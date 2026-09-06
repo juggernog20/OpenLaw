@@ -145,6 +145,7 @@ export const EVENT_GROUP: Record<NotificationEventType, NotificationEventGroup> 
   // Requester's own receipt for the same moment. They are two events
   // because they have two audiences, two defaults, and two bells.
   "request.submitted": "new_requests",
+  "request.assigned": "assigned_to_you",
   // Group 5 — the portal audience's own events. The decline is here
   // rather than beside the status change it also is, because INT-006
   // makes "no" arrive with a why and a reason is a different message.

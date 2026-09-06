@@ -1,36 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * The Resolve dialog (INT-006, INT-007, DES-058, #419) — the second of
- * INT-007's three dispositions, and the one that says "answered".
- *
- * **`designs/intake.pen` draws no Resolve dialog.** I4 is Decline's and
- * I3 is Convert's; the sub-bar's Resolve button opens nothing in the
- * mocks. So this is I4's anatomy with Resolve's own content, which is
- * what DES-058 clause 3 set up: the house dialog, the reference in the
- * title, one sentence saying what the act does, one box, the note that
- * names who reads it, and Cancel beside the verb.
- *
- * **The box is optional, and it says so where the box is.** INT-006's
- * trivial question is answered in the conversation, so by the time
- * somebody presses Resolve the answer is often already on the thread.
- * The label says `(optional)` where Decline's says required, and there
- * is no refusal to write: pressing the button with an empty box is
- * a resolution with no closing reply, which is a thing somebody means to
- * do.
- *
- * **What the box writes is a comment, and the note says so.** The reply
- * lands on the thread the requester is already reading, and the seam
- * mails it to them as a reply. The decline reason goes somewhere else —
- * onto the Request itself — and somebody about to type into one of the
- * two boxes needs to know which they are doing.
- *
- * **Cancelling leaves the Request untouched**, and **a lost race ends
- * the dialog in a statement** — both the scaffold's, unchanged from
- * Decline (DES-058 clause 5). With no claim step two triagers open one
- * Request and both press, and the loser is told what was recorded rather
- * than being offered the button again.
- */
+/** Resolving requires a note, posted to the requester-visible thread with the closure. */
 
 import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -63,13 +33,10 @@ export function ResolveDialog({
   reference: string;
   busy: boolean;
   onClose: () => void;
-  onResolve: (reply?: string) => Promise<ResolveResult>;
+  onResolve: (reply: string) => Promise<ResolveResult>;
 }>) {
   const intl = useIntl();
   const [reply, setReply] = useState("");
-  /** The seam's own refusal, where it gave one. There is no refusal of
-   * this dialog's own to hold: the one box on it is optional, so there
-   * is nothing it can check before asking. */
   const [error, setError] = useState<string | null>(null);
   /** The decision somebody else recorded first, once the seam has said
    * so. Set, the dialog stops being a form and becomes a statement. */
@@ -77,11 +44,18 @@ export function ResolveDialog({
 
   async function submit() {
     if (busy) return;
-    // Trimmed here, and an empty box is genuinely no reply rather than
-    // an empty one. The seam refuses a blank reply, so a box of spaces
-    // must not be sent as one.
     const trimmed = reply.trim();
-    const result = await onResolve(trimmed === "" ? undefined : trimmed);
+    if (!trimmed) {
+      setError(
+        intl.formatMessage({
+          id: "resolve.noteRequired",
+          defaultMessage: "Explain why this request is being resolved without converting.",
+        }),
+      );
+      document.getElementById("resolve-reply")?.focus();
+      return;
+    }
+    const result = await onResolve(trimmed);
     if (result.ok) return;
     if (result.alreadyDecided) {
       setAlreadyDecided(result.alreadyDecided);
@@ -103,7 +77,7 @@ export function ResolveDialog({
         <DialogTitle>
           <FormattedMessage
             id="resolve.title"
-            defaultMessage="Resolve {reference}"
+            defaultMessage="Resolve {reference} without converting"
             values={{ reference }}
           />
         </DialogTitle>
@@ -143,24 +117,23 @@ export function ResolveDialog({
               void submit();
             }}
           >
-            {/* What the act does, and why the box below it is optional:
-                a request answered on the thread is honestly done. */}
             <p className="text-sm text-muted">
               <FormattedMessage
                 id="resolve.explains"
-                defaultMessage="Resolving closes the request as answered. Add a closing reply if the answer is not already on the thread."
+                defaultMessage="Explain why this request can be closed without creating a contract or matter."
               />
             </p>
             <div className="flex flex-col gap-1.5">
-              {/* The word rather than Decline's asterisk, and inside the
-                  label the way every other optional box in the product
-                  says it — "optional" is the fact that changes what
-                  somebody does next, so every reader gets it. */}
               <Label htmlFor="resolve-reply">
-                <FormattedMessage id="resolve.reply" defaultMessage="Closing reply (optional)" />
+                <FormattedMessage id="resolve.reply" defaultMessage="Resolution note (required)" />
               </Label>
               <textarea
                 id="resolve-reply"
+                aria-required="true"
+                aria-invalid={error !== null && !reply.trim() ? true : undefined}
+                aria-describedby={
+                  error !== null ? "resolve-error resolve-note-help" : "resolve-note-help"
+                }
                 value={reply}
                 rows={4}
                 autoFocus
@@ -178,7 +151,7 @@ export function ResolveDialog({
               {/* Which of the two boxes on this page's dialogs this is:
                   a reply goes on the conversation, where the requester
                   can answer it. */}
-              <p className="flex items-start gap-1.5 text-xs text-muted">
+              <p id="resolve-note-help" className="flex items-start gap-1.5 text-xs text-muted">
                 <MessageSquare size={16} aria-hidden="true" className="mt-px shrink-0" />
                 <FormattedMessage
                   id="resolve.notifyNote"
@@ -187,7 +160,7 @@ export function ResolveDialog({
               </p>
             </div>
             {error !== null && (
-              <p role="alert" className="text-xs text-status-danger-fg">
+              <p id="resolve-error" role="alert" className="text-xs text-status-danger-fg">
                 {error}
               </p>
             )}

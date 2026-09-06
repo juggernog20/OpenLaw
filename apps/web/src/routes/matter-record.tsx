@@ -251,10 +251,14 @@ export function MatterRecordPage() {
   const taskAssignees = useMemo(() => {
     const candidates = [
       ...(saved.manager && !saved.manager.archived ? [saved.manager] : []),
-      ...team.filter((person) => !person.archived),
+      ...team.filter(
+        (person) =>
+          !person.archived &&
+          users.some((user) => user.id === person.id && user.role !== "business_user"),
+      ),
     ];
     return [...new Map(candidates.map((person) => [person.id, person])).values()];
-  }, [saved.manager, team]);
+  }, [saved.manager, team, users]);
 
   const signOut = useSignOut("/auth/login");
 
@@ -961,6 +965,31 @@ export function MatterRecordPage() {
                 doneCount={checklist.doneCount}
                 totalCount={checklist.totalCount}
                 assignees={taskAssignees}
+                teamExpansion={
+                  !frozen && !audienceLocked
+                    ? {
+                        people: users.filter(
+                          (person) => !person.archived && person.role !== "business_user",
+                        ),
+                        onAdded: (id) => {
+                          const person = users.find((candidate) => candidate.id === id);
+                          if (person)
+                            setTeam((current) =>
+                              current.some((member) => member.id === id)
+                                ? current
+                                : [
+                                    ...current,
+                                    {
+                                      ...person,
+                                      role:
+                                        person.role === "contributor" ? "contributor" : "member",
+                                    },
+                                  ],
+                            );
+                        },
+                      }
+                    : undefined
+                }
                 onTasksChange={setChecklist}
               />
             </div>

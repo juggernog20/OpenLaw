@@ -6,8 +6,8 @@
  * column that stole width from every section.
  *
  * The Owner heads the roster as a statement — the Owner select on the
- * Contract card is where it changes — then one row per `contract_team`
- * role. Adding a person names two things at once, so it takes the
+ * Contract card is where it changes. Each person appears once, with
+ * their roles grouped as tags. Adding a person names two things at once, so it takes the
  * compound-edit dialog DES-017 carves out of the inline rule.
  *
  * The add control sits in the panel header, where the chat applet puts
@@ -20,7 +20,7 @@
  */
 
 import { useRef, useState, type RefObject } from "react";
-import { Plus, User, X } from "lucide-react";
+import { Plus, User } from "lucide-react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { api } from "../../lib/api";
 import {
@@ -33,7 +33,7 @@ import {
 } from "../../lib/contracts";
 import { CONTROL_CLASS } from "../../lib/form-controls";
 import { problem as readProblem } from "../../lib/problem";
-import { Avatar } from "../avatar";
+import { TeamRoster, type TeamRosterEntry } from "../team-roster";
 import type { Applet } from "../shell/applets";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
@@ -178,45 +178,42 @@ function TeamPanel({
   return (
     <>
       <div className="flex flex-col py-1">
-        {owner && (
-          <PersonRow
-            name={owner.displayName}
-            image={owner.image}
-            archived={owner.archived}
-            role={intl.formatMessage({ id: "contracts.form.owner", defaultMessage: "Owner" })}
-          />
-        )}
-        {roster.map((member) => (
-          <PersonRow
-            key={`${member.id}:${member.role}`}
-            name={member.displayName}
-            image={member.image}
-            archived={member.archived}
-            role={teamRoleLabel(intl, member.role)}
-            // The creator is provenance — who made the record survives
-            // every owner change, so it has no remove control.
-            // A second click while the first is in flight is refused by
-            // `remove` itself, so the control stays enabled and keeps
-            // the focus its owner put on it.
-            onRemove={frozen || member.role === "creator" ? undefined : () => void remove(member)}
-            // Drawn and inert rather than gone: the row is a fact, and
-            // only the deciding is withheld (CTR-023).
-            removeDisabled={audienceLocked}
-            // The role is selected inside the message, not pasted in as
-            // a translated fragment — a locale that inflects the role
-            // after "as" needs the raw value to work with (DES-013).
-            removeLabel={intl.formatMessage(
-              {
-                id: "contracts.team.remove",
-                defaultMessage:
-                  "Take {name} off the team as {role, select, member {Member} " +
-                  "watcher {Watcher} creator {Creator} contributor {Contributor} " +
-                  "other {Unknown}}",
+        <TeamRoster
+          entries={[
+            ...(owner
+              ? [
+                  {
+                    person: owner,
+                    role: {
+                      id: "owner",
+                      label: intl.formatMessage({
+                        id: "contracts.form.owner",
+                        defaultMessage: "Owner",
+                      }),
+                    },
+                  },
+                ]
+              : []),
+            ...roster.map((member): TeamRosterEntry => ({
+              person: member,
+              role: {
+                id: member.role,
+                label: teamRoleLabel(intl, member.role),
+                onRemove:
+                  frozen || member.role === "creator" ? undefined : () => void remove(member),
+                removeDisabled: audienceLocked,
+                removeLabel: intl.formatMessage(
+                  {
+                    id: "contracts.team.remove",
+                    defaultMessage:
+                      "Take {name} off the team as {role, select, member {Member} watcher {Watcher} creator {Creator} contributor {Contributor} other {Unknown}}",
+                  },
+                  { name: member.displayName, role: member.role },
+                ),
               },
-              { name: member.displayName, role: member.role },
-            )}
-          />
-        ))}
+            })),
+          ]}
+        />
         {!owner && roster.length === 0 && (
           <p className="px-4 py-2 text-base text-muted">
             <FormattedMessage
@@ -240,51 +237,6 @@ function TeamPanel({
         />
       )}
     </>
-  );
-}
-
-/** One roster row: the face, the name, and what they are on this
- * contract. One avatar treatment everywhere (DES-018). */
-function PersonRow({
-  name,
-  image,
-  archived,
-  role,
-  onRemove,
-  removeLabel,
-  removeDisabled = false,
-}: Readonly<{
-  name: string;
-  image: string | null;
-  archived: boolean;
-  role: string;
-  onRemove?: () => void;
-  removeLabel?: string;
-  /** The control is offered but refused. Absent and inert say different
-   * things: absent is "this row has no remove", inert is "this remove is
-   * not yours". */
-  removeDisabled?: boolean;
-}>) {
-  return (
-    <div className={`flex h-10 items-center gap-2.5 px-4 ${archived ? "opacity-50" : ""}`}>
-      <Avatar name={name} image={image} className="size-6" />
-      <div className="flex min-w-0 flex-col gap-px">
-        <span className="truncate text-base font-medium">{name}</span>
-        <span className="text-xs text-muted">{role}</span>
-      </div>
-      {onRemove && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="ms-auto"
-          disabled={removeDisabled}
-          aria-label={removeLabel}
-          onClick={onRemove}
-        >
-          <X size={16} aria-hidden="true" />
-        </Button>
-      )}
-    </div>
   );
 }
 

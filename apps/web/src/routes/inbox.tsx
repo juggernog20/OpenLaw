@@ -1,115 +1,173 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * The Inbox destination (INT-006, INT-007, #413), per the I1 frame of
- * designs/intake.pen: nav slot one, and the queue of Requests whose
- * fate is undecided.
- *
- * **The columns are I1's, as INT-007 revised them**: the R-###
- * reference, the ask, the front door with the routing bound to it, who
- * asked, how urgent they said it is, how long it has waited, and the
- * Assign button that opens the disposition. There is no Status column
- * and no Assignee column, because there is no assignment and there is
- * only one status in the queue — everything here is `new`, which is
- * what makes the list read truthfully as "requests whose fate is
- * undecided".
- *
- * **The toggle is the only control.** I1 also draws Type and Urgency
- * filter chips and the managed-table Filter and Columns buttons; the
- * Inbox is a fixed queue rather than a curated destination list, so
- * DD-019's machinery is not built here and neither are the chips. Show
- * triaged is the one thing INT-007 asks for, and turning it on adds the
- * converted, resolved, and declined Requests with an Outcome column
- * that says which they are.
- *
- * **A converted row's link is the server's to give.** The API answers
- * the record only when this viewer reaches it (DD-014, CTR-018), so a
- * row with no link is a row the server withheld one from — this screen
- * never decides that and never has a reference it must hide. The
- * outcome still shows: the Request is triage's business whatever
- * became of it.
- *
- * The order is the API's — urgency rank, then age — and the foot says
- * so, because a queue whose ordering is a product decision should not
- * make the reader infer it.
- *
- * The loader is the client half of INT-006's floor: Member+ only,
- * everyone else bounced home. The API's 403 is the real refusal.
- */
-
-import { useState } from "react";
-import { Link, redirect, useLoaderData } from "react-router";
+/** The staff triage queue, with shared quick filters and private saved views. */
+import { useEffect, useRef, useState } from "react";
+import { Inbox } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
-import { Inbox, UserPlus } from "lucide-react";
-import { api } from "../lib/api";
-import { contractPath, contractReference, SEVERITY_PILL, severityLabel } from "../lib/contracts";
-import { matterPath, matterReference } from "../lib/matters";
-import { formatRelativeOrShort } from "../lib/format";
 import {
-  requestReference,
-  requestStatusLabel,
-  requestTargetLabel,
-  REQUEST_STATUS_PILL,
-  type InboxRow,
-} from "../lib/requests";
+  redirect,
+  useLoaderData,
+  useNavigate,
+  useNavigation,
+  type LoaderFunctionArgs,
+} from "react-router";
+import { api } from "../lib/api";
+import { resolveTimeZone } from "../lib/format";
+import {
+  INBOX_FILTER_KEYS,
+  filterQuery,
+  filterSearch,
+  initialView,
+  layoutFromUrl,
+} from "../lib/record-filters";
+import {
+  createView,
+  deleteView,
+  readViews,
+  resolveLayout,
+  sameLayout,
+  updateView,
+  type Layout,
+  type SavedView,
+} from "../lib/list-views";
+import type { InboxRow } from "../lib/requests";
 import { isMemberPlus } from "../lib/roles";
 import { requireUser, useSignOut } from "../lib/session";
+import {
+  INBOX_CATALOGUE as CATALOGUE,
+  defaultInboxLayout,
+  InboxAssignAction,
+} from "../components/inbox/inbox-columns";
+import { useInboxFilterDefinitions } from "../components/inbox/inbox-filter-definitions";
 import { AppShell } from "../components/shell/app-shell";
 import { PageSubBar } from "../components/shell/page-subbar";
 import { PageTitle } from "../components/page-title";
 import { Button } from "../components/ui/button";
-import { Label } from "../components/ui/label";
-import { Switch } from "../components/ui/switch";
+import { ColumnMenu } from "../components/table/column-menu";
+import { ManagedTable } from "../components/table/managed-table";
+import { ViewsMenu } from "../components/table/views-menu";
+import { RecordFilterBar } from "../components/table/record-filter-bar";
 
-/** Where one Request opens: the staff detail, under the destination it
- * was picked up from. The portal keeps its own address for the same
- * row — two audiences, two reads, and neither route means two things. */
 export function inboxRequestPath(number: number): string {
   return `/inbox/${number}`;
 }
 
-export async function inboxLoader() {
+function listQuery(layout: Layout) {
+  return {
+    includeTriaged: "true" as const,
+    ...filterQuery(layout.filters, INBOX_FILTER_KEYS),
+    ...(layout.filters.receivedFrom || layout.filters.receivedTo
+      ? { timeZone: resolveTimeZone() }
+      : {}),
+  };
+}
+function sameQuery(a: Layout, b: Layout) {
+  return JSON.stringify(listQuery(a)) === JSON.stringify(listQuery(b));
+}
+
+export async function inboxLoader(args?: LoaderFunctionArgs) {
   const user = await requireUser();
-  // INT-006: triage stays legal's. A Contributor and a Business User get
-  // no surface at all, not a disabled one; the API's 403 stands behind
-  // this.
   if (!isMemberPlus(user.role)) return redirect("/");
-  const list = await api.GET("/api/v1/requests");
-  if (!list.data) throw new Error("The Inbox could not be read.");
-  return { user, requests: list.data.requests, nextCursor: list.data.nextCursor };
+  const views = await readViews(CATALOGUE.surface);
+  const opensOn = initialView(views, args);
+  let layout = layoutFromUrl(
+    opensOn ? resolveLayout(CATALOGUE, opensOn.layout) : defaultInboxLayout(),
+    args,
+    INBOX_FILTER_KEYS,
+    [],
+  );
+  const params = args && new URL(args.request.url).searchParams;
+  if (params?.get("includeTriaged") === "true" && !params.has("status") && !params.has("filters"))
+    layout = { ...layout, filters: {} };
+  const [list, options] = await Promise.all([
+    api.GET("/api/v1/requests", { params: { query: listQuery(layout) } }),
+    api.GET("/api/v1/requests/filter-options"),
+  ]);
+  if (!list.data || !options.data) throw new Error("The Inbox could not be read.");
+  return {
+    user,
+    requests: list.data.requests,
+    total: list.data.total,
+    nextCursor: list.data.nextCursor,
+    filterOptions: options.data,
+    views,
+    layout,
+    activeViewId: opensOn?.id ?? null,
+  };
 }
 
 export function InboxPage() {
   const loaded = useLoaderData<typeof inboxLoader>();
   const intl = useIntl();
+  const navigate = useNavigate();
   const [rows, setRows] = useState<InboxRow[]>(loaded.requests);
+  const [total, setTotal] = useState(loaded.total ?? loaded.requests.length);
   const [cursor, setCursor] = useState<string | null>(loaded.nextCursor);
-  const [showTriaged, setShowTriaged] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [layout, setLayout] = useState<Layout>(loaded.layout);
+  const [views, setViews] = useState<SavedView[]>(loaded.views);
+  const [activeViewId, setActiveViewId] = useState<string | null>(loaded.activeViewId);
+  const [requestBusy, setBusy] = useState(false);
+  const navigation = useNavigation();
+  const busy = requestBusy || navigation.state !== "idle";
+  const readVersion = useRef(0);
+  useEffect(() => {
+    readVersion.current += 1;
+  }, [loaded, navigation.location]);
   const [listError, setListError] = useState<string | null>(null);
+  const [pageError, setPageError] = useState<string | null>(null);
+  const [appended, setAppended] = useState<{ count: number; from: string } | null>(null);
 
-  /** What the sub-bar counts: the undecided ones on screen. A triaged
-   * Request has left the queue, so it is not part of the number even
-   * when the toggle is drawing it. */
-  const awaiting = rows.filter((row) => row.status === "new").length;
+  const previousLoad = useRef(loaded);
+  useEffect(() => {
+    const previous = previousLoad.current;
+    previousLoad.current = loaded;
+    if (previous === loaded) return;
+    setRows(loaded.requests);
+    setCursor(loaded.nextCursor);
+    setTotal(loaded.total ?? loaded.requests.length);
+    setLayout((current) =>
+      previous.activeViewId === loaded.activeViewId
+        ? { ...current, filters: loaded.layout.filters, sort: loaded.layout.sort }
+        : loaded.layout,
+    );
+    setViews(loaded.views);
+    setActiveViewId(loaded.activeViewId);
+    setAppended(null);
+    setPageError(null);
+    setListError(null);
+  }, [loaded]);
+  const definitions = useInboxFilterDefinitions(loaded.filterOptions);
 
+  const activeView = views.find((view) => view.id === activeViewId) ?? null;
+  const storedLayout = activeView
+    ? resolveLayout(CATALOGUE, activeView.layout)
+    : defaultInboxLayout();
+  const modified = !sameLayout(layout, storedLayout);
+
+  // A filter that answers nothing is not the module's first visit: the
+  // empty state has to say which of the two it is.
   const signOut = useSignOut("/auth/login");
 
-  /** The one query this list asks. The toggle rides on every read,
-   * cursor included: a cursor is a position in one ordering, and a page
-   * read under a different one is a page of a different list. */
-  const listQuery = (triaged: boolean) => (triaged ? { includeTriaged: "true" as const } : {});
-
-  /** Turning the toggle re-reads the queue: the triaged rows only exist
-   * server-side, and coming back should not trust a stale list either. */
-  async function toggleTriaged(next: boolean) {
+  async function commit(next: Layout, nextActiveId: string | null = activeViewId) {
+    if (sameQuery(layout, next)) {
+      setLayout(next);
+      setActiveViewId(nextActiveId);
+      if (nextActiveId !== activeViewId)
+        await navigate(
+          { search: filterSearch(next, INBOX_FILTER_KEYS, nextActiveId) },
+          { preventScrollReset: true },
+        );
+      return;
+    }
     if (busy) return;
     setListError(null);
     setBusy(true);
+    const version = ++readVersion.current;
     const { data } = await api
       .GET("/api/v1/requests", { params: { query: listQuery(next) } })
       .catch(() => ({ data: undefined }))
       .finally(() => setBusy(false));
+    if (version !== readVersion.current) return;
     if (!data) {
       setListError(
         intl.formatMessage({
@@ -121,21 +179,29 @@ export function InboxPage() {
     }
     setRows(data.requests);
     setCursor(data.nextCursor);
-    setShowTriaged(next);
+    setTotal(data.total ?? data.requests.length);
+    setAppended(null);
+    setPageError(null);
+    setLayout(next);
+    setActiveViewId(nextActiveId);
+    await navigate(
+      { search: filterSearch(next, INBOX_FILTER_KEYS, nextActiveId) },
+      { preventScrollReset: true },
+    );
   }
 
-  /** One more page, appended in place — the house pattern, and the only
-   * honest answer for a list with no total to state. */
   async function showMore() {
     if (busy || cursor === null) return;
-    setListError(null);
+    setPageError(null);
     setBusy(true);
+    const version = ++readVersion.current;
     const { data } = await api
-      .GET("/api/v1/requests", { params: { query: { cursor, ...listQuery(showTriaged) } } })
+      .GET("/api/v1/requests", { params: { query: { cursor, ...listQuery(layout) } } })
       .catch(() => ({ data: undefined }))
       .finally(() => setBusy(false));
+    if (version !== readVersion.current) return;
     if (!data) {
-      setListError(
+      setPageError(
         intl.formatMessage({
           id: "inbox.moreError",
           defaultMessage: "The next requests could not be read. Try again.",
@@ -143,9 +209,67 @@ export function InboxPage() {
       );
       return;
     }
+    const first = data.requests[0];
     setRows((current) => [...current, ...data.requests]);
     setCursor(data.nextCursor);
+    setTotal(data.total ?? data.requests.length);
+    setAppended(first ? { count: data.requests.length, from: first.id } : null);
   }
+
+  function selectView(view: SavedView | null) {
+    void commit(
+      view ? resolveLayout(CATALOGUE, view.layout) : defaultInboxLayout(),
+      view?.id ?? null,
+    );
+  }
+
+  function adopt(next: SavedView[], activeId: string | null) {
+    setViews(next);
+    setActiveViewId(activeId);
+    if (activeId !== activeViewId)
+      void navigate(
+        { search: filterSearch(layout, INBOX_FILTER_KEYS, activeId) },
+        { replace: true, preventScrollReset: true },
+      );
+  }
+
+  const tableControls = (
+    <>
+      <ViewsMenu
+        views={views}
+        activeView={activeView}
+        modified={modified}
+        busy={busy}
+        onSelect={selectView}
+        onSave={async () => {
+          if (!activeView) return;
+          adopt(await updateView(activeView.id, { config: layout }), activeView.id);
+        }}
+        onSaveAs={async (name) => {
+          const next = await createView(CATALOGUE.surface, name, layout);
+          adopt(next, next.find((view) => view.name === name)?.id ?? null);
+        }}
+        onRename={async (name) => {
+          if (!activeView) return;
+          adopt(await updateView(activeView.id, { name }), activeView.id);
+        }}
+        onSetDefault={async () => {
+          if (!activeView) return;
+          adopt(await updateView(activeView.id, { isDefault: true }), activeView.id);
+        }}
+        onDelete={async (view) => {
+          setViews(await deleteView(view.id));
+          await commit(defaultInboxLayout(), null);
+        }}
+        onReset={() => void commit(storedLayout)}
+      />
+      <ColumnMenu
+        catalogue={CATALOGUE}
+        layout={layout}
+        onLayoutChange={(next) => void commit(next)}
+      />
+    </>
+  );
 
   return (
     <AppShell
@@ -155,218 +279,130 @@ export function InboxPage() {
         <PageSubBar
           title={<FormattedMessage id="inbox.title" defaultMessage="Inbox" />}
           subtitle={
-            // What is on screen. There is no total to state — the queue
-            // is keyset-paged — so a bare count over a longer list would
-            // be a number the page cannot stand behind.
-            cursor === null ? (
+            rows.length < total ? (
               <FormattedMessage
-                id="inbox.awaiting"
-                defaultMessage="{count} awaiting triage"
-                values={{ count: awaiting }}
+                id="inbox.filteredCount"
+                defaultMessage="{shown} of {total, plural, one {# request} other {# requests}}"
+                values={{ shown: rows.length, total }}
               />
             ) : (
               <FormattedMessage
-                id="inbox.awaitingShown"
-                defaultMessage="{count} awaiting triage shown"
-                values={{ count: awaiting }}
+                id="inbox.matchingCount"
+                defaultMessage="{count, plural, one {# request} other {# requests}}"
+                values={{ count: total }}
               />
             )
           }
+          actions={tableControls}
         />
       }
     >
       <PageTitle title={intl.formatMessage({ id: "inbox.title", defaultMessage: "Inbox" })} />
       <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-end gap-2">
-          {listError && (
-            <p role="alert" className="text-xs text-status-danger-fg">
-              {listError}
-            </p>
-          )}
-          <Label htmlFor="inbox-show-triaged">
-            <FormattedMessage id="inbox.showTriaged" defaultMessage="Show triaged" />
-          </Label>
-          <Switch
-            id="inbox-show-triaged"
-            checked={showTriaged}
-            disabled={busy}
-            onCheckedChange={(next) => void toggleTriaged(next)}
-          />
-        </div>
+        <RecordFilterBar
+          definitions={definitions}
+          values={layout.filters}
+          busy={busy}
+          error={listError}
+          onChange={(filters) => void commit({ ...layout, filters })}
+        />
         {rows.length === 0 ? (
-          <EmptyInbox />
+          <EmptyInbox
+            awaitingOnly={
+              JSON.stringify(filterQuery(layout.filters, INBOX_FILTER_KEYS)) ===
+              JSON.stringify({ status: "new" })
+            }
+          />
         ) : (
-          <>
-            <QueueTable rows={rows} showOutcome={showTriaged} />
-            <div className="flex items-center justify-between gap-4">
-              <p className="text-xs text-muted">
-                <FormattedMessage
-                  id="inbox.ordering"
-                  defaultMessage="Ordered by urgency, then age"
+          <ManagedTable
+            catalogue={CATALOGUE}
+            actionsColumn={{
+              label: intl.formatMessage({ id: "inbox.column.actions", defaultMessage: "Actions" }),
+              width: 128,
+              pinned: true,
+              render: (row) => (
+                <InboxAssignAction
+                  row={row}
+                  onAssigned={(updated) =>
+                    setRows((current) =>
+                      current.map((item) =>
+                        item.id === updated.id ? { ...item, assignee: updated.assignee } : item,
+                      ),
+                    )
+                  }
                 />
-              </p>
-              {cursor !== null && (
-                <Button variant="secondary" disabled={busy} onClick={() => void showMore()}>
-                  <FormattedMessage id="inbox.more" defaultMessage="Show more" />
-                </Button>
-              )}
-            </div>
-          </>
+              ),
+            }}
+            layout={layout}
+            rows={rows}
+            rowKey={(row) => row.id}
+            onLayoutChange={(next) => void commit(next)}
+            focusRowKey={appended?.from}
+            foot={
+              <>
+                <p className="text-xs text-muted">
+                  <FormattedMessage
+                    id="inbox.ordering"
+                    defaultMessage="Ordered by urgency, then age"
+                  />
+                </p>
+                {pageError && (
+                  <p role="alert" className="text-xs text-status-danger-fg">
+                    {pageError}
+                  </p>
+                )}
+                {cursor !== null && (
+                  <Button variant="secondary" disabled={busy} onClick={() => void showMore()}>
+                    <FormattedMessage id="inbox.more" defaultMessage="Show more" />
+                  </Button>
+                )}
+              </>
+            }
+          />
         )}
+        <p aria-live="polite" className="sr-only">
+          {appended && (
+            <FormattedMessage
+              id="inbox.moreAdded"
+              defaultMessage="{count, plural, one {# more request} other {# more requests}}. {total} shown."
+              values={{ count: appended.count, total: rows.length }}
+            />
+          )}
+        </p>
       </div>
     </AppShell>
   );
 }
 
-/** Zero reads as the good news it is (INT-006): the queue is empty
- * because everything that arrived has been decided, and the screen says
- * that rather than drawing an empty table. */
-function EmptyInbox() {
+function EmptyInbox({ awaitingOnly }: Readonly<{ awaitingOnly: boolean }>) {
   return (
     <div className="flex flex-col items-center gap-4 rounded-card border border-border-default bg-raised px-6 py-16 text-center">
       <Inbox size={24} aria-hidden="true" className="text-subtle" />
       <div className="flex flex-col gap-1">
         <h2 className="text-md font-semibold">
-          <FormattedMessage id="inbox.empty.title" defaultMessage="Nothing is waiting" />
+          {awaitingOnly ? (
+            <FormattedMessage id="inbox.empty.title" defaultMessage="Nothing is waiting" />
+          ) : (
+            <FormattedMessage
+              id="inbox.empty.filteredTitle"
+              defaultMessage="No requests match these filters"
+            />
+          )}
         </h2>
         <p className="max-w-md text-base text-muted">
-          <FormattedMessage
-            id="inbox.empty.body"
-            defaultMessage={
-              "Every Request has been decided. New ones land here as they " +
-              "arrive, hottest and oldest first."
-            }
-          />
+          {awaitingOnly ? (
+            <FormattedMessage
+              id="inbox.empty.body"
+              defaultMessage="Every Request has been decided. New ones land here as they arrive, hottest and oldest first."
+            />
+          ) : (
+            <FormattedMessage
+              id="inbox.empty.filteredBody"
+              defaultMessage="Clear a filter to widen the list."
+            />
+          )}
         </p>
       </div>
-    </div>
-  );
-}
-
-/** I1's table. The Outcome column is drawn only where there can be an
- * outcome to draw — the default queue is all `new`, and a column of one
- * repeated word says nothing. */
-function QueueTable({ rows, showOutcome }: Readonly<{ rows: InboxRow[]; showOutcome: boolean }>) {
-  const intl = useIntl();
-  return (
-    <div className="overflow-x-auto rounded-card border border-border-default bg-raised">
-      <table className="w-full">
-        <thead>
-          <tr className="bg-section-header text-start text-sm font-medium text-muted">
-            <th scope="col" className="w-20 px-4 py-2 text-start font-medium">
-              <FormattedMessage id="inbox.column.reference" defaultMessage="Ref" />
-            </th>
-            <th scope="col" className="px-4 py-2 text-start font-medium">
-              <FormattedMessage id="inbox.column.summary" defaultMessage="Summary" />
-            </th>
-            <th scope="col" className="w-48 px-4 py-2 text-start font-medium">
-              <FormattedMessage id="inbox.column.type" defaultMessage="Type" />
-            </th>
-            <th scope="col" className="w-40 px-4 py-2 text-start font-medium">
-              <FormattedMessage id="inbox.column.requester" defaultMessage="Requester" />
-            </th>
-            <th scope="col" className="w-28 px-4 py-2 text-start font-medium">
-              <FormattedMessage id="inbox.column.urgency" defaultMessage="Urgency" />
-            </th>
-            <th scope="col" className="w-28 px-4 py-2 text-start font-medium">
-              <FormattedMessage id="inbox.column.age" defaultMessage="Age" />
-            </th>
-            {showOutcome && (
-              <th scope="col" className="w-40 px-4 py-2 text-start font-medium">
-                <FormattedMessage id="inbox.column.outcome" defaultMessage="Outcome" />
-              </th>
-            )}
-            <th scope="col" className="w-32 px-4 py-2 text-end font-medium">
-              <span className="sr-only">
-                <FormattedMessage id="inbox.column.actions" defaultMessage="Actions" />
-              </span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => {
-            const reference = requestReference(intl, row.number);
-            return (
-              <tr key={row.id} className="border-t border-border-default">
-                <td className="px-4 py-2.5 text-sm font-semibold text-muted">{reference}</td>
-                <td className="px-4 py-2.5">
-                  <Link
-                    to={inboxRequestPath(row.number)}
-                    className="rounded-chip font-medium text-primary hover:text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
-                  >
-                    {row.summary}
-                  </Link>
-                </td>
-                <td className="px-4 py-2.5">
-                  <span className="flex flex-col">
-                    <span className="text-sm text-primary">{row.requestType.displayName}</span>
-                    {/* The routing the Administrator bound, so triage
-                        can see how much of it is already decided. */}
-                    <span className="text-xs text-muted">
-                      {requestTargetLabel(intl, row.requestType)}
-                    </span>
-                  </span>
-                </td>
-                <td className="px-4 py-2.5 text-sm">{row.requester.displayName}</td>
-                <td className="px-4 py-2.5">
-                  <span
-                    className={`inline-flex rounded-pill px-2 py-0.5 text-xs font-medium ${SEVERITY_PILL[row.urgency]}`}
-                  >
-                    {severityLabel(intl, row.urgency)}
-                  </span>
-                </td>
-                <td className="px-4 py-2.5 text-sm text-muted">
-                  {formatRelativeOrShort(row.createdAt, { locale: intl.locale })}
-                </td>
-                {showOutcome && (
-                  <td className="px-4 py-2.5">
-                    <span className="flex items-center gap-2">
-                      <span
-                        className={`inline-flex rounded-pill px-2 py-0.5 text-xs font-medium ${REQUEST_STATUS_PILL[row.status]}`}
-                      >
-                        {requestStatusLabel(intl, row.status)}
-                      </span>
-                      {row.convertedRecord && (
-                        <Link
-                          to={
-                            row.convertedRecord.module === "matter"
-                              ? matterPath(row.convertedRecord.number)
-                              : contractPath(row.convertedRecord.number)
-                          }
-                          className="rounded-chip text-sm font-medium text-primary hover:text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
-                        >
-                          {row.convertedRecord.module === "matter"
-                            ? matterReference(intl, row.convertedRecord.number)
-                            : contractReference(intl, row.convertedRecord.number)}
-                        </Link>
-                      )}
-                    </span>
-                  </td>
-                )}
-                <td className="px-4 py-2.5 text-end">
-                  {/* INT-007: no claim step and no parked state —
-                      Assign is the entry to the disposition, and it
-                      opens the Request where the three actions live. */}
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    asChild
-                    aria-label={intl.formatMessage(
-                      { id: "inbox.assignRow", defaultMessage: "Assign {reference}" },
-                      { reference },
-                    )}
-                  >
-                    <Link to={inboxRequestPath(row.number)}>
-                      <UserPlus size={16} aria-hidden="true" />
-                      <FormattedMessage id="inbox.assign" defaultMessage="Assign" />
-                    </Link>
-                  </Button>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
     </div>
   );
 }

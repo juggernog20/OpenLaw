@@ -318,7 +318,7 @@ describe("being handed a contract (CTR-004)", () => {
  * checklist it leaves behind. */
 async function addTask(
   number: number,
-  body: { title: string; assigneeId?: string | null },
+  body: { title: string; assigneeId?: string | null; addToTeam?: boolean },
 ): Promise<{ id: string; title: string; assigneeId: string | null }[]> {
   const res = await harness.app.inject({
     method: "POST",
@@ -347,6 +347,7 @@ describe("being given a task (CTR-017)", () => {
     const tasks = await addTask(contract.number, {
       title: "Redline clause 7",
       assigneeId: idOf(TARGET),
+      addToTeam: true,
     });
     expect(tasks).toHaveLength(1);
 
@@ -372,7 +373,7 @@ describe("being given a task (CTR-017)", () => {
     const [task] = await addTask(contract.number, { title: "Chase the counterparty" });
     expect(task!.assigneeId).toBeNull();
 
-    await editTask(task!.id, { assigneeId: idOf(TARGET) });
+    await editTask(task!.id, { assigneeId: idOf(TARGET), addToTeam: true });
     const items = await bellFor(TARGET, contract);
     expect(items.map((row) => row.eventType)).toEqual(["contract.task_assigned"]);
     expect(items[0]!.payload.taskTitle).toBe("Chase the counterparty");
@@ -384,6 +385,7 @@ describe("being given a task (CTR-017)", () => {
     const [task] = await addTask(contract.number, {
       title: "Draft the SOW",
       assigneeId: idOf(TARGET),
+      addToTeam: true,
     });
     const after = (await rowsFor(TARGET)).length;
 
@@ -404,18 +406,29 @@ describe("being given a task (CTR-017)", () => {
     expect(await rowsFor(ACTOR)).toHaveLength(before);
   });
 
-  it("tells nobody outside a confidential record's audience", async () => {
-    // The checklist takes any live person as an assignee; the wall is
-    // what decides who may be *told*. A Member outside a walled
-    // record's audience gets no bell row and no email — silently, which
-    // is the only way an omission can be made (DD-014, M10).
+  it("refuses an outside assignee without notifying them, then notifies after explicit team expansion", async () => {
     const contract = await newContract("Direct · a task behind the wall");
     await wallOff(contract.id);
     const before = (await rowsFor(TARGET)).length;
-
-    await addTask(contract.number, { title: "Not for you", assigneeId: idOf(TARGET) });
+    const refused = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/tasks`,
+      cookies: as(ACTOR),
+      payload: { title: "Not for you", assigneeId: idOf(TARGET) },
+    });
+    expect(refused.statusCode, refused.body).toBe(400);
     expect(await bellFor(TARGET, contract)).toEqual([]);
     expect(await rowsFor(TARGET)).toHaveLength(before);
+
+    await addTask(contract.number, {
+      title: "Now on the team",
+      assigneeId: idOf(TARGET),
+      addToTeam: true,
+    });
+    expect((await bellFor(TARGET, contract)).map((row) => row.eventType)).toEqual([
+      "contract.task_assigned",
+    ]);
+    expect((await mailAbout(TARGET, contract)).text).toContain("Now on the team");
   });
 });
 

@@ -18,8 +18,18 @@
  * listing and on every write alike.
  */
 
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, and, asc, eq, inArray, users } from "@openlaw/db";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import {
+  activityLog,
+  and,
+  asc,
+  eq,
+  inArray,
+  users,
+  contracts,
+  contractTasks,
+  contractTeam,
+} from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies,
@@ -49,6 +59,7 @@ let memberCookies: Record<string, string>;
 let outsiderCookies: Record<string, string>;
 let contributorCookies: Record<string, string>;
 let contributorId = "";
+let outsiderId = "";
 let memberId = "";
 let ndaTypeId = "";
 
@@ -81,6 +92,7 @@ beforeAll(async () => {
   memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
 
   const outsider = await provisionUser(harness.app.auth, OUTSIDER);
+  outsiderId = outsider.id;
   await harness.db
     .update(users)
     .set({ role: "legal_team_member" })
@@ -226,6 +238,44 @@ describe("tasks on a contract (CTR-017)", () => {
       taskId: id,
       title: "Draft the NDA",
     });
+  });
+
+  it("delegates independently of the Owner and moves the task between personal task lists", async () => {
+    const contract = await newContract("Independent task assignment");
+    await harness.db
+      .update(contracts)
+      .set({ managerId: memberId })
+      .where(eq(contracts.id, contract.id));
+    await harness.db
+      .insert(contractTeam)
+      .values({ contractId: contract.id, userId: contributorId, role: "contributor" });
+    const id = await add(contract.number, { title: "Junior drafts", assigneeId: memberId });
+    const homeIds = async (cookies: Record<string, string>) => {
+      const response = await harness.app.inject({
+        method: "GET",
+        url: "/api/v1/home/tasks",
+        cookies,
+      });
+      expect(response.statusCode, response.body).toBe(200);
+      return response.json().rows.map((row: { id: string }) => row.id);
+    };
+    expect(await homeIds(memberCookies)).toContain(id);
+    expect(await homeIds(contributorCookies)).not.toContain(id);
+    await edit(id, { assigneeId: contributorId });
+    const [stored] = await harness.db.select().from(contractTasks).where(eq(contractTasks.id, id));
+    const [owner] = await harness.db
+      .select({ managerId: contracts.managerId })
+      .from(contracts)
+      .where(eq(contracts.id, contract.id));
+    expect(stored?.assigneeId).toBe(contributorId);
+    expect(owner?.managerId).toBe(memberId);
+    expect((await list(contract.number))[0]).toMatchObject({
+      assigneeId: contributorId,
+      assigneeName: CONTRIBUTOR.displayName,
+      assigneeImage: null,
+    });
+    expect(await homeIds(memberCookies)).not.toContain(id);
+    expect(await homeIds(contributorCookies)).toContain(id);
   });
 
   it("adds a task with assignee and due date", async () => {
@@ -457,5 +507,136 @@ describe("tasks on a confidential contract (DD-014)", () => {
     expect(feed.body).not.toContain("Board paper");
 
     expect((await list(walled.number)).length).toBe(1);
+  });
+});
+
+describe("explicit team expansion during assignment", () => {
+  it("requires an explicit add, persists membership and assignment, and retries without duplicate activity", async () => {
+    const record = await newContract("Task team expansion");
+    const refused = await addRaw(record.number, { title: "Draft", assigneeId: contributorId });
+    expect(refused.statusCode, refused.body).toBe(400);
+    const created = await addRaw(record.number, {
+      title: "Draft",
+      assigneeId: contributorId,
+      addToTeam: true,
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const taskId = created.json().tasks[0].id;
+    const retry = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/tasks/${taskId}`,
+      cookies: memberCookies,
+      payload: { assigneeId: contributorId, addToTeam: true },
+    });
+    expect(retry.statusCode, retry.body).toBe(200);
+    const members = await harness.db
+      .select()
+      .from(contractTeam)
+      .where(and(eq(contractTeam.contractId, record.id), eq(contractTeam.userId, contributorId)));
+    expect(members).toHaveLength(1);
+    expect(members[0]?.role).toBe("contributor");
+    expect((await list(record.number))[0]?.assigneeId).toBe(contributorId);
+    const activity = await harness.db
+      .select()
+      .from(activityLog)
+      .where(
+        and(eq(activityLog.entityId, record.id), eq(activityLog.action, "contract.team_added")),
+      );
+    expect(activity).toHaveLength(1);
+    expect((await listRaw(record.number, contributorCookies)).statusCode).toBe(200);
+  });
+
+  it("adds a new team member while reassigning an existing task", async () => {
+    const record = await newContract("Reassignment adds team member");
+    const created = await addRaw(record.number, { title: "Draft", assigneeId: memberId });
+    const taskId = created.json().tasks[0].id;
+    const response = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/tasks/${taskId}`,
+      cookies: memberCookies,
+      payload: { assigneeId: outsiderId, addToTeam: true },
+    });
+    expect(response.statusCode, response.body).toBe(200);
+    expect((await list(record.number))[0]?.assigneeId).toBe(outsiderId);
+    const [member] = await harness.db
+      .select()
+      .from(contractTeam)
+      .where(and(eq(contractTeam.contractId, record.id), eq(contractTeam.userId, outsiderId)));
+    expect(member?.role).toBe("member");
+  });
+
+  it("does not let an ordinary team member expand a confidential audience", async () => {
+    const record = await newContract("Confidential task team");
+    await harness.db
+      .update(contracts)
+      .set({ isConfidential: true })
+      .where(eq(contracts.id, record.id));
+    await harness.db
+      .insert(contractTeam)
+      .values({ contractId: record.id, userId: outsiderId, role: "member" });
+    const created = await addRaw(record.number, { title: "Draft", assigneeId: memberId });
+    const taskId = created.json().tasks[0].id;
+    const response = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/tasks/${taskId}`,
+      cookies: outsiderCookies,
+      payload: { assigneeId: contributorId, addToTeam: true },
+    });
+    expect(response.statusCode, response.body).toBe(403);
+    expect((await list(record.number))[0]?.assigneeId).toBe(memberId);
+    expect(
+      await harness.db
+        .select()
+        .from(contractTeam)
+        .where(and(eq(contractTeam.contractId, record.id), eq(contractTeam.userId, contributorId))),
+    ).toHaveLength(0);
+    const existing = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/tasks/${taskId}`,
+      cookies: outsiderCookies,
+      payload: { assigneeId: outsiderId },
+    });
+    expect(existing.statusCode, existing.body).toBe(200);
+    const owner = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/tasks/${taskId}`,
+      cookies: memberCookies,
+      payload: { assigneeId: contributorId, addToTeam: true },
+    });
+    expect(owner.statusCode, owner.body).toBe(200);
+  });
+
+  it("rolls back membership if assignment notification fails", async () => {
+    const record = await newContract("Atomic team assignment");
+    const spy = vi
+      .spyOn(harness.app.notifier, "taskAssigned")
+      .mockRejectedValueOnce(new Error("notification failure"));
+    try {
+      const response = await addRaw(record.number, {
+        title: "Draft",
+        assigneeId: contributorId,
+        addToTeam: true,
+      });
+      expect(response.statusCode).toBe(500);
+      expect(await list(record.number)).toHaveLength(0);
+      expect(
+        await harness.db
+          .select()
+          .from(contractTeam)
+          .where(
+            and(eq(contractTeam.contractId, record.id), eq(contractTeam.userId, contributorId)),
+          ),
+      ).toHaveLength(0);
+      expect(
+        await harness.db
+          .select()
+          .from(activityLog)
+          .where(
+            and(eq(activityLog.entityId, record.id), eq(activityLog.action, "contract.team_added")),
+          ),
+      ).toHaveLength(0);
+    } finally {
+      spy.mockRestore();
+    }
   });
 });

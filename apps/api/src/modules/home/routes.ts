@@ -6,7 +6,12 @@ import { z } from "zod";
 import { requireRole } from "../../auth/guards.js";
 import { problemResponse } from "../../lib/problem.js";
 import { ApprovalsHomeSectionSchema, readApprovalsHomeSection } from "./sections/approvals.js";
-import { DatesHomeSectionSchema, readDatesHomeSection } from "./sections/dates.js";
+import {
+  DatesHomeSectionSchema,
+  PersonalDatesSchema,
+  readDatesHomeSection,
+  readPersonalDates,
+} from "./sections/dates.js";
 import { ContractsHomeSectionSchema, readContractsHomeSection } from "./sections/contracts.js";
 import { InboxHomeSectionSchema, readInboxHomeSection } from "./sections/inbox.js";
 import { MattersHomeSectionSchema, readMattersHomeSection } from "./sections/matters.js";
@@ -14,7 +19,13 @@ import {
   ObligationsHomeSectionSchema,
   readObligationsHomeSection,
 } from "./sections/obligations.js";
-import { readTasksHomeSection, TasksHomeSectionSchema } from "./sections/tasks.js";
+import {
+  AssignedTasksPageSchema,
+  AssignedTasksCursorSchema,
+  readAssignedTasks,
+  readTasksHomeSection,
+  TasksHomeSectionSchema,
+} from "./sections/tasks.js";
 
 const HomeSectionSchema = z.discriminatedUnion("type", [
   ApprovalsHomeSectionSchema,
@@ -29,6 +40,54 @@ const HomeEnvelopeSchema = z.object({ sections: z.array(HomeSectionSchema) });
 
 export const homeRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
+    "/home/dates",
+    {
+      preHandler: requireRole("administrator", "legal_team_member", "contributor"),
+      schema: {
+        operationId: "listPersonalDates",
+        summary:
+          "All dates in a calendar window on active Contracts and Matters the viewer manages or is on the team of",
+        querystring: z
+          .object({ from: z.iso.date(), to: z.iso.date() })
+          .refine(
+            ({ from, to }) => from <= to && Date.parse(to) - Date.parse(from) <= 62 * 86400000,
+            "Choose a date range of at most 63 days",
+          ),
+        response: {
+          200: PersonalDatesSchema,
+          400: problemResponse,
+          401: problemResponse,
+          403: problemResponse,
+        },
+      },
+    },
+    async (request) => readPersonalDates(app.db, request.user, request.query),
+  );
+
+  app.get(
+    "/home/tasks",
+    {
+      preHandler: requireRole("administrator", "legal_team_member", "contributor"),
+      schema: {
+        operationId: "listAssignedTasks",
+        summary:
+          "Open Tasks assigned to the signed-in user, across reachable active Contracts and Matters",
+        querystring: z.object({
+          limit: z.coerce.number().int().min(1).max(100).default(50),
+          cursor: AssignedTasksCursorSchema.optional(),
+        }),
+        response: {
+          200: AssignedTasksPageSchema,
+          400: problemResponse,
+          401: problemResponse,
+          403: problemResponse,
+        },
+      },
+    },
+    async (request) => readAssignedTasks(app.db, request.user, request.query),
+  );
+
+  app.get(
     "/home",
     {
       preHandler: requireRole("administrator", "legal_team_member", "contributor"),
@@ -37,7 +96,7 @@ export const homeRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "The signed-in staff user's personal Home sections in stable order. " +
           "Zero-total sections are omitted; every present section carries a " +
-          "three-row cap and its full eligible total. Record reach is applied " +
+          "four-row cap and its full eligible total. Record reach is applied " +
           "inside each section query, before totals and caps",
         response: {
           200: HomeEnvelopeSchema,

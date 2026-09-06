@@ -38,6 +38,9 @@
   "action.rename": {
     "defaultMessage": "Rename"
   },
+  "action.retry": {
+    "defaultMessage": "Retry"
+  },
   "action.save": {
     "defaultMessage": "Save"
   },
@@ -496,6 +499,9 @@
   },
   "activity.reminderOffset": {
     "defaultMessage": "{days, plural, =0 {day of} one {# day} other {# days}}"
+  },
+  "activity.request.assigneeChanged": {
+    "defaultMessage": "{assigned, select, yes {{actor} assigned {assignee} to triage this request} other {{actor} cleared the triage assignment}}"
   },
   "activity.request.converted": {
     "defaultMessage": "{actor} converted this request into {record}"
@@ -1481,9 +1487,6 @@
   "contracts.count": {
     "defaultMessage": "{count, plural, one {# contract} other {# contracts}}"
   },
-  "contracts.countShown": {
-    "defaultMessage": "{count, plural, one {# contract shown} other {# contracts shown}}"
-  },
   "contracts.counterparties.list": {
     "defaultMessage": "Counterparties"
   },
@@ -1526,6 +1529,12 @@
   "contracts.empty.body": {
     "defaultMessage": "A contract is the workspace for work that ends in a signed document. Create one when a deal starts; it takes a reference you can quote in email."
   },
+  "contracts.empty.filtered.body": {
+    "defaultMessage": "Clear a filter to widen the list."
+  },
+  "contracts.empty.filtered.title": {
+    "defaultMessage": "No contracts match these filters"
+  },
   "contracts.empty.readOnly.body": {
     "defaultMessage": "Contracts you are added to appear here. Ask a Legal Team Member to add you to the ones you work on."
   },
@@ -1555,6 +1564,9 @@
   },
   "contracts.fields.section": {
     "defaultMessage": "Fields"
+  },
+  "contracts.filteredCount": {
+    "defaultMessage": "{shown} of {total, plural, one {# contract} other {# contracts}}"
   },
   "contracts.form.counterparties": {
     "defaultMessage": "Counterparties"
@@ -1877,9 +1889,6 @@
   "contracts.severityLabel": {
     "defaultMessage": "{level, select, low {Low} medium {Medium} high {High} critical {Critical} other {Unknown}}"
   },
-  "contracts.showArchived": {
-    "defaultMessage": "Show archived"
-  },
   "contracts.showEnded": {
     "defaultMessage": "Show ended"
   },
@@ -2021,9 +2030,6 @@
   "contracts.valueWithCadence": {
     "defaultMessage": "{cadence, select, monthly {{amount} /month} annually {{amount} /year} other {{amount}}}"
   },
-  "convert.action": {
-    "defaultMessage": "Convert to {module, select, matter {matter} other {contract}}"
-  },
   "convert.alreadyConvertedRecord": {
     "defaultMessage": "It became {record}."
   },
@@ -2131,9 +2137,6 @@
   },
   "datePicker.year": {
     "defaultMessage": "Year"
-  },
-  "decline.action": {
-    "defaultMessage": "Decline"
   },
   "decline.explains": {
     "defaultMessage": "Declining closes the request without converting it. The reason is required and is shared with the requester."
@@ -3608,6 +3611,18 @@
   "home.contracts.title": {
     "defaultMessage": "Your contracts"
   },
+  "home.dates.calendarDay": {
+    "defaultMessage": "{date} — {count, plural, =0 {no dates} one {# date} other {# dates}}"
+  },
+  "home.dates.calendarDescription": {
+    "defaultMessage": "Key dates, term expiries and renewal notice deadlines on your Contracts and Matters."
+  },
+  "home.dates.calendarTitle": {
+    "defaultMessage": "Your dates"
+  },
+  "home.dates.closeCalendar": {
+    "defaultMessage": "Close calendar"
+  },
   "home.dates.derived": {
     "defaultMessage": "Derived"
   },
@@ -3617,17 +3632,44 @@
   "home.dates.keyDate": {
     "defaultMessage": "Key date"
   },
+  "home.dates.loadFailed": {
+    "defaultMessage": "Dates could not be loaded."
+  },
+  "home.dates.loading": {
+    "defaultMessage": "Loading dates…"
+  },
+  "home.dates.nextMonth": {
+    "defaultMessage": "Next month"
+  },
+  "home.dates.none": {
+    "defaultMessage": "No dates in this period."
+  },
   "home.dates.noticeDeadline": {
     "defaultMessage": "Renewal notice deadline"
   },
   "home.dates.noticeDeadlineWithPeriod": {
     "defaultMessage": "Renewal notice deadline — {days, plural, one {# day} other {# days}} before expiry"
   },
+  "home.dates.previousMonth": {
+    "defaultMessage": "Previous month"
+  },
   "home.dates.record": {
     "defaultMessage": "{kind, select, contract {Contract C-{number}} other {Matter M-{number}}}"
   },
+  "home.dates.retry": {
+    "defaultMessage": "Try again"
+  },
+  "home.dates.showMonth": {
+    "defaultMessage": "Show whole month"
+  },
+  "home.dates.thisMonth": {
+    "defaultMessage": "This month"
+  },
   "home.dates.title": {
     "defaultMessage": "Dates approaching"
+  },
+  "home.dates.today": {
+    "defaultMessage": "Today"
   },
   "home.inbox.request": {
     "defaultMessage": "{reference} · {requestType} · {requester}"
@@ -3662,17 +3704,53 @@
   "home.section.viewAll": {
     "defaultMessage": "View all {count}"
   },
+  "home.tasks.back": {
+    "defaultMessage": "Back to Home"
+  },
+  "home.tasks.complete": {
+    "defaultMessage": "Complete Task: {title}"
+  },
+  "home.tasks.completeFailed": {
+    "defaultMessage": "The Task could not be marked done. Please try again."
+  },
+  "home.tasks.completed": {
+    "defaultMessage": "Completed: {title}"
+  },
+  "home.tasks.empty": {
+    "defaultMessage": "No open Tasks assigned to you."
+  },
+  "home.tasks.loadFailed": {
+    "defaultMessage": "More Tasks could not be loaded. Please try again."
+  },
+  "home.tasks.loadMore": {
+    "defaultMessage": "Load more Tasks"
+  },
+  "home.tasks.loading": {
+    "defaultMessage": "Loading…"
+  },
   "home.tasks.noDueDate": {
     "defaultMessage": "No due date"
   },
   "home.tasks.overdue": {
     "defaultMessage": "Overdue"
   },
+  "home.tasks.pageTitle": {
+    "defaultMessage": "Your Tasks"
+  },
   "home.tasks.record": {
     "defaultMessage": "{title} · {kind, select, contract {Contract C-{number}} other {Matter M-{number}}}"
   },
+  "home.tasks.restored": {
+    "defaultMessage": "Reopened: {title}"
+  },
   "home.tasks.title": {
     "defaultMessage": "Tasks assigned to you"
+  },
+  "home.tasks.undo": {
+    "defaultMessage": "Undo"
+  },
+  "home.tasks.undoFailed": {
+    "defaultMessage": "The Task could not be reopened. Please try Undo again."
   },
   "home.title": {
     "defaultMessage": "Home"
@@ -3692,11 +3770,38 @@
   "inbox.assignRow": {
     "defaultMessage": "Assign {reference}"
   },
-  "inbox.awaiting": {
-    "defaultMessage": "{count} awaiting triage"
+  "inbox.assignment.explains": {
+    "defaultMessage": "Choose who should triage this request."
   },
-  "inbox.awaitingShown": {
-    "defaultMessage": "{count} awaiting triage shown"
+  "inbox.assignment.failed": {
+    "defaultMessage": "The assignment could not be saved. Try again."
+  },
+  "inbox.assignment.loadFailed": {
+    "defaultMessage": "People could not be loaded."
+  },
+  "inbox.assignment.loading": {
+    "defaultMessage": "Loading people…"
+  },
+  "inbox.assignment.noMatch": {
+    "defaultMessage": "No people match your search."
+  },
+  "inbox.assignment.person": {
+    "defaultMessage": "Triage assignee"
+  },
+  "inbox.assignment.save": {
+    "defaultMessage": "Save assignment"
+  },
+  "inbox.assignment.search": {
+    "defaultMessage": "Search people"
+  },
+  "inbox.assignment.title": {
+    "defaultMessage": "Assign {reference} for triage"
+  },
+  "inbox.assignment.unassigned": {
+    "defaultMessage": "Unassigned"
+  },
+  "inbox.assignment.unavailable": {
+    "defaultMessage": "{name} is no longer available to triage. Choose another person or clear the assignment."
   },
   "inbox.column.actions": {
     "defaultMessage": "Actions"
@@ -3704,14 +3809,14 @@
   "inbox.column.age": {
     "defaultMessage": "Age"
   },
-  "inbox.column.outcome": {
-    "defaultMessage": "Outcome"
-  },
   "inbox.column.reference": {
     "defaultMessage": "Ref"
   },
   "inbox.column.requester": {
     "defaultMessage": "Requester"
+  },
+  "inbox.column.status": {
+    "defaultMessage": "Status"
   },
   "inbox.column.summary": {
     "defaultMessage": "Summary"
@@ -3725,20 +3830,41 @@
   "inbox.empty.body": {
     "defaultMessage": "Every Request has been decided. New ones land here as they arrive, hottest and oldest first."
   },
+  "inbox.empty.filteredBody": {
+    "defaultMessage": "Clear a filter to widen the list."
+  },
+  "inbox.empty.filteredTitle": {
+    "defaultMessage": "No requests match these filters"
+  },
   "inbox.empty.title": {
     "defaultMessage": "Nothing is waiting"
+  },
+  "inbox.filteredCount": {
+    "defaultMessage": "{shown} of {total, plural, one {# request} other {# requests}}"
+  },
+  "inbox.filters.received": {
+    "defaultMessage": "Received date"
   },
   "inbox.listError": {
     "defaultMessage": "The Inbox could not be read. Try again."
   },
+  "inbox.matchingCount": {
+    "defaultMessage": "{count, plural, one {# request} other {# requests}}"
+  },
   "inbox.more": {
     "defaultMessage": "Show more"
+  },
+  "inbox.moreAdded": {
+    "defaultMessage": "{count, plural, one {# more request} other {# more requests}}. {total} shown."
   },
   "inbox.moreError": {
     "defaultMessage": "The next requests could not be read. Try again."
   },
   "inbox.ordering": {
     "defaultMessage": "Ordered by urgency, then age"
+  },
+  "inbox.reassignRow": {
+    "defaultMessage": "Reassign {reference}: {name}"
   },
   "inbox.request.archivedReference": {
     "defaultMessage": "Archived"
@@ -3748,6 +3874,12 @@
   },
   "inbox.request.booleanValue": {
     "defaultMessage": "{value, select, true {Yes} other {No}}"
+  },
+  "inbox.request.convertContract": {
+    "defaultMessage": "Convert to contract"
+  },
+  "inbox.request.convertMatter": {
+    "defaultMessage": "Convert to matter"
   },
   "inbox.request.description": {
     "defaultMessage": "Description"
@@ -3773,6 +3905,9 @@
   "inbox.request.requester": {
     "defaultMessage": "Requester"
   },
+  "inbox.request.resolveWithoutConverting": {
+    "defaultMessage": "Resolve request without converting"
+  },
   "inbox.request.responses": {
     "defaultMessage": "Form responses"
   },
@@ -3782,8 +3917,8 @@
   "inbox.request.target": {
     "defaultMessage": "Converts to"
   },
-  "inbox.showTriaged": {
-    "defaultMessage": "Show triaged"
+  "inbox.request.triage": {
+    "defaultMessage": "Triage"
   },
   "inbox.target.module": {
     "defaultMessage": "{module, select, matter {Matter} contract {Contract} other {No target}}"
@@ -4352,14 +4487,8 @@
   "matterTasks.section": {
     "defaultMessage": "Tasks"
   },
-  "matterTasks.separator": {
-    "defaultMessage": "·"
-  },
   "matterTasks.toggle": {
     "defaultMessage": "{done, select, true {Reopen Task: {title}} other {Complete Task: {title}}}"
-  },
-  "matterTasks.unassigned": {
-    "defaultMessage": "Unassigned"
   },
   "matterTasks.up": {
     "defaultMessage": "Move up"
@@ -4429,9 +4558,6 @@
   },
   "matters.confidential.manageTeam": {
     "defaultMessage": "Manage team"
-  },
-  "matters.counts": {
-    "defaultMessage": "{open} open · {onHold} on hold"
   },
   "matters.create.parent": {
     "defaultMessage": "Parent: {reference} {title}"
@@ -4517,41 +4643,14 @@
   "matters.field.type": {
     "defaultMessage": "Matter type"
   },
-  "matters.filter.incomplete": {
-    "defaultMessage": "Incomplete"
-  },
-  "matters.filter.manager": {
-    "defaultMessage": "Manager"
-  },
-  "matters.filter.manager.all": {
-    "defaultMessage": "All managers"
-  },
-  "matters.filter.manager.me": {
-    "defaultMessage": "Me"
-  },
-  "matters.filter.managerMe": {
-    "defaultMessage": "Manager: me"
-  },
-  "matters.filter.priority": {
-    "defaultMessage": "Priority"
-  },
-  "matters.filter.priority.all": {
-    "defaultMessage": "All priorities"
-  },
-  "matters.filter.status": {
-    "defaultMessage": "Status"
-  },
-  "matters.filter.status.all": {
-    "defaultMessage": "All statuses"
-  },
-  "matters.filter.type": {
-    "defaultMessage": "Type"
-  },
-  "matters.filter.type.all": {
-    "defaultMessage": "All types"
+  "matters.filteredCount": {
+    "defaultMessage": "{shown} of {total, plural, one {# matter} other {# matters}}"
   },
   "matters.listError": {
     "defaultMessage": "The matter list could not be read. Try again."
+  },
+  "matters.matchingCount": {
+    "defaultMessage": "{count, plural, one {# matter} other {# matters}}"
   },
   "matters.more": {
     "defaultMessage": "Show more"
@@ -4708,9 +4807,6 @@
   },
   "matters.severity": {
     "defaultMessage": "{value, select, low {Low} medium {Medium} high {High} critical {Critical} other {Unknown}}"
-  },
-  "matters.showArchived": {
-    "defaultMessage": "Show archived"
   },
   "matters.showClosed": {
     "defaultMessage": "Show closed"
@@ -4874,6 +4970,9 @@
   "notifications.olderError": {
     "defaultMessage": "The older notifications could not be read. Try again."
   },
+  "notifications.request.assigned": {
+    "defaultMessage": "{actor} assigned you to triage {request}"
+  },
   "notifications.request.created": {
     "defaultMessage": "Legal has received your request {request}"
   },
@@ -4903,6 +5002,15 @@
   },
   "portal.brand": {
     "defaultMessage": "OpenLaw"
+  },
+  "portal.businessView.active": {
+    "defaultMessage": "Viewing as business user"
+  },
+  "portal.businessView.description": {
+    "defaultMessage": "You’re viewing your own requests. Submissions and replies are real."
+  },
+  "portal.businessView.return": {
+    "defaultMessage": "Return to legal view"
   },
   "portal.deflection.heading": {
     "defaultMessage": "Before you submit"
@@ -4949,6 +5057,9 @@
   "portal.form.back": {
     "defaultMessage": "All request types"
   },
+  "portal.form.basicsHeading": {
+    "defaultMessage": "About your request"
+  },
   "portal.form.confirmationBack": {
     "defaultMessage": "Back to the portal"
   },
@@ -4958,6 +5069,9 @@
   "portal.form.confirmationHeading": {
     "defaultMessage": "Request {reference} is with Legal"
   },
+  "portal.form.confirmationOpen": {
+    "defaultMessage": "Open request"
+  },
   "portal.form.description": {
     "defaultMessage": "Description"
   },
@@ -4966,6 +5080,9 @@
   },
   "portal.form.fieldRequired": {
     "defaultMessage": "{field} is required."
+  },
+  "portal.form.fieldsHeading": {
+    "defaultMessage": "Details for {requestType}"
   },
   "portal.form.footerNote": {
     "defaultMessage": "You'll get email updates and can track progress here."
@@ -5027,6 +5144,9 @@
   "portal.knowledge.guidance": {
     "defaultMessage": "Guidance"
   },
+  "portal.knowledge.kicker": {
+    "defaultMessage": "From Legal"
+  },
   "portal.myRequests.count": {
     "defaultMessage": "{count, plural, one {# request} other {# requests}}"
   },
@@ -5084,6 +5204,9 @@
   "portal.request.submittedHeading": {
     "defaultMessage": "What you submitted"
   },
+  "portal.request.threadEmpty": {
+    "defaultMessage": "No replies yet. When Legal answers, it shows up here."
+  },
   "portal.request.threadFailed": {
     "defaultMessage": "The conversation could not be read. Reload the page to try again."
   },
@@ -5105,11 +5228,119 @@
   "portal.settings.heading": {
     "defaultMessage": "How we tell you about your requests"
   },
+  "portal.settings.lead": {
+    "defaultMessage": "Choose how Legal reaches you about the requests you submit."
+  },
   "portal.settings.link": {
     "defaultMessage": "Notification settings"
   },
   "portal.settings.title": {
     "defaultMessage": "Notification settings"
+  },
+  "portal.theme.choose": {
+    "defaultMessage": "Theme: {theme}"
+  },
+  "portal.theme.failed": {
+    "defaultMessage": "The theme could not be saved. Please choose it again to retry."
+  },
+  "recordFilters.apply": {
+    "defaultMessage": "Apply"
+  },
+  "recordFilters.back": {
+    "defaultMessage": "Back to filters"
+  },
+  "recordFilters.clear": {
+    "defaultMessage": "Clear all"
+  },
+  "recordFilters.deadline": {
+    "defaultMessage": "Next deadline"
+  },
+  "recordFilters.effective": {
+    "defaultMessage": "Effective date"
+  },
+  "recordFilters.expiry": {
+    "defaultMessage": "Expiry date"
+  },
+  "recordFilters.filter": {
+    "defaultMessage": "Filter"
+  },
+  "recordFilters.from": {
+    "defaultMessage": "From"
+  },
+  "recordFilters.fromDate": {
+    "defaultMessage": "From {date}"
+  },
+  "recordFilters.inclusive": {
+    "defaultMessage": "Includes both dates"
+  },
+  "recordFilters.invalidDates": {
+    "defaultMessage": "End date must be on or after start date."
+  },
+  "recordFilters.label": {
+    "defaultMessage": "Record filters"
+  },
+  "recordFilters.manager": {
+    "defaultMessage": "Manager"
+  },
+  "recordFilters.matchAny": {
+    "defaultMessage": "Matches any selected value"
+  },
+  "recordFilters.me": {
+    "defaultMessage": "Me"
+  },
+  "recordFilters.noChoices": {
+    "defaultMessage": "No matching choices"
+  },
+  "recordFilters.noFilters": {
+    "defaultMessage": "No filters found"
+  },
+  "recordFilters.opened": {
+    "defaultMessage": "Opened date"
+  },
+  "recordFilters.owner": {
+    "defaultMessage": "Owner"
+  },
+  "recordFilters.priority": {
+    "defaultMessage": "Priority"
+  },
+  "recordFilters.remove": {
+    "defaultMessage": "Remove {filter} filter"
+  },
+  "recordFilters.removeFlag": {
+    "defaultMessage": "Remove filter"
+  },
+  "recordFilters.risk": {
+    "defaultMessage": "Risk"
+  },
+  "recordFilters.searchChoices": {
+    "defaultMessage": "Search choices"
+  },
+  "recordFilters.searchProperties": {
+    "defaultMessage": "Search filters"
+  },
+  "recordFilters.showArchived": {
+    "defaultMessage": "Show archived"
+  },
+  "recordFilters.status": {
+    "defaultMessage": "Status"
+  },
+  "recordFilters.to": {
+    "defaultMessage": "To"
+  },
+  "recordFilters.type": {
+    "defaultMessage": "Type"
+  },
+  "recordFilters.unassessed": {
+    "defaultMessage": "Not assessed"
+  },
+  "recordFilters.unassigned": {
+    "defaultMessage": "Unassigned"
+  },
+  "recordFilters.untilDate": {
+    "defaultMessage": "Until {date}"
+  },
+  "recordFilters.updating": {
+    "defaultMessage": "Updating…"
   },
   "renewal.action.amendment": {
     "defaultMessage": "File the amendment"
@@ -5225,26 +5456,26 @@
   "requests.statusLabel": {
     "defaultMessage": "{status, select, new {New} converted {Converted} resolved {Resolved} declined {Declined} other {Unknown}}"
   },
-  "resolve.action": {
-    "defaultMessage": "Resolve"
-  },
   "resolve.explains": {
-    "defaultMessage": "Resolving closes the request as answered. Add a closing reply if the answer is not already on the thread."
+    "defaultMessage": "Explain why this request can be closed without creating a contract or matter."
   },
   "resolve.failed": {
     "defaultMessage": "The request could not be resolved. Try again."
+  },
+  "resolve.noteRequired": {
+    "defaultMessage": "Explain why this request is being resolved without converting."
   },
   "resolve.notifyNote": {
     "defaultMessage": "This goes on the request's thread, and to the requester by email."
   },
   "resolve.reply": {
-    "defaultMessage": "Closing reply (optional)"
+    "defaultMessage": "Resolution note (required)"
   },
   "resolve.submit": {
     "defaultMessage": "Resolve request"
   },
   "resolve.title": {
-    "defaultMessage": "Resolve {reference}"
+    "defaultMessage": "Resolve {reference} without converting"
   },
   "role.administrator": {
     "defaultMessage": "Administrator"
@@ -7103,6 +7334,15 @@
   "settings.officerRoles.title": {
     "defaultMessage": "Officer roles"
   },
+  "settings.profile.appView": {
+    "defaultMessage": "App view"
+  },
+  "settings.profile.businessView.action": {
+    "defaultMessage": "View as business user"
+  },
+  "settings.profile.businessView.description": {
+    "defaultMessage": "Open the intake portal as a Business User sees it: submit requests, track their progress, and talk to Legal. You’ll see your own requests, and anything you submit is real."
+  },
   "settings.profile.changePassword": {
     "defaultMessage": "Change password"
   },
@@ -7727,6 +7967,45 @@
   "table.resizeColumn": {
     "defaultMessage": "Width of the {column} column"
   },
+  "taskAssignee.access": {
+    "defaultMessage": "This person will join the team, gain access to this record, and be assigned this task."
+  },
+  "taskAssignee.addAndAssign": {
+    "defaultMessage": "Add to team and assign"
+  },
+  "taskAssignee.addSomeone": {
+    "defaultMessage": "Add someone to the team…"
+  },
+  "taskAssignee.back": {
+    "defaultMessage": "Back"
+  },
+  "taskAssignee.change": {
+    "defaultMessage": "Change assignee for {task}: {name}"
+  },
+  "taskAssignee.choose": {
+    "defaultMessage": "Assign task"
+  },
+  "taskAssignee.deferred": {
+    "defaultMessage": "Team membership and assignment are saved when you save the task."
+  },
+  "taskAssignee.empty": {
+    "defaultMessage": "No matching people"
+  },
+  "taskAssignee.failed": {
+    "defaultMessage": "The assignee could not be changed. Try again."
+  },
+  "taskAssignee.saving": {
+    "defaultMessage": "Saving…"
+  },
+  "taskAssignee.search": {
+    "defaultMessage": "Search people"
+  },
+  "taskAssignee.unassigned": {
+    "defaultMessage": "Unassigned"
+  },
+  "taskAssignee.usePerson": {
+    "defaultMessage": "Use this person"
+  },
   "tasks.actionsFor": {
     "defaultMessage": "Actions for {title}"
   },
@@ -7753,6 +8032,9 @@
   },
   "tasks.empty": {
     "defaultMessage": "No tasks on this contract yet."
+  },
+  "tasks.field.assignee": {
+    "defaultMessage": "Assignee"
   },
   "tasks.field.dueDate": {
     "defaultMessage": "Due date (optional)"
@@ -7809,7 +8091,7 @@
     "defaultMessage": "Delete…"
   },
   "views.delete.body": {
-    "defaultMessage": "{name} is removed. The contracts in it are not touched."
+    "defaultMessage": "{name} is removed. The records in it are not touched."
   },
   "views.delete.title": {
     "defaultMessage": "Delete this view?"

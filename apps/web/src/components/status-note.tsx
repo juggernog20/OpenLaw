@@ -6,6 +6,7 @@
  * politely to readers. Shared by the panes that commit per field.
  */
 
+import { useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { cn } from "../lib/utils";
 
@@ -15,6 +16,34 @@ import { cn } from "../lib/utils";
 import type { FieldStatus } from "../lib/field-commit";
 
 export type { FieldStatus };
+
+// Mounted for each successful save, so the next saving state cancels
+// these timers without changing the field's commit state.
+function SavedNote() {
+  const [phase, setPhase] = useState<"visible" | "fading" | "hidden">("visible");
+
+  useEffect(() => {
+    const fade = window.setTimeout(() => setPhase("fading"), 3_000);
+    const hide = window.setTimeout(() => setPhase("hidden"), 3_300);
+    return () => {
+      window.clearTimeout(fade);
+      window.clearTimeout(hide);
+    };
+  }, []);
+
+  if (phase === "hidden") return null;
+
+  return (
+    <span
+      className={cn(
+        "transition-opacity duration-300 motion-reduce:transition-none",
+        phase === "fading" ? "opacity-0" : "opacity-100",
+      )}
+    >
+      <FormattedMessage id="settings.field.saved" defaultMessage="Saved" />
+    </span>
+  );
+}
 
 export function StatusNote({
   status,
@@ -33,7 +62,7 @@ export function StatusNote({
       {status === "saving" && (
         <FormattedMessage id="settings.field.saving" defaultMessage="Saving…" />
       )}
-      {status === "saved" && <FormattedMessage id="settings.field.saved" defaultMessage="Saved" />}
+      {status === "saved" && <SavedNote />}
       {/* The API's own refusal (already localized policy language like the
           last-Administrator floor) beats the generic line when it exists —
           an empty string counts as absent, never as a blank note. */}

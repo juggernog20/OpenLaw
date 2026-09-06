@@ -176,25 +176,3 @@ export const MATTERS_CATALOGUE: ColumnCatalogue<MatterRow> = {
   ],
   flexColumnKey: "title",
 };
-
-export interface MatterFilters {
-  includeClosed: boolean;
-  includeArchived: boolean;
-  status: string;
-  type: string;
-  priority: string;
-  manager: string;
-  incomplete: boolean;
-}
-
-export function matterFilters(filters: Record<string, boolean | string>): MatterFilters {
-  return {
-    includeClosed: filters.includeClosed === true,
-    includeArchived: filters.includeArchived === true,
-    status: typeof filters.status === "string" ? filters.status : "",
-    type: typeof filters.type === "string" ? filters.type : "",
-    priority: typeof filters.priority === "string" ? filters.priority : "",
-    manager: typeof filters.manager === "string" ? filters.manager : "",
-    incomplete: filters.incomplete === true,
-  };
-}

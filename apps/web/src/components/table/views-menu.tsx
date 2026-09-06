@@ -223,7 +223,7 @@ export function ViewsMenu({
             <p className="mt-2 text-base text-muted">
               <FormattedMessage
                 id="views.delete.body"
-                defaultMessage="{name} is removed. The contracts in it are not touched."
+                defaultMessage="{name} is removed. The records in it are not touched."
                 values={{ name: prompt.view.name }}
               />
             </p>

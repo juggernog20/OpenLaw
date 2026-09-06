@@ -203,6 +203,76 @@ describe("role-based landing", () => {
   });
 });
 
+describe("view as business user", () => {
+  it.each(["legal_team_member", "administrator"])(
+    "lets a %s switch from Profile and return without changing their account",
+    async (role) => {
+      const user = userEvent.setup();
+      const writes: StubCall[] = [];
+      stubApi({
+        signedIn: { ...MEMBER, role },
+        extra: (call) => {
+          if (call.url.pathname.startsWith("/api/v1/") && call.method !== "GET") {
+            writes.push(call);
+          }
+          return portalHome({ requestTypes: SEED_TYPES })(call);
+        },
+      });
+      renderAt("/settings/profile");
+
+      await user.click(await screen.findByRole("link", { name: "View as business user" }));
+      expect(await screen.findByRole("heading", { name: PORTAL_HOME })).toBeVisible();
+      expect(screen.getByRole("heading", { name: "Your requests" })).toBeVisible();
+      expect(screen.getByRole("link", { name: /Contract review/ })).toBeVisible();
+      expect(screen.getByText("Viewing as business user")).toBeVisible();
+      expect(screen.getByText(/Submissions and replies are real/)).toBeVisible();
+      expect(screen.queryByRole("link", { name: "Matters" })).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole("link", { name: "Return to legal view" }));
+      expect(await screen.findByLabelText("Full name")).toHaveValue(MEMBER.displayName);
+      expect(
+        screen.getByText(role === "administrator" ? "Administrator" : "Legal team member"),
+      ).toBeVisible();
+      expect(writes).toEqual([]);
+    },
+  );
+
+  it("keeps the return control when opening a portal subpage directly", async () => {
+    const user = userEvent.setup();
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/me/notification-preferences" && call.method === "GET"
+          ? json(200, { groups: [{ eventGroup: "requester_events", inApp: true, email: true }] })
+          : undefined,
+    });
+    renderAt("/portal/settings");
+
+    await user.click(await screen.findByRole("link", { name: "Return to legal view" }));
+    expect(await screen.findByLabelText("Full name")).toBeVisible();
+  });
+
+  it("does not offer the switch to a Contributor", async () => {
+    stubApi({ signedIn: { ...MEMBER, role: "contributor" } });
+    renderAt("/settings/profile");
+
+    await screen.findByLabelText("Full name");
+    expect(screen.queryByRole("link", { name: "View as business user" })).not.toBeInTheDocument();
+  });
+
+  it.each(["business_user", "contributor"])(
+    "shows no legal return control to a %s",
+    async (role) => {
+      stubApi({ signedIn: { ...REQUESTER, role } });
+      renderAt("/portal");
+
+      await screen.findByRole("heading", { name: PORTAL_HOME });
+      expect(screen.queryByText("Viewing as business user")).not.toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: "Return to legal view" })).not.toBeInTheDocument();
+    },
+  );
+});
+
 describe("the portal chrome", () => {
   it("carries the signed-in identity and the way out", async () => {
     stubApi({ signedIn: REQUESTER });
@@ -214,7 +284,7 @@ describe("the portal chrome", () => {
     expect(screen.getByRole("link", { name: "Skip to content" })).toHaveAttribute("href", "#main");
   });
 
-  it("draws no staff navigation and no staff-only affordances", async () => {
+  it("keeps staff navigation out of the portal", async () => {
     // Asserted for a Member+ session on purpose: this role has every
     // staff destination, so anything staff-shaped leaking into the
     // portal would show up here.

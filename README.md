@@ -50,11 +50,19 @@ Two things to know about it. Emailed links point at `http://localhost:3000`, bec
 `pnpm seed:demo` fills a running dev loop with a whole fictional company, Helix Software Group: a legal team of twelve, thirty group entities, a contract pipeline across every stage, matters, an intake queue with triage history, and a knowledge library. It exists for design and UX review, where an empty instance tells you nothing and a hand-made record or two tells you almost as little.
 
 ```sh
-docker compose -f compose.yml -f compose.dev.yml down -v   # start from nothing
-pnpm dev:hot
+pnpm dev:hot --fresh                    # wipe the instance, start the loop, seed it
+pnpm dev:hot --seed                     # start the loop; seed only if the instance is empty
+pnpm dev:seeded                         # the same as --seed
+pnpm dev:hot --fresh --scale medium     # a third of the data, for faster reseeding
+pnpm dev:hot --fresh --seed 42          # a different but equally repeatable instance
+```
+
+`--seed` runs the seed beside the loop once the API answers, and skips it when the instance already has an Administrator, so you can restart the loop with the flag every day and the data stays as it is. `--fresh` drops the database volume and the blob directory first, and then seeds. Anything else on the line goes to the seed. The seed also runs on its own against a loop that is already up:
+
+```sh
 pnpm seed:demo                          # about 180 contracts, 90 matters, 70 requests
-pnpm seed:demo --scale medium           # a third of that, for faster reseeding
-pnpm seed:demo --seed 42                # a different but equally repeatable instance
+pnpm seed:demo --scale medium           # a third of that
+pnpm seed:demo --seed 42                # a different random seed
 ```
 
 Sign in as `blair@helix.example` with `correct-horse-battery`. Every seeded person shares that password; the Business Users sign in through a magic link instead, which lands in Mailpit.

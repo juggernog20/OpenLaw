@@ -332,6 +332,12 @@ export function stubApi(state: ApiState) {
     // seeded row. Only the suites about views supply any. Without this the
     // read would throw and be swallowed by `readViews`, which is the right
     // production behaviour and a bad thing for a test to lean on.
+    if (
+      /^\/api\/v1\/(contracts|matters|requests)\/filter-options$/.test(call.url.pathname) &&
+      call.method === "GET"
+    ) {
+      return json(200, { types: [], statuses: [], people: [] });
+    }
     if (call.url.pathname === "/api/v1/list-views" && call.method === "GET") {
       return json(200, { views: [] });
     }

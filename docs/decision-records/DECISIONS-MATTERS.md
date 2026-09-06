@@ -310,6 +310,12 @@ The close pass confirms Tasks as one section of the Matter rather than a paralle
 
 ---
 
+### UX review addendum (2026-09-05): Explicit team expansion from Tasks
+
+The shared Task assignee picker follows CTR-017's UX review addendum: avatar and name on each row, searchable active team members and the Matter Manager, and an explicit **Add someone to the team… → Add to team and assign** flow. This supersedes the earlier restriction that assignment never creates membership: an explicit request now adds the person and assigns the Task atomically, subject to the existing confidential-team permission. Ordinary assignment still requires an existing team member or Manager. Add/edit forms save both changes only on Task Save; cancellation grants no access. Clearing or changing the assignee leaves team membership intact.
+
+The Team panel groups entries by person: one avatar and name, with every held role shown as a tag, including Matter Manager and Creator. A removable role has its own remove control; removing it leaves the person’s other roles intact. Creator and the record’s responsible role remain informational tags.
+
 ## MTR-006: External counsel — collaboration via Contributor role; fee tracking deferred
 
 - **Status:** Accepted

@@ -211,13 +211,18 @@ describe("the Matters destination", () => {
           const rows = [open];
           if (call.url.searchParams.get("includeClosed") === "true") rows.push(closed);
           if (call.url.searchParams.get("includeArchived") === "true") rows.push(archived);
-          return json(200, { matters: rows, nextCursor: null, counts: { open: 4, onHold: 2 } });
+          return json(200, {
+            matters: rows,
+            nextCursor: null,
+            total: 6,
+            counts: { open: 4, onHold: 2 },
+          });
         }
         return undefined;
       },
     });
     renderAt("/matters");
-    expect(await screen.findByText("4 open · 2 on hold")).toBeInTheDocument();
+    expect(await screen.findByText("1 of 6 matters")).toBeInTheDocument();
     const table = screen.getByRole("table");
     for (const heading of [
       "Matter",
@@ -241,27 +246,51 @@ describe("the Matters destination", () => {
     );
 
     const user = userEvent.setup();
-    await user.selectOptions(screen.getByLabelText("Manager"), "me");
-    expect(await screen.findByText("Manager: me")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /^Filter/ }));
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+        name: "Manager",
+      }),
+    );
+    await user.click(screen.getByRole("checkbox", { name: "Me" }));
+    await user.click(screen.getByRole("button", { name: "Apply" }));
+    expect(await screen.findByRole("button", { name: /Manager: Me/ })).toBeInTheDocument();
     await waitFor(() => expect(calls.at(-1)?.searchParams.get("manager")).toBe("me"));
 
-    await user.click(screen.getByRole("switch", { name: "Show closed" }));
+    await user.click(screen.getByRole("button", { name: /^Filter/ }));
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+        name: "Show closed",
+      }),
+    );
     expect(await screen.findByText("Closed advice")).toBeInTheDocument();
     expect(calls.at(-1)?.searchParams.get("includeClosed")).toBe("true");
-    await user.click(screen.getByRole("switch", { name: "Show archived" }));
+    await user.click(screen.getByRole("button", { name: /^Filter/ }));
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+        name: "Show archived",
+      }),
+    );
     expect(await screen.findByText("Archived advice")).toBeInTheDocument();
     expect(calls.at(-1)?.searchParams.get("includeArchived")).toBe("true");
   });
 
-  it("draws no table menus on the empty state and names a filter that matches nothing", async () => {
+  it("keeps saved views available on the empty state and names a filter that matches nothing", async () => {
     stubApi({ signedIn: MEMBER, extra: matterApi() });
     renderAt("/matters");
     expect(await screen.findByRole("heading", { name: "No matters yet" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Default view/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Columns" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Default view/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Columns" })).toBeInTheDocument();
 
     const user = userEvent.setup();
-    await user.selectOptions(screen.getByLabelText("Priority"), "critical");
+    await user.click(screen.getByRole("button", { name: /^Filter/ }));
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+        name: "Priority",
+      }),
+    );
+    await user.click(screen.getByRole("checkbox", { name: "Critical" }));
+    await user.click(screen.getByRole("button", { name: "Apply" }));
     expect(
       await screen.findByRole("heading", { name: "No matters match these filters" }),
     ).toBeInTheDocument();

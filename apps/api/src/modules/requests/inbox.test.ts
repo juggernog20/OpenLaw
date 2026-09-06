@@ -495,3 +495,108 @@ describe("the trail from ask to work (DD-014, CTR-018)", () => {
     });
   });
 });
+
+describe("Inbox quick filters", () => {
+  it("combines choices within a field and intersects different fields before paging", async () => {
+    await clearRequests();
+    const expected = [];
+    for (let i = 0; i < 53; i++)
+      expected.push(
+        await plant({
+          summary: `Match ${i}`,
+          urgency: i % 2 ? "high" : "critical",
+          createdAt: ago(i + 1),
+          status: i % 2 ? "new" : "resolved",
+        }),
+      );
+    await plant({ summary: "Wrong urgency", urgency: "low", createdAt: ago(100) });
+    await plant({
+      summary: "Wrong status",
+      urgency: "critical",
+      status: "declined",
+      createdAt: ago(101),
+    });
+    const query = {
+      status: "new,resolved",
+      urgency: "critical,high",
+      type: typeIds.get("nda_request")!,
+      requester: requesterId,
+    };
+    const first = await readInbox(memberCookies, query);
+    expect(first.statusCode, first.body).toBe(200);
+    expect(first.requests).toHaveLength(50);
+    expect(JSON.parse(first.body).total).toBe(53);
+    const second = await readInbox(memberCookies, { ...query, cursor: first.nextCursor! });
+    expect(second.requests).toHaveLength(3);
+    expect(JSON.parse(second.body).total).toBe(53);
+    expect(new Set([...first.requests, ...second.requests].map((r) => r.id))).toEqual(
+      new Set(expected.map((r) => r.id)),
+    );
+    expect((await readInbox(memberCookies, { ...query, requester: "me" })).requests).toHaveLength(
+      0,
+    );
+    expect(
+      (await readInbox(memberCookies, { ...query, type: "unknown-type" })).requests,
+    ).toHaveLength(0);
+  });
+
+  it("treats received-date boundaries as inclusive civil dates in the viewer's timezone", async () => {
+    await clearRequests();
+    for (const [summary, createdAt] of [
+      ["Before", "2026-09-04T19:59:59Z"],
+      ["Start", "2026-09-04T20:00:00Z"],
+      ["End", "2026-09-05T19:59:59Z"],
+      ["After", "2026-09-05T20:00:00Z"],
+    ])
+      await plant({ summary: summary!, createdAt: new Date(createdAt!), urgency: "medium" });
+    const result = await readInbox(memberCookies, {
+      receivedFrom: "2026-09-05",
+      receivedTo: "2026-09-05",
+      timeZone: "Asia/Dubai",
+    });
+    expect(result.requests.map((r) => r.summary)).toEqual(["Start", "End"]);
+    expect(
+      (await readInbox(memberCookies, { receivedFrom: "2026-09-06", receivedTo: "2026-09-05" }))
+        .statusCode,
+    ).toBe(400);
+    expect((await readInbox(memberCookies, { timeZone: "invalid-zone" })).statusCode).toBe(400);
+    expect((await readInbox(memberCookies, { urgency: "high,,low" })).statusCode).toBe(400);
+  });
+
+  it("offers requesters and types from triaged requests even when their type is archived, behind the triage gate", async () => {
+    await clearRequests();
+    const row = await plant({
+      summary: "Old type",
+      urgency: "low",
+      status: "resolved",
+      createdAt: ago(2),
+    });
+    await harness.db
+      .update(requestTypes)
+      .set({ archivedAt: NOW })
+      .where(eq(requestTypes.id, row.requestTypeId));
+    try {
+      const options = await harness.app.inject({
+        method: "GET",
+        url: "/api/v1/requests/filter-options",
+        cookies: memberCookies,
+      });
+      expect(options.statusCode, options.body).toBe(200);
+      expect(options.json().types.map((r: { id: string }) => r.id)).toEqual([row.requestTypeId]);
+      expect(options.json().people.map((r: { id: string }) => r.id)).toEqual([requesterId]);
+      for (const cookies of [contributorCookies, requesterCookies]) {
+        const response = await harness.app.inject({
+          method: "GET",
+          url: "/api/v1/requests/filter-options",
+          cookies,
+        });
+        expect(response.statusCode).toBe(403);
+      }
+    } finally {
+      await harness.db
+        .update(requestTypes)
+        .set({ archivedAt: null })
+        .where(eq(requestTypes.id, row.requestTypeId));
+    }
+  });
+});

@@ -142,6 +142,26 @@ async function reset(cookies = memberCookies) {
 }
 
 describe("saving and reading a view", () => {
+  it("round-trips multi-value quick filters larger than the old single-value limit", async () => {
+    const filters = {
+      owner: "me",
+      status: Array.from(
+        { length: 20 },
+        (_, i) => `01900000-0000-7000-8000-${String(i).padStart(12, "0")}`,
+      ).join(","),
+      expiryFrom: "2027-01-01",
+      expiryTo: "2027-12-31",
+    };
+    const views = await create({
+      surface: "contracts",
+      name: "Quick filter round trip",
+      config: { ...CONFIG, filters },
+    });
+    const saved = views.find((view) => view.name === "Quick filter round trip")!;
+    expect((await read()).find((view) => view.id === saved.id)?.config.filters).toEqual(filters);
+    expect((await deleteRaw(saved.id)).statusCode).toBe(200);
+  });
+
   it("persists the Matters surface independently", async () => {
     const views = await create({ surface: "matters", name: "My matters", config: CONFIG });
     expect(views).toHaveLength(1);
@@ -398,4 +418,29 @@ describe("who may hold a view", () => {
     });
     expect(res.statusCode).toBe(401);
   });
+});
+
+it("persists Inbox views separately and keeps them private", async () => {
+  const config = {
+    ...CONFIG,
+    filters: {
+      status: "new,resolved",
+      urgency: "critical,high",
+      receivedFrom: "2026-09-01",
+      receivedTo: "2026-09-30",
+    },
+  };
+  const [view] = await create({
+    surface: "inbox",
+    name: "Triage priorities",
+    config,
+    isDefault: true,
+  });
+  expect((await read(memberCookies, "inbox"))[0]).toMatchObject({
+    id: view!.id,
+    config,
+    isDefault: true,
+  });
+  expect(await read(otherCookies, "inbox")).toHaveLength(0);
+  expect((await patchRaw(view!.id, { name: "Not mine" }, otherCookies)).statusCode).toBe(404);
 });

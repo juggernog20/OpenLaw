@@ -51,6 +51,7 @@ let ndaTypeId = "";
 const made: { id: string; number: number; title: string }[] = [];
 
 interface ListAnswer {
+  total: number;
   contracts: { id: string; number: number; title: string; expiryDate: string | null }[];
   nextCursor: string | null;
 }
@@ -154,6 +155,24 @@ const mine = (rows: ListAnswer["contracts"]) =>
   rows.filter((row) => made.some((made) => made.id === row.id));
 
 describe("the contracts list under no sort (CTR-024, unchanged)", () => {
+  it("combines owner and type choices before paging, with inclusive expiry boundaries", async () => {
+    const query = { owner: "me,unassigned", type: `${ndaTypeId},missing-type` };
+    const first = await page(query);
+    expect(first.total).toBe(FIXTURE_SIZE);
+    expect(first.contracts).toHaveLength(50);
+    const second = await page(query, first.nextCursor);
+    expect(second.total).toBe(FIXTURE_SIZE);
+    expect(second.contracts).toHaveLength(10);
+    expect(new Set([...first.contracts, ...second.contracts].map((row) => row.id))).toEqual(
+      new Set(made.map((row) => row.id)),
+    );
+    const dated = await page({ ...query, expiryFrom: DATES[0], expiryTo: DATES[0] });
+    expect(dated.total).toBe(10);
+    expect(dated.contracts.every((row) => row.expiryDate === DATES[0])).toBe(true);
+    const empty = await page({ owner: "missing-person" });
+    expect(empty).toMatchObject({ contracts: [], total: 0, nextCursor: null });
+  });
+
   it("reads newest reference first, and pages the whole list exactly once", async () => {
     const rows = mine(await walk({}));
     expect(rows).toHaveLength(FIXTURE_SIZE);

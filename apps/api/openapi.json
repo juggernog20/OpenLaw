@@ -7204,7 +7204,7 @@
             "schema": {
               "type": "string",
               "minLength": 1,
-              "maxLength": 64
+              "maxLength": 2000
             },
             "in": "query",
             "name": "status",
@@ -7214,7 +7214,7 @@
             "schema": {
               "type": "string",
               "minLength": 1,
-              "maxLength": 64
+              "maxLength": 2000
             },
             "in": "query",
             "name": "type",
@@ -7223,7 +7223,8 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["low", "medium", "high", "critical"]
+              "minLength": 1,
+              "maxLength": 2000
             },
             "in": "query",
             "name": "priority",
@@ -7233,7 +7234,65 @@
             "schema": {
               "type": "string",
               "minLength": 1,
-              "maxLength": 64
+              "maxLength": 2000
+            },
+            "in": "query",
+            "name": "risk",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "timeZone",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "in": "query",
+            "name": "openedFrom",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "in": "query",
+            "name": "openedTo",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "in": "query",
+            "name": "deadlineFrom",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "in": "query",
+            "name": "deadlineTo",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
             },
             "in": "query",
             "name": "manager",
@@ -7485,6 +7544,11 @@
                         "additionalProperties": false
                       }
                     },
+                    "total": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "nextCursor": {
                       "type": ["string", "null"]
                     },
@@ -7506,7 +7570,7 @@
                       "additionalProperties": false
                     }
                   },
-                  "required": ["matters", "nextCursor", "counts"],
+                  "required": ["matters", "total", "nextCursor", "counts"],
                   "additionalProperties": false
                 }
               }
@@ -7820,6 +7884,86 @@
                     }
                   },
                   "required": ["matter"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/matters/filter-options": {
+      "get": {
+        "operationId": "listMatterFilterOptions",
+        "tags": ["matters"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "types": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "displayName"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "statuses": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "displayName"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "people": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "displayName"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["types", "statuses", "people"],
                   "additionalProperties": false
                 }
               }
@@ -11438,6 +11582,9 @@
                           "assigneeName": {
                             "type": ["string", "null"]
                           },
+                          "assigneeImage": {
+                            "type": ["string", "null"]
+                          },
                           "dueDate": {
                             "anyOf": [
                               {
@@ -11462,6 +11609,7 @@
                           "isDone",
                           "assigneeId",
                           "assigneeName",
+                          "assigneeImage",
                           "dueDate",
                           "displayOrder"
                         ],
@@ -11515,6 +11663,9 @@
                   },
                   "assigneeId": {
                     "type": ["string", "null"]
+                  },
+                  "addToTeam": {
+                    "type": "boolean"
                   },
                   "dueDate": {
                     "anyOf": [
@@ -11575,6 +11726,9 @@
                           "assigneeName": {
                             "type": ["string", "null"]
                           },
+                          "assigneeImage": {
+                            "type": ["string", "null"]
+                          },
                           "dueDate": {
                             "anyOf": [
                               {
@@ -11599,6 +11753,7 @@
                           "isDone",
                           "assigneeId",
                           "assigneeName",
+                          "assigneeImage",
                           "dueDate",
                           "displayOrder"
                         ],
@@ -11654,6 +11809,9 @@
                   },
                   "assigneeId": {
                     "type": ["string", "null"]
+                  },
+                  "addToTeam": {
+                    "type": "boolean"
                   },
                   "dueDate": {
                     "anyOf": [
@@ -11714,6 +11872,9 @@
                           "assigneeName": {
                             "type": ["string", "null"]
                           },
+                          "assigneeImage": {
+                            "type": ["string", "null"]
+                          },
                           "dueDate": {
                             "anyOf": [
                               {
@@ -11738,6 +11899,7 @@
                           "isDone",
                           "assigneeId",
                           "assigneeName",
+                          "assigneeImage",
                           "dueDate",
                           "displayOrder"
                         ],
@@ -11817,6 +11979,9 @@
                           "assigneeName": {
                             "type": ["string", "null"]
                           },
+                          "assigneeImage": {
+                            "type": ["string", "null"]
+                          },
                           "dueDate": {
                             "anyOf": [
                               {
@@ -11841,6 +12006,7 @@
                           "isDone",
                           "assigneeId",
                           "assigneeName",
+                          "assigneeImage",
                           "dueDate",
                           "displayOrder"
                         ],
@@ -11922,6 +12088,9 @@
                           "assigneeName": {
                             "type": ["string", "null"]
                           },
+                          "assigneeImage": {
+                            "type": ["string", "null"]
+                          },
                           "dueDate": {
                             "anyOf": [
                               {
@@ -11946,6 +12115,7 @@
                           "isDone",
                           "assigneeId",
                           "assigneeName",
+                          "assigneeImage",
                           "dueDate",
                           "displayOrder"
                         ],
@@ -12049,6 +12219,9 @@
                           "assigneeName": {
                             "type": ["string", "null"]
                           },
+                          "assigneeImage": {
+                            "type": ["string", "null"]
+                          },
                           "dueDate": {
                             "anyOf": [
                               {
@@ -12073,6 +12246,7 @@
                           "isDone",
                           "assigneeId",
                           "assigneeName",
+                          "assigneeImage",
                           "dueDate",
                           "displayOrder"
                         ],
@@ -17038,9 +17212,77 @@
       },
       "get": {
         "operationId": "listInbox",
-        "summary": "The Inbox (INT-006, INT-007): the Requests whose fate is undecided, ordered by urgency rank — critical first — then age, oldest first, and paged by cursor. The answer is exactly the `new` Requests; includeTriaged=true widens it to the converted, resolved, and declined ones with their outcomes. A converted row carries the contract or matter it became only when the caller reaches that record, and carries null otherwise (DD-014). Member+ only: a Contributor and a Business User are refused",
+        "summary": "The Inbox (INT-006, INT-007): the Requests whose fate is undecided, ordered by urgency rank — critical first — then age, oldest first, and paged by cursor. The answer is the `new` Requests by default; status choices or includeTriaged=true widen it to the converted, resolved, and declined ones with their outcomes. A converted row carries the contract or matter it became only when the caller reaches that record, and carries null otherwise (DD-014). Member+ only: a Contributor and a Business User are refused",
         "tags": ["requests"],
         "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
+            },
+            "in": "query",
+            "name": "status",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
+            },
+            "in": "query",
+            "name": "type",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
+            },
+            "in": "query",
+            "name": "urgency",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
+            },
+            "in": "query",
+            "name": "requester",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "in": "query",
+            "name": "receivedFrom",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "in": "query",
+            "name": "receivedTo",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "timeZone",
+            "required": false
+          },
           {
             "schema": {
               "type": "string",
@@ -17142,6 +17384,29 @@
                             "required": ["id", "displayName"],
                             "additionalProperties": false
                           },
+                          "assignee": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "displayName": {
+                                    "type": "string"
+                                  },
+                                  "image": {
+                                    "type": ["string", "null"]
+                                  }
+                                },
+                                "required": ["id", "displayName", "image"],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "createdAt": {
                             "type": "string"
                           },
@@ -17216,6 +17481,7 @@
                           "urgency",
                           "requestType",
                           "requester",
+                          "assignee",
                           "createdAt",
                           "convertedContract",
                           "convertedRecord"
@@ -17223,11 +17489,16 @@
                         "additionalProperties": false
                       }
                     },
+                    "total": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "nextCursor": {
                       "type": ["string", "null"]
                     }
                   },
-                  "required": ["requests", "nextCursor"],
+                  "required": ["requests", "total", "nextCursor"],
                   "additionalProperties": false
                 }
               }
@@ -17848,6 +18119,409 @@
         }
       }
     },
+    "/api/v1/requests/assignees": {
+      "get": {
+        "operationId": "requestAssigneeOptions",
+        "summary": "Active staff who can triage Requests",
+        "tags": ["requests"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "people": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "image": {
+                            "type": ["string", "null"]
+                          }
+                        },
+                        "required": ["id", "displayName", "image"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["people"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/requests/{number}/assignee": {
+      "patch": {
+        "operationId": "assignRequest",
+        "summary": "Assign, reassign or clear the person responsible for triaging an open Request",
+        "tags": ["requests"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "assigneeId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": ["assigneeId"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "request": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "number": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": ["new", "converted", "resolved", "declined"]
+                        },
+                        "summary": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "urgency": {
+                          "type": "string",
+                          "enum": ["low", "medium", "high", "critical"]
+                        },
+                        "customFields": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "declinedReason": {
+                          "type": ["string", "null"]
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        },
+                        "requestType": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "targetModule": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": ["matter", "contract"]
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "targetTypeId": {
+                              "type": ["string", "null"]
+                            },
+                            "targetTypeName": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "displayName",
+                            "targetModule",
+                            "targetTypeId",
+                            "targetTypeName"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "requester": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "email": {
+                              "type": "string"
+                            },
+                            "image": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["id", "displayName", "email", "image"],
+                          "additionalProperties": false
+                        },
+                        "assignee": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "type": ["string", "null"]
+                                }
+                              },
+                              "required": ["id", "displayName", "image"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "convertedContract": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "number": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                }
+                              },
+                              "required": ["number"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "convertedRecord": {
+                          "anyOf": [
+                            {
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "module": {
+                                      "type": "string",
+                                      "enum": ["contract"]
+                                    },
+                                    "number": {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    }
+                                  },
+                                  "required": ["module", "number"],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "module": {
+                                      "type": "string",
+                                      "enum": ["matter"]
+                                    },
+                                    "number": {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    }
+                                  },
+                                  "required": ["module", "number"],
+                                  "additionalProperties": false
+                                }
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "number",
+                        "status",
+                        "summary",
+                        "description",
+                        "urgency",
+                        "customFields",
+                        "declinedReason",
+                        "createdAt",
+                        "requestType",
+                        "requester",
+                        "assignee",
+                        "convertedContract",
+                        "convertedRecord"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["request"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/requests/filter-options": {
+      "get": {
+        "operationId": "inboxFilterOptions",
+        "summary": "Request types and requesters across the live Inbox, including triaged requests",
+        "tags": ["requests"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "types": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "displayName"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "people": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "displayName"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["types", "people"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/requests/{number}": {
       "get": {
         "operationId": "readRequest",
@@ -17984,6 +18658,29 @@
                           "required": ["id", "displayName", "email", "image"],
                           "additionalProperties": false
                         },
+                        "assignee": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "type": ["string", "null"]
+                                }
+                              },
+                              "required": ["id", "displayName", "image"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "convertedContract": {
                           "anyOf": [
                             {
@@ -18059,6 +18756,7 @@
                         "createdAt",
                         "requestType",
                         "requester",
+                        "assignee",
                         "convertedContract",
                         "convertedRecord"
                       ],
@@ -18445,6 +19143,29 @@
                           "required": ["id", "displayName", "email", "image"],
                           "additionalProperties": false
                         },
+                        "assignee": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "type": ["string", "null"]
+                                }
+                              },
+                              "required": ["id", "displayName", "image"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "convertedContract": {
                           "anyOf": [
                             {
@@ -18520,6 +19241,7 @@
                         "createdAt",
                         "requestType",
                         "requester",
+                        "assignee",
                         "convertedContract",
                         "convertedRecord"
                       ],
@@ -18667,7 +19389,7 @@
     "/api/v1/requests/{number}/resolve": {
       "post": {
         "operationId": "resolveRequest",
-        "summary": "Close a Request that has been answered (INT-006). The second of INT-007's three dispositions: it transitions the Request from `new` to `resolved` under the Request's own row lock, so two triagers racing one Request produce one resolution. The loser is answered 409 with the recorded outcome rather than a second resolution. `reply` is optional — the answer is often already on the thread, and INT-006 asks for a closing reply rather than requiring one. Given, it is posted as an ordinary Full Thread comment: it lands on the conversation, narrates as comment.posted, and notifies the Requester as any staff reply does. Raises `requestStatusChanged` beside it, because an answer and a closure are two pieces of news and the requester may have both. Appends one request.resolved entry naming the actor (DD-017, INT-007: who dispositioned is audit data); what was said is on the thread, not in the payload. Answers the Request as the staff detail reads it. Member+ only",
+        "summary": "Resolve a Request without converting it. Requires a nonblank reply explaining the resolution, posted to the requester-visible thread. Records the comment, closure and notifications atomically. Member+ only; already decided Requests return 409.",
         "tags": ["requests"],
         "requestBody": {
           "required": true,
@@ -18682,6 +19404,7 @@
                     "maxLength": 10000
                   }
                 },
+                "required": ["reply"],
                 "additionalProperties": false
               }
             }
@@ -18818,6 +19541,29 @@
                           "required": ["id", "displayName", "email", "image"],
                           "additionalProperties": false
                         },
+                        "assignee": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "type": ["string", "null"]
+                                }
+                              },
+                              "required": ["id", "displayName", "image"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "convertedContract": {
                           "anyOf": [
                             {
@@ -18893,6 +19639,7 @@
                         "createdAt",
                         "requestType",
                         "requester",
+                        "assignee",
                         "convertedContract",
                         "convertedRecord"
                       ],
@@ -19234,6 +19981,29 @@
                           "required": ["id", "displayName", "email", "image"],
                           "additionalProperties": false
                         },
+                        "assignee": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "type": ["string", "null"]
+                                }
+                              },
+                              "required": ["id", "displayName", "image"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "convertedContract": {
                           "anyOf": [
                             {
@@ -19309,6 +20079,7 @@
                         "createdAt",
                         "requestType",
                         "requester",
+                        "assignee",
                         "convertedContract",
                         "convertedRecord"
                       ],
@@ -20802,6 +21573,76 @@
           {
             "schema": {
               "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
+            },
+            "in": "query",
+            "name": "owner",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
+            },
+            "in": "query",
+            "name": "status",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
+            },
+            "in": "query",
+            "name": "type",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "in": "query",
+            "name": "effectiveFrom",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "in": "query",
+            "name": "effectiveTo",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "in": "query",
+            "name": "expiryFrom",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "in": "query",
+            "name": "expiryTo",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
               "enum": ["true", "false"]
             },
             "in": "query",
@@ -21247,11 +22088,16 @@
                         "additionalProperties": false
                       }
                     },
+                    "total": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "nextCursor": {
                       "type": ["string", "null"]
                     }
                   },
-                  "required": ["contracts", "nextCursor"],
+                  "required": ["contracts", "total", "nextCursor"],
                   "additionalProperties": false
                 }
               }
@@ -21793,6 +22639,86 @@
                   "required": ["type", "title", "status"],
                   "additionalProperties": false,
                   "description": "The named types are CTR-015's guards: the link already exists, the parent would close a loop, or both ends are one contract. An unnamed 409 is an archived predecessor; print it."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contracts/filter-options": {
+      "get": {
+        "operationId": "listContractFilterOptions",
+        "tags": ["contracts"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "types": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "displayName"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "statuses": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "displayName"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "people": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "displayName"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["types", "statuses", "people"],
+                  "additionalProperties": false
                 }
               }
             }
@@ -31844,6 +32770,12 @@
                           "assigneeId": {
                             "type": ["string", "null"]
                           },
+                          "assigneeName": {
+                            "type": ["string", "null"]
+                          },
+                          "assigneeImage": {
+                            "type": ["string", "null"]
+                          },
                           "dueDate": {
                             "anyOf": [
                               {
@@ -31867,6 +32799,8 @@
                           "title",
                           "isDone",
                           "assigneeId",
+                          "assigneeName",
+                          "assigneeImage",
                           "dueDate",
                           "displayOrder"
                         ],
@@ -31920,6 +32854,9 @@
                   },
                   "assigneeId": {
                     "type": ["string", "null"]
+                  },
+                  "addToTeam": {
+                    "type": "boolean"
                   },
                   "dueDate": {
                     "anyOf": [
@@ -31977,6 +32914,12 @@
                           "assigneeId": {
                             "type": ["string", "null"]
                           },
+                          "assigneeName": {
+                            "type": ["string", "null"]
+                          },
+                          "assigneeImage": {
+                            "type": ["string", "null"]
+                          },
                           "dueDate": {
                             "anyOf": [
                               {
@@ -32000,6 +32943,8 @@
                           "title",
                           "isDone",
                           "assigneeId",
+                          "assigneeName",
+                          "assigneeImage",
                           "dueDate",
                           "displayOrder"
                         ],
@@ -32056,6 +33001,9 @@
                   "assigneeId": {
                     "type": ["string", "null"]
                   },
+                  "addToTeam": {
+                    "type": "boolean"
+                  },
                   "dueDate": {
                     "anyOf": [
                       {
@@ -32111,6 +33059,12 @@
                           "assigneeId": {
                             "type": ["string", "null"]
                           },
+                          "assigneeName": {
+                            "type": ["string", "null"]
+                          },
+                          "assigneeImage": {
+                            "type": ["string", "null"]
+                          },
                           "dueDate": {
                             "anyOf": [
                               {
@@ -32134,6 +33088,8 @@
                           "title",
                           "isDone",
                           "assigneeId",
+                          "assigneeName",
+                          "assigneeImage",
                           "dueDate",
                           "displayOrder"
                         ],
@@ -32210,6 +33166,12 @@
                           "assigneeId": {
                             "type": ["string", "null"]
                           },
+                          "assigneeName": {
+                            "type": ["string", "null"]
+                          },
+                          "assigneeImage": {
+                            "type": ["string", "null"]
+                          },
                           "dueDate": {
                             "anyOf": [
                               {
@@ -32233,6 +33195,8 @@
                           "title",
                           "isDone",
                           "assigneeId",
+                          "assigneeName",
+                          "assigneeImage",
                           "dueDate",
                           "displayOrder"
                         ],
@@ -32311,6 +33275,12 @@
                           "assigneeId": {
                             "type": ["string", "null"]
                           },
+                          "assigneeName": {
+                            "type": ["string", "null"]
+                          },
+                          "assigneeImage": {
+                            "type": ["string", "null"]
+                          },
                           "dueDate": {
                             "anyOf": [
                               {
@@ -32334,6 +33304,8 @@
                           "title",
                           "isDone",
                           "assigneeId",
+                          "assigneeName",
+                          "assigneeImage",
                           "dueDate",
                           "displayOrder"
                         ],
@@ -32434,6 +33406,12 @@
                           "assigneeId": {
                             "type": ["string", "null"]
                           },
+                          "assigneeName": {
+                            "type": ["string", "null"]
+                          },
+                          "assigneeImage": {
+                            "type": ["string", "null"]
+                          },
                           "dueDate": {
                             "anyOf": [
                               {
@@ -32457,6 +33435,8 @@
                           "title",
                           "isDone",
                           "assigneeId",
+                          "assigneeName",
+                          "assigneeImage",
                           "dueDate",
                           "displayOrder"
                         ],
@@ -55705,10 +56685,299 @@
         }
       }
     },
+    "/api/v1/home/dates": {
+      "get": {
+        "operationId": "listPersonalDates",
+        "summary": "All dates in a calendar window on active Contracts and Matters the viewer manages or is on the team of",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "in": "query",
+            "name": "from",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "in": "query",
+            "name": "to",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "source": {
+                            "type": "string",
+                            "enum": ["key_date", "expiry", "notice_deadline"]
+                          },
+                          "keyDateId": {
+                            "type": ["string", "null"]
+                          },
+                          "date": {
+                            "type": "string",
+                            "format": "date",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                          },
+                          "label": {
+                            "type": ["string", "null"]
+                          },
+                          "noticePeriodDays": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "unverified": {
+                            "type": "boolean"
+                          },
+                          "record": {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["contract", "matter"]
+                              },
+                              "id": {
+                                "type": "string"
+                              },
+                              "number": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "isConfidential": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": ["kind", "id", "number", "title", "isConfidential"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "source",
+                          "keyDateId",
+                          "date",
+                          "label",
+                          "noticePeriodDays",
+                          "unverified",
+                          "record"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["total", "rows"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/home/tasks": {
+      "get": {
+        "operationId": "listAssignedTasks",
+        "summary": "Open Tasks assigned to the signed-in user, across reachable active Contracts and Matters",
+        "parameters": [
+          {
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "cursor",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "dueDate": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "isOverdue": {
+                            "type": "boolean"
+                          },
+                          "record": {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["contract", "matter"]
+                              },
+                              "id": {
+                                "type": "string"
+                              },
+                              "number": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "isConfidential": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": ["kind", "id", "number", "title", "isConfidential"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": ["id", "title", "dueDate", "isOverdue", "record"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "nextCursor": {
+                      "type": ["string", "null"]
+                    }
+                  },
+                  "required": ["total", "rows", "nextCursor"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/home": {
       "get": {
         "operationId": "getHome",
-        "summary": "The signed-in staff user's personal Home sections in stable order. Zero-total sections are omitted; every present section carries a three-row cap and its full eligible total. Record reach is applied inside each section query, before totals and caps",
+        "summary": "The signed-in staff user's personal Home sections in stable order. Zero-total sections are omitted; every present section carries a four-row cap and its full eligible total. Record reach is applied inside each section query, before totals and caps",
         "responses": {
           "200": {
             "description": "Default Response",
@@ -55734,7 +57003,7 @@
                                 "maximum": 9007199254740991
                               },
                               "rows": {
-                                "maxItems": 3,
+                                "maxItems": 4,
                                 "type": "array",
                                 "items": {
                                   "type": "object",
@@ -55803,7 +57072,7 @@
                                 "maximum": 9007199254740991
                               },
                               "rows": {
-                                "maxItems": 3,
+                                "maxItems": 4,
                                 "type": "array",
                                 "items": {
                                   "type": "object",
@@ -55882,7 +57151,7 @@
                                 "maximum": 9007199254740991
                               },
                               "rows": {
-                                "maxItems": 3,
+                                "maxItems": 4,
                                 "type": "array",
                                 "items": {
                                   "type": "object",
@@ -55978,7 +57247,7 @@
                                 "maximum": 9007199254740991
                               },
                               "rows": {
-                                "maxItems": 3,
+                                "maxItems": 4,
                                 "type": "array",
                                 "items": {
                                   "type": "object",
@@ -56042,7 +57311,7 @@
                                 "maximum": 9007199254740991
                               },
                               "rows": {
-                                "maxItems": 3,
+                                "maxItems": 4,
                                 "type": "array",
                                 "items": {
                                   "type": "object",
@@ -56123,7 +57392,7 @@
                                 "maximum": 9007199254740991
                               },
                               "rows": {
-                                "maxItems": 3,
+                                "maxItems": 4,
                                 "type": "array",
                                 "items": {
                                   "type": "object",
@@ -56198,7 +57467,7 @@
                                 "maximum": 9007199254740991
                               },
                               "rows": {
-                                "maxItems": 3,
+                                "maxItems": 4,
                                 "type": "array",
                                 "items": {
                                   "type": "object",
@@ -57205,7 +58474,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["contracts", "matters", "documents", "entities", "knowledge"]
+              "enum": ["inbox", "contracts", "matters", "documents", "entities", "knowledge"]
             },
             "in": "query",
             "name": "surface",
@@ -57230,7 +58499,14 @@
                           },
                           "surface": {
                             "type": "string",
-                            "enum": ["contracts", "matters", "documents", "entities", "knowledge"]
+                            "enum": [
+                              "inbox",
+                              "contracts",
+                              "matters",
+                              "documents",
+                              "entities",
+                              "knowledge"
+                            ]
                           },
                           "name": {
                             "type": "string"
@@ -57316,7 +58592,7 @@
                                     },
                                     {
                                       "type": "string",
-                                      "maxLength": 200
+                                      "maxLength": 2000
                                     }
                                   ]
                                 }
@@ -57365,7 +58641,7 @@
                 "properties": {
                   "surface": {
                     "type": "string",
-                    "enum": ["contracts", "matters", "documents", "entities", "knowledge"]
+                    "enum": ["inbox", "contracts", "matters", "documents", "entities", "knowledge"]
                   },
                   "name": {
                     "type": "string",
@@ -57453,7 +58729,7 @@
                             },
                             {
                               "type": "string",
-                              "maxLength": 200
+                              "maxLength": 2000
                             }
                           ]
                         }
@@ -57490,7 +58766,14 @@
                           },
                           "surface": {
                             "type": "string",
-                            "enum": ["contracts", "matters", "documents", "entities", "knowledge"]
+                            "enum": [
+                              "inbox",
+                              "contracts",
+                              "matters",
+                              "documents",
+                              "entities",
+                              "knowledge"
+                            ]
                           },
                           "name": {
                             "type": "string"
@@ -57576,7 +58859,7 @@
                                     },
                                     {
                                       "type": "string",
-                                      "maxLength": 200
+                                      "maxLength": 2000
                                     }
                                   ]
                                 }
@@ -57711,7 +58994,7 @@
                             },
                             {
                               "type": "string",
-                              "maxLength": 200
+                              "maxLength": 2000
                             }
                           ]
                         }
@@ -57759,7 +59042,14 @@
                           },
                           "surface": {
                             "type": "string",
-                            "enum": ["contracts", "matters", "documents", "entities", "knowledge"]
+                            "enum": [
+                              "inbox",
+                              "contracts",
+                              "matters",
+                              "documents",
+                              "entities",
+                              "knowledge"
+                            ]
                           },
                           "name": {
                             "type": "string"
@@ -57845,7 +59135,7 @@
                                     },
                                     {
                                       "type": "string",
-                                      "maxLength": 200
+                                      "maxLength": 2000
                                     }
                                   ]
                                 }
@@ -57915,7 +59205,14 @@
                           },
                           "surface": {
                             "type": "string",
-                            "enum": ["contracts", "matters", "documents", "entities", "knowledge"]
+                            "enum": [
+                              "inbox",
+                              "contracts",
+                              "matters",
+                              "documents",
+                              "entities",
+                              "knowledge"
+                            ]
                           },
                           "name": {
                             "type": "string"
@@ -58001,7 +59298,7 @@
                                     },
                                     {
                                       "type": "string",
-                                      "maxLength": 200
+                                      "maxLength": 2000
                                     }
                                   ]
                                 }

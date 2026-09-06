@@ -731,6 +731,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   },
   "request.declined": { number: 42 },
   "request.resolved": { number: 42 },
+  "request.assignee_changed": { number: 42, assignee: "Nadia Counsel", from: null, to: "u2" },
   "request.converted": { number: 42, contractNumber: 51 },
   "request.thread_moved": { number: 42, contractNumber: 51 },
 

@@ -51,6 +51,11 @@
  *    take one back. The files a requester chose are listed under it,
  *    each with a control that removes it, because a mis-picked file
  *    that cannot be unpicked is a form that has to be started again.
+ * 7. I6 draws the form as one run of fields. The four basics and the
+ *    type's own fields sit under two section strips, so a long form
+ *    reads as "what every request says" and then "what this kind of
+ *    request adds". The second strip is absent when the type attaches
+ *    no fields: a heading over nothing is not a section.
  *
  * ### The paper (#380)
  *
@@ -75,7 +80,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
-import { ChevronLeft, CircleCheck, FileText, Mail, TriangleAlert, Upload, X } from "lucide-react";
+import { CircleCheck, FileText, Mail, TriangleAlert, Upload, X } from "lucide-react";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
 import { SEVERITY_LEVELS, severityLabel } from "../lib/contracts";
@@ -91,6 +96,7 @@ import { attachToRequest, MAX_REQUEST_ATTACHMENTS, requestReference } from "../l
 import { currentUser, useSignOut } from "../lib/session";
 import { CustomFieldControl } from "../components/custom-field-control";
 import { PageTitle } from "../components/page-title";
+import { PortalBackLink } from "../components/portal/back-link";
 import { DeflectionPanel } from "../components/portal/deflection-panel";
 import { PortalShell } from "../components/portal/portal-shell";
 import { Button } from "../components/ui/button";
@@ -299,33 +305,37 @@ export function PortalRequestFormPage() {
   return (
     <PortalShell user={user} onSignOut={() => void signOut()}>
       <PageTitle title={intl.formatMessage(TITLE)} />
-      <Link
-        to="/portal"
-        className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-muted hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
-      >
-        <ChevronLeft aria-hidden="true" className="size-4 shrink-0" />
+      <PortalBackLink>
         <FormattedMessage id="portal.form.back" defaultMessage="All request types" />
-      </Link>
+      </PortalBackLink>
       <div className="flex flex-col gap-1.5">
-        <h1 className="text-xl font-semibold">{requestType.displayName}</h1>
+        <h1 className="text-2xl font-semibold">{requestType.displayName}</h1>
         {requestType.description !== null && (
-          <p className="text-base text-muted">{requestType.description}</p>
+          <p className="max-w-prose text-md text-muted">{requestType.description}</p>
         )}
       </div>
-      <div className="@container/form flex flex-col gap-6 @2xl/form:flex-row">
-        <div className="min-w-0 flex-1">
+      <div className="grid gap-section-gap @3xl/page:grid-cols-portal-split">
+        <div className="min-w-0">
           {submitted ? (
             <Confirmation {...submitted} />
           ) : (
             <form
               noValidate
-              className="flex flex-col rounded-card border border-border-default bg-raised"
+              className="flex flex-col overflow-hidden rounded-card border border-border-default bg-raised"
               onSubmit={(event) => {
                 event.preventDefault();
                 void submit();
               }}
             >
-              <div className="flex flex-col gap-4 p-4">
+              <div className="flex h-section-header items-center border-b border-border-default bg-section-header px-4">
+                <h2 className="text-base font-semibold">
+                  <FormattedMessage
+                    id="portal.form.basicsHeading"
+                    defaultMessage="About your request"
+                  />
+                </h2>
+              </div>
+              <div className="flex flex-col gap-5 p-4">
                 <Field
                   htmlFor="request-summary"
                   label={intl.formatMessage(BASIC_LABELS.summary)}
@@ -408,28 +418,43 @@ export function PortalRequestFormPage() {
                     ))}
                   </select>
                 </Field>
-                {/* The request type's own fields, in the Administrator's
-                    display order (INT-002). */}
-                {fields.map((field) => (
-                  <AttachedField
-                    key={field.slug}
-                    field={field}
-                    draft={drafts[field.slug] ?? emptyDraft(field)}
-                    unanswered={unanswered.has(field.slug)}
-                    onDraft={(next) => {
-                      setDrafts((current) => ({ ...current, [field.slug]: next }));
-                      clearMark(field.slug);
-                    }}
-                  />
-                ))}
-                {error && (
-                  <p role="alert" className="text-sm text-status-danger-fg">
-                    {error}
-                  </p>
-                )}
               </div>
-              <div className="flex items-center justify-between gap-4 border-t border-border-muted px-4 py-3">
-                <span className="flex items-center gap-1.5 text-xs text-muted">
+              {/* The request type's own fields, in the Administrator's
+                  display order (INT-002), under their own strip. */}
+              {fields.length > 0 && (
+                <>
+                  <div className="flex h-section-header items-center border-y border-border-default bg-section-header px-4">
+                    <h2 className="text-base font-semibold">
+                      <FormattedMessage
+                        id="portal.form.fieldsHeading"
+                        defaultMessage="Details for {requestType}"
+                        values={{ requestType: requestType.displayName }}
+                      />
+                    </h2>
+                  </div>
+                  <div className="flex flex-col gap-5 p-4">
+                    {fields.map((field) => (
+                      <AttachedField
+                        key={field.slug}
+                        field={field}
+                        draft={drafts[field.slug] ?? emptyDraft(field)}
+                        unanswered={unanswered.has(field.slug)}
+                        onDraft={(next) => {
+                          setDrafts((current) => ({ ...current, [field.slug]: next }));
+                          clearMark(field.slug);
+                        }}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+              {error && (
+                <p role="alert" className="px-4 pb-4 text-sm text-status-danger-fg">
+                  {error}
+                </p>
+              )}
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border-default bg-section-header px-4 py-3">
+                <span className="flex items-center gap-1.5 text-sm text-muted">
                   <Mail aria-hidden="true" className="size-4 shrink-0" />
                   <FormattedMessage
                     id="portal.form.footerNote"
@@ -446,9 +471,9 @@ export function PortalRequestFormPage() {
         {/* This request type's own deflection links (INT-004): a
             type-specific answer can still deflect at the last moment.
             The panel draws nothing when the type has none. */}
-        <div className="flex flex-col gap-4 @2xl/form:w-70 @2xl/form:shrink-0">
+        <aside className="flex flex-col gap-4 @3xl/page:self-start">
           <DeflectionPanel links={intakeLinks} />
-        </div>
+        </aside>
       </div>
     </PortalShell>
   );
@@ -559,8 +584,8 @@ function AttachmentsField({
         <FormattedMessage {...BASIC_LABELS.attachments} />
       </Label>
       <div
-        className={`flex flex-col items-center justify-center gap-2 rounded-button border bg-control px-3 py-4 transition-colors duration-150 ${
-          over ? "border-link" : "border-border-default"
+        className={`flex flex-col items-center justify-center gap-2 rounded-card border border-dashed bg-control px-4 py-6 transition-colors duration-150 ${
+          over ? "border-link" : "border-border-strong"
         }`}
         onDragOver={(event) => {
           event.preventDefault();
@@ -589,8 +614,8 @@ function AttachmentsField({
             event.target.value = "";
           }}
         />
-        <Upload aria-hidden="true" className="size-4 shrink-0 text-muted" />
-        <p className="text-center text-sm text-muted">
+        <Upload aria-hidden="true" className="size-5 shrink-0 text-muted" />
+        <p className="max-w-prose text-center text-sm text-muted">
           <FormattedMessage
             id="portal.form.attachmentsHint"
             defaultMessage="Drop files here — the redline, the prior agreement, the term sheet. Up to {max} files."
@@ -611,14 +636,14 @@ function AttachmentsField({
         </p>
       )}
       {files.length > 0 && (
-        <ul className="flex flex-col gap-1">
+        <ul className="flex flex-col gap-1.5">
           {files.map((file, index) => (
             <li
               // Two files may carry one name — a requester can pick the
               // same paper from two folders — so the position in the
               // list is what identifies a row here.
               key={`${String(index)}-${file.name}`}
-              className="flex items-center gap-1.5 text-sm"
+              className="flex items-center gap-2 rounded-button border border-border-default bg-raised ps-2.5 pe-1.5 py-1.5 text-sm"
             >
               <FileText aria-hidden="true" className="size-4 shrink-0 text-muted" />
               <span className="min-w-0 flex-1 truncate">{file.name}</span>
@@ -713,26 +738,29 @@ function Confirmation({ number, uploading, unattached, threadNumber }: Readonly<
     heading.current?.focus();
   }, []);
   return (
-    <section className="flex flex-col gap-2 rounded-card border border-border-default bg-raised p-4">
-      <h2
-        ref={heading}
-        tabIndex={-1}
-        className="flex items-center gap-1.5 text-md font-semibold text-status-success-fg"
+    <section className="flex flex-col gap-4 rounded-card border border-border-default bg-raised p-6">
+      <span
+        aria-hidden="true"
+        className="flex size-10 items-center justify-center rounded-avatar bg-status-success-bg text-status-success-fg"
       >
-        <CircleCheck aria-hidden="true" className="size-4 shrink-0" />
-        <FormattedMessage
-          id="portal.form.confirmationHeading"
-          defaultMessage="Request {reference} is with Legal"
-          values={{ reference: requestReference(intl, number) }}
-        />
-      </h2>
-      <p className="text-base text-muted">
-        <FormattedMessage
-          id="portal.form.confirmationBody"
-          defaultMessage="Quote {reference} when you talk to Legal about it. You'll get updates by email and here in the portal."
-          values={{ reference: requestReference(intl, number) }}
-        />
-      </p>
+        <CircleCheck className="size-6" />
+      </span>
+      <div className="flex flex-col gap-1">
+        <h2 ref={heading} tabIndex={-1} className="rounded-chip text-lg font-semibold">
+          <FormattedMessage
+            id="portal.form.confirmationHeading"
+            defaultMessage="Request {reference} is with Legal"
+            values={{ reference: requestReference(intl, number) }}
+          />
+        </h2>
+        <p className="max-w-prose text-md text-muted">
+          <FormattedMessage
+            id="portal.form.confirmationBody"
+            defaultMessage="Quote {reference} when you talk to Legal about it. You'll get updates by email and here in the portal."
+            values={{ reference: requestReference(intl, number) }}
+          />
+        </p>
+      </div>
       {uploading && (
         <p className="text-sm text-muted">
           <FormattedMessage
@@ -803,12 +831,21 @@ function Confirmation({ number, uploading, unattached, threadNumber }: Readonly<
           </div>
         </div>
       )}
-      <Link
-        to="/portal"
-        className="w-fit text-base font-medium text-link underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
-      >
-        <FormattedMessage id="portal.form.confirmationBack" defaultMessage="Back to the portal" />
-      </Link>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button asChild>
+          <Link to={`/portal/requests/${String(number)}`}>
+            <FormattedMessage id="portal.form.confirmationOpen" defaultMessage="Open request" />
+          </Link>
+        </Button>
+        <Button asChild variant="secondary">
+          <Link to="/portal">
+            <FormattedMessage
+              id="portal.form.confirmationBack"
+              defaultMessage="Back to the portal"
+            />
+          </Link>
+        </Button>
+      </div>
     </section>
   );
 }

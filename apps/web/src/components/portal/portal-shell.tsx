@@ -10,8 +10,7 @@
  * no activity bar: a Business User sees only their own Requests
  * (DD-013), so every staff destination would open on nothing. Member+
  * staff are welcome here, they submit Requests too, and they reach the
- * full application the way they always did, so the portal owes them no
- * door back.
+ * full application through the return control shown to Member+ staff.
  *
  * The trailing cluster carries the two things a requester's session
  * owns (M20/9). The bell is NOT-001's second surface, the same
@@ -26,22 +25,24 @@
  * request thread rather than being pushed off the top of it.
  */
 
-import { useLayoutEffect, type ReactNode } from "react";
-import { Settings } from "lucide-react";
+import { type ReactNode } from "react";
+import { Scale, Settings } from "lucide-react";
 import { Link } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
-import { applyPreferredTheme, type Theme } from "../../lib/theme";
+import { type Theme } from "../../lib/theme";
+import { isMemberPlus, type Role } from "../../lib/roles";
 import { useRetainedLiveEvents, type LiveEventRecordScope } from "../../lib/events";
 import { Avatar } from "../avatar";
+import { PortalThemeMenu } from "./portal-theme-menu";
 import { NotificationBell } from "../notification-bell";
 import { SkipLink } from "../skip-link";
 import { Button } from "../ui/button";
 
-/** Who the portal header draws. Narrower than the staff shell's user on
- * purpose: the portal branches on nothing about the role. */
+/** The signed-in identity and the role used for the staff return control. */
 export interface PortalUser {
   displayName: string;
   email: string;
+  role: Role;
   /** Avatar photo (DES-018); absent or null renders initials. */
   image?: string | null;
   theme: Theme;
@@ -59,13 +60,6 @@ export function PortalShell({
   children: ReactNode;
 }>) {
   const intl = useIntl();
-  // The server value wins over the pre-paint mirror, the same way the
-  // staff shell reconciles it (#44). A magic-link session is often a
-  // first visit on this browser, where there is no mirror to reconcile.
-  useLayoutEffect(() => {
-    applyPreferredTheme(user.theme);
-  }, [user.theme]);
-
   // The portal is the second authenticated shell over the same tab-wide
   // channel. Consumers subscribe to the module and never open a stream.
   useRetainedLiveEvents(recordScope);
@@ -73,17 +67,35 @@ export function PortalShell({
   return (
     <div className="@container/shell flex h-dvh flex-col overflow-hidden bg-canvas text-primary">
       <SkipLink />
-      <header className="flex h-(--height-header) shrink-0 items-center justify-between gap-4 border-b border-border-default bg-raised px-page-x">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <span className="text-md font-semibold">
-            <FormattedMessage id="portal.brand" defaultMessage="OpenLaw" />
+      <header className="flex h-(--height-header) shrink-0 items-center justify-between gap-2 border-b border-border-default bg-raised px-4 sm:gap-4 sm:px-page-x">
+        <Link
+          to="/portal"
+          aria-label={intl.formatMessage({
+            id: "portal.name",
+            defaultMessage: "Legal request portal",
+          })}
+          className="flex min-w-0 items-center gap-3 rounded-button focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+        >
+          {/* The staff header's mark (DES-008's scale glyph), on the
+              portal's own light strip: the same product, a different
+              door. */}
+          <span
+            aria-hidden="true"
+            className="flex size-8 shrink-0 items-center justify-center rounded-card bg-inverted text-on-inverted"
+          >
+            <Scale size={20} />
           </span>
-          <span aria-hidden="true" className="h-4 w-px shrink-0 bg-border-default" />
-          <span className="truncate text-base text-muted">
-            <FormattedMessage id="portal.name" defaultMessage="Legal request portal" />
+          <span className="hidden min-w-0 flex-col sm:flex">
+            <span className="truncate text-base leading-tight font-semibold text-primary">
+              <FormattedMessage id="portal.brand" defaultMessage="OpenLaw" />
+            </span>
+            <span className="truncate text-sm leading-tight text-muted">
+              <FormattedMessage id="portal.name" defaultMessage="Legal request portal" />
+            </span>
           </span>
-        </div>
-        <div className="flex shrink-0 items-center gap-3">
+        </Link>
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          <PortalThemeMenu initialTheme={user.theme} />
           <NotificationBell surface="portal" />
           {/* The same 24×24 target the bell takes (DES-011), so the two
               glyphs sit on one line without either being the odd one. */}
@@ -97,22 +109,52 @@ export function PortalShell({
           >
             <Settings size={20} aria-hidden="true" />
           </Link>
+          <span aria-hidden="true" className="mx-1 h-5 w-px shrink-0 bg-border-default" />
           <Avatar name={user.displayName} image={user.image} className="size-6" />
-          {/* The address yields its width first: below md the identity
-              is the avatar and the way out (DES-012). */}
-          <span className="hidden text-sm text-muted md:inline">{user.email}</span>
-          <Button variant="link" size="sm" className="px-0 text-sm text-muted" onClick={onSignOut}>
+          {/* The name and address yield their width first: below md the
+              identity is the avatar and the way out (DES-012). */}
+          <span className="hidden min-w-0 flex-col md:flex">
+            <span className="truncate text-sm leading-tight font-medium">{user.displayName}</span>
+            <span className="truncate text-xs leading-tight text-muted">{user.email}</span>
+          </span>
+          <Button variant="ghost" size="sm" className="ms-1 text-muted" onClick={onSignOut}>
             <FormattedMessage id="auth.signOut" defaultMessage="Sign out" />
           </Button>
         </div>
       </header>
+      {isMemberPlus(user.role) && (
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border-default bg-raised px-page-x py-3">
+          <div className="flex min-w-0 flex-col gap-1">
+            <p className="text-base font-semibold">
+              <FormattedMessage
+                id="portal.businessView.active"
+                defaultMessage="Viewing as business user"
+              />
+            </p>
+            <p className="text-sm text-muted">
+              <FormattedMessage
+                id="portal.businessView.description"
+                defaultMessage="You’re viewing your own requests. Submissions and replies are real."
+              />
+            </p>
+          </div>
+          <Button asChild variant="secondary" size="sm">
+            <Link to="/settings/profile">
+              <FormattedMessage
+                id="portal.businessView.return"
+                defaultMessage="Return to legal view"
+              />
+            </Link>
+          </Button>
+        </div>
+      )}
       {/* tabIndex={-1} makes the skip-link target programmatically
           focusable; min-h-0 is what lets the region shrink so the scroll
           stays here instead of returning to the document. */}
       <main
         id="main"
         tabIndex={-1}
-        className="@container/page min-h-0 flex-1 overflow-y-auto px-page-x pt-8 pb-12"
+        className="@container/page min-h-0 flex-1 overflow-y-auto px-page-x pt-8 pb-16"
       >
         <div className="mx-auto flex w-full max-w-(--width-portal-col) flex-col gap-section-gap">
           {children}

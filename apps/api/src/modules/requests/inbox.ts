@@ -11,12 +11,8 @@
  * route sits at this same address under `POST`, because a write of the
  * record does not differ by audience and a read does.
  *
- * **The default answer is exactly the `new` Requests** (INT-007). That
- * is not a filter with a default; it is what the Inbox *is* — the
- * queue reads truthfully as "requests whose fate is undecided", and a
- * triaged Request has left it. `includeTriaged=true` widens the answer
- * to the other three arms so yesterday's decisions stay findable, which
- * is the toggle INT-007 asks for and the only control this list has.
+ * The default answer is the new Requests. Explicit status choices or
+ * includeTriaged widen it; quick filters combine across the whole queue.
  *
  * **Urgency rank, then age** (INT-006). Critical first, and inside one
  * urgency the oldest first, so the hottest and the longest-waiting ask
@@ -69,6 +65,13 @@ import {
   type SQL,
 } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
+import { TimezoneSchema } from "../../lib/timezones.js";
+import {
+  choiceFilter,
+  dateFilter,
+  FilterChoices,
+  validDateRanges,
+} from "../../lib/record-filters.js";
 import { problemResponse } from "../../lib/problem.js";
 import {
   liveTargetContractType,
@@ -77,6 +80,9 @@ import {
   ConvertedRecordSchema,
   selectConvertedRecords,
   StaffRequestTypeSchema,
+  RequestAssigneeSchema,
+  requestAssignees,
+  requestAssigneeSelection,
   toStaffRequestType,
 } from "./projection.js";
 import {
@@ -110,10 +116,8 @@ const InboxRequesterSchema = z.object({ id: z.string(), displayName: z.string() 
 /**
  * One row of the Inbox — I1's columns, as INT-007 revised them.
  *
- * No Assignee, because there is no assignment: acting on a Request
- * means choosing its outcome then and there. `status` rides on every
- * row all the same, because the triaged view draws the outcome and a
- * projection that carried it only sometimes would be two shapes.
+ * The triage assignee is separate from the status: assigning a person
+ * leaves the Request open until it is converted or resolved.
  *
  * The age is the stamp rather than a duration: how "3 days ago" reads
  * is the reader's locale's business, and a server that computed it
@@ -133,6 +137,7 @@ const InboxRowSchema = z.object({
    * hard-deleted and the FK demoted the row rather than stranding it. */
   requestType: StaffRequestTypeSchema,
   requester: InboxRequesterSchema,
+  assignee: RequestAssigneeSchema.nullable(),
   createdAt: z.string(),
   /** The record a conversion made, when this viewer reaches it, and
    * `null` in every other case — never converted, converted into a
@@ -152,22 +157,32 @@ export const requestInboxRoutes: FastifyPluginAsyncZod = async (app) => {
           "The Inbox (INT-006, INT-007): the Requests whose fate is " +
           "undecided, ordered by urgency rank — critical first — then " +
           "age, oldest first, and paged by cursor. The answer is " +
-          "exactly the `new` Requests; includeTriaged=true widens it " +
+          "the `new` Requests by default; status choices or includeTriaged=true widen it " +
           "to the converted, resolved, and declined ones with their " +
           "outcomes. A converted row carries the contract or matter it became " +
           "only when the caller reaches that record, and carries " +
           "null otherwise (DD-014). Member+ only: a Contributor and a " +
           "Business User are refused",
         tags: ["requests"],
-        querystring: z.object({
-          /** INT-007's toggle. Omitted is the Inbox itself. */
-          includeTriaged: z.enum(["true", "false"]).optional(),
-          /** The previous page's `nextCursor`. Omit for the first page. */
-          cursor: CursorSchema.optional(),
-        }),
+        querystring: z
+          .object({
+            status: FilterChoices.optional(),
+            type: FilterChoices.optional(),
+            urgency: FilterChoices.optional(),
+            requester: FilterChoices.optional(),
+            receivedFrom: z.iso.date().optional(),
+            receivedTo: z.iso.date().optional(),
+            timeZone: TimezoneSchema.optional(),
+            /** INT-007's toggle. Omitted is the Inbox itself. */
+            includeTriaged: z.enum(["true", "false"]).optional(),
+            /** The previous page's `nextCursor`. Omit for the first page. */
+            cursor: CursorSchema.optional(),
+          })
+          .refine(validDateRanges, "The end date must not precede the start date."),
         response: {
           200: z.object({
             requests: z.array(InboxRowSchema),
+            total: z.int(),
             /** Pass back as `cursor` for the next page. NULL when this
              * page is the end of the queue. */
             nextCursor: z.string().nullable(),
@@ -177,20 +192,32 @@ export const requestInboxRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
+      const query = request.query;
+      const scope = and(
+        isNull(requests.archivedAt),
+        query.status
+          ? choiceFilter(requests.status, query.status)
+          : query.includeTriaged === "true"
+            ? undefined
+            : eq(requests.status, "new"),
+        choiceFilter(requests.requestTypeId, query.type),
+        choiceFilter(requests.urgency, query.urgency),
+        choiceFilter(requests.requesterId, query.requester, request.user.id),
+        dateFilter(
+          sql`(${requests.createdAt} at time zone ${query.timeZone ?? request.user.timezone ?? "UTC"})::date`,
+          query.receivedFrom,
+          query.receivedTo,
+        ),
+      );
+      const [count] = await app.db
+        .select({ total: sql<number>`count(*)::int` })
+        .from(requests)
+        .where(scope);
       const rows = await selectInbox()
-        .where(
-          and(
-            // The house rule that NULL means live. Nothing archives a
-            // Request yet, and a rule stated now is one the first
-            // archiver inherits.
-            isNull(requests.archivedAt),
-            request.query.includeTriaged === "true" ? undefined : eq(requests.status, "new"),
-            request.query.cursor === undefined ? undefined : furtherDownThan(request.query.cursor),
-          ),
-        )
+        .where(and(scope, query.cursor === undefined ? undefined : furtherDownThan(query.cursor)))
         .orderBy(desc(urgencyRank), asc(requests.createdAt), asc(requests.number))
         // One past the page, which is how the answer knows whether
-        // there is more without counting anything.
+        // there is another page.
         .limit(PAGE_SIZE + 1);
       const page = rows.slice(0, PAGE_SIZE);
       const convertedRecords = await selectConvertedRecords(
@@ -199,11 +226,49 @@ export const requestInboxRoutes: FastifyPluginAsyncZod = async (app) => {
         page.map((row) => row.id),
       );
       return {
+        total: count?.total ?? 0,
         requests: page.map((row) => toRow(row, convertedRecords.get(row.id) ?? null)),
         // Only when a further row was actually read. A cursor on the
         // last page would send the client for an empty one.
         nextCursor: rows.length > PAGE_SIZE ? (page.at(-1)?.id ?? null) : null,
       };
+    },
+  );
+
+  app.get(
+    "/requests/filter-options",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "inboxFilterOptions",
+        summary: "Request types and requesters across the live Inbox, including triaged requests",
+        tags: ["requests"],
+        response: {
+          200: z.object({
+            types: z.array(z.object({ id: z.string(), displayName: z.string() })),
+            people: z.array(InboxRequesterSchema),
+          }),
+          default: problemResponse,
+        },
+      },
+    },
+    async () => {
+      const [types, people] = await Promise.all([
+        app.db
+          .selectDistinct({ id: requestTypes.id, displayName: requestTypes.displayName })
+          .from(requests)
+          .innerJoin(requestTypes, eq(requests.requestTypeId, requestTypes.id))
+          .where(isNull(requests.archivedAt))
+          .orderBy(asc(requestTypes.displayName), asc(requestTypes.id)),
+        app.db
+          .selectDistinct({ id: users.id, displayName: users.displayName })
+          .from(requests)
+          .innerJoin(users, eq(requests.requesterId, users.id))
+          .leftJoin(requestAssignees, eq(requests.assigneeId, requestAssignees.id))
+          .where(isNull(requests.archivedAt))
+          .orderBy(asc(users.displayName), asc(users.id)),
+      ]);
+      return { types, people };
     },
   );
 
@@ -232,12 +297,14 @@ export const requestInboxRoutes: FastifyPluginAsyncZod = async (app) => {
         targetContractTypeName: contractTypes.displayName,
         targetMatterTypeId: matterTypes.id,
         targetMatterTypeName: matterTypes.displayName,
+        assignee: requestAssigneeSelection,
         requesterId: users.id,
         requesterDisplayName: users.displayName,
       })
       .from(requests)
       .innerJoin(requestTypes, eq(requests.requestTypeId, requestTypes.id))
       .innerJoin(users, eq(requests.requesterId, users.id))
+      .leftJoin(requestAssignees, eq(requests.assigneeId, requestAssignees.id))
       .leftJoin(contractTypes, liveTargetContractType())
       .leftJoin(matterTypes, liveTargetMatterType());
   }
@@ -298,6 +365,7 @@ function toRow(
     targetContractTypeName: string | null;
     targetMatterTypeId: string | null;
     targetMatterTypeName: string | null;
+    assignee: z.infer<typeof RequestAssigneeSchema> | null;
     requesterId: string;
     requesterDisplayName: string;
   },
@@ -307,6 +375,7 @@ function toRow(
     id: row.id,
     number: row.number,
     status: row.status,
+    assignee: row.assignee,
     summary: row.summary,
     urgency: row.urgency,
     requestType: toStaffRequestType(row),

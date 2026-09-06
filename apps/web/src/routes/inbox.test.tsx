@@ -3,7 +3,7 @@
 /**
  * The Inbox destination (#413), through the real route table with the
  * standard fetch stub: nav slot one for Member+, the undecided queue in
- * I1's columns, the triaged toggle, the trail from a converted Request
+ * the shared columns and filters, the trail from a converted Request
  * to the record it became, the empty state, and the next page.
  *
  * A Contributor and a Business User never see the destination and never
@@ -12,7 +12,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
@@ -59,14 +59,17 @@ function inboxRow(overrides: Partial<Record<string, unknown>> = {}) {
 
 /**
  * The queue behind the screen. `triaged` rows are answered only when
- * the toggle asks for them, so the test can watch the re-read happen.
+ * the filters ask for them, so the test can watch the re-read happen.
  */
 function inboxApi(open: Record<string, unknown>[], triaged: Record<string, unknown>[] = []) {
   const asked: URL[] = [];
   const handler = (call: StubCall): Response | undefined => {
     if (call.url.pathname === "/api/v1/requests" && call.method === "GET") {
       asked.push(call.url);
-      const withTriaged = call.url.searchParams.get("includeTriaged") === "true";
+      const withTriaged = !call.url.searchParams
+        .get("status")
+        ?.split(",")
+        .every((status) => status === "new");
       return json(200, {
         requests: [...open, ...(withTriaged ? triaged : [])],
         nextCursor: null,
@@ -83,6 +86,9 @@ describe("the Inbox destination", () => {
     renderAt("/inbox");
 
     expect(await screen.findByRole("heading", { level: 1, name: "Inbox" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("separator", { name: "Width of the Actions column" }),
+    ).not.toBeInTheDocument();
     const row = screen.getByRole("row", { name: /Injunction threat/ });
     expect(within(row).getByText("R-48")).toBeInTheDocument();
     expect(
@@ -94,12 +100,7 @@ describe("the Inbox destination", () => {
     expect(within(row).getByText("Contract · NDA")).toBeInTheDocument();
     expect(within(row).getByText("Dana Reyes")).toBeInTheDocument();
     expect(within(row).getByText("Critical")).toBeInTheDocument();
-    // INT-007: the row affordance is Assign, and it opens the
-    // disposition entry on the Request itself.
-    expect(within(row).getByRole("link", { name: "Assign R-48" })).toHaveAttribute(
-      "href",
-      "/inbox/48",
-    );
+    expect(within(row).getByRole("button", { name: "Assign R-48" })).toBeInTheDocument();
   });
 
   it("reads a module-only target as the module alone, and no target as none", async () => {
@@ -146,7 +147,7 @@ describe("the Inbox destination", () => {
     renderAt("/inbox");
 
     const subbar = await screen.findByRole("region", { name: "Inbox" });
-    expect(within(subbar).getByText("2 awaiting triage")).toBeInTheDocument();
+    expect(within(subbar).getByText("2 requests")).toBeInTheDocument();
     expect(screen.getByText("Ordered by urgency, then age")).toBeInTheDocument();
   });
 
@@ -158,7 +159,7 @@ describe("the Inbox destination", () => {
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
   });
 
-  it("reveals the triaged Requests with their outcome when the toggle is turned on", async () => {
+  it("reveals the triaged Requests with their outcome when the Status filter is cleared", async () => {
     const api = inboxApi(
       [inboxRow()],
       [
@@ -179,21 +180,21 @@ describe("the Inbox destination", () => {
     // for (INT-007).
     expect(screen.queryByText(/Trademark check/)).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("switch", { name: "Show triaged" }));
+    await user.click(screen.getByRole("button", { name: "Remove Status filter" }));
 
     const declined = await screen.findByRole("row", { name: /Trademark check/ });
     expect(within(declined).getByText("Declined")).toBeInTheDocument();
     expect(api.asked.at(-1)?.searchParams.get("includeTriaged")).toBe("true");
   });
 
-  it("says so when the toggle's re-read fails, and leaves the toggle usable", async () => {
+  it("says so when a filter read fails, and keeps the previous filter usable", async () => {
     let answers = 0;
     stubApi({
       signedIn: MEMBER,
       extra: (call) => {
         if (call.url.pathname !== "/api/v1/requests" || call.method !== "GET") return undefined;
         answers += 1;
-        // The loader's read lands; the toggle's does not.
+        // The loader's read lands; the filter change does not.
         return answers === 1
           ? json(200, { requests: [inboxRow()], nextCursor: null })
           : problem(500, "The Inbox could not be read.");
@@ -203,7 +204,7 @@ describe("the Inbox destination", () => {
     const user = userEvent.setup();
 
     await screen.findByRole("row", { name: /Injunction threat/ });
-    await user.click(screen.getByRole("switch", { name: "Show triaged" }));
+    await user.click(screen.getByRole("button", { name: "Remove Status filter" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "The Inbox could not be read. Try again.",
@@ -211,7 +212,9 @@ describe("the Inbox destination", () => {
     // The queue that was read still stands, and the retry is the same
     // control under the reader's hand.
     expect(screen.getByRole("row", { name: /Injunction threat/ })).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByRole("switch", { name: "Show triaged" })).toBeEnabled());
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Remove Status filter" })).toBeEnabled(),
+    );
   });
 
   it("links a converted Request to the record it became", async () => {
@@ -233,7 +236,7 @@ describe("the Inbox destination", () => {
     });
     renderAt("/inbox");
     const user = userEvent.setup();
-    await user.click(await screen.findByRole("switch", { name: "Show triaged" }));
+    await user.click(await screen.findByRole("button", { name: "Remove Status filter" }));
 
     const row = await screen.findByRole("row", { name: /NDA with Northwind Labs/ });
     expect(within(row).getByRole("link", { name: "C-91" })).toHaveAttribute(
@@ -261,7 +264,7 @@ describe("the Inbox destination", () => {
     });
     renderAt("/inbox");
     const user = userEvent.setup();
-    await user.click(await screen.findByRole("switch", { name: "Show triaged" }));
+    await user.click(await screen.findByRole("button", { name: "Remove Status filter" }));
 
     const row = await screen.findByRole("row", { name: /Meridian dispute/ });
     expect(within(row).getByRole("link", { name: "M-12" })).toHaveAttribute("href", "/matters/12");
@@ -287,14 +290,14 @@ describe("the Inbox destination", () => {
     });
     renderAt("/inbox");
     const user = userEvent.setup();
-    await user.click(await screen.findByRole("switch", { name: "Show triaged" }));
+    await user.click(await screen.findByRole("button", { name: "Remove Status filter" }));
 
     const row = await screen.findByRole("row", { name: /Something quiet/ });
     expect(within(row).getByText("Converted")).toBeInTheDocument();
     expect(within(row).queryByRole("link", { name: /^C-/ })).not.toBeInTheDocument();
   });
 
-  it("appends the next page in place, carrying the toggle with the cursor", async () => {
+  it("appends the next page in place, carrying filters with the cursor", async () => {
     const FIRST = [inboxRow()];
     const SECOND = [inboxRow({ id: "r2", number: 45, summary: "Orion Cloud MSA renewal" })];
     const asked: URL[] = [];
@@ -363,5 +366,121 @@ describe("who the Inbox is for (INT-006, DD-013)", () => {
     // (INT-001). The staff shell is somewhere they never arrive.
     await waitFor(() => expect(router.state.location.pathname).toBe("/portal"));
     expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
+  });
+});
+
+async function chooseFilter(
+  user: ReturnType<typeof userEvent.setup>,
+  name: string,
+  choices: string[],
+) {
+  await user.click(await screen.findByRole("button", { name: /^Filter/ }));
+  const picker = within(screen.getByRole("dialog", { name: "Filter" }));
+  await user.click(picker.getByRole("button", { name }));
+  for (const choice of choices) await user.click(picker.getByRole("checkbox", { name: choice }));
+  await user.click(picker.getByRole("button", { name: "Apply" }));
+}
+
+describe("Inbox filters and views", () => {
+  it("combines multiple urgency values with requester choices, carries filters into paging, and restores browser history", async () => {
+    const asked: URL[] = [];
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/requests/filter-options")
+          return json(200, { types: [], people: [{ id: "u7", displayName: "Dana Reyes" }] });
+        if (call.url.pathname !== "/api/v1/requests") return undefined;
+        asked.push(call.url);
+        return json(200, {
+          requests: [
+            inboxRow({
+              id: call.url.searchParams.has("cursor") ? "r2" : "r1",
+              summary: call.url.searchParams.has("cursor") ? "Next page" : "First page",
+            }),
+          ],
+          nextCursor: call.url.searchParams.has("cursor") ? null : "r1",
+          total: 51,
+        });
+      },
+    });
+    const { router } = renderAt("/inbox");
+    const user = userEvent.setup();
+    await chooseFilter(user, "Urgency", ["High", "Critical"]);
+    await waitFor(() =>
+      expect(new URLSearchParams(router.state.location.search).get("urgency")).toBe(
+        "high,critical",
+      ),
+    );
+    await chooseFilter(user, "Requester", ["Dana Reyes"]);
+    await waitFor(() =>
+      expect(new URLSearchParams(router.state.location.search).get("requester")).toBe("u7"),
+    );
+    await user.click(screen.getByRole("button", { name: "Show more" }));
+    await screen.findByRole("row", { name: /Next page/ });
+    expect(asked.at(-1)?.searchParams.get("urgency")).toBe("high,critical");
+    expect(asked.at(-1)?.searchParams.get("requester")).toBe("u7");
+    expect(asked.at(-1)?.searchParams.get("status")).toBe("new");
+    await act(async () => {
+      await router.navigate(-1);
+    });
+    expect(
+      screen.queryByRole("button", { name: "Remove Requester filter" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove Urgency filter" })).toBeInTheDocument();
+    expect(screen.queryByRole("row", { name: /Next page/ })).not.toBeInTheDocument();
+  });
+
+  it("saves filters and dates as an Inbox view, restores its default, and keeps explicit links authoritative", async () => {
+    let saved: Record<string, unknown>[] = [];
+    const asked: URL[] = [];
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/list-views") {
+          if (call.method === "POST") {
+            const body = call.body as Record<string, unknown>;
+            expect(body.surface).toBe("inbox");
+            saved = [{ id: "inbox-view", ...body, isDefault: true }];
+            return json(201, { views: saved });
+          }
+          return json(200, { views: saved });
+        }
+        if (call.url.pathname === "/api/v1/requests") {
+          asked.push(call.url);
+          return json(200, { requests: [], nextCursor: null, total: 0 });
+        }
+        return undefined;
+      },
+    });
+    const { router } = renderAt(
+      "/inbox?filters=1&status=new,resolved&urgency=critical,high&receivedFrom=2026-09-01&receivedTo=2026-09-30",
+    );
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: /^Default view/ }));
+    await user.click(screen.getByRole("menuitem", { name: "Save as…" }));
+    const dialog = within(screen.getByRole("dialog", { name: "Save this view" }));
+    await user.clear(dialog.getByLabelText("Name"));
+    await user.type(dialog.getByLabelText("Name"), "September priorities");
+    await user.click(dialog.getByRole("button", { name: "Save" }));
+    await screen.findByRole("button", { name: "September priorities" });
+    expect(saved[0]?.config).toMatchObject({
+      filters: {
+        status: "new,resolved",
+        urgency: "critical,high",
+        receivedFrom: "2026-09-01",
+        receivedTo: "2026-09-30",
+      },
+    });
+    await act(async () => {
+      await router.navigate("/inbox");
+    });
+    expect(asked.at(-1)?.searchParams.get("urgency")).toBe("critical,high");
+    expect(asked.at(-1)?.searchParams.get("receivedTo")).toBe("2026-09-30");
+    await act(async () => {
+      await router.navigate("/inbox?filters=1&view=all&status=declined");
+    });
+    expect(asked.at(-1)?.searchParams.get("status")).toBe("declined");
+    expect(asked.at(-1)?.searchParams.has("urgency")).toBe(false);
+    expect(screen.getByRole("button", { name: /^Default view/ })).toBeInTheDocument();
   });
 });

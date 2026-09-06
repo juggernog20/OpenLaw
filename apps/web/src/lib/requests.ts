@@ -242,21 +242,8 @@ export async function declineRequest(number: number, reason: string): Promise<Di
   return refusal(result);
 }
 
-/**
- * Closes a Request that has been answered (INT-006, INT-007).
- *
- * The closing reply is optional, and an omitted one is genuinely
- * omitted: INT-006 asks for a reply rather than requiring one, because
- * the answer is often already on the thread and a second copy of it
- * would be noise. Given, it is posted as an ordinary Full Thread comment
- * and the requester hears about it as a reply, separately from the
- * closure itself.
- *
- * Nothing about the Request is written before this call, for the reason
- * a decline writes nothing before its own: INT-007 has no claim step, so
- * the dialog opening is not an act.
- */
-export async function resolveRequest(number: number, reply?: string): Promise<DispositionOutcome> {
+/** Close a Request with a required explanation on its requester-visible thread. */
+export async function resolveRequest(number: number, reply: string): Promise<DispositionOutcome> {
   // Settled, never rejected — `declineRequest`'s rule: the dialog holds
   // its button busy until this answers, so a request that never arrived
   // has to come back as an ordinary refusal rather than as an escaping
@@ -264,10 +251,7 @@ export async function resolveRequest(number: number, reply?: string): Promise<Di
   const result = await api
     .POST("/api/v1/requests/{number}/resolve", {
       params: { path: { number } },
-      // Absent rather than empty. The seam refuses a blank reply, and it
-      // is right to: a box of spaces is not an answer, and "no reply" is
-      // said by sending no reply.
-      body: reply === undefined ? {} : { reply },
+      body: { reply },
     })
     .catch(() => undefined);
   if (result?.data) return { ok: true, request: result.data.request };

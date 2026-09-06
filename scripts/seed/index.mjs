@@ -32,12 +32,18 @@
  *                                needs the loop started with
  *                                SIGNING_STANDIN=true and
  *                                DOCUSIGN_BASE_URL=http://127.0.0.1:8129
+ *   --wait                       wait for the API and Mailpit to come up
+ *                                instead of failing when they are not there
+ *                                yet (`pnpm dev:hot --seed` uses this)
+ *   --only-if-empty              do nothing when the instance already has
+ *                                an Administrator, so a loop that seeds on
+ *                                start can be restarted without doubling up
  *
  * Environment: SEED_BASE_URL (default http://localhost:3000),
  * SEED_MAILPIT_URL (default http://localhost:8025).
  */
 
-import { DEFAULT_BASE_URL, Session, pool } from "./client.mjs";
+import { DEFAULT_BASE_URL, Session, pause, pool } from "./client.mjs";
 import { createRandom } from "./random.mjs";
 import { clearMailbox, mailpitIsUp } from "./mailpit.mjs";
 import { ADMIN, ORG } from "./data.mjs";
@@ -76,13 +82,22 @@ const SCALES = {
 };
 
 function readOptions(argv) {
-  const options = { scale: "heavy", seed: 1, skipAi: false, withSigning: false };
+  const options = {
+    scale: "heavy",
+    seed: 1,
+    skipAi: false,
+    withSigning: false,
+    wait: false,
+    onlyIfEmpty: false,
+  };
   for (let index = 0; index < argv.length; index++) {
     const argument = argv[index];
     if (argument === "--scale") options.scale = argv[++index];
     else if (argument === "--seed") options.seed = Number(argv[++index]);
     else if (argument === "--skip-ai") options.skipAi = true;
     else if (argument === "--with-signing") options.withSigning = true;
+    else if (argument === "--wait") options.wait = true;
+    else if (argument === "--only-if-empty") options.onlyIfEmpty = true;
     else if (argument === "--help" || argument === "-h") options.help = true;
   }
   return options;
@@ -107,21 +122,44 @@ function makeLogger() {
   };
 }
 
-/** Refuses to start against something that is not a reachable, migrated API. */
-async function preflight(log) {
+/** How long `--wait` holds on for the loop before giving up. */
+const WAIT_FOR_LOOP_MS = 3 * 60 * 1000;
+
+/**
+ * Refuses to start against something that is not a reachable, migrated
+ * API. With `wait`, it holds on for the loop instead: `pnpm dev:hot
+ * --seed` starts this process beside the watch processes, and the API
+ * takes a few seconds to compile and migrate before it answers.
+ */
+async function preflight(log, { wait }) {
   const probe = new Session("preflight");
+  const deadline = Date.now() + WAIT_FOR_LOOP_MS;
   let setup;
-  try {
-    ({ body: setup } = await probe.get("/api/v1/auth/setup"));
-  } catch (error) {
-    throw new Error(
-      `No API at ${DEFAULT_BASE_URL}. Start the dev loop with \`pnpm dev:hot\` first. (${error.message})`,
-    );
-  }
-  if (!(await mailpitIsUp())) {
-    throw new Error(
-      "Mailpit is not answering. Staff activation and portal sign-in both read the mailbox, so the seed cannot run without it.",
-    );
+  let announced = false;
+  for (;;) {
+    try {
+      ({ body: setup } = await probe.get("/api/v1/auth/setup"));
+      if (await mailpitIsUp()) break;
+      throw new Error("Mailpit is not answering");
+    } catch (error) {
+      if (!wait) {
+        throw new Error(
+          `No API at ${DEFAULT_BASE_URL}. Start the dev loop with \`pnpm dev:hot\` first. ` +
+            "Staff activation and portal sign-in both read the mailbox, so Mailpit must be up too. " +
+            `(${error.message})`,
+        );
+      }
+      if (Date.now() > deadline) {
+        throw new Error(
+          `Waited ${WAIT_FOR_LOOP_MS / 1000}s for the API at ${DEFAULT_BASE_URL} and Mailpit, and they never came up. (${error.message})`,
+        );
+      }
+      if (!announced) {
+        log(`waiting for the API at ${DEFAULT_BASE_URL} and Mailpit`);
+        announced = true;
+      }
+      await pause(1000);
+    }
   }
   log(
     `api at ${DEFAULT_BASE_URL}, mail catcher up, first-run setup ${setup.needsSetup ? "open" : "already done"}`,
@@ -186,7 +224,7 @@ async function main() {
   const options = readOptions(process.argv.slice(2));
   if (options.help) {
     process.stdout.write(
-      "pnpm seed:demo [--scale heavy|medium|light] [--seed <number>] [--skip-ai] [--with-signing]\n",
+      "pnpm seed:demo [--scale heavy|medium|light] [--seed <number>] [--skip-ai] [--with-signing] [--wait] [--only-if-empty]\n",
     );
     return;
   }
@@ -195,7 +233,11 @@ async function main() {
 
   const { phase, log } = makeLogger();
   phase("preflight");
-  const fresh = await preflight(log);
+  const fresh = await preflight(log, { wait: options.wait });
+  if (!fresh && options.onlyIfEmpty) {
+    log("this instance already has an Administrator, so there is nothing to seed.");
+    return;
+  }
   if (!fresh) {
     log(
       "warning: this instance already has an Administrator, so the seed is adding to what is there.",

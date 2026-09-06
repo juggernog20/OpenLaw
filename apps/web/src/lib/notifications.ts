@@ -310,6 +310,14 @@ const ARMS: Readonly<Record<string, Arm>> = {
   // arm that lands on the **staff** bell, and the one that addresses the
   // staff detail rather than the portal: the reader is a triager, and
   // the Request is work rather than news about their own ask.
+  "request.assigned": {
+    icon: Inbox,
+    staffSide: true,
+    message: defineMessage({
+      id: "notifications.request.assigned",
+      defaultMessage: "{actor} assigned you to triage {request}",
+    }),
+  },
   "request.submitted": {
     icon: Inbox,
     staffSide: true,

@@ -144,6 +144,7 @@ export const NOTIFICATION_EVENT_TYPES = [
    * sentences to separate audiences on separate bells.
    */
   "request.submitted",
+  "request.assigned",
   // Group 5 — the portal audience's own events (INT-001/003/006).
   /** A Request was submitted — the Requester's receipt (INT-001). */
   "request.created",

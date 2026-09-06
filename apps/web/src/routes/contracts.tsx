@@ -40,12 +40,27 @@
  * Users are bounced home; the API's 403 is the real refusal.
  */
 
-import { useState } from "react";
-import { redirect, useLoaderData } from "react-router";
+import { useEffect, useRef, useState } from "react";
+import {
+  redirect,
+  useLoaderData,
+  useNavigate,
+  useNavigation,
+  type LoaderFunctionArgs,
+} from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { FilePen, Plus } from "lucide-react";
-import type { SortDirection } from "@openlaw/shared";
+import { CONTRACT_SORT_KEYS, type SortDirection } from "@openlaw/shared";
 import { api } from "../lib/api";
+import {
+  CONTRACT_FILTER_KEYS,
+  filterQuery,
+  filterSearch,
+  initialView,
+  layoutFromUrl,
+} from "../lib/record-filters";
+import { RecordFilterBar } from "../components/table/record-filter-bar";
+import { useRecordFilterDefinitions } from "../components/table/record-filter-definitions";
 import { readRegistry } from "../lib/entities";
 import {
   contractReference,
@@ -79,8 +94,6 @@ import { ManagedTable } from "../components/table/managed-table";
 import { ViewsMenu } from "../components/table/views-menu";
 import { PageTitle } from "../components/page-title";
 import { Button } from "../components/ui/button";
-import { Label } from "../components/ui/label";
-import { Switch } from "../components/ui/switch";
 
 /**
  * The query one layout asks the list for: the two filters, and the sort.
@@ -91,10 +104,8 @@ import { Switch } from "../components/ui/switch";
  * every page read: a cursor is a position in one ordering (CTR-024).
  */
 function listQuery(layout: Layout) {
-  const filters = contractFilters(layout.filters);
   return {
-    ...(filters.includeArchived ? { includeArchived: "true" as const } : {}),
-    ...(filters.includeEnded ? { includeEnded: "true" as const } : {}),
+    ...filterQuery(layout.filters, CONTRACT_FILTER_KEYS),
     ...(layout.sort
       ? { sort: layout.sort.key as never, dir: layout.sort.dir as SortDirection }
       : {}),
@@ -107,7 +118,7 @@ function sameQuery(a: Layout, b: Layout): boolean {
   return JSON.stringify(listQuery(a)) === JSON.stringify(listQuery(b));
 }
 
-export async function contractsLoader() {
+export async function contractsLoader(args?: LoaderFunctionArgs) {
   const user = await requireUser();
   // A Business User gets no surface at all, not a disabled one. The
   // API's 403 stands behind this.
@@ -124,10 +135,15 @@ export async function contractsLoader() {
   // not render because a preference read failed is worse than one with no
   // saved views in its menu.
   const views = await readViews(CATALOGUE.surface);
-  const opensOn = views.find((view) => view.isDefault) ?? null;
-  const layout = opensOn ? resolveLayout(CATALOGUE, opensOn.layout) : builtInLayout(CATALOGUE);
+  const opensOn = initialView(views, args);
+  const layout = layoutFromUrl(
+    opensOn ? resolveLayout(CATALOGUE, opensOn.layout) : builtInLayout(CATALOGUE),
+    args,
+    CONTRACT_FILTER_KEYS,
+    CONTRACT_SORT_KEYS,
+  );
 
-  const [list, options, registry] = await Promise.all([
+  const [list, options, registry, filterOptions] = await Promise.all([
     api.GET("/api/v1/contracts", { params: { query: listQuery(layout) } }),
     // The create dialog grows the picked type's hard-required fields
     // (CTR-016), and two of the nine field types name a row: a person or
@@ -135,14 +151,17 @@ export async function contractsLoader() {
     // are the M7 registry's own Member+ list.
     canEdit ? api.GET("/api/v1/contracts/options") : undefined,
     canEdit ? readRegistry() : undefined,
+    api.GET("/api/v1/contracts/filter-options"),
   ]);
-  if (!list.data || (canEdit && !(options?.data && registry?.data))) {
+  if (!filterOptions.data || !list.data || (canEdit && !(options?.data && registry?.data))) {
     throw new Error("The contract list could not be read.");
   }
   return {
+    filterOptions: filterOptions.data,
     user,
     canEdit,
     contracts: list.data.contracts,
+    total: list.data.total,
     /** Where the next page starts, or null when the first page is the
      * whole list (CTR-024). */
     nextCursor: list.data.nextCursor,
@@ -159,9 +178,11 @@ export function ContractsPage() {
   const loaded = useLoaderData<typeof contractsLoader>();
   const { user, canEdit, contractTypes, users, entities } = loaded;
   const intl = useIntl();
+  const navigate = useNavigate();
   const [rows, setRows] = useState<ContractRow[]>(loaded.contracts);
   /** Where the next page starts, or null at the end of the list
    * (CTR-024). */
+  const [total, setTotal] = useState(loaded.total ?? loaded.contracts.length);
   const [cursor, setCursor] = useState<string | null>(loaded.nextCursor);
   /** How many rows the last page brought, and the reference it started
    * at. The first is what the live region announces; the second is the
@@ -174,7 +195,13 @@ export function ContractsPage() {
   /** One list-level request at a time: a second toggle or restore
    * launched mid-flight would race the first, and the loser's answer
    * would overwrite the winner's list. */
-  const [listBusy, setListBusy] = useState(false);
+  const [requestBusy, setListBusy] = useState(false);
+  const navigation = useNavigation();
+  const listBusy = requestBusy || navigation.state !== "idle";
+  const readVersion = useRef(0);
+  useEffect(() => {
+    readVersion.current += 1;
+  }, [loaded, navigation.location]);
 
   /** What the reader is looking at, and the views they could be looking
    * at instead. Both start from the loader, which already resolved the
@@ -182,6 +209,27 @@ export function ContractsPage() {
   const [layout, setLayout] = useState<Layout>(loaded.layout);
   const [views, setViews] = useState<SavedView[]>(loaded.views);
   const [activeViewId, setActiveViewId] = useState<string | null>(loaded.activeViewId);
+
+  const previousLoad = useRef(loaded);
+  useEffect(() => {
+    const previous = previousLoad.current;
+    previousLoad.current = loaded;
+    if (previous === loaded) return;
+    setRows(loaded.contracts);
+    setCursor(loaded.nextCursor);
+    setTotal(loaded.total ?? loaded.contracts.length);
+    setLayout((current) =>
+      previous.activeViewId === loaded.activeViewId
+        ? { ...current, filters: loaded.layout.filters, sort: loaded.layout.sort }
+        : loaded.layout,
+    );
+    setViews(loaded.views);
+    setActiveViewId(loaded.activeViewId);
+    setAppended(null);
+    setPageError(null);
+    setListError(null);
+  }, [loaded]);
+  const definitions = useRecordFilterDefinitions("contracts", loaded.filterOptions);
 
   const activeView = views.find((view) => view.id === activeViewId) ?? null;
   /** The layout the active view stores, resolved — or the built-in one
@@ -191,10 +239,6 @@ export function ContractsPage() {
     : builtInLayout(CATALOGUE);
   const modified = !sameLayout(layout, storedLayout);
   const filters = contractFilters(layout.filters);
-
-  /** The working list — archived rows never count, whichever view is
-   * showing (they are mistakes, not contracts). */
-  const liveCount = rows.filter((row) => row.archivedAt === null).length;
 
   const signOut = useSignOut("/auth/login");
 
@@ -219,6 +263,11 @@ export function ContractsPage() {
     if (sameQuery(layout, next)) {
       setLayout(next);
       setActiveViewId(nextActiveId);
+      if (nextActiveId !== activeViewId)
+        await navigate(
+          { search: filterSearch(next, CONTRACT_FILTER_KEYS, nextActiveId) },
+          { preventScrollReset: true },
+        );
       return;
     }
     // One list-level request at a time: a second toggle launched
@@ -227,10 +276,12 @@ export function ContractsPage() {
     if (listBusy) return;
     setListError(null);
     setListBusy(true);
+    const version = ++readVersion.current;
     const { data } = await api
       .GET("/api/v1/contracts", { params: { query: listQuery(next) } })
       .catch(() => ({ data: undefined }))
       .finally(() => setListBusy(false));
+    if (version !== readVersion.current) return;
     if (!data) {
       setListError(
         intl.formatMessage({
@@ -242,16 +293,15 @@ export function ContractsPage() {
     }
     setRows(data.contracts);
     setCursor(data.nextCursor);
+    setTotal(data.total ?? data.contracts.length);
     setAppended(null);
     setPageError(null);
     setLayout(next);
     setActiveViewId(nextActiveId);
-  }
-
-  /** Toggle one of the two list filters. They live in the layout, so a
-   * saved view remembers them (DD-019 clause 2). */
-  function toggleFilter(key: "includeEnded" | "includeArchived", on: boolean) {
-    void commit({ ...layout, filters: { ...layout.filters, [key]: on } });
+    await navigate(
+      { search: filterSearch(next, CONTRACT_FILTER_KEYS, nextActiveId) },
+      { preventScrollReset: true },
+    );
   }
 
   /**
@@ -265,10 +315,12 @@ export function ContractsPage() {
     if (listBusy || cursor === null) return;
     setPageError(null);
     setListBusy(true);
+    const version = ++readVersion.current;
     const { data } = await api
       .GET("/api/v1/contracts", { params: { query: { cursor, ...listQuery(layout) } } })
       .catch(() => ({ data: undefined }))
       .finally(() => setListBusy(false));
+    if (version !== readVersion.current) return;
     if (!data) {
       // Beside the control that failed, and the control stays: the retry
       // is the button already under the reader's hand.
@@ -283,6 +335,7 @@ export function ContractsPage() {
     const first = data.contracts[0];
     setRows((current) => [...current, ...data.contracts]);
     setCursor(data.nextCursor);
+    setTotal(data.total ?? data.contracts.length);
     setAppended(first ? { count: data.contracts.length, from: first.id } : null);
   }
 
@@ -329,6 +382,11 @@ export function ContractsPage() {
   function adopt(next: SavedView[], activeId: string | null) {
     setViews(next);
     setActiveViewId(activeId);
+    if (activeId !== activeViewId)
+      void navigate(
+        { search: filterSearch(layout, CONTRACT_FILTER_KEYS, activeId) },
+        { replace: true, preventScrollReset: true },
+      );
   }
 
   /** Absent, not disabled, for a read-only viewer — the same convention
@@ -346,46 +404,43 @@ export function ContractsPage() {
    * column would be a blank heading over a column of blank cells. */
   const hasArchivedRow = rows.some((row) => row.archivedAt !== null);
 
-  /** Both table controls are absent while the list has no rows to
-   * arrange (DES-046 clause 7). */
-  const tableControls =
-    rows.length === 0 ? undefined : (
-      <>
-        <ViewsMenu
-          views={views}
-          activeView={activeView}
-          modified={modified}
-          busy={listBusy}
-          onSelect={selectView}
-          onSave={async () => {
-            if (!activeView) return;
-            adopt(await updateView(activeView.id, { config: layout }), activeView.id);
-          }}
-          onSaveAs={async (name) => {
-            const next = await createView(CATALOGUE.surface, name, layout);
-            adopt(next, next.find((view) => view.name === name)?.id ?? null);
-          }}
-          onRename={async (name) => {
-            if (!activeView) return;
-            adopt(await updateView(activeView.id, { name }), activeView.id);
-          }}
-          onSetDefault={async () => {
-            if (!activeView) return;
-            adopt(await updateView(activeView.id, { isDefault: true }), activeView.id);
-          }}
-          onDelete={async (view) => {
-            setViews(await deleteView(view.id));
-            await commit(builtInLayout(CATALOGUE), null);
-          }}
-          onReset={() => void commit(storedLayout)}
-        />
-        <ColumnMenu
-          catalogue={CATALOGUE}
-          layout={layout}
-          onLayoutChange={(next) => void commit(next)}
-        />
-      </>
-    );
+  const tableControls = (
+    <>
+      <ViewsMenu
+        views={views}
+        activeView={activeView}
+        modified={modified}
+        busy={listBusy}
+        onSelect={selectView}
+        onSave={async () => {
+          if (!activeView) return;
+          adopt(await updateView(activeView.id, { config: layout }), activeView.id);
+        }}
+        onSaveAs={async (name) => {
+          const next = await createView(CATALOGUE.surface, name, layout);
+          adopt(next, next.find((view) => view.name === name)?.id ?? null);
+        }}
+        onRename={async (name) => {
+          if (!activeView) return;
+          adopt(await updateView(activeView.id, { name }), activeView.id);
+        }}
+        onSetDefault={async () => {
+          if (!activeView) return;
+          adopt(await updateView(activeView.id, { isDefault: true }), activeView.id);
+        }}
+        onDelete={async (view) => {
+          setViews(await deleteView(view.id));
+          await commit(builtInLayout(CATALOGUE), null);
+        }}
+        onReset={() => void commit(storedLayout)}
+      />
+      <ColumnMenu
+        catalogue={CATALOGUE}
+        layout={layout}
+        onLayoutChange={(next) => void commit(next)}
+      />
+    </>
+  );
 
   return (
     <AppShell
@@ -395,21 +450,17 @@ export function ContractsPage() {
         <PageSubBar
           title={<FormattedMessage id="contracts.title" defaultMessage="Contracts" />}
           subtitle={
-            // What is on screen, and it says so whenever that is not the
-            // whole list. There is no total to state (CTR-024), and a
-            // bare "50 contracts" over a list of three hundred would be
-            // a number the page cannot stand behind.
-            cursor === null ? (
+            rows.length < total ? (
               <FormattedMessage
-                id="contracts.count"
-                defaultMessage="{count, plural, one {# contract} other {# contracts}}"
-                values={{ count: liveCount }}
+                id="contracts.filteredCount"
+                defaultMessage="{shown} of {total, plural, one {# contract} other {# contracts}}"
+                values={{ shown: rows.length, total }}
               />
             ) : (
               <FormattedMessage
-                id="contracts.countShown"
-                defaultMessage="{count, plural, one {# contract shown} other {# contracts shown}}"
-                values={{ count: liveCount }}
+                id="contracts.count"
+                defaultMessage="{count, plural, one {# contract} other {# contracts}}"
+                values={{ count: total }}
               />
             )
           }
@@ -422,33 +473,18 @@ export function ContractsPage() {
         title={intl.formatMessage({ id: "contracts.title", defaultMessage: "Contracts" })}
       />
       <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-end gap-2">
-          {listError && (
-            <p role="alert" className="text-xs text-status-danger-fg">
-              {listError}
-            </p>
-          )}
-          <Label htmlFor="contracts-show-ended">
-            <FormattedMessage id="contracts.showEnded" defaultMessage="Show ended" />
-          </Label>
-          <Switch
-            id="contracts-show-ended"
-            checked={filters.includeEnded}
-            disabled={listBusy}
-            onCheckedChange={(next) => toggleFilter("includeEnded", next)}
-          />
-          <Label htmlFor="contracts-show-archived">
-            <FormattedMessage id="contracts.showArchived" defaultMessage="Show archived" />
-          </Label>
-          <Switch
-            id="contracts-show-archived"
-            checked={filters.includeArchived}
-            disabled={listBusy}
-            onCheckedChange={(next) => toggleFilter("includeArchived", next)}
-          />
-        </div>
+        <RecordFilterBar
+          definitions={definitions}
+          values={layout.filters}
+          busy={listBusy}
+          error={listError}
+          onChange={(filters) => void commit({ ...layout, filters })}
+        />
         {rows.length === 0 ? (
           <EmptyContracts
+            narrowed={Object.keys(filterQuery(layout.filters, CONTRACT_FILTER_KEYS)).some(
+              (key) => !key.startsWith("include"),
+            )}
             archived={filters.includeArchived}
             onCreate={canEdit ? () => setCreateOpen(true) : undefined}
           />
@@ -548,8 +584,9 @@ export function ContractsPage() {
  * contract yet, and being added to one is what puts a row here. */
 function EmptyContracts({
   archived,
+  narrowed,
   onCreate,
-}: Readonly<{ archived: boolean; onCreate?: () => void }>) {
+}: Readonly<{ archived: boolean; narrowed: boolean; onCreate?: () => void }>) {
   return (
     <div className="flex flex-col items-center gap-4 rounded-card border border-border-default bg-raised px-6 py-16 text-center">
       {/* The destination's own glyph, as the C17 mock and the nav draw it. */}
@@ -558,7 +595,12 @@ function EmptyContracts({
           a composed id is a message the catalog never sees (DES-013). */}
       <div className="flex flex-col gap-1">
         <h2 className="text-md font-semibold">
-          {archived ? (
+          {narrowed ? (
+            <FormattedMessage
+              id="contracts.empty.filtered.title"
+              defaultMessage="No contracts match these filters"
+            />
+          ) : archived ? (
             <FormattedMessage
               id="contracts.empty.archived.title"
               defaultMessage="No archived contracts"
@@ -568,7 +610,12 @@ function EmptyContracts({
           )}
         </h2>
         <p className="max-w-md text-base text-muted">
-          {archived ? (
+          {narrowed ? (
+            <FormattedMessage
+              id="contracts.empty.filtered.body"
+              defaultMessage="Clear a filter to widen the list."
+            />
+          ) : archived ? (
             <FormattedMessage
               id="contracts.empty.archived.body"
               defaultMessage="Archived contracts are kept out of the way until they are restored."
@@ -595,7 +642,7 @@ function EmptyContracts({
           )}
         </p>
       </div>
-      {!archived && onCreate && (
+      {!narrowed && !archived && onCreate && (
         <Button onClick={onCreate}>
           <Plus size={16} aria-hidden="true" />
           <FormattedMessage id="contracts.create" defaultMessage="Create contract" />

@@ -101,6 +101,13 @@ function recordApi(
             { id: "status-open", slug: "open", displayName: "Open", category: "open" },
           ],
           users: [
+            {
+              id: "outsider",
+              displayName: "Olivia Outsider",
+              image: null,
+              archived: false,
+              role: "legal_team_member",
+            },
             { ...MEMBER, image: null, archived: false },
             { ...TEAMMATE, role: "legal_team_member" },
           ],
@@ -177,7 +184,12 @@ describe("the Matter record's Tasks section", () => {
     await user.click((await section()).getByRole("button", { name: "Add Task" }));
     const dialog = within(await screen.findByRole("dialog"));
     await user.type(dialog.getByLabelText("Title"), "Prepare exhibits");
-    await user.selectOptions(dialog.getByLabelText("Assignee"), TEAMMATE.id);
+    await user.click(dialog.getByLabelText("Assignee"));
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Assign task" })).getByRole("button", {
+        name: TEAMMATE.displayName,
+      }),
+    );
     await user.type(dialog.getByLabelText("Due date (optional)"), "2030-01-02");
     await user.click(dialog.getByRole("button", { name: "Add Task" }));
     const row = (await section()).getByRole("listitem");
@@ -222,6 +234,38 @@ describe("the Matter record's Tasks section", () => {
     expect(api.writes.map((write) => write.method)).toEqual(["POST", "PUT", "PATCH", "DELETE"]);
   });
 
+  it("changes and clears a task assignee without changing the Matter Manager", async () => {
+    const api = recordApi([task({ assigneeId: MEMBER.id })]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/matters/12/tasks");
+    const user = userEvent.setup();
+    const card = await section();
+    await user.click(
+      card.getByRole("button", { name: "Change assignee for Draft response: Mina Member" }),
+    );
+    await user.type(screen.getByRole("textbox", { name: "Search people" }), "Taylor");
+    await user.click(screen.getByRole("button", { name: TEAMMATE.displayName }));
+    expect(
+      await card.findByRole("button", {
+        name: "Change assignee for Draft response: Taylor Teammate",
+      }),
+    ).toBeInTheDocument();
+    expect(api.writes.at(-1)).toMatchObject({
+      method: "PATCH",
+      path: "/api/v1/matter-tasks/task-1",
+      body: { assigneeId: TEAMMATE.id },
+    });
+    expect(api.writes.at(-1)?.body).toEqual({ assigneeId: TEAMMATE.id });
+    await user.click(
+      card.getByRole("button", { name: "Change assignee for Draft response: Taylor Teammate" }),
+    );
+    await user.click(screen.getByRole("button", { name: "Unassigned" }));
+    expect(
+      await card.findByRole("button", { name: "Change assignee for Draft response: Unassigned" }),
+    ).toBeInTheDocument();
+    expect(api.writes.at(-1)?.body).toEqual({ assigneeId: null });
+  });
+
   it("gives a Contributor the assigned checklist and no mutation controls", async () => {
     stubApi({
       signedIn: CONTRIBUTOR,
@@ -235,5 +279,58 @@ describe("the Matter record's Tasks section", () => {
     expect(card.queryByRole("button", { name: "Add Task" })).not.toBeInTheDocument();
     expect(card.queryByRole("button", { name: /^Actions for/ })).not.toBeInTheDocument();
     expect(card.getByRole("checkbox")).toBeDisabled();
+  });
+});
+
+describe("team-first task picker", () => {
+  it("requires confirmation before adding someone, then includes them in the team choices", async () => {
+    const api = recordApi([task()]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/matters/12/tasks");
+    const user = userEvent.setup();
+    const card = within(await screen.findByRole("region", { name: "Tasks" }));
+    await user.click(
+      card.getByRole("button", { name: "Change assignee for Draft response: Unassigned" }),
+    );
+    let picker = within(screen.getByRole("dialog", { name: "Assign task" }));
+    expect(picker.queryByRole("button", { name: "Olivia Outsider" })).not.toBeInTheDocument();
+    await user.click(picker.getByRole("button", { name: "Add someone to the team…" }));
+    await user.type(picker.getByRole("textbox", { name: "Search people" }), "Olivia");
+    await user.click(picker.getByRole("button", { name: "Olivia Outsider" }));
+    expect(api.writes).toHaveLength(0);
+    expect(picker.getByText(/gain access to this record/)).toBeInTheDocument();
+    await user.click(picker.getByRole("button", { name: "Back" }));
+    expect(api.writes).toHaveLength(0);
+    await user.click(picker.getByRole("button", { name: "Olivia Outsider" }));
+    await user.click(picker.getByRole("button", { name: "Add to team and assign" }));
+    await user.click(
+      await card.findByRole("button", {
+        name: "Change assignee for Draft response: Olivia Outsider",
+      }),
+    );
+    expect(api.writes).toEqual([
+      {
+        method: "PATCH",
+        path: "/api/v1/matter-tasks/task-1",
+        body: { assigneeId: "outsider", addToTeam: true },
+      },
+    ]);
+    picker = within(screen.getByRole("dialog", { name: "Assign task" }));
+    expect(picker.getByRole("button", { name: "Olivia Outsider" })).toBeInTheDocument();
+  });
+
+  it("does not offer team expansion to someone who cannot manage the confidential audience", async () => {
+    const api = recordApi([task()], matter({ isConfidential: true, manager: null }));
+    stubApi({ signedIn: { ...MEMBER, id: "ordinary-member" }, extra: api.handler });
+    renderAt("/matters/12/tasks");
+    const user = userEvent.setup();
+    const card = within(await screen.findByRole("region", { name: "Tasks" }));
+    await user.click(
+      card.getByRole("button", { name: "Change assignee for Draft response: Unassigned" }),
+    );
+    const picker = within(screen.getByRole("dialog", { name: "Assign task" }));
+    expect(
+      picker.queryByRole("button", { name: "Add someone to the team…" }),
+    ).not.toBeInTheDocument();
   });
 });

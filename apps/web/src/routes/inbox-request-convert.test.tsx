@@ -213,15 +213,26 @@ function open(api: ReturnType<typeof requestApi>) {
   return renderAt("/inbox/45");
 }
 
-describe("the sub-bar's third action (DES-058, INT-007)", () => {
-  it("offers Convert beside Decline and Resolve while the Request is undecided", async () => {
+describe("the Triage menu (INT-007)", () => {
+  it("offers both conversion targets and resolution from one Triage button", async () => {
+    const user = userEvent.setup();
     open(requestApi());
     const actions = within(await subbar()).getAllByRole("button");
-    expect(actions.map((button) => button.textContent)).toEqual([
-      "Decline",
-      "Resolve",
+    expect(actions.map((button) => button.textContent)).toEqual(["Assign", "Triage"]);
+    await user.click(actions[1]!);
+    expect((await screen.findAllByRole("menuitem")).map((item) => item.textContent)).toEqual([
       "Convert to contract",
+      "Convert to matter",
+      "Resolve request without converting",
     ]);
+  });
+
+  it("opens the chosen module even when the request is routed to the other module", async () => {
+    const user = userEvent.setup();
+    open(requestApi());
+    const dialog = await openDisposition(user, "Convert to matter");
+    expect(within(dialog).getByRole("button", { name: "Convert to matter" })).toBeInTheDocument();
+    expect(within(dialog).queryByRole("button", { name: "Convert to contract" })).toBeNull();
   });
 
   it("offers nothing on a Request somebody has already converted", async () => {
@@ -234,9 +245,7 @@ describe("the sub-bar's third action (DES-058, INT-007)", () => {
         }),
       ),
     );
-    expect(
-      within(await subbar()).queryByRole("button", { name: "Convert to contract" }),
-    ).toBeNull();
+    expect(within(await subbar()).queryByRole("button", { name: "Triage" })).toBeNull();
     // What was decided is the Outcome card's to say, and it links to the
     // record the ask became.
     expect(await screen.findByRole("link", { name: "C-51" })).toBeInTheDocument();
@@ -757,9 +766,7 @@ describe("what happens after the press (INT-007)", () => {
     await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     expect(api.conversions).toEqual([]);
-    expect(
-      within(await subbar()).getByRole("button", { name: "Convert to contract" }),
-    ).toBeInTheDocument();
+    expect(within(await subbar()).getByRole("button", { name: "Triage" })).toBeInTheDocument();
   });
 
   it("prints the seam's own sentence on an ordinary refusal", async () => {

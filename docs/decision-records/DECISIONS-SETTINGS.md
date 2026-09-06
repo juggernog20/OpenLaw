@@ -143,6 +143,12 @@ Built in M20/2 (#376) and recorded at the M20 close, where the sweep found it st
 - **Rationale** — Everything shipped is wiring for surfaces M2 already built. Email change is the one expensive item: it needs a verification flow we haven't configured, and it churns the identity the DD-010 allowlist and invites key on.
 - **Consequences** — `users` gains the `timezone` column DES-014 anticipated. FUTURE-FEATURES entry (self-service email change; the v1 workaround is admin-driven: archive + re-invite under the new address). The Personal → Notifications pane is unaffected — it ships in M18 with the notification engine (NOT-001).
 
+### Addendum (2026-09-05) — View as business user
+
+Settings → Personal → Profile includes an **App view** card for Administrators and Legal Team Members. **View as business user** opens `/portal`, using the existing requester-scoped forms, Your requests list, and conversations. The signed-in account and role stay the same; the portal shows that person's own Requests, and submissions and replies are real.
+
+Every authenticated portal page shows Member+ staff a **Viewing as business user** notice and **Return to legal view** link to `/settings/profile`. The route determines the view, so reloads and portal navigation retain the return control without a stored preference. Business Users and Contributors see neither control. This supersedes the INT-001 M20/2 addendum's decision to omit a staff return control; its session gate and requester scoping still apply.
+
 ## SET-007 — E-signature lives in Organization → Integrations, not in Contracts
 
 - **Status** — Accepted

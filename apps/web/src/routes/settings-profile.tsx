@@ -15,14 +15,14 @@
  */
 
 import { useRef, useState, type SubmitEvent as FormSubmitEvent } from "react";
-import { useLoaderData, useRevalidator } from "react-router";
+import { Link, useLoaderData, useRevalidator } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
 import { formatShortDate } from "../lib/format";
 import { field } from "../lib/forms";
 import { networkError } from "../lib/messages";
-import { ROLE_MESSAGES, type Role } from "../lib/roles";
+import { isMemberPlus, ROLE_MESSAGES, type Role } from "../lib/roles";
 import { requireUser } from "../lib/session";
 import { Avatar } from "../components/avatar";
 import { PageTitle } from "../components/page-title";
@@ -292,6 +292,27 @@ export function SettingsProfilePage() {
       <PageTitle
         title={intl.formatMessage({ id: "settings.section.profile", defaultMessage: "Profile" })}
       />
+
+      {isMemberPlus(loaded.user.role) && (
+        <SettingsCard
+          title={<FormattedMessage id="settings.profile.appView" defaultMessage="App view" />}
+        >
+          <p className="text-sm text-muted">
+            <FormattedMessage
+              id="settings.profile.businessView.description"
+              defaultMessage="Open the intake portal as a Business User sees it: submit requests, track their progress, and talk to Legal. You’ll see your own requests, and anything you submit is real."
+            />
+          </p>
+          <Button asChild variant="secondary" className="self-start">
+            <Link to="/portal">
+              <FormattedMessage
+                id="settings.profile.businessView.action"
+                defaultMessage="View as business user"
+              />
+            </Link>
+          </Button>
+        </SettingsCard>
+      )}
 
       <SettingsCard
         title={<FormattedMessage id="settings.section.profile" defaultMessage="Profile" />}

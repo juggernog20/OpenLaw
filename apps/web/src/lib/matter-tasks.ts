@@ -12,6 +12,7 @@ export type MatterTask = ListResponse["tasks"][number];
 export interface MatterTaskInput {
   title: string;
   assigneeId?: string | null;
+  addToTeam?: boolean;
   dueDate?: string | null;
 }
 export type MatterTasksOutcome =
@@ -53,7 +54,7 @@ export async function addMatterTask(
 
 export async function updateMatterTask(
   taskId: string,
-  input: MatterTaskInput,
+  input: Partial<MatterTaskInput>,
 ): Promise<MatterTasksOutcome> {
   const result = await api
     .PATCH("/api/v1/matter-tasks/{taskId}", {

@@ -152,6 +152,7 @@ export async function openDisposition(
   user: ReturnType<typeof userEvent.setup>,
   action: string,
 ): Promise<HTMLElement> {
-  await user.click(within(await subbar()).getByRole("button", { name: action }));
+  await user.click(within(await subbar()).getByRole("button", { name: "Triage" }));
+  await user.click(await screen.findByRole("menuitem", { name: action }));
   return screen.findByRole("dialog");
 }

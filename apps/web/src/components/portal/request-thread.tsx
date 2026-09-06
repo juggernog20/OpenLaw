@@ -48,9 +48,15 @@
  * 3. I7's author pill reads "You" or "Legal". Both are kept, because on
  *    a Request the audience is the Requester plus Member+ staff and
  *    there is nobody else an author could be.
+ * 4. I7 draws a thread that already has messages. A thread with none
+ *    says so, in DES-003's one-glyph-one-sentence form, rather than
+ *    opening on a bare reply box under a "Conversation" head: a
+ *    requester who has just asked should read that nothing has been
+ *    said yet, not wonder whether the page failed to load it.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { MessageSquare } from "lucide-react";
 import { FormattedMessage, defineMessage, useIntl } from "react-intl";
 import { api } from "../../lib/api";
 import {
@@ -180,12 +186,22 @@ export function RequestThread({
       {/* A `div` rather than a `header`, the submitted card's rule: the
           portal draws one banner, and a card strip that also claimed the
           role would make "the page header" mean two things. */}
-      <div className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
+      <div className="flex h-section-header items-center gap-2 border-b border-border-default bg-section-header px-4">
+        <MessageSquare aria-hidden="true" className="size-4 shrink-0 text-muted" />
         <h2 id="portal-request-thread-heading" className="text-base font-semibold">
           <FormattedMessage id="portal.request.threadHeading" defaultMessage="Conversation" />
         </h2>
       </div>
       <div className="flex flex-col gap-4 p-4">
+        {!readFailed && cursor === null && comments.length === 0 && (
+          <p className="flex flex-col items-center gap-2 py-6 text-center text-md text-muted">
+            <MessageSquare aria-hidden="true" className="size-6 text-subtle" />
+            <FormattedMessage
+              id="portal.request.threadEmpty"
+              defaultMessage="No replies yet. When Legal answers, it shows up here."
+            />
+          </p>
+        )}
         {readFailed && (
           <p role="alert" className="text-sm text-status-danger-fg">
             <FormattedMessage
@@ -219,7 +235,7 @@ export function RequestThread({
           </div>
         )}
         {comments.length > 0 && (
-          <ul className="flex flex-col gap-4">
+          <ul className="flex flex-col gap-5">
             {comments.map((comment) => (
               <Message
                 key={comment.id}
@@ -287,9 +303,9 @@ function Message({
       // controls, not its messages — but focusable by hand, so the
       // paging control has somewhere to hand focus once it is gone.
       tabIndex={-1}
-      className="flex gap-2.5 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-link"
+      className="flex gap-3 rounded-card focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-link"
     >
-      <Avatar name={comment.author.displayName} image={comment.author.image} className="size-6" />
+      <Avatar name={comment.author.displayName} image={comment.author.image} className="size-8" />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2">
           <span className={cn("text-base font-semibold", comment.author.archived && "opacity-50")}>
@@ -404,7 +420,7 @@ function Composer({
   return (
     <form
       id="portal-request-composer"
-      className="flex flex-col gap-2"
+      className="flex flex-col gap-2 border-t border-border-muted pt-4"
       onSubmit={(event) => {
         event.preventDefault();
         void post();
@@ -422,7 +438,7 @@ function Composer({
         value={draft}
         disabled={busy}
         onChange={(event) => setDraft(event.target.value)}
-        className={TEXTAREA_CLASS}
+        className={cn(TEXTAREA_CLASS, "min-h-24")}
       />
       <CommentFilePicker files={files} disabled={busy} onChange={setFiles} />
       <div className="flex justify-end">

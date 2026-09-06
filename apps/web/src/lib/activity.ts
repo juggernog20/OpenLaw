@@ -2198,6 +2198,18 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   // comment on the same feed and narrates as itself — this entry is the
   // closure, so a resolution with a reply and one without read the same
   // here.
+  "request.assignee_changed": {
+    icon: UserPlus,
+    message: defineMessage({
+      id: "activity.request.assigneeChanged",
+      defaultMessage:
+        "{assigned, select, yes {{actor} assigned {assignee} to triage this request} other {{actor} cleared the triage assignment}}",
+    }),
+    values: (_intl, payload) => ({
+      assigned: payload.to ? "yes" : "no",
+      assignee: typeof payload.assignee === "string" ? payload.assignee : "",
+    }),
+  },
   "request.resolved": {
     icon: CircleCheck,
     message: defineMessage({

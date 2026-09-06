@@ -714,18 +714,60 @@ describe("the flag on the contract row (M10/2)", () => {
     expect(listed).toMatchObject({ isConfidential: true });
   });
 
-  it("leaves the list its no-count shape — there is no total to scrub", async () => {
-    const res = await harness.app.inject({
-      method: "GET",
-      url: "/api/v1/contracts",
-      cookies: adminCookies,
-    });
-    expect(res.statusCode, res.body).toBe(200);
-    // The cursor CTR-024 added is a position, not a number: it says
-    // where the next page starts and nothing about how many rows exist
-    // beyond it. The property this test is about — that no total rides
-    // out to be scrubbed — is unchanged.
-    expect(Object.keys(res.json())).toEqual(["contracts", "nextCursor"]);
+  it("counts and offers filter choices only from reachable records", async () => {
+    for (const cookies of [outsiderCookies, contributorCookies]) {
+      const reached: {
+        id: string;
+        contractTypeId: string;
+        statusId: string;
+        manager: { id: string } | null;
+      }[] = [];
+      let cursor: string | null = null;
+      let total: number;
+      do {
+        const url: string = `/api/v1/contracts?includeEnded=true&includeArchived=true${cursor ? `&cursor=${cursor}` : ""}`;
+        const res = await harness.app.inject({
+          method: "GET",
+          url,
+          cookies,
+        });
+        expect(res.statusCode, res.body).toBe(200);
+        reached.push(...res.json().contracts);
+        total = res.json().total;
+        cursor = res.json().nextCursor;
+      } while (cursor);
+      expect(total).toBe(reached.length);
+      for (const row of reached)
+        expect(
+          (
+            await harness.app.inject({
+              method: "GET",
+              url: `/api/v1/contracts?owner=missing-person&status=${row.statusId}`,
+              cookies,
+            })
+          ).json().total,
+        ).toBe(0);
+      const options = await harness.app.inject({
+        method: "GET",
+        url: "/api/v1/contracts/filter-options",
+        cookies,
+      });
+      expect(options.statusCode, options.body).toBe(200);
+      const facets = options.json() as {
+        types: { id: string }[];
+        statuses: { id: string }[];
+        people: { id: string }[];
+      };
+      expect(new Set(facets.types.map((row) => row.id))).toEqual(
+        new Set(reached.map((row) => row.contractTypeId)),
+      );
+      expect(new Set(facets.statuses.map((row) => row.id))).toEqual(
+        new Set(reached.map((row) => row.statusId)),
+      );
+      expect(new Set(facets.people.map((row) => row.id))).toEqual(
+        new Set(reached.flatMap((row) => (row.manager ? [row.manager.id] : []))),
+      );
+    }
   });
 });
 

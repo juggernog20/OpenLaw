@@ -422,6 +422,10 @@ export interface RequestEvent {
 }
 
 /** What a Request's move tells the person who asked (INT-007). */
+export interface RequestAssignedEvent extends RequestEvent {
+  assigneeId: string;
+}
+
 export interface RequestStatusChangedEvent extends RequestEvent {
   /** The lifecycle either side of the move. A fixed enum, because code
    * branches on it (INT-001 as revised by INT-007) — unlike a contract's
@@ -511,6 +515,7 @@ export interface Notifier {
    * its Owner (CTR-022), so the wall would still be answering about the
    * previous one.
    */
+  requestAssigned(tx: NotifyingTransaction, event: RequestAssignedEvent): Promise<void>;
   ownerAssigned(tx: NotifyingTransaction, event: OwnerAssignedEvent): Promise<void>;
 
   /**
@@ -1387,6 +1392,28 @@ export function createNotifier(deps: NotifierDeps): Notifier {
             actorName: event.actorName,
           },
         })),
+      );
+    },
+
+    async requestAssigned(tx: NotifyingTransaction, event: RequestAssignedEvent): Promise<void> {
+      const audience = await requestAudience(tx, event.requestId);
+      if (!audience) return;
+      await fanOut(
+        tx,
+        "request.assigned",
+        { type: REQUEST_ENTITY, id: event.requestId },
+        event.actorId,
+        [
+          {
+            userId: event.assigneeId,
+            payload: {
+              requestNumber: audience.requestNumber,
+              requestSummary: audience.summary,
+              actorId: event.actorId,
+              actorName: event.actorName,
+            },
+          },
+        ],
       );
     },
 

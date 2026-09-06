@@ -1,22 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * Resolve on the staff request detail (#419), through the real route
- * table with the standard fetch stub.
- *
- * The screen's own subjects — the envelope, the values, the paper, the
- * thread — are `inbox-request.test.tsx`'s, and the scaffold the dialog
- * rides is `inbox-request-decline.test.tsx`'s. This suite is Resolve's
- * own shape: that the sub-bar offers it beside Decline while a Request
- * is undecided, that the closing reply is genuinely optional and is
- * omitted rather than sent empty, that the page repaints as Resolved,
- * and that a lost race ends the dialog in a statement.
- *
- * What the seam does with a resolution — the comment on the thread, the
- * two events, the row lock — is the API harness's subject
- * (`resolve.test.ts`). What this suite asks of it is that the screen
- * sends the reply it was given and reads the Request again afterwards.
- */
+/** Triage resolution: required note, persistence, cancellation and concurrent decisions. */
 
 import { describe, expect, it } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
@@ -66,16 +50,19 @@ function requestApi(
   };
 }
 
-const openResolve = (user: ReturnType<typeof userEvent.setup>) => openDisposition(user, "Resolve");
+const openResolve = (user: ReturnType<typeof userEvent.setup>) =>
+  openDisposition(user, "Resolve request without converting");
 
 describe("the disposition surface (INT-007, DES-058)", () => {
-  it("offers Resolve beside Decline while the Request is undecided", async () => {
+  it("offers resolution inside Triage", async () => {
+    const user = userEvent.setup();
     stubApi({ signedIn: MEMBER, extra: requestApi().handler });
     renderAt("/inbox/45");
-
-    const bar = await subbar();
-    expect(within(bar).getByRole("button", { name: "Resolve" })).toBeInTheDocument();
-    expect(within(bar).getByRole("button", { name: "Decline" })).toBeInTheDocument();
+    await user.click(within(await subbar()).getByRole("button", { name: "Triage" }));
+    expect(
+      await screen.findByRole("menuitem", { name: "Resolve request without converting" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "Decline" })).toBeNull();
   });
 
   it("offers nothing once the Request has been decided", async () => {
@@ -84,7 +71,7 @@ describe("the disposition surface (INT-007, DES-058)", () => {
     stubApi({ signedIn: MEMBER, extra: requestApi(request({ status: "resolved" })).handler });
     renderAt("/inbox/45");
 
-    expect(within(await subbar()).queryByRole("button", { name: "Resolve" })).toBeNull();
+    expect(within(await subbar()).queryByRole("button", { name: "Triage" })).toBeNull();
     const outcome = await screen.findByRole("region", { name: "Outcome" });
     expect(within(outcome).getByText("Resolved")).toBeInTheDocument();
   });
@@ -98,7 +85,7 @@ describe("the disposition surface (INT-007, DES-058)", () => {
     renderAt("/inbox/45");
 
     const dialog = await openResolve(user);
-    await user.type(within(dialog).getByLabelText(/Closing reply/), "Second thoughts.");
+    await user.type(within(dialog).getByLabelText(/Resolution note/), "Second thoughts.");
     await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
 
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
@@ -108,13 +95,13 @@ describe("the disposition surface (INT-007, DES-058)", () => {
 });
 
 describe("the closing reply (INT-006)", () => {
-  it("says the box is optional and what the words in it become", async () => {
+  it("says the box is required and what the words in it become", async () => {
     const user = userEvent.setup();
     stubApi({ signedIn: MEMBER, extra: requestApi().handler });
     renderAt("/inbox/45");
 
     const dialog = await openResolve(user);
-    expect(within(dialog).getByLabelText("Closing reply (optional)")).toBeInTheDocument();
+    expect(within(dialog).getByLabelText("Resolution note (required)")).toBeInTheDocument();
     // Which of the two disposition boxes this is: a reply goes on the
     // conversation, where the requester can answer it.
     expect(
@@ -130,7 +117,7 @@ describe("the closing reply (INT-006)", () => {
 
     const dialog = await openResolve(user);
     await user.type(
-      within(dialog).getByLabelText(/Closing reply/),
+      within(dialog).getByLabelText(/Resolution note/),
       "Use the short-form NDA in the templates folder.",
     );
     await user.click(within(dialog).getByRole("button", { name: "Resolve request" }));
@@ -143,13 +130,11 @@ describe("the closing reply (INT-006)", () => {
     await waitFor(() => expect(api.reads).toBeGreaterThan(1));
     const bar = await subbar();
     await waitFor(() => expect(within(bar).getByText("Resolved")).toBeInTheDocument());
-    expect(within(bar).queryByRole("button", { name: "Resolve" })).toBeNull();
+    expect(within(bar).queryByRole("button", { name: "Triage" })).toBeNull();
     expect(within(bar).queryByRole("button", { name: "Decline" })).toBeNull();
   });
 
-  it("closes the Request with no reply at all when the box is left empty", async () => {
-    // INT-006's optional half: the answer is often already on the thread,
-    // and a second copy of it would be noise.
+  it("keeps the Request open without sending a write when the note is empty", async () => {
     const user = userEvent.setup();
     const api = requestApi();
     stubApi({ signedIn: MEMBER, extra: api.handler });
@@ -158,11 +143,18 @@ describe("the closing reply (INT-006)", () => {
     const dialog = await openResolve(user);
     await user.click(within(dialog).getByRole("button", { name: "Resolve request" }));
 
-    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-    expect(api.resolutions).toEqual([{}]);
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+      "Explain why this request is being resolved without converting.",
+    );
+    expect(within(dialog).getByLabelText(/Resolution note/)).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+    expect(within(dialog).getByLabelText(/Resolution note/)).toHaveFocus();
+    expect(api.resolutions).toEqual([]);
   });
 
-  it("treats a box of spaces as no reply rather than sending a blank one", async () => {
+  it("requires a nonblank note", async () => {
     // The seam refuses a blank reply, and it is right to: a box of
     // spaces is not an answer. The screen never asks it to.
     const user = userEvent.setup();
@@ -171,11 +163,18 @@ describe("the closing reply (INT-006)", () => {
     renderAt("/inbox/45");
 
     const dialog = await openResolve(user);
-    await user.type(within(dialog).getByLabelText(/Closing reply/), "   ");
+    await user.type(within(dialog).getByLabelText(/Resolution note/), "   ");
     await user.click(within(dialog).getByRole("button", { name: "Resolve request" }));
 
-    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-    expect(api.resolutions).toEqual([{}]);
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+      "Explain why this request is being resolved without converting.",
+    );
+    expect(within(dialog).getByLabelText(/Resolution note/)).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+    expect(within(dialog).getByLabelText(/Resolution note/)).toHaveFocus();
+    expect(api.resolutions).toEqual([]);
   });
 
   it("prints the seam's own refusal when it gives one", async () => {
@@ -185,7 +184,7 @@ describe("the closing reply (INT-006)", () => {
     renderAt("/inbox/45");
 
     const dialog = await openResolve(user);
-    await user.type(within(dialog).getByLabelText(/Closing reply/), "All sorted.");
+    await user.type(within(dialog).getByLabelText(/Resolution note/), "All sorted.");
     await user.click(within(dialog).getByRole("button", { name: "Resolve request" }));
 
     expect(await within(dialog).findByRole("alert")).toHaveTextContent(
@@ -217,6 +216,10 @@ describe("the lost race (INT-007, TECH-020)", () => {
     renderAt("/inbox/45");
 
     const dialog = await openResolve(user);
+    await user.type(
+      within(dialog).getByLabelText(/Resolution note/),
+      "Answered in the thread; no further work needed.",
+    );
     await user.click(within(dialog).getByRole("button", { name: "Resolve request" }));
 
     // The outcome comes off the problem type's extension member, so the
@@ -262,7 +265,7 @@ describe("the lost race (INT-007, TECH-020)", () => {
     renderAt("/inbox/45");
 
     const dialog = await openResolve(user);
-    await user.type(within(dialog).getByLabelText(/Closing reply/), "Answered on the thread.");
+    await user.type(within(dialog).getByLabelText(/Resolution note/), "Answered on the thread.");
     await user.click(within(dialog).getByRole("button", { name: "Resolve request" }));
 
     await within(dialog).findByText("Somebody else already declined this request.");

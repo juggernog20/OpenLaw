@@ -1893,7 +1893,7 @@ _M11/6 adds the inline variant's second surface: a **document** row in the contr
 
 ### Built addendum (2026-09-01, M29 close, [#625](https://github.com/juggernog20/OpenLaw/issues/625)): Home closes the dashboard obligation
 
-Home renders the inline lock and literal `CONFI` beside reachable Confidential Contract and Matter titles in its Approvals, Tasks, Dates, Your contracts, and Your matters sections. The marker keeps its accessible name and carries no background wash. Record reach runs before totals and the three-row cap, so an unreachable Confidential record still contributes no title, marker, row, count, or gap.
+Home renders the inline lock and literal `CONFI` beside reachable Confidential Contract and Matter titles in its Approvals, Tasks, Dates, Your contracts, and Your matters sections. The marker keeps its accessible name and carries no background wash. Record reach runs before totals and the four-row cap, so an unreachable Confidential record still contributes no title, marker, row, count, or gap.
 
 This closes the last future surface named in this record's consequences. Search adopted the marker in M25, and Home adopts it in M29.
 
@@ -3154,6 +3154,18 @@ The Documents destination adopts the managed table whole. Title is its required 
 
 The Entity registry adopts the managed table whole under the Calendar/List/Chart destination switch. Legal name is its required flex column; Type, Jurisdiction, Registration no., Status, and Next obligation complete the built-in layout, with Created available from the column menu. Type, Status, Jurisdiction, Majority owner, and Show archived are the saved filter row. The shared resize, reorder, sort, saved-view, truncation, horizontal escape, archived row action, and keyset foot behaviours are unchanged.
 
+### Addendum (2026-09-05, UX review): shared quick filters for Contracts and Matters
+
+Both destinations use one Filter popover with searchable properties and checkbox choices. Values within one property match any selection; separate properties combine with AND. There is no nested condition builder. Active filters are editable chips with individual removal, plus Clear all. Date ranges accept either endpoint and include both boundary dates.
+
+Contracts offer Owner (including Me and Unassigned), Status, Type, Effective date, Expiry date, Show ended, and Show archived. Matters offer Manager (including Me and Unassigned), Status, Type, Priority, Risk (including Not assessed), Opened date, Next deadline, Show closed, and Show archived. Next deadline means the same next date displayed in the table, rather than any date attached to the Matter.
+
+The API applies filters and access scope before pagination, and uses those same predicates for the matching total. Filter choices come from the entire reachable collection, including retired labels still in use. Links carry filters and sort; browser history, refresh, and saved views restore them. Existing single-value saved filters remain readable. Home's Your Contracts opens Owner: Me; Your Matters opens Manager: Me. Explicit link filters override the saved default view's filters.
+
+For these two destinations, clause 7 is amended: Views and Columns remain available on an empty result, so the reader can save or leave a view that currently matches nothing. Counts describe the matching collection, including archived or closed records when included.
+
+Visual references: [Linear's property and status filter menus](https://mobbin.com/screens/d1d26f7d-e1e5-490f-ab4f-c96dd12854c1) and [Notion's editable multi-select filter chip](https://mobbin.com/screens/d8abbe0b-4c55-4316-91b7-2e6b4baecb52). OpenLaw retains its own components and semantic colors.
+
 ## DES-047: The Team roster is an activity-bar applet (amends DES-016, DES-032, DES-028)
 
 - **Status:** Accepted
@@ -4292,7 +4304,7 @@ Home uses the DES-030 shell and current role-filtered top navigation, with Home 
 6. Your contracts
 7. Your matters
 
-At desktop widths adjacent cards may share a row, but that row-wise sequence remains the document and narrow-layout order. Each section uses the record-page card convention: a `border-default` card on `bg-raised` at the six-pixel card radius, a 38-pixel `bg-section-header` strip, its title, a `badge-count` total badge, capped rows, and a trailing `View all N` link. Home shows at most three rows in a populated section. The badge and link report the full eligible total; the link opens the corresponding destination or filtered destination. Home has no local paging.
+At desktop widths adjacent cards may share a row, but that row-wise sequence remains the document and narrow-layout order. Each section uses the record-page card convention: a `border-default` card on `bg-raised` at the six-pixel card radius, a 38-pixel `bg-section-header` strip, its title, a `badge-count` total badge, capped rows, and a trailing `View all N` link. Home shows at most four rows in a populated section. The badge and link report the full eligible total; the link opens the corresponding destination or filtered destination. Home has no local paging.
 
 Home adopts DES-056's fixed-read posture. It has no managed-table header, column controls, sorting, saved views, Filter control, Customize control, widget picker, or section rearrangement. Server-side eligibility and role predicates determine the read; the user does not curate it.
 
@@ -4308,7 +4320,7 @@ When every role-eligible section has a zero total, Home replaces the card grid w
 2. **Sub-bar.** The ancestor's portfolio summary, Filter, Customize, and New matter controls are removed. Home names the surface and does not pretend to be either a managed table or a creation entry point.
 3. **Section inventory.** `My approvals` becomes Approvals waiting on you and moves first. `Upcoming` splits into Dates approaching and Entity obligations. Tasks assigned to you is added. `Intake queue` becomes Inbox and uses Request vocabulary. `My open matters` splits into Your contracts and Your matters. `Recent activity` and `Recent documents` are removed; those histories and files remain on records and in Documents.
 4. **Hierarchy.** The old main-column/sidebar split becomes one record-card grid. Pairing is visual only: the seven-section order above is stable in the document, responsive stack, and assistive reading order.
-5. **Density and totals.** The ancestor's unrelated per-card row counts become a three-row cap with full totals and an explicit destination link. The total is not the number of rendered rows.
+5. **Density and totals.** The ancestor's unrelated per-card row counts become a four-row cap with full totals and an explicit destination link. The total is not the number of rendered rows.
 6. **Actions.** Inline queue decisions and bespoke card controls are removed. A Home row opens its underlying work; workflow actions live on that destination or record.
 7. **Semantic markers.** The ancestor's Confidential shorthand is normalized to DES-029's lock and literal `CONFI`. DES-018 severe identifies overdue rows, and DES-043's warning flag identifies renewal pending confirmation. Request urgency and Matter priority wear DES-018's ramp by value with the ramp's own vocabulary, not I1's retired `Normal`. These meanings do not change with theme.
 8. **Theme fidelity.** Light, Warm, and Dark use the current shell and semantic theme tokens with identical geometry. `designs/final-themes.pen` remains the token-era ancestor and is not amended.
@@ -4327,6 +4339,12 @@ Home answers a stable question: what needs this user's attention, and where can 
 ### Consequences
 
 `designs/home.pen` is the M29 source for populated Light, Warm, and Dark Home, the all-zero welcome, and the Contributor projection. Web tickets must preserve section order, role omission, row caps, full totals, and marker semantics, and must route continuation to the owning destination rather than adding Home-only workflows. Tests should pin the projection order, Contributor absence rules, all-zero switch, and confidentiality and renewal labels.
+
+### UX review addendum (2026-09-05) — Tasks and Dates continuation
+
+Tasks assigned to you opens `/home/tasks` through **View all N**. The page lists assigned open Tasks across reachable active Contracts and Matters, ordered by due date, and loads further rows when needed. Member+ users can complete a Task through the owning record's API. A checked row holds briefly, fades, then closes its gap; removal waits for animation end. A bordered Undo button beside the completion message reopens the latest completed Task. Contributors retain read-only links. Home keeps its four-row preview.
+
+Dates approaching opens **Your dates** in a wide modal through **View all N**. Home's total and preview still cover the next thirty days; the modal reads the full displayed month with the same personal, access, and lifecycle predicates. Previous month, next month, and Today share the top bar. Date numbers align under weekday headings; marked days can be selected to filter the list, and Show whole month clears the selection. Each entry links to its Contract or Matter Key dates tab. The modal fills narrow screens and preserves the standard dialog dismissal and focus behavior.
 
 ## DES-070: AI analysis is one settings pane, one record card, and one unverified marker (normalizes F.3; extends DES-054, DES-032, DES-042, DES-069)
 
@@ -4391,6 +4409,45 @@ The compare card names both operand filenames in its toolbar. Its canvas well ho
 ### Consequences
 
 The Comparison address is shareable and belongs to the Document rather than one owner kind. The pane and document remain one keyboard and screen-reader surface. The M32 acceptance journey enters through the version row, presses a change, exports, reads the Generated redline on the chain and in the doc panel, and runs axe over the ready screen in Light and Dark.
+
+## DES-072: The portal page is a main column beside an aside (amends the I5–I7 column; extends DES-012, DES-003, DES-068)
+
+- **Status:** Accepted
+- **Date:** 2026-09-06
+
+### Context
+
+`intake.pen`'s I5–I7 draw the portal as one 880px column: on the home the picker, the "Before you submit" panel, and the my-requests list stacked in that order; on the form the fields with the type's links beside them; on the request detail the banner, the thread, and "What you submitted" in a run. Built to the frame, the pages read as three unrelated blocks. The deflection panel wore the information pair for something that is always there, the picker cards led with the link colour, and a Request with no replies opened on a bare reply box. Blair asked for the portal to be redesigned within the app's own system.
+
+### Decision
+
+**Every portal page below the header shares one anatomy.** A back link to the home (except on the home), a page head of `text-2xl` title over a `text-md` muted lead, and then either one column or the split. The portal column is 64rem. The split is `grid-cols-portal-split`, `minmax(0, 1fr) 18rem`, applied from `@3xl` of the page container; below it the two stack in the frames' own order.
+
+**The home puts the deflection panel in the aside.** Main column: the picker, then my-requests. Aside: "Before you submit". Below the split the DOM order holds the frame's order, picker, panel, list.
+
+**The request detail puts "What you submitted" in the aside.** Main column: the status banner, then the Conversation card. Aside: the submitted card, with its rows stacked label over value. Below the split the frame's order holds, banner, thread, card.
+
+**The form puts the type's own links in the aside** and draws the form under two section strips: "About your request" over the four basics, and "Details for {type}" over the attached fields. The second strip is absent when the type attaches nothing. The dropzone is a dashed `border-strong` card on `bg-control`. The confirmation is a success-paired glyph medallion, an `text-lg` heading, and two buttons: `Open request` (primary) and `Back to the portal` (secondary).
+
+**The picker card is a door.** Name in `text-md font-semibold text-primary`, description in `text-sm text-muted`, and a 16px `arrow-right` in `text-subtle` at the trailing edge. Hover moves the border to `border-strong`, the surface to `bg-control`, and the arrow 2px forward, inside DES-003's 200ms.
+
+**The my-requests row is reference chip, two lines, pill, chevron.** The reference wears the neutral counter chip. The first line is the summary in `text-base font-medium`; the second is the request type and the age in `text-sm text-muted`, separated by a middle dot. The empty block is DES-003's glyph, sentence, and pointer.
+
+**The deflection panel is a card, not an alert.** Section-header strip with a `lightbulb` glyph, rows divided by `border-muted`. A Knowledge target wears `book-open` and opens in this tab; an external address wears `external-link`, shows its hostname under the label in `text-xs text-muted`, and opens beside the portal (DES-068 point 5). The hostname sits outside the anchor so the link's name stays the label.
+
+**The Conversation card says when nothing has been said.** With no comments and no older page it draws a `message-square` glyph and one sentence, "No replies yet. When Legal answers, it shows up here.", above the composer. The composer is separated from the messages by a `border-muted` rule. Messages carry a 32px avatar.
+
+**The header is the same product, a different door.** The staff `scale` mark on an `bg-inverted` chip, the brand over "Legal request portal" in two lines, a rule after the bell and gear, and the display name over the address beside the avatar. Sign out is a ghost button.
+
+### Alternatives considered
+
+- **Keep the 55rem single column and only restyle the blocks.** Rejected. The three-block stack was the thing that read as unrelated; colour and spacing alone did not fix the hierarchy.
+- **Widen to 64rem for the home alone.** Rejected. A column that changes width between the home and a request is a page that jumps under the reader.
+- **Move "What you submitted" above the thread as the opening post.** Rejected. INT-001's M20/5 addendum keeps the Description a submitted value, not a message, and the aside keeps both in view on a wide screen without asking the thread to make room.
+
+### Consequences
+
+Two tokens change in `globals.css`: `--width-portal-col` is 64rem and `--grid-template-columns-portal-split` is new. The back link is one component, `components/portal/back-link.tsx`. I5–I7 in `intake.pen` now differ from the build at every point above and are due a back-port when the intake frames are next touched. The Knowledge article on the portal caps its cards at `--width-settings-card` because it is prose. No new colour token, no new radius, no new type size.
 
 ## Index of decisions
 
@@ -4467,3 +4524,4 @@ The Comparison address is shareable and belongs to the Document rather than one 
 | DES-069 | Home is a fixed personal read of seven capped sections (extends DES-056, DES-030, DES-018, DES-029, DES-043)                                                         | Accepted                                                                                                   |
 | DES-070 | AI analysis is one settings pane, one record card, and one unverified marker (normalizes F.3; extends DES-054, DES-032, DES-042, DES-069)                            | Accepted                                                                                                   |
 | DES-071 | A Comparison is one change pane beside one compare card (extends DES-006, DES-016, DES-063)                                                                          | Accepted                                                                                                   |
+| DES-072 | The portal page is a main column beside an aside (amends the I5–I7 column; extends DES-012, DES-003, DES-068)                                                        | Accepted                                                                                                   |
