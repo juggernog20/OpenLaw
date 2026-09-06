@@ -505,7 +505,7 @@ describe("sorting the contracts list", () => {
     const user = userEvent.setup();
     const surface = api();
     stubApi({ signedIn: MEMBER, extra: surface.handler });
-    renderAt("/contracts");
+    const { router } = renderAt("/contracts");
 
     const header = await screen.findByRole("button", { name: "Title" });
     const cell = () => screen.getByRole("columnheader", { name: /Title/ });
@@ -515,6 +515,9 @@ describe("sorting the contracts list", () => {
     await waitFor(() => {
       expect(lastQuery(surface.queries).get("dir")).toBe("asc");
       expect(cell()).toHaveAttribute("aria-sort", "ascending");
+      expect(new URLSearchParams(router.state.location.search).get("dir")).toBe("asc");
+      expect(router.state.navigation.state).toBe("idle");
+      expect(screen.getByRole("button", { name: /^Filter/ })).toBeEnabled();
     });
     expect(lastQuery(surface.queries).get("sort")).toBe("title");
 
@@ -522,6 +525,9 @@ describe("sorting the contracts list", () => {
     await waitFor(() => {
       expect(lastQuery(surface.queries).get("dir")).toBe("desc");
       expect(cell()).toHaveAttribute("aria-sort", "descending");
+      expect(new URLSearchParams(router.state.location.search).get("dir")).toBe("desc");
+      expect(router.state.navigation.state).toBe("idle");
+      expect(screen.getByRole("button", { name: /^Filter/ })).toBeEnabled();
     });
 
     // Off is a state, not the absence of one: on contracts it is newest

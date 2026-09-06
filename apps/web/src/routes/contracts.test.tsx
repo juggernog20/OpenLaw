@@ -904,7 +904,10 @@ describe("quick contract filters", () => {
     );
     expect(surface.queries.at(-1)?.get("owner")).toBe("me");
     expect(surface.queries.at(-1)?.get("status")).toBe("s-draft,s-active");
-    await waitFor(() => expect(router.state.navigation.state).toBe("idle"));
+    await waitFor(() => {
+      expect(router.state.navigation.state).toBe("idle");
+      expect(screen.getByRole("button", { name: /^Filter/ })).toBeEnabled();
+    });
     await user.click(screen.getByRole("button", { name: /^Filter/ }));
     await user.click(
       within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
@@ -917,7 +920,10 @@ describe("quick contract filters", () => {
     await waitFor(() =>
       expect(new URLSearchParams(router.state.location.search).get("expiryTo")).toBe("2027-01-31"),
     );
-    await waitFor(() => expect(router.state.navigation.state).toBe("idle"));
+    await waitFor(() => {
+      expect(router.state.navigation.state).toBe("idle");
+      expect(screen.getByRole("button", { name: /^Filter/ })).toBeEnabled();
+    });
     await user.click(screen.getByRole("button", { name: "Remove Status filter" }));
     await waitFor(() =>
       expect(new URLSearchParams(router.state.location.search).has("status")).toBe(false),
@@ -929,7 +935,11 @@ describe("quick contract filters", () => {
     await act(() => router.navigate(1));
     expect(screen.queryByRole("button", { name: "Status: Draft, Active" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Clear all" }));
-    await waitFor(() => expect(router.state.navigation.state).toBe("idle"));
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: "Clear all" })).not.toBeInTheDocument();
+      expect(router.state.navigation.state).toBe("idle");
+      expect(screen.getByRole("button", { name: /^Filter/ })).toBeEnabled();
+    });
     expect(surface.queries.at(-1)?.has("owner")).toBe(false);
     expect(surface.queries.at(-1)?.has("expiryTo")).toBe(false);
     await act(() => router.revalidate());
@@ -959,7 +969,10 @@ describe("quick contract filters", () => {
       },
     });
     await screen.findByRole("button", { name: /My renewals/ });
-    await waitFor(() => expect(router.state.navigation.state).toBe("idle"));
+    await waitFor(() => {
+      expect(router.state.navigation.state).toBe("idle");
+      expect(screen.getByRole("button", { name: /^Filter/ })).toBeEnabled();
+    });
     await user.click(await screen.findByRole("button", { name: "Clear all" }));
     await waitFor(() => {
       expect(new URLSearchParams(router.state.location.search).has("status")).toBe(false);
