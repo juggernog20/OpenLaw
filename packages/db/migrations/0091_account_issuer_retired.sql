@@ -1,0 +1,23 @@
+-- better-auth 1.7.3 restored the 1.6 account key: an account is identified
+-- by (provider_id, account_id) again, and the library neither reads nor
+-- writes `issuer`. 0060 added that column for 1.7.0–1.7.2, backfilled it,
+-- made it NOT NULL and indexed it with account_id; this retires all of it.
+--
+-- Dropped rather than relaxed, on purpose. A nullable column nobody writes
+-- would be NULL on every row created from here on and stale on every row
+-- before, and it would be the one column on the table SCHEMA.md could not
+-- describe truthfully. It is also what better-auth's own boot-time schema
+-- check asks for: a required column it never writes fails every insert,
+-- and 1.7.3 refuses to serve auth requests until it is gone or nullable.
+--
+-- No COMMIT;/BEGIN; header (see 0060 and TECH-006): each statement here is
+-- atomic on its own and safe to land alone, so it does not matter whether
+-- the batch reaches this file inside drizzle's transaction or in autocommit
+-- after crossing 0054. The DROP COLUMN would take the index with it anyway;
+-- drizzle-kit names both, and that is the more legible record.
+--
+-- 0060 stays as it was. Shipped migrations are history, and an install
+-- upgrading from before it passes through both — its refusals included,
+-- which still stop an install holding an account no provider can speak for.
+DROP INDEX "accounts_issuer_account_unique";--> statement-breakpoint
+ALTER TABLE "accounts" DROP COLUMN "issuer";

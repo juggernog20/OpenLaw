@@ -1,33 +1,34 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * Migration 0060, the `accounts.issuer` backfill (#340), against a real
- * database.
+ * Migration 0060, the `accounts.issuer` backfill (#340), and 0091, which
+ * retires what it built, against a real database.
  *
  * Lives in apps/api for the reason `migration-journal.test.ts` gives:
  * this is where the Postgres harness is, and packages/db has no test
  * runner. That file is also the prior art for migrating through a tag,
  * which is what this one needs.
  *
- * better-auth 1.7 identifies an account by (`issuer`, `account_id`)
- * rather than by its provider id, and its own credential lookups filter
- * on the issuer. Every other suite starts from a migrated empty
- * database, so the backfill never runs on a row in any of them — it can
- * only be asserted by putting an install into the state a real one is
- * in on 1.6 and then upgrading it.
+ * better-auth 1.7.0–1.7.2 identified an account by (`issuer`,
+ * `account_id`) rather than by its provider id, and 0060 gave every row
+ * one. 1.7.3 restored the 1.6 key, (`provider_id`, `account_id`), and
+ * 0091 dropped the column. Both migrations are history an install passes
+ * through, so both are rehearsed here: 0060's backfill and refusals as
+ * they were written — a stranded row still stops an upgrade at 0060, a
+ * column that 0091 then drops notwithstanding — and, at the end, that a
+ * row written before either existed still signs in once both have run.
  *
- * The failure mode is quiet and total: a credential row with the wrong
- * issuer is a user who cannot sign in and cannot reset a password, and
- * an SSO row with the wrong issuer re-links as a second identity on the
- * next sign-in. So the refusals are asserted too — this migration is
- * meant to stop an upgrade rather than complete a partial one.
+ * Every other suite starts from a migrated empty database, so neither
+ * migration runs on a row in any of them — they can only be asserted by
+ * putting an install into the state a real one is in on 1.6 and then
+ * upgrading it.
  *
  * The last test signs in through `auth.api` rather than through a
  * mounted route, which is the one place this file steps outside the
  * house rule. `startHarness` migrates the database it creates, so it
  * cannot produce the thing under test: an install that stopped at 0059.
  * What is being asserted is not the route — nothing about it changed —
- * but whether better-auth accepts the row the backfill wrote, and
+ * but whether better-auth accepts the row the upgrade left, and
  * `signInEmail` is that lookup with nothing else around it. The same
  * journey over real HTTP, against a genuinely upgraded install, is the
  * upgrade-fidelity gate in e2e/scripts.
@@ -44,7 +45,7 @@ import {
   type Db,
   type JournalEntry,
 } from "@openlaw/db";
-import { createAuth, CREDENTIAL_ISSUER } from "./auth/instance.js";
+import { createAuth } from "./auth/instance.js";
 import { createUnconfiguredMailer } from "./lib/mailer.js";
 import { TEST_AUTH_CONFIG, TEST_SECRET_KEY } from "./testing/harness.js";
 import {
@@ -54,8 +55,18 @@ import {
   refusal,
 } from "./testing/migration-rehearsal.js";
 
-/** The last migration before the one under test. */
+/** The last migration before 0060. */
 const BEFORE = "0059_intake_links";
+/** The migration 0060 is, and the last one the backfill's values survive to. */
+const BACKFILL = "0060_account_issuer";
+
+/**
+ * The issuer 0060 wrote on a password row: the synthetic `local:` plus
+ * the provider id that better-auth 1.7.0–1.7.2 filtered credential
+ * lookups by. Spelled here because it is what the migration's SQL says,
+ * not because anything in the app reads it any more.
+ */
+const CREDENTIAL_ISSUER = "local:credential";
 
 let container: StartedPostgreSqlContainer;
 let entries: JournalEntry[];
@@ -105,6 +116,21 @@ async function issuers(db: Db): Promise<Record<string, string | null>> {
   return Object.fromEntries(rows.rows.map((row) => [row.account_id, row.issuer]));
 }
 
+/** Whether `accounts.issuer` exists, and the indexes on the table. */
+async function accountsShape(db: Db): Promise<{ issuer: boolean; indexes: string[] }> {
+  const columns = await db.execute<{ column_name: string }>(
+    sql`select column_name from information_schema.columns
+         where table_name = 'accounts' and column_name = 'issuer'`,
+  );
+  const indexes = await db.execute<{ indexname: string }>(
+    sql`select indexname from pg_indexes where tablename = 'accounts' order by indexname`,
+  );
+  return {
+    issuer: columns.rows.length > 0,
+    indexes: indexes.rows.map((row) => row.indexname),
+  };
+}
+
 describe("the 0060 backfill", () => {
   it("gives a password row the issuer better-auth looks it up by", async () => {
     const db = await installOn16("issuer_credential");
@@ -113,7 +139,7 @@ describe("the 0060 backfill", () => {
       await db.execute(sql`insert into accounts (id, user_id, account_id, provider_id, password)
         values ('a-1', 'u-blair', 'u-blair', 'credential', 'argon2id-hash')`);
 
-      await runMigrations(db);
+      await migrateThrough(db, BACKFILL);
 
       expect(await issuers(db)).toEqual({ "u-blair": CREDENTIAL_ISSUER });
     } finally {
@@ -131,7 +157,7 @@ describe("the 0060 backfill", () => {
       await db.execute(sql`insert into accounts (id, user_id, account_id, provider_id)
         values ('a-2', 'u-nadia', 'idp-nadia', 'acme-idp')`);
 
-      await runMigrations(db);
+      await migrateThrough(db, BACKFILL);
 
       expect(await issuers(db)).toEqual({ "idp-nadia": "https://idp.acme.example" });
     } finally {
@@ -150,14 +176,15 @@ describe("the 0060 backfill", () => {
       await db.execute(sql`insert into accounts (id, user_id, account_id, provider_id)
         values ('a-2', 'u-nadia', 'idp-nadia', 'acme-idp')`);
 
-      await runMigrations(db);
+      await migrateThrough(db, BACKFILL);
 
       expect(await issuers(db)).toEqual({
         "u-blair": CREDENTIAL_ISSUER,
         "u-nadia": CREDENTIAL_ISSUER,
         "idp-nadia": "https://idp.acme.example",
       });
-      // The column is real from here on, so a later row cannot omit it.
+      // The column is real from here to 0091, so a row written between
+      // the two could not omit it.
       const nulls = await db.execute<{ count: string }>(
         sql`select count(*) as count from accounts where issuer is null`,
       );
@@ -223,7 +250,7 @@ describe("the 0060 refusals", () => {
       // accounts point at, run the upgrade again, and it completes.
       await db.execute(sql`insert into sso_providers (id, issuer, domain, provider_id, user_id)
         values ('p-ghost', 'https://idp.ghost.example', 'ghost.example', 'ghost-idp', 'u-nadia')`);
-      await runMigrations(db);
+      await migrateThrough(db, BACKFILL);
       expect(await issuers(db)).toEqual({ "idp-nadia": "https://idp.ghost.example" });
     } finally {
       await db.$client.end();
@@ -250,6 +277,41 @@ describe("the 0060 refusals", () => {
   });
 });
 
+describe("the 0091 retirement", () => {
+  it("drops the column and its index, and keeps the key better-auth uses", async () => {
+    const db = await installOn16("issuer_retired");
+    try {
+      await db.execute(sql`insert into sso_providers (id, issuer, domain, provider_id, user_id)
+        values ('p-acme', 'https://idp.acme.example', 'acme.example', 'acme-idp', 'u-blair')`);
+      await db.execute(sql`insert into accounts (id, user_id, account_id, provider_id, password)
+        values ('a-1', 'u-blair', 'u-blair', 'credential', 'argon2id-hash')`);
+      await db.execute(sql`insert into accounts (id, user_id, account_id, provider_id)
+        values ('a-2', 'u-nadia', 'idp-nadia', 'acme-idp')`);
+
+      // Through 0060 the column is there and filled; through the whole
+      // chain it is gone again, with the rows it was on intact.
+      await migrateThrough(db, BACKFILL);
+      expect((await accountsShape(db)).issuer).toBe(true);
+
+      await runMigrations(db);
+
+      const shape = await accountsShape(db);
+      expect(shape.issuer).toBe(false);
+      expect(shape.indexes).not.toContain("accounts_issuer_account_unique");
+      expect(shape.indexes).toContain("accounts_provider_account_unique");
+      const rows = await db.execute<{ account_id: string; provider_id: string }>(
+        sql`select account_id, provider_id from accounts order by account_id`,
+      );
+      expect(rows.rows).toEqual([
+        { account_id: "idp-nadia", provider_id: "acme-idp" },
+        { account_id: "u-blair", provider_id: "credential" },
+      ]);
+    } finally {
+      await db.$client.end();
+    }
+  });
+});
+
 describe("the upgraded install", () => {
   it("signs a password account in that was written before 1.7 existed", async () => {
     const db = await installOn16("issuer_signin");
@@ -257,9 +319,9 @@ describe("the upgraded install", () => {
       const password = "correct-horse-battery"; // NOSONAR — fixture for a throwaway container
       // Hashing needs an auth instance, and this one is only borrowed for
       // its hasher: `password.hash` reads nothing and writes nothing, so
-      // it is safe to build against a database that has no issuer column
-      // yet. The row it produces is what 1.6 wrote — the same Argon2id
-      // hash, keyed on (provider_id, account_id), with no issuer at all.
+      // it is safe to build against a database 0060 has not reached. The
+      // row it produces is what 1.6 wrote — the same Argon2id hash, keyed
+      // on (provider_id, account_id).
       const before = createAuth(db, TEST_AUTH_CONFIG, unconfiguredMailer, silent);
       const hash = await (await before.$context).password.hash(password);
       await db.execute(sql`insert into accounts (id, user_id, account_id, provider_id, password)
@@ -267,10 +329,11 @@ describe("the upgraded install", () => {
 
       await runMigrations(db);
 
-      // The whole point of the backfill: better-auth 1.7 looks a
-      // credential row up by (issuer, account_id), so an account the
-      // upgrade did not reach is a person locked out of their own
-      // install. A fresh instance, because the schema moved under it.
+      // The row has now been given an issuer by 0060 and had it taken
+      // away by 0091. better-auth 1.7.3 looks a credential row up by
+      // (provider_id, account_id), which is what 1.6 wrote and what is
+      // left — so the person signs in. A fresh instance, because the
+      // schema moved under the first one.
       const after = createAuth(db, TEST_AUTH_CONFIG, unconfiguredMailer, silent);
       const session = await after.api.signInEmail({
         body: { email: "blair@example.com", password },
