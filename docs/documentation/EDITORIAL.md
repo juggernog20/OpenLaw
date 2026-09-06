@@ -77,10 +77,11 @@ is relevant to the current page; the procedure comes from the canonical article.
 Shared instructions live in the subjects listed in [NAVIGATION.md](NAVIGATION.md).
 Link to them rather than copying another module's steps.
 
-Make role variants explicit. A Business User should not be told to open the Inbox;
-a Contributor should not be told to use an action reserved for Member+ users. A guide may explain
-why an action is unavailable without offering a bypass. Operator instructions may
-contain commands and configuration names because those are the operator's controls.
+Make role variants explicit. A Business User should not be told to open the Inbox.
+A Contributor should not be told to use an action reserved for Member+ users. A guide
+may explain why an action is unavailable without offering a bypass. Operator
+instructions may contain commands and configuration names because those are the
+operator's controls.
 
 Documentation search and Help do not search the organization's records or Knowledge
 Items. Examples must not imply that reading an Administrator guide grants access to
@@ -118,10 +119,11 @@ This file is a template, not evidence that its placeholder scenario passed.
 
 Record article ID, content hash, app source/build identity, environment, author,
 technical reviewer, independent walkthrough reviewer, dates, source references,
-scenarios and results, evidence locations, and limitations. Label the verification
-method: source inspection, browser walkthrough, automated test, container operation,
-or live-provider check. An existing feature test is supporting evidence; it does not
-prove that the written steps can be followed.
+scenarios and results, evidence locations, and limitations. Label each scenario's
+`method` with one of `source-inspection`, `browser-walkthrough`, `automated-test`,
+`container-operation`, or `live-provider-check`. Record its `result` as `pass`,
+`fail`, `blocked`, or `not-run`. An existing feature test is supporting evidence; it
+does not prove that the written steps can be followed.
 
 The app build and content hash identify different things. Record the actual tested
 app source revision and the exact article bytes. If the build includes uncommitted
@@ -137,14 +139,14 @@ restore; restored app records, files, and required encrypted configuration must 
 
 ## State transitions and completion
 
-| Catalogue state | Evidence required to enter it                                                            |
-| --------------- | ---------------------------------------------------------------------------------------- |
-| `scoped`        | Audience, intended outcome, owning task, and coverage are mapped                         |
-| `ready`         | Dependencies, sources, prerequisites, and validation scenario are available              |
-| `draft`         | Complete initial prose exists and the author has checked the steps                       |
-| `review`        | Author checks pass and technical/independent review is underway                          |
-| `verified`      | Technical review and required walkthrough scenarios pass against recorded content/build  |
-| `published`     | Verified content is available through its agreed destinations and live links/search work |
+| Catalog `status` | Evidence required to enter it                                                            |
+| ---------------- | ---------------------------------------------------------------------------------------- |
+| `scoped`         | Audience, intended outcome, owning task, and coverage are mapped                         |
+| `ready`          | Dependencies, sources, prerequisites, and validation scenario are available              |
+| `draft`          | Complete initial prose exists and the author has checked the steps                       |
+| `review`         | Author checks pass and technical/independent review is underway                          |
+| `verified`       | Technical review and required walkthrough scenarios pass against recorded content/build  |
+| `published`      | Verified content is available through its agreed destinations and live links/search work |
 
 The issue workflow may show more detail than these catalog states. Use GitHub as
 the live scheduling record. Update article checklists individually. A group mapped
@@ -158,7 +160,7 @@ unverified requirement or make the complete-suite denominator smaller.
 
 ## Reopening and maintenance
 
-Behaviour, permissions, prerequisites, or supported-version changes reopen affected
+Behavior, permissions, prerequisites, or supported-version changes reopen affected
 articles to `review`. Identify their coverage IDs in the feature issue/PR and rerun
 the relevant walkthroughs before publishing updated instructions. Preserve stable
 article links or add redirects when an article must move.
