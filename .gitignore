@@ -24,3 +24,6 @@ playwright-report/
 
 # Host-development blob store (scripts/dev-hot.sh)
 .storage/
+
+# Disposable documentation environments and their generated secrets.
+.documentation-labs/
