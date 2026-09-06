@@ -415,7 +415,14 @@ describe("Inbox filters and views", () => {
     await waitFor(() =>
       expect(new URLSearchParams(router.state.location.search).get("requester")).toBe("u7"),
     );
-    await user.click(screen.getByRole("button", { name: "Show more" }));
+    await waitFor(() => {
+      expect(router.state.navigation.state).toBe("idle");
+      expect(screen.queryByRole("dialog", { name: "Filter" })).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Show more" })).toBeEnabled();
+    });
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: "Show more" }));
+    });
     await screen.findByRole("row", { name: /Next page/ });
     expect(asked.at(-1)?.searchParams.get("urgency")).toBe("high,critical");
     expect(asked.at(-1)?.searchParams.get("requester")).toBe("u7");

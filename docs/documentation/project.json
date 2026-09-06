@@ -10,7 +10,8 @@
   "workstreams": [
     {
       "id": "DOC-E1",
-      "issue": 715
+      "issue": 715,
+      "status": "closed"
     },
     {
       "id": "DOC-E2",
@@ -37,12 +38,13 @@
     {
       "id": "DOC-001",
       "issue": 721,
-      "status": "in-progress"
+      "status": "closed",
+      "pullRequest": 748
     },
     {
       "id": "DOC-002",
       "issue": 722,
-      "status": "open"
+      "status": "in-progress"
     },
     {
       "id": "DOC-003",

@@ -510,21 +510,31 @@ describe("the /contracts destination", () => {
       ],
     );
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts");
+    const { router } = renderAt("/contracts");
     const user = userEvent.setup();
 
     // The default list hides the dead deal (CTR-019).
     expect(await screen.findByText("C-42")).toBeInTheDocument();
     expect(screen.queryByText("C-9")).not.toBeInTheDocument();
 
-    // The toggle re-reads with includeEnded and the deal appears.
+    // The toggle re-reads with includeEnded and the deal appears. The
+    // list commits its rows and the chip before it navigates, so wait
+    // for the URL to carry the flag and the navigation to settle: a
+    // chip click in that gap lands while the list is busy and is
+    // dropped.
     await toggleListFlag(user, "Show ended");
     expect(await screen.findByText("C-9")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(new URLSearchParams(router.state.location.search).get("includeEnded")).toBe("true");
+      expect(router.state.navigation.state).toBe("idle");
+    });
 
     // And back: the toggle off re-reads the default list.
     await toggleListFlag(user, "Show ended");
-    await waitFor(() => expect(screen.queryByText("C-9")).not.toBeInTheDocument());
-    expect(screen.getByText("C-42")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText("C-9")).not.toBeInTheDocument();
+      expect(screen.getByText("C-42")).toBeInTheDocument();
+    });
   });
 
   it("reports a failed archived re-read instead of showing a stale list", async () => {

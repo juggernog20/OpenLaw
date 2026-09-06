@@ -59,11 +59,14 @@ where appropriate. Proposed issues start at `needs-triage`; do not mark downstre
 work ready until its dependencies are met. G1–G4 may be tracker milestones if
 useful; no dates are proposed yet.
 
-Each content task below is an authoring batch with explicit coverage. At G1, split
-any batch that needs more than three independently reviewable guides into article
-children, keeping the batch as their parent and retaining coverage IDs. Estimate
-article children after the pilot. This avoids treating a whole module as one writing
-assignment while leaving final article boundaries to the navigation work.
+Each content task below is an authoring batch with explicit coverage. DOC-002 maps
+its independently reviewable article children in `articles.json` and
+`WRITING-BATCHES.md`. Track each child's authoring and verification in the batch
+issue. Split a separate article issue when its owner or dependencies differ. One
+batch PR can carry its related articles, with per-article evidence and review.
+Estimate the children after the pilot; do not count a whole batch complete because
+one of its articles passed. This refines the initial proposal's three-guide split
+rule into explicit article tracking without creating unnecessary scheduling issues.
 
 ## Required issue fields
 
@@ -301,7 +304,7 @@ Coverage: C26–C28, C30, C54.
 ## DOC-018 — Entity and Counterparty guides
 
 Owner: documentation author; reviewer: Entity owner and Legal Team Member.
-Parent: DOC-E5. Gate: G4. Dependencies: DOC-008. Coverage: C31–C32, C52–C53.
+Parent: DOC-E5. Gates: G3/G4 by row. Dependencies: DOC-008. Coverage: C31–C32, C52–C53.
 
 - [ ] Verify creating and maintaining our Entities, and selecting/maintaining external
       Counterparties through the actual picker surfaces.
