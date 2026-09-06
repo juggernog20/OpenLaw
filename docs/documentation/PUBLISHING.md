@@ -47,8 +47,8 @@ Use these locations:
 | `docs/documentation/redirects.json`     | Deliberate aliases for retired article IDs or anchors           |
 | `scripts/documentation/`                | Compiler, validators, search preparation, and standalone export |
 
-The last four implementation locations are created by DOC-006 or the content
-tasks. Their absence in this design task is intentional. Planning files, templates,
+Only `articles.json` and `help-contexts.json` exist today. DOC-006 and the content
+tasks create the other locations; their absence here is intentional. Planning files, templates,
 source references, reviewer identities, and evidence logs do not enter the public
 bundle. Publish only the reader metadata needed to identify the edition and choose
 an article.
@@ -199,8 +199,9 @@ Use `?topic=<context-key>` for a topic result and `?q=<words>` for documentation
 search. Carry only registered topic keys into Help, never record IDs or the raw
 originating URL. In the binding registry, `staff` and `portal` name Help surfaces,
 `both` includes both, and `formal` names public entry guidance. `*` is the shared
-fallback. Combine matching route bindings, rank specific route topics before shared
-fallbacks, and then apply article destination/audience eligibility. Optional `:tab?`
+fallback. A topic key may appear in a specific route binding and in `*`. Combine
+matching route bindings, rank specific route topics before shared fallbacks, and then
+apply article destination/audience eligibility. Optional `:tab?`
 segments follow the current router's matching behavior.
 
 Preserve `?` for the existing keyboard-shortcuts sheet, `/` for existing app search,

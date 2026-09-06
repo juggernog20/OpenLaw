@@ -4449,7 +4449,7 @@ The Comparison address is shareable and belongs to the Document rather than one 
 
 Two tokens change in `globals.css`: `--width-portal-col` is 64rem and `--grid-template-columns-portal-split` is new. The back link is one component, `components/portal/back-link.tsx`. I5–I7 in `intake.pen` now differ from the build at every point above and are due a back-port when the intake frames are next touched. The Knowledge article on the portal caps its cards at `--width-settings-card` because it is prose. No new colour token, no new radius, no new type size.
 
-## DES-073: Help has a discoverable entry in each shell and a public formal reader
+## DES-073: Help has a discoverable entry in each shell and a public formal reader (extends DES-072)
 
 - **Status:** Accepted
 - **Date:** 2026-09-07
@@ -4569,4 +4569,4 @@ implements and verifies these surfaces against
 | DES-070 | AI analysis is one settings pane, one record card, and one unverified marker (normalizes F.3; extends DES-054, DES-032, DES-042, DES-069)                            | Accepted                                                                                                   |
 | DES-071 | A Comparison is one change pane beside one compare card (extends DES-006, DES-016, DES-063)                                                                          | Accepted                                                                                                   |
 | DES-072 | The portal page is a main column beside an aside (amends the I5–I7 column; extends DES-012, DES-003, DES-068)                                                        | Accepted                                                                                                   |
-| DES-073 | Help has a discoverable entry in each shell and a public formal reader                                                                                               | Accepted                                                                                                   |
+| DES-073 | Help has a discoverable entry in each shell and a public formal reader (extends DES-072)                                                                             | Accepted                                                                                                   |

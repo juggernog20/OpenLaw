@@ -216,6 +216,12 @@
       "pilotEntry": false
     },
     {
+      "routes": ["/settings/notifications", "/portal/settings"],
+      "contexts": ["notifications"],
+      "surface": "both",
+      "pilotEntry": false
+    },
+    {
       "routes": ["/settings/general"],
       "contexts": ["settings.general"],
       "surface": "staff",
