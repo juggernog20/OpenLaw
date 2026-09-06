@@ -169,15 +169,25 @@ describe("the Profile pane (SET-006, #67)", () => {
     // enable, both with the one password the dialog asked for.
     const user = userEvent.setup();
     const calls: string[] = [];
+    // The body is `unknown` at the seam; a request that is not the
+    // password object the endpoints take is recorded as such, not cast
+    // into shape.
+    const passwordOf = (body: unknown): string =>
+      typeof body === "object" &&
+      body !== null &&
+      "password" in body &&
+      typeof body.password === "string"
+        ? body.password
+        : `<not a password body: ${JSON.stringify(body)}>`;
     stubApi({
       signedIn: { ...MEMBER, twoFactorEnabled: true },
       extra: (call: StubCall) => {
         if (call.url.pathname === "/api/auth/two-factor/disable" && call.method === "POST") {
-          calls.push(`disable:${(call.body as { password: string }).password}`);
+          calls.push(`disable:${passwordOf(call.body)}`);
           return json(200, { status: true });
         }
         if (call.url.pathname === "/api/auth/two-factor/enable" && call.method === "POST") {
-          calls.push(`enable:${(call.body as { password: string }).password}`);
+          calls.push(`enable:${passwordOf(call.body)}`);
           return json(200, { method: "totp", totpURI: TOTP_URI, backupCodes: ["AAAAA-11111"] });
         }
         return undefined;
