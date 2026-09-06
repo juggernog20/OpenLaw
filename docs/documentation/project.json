@@ -7,6 +7,32 @@
   },
   "umbrella": 714,
   "featureBranch": "feat/documentation",
+  "workstreams": [
+    {
+      "id": "DOC-E1",
+      "issue": 715
+    },
+    {
+      "id": "DOC-E2",
+      "issue": 716
+    },
+    {
+      "id": "DOC-E3",
+      "issue": 717
+    },
+    {
+      "id": "DOC-E4",
+      "issue": 718
+    },
+    {
+      "id": "DOC-E5",
+      "issue": 719
+    },
+    {
+      "id": "DOC-E6",
+      "issue": 720
+    }
+  ],
   "tasks": [
     {
       "id": "DOC-001",

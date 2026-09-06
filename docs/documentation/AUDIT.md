@@ -30,13 +30,14 @@ against the destination branch and refresh affected instructions.
 | Entity obligations were omitted from the initial matrix                                | `components/entities/obligations-panel.tsx`, ENT-006 and its built addendum                                               | Add C52 at P0, including filing and human-confirmed recurrence. DOC-018 owns it.                                                                                             |
 | Entity share capital, Grants, chart, and linked-record roll-ups need explicit coverage | Entity record components; ENT-003/004/007                                                                                 | Add C53 at P1. DOC-018 owns it, with access review from DOC-010.                                                                                                             |
 | Document permanent deletion needs its own outcome                                      | `components/documents/documents-card.tsx` implements Administrator typed confirmation                                     | Add C54 at P0 alongside archive/restore. DOC-017 owns it.                                                                                                                    |
+| Approver group configuration had no named outcome                                      | `/settings/contracts/approver-groups` route, `routes/settings-approver-groups.tsx`, CTR-012                               | Add C55 at P1. DOC-021 owns it; C16 links to it for the user-side approval flow.                                                                                             |
 | Help is not implemented                                                                | No Help route in the baseline route table                                                                                 | DOC-004/006/007 specify and build it. Existing `?` shortcut discovery remains.                                                                                               |
 | Release and support locations are not assigned                                         | M34 release work is not completed in this branch                                                                          | Use development-version metadata and an app-bundled documentation candidate. DOC-004 decides delivery. Do not invent a production hostname or claim a tagged release exists. |
 
 ## Coverage check
 
-The matrix now contains 54 outcome groups, including three additions from this
-audit. All retain stable IDs and owning tasks. P0 has 39 groups; P1 has 15.
+The matrix now contains 55 outcome groups, including four additions from this
+audit. All retain stable IDs and owning tasks. P0 has 39 groups; P1 has 16.
 No implemented group has been deferred to reduce the release denominator.
 
 The audit inspected route entries for Home/Tasks, Inbox, Contracts, Matters,

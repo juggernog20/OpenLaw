@@ -36,27 +36,28 @@ The linked issues below track task status. The task headings retain stable plann
 
 ## Umbrella and workstream parents
 
-Proposed umbrella title: **Documentation — complete user guides, in-app Help, and
-formal documentation**.
+Umbrella: [#714 Documentation: user guides, in-app Help, and formal documentation](https://github.com/juggernog20/OpenLaw/issues/714).
+Workstream parents are published as #715–#720 and are linked in the table below.
 
 Umbrella outcome: people in each OpenLaw role can complete the matrix's workflows
 using Help and formal documentation for their app version, and operators can deploy,
 upgrade, and recover an instance. Completion requires G4, not merely merged articles.
 
-| Parent ID / proposed title                                | Child tasks          | Accountable role                           | Completion                                                                       |
-| --------------------------------------------------------- | -------------------- | ------------------------------------------ | -------------------------------------------------------------------------------- |
-| DOC-E1 — Scope, inventory, and release baseline           | DOC-001              | Documentation lead + product owner         | Coverage, release baseline, exclusions, and responsibility assignments agreed    |
-| DOC-E2 — Navigation and editorial standards               | DOC-002–003          | Documentation lead                         | Article map and author/reviewer standards agreed                                 |
-| DOC-E3 — Publishing and Help delivery                     | DOC-004, DOC-006–007 | Web/platform engineer                      | Canonical content reaches both surfaces and version/access behaviour is verified |
-| DOC-E4 — Pilot and core user journeys                     | DOC-008–017          | Documentation lead + feature owners        | Pilot and allocated coverage verified; P0 subset passes by G3                    |
-| DOC-E5 — Complete modules, administration, and operations | DOC-018–024          | Documentation lead + deployment maintainer | Allocated P0/P1 coverage verified; existing deployment material consolidated     |
-| DOC-E6 — Verification, maintenance, and release           | DOC-005, DOC-025–027 | Documentation lead + release owner         | All gate evidence recorded; publication and future ownership established         |
+| Parent ID / published issue                                                                                         | Child tasks          | Accountable role                           | Completion                                                                       |
+| ------------------------------------------------------------------------------------------------------------------- | -------------------- | ------------------------------------------ | -------------------------------------------------------------------------------- |
+| [DOC-E1 #715](https://github.com/juggernog20/OpenLaw/issues/715) — Scope, inventory, and release baseline           | DOC-001              | Documentation lead + product owner         | Coverage, release baseline, exclusions, and responsibility assignments agreed    |
+| [DOC-E2 #716](https://github.com/juggernog20/OpenLaw/issues/716) — Navigation and editorial standards               | DOC-002–003          | Documentation lead                         | Article map and author/reviewer standards agreed                                 |
+| [DOC-E3 #717](https://github.com/juggernog20/OpenLaw/issues/717) — Publishing and Help delivery                     | DOC-004, DOC-006–007 | Web/platform engineer                      | Canonical content reaches both surfaces and version/access behaviour is verified |
+| [DOC-E4 #718](https://github.com/juggernog20/OpenLaw/issues/718) — Pilot and core user journeys                     | DOC-008–017          | Documentation lead + feature owners        | Pilot and allocated coverage verified; P0 subset passes by G3                    |
+| [DOC-E5 #719](https://github.com/juggernog20/OpenLaw/issues/719) — Complete modules, administration, and operations | DOC-018–024          | Documentation lead + deployment maintainer | Allocated P0/P1 coverage verified; existing deployment material consolidated     |
+| [DOC-E6 #720](https://github.com/juggernog20/OpenLaw/issues/720) — Verification, maintenance, and release           | DOC-005, DOC-025–027 | Documentation lead + release owner         | All gate evidence recorded; publication and future ownership established         |
 
-When publishing, create/link the umbrella and workstream parents first, then children
-with their dependency links. Use `documentation` on all issues and `enhancement` on
-Help/publishing implementation where appropriate. Proposed issues start at
-`needs-triage`; do not mark downstream work ready until its dependencies are met.
-G1–G4 may be tracker milestones if useful; no dates are proposed yet.
+The umbrella, workstream parents, and children are published with their dependency
+links. New proposals follow the same order: parent first, then children. Use
+`documentation` on all issues and `enhancement` on Help/publishing implementation
+where appropriate. Proposed issues start at `needs-triage`; do not mark downstream
+work ready until its dependencies are met. G1–G4 may be tracker milestones if
+useful; no dates are proposed yet.
 
 Each content task below is an authoring batch with explicit coverage. At G1, split
 any batch that needs more than three independently reviewable guides into article
@@ -80,7 +81,7 @@ for G4 even if that batch's P0 rows have passed G3.
 ## DOC-001 — Reconcile the coverage inventory to a target release
 
 Owner: documentation lead; reviewer: product owner. Parent: DOC-E1. Gate: G1.
-Dependencies: none. Coverage: C01–C54, audit only.
+Dependencies: none. Coverage: C01–C55, audit only.
 
 - [ ] Select and record the app build/release baseline and compare its reachable
       routes, dialogs, settings, and role-specific surfaces with every matrix row.
@@ -92,7 +93,7 @@ Dependencies: none. Coverage: C01–C54, audit only.
 ## DOC-002 — Define article structure and Help topic mapping
 
 Owner: documentation lead; reviewer: product/design owner. Parent: DOC-E2. Gate: G1.
-Dependencies: DOC-001. Coverage: C01–C54, mapping only.
+Dependencies: DOC-001. Coverage: C01–C55, mapping only.
 
 - [ ] Produce navigation and article IDs/slugs around tasks; map every coverage row
       to articles and every planned Help entry to canonical content.
@@ -293,6 +294,9 @@ Coverage: C26–C28, C30, C54.
       and partial upload recovery with appropriate permission variants.
 - [ ] Verify the central repository's current ownership scope, filters, and Version
       landing behaviour; link Comparison rather than duplicate its instructions.
+- [ ] Verify Document archive and restore for each permitted role, and the
+      Administrator's typed-confirmation permanent deletion with its Version and
+      stored-file consequences.
 
 ## DOC-018 — Entity and Counterparty guides
 
@@ -304,7 +308,11 @@ Parent: DOC-E5. Gate: G4. Dependencies: DOC-008. Coverage: C31–C32, C52–C53.
 - [ ] Walk Holdings, Officers, Registrations, and Entity-owned Documents with their
       actual relationship and permission rules.
 - [ ] Verify archive/restore and in-use restrictions; link configurable types/Officer
-      roles and shared Documents guidance and verify the implemented Entity obligations calendar separately from Matter dates.
+      roles and shared Documents guidance.
+- [ ] Verify Entity obligations, their calendar and Home reminders, filing, and
+      human-confirmed recurrence separately from Matter Key dates.
+- [ ] Verify share capital, the ownership chart, linked-record roll-ups, and
+      confidential Grants with DOC-010's access review.
 
 ## DOC-019 — Knowledge authoring, publishing, and audience guides
 
@@ -337,10 +345,11 @@ Parent: DOC-E5. Gate: G3. Dependencies: DOC-008. Coverage: C35–C37.
 
 Owner: documentation author; reviewers: module/settings owners and Administrator.
 Parent: DOC-E5. Gates: G3/G4 by row. Dependencies: DOC-008.
-Coverage: C38–C41. Split into article children in DOC-002 before scheduling.
+Coverage: C38–C41, C55. Split into article children in DOC-002 before scheduling.
 
-- [ ] Verify types, Statuses, Fields and requiredness, Officer roles, rename/reorder/
-      archive restrictions, and retained values using the release's actual settings.
+- [ ] Verify types, Statuses, Fields and requiredness, Officer roles, approver groups,
+      rename/reorder/archive restrictions, and retained values using the release's
+      actual settings.
 - [ ] Verify Matter template defaults/relative content; extend the intake pilot to
       remaining target/form variants, Knowledge/external guidance, and conversion gaps.
 - [ ] Verify organisation reminder settings and audit-log access/filtering; cross-link
@@ -392,7 +401,7 @@ findings as batches complete. Coverage: C49–C51.
 Owner: documentation lead; reviewers: independent role users and deployment maintainer.
 Parent: DOC-E6. Gates: G3 and G4. Dependencies: DOC-005/008 and each reviewed batch;
 P0 closure requires all P0 batch portions; final closure requires DOC-009–024 complete.
-Coverage: C01–C54, independent verification.
+Coverage: C01–C55, independent verification.
 
 - [ ] Follow every required procedural scenario as the stated role on the recorded
       build and review references; record failures against coverage IDs and retest fixes.

@@ -16,7 +16,7 @@ identify intended readers, not an exhaustive permission specification.
 
 Destination: **S** staff Help; **P** portal Help; **F** formal documentation.
 `S/F` or `P/F` means curated Help plus the canonical full article, not duplicated
-procedures. **G3** is the P0 gate; **G4** is the P1 gate. All 54 rows are in the
+procedures. **G3** is the P0 gate; **G4** is the P1 gate. All 55 rows are in the
 proposed complete-suite scope. Pilot coverage is a subset and is not counted twice.
 
 Paths are app entry points. Evidence keys below link to repository sources. Each row
@@ -78,6 +78,7 @@ has one owning content task; cross-cutting reviewers may contribute to several t
 | C52 | Create Entity obligations, interpret their calendar, record filing, and advance recurring cycles                        | L/A       | S/F         | P0 / G3         | Entity Obligations tab and Home obligations; ENTITIES, NOTIFICATIONS                                          | DOC-018    |
 | C53 | Record Entity share capital, inspect the ownership chart and linked records, and manage confidential Grants             | L/A       | S/F         | P1 / G4         | Entity tabs and Manage access; ENTITIES, ACCESS                                                               | DOC-018    |
 | C54 | Archive and restore Documents; understand Administrator permanent deletion and its Version/file consequences            | L/A/C     | S/F         | P0 / G3         | Record Documents action menus; DOCUMENTS; validate role-specific actions                                      | DOC-017    |
+| C55 | Configure reusable approver groups and understand that applying one snapshots its members into the approval request     | A         | S/F         | P1 / G4         | `/settings/contracts/approver-groups`; CONTRACTS, SETTINGS; CTR-012                                           | DOC-021    |
 
 ## Evidence index
 
