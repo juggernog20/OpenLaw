@@ -219,6 +219,25 @@ export function SettingsProfilePage() {
         setTotpDialog(null);
         return;
       }
+      // Re-enrolment is a disable and then an enrolment. From better-auth
+      // 1.7.3 `enable` refuses while a verified authenticator is active
+      // (TOTP_ALREADY_ENABLED) rather than replacing it — an unfinished
+      // re-enrolment used to leave a secret nobody had proven. The window
+      // between the two is the same as an abandoned enrolment: two-factor
+      // off, the pane saying so, sign-in still working.
+      if (totpEnabled) {
+        const off = await authClient.twoFactor.disable({ password });
+        if (off.error) {
+          setDialogError(
+            intl.formatMessage({
+              id: "auth.enroll.error.password",
+              defaultMessage: "Check your password.",
+            }),
+          );
+          return;
+        }
+        setTotpEnabled(false);
+      }
       const res = await authClient.twoFactor.enable({ password });
       if (res.error || !res.data) {
         setDialogError(

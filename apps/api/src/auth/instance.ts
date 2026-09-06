@@ -576,24 +576,6 @@ export function createAuth(
 
 export type Auth = ReturnType<typeof createAuth>;
 
-/**
- * The issuer better-auth 1.7 gives a password account.
- *
- * From 1.7 an account is identified by (`issuer`, `account_id`) rather
- * than by its provider id. A method with no issuer of its own gets a
- * synthetic one, `local:<provider id>`, and the library builds this exact
- * string wherever it looks a credential row up — `findCredentialAccount`
- * and `updatePassword` both filter on it.
- *
- * It is written here rather than imported because `@better-auth/core`,
- * which exports the builder, is a transitive dependency we would then
- * have to keep in lockstep for one constant — and because migration
- * 0060 has to spell the same value in SQL, where nothing can be
- * imported at all. The two are pinned together by the setup and
- * migration suites: get it wrong and no password sign-in works.
- */
-export const CREDENTIAL_ISSUER = "local:credential";
-
 export interface ProvisionedUser {
   email: string;
   displayName: string;
@@ -631,15 +613,14 @@ export async function provisionUser(auth: Auth, user: ProvisionedUser): Promise<
     // password of its own.
     { method: "email-password" },
   );
+  // (provider id, account id) is the pair better-auth looks a credential
+  // row up by — `findCredentialAccount` and `updatePassword` both filter
+  // on it — and for a password account the account id is the user id.
+  // 1.7.0–1.7.2 keyed this on an `issuer` as well; 1.7.3 took that back
+  // (migration 0091 retired the column), so nothing else goes on the row.
   await ctx.internalAdapter.linkAccount({
     userId: created.id,
     providerId: "credential",
-    // 1.7 keys an account on (issuer, accountId) rather than on the
-    // provider id. Local methods carry a synthetic issuer, and
-    // better-auth's own credential lookups — `findCredentialAccount`
-    // and `updatePassword` — filter on exactly this value, so a row
-    // without it can never sign in or change its password.
-    issuer: CREDENTIAL_ISSUER,
     accountId: created.id,
     password: passwordHash,
   });

@@ -113,12 +113,11 @@ export const accounts = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     accountId: text("account_id").notNull(),
     providerId: text("provider_id").notNull(),
-    // What identifies the account from better-auth 1.7 on, paired with
-    // `account_id`. A password row carries the synthetic `local:credential`;
-    // an OIDC row carries the IdP's own issuer, which is what the `iss`
-    // claim of a verified id_token says and what `sso_providers.issuer`
-    // holds. Migration 0060 backfilled both.
-    issuer: text("issuer").notNull(),
+    // No `issuer` column, on purpose. better-auth 1.7.0–1.7.2 keyed an
+    // account on (issuer, account_id) and migration 0060 backfilled one;
+    // 1.7.3 restored the 1.6 key below, and 0091 dropped the column. A
+    // column better-auth neither reads nor writes would trip its boot-time
+    // schema check if it were required, and would hold nothing if not.
     password: text("password"),
     // Encrypted at rest by better-auth, not by us (#387). The library
     // owns every read and write of these two columns, so it seals them
@@ -152,16 +151,14 @@ export const accounts = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  // Two keys, and they are not the same statement. (provider_id,
-  // account_id) is one credential row per user and one row per subject
-  // under a given provider registration. (issuer, account_id) is the key
-  // better-auth looks an account up by from 1.7 on, and it is the
-  // stricter one: two provider registrations can name the same IdP, and
-  // then one person's subject reaches this table twice under two
-  // provider ids that the first index is content to keep apart.
+  // (provider_id, account_id) is the key better-auth looks an account up
+  // by, and the one it refuses to find twice: one credential row per user,
+  // one row per subject under a given provider registration. Two provider
+  // registrations naming the same IdP give one person's subject two rows
+  // here, both linked to the same user by email — accepted; it is what
+  // happened, and each row still signs in.
   (table) => [
     uniqueIndex("accounts_provider_account_unique").on(table.providerId, table.accountId),
-    uniqueIndex("accounts_issuer_account_unique").on(table.issuer, table.accountId),
     index("accounts_user_id_idx").on(table.userId),
   ],
 );

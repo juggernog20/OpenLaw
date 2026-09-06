@@ -60,6 +60,12 @@ export async function freshDb(container: StartedPostgreSqlContainer, name: strin
  * database, and every rehearsal built on it would pass while testing
  * nothing: the migration under test would already have run before the
  * suite wrote its first row.
+ *
+ * Resumes from wherever the database already is, by the rule drizzle's
+ * own migrator uses: an entry stamped no later than the newest applied
+ * one is taken as applied. So a rehearsal can stop at one release, write
+ * its rows, and step to a later one — or hand the database to
+ * `runMigrations` in between — without replaying the beginning.
  */
 export async function migrateThrough(db: Db, tag: string, entries: JournalEntry[]): Promise<void> {
   if (!entries.some((entry) => entry.tag === tag)) {
@@ -71,7 +77,15 @@ export async function migrateThrough(db: Db, tag: string, entries: JournalEntry[
   await db.execute(sql`create schema if not exists drizzle`);
   await db.execute(sql`create table if not exists drizzle.__drizzle_migrations (
     id serial primary key, hash text not null, created_at bigint)`);
+  const newest = await db.execute<{ newest: string | null }>(
+    sql`select max(created_at) as newest from drizzle.__drizzle_migrations`,
+  );
+  const applied = Number(newest.rows[0]?.newest ?? 0);
   for (const entry of entries) {
+    if (entry.when <= applied) {
+      if (entry.tag === tag) return;
+      continue;
+    }
     // One statement per round trip rather than one joined string: a
     // multi-statement query runs in an implicit transaction, and 0054's
     // `CREATE INDEX CONCURRENTLY` cannot.

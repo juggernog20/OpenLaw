@@ -1,0 +1,26 @@
+-- SPDX-License-Identifier: AGPL-3.0-only
+--
+-- better-auth 1.7.3 restored the 1.6 account key: an account is identified
+-- by (provider_id, account_id) again, and the library neither reads nor
+-- writes `issuer`. 0060 added that column for 1.7.0–1.7.2, backfilled it,
+-- made it NOT NULL and indexed it with account_id; this retires all of it.
+--
+-- Dropped rather than relaxed, on purpose. A nullable column nobody writes
+-- would be NULL on every row created from here on and stale on every row
+-- before, and it would be the one column on the table SCHEMA.md could not
+-- describe truthfully. It is also what better-auth's own boot-time schema
+-- check asks for: a required column it never writes fails every insert,
+-- and 1.7.3 refuses to serve auth requests until it is gone or nullable.
+--
+-- One statement, no COMMIT;/BEGIN; header (see 0060 and TECH-006). Postgres
+-- drops the column's index with the column, so the DROP INDEX drizzle-kit
+-- also emitted is left out: in autocommit after crossing 0054, a run
+-- interrupted between the two would leave the column in place and the
+-- re-run dying on the index that was already gone. A single DROP COLUMN
+-- is atomic on its own and lands the same whether the batch reaches this
+-- file inside drizzle's transaction or not.
+--
+-- 0060 stays as it was. Shipped migrations are history, and an install
+-- upgrading from before it passes through both — its refusals included,
+-- which still stop an install holding an account no provider can speak for.
+ALTER TABLE "accounts" DROP COLUMN "issuer";

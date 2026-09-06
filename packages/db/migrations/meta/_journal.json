@@ -638,6 +638,13 @@
       "when": 1788630266749,
       "tag": "0090_onboarding_reviewed_types",
       "breakpoints": true
+    },
+    {
+      "idx": 91,
+      "version": "7",
+      "when": 1788676706424,
+      "tag": "0091_account_issuer_retired",
+      "breakpoints": true
     }
   ]
 }

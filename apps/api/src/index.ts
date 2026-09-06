@@ -273,6 +273,22 @@ if (!webDistPresent) {
   app.log.info(`no web bundle at ${webDist}; serving the API only`);
 }
 
+// better-auth checks the Drizzle schema it was handed against the tables
+// it writes (from 1.7.3, in every environment). Left to itself it logs
+// the mismatch once and then throws it on every auth request, so the
+// process would report ready and every sign-in would fail. Awaited here
+// instead, beside the migrations and for their reason (TECH-005): a
+// schema this build cannot write to is a boot that stops, with the
+// message the operator needs. The check reads the schema object, not the
+// database, so it costs no round trip and cannot fail for a bad
+// connection.
+try {
+  await (await app.auth.$context).checkSchema?.();
+} catch (error) {
+  console.error(error instanceof Error ? error.message : error);
+  process.exit(1);
+}
+
 const port = Number(process.env.PORT ?? 3000);
 const host = process.env.HOST ?? "0.0.0.0";
 

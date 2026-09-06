@@ -274,13 +274,34 @@ describe("TOTP lifecycle audit (SET-006: enrol, re-enrol, disable)", () => {
     expect(answered.statusCode, answered.body).toBe(200);
     expect(await rowsFor("user.two_factor_enrolled")).toHaveLength(beforeEnroll + 1);
 
-    // Re-enrolment (a fresh secret while already enabled) is a real
-    // event and appends its own entry.
-    const reenrolled = await enroll(cookies);
+    // Re-enrolment. From better-auth 1.7.3 `enable` refuses while a
+    // verified authenticator is active (TOTP_ALREADY_ENABLED) — it will
+    // not replace one — so a fresh secret is a disable followed by an
+    // enrolment, and the record shows both transitions. Each needs the
+    // password; disable rotates the session, so the fresh cookie rides.
+    const beforeDisable = (await rowsFor("user.two_factor_disabled")).length;
+    const refused = await harness.app.inject({
+      method: "POST",
+      url: "/api/auth/two-factor/enable",
+      cookies,
+      payload: { password },
+    });
+    expect(refused.statusCode, refused.body).toBe(400);
+    expect(refused.json()).toMatchObject({ code: "TOTP_ALREADY_ENABLED" });
+    const dropped = await harness.app.inject({
+      method: "POST",
+      url: "/api/auth/two-factor/disable",
+      cookies,
+      payload: { password },
+    });
+    expect(dropped.statusCode, dropped.body).toBe(200);
+    expect(await rowsFor("user.two_factor_disabled")).toHaveLength(beforeDisable + 1);
+    const afterDrop = { ...cookies };
+    for (const c of dropped.cookies) if (c.value) afterDrop[c.name] = c.value;
+    const reenrolled = await enroll(afterDrop);
     expect(await rowsFor("user.two_factor_enrolled")).toHaveLength(beforeEnroll + 2);
 
     // Disable requires the password and appends one disabled entry.
-    const beforeDisable = (await rowsFor("user.two_factor_disabled")).length;
     const disabled = await harness.app.inject({
       method: "POST",
       url: "/api/auth/two-factor/disable",
@@ -288,7 +309,7 @@ describe("TOTP lifecycle audit (SET-006: enrol, re-enrol, disable)", () => {
       payload: { password },
     });
     expect(disabled.statusCode, disabled.body).toBe(200);
-    expect(await rowsFor("user.two_factor_disabled")).toHaveLength(beforeDisable + 1);
+    expect(await rowsFor("user.two_factor_disabled")).toHaveLength(beforeDisable + 2);
 
     // Disabling when already disabled records nothing — no transition.
     // (Disable rotates the session like the enrolment verify does, so
@@ -302,6 +323,6 @@ describe("TOTP lifecycle audit (SET-006: enrol, re-enrol, disable)", () => {
       payload: { password },
     });
     expect(again.statusCode, again.body).toBe(200);
-    expect(await rowsFor("user.two_factor_disabled")).toHaveLength(beforeDisable + 1);
+    expect(await rowsFor("user.two_factor_disabled")).toHaveLength(beforeDisable + 2);
   });
 });
