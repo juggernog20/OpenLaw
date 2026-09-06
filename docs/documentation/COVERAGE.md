@@ -19,6 +19,10 @@ Destination: **S** staff Help; **P** portal Help; **F** formal documentation.
 procedures. **G3** is the P0 gate; **G4** is the P1 gate. All 55 rows are in the
 proposed complete-suite scope. Pilot coverage is a subset and is not counted twice.
 
+Article IDs: the planned articles that cover the row, as defined in
+[articles.json](articles.json) and explained in [NAVIGATION.md](NAVIGATION.md). A row
+with several articles is verified only when every listed article passes.
+
 Paths are app entry points. Evidence keys below link to repository sources. Each row
 has one owning content task; cross-cutting reviewers may contribute to several tasks.
 

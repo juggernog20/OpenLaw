@@ -17,10 +17,11 @@ keys. IDs become canonical slugs. A later title change must not change its slug.
 The publishing design owns the final URL structure and rendering format.
 
 The coverage table names the article IDs for each row. Article entries are the
-independently reviewable children of their owning writing batch. Track these child deliverables as article checklists in their batch issue. Split
-out an article issue when it needs a different owner or dependency. The batch
-retains its coverage gate and is complete only when every article is verified.
-The catalogue supplies each child's title, audience, source coverage, and destinations.
+independently reviewable children of their owning writing batch. Track these child
+deliverables as article checklists in their batch issue. Split out an article issue
+when it needs a different owner or dependency. The batch retains its coverage gate
+and is complete only when every article is verified. The catalogue supplies each
+child's title, audience, source coverage, and destinations.
 
 Do not change all articles to Published when their batch merges. Each article keeps
 its own content and validation status. Both C17 articles must pass before C17 counts
@@ -117,10 +118,11 @@ DOC-008 and DOC-025 must test real discovery after Help and articles exist.
 | Administrator: where do I change the request form?          | Administration → Configure request types and forms                                    | `request-forms` includes Administrator, Settings context, and C40                         |
 | Operator: how do I recover the database and uploaded files? | Deployment and operations → Back up and restore OpenLaw                               | `backup-and-restore` includes operator and formal docs, independent of staff Help         |
 
-All five paths resolve in the proposed catalogue. Use the role name Contributor throughout and keep app Knowledge distinct from Help
-in editorial review. Search synonyms such as "request form", "can't access", and
-"restore files" should be checked during the pilot; they are not evidence that a
-search implementation already exists.
+All five paths resolve in the proposed catalogue. Use the role name Contributor
+throughout and keep app Knowledge distinct from Help in editorial review. Search
+synonyms such as "request form", "can't access", and "restore files" should be
+checked during the pilot; they are not evidence that a search implementation
+already exists.
 
 ## Validation and hand-off
 
