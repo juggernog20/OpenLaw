@@ -313,7 +313,9 @@ test.describe.serial("M20 demo path", () => {
       const picker = portal.getByRole("list", { name: "Request types" });
       await picker.getByRole("link", { name: new RegExp(TYPE_NAME) }).click();
       await expect(portal).toHaveURL(new RegExp(`/portal/new/${TYPE_SLUG}$`));
-      await expect(portal.getByRole("heading", { name: TYPE_NAME })).toBeVisible();
+      await expect(
+        portal.getByRole("heading", { level: 1, name: TYPE_NAME, exact: true }),
+      ).toBeVisible();
 
       // The four basics are drawn as facts about every form (INT-002's
       // M19/4 addendum), and the attached field follows them.
