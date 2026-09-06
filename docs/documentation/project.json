@@ -1,0 +1,173 @@
+{
+  "baseline": {
+    "commit": "2a153fc5e768dcd92ae8309e0fe050759ec472db",
+    "branch": "origin/fix/home-all-tasks",
+    "release": "development",
+    "auditedAt": "2026-09-07"
+  },
+  "umbrella": 714,
+  "featureBranch": "feat/documentation",
+  "workstreams": [
+    {
+      "id": "DOC-E1",
+      "issue": 715
+    },
+    {
+      "id": "DOC-E2",
+      "issue": 716
+    },
+    {
+      "id": "DOC-E3",
+      "issue": 717
+    },
+    {
+      "id": "DOC-E4",
+      "issue": 718
+    },
+    {
+      "id": "DOC-E5",
+      "issue": 719
+    },
+    {
+      "id": "DOC-E6",
+      "issue": 720
+    }
+  ],
+  "tasks": [
+    {
+      "id": "DOC-001",
+      "issue": 721,
+      "status": "in-progress"
+    },
+    {
+      "id": "DOC-002",
+      "issue": 722,
+      "status": "open"
+    },
+    {
+      "id": "DOC-003",
+      "issue": 723,
+      "status": "open"
+    },
+    {
+      "id": "DOC-004",
+      "issue": 724,
+      "status": "open"
+    },
+    {
+      "id": "DOC-005",
+      "issue": 725,
+      "status": "open"
+    },
+    {
+      "id": "DOC-006",
+      "issue": 726,
+      "status": "open"
+    },
+    {
+      "id": "DOC-007",
+      "issue": 727,
+      "status": "open"
+    },
+    {
+      "id": "DOC-008",
+      "issue": 728,
+      "status": "open"
+    },
+    {
+      "id": "DOC-009",
+      "issue": 729,
+      "status": "open"
+    },
+    {
+      "id": "DOC-010",
+      "issue": 730,
+      "status": "open"
+    },
+    {
+      "id": "DOC-011",
+      "issue": 731,
+      "status": "open"
+    },
+    {
+      "id": "DOC-012",
+      "issue": 732,
+      "status": "open"
+    },
+    {
+      "id": "DOC-013",
+      "issue": 733,
+      "status": "open"
+    },
+    {
+      "id": "DOC-014",
+      "issue": 734,
+      "status": "open"
+    },
+    {
+      "id": "DOC-015",
+      "issue": 735,
+      "status": "open"
+    },
+    {
+      "id": "DOC-016",
+      "issue": 736,
+      "status": "open"
+    },
+    {
+      "id": "DOC-017",
+      "issue": 737,
+      "status": "open"
+    },
+    {
+      "id": "DOC-018",
+      "issue": 738,
+      "status": "open"
+    },
+    {
+      "id": "DOC-019",
+      "issue": 739,
+      "status": "open"
+    },
+    {
+      "id": "DOC-020",
+      "issue": 740,
+      "status": "open"
+    },
+    {
+      "id": "DOC-021",
+      "issue": 741,
+      "status": "open"
+    },
+    {
+      "id": "DOC-022",
+      "issue": 742,
+      "status": "open"
+    },
+    {
+      "id": "DOC-023",
+      "issue": 743,
+      "status": "open"
+    },
+    {
+      "id": "DOC-024",
+      "issue": 744,
+      "status": "open"
+    },
+    {
+      "id": "DOC-025",
+      "issue": 745,
+      "status": "open"
+    },
+    {
+      "id": "DOC-026",
+      "issue": 746,
+      "status": "open"
+    },
+    {
+      "id": "DOC-027",
+      "issue": 747,
+      "status": "open"
+    }
+  ]
+}
