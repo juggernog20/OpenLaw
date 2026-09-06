@@ -1,0 +1,1184 @@
+{
+  "schemaVersion": 1,
+  "status": "planned",
+  "scenarios": [
+    {
+      "id": "V-C01",
+      "coverage": ["C01"],
+      "articles": ["staff-sign-in"],
+      "roles": ["legal_team_member", "administrator", "contributor"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Invited account, Mailpit activation message, and a separate authenticated session."
+      ],
+      "actions": [
+        "Activate the account, sign in, enroll and use two-factor authentication, then sign out."
+      ],
+      "expectedResults": [
+        "The intended account reaches its permitted landing page; two-factor and session controls have their documented effects."
+      ],
+      "negativeChecks": [
+        "Expired activation, incorrect password/code, and revoked-session behavior are observable without exposing another account."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C02",
+      "coverage": ["C02"],
+      "articles": ["portal-sign-in"],
+      "roles": ["business_user"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Portal enabled for helix.example; Jonas and Amara use separate browser contexts."
+      ],
+      "actions": [
+        "Request and redeem a magic link, sign out, then try an expired or already-used link."
+      ],
+      "expectedResults": [
+        "Only the intended Business User session opens; the portal shows that person\u2019s Requests."
+      ],
+      "negativeChecks": [
+        "An unapproved domain gets the supported refusal/neutral response; a bad link offers a working recovery route."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C03",
+      "coverage": ["C03"],
+      "articles": ["find-your-work"],
+      "roles": ["legal_team_member", "administrator", "contributor"],
+      "environment": "authoring",
+      "prerequisites": ["Seeded Tasks, Key dates, and records reached by each role."],
+      "actions": [
+        "Use Home, all Tasks, record sections, and the keyboard-shortcuts sheet to find a named fixture."
+      ],
+      "expectedResults": [
+        "Links reach the intended records; Tasks remain distinct from deadline surfaces; ? opens shortcuts."
+      ],
+      "negativeChecks": [
+        "Empty sections and unavailable records have useful outcomes; / and Escape retain their existing behavior."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C04",
+      "coverage": ["C04"],
+      "articles": ["search-and-views"],
+      "roles": ["legal_team_member", "administrator", "contributor"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Two visible records, a confidential record outside reach, and a Document with extracted unique text."
+      ],
+      "actions": [
+        "Search for the unique text; filter/sort a list, save a view, change filters, and use Back/Forward."
+      ],
+      "expectedResults": [
+        "Results respect reach and the saved view restores its configuration; URL, chips, and rows agree."
+      ],
+      "negativeChecks": [
+        "The hidden record never appears; no-match search and failed reads preserve understandable state. Track rapid-click issue #751 separately."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C05",
+      "coverage": ["C05"],
+      "articles": ["personal-settings"],
+      "roles": ["legal_team_member", "administrator", "contributor"],
+      "environment": "authoring",
+      "prerequisites": ["Separate personal accounts with known initial timezone and appearance."],
+      "actions": [
+        "Change profile, timezone, and theme; switch to the portal and exercise personal session controls."
+      ],
+      "expectedResults": [
+        "Preferences persist for the intended user and the documented app-view path works on this baseline."
+      ],
+      "negativeChecks": [
+        "Another account\u2019s preferences remain unchanged; no absent M33 App view route is claimed."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C06",
+      "coverage": ["C06"],
+      "articles": ["roles-and-access"],
+      "roles": ["legal_team_member", "administrator", "contributor", "business_user"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Public and confidential Contracts/Matters, two teams, and a confidential Entity with explicit Grants."
+      ],
+      "actions": [
+        "Compare the same record links as Administrator, Legal Team Member, Contributor, and Business User; add/remove permitted reach."
+      ],
+      "expectedResults": [
+        "Each account sees only its permitted records/actions, including the Administrator exception."
+      ],
+      "negativeChecks": [
+        "Removed membership/Grants cease granting access; parent or related-record links do not grant inherited reach."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C07",
+      "coverage": ["C07"],
+      "articles": ["comments-and-activity"],
+      "roles": ["legal_team_member", "administrator", "contributor", "business_user"],
+      "environment": "authoring",
+      "prerequisites": [
+        "A reached Contract, Matter, and Request conversation, plus small fictional attachments."
+      ],
+      "actions": [
+        "Post comments at available visibility tiers, mention a person, attach paper, and inspect activity as each audience."
+      ],
+      "expectedResults": [
+        "Allowed recipients see the intended conversation and attachments; the activity records the action."
+      ],
+      "negativeChecks": [
+        "Legal Only and Working Team content stay outside the Business User view; failed attachments do not falsely appear filed."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C08",
+      "coverage": ["C08"],
+      "articles": ["notifications"],
+      "roles": ["legal_team_member", "administrator", "contributor", "business_user"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Separate role accounts, Mailpit, and a controlled event that produces a notification."
+      ],
+      "actions": [
+        "Open a notification, change bell/email preferences, trigger another event, and inspect the corresponding destinations."
+      ],
+      "expectedResults": [
+        "Links open permitted records and each preference affects its documented channel/event group."
+      ],
+      "negativeChecks": [
+        "Portal preferences expose only supported groups; disabled email, unavailable records, and timing/timezone limits are explained."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C09",
+      "coverage": ["C09"],
+      "articles": ["submit-request"],
+      "roles": ["business_user"],
+      "environment": "authoring",
+      "prerequisites": [
+        "A published request type with required Fields, deflection guidance, and a small PDF."
+      ],
+      "actions": [
+        "Choose the type, complete the form, attach the PDF, submit, and open the new Request."
+      ],
+      "expectedResults": [
+        "One Request has the supplied values and successful attachments and appears for its Requester."
+      ],
+      "negativeChecks": [
+        "Missing required values prevent submission; attachment failure is reported without concealing a successfully created Request."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C10",
+      "coverage": ["C10"],
+      "articles": ["follow-request"],
+      "roles": ["business_user"],
+      "environment": "authoring",
+      "prerequisites": ["Jonas\u2019s open Request and a Legal Team Member able to act on it."],
+      "actions": [
+        "Reply from both roles, supply additional paper, and follow the Request through disposition."
+      ],
+      "expectedResults": [
+        "The Requester sees the supported progress and conversation for their own Request after disposition."
+      ],
+      "negativeChecks": [
+        "A second Business User cannot open it; Legal-only conversation and internal work details remain unavailable."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C11",
+      "coverage": ["C11"],
+      "articles": ["portal-knowledge"],
+      "roles": ["business_user"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Published portal Knowledge, restricted/unpublished Knowledge, and configured deflection links."
+      ],
+      "actions": [
+        "Follow portal guidance and open its primary/supporting Documents before starting a Request."
+      ],
+      "expectedResults": [
+        "Only eligible published Knowledge appears and allowed files open through their intended links."
+      ],
+      "negativeChecks": [
+        "Unpublished or out-of-audience items and their files remain unavailable; a broken external link does not block the Request form."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C12",
+      "coverage": ["C12"],
+      "articles": ["triage-requests"],
+      "roles": ["legal_team_member", "administrator"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Separate undecided Requests for Convert, Resolve, and Decline, plus two legal sessions."
+      ],
+      "actions": ["Review and assign Requests, record each disposition, and revisit the Inbox."],
+      "expectedResults": [
+        "Dispositioned Requests leave the undecided Inbox and retain their recorded outcome."
+      ],
+      "negativeChecks": [
+        "A concurrent disposition produces a clear lost-race result rather than a second outcome."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C13",
+      "coverage": ["C13"],
+      "articles": ["convert-request"],
+      "roles": ["legal_team_member", "administrator"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Contract-targeting and Matter-targeting Request types with Fields, attachments, and comments."
+      ],
+      "actions": [
+        "Convert one Request through each target, repair required carried values, and inspect the new work and original Request."
+      ],
+      "expectedResults": [
+        "Each Request creates one work object of its configured target; paper and conversation retain the documented ownership and reach."
+      ],
+      "negativeChecks": [
+        "Concurrent conversion, archived carried references, and missing required values have supported repair or refusal paths."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C14",
+      "coverage": ["C14"],
+      "articles": ["create-contract"],
+      "roles": ["legal_team_member", "administrator"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Active Entity, Counterparties, Contract type, prospective Owner, and team members."
+      ],
+      "actions": [
+        "Create a Contract, choose our Entity and Counterparties, assign its Owner/team, and edit business Fields."
+      ],
+      "expectedResults": [
+        "The Contract stores the intended parties, accountability, and values and is reached by the expected people."
+      ],
+      "negativeChecks": [
+        "Required/invalid values and archived references are handled without creating an unintended Contract."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C15",
+      "coverage": ["C15"],
+      "articles": ["contract-stages"],
+      "roles": ["legal_team_member", "administrator"],
+      "environment": "authoring",
+      "prerequisites": ["Contract Statuses covering the fixed Stages and an editable Contract."],
+      "actions": [
+        "Move through representative Statuses and inspect the displayed Stage and activity."
+      ],
+      "expectedResults": [
+        "Status labels use their configured Stage mapping and each successful move is visible."
+      ],
+      "negativeChecks": [
+        "An archived/read-only record offers no unsupported mutation; renaming a Status does not change its Stage."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C16",
+      "coverage": ["C16"],
+      "articles": ["contract-approvals"],
+      "roles": ["legal_team_member", "administrator"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Editable Contract, two approvers, and a second actor for cancellation/rejection cases."
+      ],
+      "actions": [
+        "Request approvals, answer as the named people, re-request after rejection, and cross the Soft gate deliberately."
+      ],
+      "expectedResults": [
+        "Approval requests remain independent; the confirmed override is recorded and the Stage move succeeds."
+      ],
+      "negativeChecks": [
+        "A different user cannot answer someone else\u2019s request; unresolved approval is a warning, not an invented hard lock."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C17-manual",
+      "coverage": ["C17"],
+      "articles": ["manual-signing"],
+      "roles": ["legal_team_member", "administrator"],
+      "environment": "scenario-fixture",
+      "prerequisites": ["Contract with an uploaded fictional executed PDF; no Signing connector."],
+      "actions": [
+        "Use the Manual hand-off, choose the Executed pin, and move to the intended active Status."
+      ],
+      "expectedResults": [
+        "The selected Document Version is explicitly pinned and the Contract reaches the chosen Stage without a connector."
+      ],
+      "negativeChecks": [
+        "A Version kind alone does not set the Executed pin; unsupported users cannot perform the legal action."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C17-electronic",
+      "coverage": ["C17"],
+      "articles": ["electronic-signing"],
+      "roles": ["legal_team_member", "administrator"],
+      "environment": "scenario-fixture",
+      "prerequisites": [
+        "Dedicated signing-workflow fixture with a declared provider mode and fictional paper/Signers."
+      ],
+      "actions": [
+        "Send an Envelope, observe completion, and use separate Envelopes for void/decline/retry cases."
+      ],
+      "expectedResults": [
+        "OpenLaw records the correct Envelope transitions and files/pins the returned executed paper once."
+      ],
+      "negativeChecks": [
+        "Unavailable/disabled configuration, a second live Envelope, and provider failure have the documented outcomes. Local stand-ins do not satisfy C42 setup checks."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C18",
+      "coverage": ["C18"],
+      "articles": ["terms-and-renewals"],
+      "roles": ["legal_team_member", "administrator"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Contracts with fixed terms, notice periods, and representative renewal options."
+      ],
+      "actions": [
+        "Edit the term, inspect derived notice/next-deadline values, and confirm a proposed renewal."
+      ],
+      "expectedResults": [
+        "The displayed dates reflect the recorded term and the renewal changes the term only through the supported action."
+      ],
+      "negativeChecks": [
+        "Invalid or stale dates are refused/re-read; Task due dates are not substituted for Contract deadlines."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C19",
+      "coverage": ["C19"],
+      "articles": ["contract-tasks-and-dates"],
+      "roles": ["legal_team_member", "administrator"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Contract team, an open Task, a Key date, and controlled notification timing."
+      ],
+      "actions": [
+        "Create/complete/reorder Tasks and add/change a Key date; inspect Home and notification destinations."
+      ],
+      "expectedResults": [
+        "Task and Key date updates persist and affect their distinct supported surfaces."
+      ],
+      "negativeChecks": [
+        "Read-only/archived restrictions and missing recipients do not produce misleading reminder promises."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C20",
+      "coverage": ["C20"],
+      "articles": ["contract-relations-and-ending"],
+      "roles": ["legal_team_member", "administrator"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Several Contracts, a parent relation, a typed relation, and one restricted target."
+      ],
+      "actions": [
+        "Create/remove relations and exercise ending, archive, and restore on separate fixtures."
+      ],
+      "expectedResults": [
+        "Relations, lifecycle changes, and recorded history match the visible actions without granting reach."
+      ],
+      "negativeChecks": [
+        "Cycles/invalid links are refused; a restricted target does not leak its details."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C21",
+      "coverage": ["C21"],
+      "articles": ["contract-analysis"],
+      "roles": ["legal_team_member", "administrator"],
+      "environment": "scenario-fixture",
+      "prerequisites": [
+        "A dedicated Analysis fixture, known extracted text, target Fields, and a declared local or live AI provider."
+      ],
+      "actions": [
+        "Run Analysis, inspect evidence and Unverified values, confirm/edit one value, and rerun against changed input."
+      ],
+      "expectedResults": [
+        "Evidence is tied to the chosen Document Version; confirming one value does not clear unrelated markers."
+      ],
+      "negativeChecks": [
+        "Disabled connector, failed extraction, changed source, and stale evidence have the documented states. C43 separately verifies real provider setup."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C22",
+      "coverage": ["C22"],
+      "articles": ["create-matter"],
+      "roles": ["legal_team_member", "administrator"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Matter type/template, Entity/Counterparty references, Matter Manager, and team."
+      ],
+      "actions": [
+        "Create a Matter directly and from a template, then edit its supported business Fields."
+      ],
+      "expectedResults": [
+        "The Matter has its intended Manager, team, references, and template defaults."
+      ],
+      "negativeChecks": [
+        "Missing required values and unavailable templates produce the supported validation or selection behavior."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C23",
+      "coverage": ["C23"],
+      "articles": ["matter-status-and-archive"],
+      "roles": ["legal_team_member", "administrator"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Open and closed Matter Statuses and separate active/archived Matter fixtures."
+      ],
+      "actions": ["Change Status, close/reopen, archive, and restore using allowed accounts."],
+      "expectedResults": [
+        "The selected Status retains its immutable open/closed Category and lifecycle changes persist."
+      ],
+      "negativeChecks": [
+        "An archived Matter cannot be edited through ordinary controls; Contributor restrictions remain clear."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C24",
+      "coverage": ["C24"],
+      "articles": ["matter-work"],
+      "roles": ["legal_team_member", "administrator"],
+      "environment": "authoring",
+      "prerequisites": ["Reached Matter with people, Tasks, Key dates, and related work."],
+      "actions": ["Maintain Tasks/Key dates and add/remove permitted relationships."],
+      "expectedResults": [
+        "Checklist work, deadlines, relationships, and corresponding history remain distinct and accurate."
+      ],
+      "negativeChecks": [
+        "Invalid cycles/restricted targets and unauthorized changes do not expose or alter hidden work."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C25",
+      "coverage": ["C25"],
+      "articles": ["contributor-guide"],
+      "roles": ["contributor"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Ravi is on one Contract and Matter team and absent from comparable records."
+      ],
+      "actions": ["Edit permitted business Fields, add supporting Documents, and comment as Ravi."],
+      "expectedResults": [
+        "Contributor actions succeed only on reached work and the guide identifies the actual legal-action limits."
+      ],
+      "negativeChecks": [
+        "Stage/Status moves and other reserved legal actions remain unavailable; removing Ravi\u2019s reach stops access."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C26",
+      "coverage": ["C26"],
+      "articles": ["document-versions"],
+      "roles": ["legal_team_member", "administrator", "contributor"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Reached owning records, PDF/Word fixtures, two Versions, and comment paper."
+      ],
+      "actions": [
+        "Upload a Document, append a Document Version, inspect provenance/kind, and file conversation paper."
+      ],
+      "expectedResults": [
+        "A logical Document retains its linear Version chain and the paper\u2019s ownership/provenance is visible."
+      ],
+      "negativeChecks": [
+        "Unsupported corrections, failed uploads, and insufficient access do not silently alter a Version or its provenance."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C27",
+      "coverage": ["C27"],
+      "articles": ["document-folders"],
+      "roles": ["legal_team_member", "administrator", "contributor"],
+      "environment": "authoring",
+      "prerequisites": [
+        "A reached record, nested local folders, valid files, and one intentionally failing file."
+      ],
+      "actions": [
+        "Create/move supported folders and perform bulk/folder upload with a partial failure."
+      ],
+      "expectedResults": [
+        "Successful files remain available and the failed item is identified separately."
+      ],
+      "negativeChecks": [
+        "Unsupported folder actions or uploads are refused for the relevant role without claiming the whole batch succeeded."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C28",
+      "coverage": ["C28"],
+      "articles": ["document-previews"],
+      "roles": ["legal_team_member", "administrator", "contributor", "business_user"],
+      "environment": "scenario-fixture",
+      "prerequisites": [
+        "Real PDF, DOCX, scanned PDF, unsupported file, and an isolated processing-failure fixture."
+      ],
+      "actions": [
+        "Open previews, wait for processing/OCR, download the original, and retry/recover after the induced failure."
+      ],
+      "expectedResults": [
+        "Supported renditions/text become available and downloads preserve the original bytes."
+      ],
+      "negativeChecks": [
+        "Failure/unsupported states offer the documented download or recovery path; portal file reach is checked separately."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C29",
+      "coverage": ["C29"],
+      "articles": ["compare-versions"],
+      "roles": ["legal_team_member", "administrator", "contributor"],
+      "environment": "scenario-fixture",
+      "prerequisites": ["Two Word Versions and a PDF/text pair with known small differences."],
+      "actions": [
+        "Compare both pairs, read changes, and export a Generated redline where permitted."
+      ],
+      "expectedResults": [
+        "Comparison operands and output are correct; an exported redline is a new derived Version with provenance."
+      ],
+      "negativeChecks": [
+        "Pending/failed processing and unauthorized export are handled; a Comparison is not misrepresented as a Version."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C30",
+      "coverage": ["C30"],
+      "articles": ["document-repository"],
+      "roles": ["legal_team_member", "administrator", "contributor"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Documents under several owner kinds, including a hidden owner and an archived Document."
+      ],
+      "actions": ["Search/filter the repository and open owners and Version histories."],
+      "expectedResults": [
+        "The repository shows permitted Documents and links to the correct owners/Versions."
+      ],
+      "negativeChecks": [
+        "Hidden owners do not leak through results or filters; archived/empty result behavior matches the guide."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C31",
+      "coverage": ["C31"],
+      "articles": ["entities-and-counterparties"],
+      "roles": ["legal_team_member", "administrator"],
+      "environment": "authoring",
+      "prerequisites": ["Editable Entity types and a separate external Counterparty fixture."],
+      "actions": ["Create/update an Entity and select each party kind in a work record."],
+      "expectedResults": [
+        "Our Entity and external Counterparty retain their distinct roles and labels."
+      ],
+      "negativeChecks": [
+        "A Contributor cannot use the Member+ Entity destination; duplicate/invalid input has a clear outcome."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C32",
+      "coverage": ["C32"],
+      "articles": ["entity-records"],
+      "roles": ["legal_team_member", "administrator"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Two Entities, an Officer, a Registration, and fictional corporate Documents."
+      ],
+      "actions": [
+        "Record a Holding, Officer appointment, Registration, and Document; archive/restore a separate Entity."
+      ],
+      "expectedResults": [
+        "The entered corporate facts and files persist with their supported dates and relationships."
+      ],
+      "negativeChecks": [
+        "Invalid ownership/date values and archived/read-only restrictions are handled without changing unrelated facts."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C33",
+      "coverage": ["C33"],
+      "articles": ["create-knowledge"],
+      "roles": ["legal_team_member", "administrator"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Knowledge types/folders and a draft Knowledge Item with fictional Documents."
+      ],
+      "actions": ["Create and organize an item, edit guidance, and choose its primary Document."],
+      "expectedResults": [
+        "The item, its guidance, its folder, and its Documents remain distinct records with a working primary choice."
+      ],
+      "negativeChecks": [
+        "Unavailable/archived references and insufficient role permissions have supported outcomes."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C34",
+      "coverage": ["C34"],
+      "articles": ["publish-knowledge"],
+      "roles": ["legal_team_member", "administrator"],
+      "environment": "authoring",
+      "prerequisites": [
+        "A draft Knowledge Item, a portal reader, and an out-of-audience comparison reader."
+      ],
+      "actions": [
+        "Publish to a chosen audience, inspect the portal, then unpublish/archive the item."
+      ],
+      "expectedResults": [
+        "Only the intended published audience reaches the item and its files; later removal takes effect."
+      ],
+      "negativeChecks": [
+        "Direct links do not bypass publication/audience checks, including links to supporting Documents."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C35",
+      "coverage": ["C35"],
+      "articles": ["first-run"],
+      "roles": ["administrator"],
+      "environment": "fresh",
+      "prerequisites": ["Fresh unseeded app and Mailpit; a fictional first Administrator."],
+      "actions": [
+        "Complete account setup and the baseline welcome/authentication/portal/email/invite wizard."
+      ],
+      "expectedResults": [
+        "The Administrator reaches the app and the saved settings reflect the completed steps."
+      ],
+      "negativeChecks": [
+        "Validation/retry and resumed onboarding work; no M33 checklist or Review step absent from this build is claimed."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C36",
+      "coverage": ["C36"],
+      "articles": ["organisation-and-users"],
+      "roles": ["administrator"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Daniel\u2019s Administrator account, Mailpit, and disposable invited users."
+      ],
+      "actions": [
+        "Edit organization identity, invite/activate a user, change role, revoke sessions, and archive the user."
+      ],
+      "expectedResults": [
+        "Changes apply to the intended account and revoked sessions cease granting access."
+      ],
+      "negativeChecks": [
+        "Unauthorized administration, invalid invites, and self/last-Administrator safeguards behave as implemented."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C37",
+      "coverage": ["C37"],
+      "articles": ["authentication-and-email"],
+      "roles": ["administrator", "operator"],
+      "environment": "scenario-fixture",
+      "prerequisites": [
+        "Separate authentication lab, Mailpit, allowed domains, and a local OIDC/SAML fixture where supported."
+      ],
+      "actions": [
+        "Configure supported sign-in/domain/email options and verify their actual entry flows and environment precedence."
+      ],
+      "expectedResults": [
+        "Allowed users can sign in and test mail reaches the controlled sink through the active configuration source."
+      ],
+      "negativeChecks": [
+        "Invalid issuer/relay, denied domain, and locked environment settings have recoverable outcomes without exposing secrets."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C38",
+      "coverage": ["C38"],
+      "articles": ["types-statuses-fields"],
+      "roles": ["administrator"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Administrator, active types/Statuses/Fields, and records retaining values from a retired definition."
+      ],
+      "actions": [
+        "Configure definitions and requiredness, then archive/reassign representative entries."
+      ],
+      "expectedResults": [
+        "New and existing records reflect the documented configuration and retained-value behavior."
+      ],
+      "negativeChecks": [
+        "Immutable Stage/Category mappings and invalid reassignment are refused; non-Administrators cannot edit configuration."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C39",
+      "coverage": ["C39"],
+      "articles": ["matter-templates"],
+      "roles": ["administrator"],
+      "environment": "authoring",
+      "prerequisites": ["Matter template with default priority/risk and relative Tasks/Key dates."],
+      "actions": [
+        "Configure the template and apply it through direct Matter creation and Request conversion."
+      ],
+      "expectedResults": ["Each path creates the intended defaults using its actual date anchor."],
+      "negativeChecks": [
+        "Changing the template does not rewrite already-created work; unavailable templates have a clear outcome."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C40",
+      "coverage": ["C40"],
+      "articles": ["request-forms"],
+      "roles": ["administrator"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Administrator, Contract/Matter types, Fields, and portal Knowledge/URL guidance."
+      ],
+      "actions": [
+        "Configure one Request type for each conversion target and submit through the resulting forms."
+      ],
+      "expectedResults": [
+        "Each form collects the intended values and conversion follows the configured target."
+      ],
+      "negativeChecks": [
+        "Invalid/missing required Fields and archived targets do not silently route work to a different module."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C41",
+      "coverage": ["C41"],
+      "articles": ["reminders-and-audit"],
+      "roles": ["administrator"],
+      "environment": "authoring",
+      "prerequisites": ["Administrator, controlled event timestamps, and Mailpit."],
+      "actions": [
+        "Set reminder lead times, trigger appropriate test events, and find their Administrator audit entries."
+      ],
+      "expectedResults": [
+        "Lead-time changes and audit facts are observable at the documented scope."
+      ],
+      "negativeChecks": [
+        "The audit log is unavailable to other roles; timezone/channel limits and missing events are investigated rather than assumed."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C42",
+      "coverage": ["C42"],
+      "articles": ["configure-signing"],
+      "roles": ["administrator", "operator"],
+      "environment": "live-provider",
+      "prerequisites": [
+        "A real disposable DocuSign developer account, consent/configuration access, and fictional paper."
+      ],
+      "actions": [
+        "Follow current provider instructions, configure the Signing connector, test it, and complete a controlled Envelope round trip."
+      ],
+      "expectedResults": [
+        "The actual provider account is reached and OpenLaw receives the intended status and executed paper."
+      ],
+      "negativeChecks": [
+        "Invalid credentials, disabled connector, webhook/reconciliation recovery, and secret rotation are tested without treating a stand-in as provider setup."
+      ],
+      "requiredMethods": ["browser-walkthrough", "live-provider-check"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C43",
+      "coverage": ["C43"],
+      "articles": ["configure-analysis"],
+      "roles": ["administrator", "operator"],
+      "environment": "live-provider",
+      "prerequisites": [
+        "A real disposable supported AI-provider account and a small fictional document with a bounded test input."
+      ],
+      "actions": [
+        "Configure and test the AI connector, configure a Field prompt, perform an Analysis run, and disable the connector."
+      ],
+      "expectedResults": [
+        "The actual configured provider receives the intended input and OpenLaw records its supported output/evidence."
+      ],
+      "negativeChecks": [
+        "Invalid key/model/endpoint, provider refusal, and disabling produce the documented behavior without claiming model accuracy."
+      ],
+      "requiredMethods": ["browser-walkthrough", "live-provider-check"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C44",
+      "coverage": ["C44"],
+      "articles": ["install"],
+      "roles": ["operator"],
+      "environment": "operator",
+      "prerequisites": [
+        "Disposable host/project, selected immutable app/engine images, and a fictional operator with the draft guide."
+      ],
+      "actions": [
+        "Independently follow the production installation guide from an empty state and time the path to usable setup."
+      ],
+      "expectedResults": [
+        "The app reaches readiness and first-run setup with the documented production defaults and topology."
+      ],
+      "negativeChecks": [
+        "Missing secrets, occupied ports, and unavailable dependencies lead to the documented recovery; the authoring lab is not counted as production install evidence."
+      ],
+      "requiredMethods": ["container-operation"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C45",
+      "coverage": ["C45"],
+      "articles": ["deployment-configuration"],
+      "roles": ["operator"],
+      "environment": "operator",
+      "prerequisites": [
+        "Disposable production-like installation, local reverse proxy, filesystem storage, and local S3-compatible storage."
+      ],
+      "actions": [
+        "Apply documented proxy, database, storage, file-limit, mail, engine, worker, and encryption settings."
+      ],
+      "expectedResults": [
+        "Each claimed configuration path is demonstrated with actual requests/files and recorded effective values excluding secrets."
+      ],
+      "negativeChecks": [
+        "Wrong origin, limits, unavailable storage/engine, and mismatched encryption keys fail as documented and recover after correction."
+      ],
+      "requiredMethods": ["container-operation"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C46",
+      "coverage": ["C46"],
+      "articles": ["upgrade"],
+      "roles": ["operator"],
+      "environment": "operator",
+      "prerequisites": [
+        "Pinned earlier supported image with populated records/files/configuration and a separate upgrade target."
+      ],
+      "actions": [
+        "Capture the baseline, follow the upgrade guide, and compare retained data and behavior after migration."
+      ],
+      "expectedResults": [
+        "Accounts, permissions, records, files, and required encrypted configuration survive the supported upgrade."
+      ],
+      "negativeChecks": [
+        "Exercise backup-based recovery in a separate target; do not imply that downgrading a migrated database is supported."
+      ],
+      "requiredMethods": ["container-operation"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C47",
+      "coverage": ["C47"],
+      "articles": ["backup-and-restore"],
+      "roles": ["operator"],
+      "environment": "operator",
+      "prerequisites": [
+        "Populated disposable source with known file hashes and encrypted configuration; separate recovery target and retained keys."
+      ],
+      "actions": [
+        "Take the coherent backup described by the guide, restore into the empty target, and use the restored app."
+      ],
+      "expectedResults": [
+        "Records and permissions work, file hashes match, and required encrypted configuration is usable with the retained key."
+      ],
+      "negativeChecks": [
+        "Missing/wrong keys or missing files are detected; a backup archive alone never counts as a successful restore."
+      ],
+      "requiredMethods": ["container-operation"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C48",
+      "coverage": ["C48"],
+      "articles": ["operator-troubleshooting"],
+      "roles": ["operator"],
+      "environment": "operator",
+      "prerequisites": [
+        "Dedicated fault-injection installation with recoverable configuration and baseline health results."
+      ],
+      "actions": [
+        "Diagnose controlled startup, migration, mail, worker, processing, storage, and connector failures using the guide."
+      ],
+      "expectedResults": [
+        "Each diagnosis reaches a concrete cause or supported escalation and restored service is actually checked."
+      ],
+      "negativeChecks": [
+        "Logs and reports omit credentials/private payloads; no destructive recovery is offered without its actual scope and consequence."
+      ],
+      "requiredMethods": ["container-operation"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C49",
+      "coverage": ["C49"],
+      "articles": ["troubleshooting"],
+      "roles": ["legal_team_member", "administrator", "contributor", "business_user"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Named app error fixtures from access, upload, preview, notifications, approvals, signing, and Analysis scenarios."
+      ],
+      "actions": [
+        "Start from each visible symptom and follow the troubleshooting article\u2019s checks and recovery links."
+      ],
+      "expectedResults": [
+        "The intended reader reaches an accurate resolution or a specific escalation with useful non-sensitive facts."
+      ],
+      "negativeChecks": [
+        "The article does not offer an access bypass, invent an unavailable action, or treat a provider stand-in as live-provider evidence."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C50",
+      "coverage": ["C50"],
+      "articles": ["reference"],
+      "roles": ["legal_team_member", "administrator", "contributor", "business_user", "operator"],
+      "environment": "authoring",
+      "prerequisites": [
+        "The target build\u2019s glossary, configured labels, role fixtures, and file-behavior examples."
+      ],
+      "actions": [
+        "Look up representative terms and limits, then compare the references with the relevant app actions."
+      ],
+      "expectedResults": [
+        "The reference separates fixed concepts from configured labels and accurately states role/file limits."
+      ],
+      "negativeChecks": [
+        "Examples do not equate Entity with Counterparty, Task due dates with Key dates, or Comparison with Document Version."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C51",
+      "coverage": ["C51"],
+      "articles": ["versions-and-support"],
+      "roles": ["legal_team_member", "administrator", "contributor", "business_user", "operator"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Installed documentation edition, standalone export, and an older or unavailable article link."
+      ],
+      "actions": [
+        "Identify the app/docs edition, follow version/support links, and inspect the unavailable-link behavior."
+      ],
+      "expectedResults": [
+        "The reader can identify supported build/content and reach the intended local or external support path."
+      ],
+      "negativeChecks": [
+        "An older app does not silently switch to latest; an external-site failure leaves local reading usable."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C52",
+      "coverage": ["C52"],
+      "articles": ["entity-obligations"],
+      "roles": ["legal_team_member", "administrator"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Entity with recurring and one-off Obligations and a controlled calendar anchor."
+      ],
+      "actions": [
+        "Create an Obligation, inspect its calendar/Home presence, record filing, and advance a recurrence."
+      ],
+      "expectedResults": [
+        "Filing history and the next cycle follow the confirmed action and supported recurrence rule."
+      ],
+      "negativeChecks": [
+        "Past-due items do not silently count as filed; invalid dates and unauthorized changes have a clear outcome."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C53",
+      "coverage": ["C53"],
+      "articles": ["entity-structure-and-access"],
+      "roles": ["legal_team_member", "administrator"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Ownership graph, share capital, linked work, confidential Entity, and allowed/denied readers."
+      ],
+      "actions": [
+        "Edit supported capital facts, inspect the chart/links, and grant then remove confidential access."
+      ],
+      "expectedResults": [
+        "Corporate facts and graph edges are accurate and explicit Grants control the intended reach."
+      ],
+      "negativeChecks": [
+        "Restricted linked records remain protected; a Holding or chart relationship does not grant access."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C54",
+      "coverage": ["C54"],
+      "articles": ["archive-and-delete-documents"],
+      "roles": ["legal_team_member", "administrator", "contributor"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Disposable Documents with multiple Versions and independent Administrator/Member/Contributor sessions."
+      ],
+      "actions": [
+        "Archive/restore permitted Documents and permanently delete a separate Document as Administrator."
+      ],
+      "expectedResults": [
+        "Archive/restore preserves supported history; permanent deletion removes the documented Versions/files and references."
+      ],
+      "negativeChecks": [
+        "Other roles cannot perform Administrator deletion; consequences and unavailable-file behavior match the guide."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-C55",
+      "coverage": ["C55"],
+      "articles": ["approver-groups"],
+      "roles": ["administrator"],
+      "environment": "authoring",
+      "prerequisites": [
+        "Administrator, two Member+ approvers, and a Contract with an applied group."
+      ],
+      "actions": [
+        "Create/edit/archive an Approver group and apply it to a Contract before changing its membership."
+      ],
+      "expectedResults": [
+        "Applying a group snapshots members into Approval requests; later group edits do not rewrite those requests."
+      ],
+      "negativeChecks": [
+        "Non-Member+ selections and unauthorized configuration are refused; existing requests retain their recorded identities."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-HELP",
+      "coverage": ["C03", "C09", "C12", "C51"],
+      "articles": [],
+      "roles": ["anonymous", "administrator", "legal_team_member", "contributor", "business_user"],
+      "environment": "publication",
+      "prerequisites": ["Help and formal readers plus verified intake pilot articles."],
+      "actions": [
+        "Find the pilot answers through staff/portal Help and signed-out formal guidance; use keyboard, narrow layout, zoom, and all three themes."
+      ],
+      "expectedResults": [
+        "All destinations, topic fallbacks, search results, focus, and existing shortcuts work without searching organization records."
+      ],
+      "negativeChecks": [
+        "Unknown or missing article/anchor and unavailable external support/reference destinations preserve useful local navigation."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    },
+    {
+      "id": "V-OFFLINE",
+      "coverage": ["C44", "C47", "C51"],
+      "articles": [],
+      "roles": ["anonymous", "operator"],
+      "environment": "publication",
+      "prerequisites": ["A copied standalone edition retained outside the disposable instance."],
+      "actions": [
+        "Block internet access and read the app bundle, then stop the instance and open the standalone edition from disk."
+      ],
+      "expectedResults": [
+        "Local reading and search work without external requests; standalone index/prose also work without JavaScript."
+      ],
+      "negativeChecks": [
+        "Blocked external requests do not break local reading while the instance is reachable.",
+        "After stopping the instance, a separately retained standalone copy remains readable from disk.",
+        "With JavaScript disabled or an optional image/search asset missing, the standalone index and prose remain usable; a missing article file is reported as a failed completeness check."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "not-run"
+    }
+  ]
+}

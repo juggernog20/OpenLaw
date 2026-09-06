@@ -333,7 +333,7 @@ async function main() {
 
     phase("done");
     log(`${ORG.name} is seeded.`);
-    log(`sign in at http://localhost:5173 as ${ADMIN.email} / ${ADMIN.password}`);
+    log(`API at ${DEFAULT_BASE_URL}; account ${ADMIN.email} / ${ADMIN.password}`);
     log("every seeded person shares that password; business users sign in with a magic link.");
   } finally {
     if (stub) await stub.close();
