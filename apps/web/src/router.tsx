@@ -12,6 +12,7 @@
 
 import { Fragment, type ReactNode } from "react";
 import { useParams, type RouteObject } from "react-router";
+import { FormalDocumentationPage } from "./components/documentation/documentation-reader";
 import { AuthLayout } from "./routes/auth-layout";
 import { ContractRecordPage, contractRecordLoader } from "./routes/contract-record";
 import { ContractsPage, contractsLoader } from "./routes/contracts";
@@ -159,6 +160,7 @@ function KeyedByParam({ name, children }: { name: string; children: ReactNode })
 }
 
 export const routes: RouteObject[] = [
+  { path: "/documentation/*", element: <FormalDocumentationPage /> },
   {
     path: "/home/tasks",
     loader: homeTasksLoader,

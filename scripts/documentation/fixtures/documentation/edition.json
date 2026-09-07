@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "validation-fixture",
+  "channel": "development",
+  "supportedAppVersion": "0.0.1",
+  "supportedAppCommit": null,
+  "publicationTarget": "local-validation-fixture",
+  "compatibilityReview": null
+}

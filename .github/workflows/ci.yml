@@ -153,6 +153,8 @@ jobs:
           targets: app,doc-engine
           load: true
           set: |
+            app.args.OPENLAW_BUILD_COMMIT=${{ github.sha }}
+            app.args.OPENLAW_BUILD_DIRTY=false
             app.cache-from=type=gha,scope=ci-app-v1
             app.cache-to=type=gha,scope=ci-app-v1,mode=max
             doc-engine.cache-from=type=gha,scope=ci-doc-engine-v1
@@ -274,6 +276,7 @@ jobs:
           echo "ref=$ref" >> "$GITHUB_OUTPUT"
           echo "Upgrading $ref to $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
           git checkout --detach "$ref"
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Build the baseline images
         uses: docker/bake-action@v6
@@ -286,6 +289,8 @@ jobs:
           targets: app,doc-engine
           load: true
           set: |
+            app.args.OPENLAW_BUILD_COMMIT=${{ steps.baseline.outputs.commit }}
+            app.args.OPENLAW_BUILD_DIRTY=false
             app.cache-from=type=gha,scope=ci-baseline-app-v1
             app.cache-to=type=gha,scope=ci-baseline-app-v1,mode=max
             doc-engine.cache-from=type=gha,scope=ci-baseline-doc-engine-v1
@@ -332,6 +337,8 @@ jobs:
           targets: app,doc-engine
           load: true
           set: |
+            app.args.OPENLAW_BUILD_COMMIT=${{ github.sha }}
+            app.args.OPENLAW_BUILD_DIRTY=false
             app.cache-from=type=gha,scope=ci-app-v1
             app.cache-from+=type=gha,scope=ci-baseline-app-v1
             doc-engine.cache-from=type=gha,scope=ci-doc-engine-v1
