@@ -1,0 +1,304 @@
+{
+  "author": "Codex",
+  "independentReview": false,
+  "startedAt": "2026-09-07T05:54:59.052Z",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "articleHashes": {
+    "roles-and-access": "71054f73ae3d6b6c25b537232243e2627b6936187bbb44f5700fa35406e15e94",
+    "contributor-guide": "2df76fed1a4fcec4d5c7da49c77eb9c95fef3c35e161cd4d727223c57d07b51e"
+  },
+  "steps": [
+    {
+      "role": "administrator",
+      "article": "roles-and-access",
+      "actual": {
+        "discovery": "Page Help or Help index, search, focused article/section, and formal-documentation link passed.",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 1440,
+            "result": "pass"
+          },
+          {
+            "theme": "light",
+            "width": 720,
+            "result": "pass"
+          },
+          {
+            "theme": "light",
+            "width": 320,
+            "result": "pass"
+          },
+          {
+            "theme": "dark",
+            "width": 1440,
+            "result": "pass"
+          },
+          {
+            "theme": "dark",
+            "width": 720,
+            "result": "pass"
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "result": "pass"
+          },
+          {
+            "theme": "warm",
+            "width": 1440,
+            "result": "pass"
+          },
+          {
+            "theme": "warm",
+            "width": 720,
+            "result": "pass"
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "result": "pass"
+          }
+        ]
+      },
+      "result": "pass",
+      "at": "2026-09-07T05:55:01.120Z"
+    },
+    {
+      "role": "legal_team_member",
+      "article": "roles-and-access",
+      "actual": {
+        "discovery": "Page Help or Help index, search, focused article/section, and formal-documentation link passed.",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 1440,
+            "result": "pass"
+          },
+          {
+            "theme": "light",
+            "width": 720,
+            "result": "pass"
+          },
+          {
+            "theme": "light",
+            "width": 320,
+            "result": "pass"
+          },
+          {
+            "theme": "dark",
+            "width": 1440,
+            "result": "pass"
+          },
+          {
+            "theme": "dark",
+            "width": 720,
+            "result": "pass"
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "result": "pass"
+          },
+          {
+            "theme": "warm",
+            "width": 1440,
+            "result": "pass"
+          },
+          {
+            "theme": "warm",
+            "width": 720,
+            "result": "pass"
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "result": "pass"
+          }
+        ]
+      },
+      "result": "pass",
+      "at": "2026-09-07T05:55:02.933Z"
+    },
+    {
+      "role": "contributor",
+      "article": "roles-and-access",
+      "actual": {
+        "discovery": "Page Help or Help index, search, focused article/section, and formal-documentation link passed.",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 1440,
+            "result": "pass"
+          },
+          {
+            "theme": "light",
+            "width": 720,
+            "result": "pass"
+          },
+          {
+            "theme": "light",
+            "width": 320,
+            "result": "pass"
+          },
+          {
+            "theme": "dark",
+            "width": 1440,
+            "result": "pass"
+          },
+          {
+            "theme": "dark",
+            "width": 720,
+            "result": "pass"
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "result": "pass"
+          },
+          {
+            "theme": "warm",
+            "width": 1440,
+            "result": "pass"
+          },
+          {
+            "theme": "warm",
+            "width": 720,
+            "result": "pass"
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "result": "pass"
+          }
+        ]
+      },
+      "result": "pass",
+      "at": "2026-09-07T05:55:04.707Z"
+    },
+    {
+      "role": "contributor",
+      "article": "contributor-guide",
+      "actual": {
+        "discovery": "Page Help or Help index, search, focused article/section, and formal-documentation link passed.",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 1440,
+            "result": "pass"
+          },
+          {
+            "theme": "light",
+            "width": 720,
+            "result": "pass"
+          },
+          {
+            "theme": "light",
+            "width": 320,
+            "result": "pass"
+          },
+          {
+            "theme": "dark",
+            "width": 1440,
+            "result": "pass"
+          },
+          {
+            "theme": "dark",
+            "width": 720,
+            "result": "pass"
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "result": "pass"
+          },
+          {
+            "theme": "warm",
+            "width": 1440,
+            "result": "pass"
+          },
+          {
+            "theme": "warm",
+            "width": 720,
+            "result": "pass"
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "result": "pass"
+          }
+        ]
+      },
+      "result": "pass",
+      "at": "2026-09-07T05:55:05.578Z"
+    },
+    {
+      "role": "business_user",
+      "article": "roles-and-access",
+      "actual": {
+        "discovery": "Page Help or Help index, search, focused article/section, and formal-documentation link passed.",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 1440,
+            "result": "pass"
+          },
+          {
+            "theme": "light",
+            "width": 720,
+            "result": "pass"
+          },
+          {
+            "theme": "light",
+            "width": 320,
+            "result": "pass"
+          },
+          {
+            "theme": "dark",
+            "width": 1440,
+            "result": "pass"
+          },
+          {
+            "theme": "dark",
+            "width": 720,
+            "result": "pass"
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "result": "pass"
+          },
+          {
+            "theme": "warm",
+            "width": 1440,
+            "result": "pass"
+          },
+          {
+            "theme": "warm",
+            "width": 720,
+            "result": "pass"
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "result": "pass"
+          }
+        ]
+      },
+      "result": "pass",
+      "at": "2026-09-07T05:55:07.023Z"
+    },
+    {
+      "role": "signed-out",
+      "article": "both",
+      "actual": "Formal index includes both guides without API requests.",
+      "result": "pass",
+      "at": "2026-09-07T05:55:07.547Z"
+    }
+  ],
+  "passed": true,
+  "finishedAt": "2026-09-07T05:55:07.548Z",
+  "limitations": [
+    "Layout checks measure CSS widths and horizontal overflow, not browser zoom or assistive technology acceptance."
+  ]
+}

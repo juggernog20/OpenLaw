@@ -1,0 +1,141 @@
+{
+  "kind": "author-browser-walkthrough",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "startedAt": "2026-09-07T05:54:52.692Z",
+  "articleHashes": {
+    "roles-and-access": "71054f73ae3d6b6c25b537232243e2627b6936187bbb44f5700fa35406e15e94",
+    "contributor-guide": "2df76fed1a4fcec4d5c7da49c77eb9c95fef3c35e161cd4d727223c57d07b51e"
+  },
+  "steps": [
+    {
+      "article": "contributor-guide",
+      "role": "contributor",
+      "step": "contract failed save recovery",
+      "actual": "A blocked save showed a failure. After restoring the connection, the repeated edit saved and survived reload.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:55.664Z"
+    },
+    {
+      "article": "contributor-guide",
+      "role": "contributor",
+      "step": "contract failed upload recovery",
+      "actual": "A blocked upload retained its dialog with an error; retry after recovery produced one Document row.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:55.940Z"
+    },
+    {
+      "article": "roles-and-access",
+      "role": "contributor",
+      "step": "contract Legal Only omission",
+      "actual": "Administrator posted a Legal Only comment. Ravi could open the record conversation but neither the comment nor that tier appeared.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:56.417Z"
+    },
+    {
+      "article": "roles-and-access",
+      "role": "administrator",
+      "step": "contract Confidential Document",
+      "actual": "On the same reached non-Confidential record, the separately Confidential Document was visible and downloadable.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:56.574Z"
+    },
+    {
+      "article": "roles-and-access",
+      "role": "legal_team_member",
+      "step": "contract Confidential Document",
+      "actual": "On the same reached non-Confidential record, the separately Confidential Document was omitted and its download refused.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:56.718Z"
+    },
+    {
+      "article": "roles-and-access",
+      "role": "contributor",
+      "step": "contract Confidential Document",
+      "actual": "On the same reached non-Confidential record, the separately Confidential Document was visible and downloadable.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:56.851Z"
+    },
+    {
+      "article": "contributor-guide",
+      "role": "contributor",
+      "step": "contract archive boundary",
+      "actual": "Archived record remained readable; business-Field editing and Upload were unavailable.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:56.976Z"
+    },
+    {
+      "article": "contributor-guide",
+      "role": "contributor",
+      "step": "contract restored",
+      "actual": "Restoring the fixture returned the Contributor business-Field control.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:57.056Z"
+    },
+    {
+      "article": "contributor-guide",
+      "role": "contributor",
+      "step": "matter failed save recovery",
+      "actual": "A blocked save showed a failure. After restoring the connection, the repeated edit saved and survived reload.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:57.429Z"
+    },
+    {
+      "article": "contributor-guide",
+      "role": "contributor",
+      "step": "matter failed upload recovery",
+      "actual": "A blocked upload retained its dialog with an error; retry after recovery produced one Document row.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:57.773Z"
+    },
+    {
+      "article": "roles-and-access",
+      "role": "contributor",
+      "step": "matter Legal Only omission",
+      "actual": "Administrator posted a Legal Only comment. Ravi could open the record conversation but neither the comment nor that tier appeared.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:58.197Z"
+    },
+    {
+      "article": "roles-and-access",
+      "role": "administrator",
+      "step": "matter Confidential Document",
+      "actual": "On the same reached non-Confidential record, the separately Confidential Document was visible and downloadable.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:58.287Z"
+    },
+    {
+      "article": "roles-and-access",
+      "role": "legal_team_member",
+      "step": "matter Confidential Document",
+      "actual": "On the same reached non-Confidential record, the separately Confidential Document was omitted and its download refused.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:58.430Z"
+    },
+    {
+      "article": "roles-and-access",
+      "role": "contributor",
+      "step": "matter Confidential Document",
+      "actual": "On the same reached non-Confidential record, the separately Confidential Document was visible and downloadable.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:58.570Z"
+    },
+    {
+      "article": "contributor-guide",
+      "role": "contributor",
+      "step": "matter archive boundary",
+      "actual": "Archived record remained readable; business-Field editing and Upload were unavailable.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:58.681Z"
+    },
+    {
+      "article": "contributor-guide",
+      "role": "contributor",
+      "step": "matter restored",
+      "actual": "Restoring the fixture returned the Contributor business-Field control.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:58.747Z"
+    }
+  ],
+  "passed": true,
+  "finishedAt": "2026-09-07T05:54:58.747Z"
+}

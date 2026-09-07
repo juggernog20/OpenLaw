@@ -1,0 +1,70 @@
+{
+  "articleId": "roles-and-access",
+  "contentSha256": "71054f73ae3d6b6c25b537232243e2627b6936187bbb44f5700fa35406e15e94",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "buildId": "app sha256:69c7cd47338eff05c787e985743dd45b2229792827d82fd5f54a50a9c63d8757; engine sha256:1dce5b67898cc8ae720231fa66e049208ed207e69053a2cf4c1bd0e172cea401",
+  "environment": "openlaw-docs-b8e31260-pilot",
+  "author": "Codex documentation author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "not-run",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS.md",
+    "apps/api/src/lib/contract-access.ts",
+    "apps/api/src/lib/matter-access.ts",
+    "apps/api/src/lib/entity-access.ts",
+    "apps/api/src/lib/document-access.ts",
+    "apps/api/src/modules/entities/grant-routes.ts",
+    "apps/api/src/modules/contracts/routes.ts",
+    "apps/api/src/modules/matters/routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C06",
+      "coverage": ["C06"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Each account sees only its permitted records/actions, including the Administrator exception. Removed membership/Grants cease granting access; parent or related-record links do not grant inherited reach.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C06",
+      "coverage": ["C06"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Each account sees only its permitted records/actions, including the Administrator exception. Removed membership/Grants cease granting access; parent or related-record links do not grant inherited reach.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C06",
+      "coverage": ["C06"],
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "expected": "Each account sees only its permitted records/actions, including the Administrator exception. Removed membership/Grants cease granting access; parent or related-record links do not grant inherited reach.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C06",
+      "coverage": ["C06"],
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "expected": "Each account sees only its permitted records/actions, including the Administrator exception. Removed membership/Grants cease granting access; parent or related-record links do not grant inherited reach.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-010/README.md"],
+  "limitations": ["Independent source review and article walkthrough pending."],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

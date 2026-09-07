@@ -20,6 +20,8 @@ author outcomes, independent review, and publication dependencies.
 
 ## DOC-010 [#730](https://github.com/juggernog20/OpenLaw/issues/730)
 
+Review the [author walkthroughs](batches/DOC-010/README.md). Complete the pending independent review.
+
 - [ ] `roles-and-access`: Understand roles and record access (C06; P0).
 - [ ] `contributor-guide`: Work on a shared Contract or Matter (C25; P0).
 
