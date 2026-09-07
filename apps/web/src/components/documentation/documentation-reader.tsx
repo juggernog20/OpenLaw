@@ -158,7 +158,9 @@ export function DocumentationReader({
       : main.current?.querySelector<HTMLElement>("h1");
     (target ?? main.current)?.focus();
     if (hash && target) target.scrollIntoView?.({ block: "start" });
-  }, [location.pathname, location.search, hash]);
+    // location.key: an outline link to the section already in the address
+    // still moves focus, as the browser would for a native fragment link.
+  }, [location.key, location.pathname, location.search, hash]);
   if (!wrongEdition && resolved && resolved !== `${id}${hash}`) {
     const [target, fragment] = resolved.split("#");
     return (

@@ -3,15 +3,30 @@
 /** DD-020 preserves the authenticated shells and a public way to read Help. */
 import { useEffect, useRef } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import { Link, Navigate, useLoaderData, useLocation } from "react-router";
+import { Link, Navigate, useLoaderData, useLocation, useRouteError } from "react-router";
 import { currentUser, useSignOut } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
 import { PortalShell } from "../components/portal/portal-shell";
 import { DocumentationReader } from "../components/documentation/documentation-reader";
 import { PageTitle } from "../components/page-title";
+import { RouteErrorPage } from "./error-page";
+
+/** The session check failed for a reason other than "signed out". */
+export class HelpSessionError extends Error {
+  constructor(cause: unknown) {
+    super("The Help session check failed.", { cause });
+    this.name = "HelpSessionError";
+  }
+}
 
 export async function helpLoader() {
-  return { user: await currentUser() };
+  try {
+    return { user: await currentUser() };
+  } catch (cause) {
+    // The boundary offers the public reader only for this failure. Any
+    // other error keeps the shared error page and its Reload action.
+    throw new HelpSessionError(cause);
+  }
 }
 
 function useHelpLocation() {
@@ -41,12 +56,14 @@ export function HelpPage() {
 }
 
 export function HelpErrorPage() {
+  const error = useRouteError();
   const { suffix } = useHelpLocation();
   const intl = useIntl();
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     heading.current?.focus();
   }, []);
+  if (!(error instanceof HelpSessionError)) return <RouteErrorPage />;
   return (
     <main className="mx-auto max-w-prose space-y-4 p-8">
       <PageTitle

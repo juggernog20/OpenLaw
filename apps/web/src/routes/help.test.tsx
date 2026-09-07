@@ -15,6 +15,18 @@ vi.mock("virtual:openlaw-help-metadata", async () => {
     default: { contexts: bundle.contexts, bindings: bundle.bindings, articles: bundle.articles },
   };
 });
+const readerFailure = vi.hoisted(() => ({ active: false }));
+vi.mock("../components/documentation/documentation-reader", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("../components/documentation/documentation-reader")>();
+  return {
+    ...actual,
+    DocumentationReader: (props: Parameters<typeof actual.DocumentationReader>[0]) => {
+      if (readerFailure.active) throw new Error("Reader fixture failure");
+      return actual.DocumentationReader(props);
+    },
+  };
+});
 const person = (role: string) => ({
   id: "fixture-user",
   displayName: "Jordan Example",
@@ -125,6 +137,21 @@ describe("Help in the app shells", () => {
         name: "Read this article in the full documentation",
       }),
     ).toBeVisible();
+  });
+
+  it("keeps the shared error page for failures other than the session check", async () => {
+    stubApi({ signedIn: person("administrator") });
+    readerFailure.active = true;
+    const silence = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      renderAt("/help");
+      expect(await screen.findByRole("heading", { name: "Something went wrong." })).toBeVisible();
+      expect(screen.getByRole("button", { name: "Reload" })).toBeVisible();
+      expect(screen.queryByText("Help session unavailable")).not.toBeInTheDocument();
+    } finally {
+      readerFailure.active = false;
+      silence.mockRestore();
+    }
   });
 
   it("offers the same public article when the session service fails", async () => {

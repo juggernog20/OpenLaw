@@ -13,7 +13,8 @@ Business User article selection, including an Administrator using the portal.
 
 Open a signed-out Help link to reach its public `/documentation` equivalent.
 The redirect retains the article ID, query and section. If the session check
-fails, follow the public documentation link. Read public documentation without
+fails, follow the public documentation link. Any other Help failure keeps the
+app's shared error page and its Reload action. Read public documentation without
 a session or setup request. Keep record and action guards in their owning routes.
 
 Help uses the actual role for discovery. A guide outside that selection offers its
