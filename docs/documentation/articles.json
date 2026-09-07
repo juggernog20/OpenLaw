@@ -84,7 +84,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["home"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "search-and-views",
@@ -97,7 +97,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["search", "lists"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "personal-settings",
@@ -123,7 +123,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P0",
       "contexts": ["access"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "comments-and-activity",
@@ -136,7 +136,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P0",
       "contexts": ["comments", "activity"],
-      "status": "scoped"
+      "status": "draft"
     },
     {
       "id": "notifications",
@@ -149,7 +149,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P0",
       "contexts": ["notifications"],
-      "status": "scoped"
+      "status": "draft"
     },
     {
       "id": "submit-request",
@@ -383,7 +383,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["contributor"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "document-versions",
