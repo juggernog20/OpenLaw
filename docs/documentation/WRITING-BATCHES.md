@@ -1,6 +1,8 @@
 # Writing batch checklists
 
-These are article child deliverables, not completed guides. Copy the relevant
+Use these checklists to track article child deliverables. Extend the four partial
+canonical drafts from the [intake pilot](PILOT.md) in DOC-012/013/021. Complete their
+remaining scenarios before checking their boxes. Copy the relevant
 checklist into the owning issue when its writing batch starts. The catalogue holds
 audience, publication destinations, priority, and contextual mapping. Each article
 needs its own technical review and walkthrough evidence before checking its box.
