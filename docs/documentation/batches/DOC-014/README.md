@@ -4,8 +4,10 @@ C14–C20 for [issue #734](https://github.com/juggernog20/OpenLaw/issues/734).
 Eight guides cover creating and maintaining Contracts, Status changes, approvals,
 manual and electronic signing, terms and renewals, Tasks and Key dates, and
 relationships, ending, and archiving. All 137 author checks passed on the recorded
-article hashes. Independent technical review and the 16 scenario/role walkthroughs
-remain pending. Agent checks are not a human user study or a feature owner's approval.
+article hashes. A different agent, the Fable review seat, then checked the guides
+against the committed app source and followed all 16 scenario/role combinations
+with its own scripts; every one passed on the final guide bytes. Agent checks are
+not a human user study or a feature owner's approval.
 
 ## Build and fixtures
 
@@ -113,20 +115,61 @@ radio hit targets, modal titles, the symmetric Related direction, and the header
 Help entry. Final records include only the completed runs and the guide hashes they ran
 against.
 
-Two guides changed after their author walkthroughs, during the Fable review. The
+Three guides changed after their author walkthroughs, during the Fable review. The
 electronic-signing guide now says a blank subject uses the C- reference and title,
-which is the send route's default. The relations guide now names the
-**Flag as confidential?** prompt and says that accepting it sets the other
-Contract's Confidential flag; the author run only declined that prompt. Both
-article evidence records carry the new hashes and a limitation naming the edit.
-The author records keep the hashes they ran against. The independent walkthrough
-covers the current bytes.
+which is the send route's default; the independent sends confirmed that subject at
+the provider. The relations guide now names the **Flag as confidential?** prompt
+and says that accepting it flags whichever Contract is not yet Confidential, which
+can be the current Contract; the review seat's own first wording had said "the
+other Contract", and the independent walkthrough exercised both directions and the
+dismissal. The create guide now places the **Contract type** control on Overview.
+The article evidence records carry the new hashes and a limitation naming each
+edit. The author records keep the hashes they ran against. The independent
+walkthrough covers the current bytes.
 
-The articles stay in review pending independent verification and linked guides.
+The Contract Status menu is crowded in these disposable labs: seeded Statuses plus
+fixture Statuses from earlier batches and this review give about twenty live
+options. At an ordinary 1280×720 viewport the menu extends below the viewport with
+overflow hidden and its last option cannot be clicked. A separate read-only probe
+recorded this and it is tracked as
+[#768](https://github.com/juggernog20/OpenLaw/issues/768). The independent
+walkthroughs used 1280×1800 browser contexts so every Status stayed reachable.
+That is a harness workaround; the ordinary-height crowded menu is not claimed to
+pass and the app was not changed.
+
+The articles stay in review pending their linked guides.
 Dependencies include Document Versions (DOC-017), analysis (DOC-015), Matter
 creation (DOC-016), Approver groups (DOC-021), Signing connector setup (DOC-022),
 and the shared conversation/notification/access guides' publication requirements.
 DOC-025 owns final acceptance against the supported publication build.
+
+## Independent walkthrough
+
+The Fable review seat first checked each guide's claims against the committed app
+source at `a28331f7`, then followed the eight guides with its own Playwright scripts
+on September 7, 2026, as Administrator and Legal Team Member. It reused the sign-in
+helpers, lab connection details, and the author's type, Field, Entity, Matter and
+Approver group identifiers, not the author's steps or assertions. Every walked
+record was created fresh with a `Rev` prefix. The other staff role decided
+approvals, changed the expiry under an open Renew dialog and voided an Envelope as
+Owner; Priya Raman was the named approver, the unrelated Legal reader and the person
+without Confidential access; Ravi Menon was the Contributor on each team. C17
+electronic signing ran on the dedicated signing lab against the declared local
+provider stand-in, with the provider control supplying the outage, the decline and
+the completions; the executed bytes matched the provider's output. That satisfies
+the declared C17 workflow mode only, not C42.
+
+All 16 scenario/role combinations passed on the final guide bytes, including the
+corrected relations, create and electronic-signing guides. Help discovery, search,
+the outline, the formal reader, the signed-out formal edition, and the committed
+lab's exclusion passed on both preview readers. The sanitized step records are in
+[independent-walkthrough.json](independent-walkthrough.json) and
+[independent-discovery.json](independent-discovery.json); the per-article evidence
+files under `docs/documentation/evidence/` cite them and now read `pass`. Earlier
+reviewer runs failed on harness locators and response shapes, not on app or guide
+behaviour; the records name those assumptions and hold only the completed runs.
+This is an agent walkthrough, not a human user study, and it does not stand in
+for the feature owner's approval.
 
 ## Repository validation
 
@@ -134,7 +177,16 @@ The full workspace suite passed: 2,889 API tests across 176 files and 1,702 web
 tests across 97 files, with all five Turbo tasks successful. All 19 static tasks
 and all 33 documentation/tooling tests passed. Normal and preview documentation
 builds passed. Preview reports ten links to unpublished targets owned by later
-writing batches; independent article acceptance remains pending.
+writing batches.
+
+After the independent walkthrough and the evidence records, the review seat ran
+the same full workspace suite again (`pnpm exec turbo run test --continue --
+--maxWorkers=8`, inside the docker group with the local doc-engine test image):
+176 API test files with 2,889 tests and 97 web test files with 1,702 tests passed,
+all five Turbo tasks successful, exit code 0. One earlier attempt was cut off by
+the review session ending mid-run and is not counted. The 24 documentation tool
+tests, the normal and preview documentation builds, prettier, the documentation
+lint, and secretlint on the new evidence files also passed.
 
 ## CodeRabbit disposition
 

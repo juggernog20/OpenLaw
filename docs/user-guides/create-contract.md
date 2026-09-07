@@ -27,7 +27,7 @@ Open **Team** and select **Add team member**. Choose **Person** and **Role**, th
 
 Select **Fields** for the Fields attached to this type. Fill the business information your team needs. Text values save when you leave the input or press Enter; choices save when selected. Wait for the save result before another change. Escape abandons an unsaved text edit. A long-text input uses Enter for a new line.
 
-Changing **Contract type** may open **Change contract type** to request missing required Fields. Fill them and select **Change type**, or cancel. Check the new type and displayed Fields afterwards. [Manage Contract terms and renewals](terms-and-renewals.md) covers dates and value-related context; [Document Versions](document-versions.md) covers the paper.
+On **Overview**, changing **Contract type** may open **Change contract type** to request missing required Fields. Fill them and select **Change type**, or cancel. Check the new type and displayed Fields afterwards. [Manage Contract terms and renewals](terms-and-renewals.md) covers dates and value-related context; [Document Versions](document-versions.md) covers the paper.
 
 ## If a change is refused
 

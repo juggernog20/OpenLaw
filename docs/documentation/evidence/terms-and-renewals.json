@@ -5,18 +5,19 @@
   "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
   "environment": "openlaw-docs-b8e31260-conversations",
   "author": "Codex documentation author",
-  "technicalReviewer": null,
-  "walkthroughReviewer": null,
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
   "reviewerKind": "agent",
-  "verifiedAt": null,
-  "status": "not-run",
+  "verifiedAt": "2026-09-07T13:51:32.114Z",
+  "status": "pass",
   "sources": [
     "CONTEXT.md",
     "apps/web/src/routes/contract-record.tsx",
+    "apps/web/src/components/date-picker.tsx",
     "apps/web/src/components/contracts/confirm-renewal-dialog.tsx",
     "apps/web/src/components/contracts/create-contract-dialog.tsx",
-    "apps/api/src/modules/contracts/routes.ts",
-    "apps/api/src/modules/contract-key-dates/routes.ts"
+    "apps/web/src/components/contracts/key-dates-card.tsx",
+    "apps/api/src/modules/contracts/routes.ts"
   ],
   "scenarios": [
     {
@@ -25,9 +26,12 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "expected": "The displayed dates reflect the recorded term and the renewal changes the term only through the supported action. Invalid or stale dates are refused/re-read; Task due dates are not substituted for Contract deadlines.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "Fixed term showed no Renewal period control; effective February 1, 2026 and expiry January 31, 2027 picked from the calendar and notice 30 days typed, each saved on its own with the notice deadline derived as 2027-01-01; Auto-renewing accepted a 1-month renewal period; Evergreen cleared expiry and renewal period (expiry control count 0); Auto-renewing → Fixed term cleared the renewal period and kept the expiry; the Contract is Auto-renewing again with expiry 2027-01-31; Term timeline drawn. Derived rows: \"Jan 31, 2027 Current term expires Derived \" and \"Jan 1, 2027 Renewal notice deadline — 30 days before expiry Derived \" (30 days before expiry), with no row actions. Dialog said \"The term currently runs to Jan 31, 2027.\" and proposed 2027-02-28; 2027-01-31 was refused with \"A roll moves the term forward. Pick a date after the current expiry.\"; Cancel kept 2027-01-31; Confirm renewal moved expiry to 2027-02-28 and the notice deadline to 2027-01-29, added the Renewals row \"Term advanced to Feb 28, 2027 From Jan 31, 2027 NH Nadia Haddad Sep 7\", showed \"Last renewal Sep 7\" on Overview, and left the Status Draft. With the dialog open on the proposal 2027-03-28, Daniel Okafor moved the expiry to 2027-04-30 through the API; Confirm renewal was refused (\"This contract's expiry has already moved. Read the record again before confirming the roll.\"), the dialog now says the term runs to April 30, 2027 while keeping 2027-03-28; Cancel and reopen proposed 2027-05-30; one roll remains recorded. Without a primary Document the dialog had no Paper as amendment; after uploading one (Version 1 designated executed) and reloading, Paper as amendment → File the amendment opened Add version with Kind preset to Amendment; the upload became Version 2 (kind amendment, not designated, Version 1 still designated); Mark as executed copy on Version 2 moved the designation off Version 1; expiry stayed 2027-04-30 and no new Contract was made. Child C-231 (dialog \"Prefilled from C-230 and born under it. The counterparties, …\", prefilled Title \"Rev C18 legal_team_member 20260907135106\") and successor C-232 were created from the Renew dialog; both copied Docs Contract live Entity 1788782207651, 1 Counterparty, GBP 9900 annually and the Auto-renewing term to 2027-04-30, with no Owner, no Ravi Menon on the team, Status Draft, Priority medium, no Risk and Confidential off; the child sits under C-230 and the successor Renews it; C-230 still expires 2027-04-30. Ravi Menon saw no Renew and got 403; the archived record showed no Renew (its read-only Approvals section listed 0 Renewals table rows) and answered 409; after Restore one Renewals row and the 2027-04-30 expiry remain.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-014/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-014/independent-discovery.json"
+      ]
     },
     {
       "id": "V-C18",
@@ -35,16 +39,25 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "expected": "The displayed dates reflect the recorded term and the renewal changes the term only through the supported action. Invalid or stale dates are refused/re-read; Task due dates are not substituted for Contract deadlines.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "Fixed term showed no Renewal period control; effective February 1, 2026 and expiry January 31, 2027 picked from the calendar and notice 30 days typed, each saved on its own with the notice deadline derived as 2027-01-01; Auto-renewing accepted a 1-month renewal period; Evergreen cleared expiry and renewal period (expiry control count 0); Auto-renewing → Fixed term cleared the renewal period and kept the expiry; the Contract is Auto-renewing again with expiry 2027-01-31; Term timeline drawn. Derived rows: \"Jan 31, 2027 Current term expires Derived \" and \"Jan 1, 2027 Renewal notice deadline — 30 days before expiry Derived \" (30 days before expiry), with no row actions. Dialog said \"The term currently runs to Jan 31, 2027.\" and proposed 2027-02-28; 2027-01-31 was refused with \"A roll moves the term forward. Pick a date after the current expiry.\"; Cancel kept 2027-01-31; Confirm renewal moved expiry to 2027-02-28 and the notice deadline to 2027-01-29, added the Renewals row \"Term advanced to Feb 28, 2027 From Jan 31, 2027 DO Daniel Okafor Sep 7\", showed \"Last renewal Sep 7\" on Overview, and left the Status Draft. With the dialog open on the proposal 2027-03-28, Nadia Haddad moved the expiry to 2027-04-30 through the API; Confirm renewal was refused (\"This contract's expiry has already moved. Read the record again before confirming the roll.\"), the dialog now says the term runs to April 30, 2027 while keeping 2027-03-28; Cancel and reopen proposed 2027-05-30; one roll remains recorded. Without a primary Document the dialog had no Paper as amendment; after uploading one (Version 1 designated executed) and reloading, Paper as amendment → File the amendment opened Add version with Kind preset to Amendment; the upload became Version 2 (kind amendment, not designated, Version 1 still designated); Mark as executed copy on Version 2 moved the designation off Version 1; expiry stayed 2027-04-30 and no new Contract was made. Child C-228 (dialog \"Prefilled from C-227 and born under it. The counterparties, …\", prefilled Title \"Rev C18 administrator 20260907135106\") and successor C-229 were created from the Renew dialog; both copied Docs Contract live Entity 1788782207651, 1 Counterparty, GBP 9900 annually and the Auto-renewing term to 2027-04-30, with no Owner, no Ravi Menon on the team, Status Draft, Priority medium, no Risk and Confidential off; the child sits under C-227 and the successor Renews it; C-227 still expires 2027-04-30. Ravi Menon saw no Renew and got 403; the archived record showed no Renew (its read-only Approvals section listed 0 Renewals table rows) and answered 409; after Restore one Renewals row and the 2027-04-30 expiry remain.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-014/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-014/independent-discovery.json"
+      ]
     }
   ],
-  "authorEvidence": ["docs/documentation/batches/DOC-014/README.md"],
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-014/README.md",
+    "docs/documentation/batches/DOC-014/author-terms.json"
+  ],
   "limitations": [
-    "Author walkthrough passed; independent source review and article walkthrough remain pending.",
-    "Agent walkthroughs are not a human user study or the feature owner's approval."
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "Browser contexts were 1280×1800 CSS px so the crowded Stage menu of the disposable labs stayed reachable (issue #768); the ordinary-height crowded menu is not claimed to pass."
   ],
   "previousEvidence": null,
-  "copyOnlyReview": null
+  "copyOnlyReview": null,
+  "publicationBlockers": [
+    "contract-analysis (DOC-015) does not exist yet; manual-signing, contract-tasks-and-dates, notifications and contract-relations-and-ending are in review."
+  ]
 }

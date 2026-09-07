@@ -50,7 +50,7 @@ walkthroughs, and publication dependencies.
 
 ## DOC-014 [#734](https://github.com/juggernog20/OpenLaw/issues/734)
 
-See the [author verification record](batches/DOC-014/README.md). Complete the independent technical review and all 16 scenario/role walkthroughs; the author checks passed.
+See the [batch verification record](batches/DOC-014/README.md) for the tested build, author outcomes, the independent walkthrough of all 16 scenario/role combinations, and publication dependencies.
 
 - [ ] `create-contract`: Create and maintain a Contract (C14; P0).
 - [ ] `contract-stages`: Change a Contract Status (C15; P0).
