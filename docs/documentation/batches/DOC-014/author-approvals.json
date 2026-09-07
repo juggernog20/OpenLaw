@@ -1,0 +1,129 @@
+{
+  "name": "approvals",
+  "startedAt": "2026-09-07T13:00:57.007Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "contract-approvals",
+      "contentSha256": "e3b7b6ee7e2b8b121c8be45203099d69331e09d5d55d374b577d5fe81bcf67f6"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "empty selection refuses, Cancel posts no approval, and two named requests start Pending in parallel",
+      "actual": "C-164 has two independent Pending requests; empty/Cancel created none; Contributor and already-pending people not offered",
+      "result": "pass",
+      "at": "2026-09-07T13:01:00.683Z"
+    },
+    {
+      "role": "administrator",
+      "action": "a different person cannot answer the named approval, including an Administrator acting for someone else",
+      "actual": "Other legal session and Priya both refused403; named request stayed Pending",
+      "result": "pass",
+      "at": "2026-09-07T13:01:00.744Z"
+    },
+    {
+      "role": "administrator",
+      "action": "named people independently approve and reject with notes, and a decided approval cannot be changed",
+      "actual": "Self Approved and other named approver Rejected, both notes saved; repeat decision409 retained earlier result",
+      "result": "pass",
+      "at": "2026-09-07T13:01:01.779Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Soft gate names unresolved sign-off, Cancel preserves Status, and Move anyway records an override without changing decisions",
+      "actual": "Rejected person named; Cancel kept Draft; Move anyway reached Signature, History recorded override, decisions unchanged",
+      "result": "pass",
+      "at": "2026-09-07T13:01:02.836Z"
+    },
+    {
+      "role": "administrator",
+      "action": "a fresh request after rejection preserves history; applying a group skips Pending people and snapshots its members",
+      "actual": "Re-request added a new Pending row beside old rejection; group skipped existing pending and asked the other person; later template membership clear changed neither request",
+      "result": "pass",
+      "at": "2026-09-07T13:01:03.991Z"
+    },
+    {
+      "role": "administrator",
+      "action": "pending cancellation is limited to requester, Owner or Administrator and removes no decided history",
+      "actual": "Priya refused before owning; requester canceled one Pending; newly assigned Owner canceled the other; Approved/Rejected history retained",
+      "result": "pass",
+      "at": "2026-09-07T13:01:06.763Z"
+    },
+    {
+      "role": "administrator",
+      "action": "group application refuses an inaccessible Confidential approver without granting access or creating requests",
+      "actual": "Real group refusal named inaccessible Priya; no approval created and her Contract read stayed404",
+      "result": "pass",
+      "at": "2026-09-07T13:01:07.570Z"
+    },
+    {
+      "role": "administrator",
+      "action": "archived Contract retains its approvals but offers no request or decision mutation",
+      "actual": "Archived Contract kept Pending row; asking control absent and attempted decision refused",
+      "result": "pass",
+      "at": "2026-09-07T13:01:08.445Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "empty selection refuses, Cancel posts no approval, and two named requests start Pending in parallel",
+      "actual": "C-170 has two independent Pending requests; empty/Cancel created none; Contributor and already-pending people not offered",
+      "result": "pass",
+      "at": "2026-09-07T13:01:09.506Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "a different person cannot answer the named approval, including an Administrator acting for someone else",
+      "actual": "Other legal session and Priya both refused403; named request stayed Pending",
+      "result": "pass",
+      "at": "2026-09-07T13:01:09.527Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "named people independently approve and reject with notes, and a decided approval cannot be changed",
+      "actual": "Self Approved and other named approver Rejected, both notes saved; repeat decision409 retained earlier result",
+      "result": "pass",
+      "at": "2026-09-07T13:01:10.462Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Soft gate names unresolved sign-off, Cancel preserves Status, and Move anyway records an override without changing decisions",
+      "actual": "Rejected person named; Cancel kept Draft; Move anyway reached Signature, History recorded override, decisions unchanged",
+      "result": "pass",
+      "at": "2026-09-07T13:01:11.500Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "a fresh request after rejection preserves history; applying a group skips Pending people and snapshots its members",
+      "actual": "Re-request added a new Pending row beside old rejection; group skipped existing pending and asked the other person; later template membership clear changed neither request",
+      "result": "pass",
+      "at": "2026-09-07T13:01:12.535Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "pending cancellation is limited to requester, Owner or Administrator and removes no decided history",
+      "actual": "Priya refused before owning; requester canceled one Pending; newly assigned Owner canceled the other; Approved/Rejected history retained",
+      "result": "pass",
+      "at": "2026-09-07T13:01:14.657Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "group application refuses an inaccessible Confidential approver without granting access or creating requests",
+      "actual": "Real group refusal named inaccessible Priya; no approval created and her Contract read stayed404",
+      "result": "pass",
+      "at": "2026-09-07T13:01:15.436Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "archived Contract retains its approvals but offers no request or decision mutation",
+      "actual": "Archived Contract kept Pending row; asking control absent and attempted decision refused",
+      "result": "pass",
+      "at": "2026-09-07T13:01:16.275Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T13:01:16.275Z"
+}

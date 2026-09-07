@@ -1,0 +1,49 @@
+{
+  "articleId": "create-contract",
+  "contentSha256": "92e03bb50f11e209417fcd45471707c2221e3d2d3f137865e0c6135fb93dd36a",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "not-run",
+  "sources": [
+    "CONTEXT.md",
+    "apps/web/src/components/contracts/create-contract-dialog.tsx",
+    "apps/web/src/routes/contract-record.tsx",
+    "apps/api/src/modules/contracts/routes.ts",
+    "apps/api/src/lib/contract-access.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C14",
+      "coverage": ["C14"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "The Contract stores the intended parties, accountability, and values and is reached by the expected people. Required/invalid values and archived references are handled without creating an unintended Contract.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C14",
+      "coverage": ["C14"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "The Contract stores the intended parties, accountability, and values and is reached by the expected people. Required/invalid values and archived references are handled without creating an unintended Contract.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-014/README.md"],
+  "limitations": [
+    "Author walkthrough passed; independent source review and article walkthrough remain pending.",
+    "Agent walkthroughs are not a human user study or the feature owner's approval."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

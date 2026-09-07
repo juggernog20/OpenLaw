@@ -1,0 +1,138 @@
+{
+  "name": "tasks",
+  "startedAt": "2026-09-07T12:38:06.672Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "contract-tasks-and-dates",
+      "contentSha256": "29654cec933cf7b62d1c87e2d75293f920de3f1f51b6859aae5a44e09356c43e"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "blank Task is refused; canceling a staged person saves neither Task nor Confidential access",
+      "actual": "C-118 blank Task refused; staged Priya selection followed by Cancel created no Task and no team grant",
+      "result": "pass",
+      "at": "2026-09-07T12:38:08.672Z"
+    },
+    {
+      "role": "administrator",
+      "action": "create assigned and unassigned Tasks in displayed order, complete and reopen without term changes",
+      "actual": "Assigned Task due 2026-09-08 (civil date; browser en-US/Asia/Dubai, organisation Europe/London) and unassigned second Task saved in append order; checkbox complete/reopen persisted and done count updated; no ordering control; term expiry unchanged",
+      "result": "pass",
+      "at": "2026-09-07T12:38:09.171Z"
+    },
+    {
+      "role": "administrator",
+      "action": "change row assignee with an explicit team grant; clearing assignment retains team membership",
+      "actual": "Row Add to team and assign explicitly added Priya and assigned Task; Unassigned cleared assignment while membership remained; reassigned to acting Owner",
+      "result": "pass",
+      "at": "2026-09-07T12:38:09.515Z"
+    },
+    {
+      "role": "administrator",
+      "action": "edit and remove Tasks through row actions; canceled edits preserve saved title",
+      "actual": "Canceled edit kept old title; Save persisted edited title; Remove task deleted second row and retained first",
+      "result": "pass",
+      "at": "2026-09-07T12:38:09.867Z"
+    },
+    {
+      "role": "administrator",
+      "action": "create distinct same-day Key dates beside derived term rows; missing inputs are refused",
+      "actual": "Two term Derived rows without actions, two distinct Key dates on same day, no Task-due row in deadline list; empty date form refused",
+      "result": "pass",
+      "at": "2026-09-07T12:38:10.256Z"
+    },
+    {
+      "role": "administrator",
+      "action": "edit, cancel, failed save, retry and removal preserve correct Key dates",
+      "actual": "Cancel preserved Event; controlled PATCH503 preserved old date; retry moved it to 2026-09-10; Remove date deleted only named Key date",
+      "result": "pass",
+      "at": "2026-09-07T12:38:10.811Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Home assigned Tasks and Dates lead to their separate Contract sections",
+      "actual": "Home View all assigned Tasks opened correct Contract Tasks; Home Dates named event opened separate Key dates section",
+      "result": "pass",
+      "at": "2026-09-07T12:38:12.573Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Contributor and archived record read rows but cannot mutate Tasks or dates",
+      "actual": "Contributor controls absent/checkbox disabled and both writes403; archived controls absent/date write409; one Task and one Key date retained",
+      "result": "pass",
+      "at": "2026-09-07T12:38:14.566Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "blank Task is refused; canceling a staged person saves neither Task nor Confidential access",
+      "actual": "C-119 blank Task refused; staged Priya selection followed by Cancel created no Task and no team grant",
+      "result": "pass",
+      "at": "2026-09-07T12:38:15.586Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "create assigned and unassigned Tasks in displayed order, complete and reopen without term changes",
+      "actual": "Assigned Task due 2026-09-08 (civil date; browser en-US/Asia/Dubai, organisation Europe/London) and unassigned second Task saved in append order; checkbox complete/reopen persisted and done count updated; no ordering control; term expiry unchanged",
+      "result": "pass",
+      "at": "2026-09-07T12:38:15.978Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "change row assignee with an explicit team grant; clearing assignment retains team membership",
+      "actual": "Row Add to team and assign explicitly added Priya and assigned Task; Unassigned cleared assignment while membership remained; reassigned to acting Owner",
+      "result": "pass",
+      "at": "2026-09-07T12:38:16.334Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "edit and remove Tasks through row actions; canceled edits preserve saved title",
+      "actual": "Canceled edit kept old title; Save persisted edited title; Remove task deleted second row and retained first",
+      "result": "pass",
+      "at": "2026-09-07T12:38:16.734Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "create distinct same-day Key dates beside derived term rows; missing inputs are refused",
+      "actual": "Two term Derived rows without actions, two distinct Key dates on same day, no Task-due row in deadline list; empty date form refused",
+      "result": "pass",
+      "at": "2026-09-07T12:38:17.161Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "edit, cancel, failed save, retry and removal preserve correct Key dates",
+      "actual": "Cancel preserved Event; controlled PATCH503 preserved old date; retry moved it to 2026-09-10; Remove date deleted only named Key date",
+      "result": "pass",
+      "at": "2026-09-07T12:38:17.583Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Home assigned Tasks and Dates lead to their separate Contract sections",
+      "actual": "Home View all assigned Tasks opened correct Contract Tasks; Home Dates named event opened separate Key dates section",
+      "result": "pass",
+      "at": "2026-09-07T12:38:19.262Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Contributor and archived record read rows but cannot mutate Tasks or dates",
+      "actual": "Contributor controls absent/checkbox disabled and both writes403; archived controls absent/date write409; one Task and one Key date retained",
+      "result": "pass",
+      "at": "2026-09-07T12:38:21.238Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T12:38:21.238Z",
+  "dateContext": {
+    "calculation": "UTC civil dates derived from the 2026-09-07 run date",
+    "browserLocale": "en-US",
+    "browserTimeZone": "Asia/Dubai",
+    "organisationTimeZone": "Europe/London",
+    "taskDueDate": "2026-09-08",
+    "initialKeyDate": "2026-09-09",
+    "editedKeyDate": "2026-09-10"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "articleId": "electronic-signing",
+  "contentSha256": "22b416df0a54d3b1bb5b427fc11253a1404e828ab648530fe40c3862e7cd861d",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-signing-workflow",
+  "author": "Codex documentation author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "not-run",
+  "sources": [
+    "CONTEXT.md",
+    "apps/web/src/components/approvals/approvals-signing-card.tsx",
+    "apps/api/src/modules/contract-envelopes/routes.ts",
+    "apps/api/src/modules/signing-connector/routes.ts",
+    "apps/api/src/pipeline/executed-copy.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C17-electronic",
+      "coverage": ["C17"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "OpenLaw records the correct Envelope transitions and files/pins the returned executed paper once. Unavailable/disabled configuration, a second live Envelope, and provider failure have the documented outcomes. Local stand-ins do not satisfy C42 setup checks.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C17-electronic",
+      "coverage": ["C17"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "OpenLaw records the correct Envelope transitions and files/pins the returned executed paper once. Unavailable/disabled configuration, a second live Envelope, and provider failure have the documented outcomes. Local stand-ins do not satisfy C42 setup checks.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-014/README.md"],
+  "limitations": [
+    "Author walkthrough passed; independent source review and article walkthrough remain pending.",
+    "Agent walkthroughs are not a human user study or the feature owner's approval.",
+    "C17 uses a declared isolated local DocuSign protocol stand-in with fictional paper and Signers. It does not verify real provider setup or satisfy C42."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

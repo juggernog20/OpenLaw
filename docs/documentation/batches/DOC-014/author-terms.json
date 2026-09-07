@@ -1,0 +1,129 @@
+{
+  "name": "terms",
+  "startedAt": "2026-09-07T13:00:56.982Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "terms-and-renewals",
+      "contentSha256": "d5af58d3f6934b6b5730e8e100c31ffc21e08640347b82750c9b39c24b085c6e"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "record Fixed term, Auto-renewing and Evergreen and verify dependent values clear",
+      "actual": "C-162 real calendar choices saved dates; notice=expiry−30; Evergreen cleared expiry and renewal period; Auto-renewing restored explicitly",
+      "result": "pass",
+      "at": "2026-09-07T13:01:00.039Z"
+    },
+    {
+      "role": "administrator",
+      "action": "inspect derived Key dates and month-end renewal proposal; invalid expiry and Cancel retain saved term",
+      "actual": "Derived expiry/notice displayed; Jan31+one month proposed Feb28; same-date roll refused, Cancel saved no renewal, amendment absent without primary",
+      "result": "pass",
+      "at": "2026-09-07T13:01:00.437Z"
+    },
+    {
+      "role": "administrator",
+      "action": "confirm the roll once and inspect expiry, notice, Last renewal and unchanged Stage",
+      "actual": "Confirmed Feb28 with Jan29 notice; one renewal history row, Last renewal displayed and original Status retained; duplicate old-expiry request409/no second roll",
+      "result": "pass",
+      "at": "2026-09-07T13:01:00.788Z"
+    },
+    {
+      "role": "administrator",
+      "action": "competing expiry change is refused and refreshed before retry",
+      "actual": "Open dialog submitted stale Feb28 expiry after separate update to Mar31; actual API409 refreshed current expiry while retaining draft; reopening proposed Apr30; Cancel retained one prior roll",
+      "result": "pass",
+      "at": "2026-09-07T13:01:01.294Z"
+    },
+    {
+      "role": "administrator",
+      "action": "paper a renewal as an Amendment Version without advancing expiry or creating a Contract",
+      "actual": "Renew→Paper as amendment opened primary Add version with Amendment selected; upload created unpinned Amendment Version2 and retained Version1 designation; explicitly marking Version2 replaced the old designation on the same C-reference, kept expiry and roll count",
+      "result": "pass",
+      "at": "2026-09-07T13:01:02.483Z"
+    },
+    {
+      "role": "administrator",
+      "action": "create child renewal with reviewed prefill and independent responsibility",
+      "actual": "New C-166 with edited Title and selected Type copied Entity, Value, term and Counterparties but no Owner/Ravi team/Priority/Risk; parent-chain relationship verified; predecessor expiry unchanged",
+      "result": "pass",
+      "at": "2026-09-07T13:01:03.521Z"
+    },
+    {
+      "role": "administrator",
+      "action": "create successor renewal with reviewed prefill and independent responsibility",
+      "actual": "New C-167 with edited Title and selected Type copied Entity, Value, term and Counterparties but no Owner/Ravi team/Priority/Risk; Renews typed link verified; predecessor expiry unchanged",
+      "result": "pass",
+      "at": "2026-09-07T13:01:05.588Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Contributor and archive refuse renewal while the saved term and history remain",
+      "actual": "Contributor Renew absent/API403; archived Renew absent/API409; Mar31 expiry and one confirmed roll retained",
+      "result": "pass",
+      "at": "2026-09-07T13:01:07.309Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "record Fixed term, Auto-renewing and Evergreen and verify dependent values clear",
+      "actual": "C-169 real calendar choices saved dates; notice=expiry−30; Evergreen cleared expiry and renewal period; Auto-renewing restored explicitly",
+      "result": "pass",
+      "at": "2026-09-07T13:01:08.782Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "inspect derived Key dates and month-end renewal proposal; invalid expiry and Cancel retain saved term",
+      "actual": "Derived expiry/notice displayed; Jan31+one month proposed Feb28; same-date roll refused, Cancel saved no renewal, amendment absent without primary",
+      "result": "pass",
+      "at": "2026-09-07T13:01:09.151Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "confirm the roll once and inspect expiry, notice, Last renewal and unchanged Stage",
+      "actual": "Confirmed Feb28 with Jan29 notice; one renewal history row, Last renewal displayed and original Status retained; duplicate old-expiry request409/no second roll",
+      "result": "pass",
+      "at": "2026-09-07T13:01:09.421Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "competing expiry change is refused and refreshed before retry",
+      "actual": "Open dialog submitted stale Feb28 expiry after separate update to Mar31; actual API409 refreshed current expiry while retaining draft; reopening proposed Apr30; Cancel retained one prior roll",
+      "result": "pass",
+      "at": "2026-09-07T13:01:09.820Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "paper a renewal as an Amendment Version without advancing expiry or creating a Contract",
+      "actual": "Renew→Paper as amendment opened primary Add version with Amendment selected; upload created unpinned Amendment Version2 and retained Version1 designation; explicitly marking Version2 replaced the old designation on the same C-reference, kept expiry and roll count",
+      "result": "pass",
+      "at": "2026-09-07T13:01:10.738Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "create child renewal with reviewed prefill and independent responsibility",
+      "actual": "New C-171 with edited Title and selected Type copied Entity, Value, term and Counterparties but no Owner/Ravi team/Priority/Risk; parent-chain relationship verified; predecessor expiry unchanged",
+      "result": "pass",
+      "at": "2026-09-07T13:01:11.738Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "create successor renewal with reviewed prefill and independent responsibility",
+      "actual": "New C-172 with edited Title and selected Type copied Entity, Value, term and Counterparties but no Owner/Ravi team/Priority/Risk; Renews typed link verified; predecessor expiry unchanged",
+      "result": "pass",
+      "at": "2026-09-07T13:01:12.716Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Contributor and archive refuse renewal while the saved term and history remain",
+      "actual": "Contributor Renew absent/API403; archived Renew absent/API409; Mar31 expiry and one confirmed roll retained",
+      "result": "pass",
+      "at": "2026-09-07T13:01:14.151Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T13:01:14.151Z"
+}

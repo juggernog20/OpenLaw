@@ -1,0 +1,52 @@
+{
+  "articleId": "contract-tasks-and-dates",
+  "contentSha256": "29654cec933cf7b62d1c87e2d75293f920de3f1f51b6859aae5a44e09356c43e",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "not-run",
+  "sources": [
+    "CONTEXT.md",
+    "apps/web/src/components/contracts/tasks-card.tsx",
+    "apps/web/src/components/tasks/assignee-picker.tsx",
+    "apps/web/src/components/contracts/key-dates-card.tsx",
+    "apps/web/src/components/home/tasks-card.tsx",
+    "apps/web/src/components/home/dates-card.tsx",
+    "apps/api/src/modules/contract-tasks/routes.ts",
+    "apps/api/src/modules/contract-key-dates/routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C19",
+      "coverage": ["C19"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Task and Key date updates persist and affect their distinct supported surfaces. Read-only/archived restrictions and missing recipients do not produce misleading reminder promises. The current Contract Task screen exposes no reorder control; verify that limit rather than crediting an API reorder as a user workflow.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C19",
+      "coverage": ["C19"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Task and Key date updates persist and affect their distinct supported surfaces. Read-only/archived restrictions and missing recipients do not produce misleading reminder promises. The current Contract Task screen exposes no reorder control; verify that limit rather than crediting an API reorder as a user workflow.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-014/README.md"],
+  "limitations": [
+    "Author walkthrough passed; independent source review and article walkthrough remain pending.",
+    "Agent walkthroughs are not a human user study or the feature owner's approval."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

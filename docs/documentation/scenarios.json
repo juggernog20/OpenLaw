@@ -274,7 +274,7 @@
       "coverage": ["C14"],
       "articles": ["create-contract"],
       "roles": ["legal_team_member", "administrator"],
-      "environment": "authoring",
+      "environment": "conversations",
       "prerequisites": [
         "Active Entity, Counterparties, Contract type, prospective Owner, and team members."
       ],
@@ -295,7 +295,7 @@
       "coverage": ["C15"],
       "articles": ["contract-stages"],
       "roles": ["legal_team_member", "administrator"],
-      "environment": "authoring",
+      "environment": "conversations",
       "prerequisites": ["Contract Statuses covering the fixed Stages and an editable Contract."],
       "actions": [
         "Move through representative Statuses and inspect the displayed Stage and activity."
@@ -314,7 +314,7 @@
       "coverage": ["C16"],
       "articles": ["contract-approvals"],
       "roles": ["legal_team_member", "administrator"],
-      "environment": "authoring",
+      "environment": "conversations",
       "prerequisites": [
         "Editable Contract, two approvers, and a second actor for cancellation/rejection cases."
       ],
@@ -335,7 +335,7 @@
       "coverage": ["C17"],
       "articles": ["manual-signing"],
       "roles": ["legal_team_member", "administrator"],
-      "environment": "scenario-fixture",
+      "environment": "conversations",
       "prerequisites": ["Contract with an uploaded fictional executed PDF; no Signing connector."],
       "actions": [
         "Use the Manual hand-off, choose the Executed pin, and move to the intended active Status."
@@ -354,7 +354,7 @@
       "coverage": ["C17"],
       "articles": ["electronic-signing"],
       "roles": ["legal_team_member", "administrator"],
-      "environment": "scenario-fixture",
+      "environment": "signing-workflow",
       "prerequisites": [
         "Dedicated signing-workflow fixture with a declared provider mode and fictional paper/Signers."
       ],
@@ -375,7 +375,7 @@
       "coverage": ["C18"],
       "articles": ["terms-and-renewals"],
       "roles": ["legal_team_member", "administrator"],
-      "environment": "authoring",
+      "environment": "conversations",
       "prerequisites": [
         "Contracts with fixed terms, notice periods, and representative renewal options."
       ],
@@ -396,18 +396,19 @@
       "coverage": ["C19"],
       "articles": ["contract-tasks-and-dates"],
       "roles": ["legal_team_member", "administrator"],
-      "environment": "authoring",
+      "environment": "conversations",
       "prerequisites": [
         "Contract team, an open Task, a Key date, and controlled notification timing."
       ],
       "actions": [
-        "Create/complete/reorder Tasks and add/change a Key date; inspect Home and notification destinations."
+        "Create/complete Tasks, inspect their displayed order, and add/change a Key date; inspect Home and notification destinations."
       ],
       "expectedResults": [
         "Task and Key date updates persist and affect their distinct supported surfaces."
       ],
       "negativeChecks": [
-        "Read-only/archived restrictions and missing recipients do not produce misleading reminder promises."
+        "Read-only/archived restrictions and missing recipients do not produce misleading reminder promises.",
+        "The current Contract Task screen exposes no reorder control; verify that limit rather than crediting an API reorder as a user workflow."
       ],
       "requiredMethods": ["browser-walkthrough"],
       "status": "not-run"
@@ -417,7 +418,7 @@
       "coverage": ["C20"],
       "articles": ["contract-relations-and-ending"],
       "roles": ["legal_team_member", "administrator"],
-      "environment": "authoring",
+      "environment": "conversations",
       "prerequisites": [
         "Several Contracts, a parent relation, a typed relation, and one restricted target."
       ],

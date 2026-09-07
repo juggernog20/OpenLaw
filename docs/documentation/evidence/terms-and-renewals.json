@@ -1,0 +1,50 @@
+{
+  "articleId": "terms-and-renewals",
+  "contentSha256": "d5af58d3f6934b6b5730e8e100c31ffc21e08640347b82750c9b39c24b085c6e",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "not-run",
+  "sources": [
+    "CONTEXT.md",
+    "apps/web/src/routes/contract-record.tsx",
+    "apps/web/src/components/contracts/confirm-renewal-dialog.tsx",
+    "apps/web/src/components/contracts/create-contract-dialog.tsx",
+    "apps/api/src/modules/contracts/routes.ts",
+    "apps/api/src/modules/contract-key-dates/routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C18",
+      "coverage": ["C18"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "The displayed dates reflect the recorded term and the renewal changes the term only through the supported action. Invalid or stale dates are refused/re-read; Task due dates are not substituted for Contract deadlines.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C18",
+      "coverage": ["C18"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "The displayed dates reflect the recorded term and the renewal changes the term only through the supported action. Invalid or stale dates are refused/re-read; Task due dates are not substituted for Contract deadlines.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-014/README.md"],
+  "limitations": [
+    "Author walkthrough passed; independent source review and article walkthrough remain pending.",
+    "Agent walkthroughs are not a human user study or the feature owner's approval."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

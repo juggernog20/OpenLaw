@@ -1,0 +1,59 @@
+{
+  "name": "create",
+  "startedAt": "2026-09-07T12:10:03.456Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "create-contract",
+      "contentSha256": "92e03bb50f11e209417fcd45471707c2221e3d2d3f137865e0c6135fb93dd36a"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "creation refuses missing Title, type and required answers; archived options absent; Cancel posts no Contract",
+      "actual": "Title/type/required text/required Entity refused before POST; archived Entity/type absent; complete draft canceled with zero creation requests",
+      "result": "pass",
+      "at": "2026-09-07T12:10:06.133Z"
+    },
+    {
+      "role": "administrator",
+      "action": "create Confidential Contract with required values and optional Matter link; check defaults and independent access",
+      "actual": "C-92 created in Draft with exact values, no Owner and Confidential flag set at creation; linked Matter did not grant Priya access",
+      "result": "pass",
+      "at": "2026-09-07T12:10:06.759Z"
+    },
+    {
+      "role": "administrator",
+      "action": "save Owner, Our entity, Priority, Risk and Description; clear and restore Owner without losing Creator access",
+      "actual": "Each save read back; distinct Owner/Our entity persisted; Owner clear/restoration retained actor access as Creator",
+      "result": "pass",
+      "at": "2026-09-07T12:10:07.546Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "creation refuses missing Title, type and required answers; archived options absent; Cancel posts no Contract",
+      "actual": "Title/type/required text/required Entity refused before POST; archived Entity/type absent; complete draft canceled with zero creation requests",
+      "result": "pass",
+      "at": "2026-09-07T12:10:08.464Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "create Confidential Contract with required values and optional Matter link; check defaults and independent access",
+      "actual": "C-93 created in Draft with exact values, no Owner and Confidential flag set at creation; linked Matter did not grant Priya access",
+      "result": "pass",
+      "at": "2026-09-07T12:10:09.065Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "save Owner, Our entity, Priority, Risk and Description; clear and restore Owner without losing Creator access",
+      "actual": "Each save read back; distinct Owner/Our entity persisted; Owner clear/restoration retained actor access as Creator",
+      "result": "pass",
+      "at": "2026-09-07T12:10:09.983Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T12:10:09.983Z"
+}
