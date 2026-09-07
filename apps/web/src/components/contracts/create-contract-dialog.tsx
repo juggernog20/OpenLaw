@@ -436,21 +436,14 @@ export function CreateContractDialog({
                 <Label
                   id={`contract-new-${field.slug}-label`}
                   htmlFor={`contract-new-${field.slug}`}
+                  required
                 >
                   {field.displayName}
-                  <span aria-hidden="true" className="ms-0.5 text-status-danger-fg">
-                    *
-                  </span>
-                  <span className="sr-only">
-                    <FormattedMessage
-                      id="contracts.field.requiredMark"
-                      defaultMessage="(required)"
-                    />
-                  </span>
                 </Label>
                 <CustomFieldControl
                   id={`contract-new-${field.slug}`}
                   field={field}
+                  required
                   draft={fieldDrafts[field.slug] ?? emptyDraft(field)}
                   people={people}
                   entities={entities}

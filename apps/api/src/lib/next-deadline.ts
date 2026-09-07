@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** Derives Next deadline from Tasks and dates under the MTR-016 and CTR-005 UX addenda. */
+
 import { z } from "zod";
 import {
   contracts,

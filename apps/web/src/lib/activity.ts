@@ -2611,12 +2611,13 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     icon: GitCommitHorizontal,
     message: defineMessage({
       id: "activity.matterStatus.groupChanged",
-      defaultMessage: "{actor} moved the matter status {name} from {previousGroup} to {group}",
+      defaultMessage:
+        "{actor} moved the matter status {name} from {previousGroup, select, open {Open} in_progress {In progress} waiting {Waiting} other {{previousGroup}}} to {group, select, open {Open} in_progress {In progress} waiting {Waiting} other {{group}}}",
     }),
-    values: (_intl, p) => ({
-      name: String(p.slug ?? ""),
-      previousGroup: String(p.from ?? ""),
-      group: String(p.to ?? ""),
+    values: (intl, p) => ({
+      name: thingName(intl, p),
+      previousGroup: text(p, "from") ?? "unknown",
+      group: text(p, "to") ?? "unknown",
     }),
   },
   ...taxonomyArms("matter_status", GitCommitHorizontal, [

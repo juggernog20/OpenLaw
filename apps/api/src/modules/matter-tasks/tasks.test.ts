@@ -324,8 +324,8 @@ describe("Matter Tasks", () => {
     ).toHaveLength(0);
   });
 
-  it("keeps Task due dates out of the Matter's Next deadline surface", async () => {
-    const matter = await newMatter("Task date negative control");
+  it("includes Task due dates in Next deadline while keeping the Key dates list separate", async () => {
+    const matter = await newMatter("Task date deadline");
     await add(matter.number, { title: "Internal draft", dueDate: "2099-01-01" });
     await harness.db
       .insert(matterKeyDates)
@@ -344,8 +344,9 @@ describe("Matter Tasks", () => {
       cookies: memberCookies,
     });
     expect(record.json().matter.nextDeadline).toMatchObject({
-      label: "External filing",
-      date: "2099-02-01",
+      label: "Internal draft",
+      date: "2099-01-01",
+      source: "task",
     });
   });
 

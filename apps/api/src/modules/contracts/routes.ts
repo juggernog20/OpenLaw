@@ -920,6 +920,11 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
    * routes all answer the same question the same way. */
   const teamScope = (user: AuthenticatedUser) => contractTeamScope(app.db, user);
 
+  async function readNextDeadline(db: Executor, user: AuthenticatedUser, id: string) {
+    const [fresh] = await selectContracts(db, user).where(eq(contracts.id, id)).limit(1);
+    return fresh?.nextDeadline ?? null;
+  }
+
   /**
    * What each sortable column orders on (DD-019 clause 2).
    *
@@ -2744,6 +2749,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         return {
           row: row!,
+          nextDeadline: await readNextDeadline(tx, request.user, row!.id),
           contractTypeName,
           statusName,
           stage,
@@ -2904,7 +2910,11 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         });
 
         return {
-          contract: toRow({ ...current, row: updated! }),
+          contract: toRow({
+            ...current,
+            row: updated!,
+            nextDeadline: await readNextDeadline(tx, request.user, updated!.id),
+          }),
           renewals: await selectRenewals(tx, row.id),
         };
       });
@@ -3327,7 +3337,11 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           visibility: RECORD_ACTIVITY_TIER,
           payload: { number: row!.number, title: row!.title },
         });
-        return { ...current, row: row! };
+        return {
+          ...current,
+          row: row!,
+          nextDeadline: await readNextDeadline(tx, request.user, row!.id),
+        };
       });
       return { contract: toRow(archived) };
     },
@@ -3365,7 +3379,11 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           visibility: RECORD_ACTIVITY_TIER,
           payload: { number: row!.number, title: row!.title },
         });
-        return { ...current, row: row! };
+        return {
+          ...current,
+          row: row!,
+          nextDeadline: await readNextDeadline(tx, request.user, row!.id),
+        };
       });
       return { contract: toRow(restored) };
     },

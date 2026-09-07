@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** Stages attachments before creation and uploads them through the document API afterward.
+ * Failed files remain retryable (DOC-011 UX addendum). */
+
 import { useEffect, useId, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Check, FileText, Loader, Paperclip, X } from "lucide-react";
@@ -205,9 +208,10 @@ export function CreateAttachments({
                 className={CONTROL_CLASS}
                 value={uploads.kind}
                 disabled={blocked}
-                onChange={(event) =>
-                  uploads.setKind(event.target.value as HandSetDocumentVersionKind)
-                }
+                onChange={(event) => {
+                  const kind = DOCUMENT_VERSION_KINDS.find((kind) => kind === event.target.value);
+                  if (kind) uploads.setKind(kind);
+                }}
               >
                 {DOCUMENT_VERSION_KINDS.map((kind) => (
                   <option key={kind} value={kind}>

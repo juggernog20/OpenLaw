@@ -4425,9 +4425,11 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     if (destination && request.user.role === "contributor") {
       throw httpError(403, "Contributors may upload supporting Documents at the record root only.");
     }
-    const kind: HandSetDocumentVersionKind = rawKind
+    const requestedKind = rawKind
       ? (HandSetKindSchema.safeParse(rawKind).data ?? refuseKind())
       : defaultKind;
+    // DOC-001: new Matter versions are neutral even when an older client sends a negotiation kind.
+    const kind: HandSetDocumentVersionKind = defaultKind === "general" ? "general" : requestedKind;
     // Refused rather than shortened. A note is what the uploader wrote
     // about this round, and silently keeping the first 2000 characters
     // of it would put words on the record that nobody chose to stop

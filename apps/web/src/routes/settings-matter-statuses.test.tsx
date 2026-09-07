@@ -162,3 +162,31 @@ it("saves a status group in Settings", async () => {
   await waitFor(() => expect(changes).toEqual([{ progressionGroup: "waiting" }]));
   expect(select).toHaveValue("waiting");
 });
+
+it("restores the saved group and displays a refused regrouping on its row", async () => {
+  stubApi({
+    signedIn: ADMIN,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/matter-statuses" && call.method === "GET")
+        return json(200, { matterStatuses: statuses() });
+      if (
+        call.url.pathname === "/api/v1/matter-statuses/s2/progression-group" &&
+        call.method === "PUT"
+      )
+        return json(409, {
+          type: "about:blank",
+          title: "Conflict",
+          status: 409,
+          detail: "This status changed. Refresh and try again.",
+        });
+      return undefined;
+    },
+  });
+  renderAt("/settings/matters/statuses");
+  const select = await screen.findByRole("combobox", { name: "Group for In progress" });
+  await userEvent.setup().selectOptions(select, "waiting");
+  expect(
+    await screen.findByText("This status changed. Refresh and try again."),
+  ).toBeInTheDocument();
+  expect(select).toHaveValue("in_progress");
+});

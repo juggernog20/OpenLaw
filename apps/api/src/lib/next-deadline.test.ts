@@ -117,6 +117,34 @@ describe.each(["matter", "contract"] as const)("%s Next deadline", (module) => {
         .set({ aiUnverified: null })
         .where(eq(contracts.id, record.id));
       expect(await read()).not.toHaveProperty("unverified");
+      const edited = await harness.app.inject({
+        method: "PATCH",
+        url: `/api/v1/contracts/${record.number}`,
+        cookies,
+        payload: { expiryDate: dates.soon, noticePeriodDays: null },
+      });
+      expect(edited.statusCode, edited.body).toBe(200);
+      expect(edited.json().contract.nextDeadline).toMatchObject({
+        date: dates.soon,
+        label: "Expiry date",
+      });
+      const archived = await harness.app.inject({
+        method: "POST",
+        url: `/api/v1/contracts/${record.number}/archive`,
+        cookies,
+      });
+      expect(archived.statusCode, archived.body).toBe(200);
+      expect(archived.json().contract.nextDeadline).toBeNull();
+      const restored = await harness.app.inject({
+        method: "POST",
+        url: `/api/v1/contracts/${record.number}/restore`,
+        cookies,
+      });
+      expect(restored.statusCode, restored.body).toBe(200);
+      expect(restored.json().contract.nextDeadline).toMatchObject({
+        date: dates.soon,
+        label: "Expiry date",
+      });
     } else {
       const filtered = await harness.app.inject({
         method: "GET",

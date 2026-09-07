@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** View Business Portal settings pane at /settings/app-view (SET-006 UX addendum).
+ * Its loader admits Administrators and Legal Team Members. */
+
 import { Link, redirect } from "react-router";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { PageTitle } from "../components/page-title";

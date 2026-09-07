@@ -529,21 +529,12 @@ export function ConvertDialog({
             )}
             {targetFields.map((field) => (
               <div key={field.slug} className="flex flex-col gap-1.5">
-                <Label id={`convert-${field.slug}-label`} htmlFor={`convert-${field.slug}`}>
+                <Label
+                  id={`convert-${field.slug}-label`}
+                  htmlFor={`convert-${field.slug}`}
+                  required={field.isRequired}
+                >
                   {field.displayName}
-                  {field.isRequired && (
-                    <>
-                      <span aria-hidden="true" className="ms-0.5 text-status-danger-fg">
-                        *
-                      </span>
-                      <span className="sr-only">
-                        <FormattedMessage
-                          id="intake.field.requiredMark"
-                          defaultMessage="(required)"
-                        />
-                      </span>
-                    </>
-                  )}
                 </Label>
                 <CustomFieldControl
                   id={`convert-${field.slug}`}

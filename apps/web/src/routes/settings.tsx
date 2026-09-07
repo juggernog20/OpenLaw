@@ -9,7 +9,8 @@
  * log (#133), the AI analysis section (#675, SET-008), and the
  * Integrations section (#245, SET-007). The
  * Personal group carries Profile (#67), Appearance (#62), and
- * Notifications (#320 — the pane M5 deferred until the engine existed).
+ * Notifications (#320 — the pane M5 deferred until the engine existed), and View Business
+ * Portal at /settings/app-view, gated by canViewPortal (SET-006 UX addendum).
  * The Organization group has a Notifications section of its own (#322):
  * the NOT-004 reminder-offset list, which is org policy rather than
  * anybody's preference. Rail entries for unshipped panes are omitted,

@@ -335,4 +335,4 @@ _Avoid_: approval task, sign-off item, approval step, reviewer
 - **"Privileged"** was explicitly rejected as the Tier 1 label, to avoid implying a formal attorney-client privilege determination and creating discovery-awkward artifacts. Use **Legal Only** [DD-016].
 - **"status" vs "stage"** was a real duplication in the contract mocks — two fields for one datum. Resolved: one stored `status_id`, stage derived from it [CTR-001].
 - **"urgency" vs "priority"** are separate on purpose: urgency is what the requester claims, priority is what legal holds. They map 1:1 at conversion and diverge thereafter [INT-002].
-- **"deadline"** includes unfinished Task due dates in **Next deadline**, alongside upcoming Key dates and Contract term dates. Tasks remain separate from Key dates and keep their own reminder behavior [2026-09-07 Next deadline addenda].
+- **"deadline"** includes unfinished Task due dates in **Next deadline**, alongside upcoming Key dates and Contract expiry and notice dates. Tasks remain separate from Key dates and keep their own reminder behavior [2026-09-07 Next deadline addenda].

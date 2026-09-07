@@ -1288,8 +1288,9 @@ Tracked here so they're not forgotten when the relevant grill begins.
 
 ### Next deadline — 2026-09-07 UX addendum
 
-Matters and Contracts have no record-level `due_date`. Migration 0094 removes the
-short-lived columns from 0093. Next deadline is computed from upcoming Key dates and
+Matters and Contracts have no record-level `due_date`. The temporary columns on the
+former local UX branch were removed before integration; the canonical migration path
+does not create them. Next deadline is computed from upcoming Key dates and
 unfinished dated Tasks, including overdue Tasks; Contracts also consider expiry and notice
 dates. Its response includes `date`, `label`, and `source` (`task` or `key_date`).
 Closed/ended or archived records return null. See MTR-016 and CTR-005 UX addenda.

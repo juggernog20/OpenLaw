@@ -90,3 +90,21 @@ it("keeps renamed waiting statuses grouped, with no controls for a read-only rec
   ).toHaveTextContent("Waiting");
   expect(screen.queryByRole("button")).not.toBeInTheDocument();
 });
+
+it("uses the closed category even when the persisted group is in progress", async () => {
+  render(
+    <IntlProvider locale="en">
+      <MatterStatusProgression
+        statuses={statuses}
+        statusId="closed"
+        busy={false}
+        onPick={vi.fn()}
+      />
+    </IntlProvider>,
+  );
+  expect(
+    screen.getByRole("list", { name: "Status" }).querySelector('[aria-current="step"]'),
+  ).toHaveTextContent("Closed");
+  await userEvent.setup().click(screen.getByRole("button", { name: "Closed — move matter" }));
+  expect(screen.getAllByRole("menuitemradio").map((item) => item.textContent)).toEqual(["Closed"]);
+});

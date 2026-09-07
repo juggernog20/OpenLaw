@@ -86,10 +86,12 @@ function MatterTeamPanel({
   const intl = useIntl();
   const [error, setError] = useState<string | null>(null);
   const busy = useRef(false);
+  const [removing, setRemoving] = useState<string | null>(null);
 
   async function remove(member: MatterTeamMember) {
     if (busy.current) return;
     busy.current = true;
+    setRemoving(`${member.id}:${member.role}`);
     setError(null);
     const result = await api
       .DELETE("/api/v1/matters/{number}/team/{userId}/{role}", {
@@ -98,6 +100,7 @@ function MatterTeamPanel({
       .catch(() => undefined)
       .finally(() => {
         busy.current = false;
+        setRemoving(null);
       });
     if (!result?.data) {
       setError(
@@ -139,7 +142,7 @@ function MatterTeamPanel({
                 label: matterTeamRoleLabel(intl, member.role),
                 onRemove:
                   frozen || member.role === "creator" ? undefined : () => void remove(member),
-                removeDisabled: audienceLocked,
+                removeDisabled: audienceLocked || removing === `${member.id}:${member.role}`,
                 removeLabel: intl.formatMessage(
                   {
                     id: "matters.team.remove",
@@ -239,11 +242,12 @@ function AddMatterTeamDialog({
           }}
         >
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="matter-team-person">
+            <Label htmlFor="matter-team-person" required>
               <FormattedMessage id="matters.team.person" defaultMessage="Person" />
             </Label>
             <select
               id="matter-team-person"
+              aria-required="true"
               className={CONTROL_CLASS}
               value={userId}
               onChange={(event) => setUserId(event.target.value)}

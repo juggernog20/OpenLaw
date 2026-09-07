@@ -559,7 +559,9 @@ export const documentRepositoryRoutes: FastifyPluginAsyncZod = async (app) => {
             request.query.kind
               ? inArray(
                   documentVersions.kind,
-                  request.query.kind.split(",") as (typeof DOCUMENT_VERSION_KINDS)[number][],
+                  DOCUMENT_VERSION_KINDS.filter((kind) =>
+                    request.query.kind?.split(",").includes(kind),
+                  ),
                 )
               : undefined,
             request.query.uploadedFrom

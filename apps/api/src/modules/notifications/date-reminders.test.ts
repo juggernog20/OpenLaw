@@ -257,7 +257,12 @@ async function moveMatterTo(number: number, category: "open" | "closed"): Promis
     method: "PATCH",
     url: `/api/v1/matters/${number}`,
     cookies: as(OWNER),
-    payload: { statusId: status!.id },
+    payload: {
+      statusId: status!.id,
+      ...(category === "closed"
+        ? { closingNote: "Matter completed for reminder coverage." }
+        : { confirmReopen: true }),
+    },
   });
   expect(response.statusCode, response.body).toBe(200);
 }

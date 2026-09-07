@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** Displays the persisted Matter progression groups and their status choices (MTR-002 UX addenda). */
+
 import { useIntl } from "react-intl";
 import {
   MATTER_STATUS_PILL,
@@ -47,7 +49,13 @@ export function MatterStatusProgression({
               labelForGroup: (group: string) =>
                 intl.formatMessage(
                   { id: "matters.status.move", defaultMessage: "{status} — move matter" },
-                  { status: matterGroupLabel(intl, group as typeof currentGroup) },
+                  {
+                    status: matterGroupLabel(
+                      intl,
+                      MATTER_PROGRESSION_GROUPS.find((candidate) => candidate === group) ??
+                        currentGroup,
+                    ),
+                  },
                 ),
               label: intl.formatMessage(
                 { id: "matters.status.move", defaultMessage: "{status} — move matter" },

@@ -3,7 +3,7 @@
 /** MTR-015's Matter relationship states through the real record route. */
 import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   MATTER_PARENT_CYCLE_PROBLEM_TYPE,
   MATTER_RELATION_EXISTS_PROBLEM_TYPE,
@@ -410,6 +410,7 @@ describe("the Matter record's linked Contracts (M23/6)", () => {
 });
 
 describe("Matter document reader navigation", () => {
+  afterEach(() => vi.unstubAllGlobals());
   class MeasuringObserver implements ResizeObserver {
     static instances: MeasuringObserver[] = [];
     target: Element | null = null;

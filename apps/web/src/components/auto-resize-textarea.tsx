@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** Fits multiline form fields to their contents (DECISIONS-DESIGN.md UX review addenda). */
+
 import { useLayoutEffect, useRef, type ComponentPropsWithoutRef } from "react";
 import { TEXTAREA_CLASS } from "../lib/form-controls";
 import { cn } from "../lib/utils";
@@ -13,6 +15,7 @@ function fitContents(element: HTMLTextAreaElement) {
 export function AutoResizeTextarea({
   className,
   value,
+  onInput,
   ...props
 }: ComponentPropsWithoutRef<"textarea">) {
   const ref = useRef<HTMLTextAreaElement>(null);
@@ -36,6 +39,10 @@ export function AutoResizeTextarea({
       {...props}
       ref={ref}
       value={value}
+      onInput={(event) => {
+        fitContents(event.currentTarget);
+        onInput?.(event);
+      }}
       className={cn(TEXTAREA_CLASS, "resize-none overflow-hidden", className)}
     />
   );

@@ -429,10 +429,8 @@ export function SettingsMatterStatusesPage() {
     }
   }
 
-  /** The ST10 category badge, in DES-020's qualifier-pill slot. The
-   * sr-only prefix keeps a row like Draft/Draft unambiguous to a
-   * reader: the name is the label, the badge is "Category: Draft". */
-  function categoryBadge(row: StatusRow) {
+  /** Open rows offer their progression group; closed rows show the category (MTR-002). */
+  function categoryDetails(row: StatusRow) {
     if (row.category === "open")
       return (
         <select
@@ -517,7 +515,7 @@ export function SettingsMatterStatusesPage() {
             )
           }
           onRename={(row, displayName) => void rename(row, displayName)}
-          rowDetails={categoryBadge}
+          rowDetails={categoryDetails}
           rowMeta={(row) => (
             <FormattedMessage
               id="settings.matterStatuses.inUse"

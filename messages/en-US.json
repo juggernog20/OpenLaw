@@ -477,7 +477,7 @@
     "defaultMessage": "{actor} changed {count, plural, =0 {this matter} one {{field}} other {# fields}}"
   },
   "activity.matterStatus.groupChanged": {
-    "defaultMessage": "{actor} moved the matter status {name} from {previousGroup} to {group}"
+    "defaultMessage": "{actor} moved the matter status {name} from {previousGroup, select, open {Open} in_progress {In progress} waiting {Waiting} other {{previousGroup}}} to {group, select, open {Open} in_progress {In progress} waiting {Waiting} other {{group}}}"
   },
   "activity.notSet": {
     "defaultMessage": "Not set"
@@ -1335,10 +1335,10 @@
     "defaultMessage": "Eligible records could not be searched."
   },
   "contractMatter.searchContract": {
-    "defaultMessage": "Search by contract number or title"
+    "defaultMessage": "Search by Contract number or title"
   },
   "contractMatter.searchMatter": {
-    "defaultMessage": "Search by matter number or title"
+    "defaultMessage": "Search by Matter number or title"
   },
   "contractMatter.searching": {
     "defaultMessage": "Searching…"

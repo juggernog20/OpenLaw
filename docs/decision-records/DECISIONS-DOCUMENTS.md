@@ -266,7 +266,7 @@ Adding a stored generated column computes it for every existing row, so the M25 
 
 ### Addendum (2026-09-06, UX review) — attach documents during record creation
 
-Matter and sub-Matter creation, Contract creation (including child/successor renewals), Entity registration, Knowledge item creation, and intake conversion offer an optional Documents area. People can choose or drop several files, remove staged files, and choose a document kind. Cancelling before creation writes nothing.
+Matter and sub-Matter creation, Contract creation (including child/successor renewals), Entity registration, Knowledge item creation, and intake conversion offer an optional Documents area. People can choose or drop several files and remove staged files. Matter and sub-Matter uploads use General without a kind picker; Contract uploads retain their kind choices. Cancelling before creation writes nothing.
 
 After the record is created, the selected files upload through its ordinary document API. The dialog shows each file's result and retains failed files for retry without recreating the record or uploading successful files again. People can continue with the created record if an upload cannot be completed. Request submission and Knowledge's existing Create from files flow retain their attachment support.
 

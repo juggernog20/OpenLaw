@@ -22,6 +22,10 @@ DO $$ BEGIN
       CHECK ("progression_group" in ('open', 'in_progress', 'waiting'));
   END IF;
 END $$;--> statement-breakpoint
+COMMIT;--> statement-breakpoint
+BEGIN;--> statement-breakpoint
 ALTER TABLE "document_versions" DROP CONSTRAINT "document_versions_kind_check";--> statement-breakpoint
 ALTER TABLE "document_versions" ADD CONSTRAINT "document_versions_kind_check"
-  CHECK ("kind" in ('general', 'draft_ours', 'draft_theirs', 'redline_theirs', 'redline_ours', 'executed', 'amendment', 'generated_redline'));
+  CHECK ("kind" in ('general', 'draft_ours', 'draft_theirs', 'redline_theirs', 'redline_ours', 'executed', 'amendment', 'generated_redline')) NOT VALID;--> statement-breakpoint
+COMMIT;--> statement-breakpoint
+ALTER TABLE "document_versions" VALIDATE CONSTRAINT "document_versions_kind_check";

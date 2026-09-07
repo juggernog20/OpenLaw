@@ -49,7 +49,7 @@ export function RecordActionsMenu({
   onRunAnalysis,
   onArchive,
 }: Readonly<{
-  /** The contract number, which is the link this copies. */
+  /** The record number used by the copied link. */
   number: number;
   recordKind?: "contract" | "matter";
   archived: boolean;

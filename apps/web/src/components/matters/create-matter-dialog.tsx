@@ -359,21 +359,8 @@ export function CreateMatterDialog({
             </div>
             {fields.map((field) => (
               <div key={field.slug} className="flex flex-col gap-1.5">
-                <Label htmlFor={`matter-new-${field.slug}`}>
+                <Label htmlFor={`matter-new-${field.slug}`} required={field.isRequired}>
                   {field.displayName}
-                  {field.isRequired && (
-                    <>
-                      <span aria-hidden="true" className="ms-0.5 text-status-danger-fg">
-                        *
-                      </span>
-                      <span className="sr-only">
-                        <FormattedMessage
-                          id="matters.field.requiredMark"
-                          defaultMessage="(required)"
-                        />
-                      </span>
-                    </>
-                  )}
                 </Label>
                 <CustomFieldControl
                   id={`matter-new-${field.slug}`}
@@ -416,7 +403,7 @@ export function CreateMatterDialog({
               <Button
                 type="button"
                 variant="secondary"
-                disabled={busy}
+                disabled={busy || attachments.pending}
                 onClick={() => onOpenChange(false)}
               >
                 <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
