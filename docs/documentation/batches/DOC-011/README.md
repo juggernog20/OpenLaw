@@ -48,8 +48,9 @@ real clock, notifier, mailer, and queue. Neither the app image nor its immutable
 configuration was changed. This fixture operation is not a user-facing scheduling procedure.
 
 Each evidence file retains the guide hash read when that run began. The notification
-guide later gained the same-date limitation below; earlier records remain historical
-checks of their recorded revision. Independent acceptance must cover the final text.
+guide later gained the same-date limitation below, and review then replaced one curly
+apostrophe with a straight one; earlier records remain historical checks of their
+recorded revision. Independent acceptance must cover the final text.
 
 ## App correction and known limitation
 

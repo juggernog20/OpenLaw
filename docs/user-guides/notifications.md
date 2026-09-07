@@ -66,7 +66,7 @@ Set your timezone in [Update your profile and personal settings](personal-settin
 
 Administrators configure reminder lead times for tracked dates. The initial list is seven days before, one day before, and on the date; your organization may have changed it. The date, eligible audience, current access, and your preferences determine whether you receive a reminder. Due-today and overdue Tasks in the briefing are separate from that lead-time list.
 
-Multiple Key dates on the same record with the same date can share one reminder. Check the record’s full Key dates list; the reminder may name only one of those entries.
+Multiple Key dates on the same record with the same date can share one reminder. Check the record's full Key dates list; the reminder may name only one of those entries.
 
 See [Configure reminders and use the Audit log](reminders-and-audit.md) for the Administrator's configuration procedure. Changing a lead time affects later checks; it does not guarantee recovery of every reminder missed while the app or worker was stopped.
 
