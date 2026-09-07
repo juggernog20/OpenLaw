@@ -121,23 +121,63 @@ in the light, dark and warm themes without horizontal overflow.
 All 44 walkthrough steps and 7 discovery steps passed. They are in
 [independent-walkthrough.json](independent-walkthrough.json) and
 [independent-discovery.json](independent-discovery.json); the per-article
-evidence files under `docs/documentation/evidence/` cite them and now read
-`pass`. Earlier reviewer runs failed on harness assumptions (a number Field is a
-spinbutton, the Key dates tab needed a reload after Reopen, the Filter button is
-renamed once a filter is active, a completed Task's checkbox is named Reopen
+evidence files under `docs/documentation/evidence/` cite them, together with the
+two supplementary records below, and now read `pass`. Earlier reviewer runs
+failed on harness assumptions (a number Field is a spinbutton, the Key dates tab
+needed a reload after Reopen, the Filter button is renamed once a filter is
+active, a completed Task's checkbox is named Reopen
 Task, and the Contributor sees a parent he is not on as Restricted Matter), not
 on app or guide behaviour; the records name them and hold only the completed
 runs. No guide text changed because of the walkthrough. This is an agent
 walkthrough, not a human user study, and it does not stand in for the feature
 owner's approval.
 
+## Template content check
+
+The C22 walkthrough's template-edit step changed only the template description
+and the Matter Manager. A supplementary run,
+[independent-template-content.json](independent-template-content.json), edits
+the owned single-template fixture's actual content. For each reader role: the
+role created a Matter from the template in the browser and its copied rows were
+read; the Administrator's API session then replaced the template's Tasks and Key
+dates (Task 1 title and offset 3 to 5, Key date 2 label and offset 7 to 9); the
+role reloaded the earlier Matter's Tasks and Key dates tabs and the rows were
+unchanged, field for field; the role created a fresh Matter and it copied the
+edited title at +5 and the edited label at +9; the Administrator's API session
+put the saved content back and the read-back equalled the pre-run copy on every
+compared field. The fixture steps are marked separately from the role's browser
+steps. This is reviewer fixture setup through the lab's own template, not
+acceptance of the DOC-021 administrator guide, and no immutable deployment input
+changed.
+
+## Keyboard operation and 200% zoom
+
+VALIDATION.md asks Help checks to cover keyboard operation and 200% zoom. The
+discovery record above covers themes, widths and focus; the supplementary
+[independent-accessibility.json](independent-accessibility.json) covers the
+rest for both reader roles and all three guides. Keyboard only: Tab from the Help
+index to the guide link and Enter opened it with the title focused (a solid
+3 px focus ring on the link); Tab to an outline section and Enter moved to the
+section with its heading focused; Tab to the search box, the typed title and
+Enter listed the guide and Tab plus Enter opened it; Tab to the full
+documentation link and Enter opened the formal page with the title focused. For
+zoom, the run emulated 200% as a 640 by 450 CSS-pixel viewport at device pixel
+ratio 2, which is the layout Chromium produces for a 1280 by 900 window at its
+200% zoom setting; Playwright has no zoom menu, so the browser's own control was
+not operated. At that layout each Help article and its formal page fit without
+horizontal overflow, paragraphs computed at 14 px and titles at 32 px, and the
+search box, outline and full documentation link stayed visible and worked.
+
 ## Repository validation
 
-After the independent walkthrough and the evidence records, the review seat ran
-the documentation build in its normal and preview forms, the documentation
-tooling tests, prettier, the documentation lint, and secretlint on the new
-records. The application runtime is unchanged by this task, so the workspace
-test suite was not rerun here.
+After the browser runs and the evidence records, the review seat ran the full
+workspace suite in the foreground
+(`pnpm exec turbo run test --continue -- --maxWorkers=8`, inside the docker
+group with the prebuilt `openlaw-doc-engine:test` image): 176 API test files
+with 2,889 tests and 97 web test files with 1,702 tests passed, all five Turbo
+tasks successful, exit code 0, in 3 minutes 56 seconds. The documentation build
+in its normal and preview forms, the 24 documentation tooling tests, prettier,
+the documentation lint, and secretlint on the new records also passed.
 
 ## CodeRabbit disposition
 
@@ -147,8 +187,9 @@ prose suggestions are declined because these are evidence reports, not user
 procedures; descriptive pending/pass statements preserve their meaning.
 
 The two major suggestions to remove Restricted Matter descriptions are not valid
-for this build. MTR-015 and the Closing addendum specify identity-free restricted
-relationship placeholders. The actual Related Matters card and Close dialog
+for this build. MTR-015 and the Closing addendum specify restricted relationship
+placeholders that carry no title, number, or navigation. The actual Related
+Matters card and Close dialog
 render **Restricted Matter** without the title, number, or navigation, and the
 Legal browser checks verify that result plus direct 404. The guides retain the
 implemented label so readers can understand what they see; they do not claim

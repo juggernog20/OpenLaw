@@ -504,10 +504,10 @@
       "prerequisites": ["Reached Matter with people, Tasks, Key dates, and related work."],
       "actions": ["Maintain Tasks/Key dates and add/remove permitted relationships."],
       "expectedResults": [
-        "Checklist work, deadlines, relationships, and corresponding history remain distinct and accurate."
+        "Tasks, Key dates, Matter relationships, and linked Contracts remain distinct and accurate, and History records the changes."
       ],
       "negativeChecks": [
-        "Invalid cycles/restricted targets and unauthorized changes do not expose or alter hidden work."
+        "Invalid hierarchy loops (the Matter itself or a descendant as parent), restricted targets, and unauthorized changes do not expose or alter hidden work."
       ],
       "requiredMethods": ["browser-walkthrough"],
       "status": "not-run"

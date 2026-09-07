@@ -8,7 +8,7 @@
   "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
   "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-07T19:07:24.300Z",
+  "verifiedAt": "2026-09-07T19:22:19.461Z",
   "status": "pass",
   "sources": [
     "CONTEXT.md",
@@ -31,7 +31,9 @@
       "result": "pass",
       "evidence": [
         "docs/documentation/batches/DOC-016/independent-walkthrough.json",
-        "docs/documentation/batches/DOC-016/independent-discovery.json"
+        "docs/documentation/batches/DOC-016/independent-discovery.json",
+        "docs/documentation/batches/DOC-016/independent-accessibility.json",
+        "docs/documentation/batches/DOC-016/independent-template-content.json"
       ]
     },
     {
@@ -44,7 +46,9 @@
       "result": "pass",
       "evidence": [
         "docs/documentation/batches/DOC-016/independent-walkthrough.json",
-        "docs/documentation/batches/DOC-016/independent-discovery.json"
+        "docs/documentation/batches/DOC-016/independent-discovery.json",
+        "docs/documentation/batches/DOC-016/independent-accessibility.json",
+        "docs/documentation/batches/DOC-016/independent-template-content.json"
       ]
     }
   ],
