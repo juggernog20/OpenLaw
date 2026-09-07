@@ -340,13 +340,29 @@ describe("the /contracts destination", () => {
 
   it("creates a contract from a title and a type, and shows it in the list", async () => {
     const api = listApi([]);
-    stubApi({ signedIn: MEMBER, extra: api.handler });
+    let uploaded = false;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/contracts/43/documents" && call.method === "POST") {
+          expect(api.creates).toHaveLength(1);
+          expect(((call.body as FormData).get("file") as File).name).toBe("nda.txt");
+          uploaded = true;
+          return json(201, { document: { id: "nda-doc" } });
+        }
+        return api.handler(call);
+      },
+    });
     renderAt("/contracts");
     const user = userEvent.setup();
 
     await openCreateDialog(user);
-    await user.type(screen.getByLabelText("Title"), "Globex NDA");
-    await user.selectOptions(screen.getByLabelText("Contract type"), "t-nda");
+    await user.type(screen.getByLabelText(/^Title\*?$/), "Globex NDA");
+    await user.selectOptions(screen.getByLabelText(/^Contract type\*?$/), "t-nda");
+    await user.upload(
+      screen.getByLabelText("Attach documents"),
+      new File(["NDA"], "nda.txt", { type: "text/plain" }),
+    );
     await user.click(screen.getByRole("button", { name: "Create" }));
 
     await waitFor(() =>
@@ -354,6 +370,7 @@ describe("the /contracts destination", () => {
         { title: "Globex NDA", contractTypeId: "t-nda", customFields: {}, isConfidential: false },
       ]),
     );
+    await waitFor(() => expect(uploaded).toBe(true));
     expect(await screen.findByRole("link", { name: "Globex NDA" })).toHaveAttribute(
       "href",
       "/contracts/43",
@@ -367,9 +384,9 @@ describe("the /contracts destination", () => {
     const user = userEvent.setup();
 
     await openCreateDialog(user);
-    expect(screen.getByLabelText("Matter (optional)")).toHaveValue("");
-    await user.type(screen.getByLabelText("Title"), "Standalone NDA");
-    await user.selectOptions(screen.getByLabelText("Contract type"), "t-nda");
+    expect(screen.getByLabelText("Matter")).toHaveValue("");
+    await user.type(screen.getByLabelText(/^Title\*?$/), "Standalone NDA");
+    await user.selectOptions(screen.getByLabelText(/^Contract type\*?$/), "t-nda");
     await user.click(screen.getByRole("button", { name: "Create" }));
     await waitFor(() => expect(standalone.creates).toHaveLength(1));
     expect(standalone.creates[0]).not.toHaveProperty("matterNumber");
@@ -379,9 +396,9 @@ describe("the /contracts destination", () => {
     stubApi({ signedIn: MEMBER, extra: linked.handler });
     renderAt("/contracts");
     await openCreateDialog(user);
-    await user.type(screen.getByLabelText("Title"), "Programme NDA");
-    await user.selectOptions(screen.getByLabelText("Contract type"), "t-nda");
-    await user.type(screen.getByLabelText("Matter (optional)"), "Regulatory");
+    await user.type(screen.getByLabelText(/^Title\*?$/), "Programme NDA");
+    await user.selectOptions(screen.getByLabelText(/^Contract type\*?$/), "t-nda");
+    await user.type(screen.getByLabelText("Matter"), "Regulatory");
     await user.click(await screen.findByRole("button", { name: /Regulatory programme/ }));
     await user.click(screen.getByRole("button", { name: "Create" }));
 
@@ -407,8 +424,8 @@ describe("the /contracts destination", () => {
     const user = userEvent.setup();
 
     await openCreateDialog(user);
-    await user.type(screen.getByLabelText("Title"), "Project Atlas NDA");
-    await user.selectOptions(screen.getByLabelText("Contract type"), "t-nda");
+    await user.type(screen.getByLabelText(/^Title\*?$/), "Project Atlas NDA");
+    await user.selectOptions(screen.getByLabelText(/^Contract type\*?$/), "t-nda");
     await user.click(
       screen.getByRole("switch", { name: "Confidential — restrict to the contract team" }),
     );
@@ -436,7 +453,7 @@ describe("the /contracts destination", () => {
     await user.click(screen.getByRole("button", { name: "Create" }));
     expect(await screen.findByText("Name the contract.")).toBeInTheDocument();
 
-    await user.type(screen.getByLabelText("Title"), "Untyped");
+    await user.type(screen.getByLabelText(/^Title\*?$/), "Untyped");
     await user.click(screen.getByRole("button", { name: "Create" }));
     expect(await screen.findByText("Pick a contract type.")).toBeInTheDocument();
     expect(api.creates).toEqual([]);
@@ -449,13 +466,13 @@ describe("the /contracts destination", () => {
     const user = userEvent.setup();
 
     await openCreateDialog(user);
-    await user.type(screen.getByLabelText("Title"), "Orion MSA");
+    await user.type(screen.getByLabelText(/^Title\*?$/), "Orion MSA");
     // The NDA demands nothing, so the dialog asks for nothing.
-    await user.selectOptions(screen.getByLabelText("Contract type"), "t-nda");
+    await user.selectOptions(screen.getByLabelText(/^Contract type\*?$/), "t-nda");
     expect(screen.queryByLabelText(/Governing law/)).not.toBeInTheDocument();
 
     // The MSA demands one field, and it appears the moment it is picked.
-    await user.selectOptions(screen.getByLabelText("Contract type"), "t-msa");
+    await user.selectOptions(screen.getByLabelText(/^Contract type\*?$/), "t-msa");
     const law = await screen.findByLabelText(/Governing law/);
 
     await user.click(screen.getByRole("button", { name: "Create" }));
@@ -501,8 +518,8 @@ describe("the /contracts destination", () => {
     const user = userEvent.setup();
 
     await openCreateDialog(user);
-    await user.type(screen.getByLabelText("Title"), "Doomed");
-    await user.selectOptions(screen.getByLabelText("Contract type"), "t-nda");
+    await user.type(screen.getByLabelText(/^Title\*?$/), "Doomed");
+    await user.selectOptions(screen.getByLabelText(/^Contract type\*?$/), "t-nda");
     await user.click(screen.getByRole("button", { name: "Create" }));
 
     expect(
@@ -1040,4 +1057,41 @@ describe("quick contract filters", () => {
     await waitFor(() => expect(surface.queries.at(-1)?.get("status")).toBe("s-draft,s-active"));
     expect(await screen.findByRole("button", { name: "Owner: Me" })).toBeInTheDocument();
   });
+});
+
+it.each(["task", "key_date"] as const)(
+  "opens a Contract Next deadline in its %s source tab",
+  async (source) => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: listApi([
+        contractRow({ nextDeadline: { date: "2026-09-30", label: "Business response", source } }),
+      ]).handler,
+    });
+    renderAt("/contracts");
+    const link = await screen.findByRole("link", { name: /Business response/ });
+    expect(link).toHaveAttribute(
+      "href",
+      `/contracts/42/${source === "task" ? "tasks" : "key-dates"}`,
+    );
+  },
+);
+
+it("marks an unverified Contract Next deadline", async () => {
+  stubApi({
+    signedIn: MEMBER,
+    extra: listApi([
+      contractRow({
+        nextDeadline: {
+          date: "2026-09-30",
+          label: "Expiry date",
+          source: "key_date",
+          unverified: true,
+        },
+      }),
+    ]).handler,
+  });
+  renderAt("/contracts");
+  const link = await screen.findByRole("link", { name: /Expiry date.*Unverified/ });
+  expect(within(link).getByText("Unverified")).toBeInTheDocument();
 });

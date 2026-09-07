@@ -528,11 +528,12 @@ function KeyDateDialog({
           }}
         >
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="key-date-date">
+            <Label htmlFor="key-date-date" required>
               <FormattedMessage id="keyDates.field.date" defaultMessage="Date" />
             </Label>
             <Input
               id="key-date-date"
+              aria-required="true"
               type="date"
               value={draft.date}
               autoFocus
@@ -541,11 +542,12 @@ function KeyDateDialog({
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="key-date-label">
+            <Label htmlFor="key-date-label" required>
               <FormattedMessage id="keyDates.field.label" defaultMessage="Event" />
             </Label>
             <Input
               id="key-date-label"
+              aria-required="true"
               value={draft.label}
               maxLength={MAX_KEY_DATE_LABEL_LENGTH}
               {...invalid("label")}
@@ -554,7 +556,7 @@ function KeyDateDialog({
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="key-date-note">
-              <FormattedMessage id="keyDates.field.note" defaultMessage="Note (optional)" />
+              <FormattedMessage id="keyDates.field.note" defaultMessage="Note" />
             </Label>
             <textarea
               id="key-date-note"

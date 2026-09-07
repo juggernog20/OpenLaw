@@ -14,6 +14,6 @@ it("keeps historical declined requests and their reasons readable", async () => 
   stubApi({ signedIn: MEMBER, extra: api.handler });
   renderAt("/inbox/45");
   expect(within(await subbar()).queryByRole("button", { name: "Triage" })).toBeNull();
-  const outcome = await screen.findByRole("region", { name: "Outcome" });
+  const outcome = await screen.findByRole("region", { name: "Status" });
   expect(within(outcome).getByText("Ask Procurement.")).toBeInTheDocument();
 });

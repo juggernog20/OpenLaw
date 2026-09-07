@@ -11,6 +11,14 @@ This document is the working checklist for the initial end-to-end product review
 
 An interaction is complete only after it has been manually tested and any agreed follow-up has been resolved. Page-level checkboxes are roll-ups; check one only when every interaction listed beneath that page is complete.
 
+## Current review checkpoint — 7 September 2026
+
+- Resume the **Matter record → Key dates** review on M-89. The discussion about record Due date interrupted this area; the current browser page does not determine the review sequence.
+- Next UX interaction: open an existing Key date's Remove confirmation, review its wording and actions, then cancel. The Edit form's UX is approved.
+- Keep the Key dates name. The redundant State column was removed. The standalone record Due date was withdrawn in favor of Tasks, Key dates, and derived Next deadline.
+- Continue with Matter Tasks after Key dates, then return to the remaining Matter interactions before starting Contract record review. New contract from Linked Contracts remains unchecked.
+- Guide one UX interaction at a time. Routine persistence and validation checks belong in automated tests; their manual checkboxes remain open unless Blair actually reviewed them. Earlier unchecked items are outstanding, not evidence that an approved component needs to be reviewed again from scratch.
+
 ## Inventory basis
 
 Interaction inventory added on 5 September 2026 against the seeded local app and the UI code at `8e5a3f5f`. The 73 original page/tab surfaces are retained. Staff pages were inspected in the Administrator session; public authentication screens were opened signed out. Shared controls and conditional dialogs were cross-checked in their components. Notes identify pages or actions that need a different account, first-run state, or live connector.
@@ -94,9 +102,12 @@ Route: `/inbox`
 - [x] Review the Inbox table layout.
   - Blair approved the Status heading and tighter width, Summary absorbing spare space, and the fixed Assign column without a vertical divider. Filter and saved-view interactions remain to be reviewed individually.
 - [ ] Page review complete
-- [ ] Open a request from its summary.
-- [ ] Use Assign to select the person responsible for triage; save and check the button becomes their avatar.
-- [ ] Click the assigned avatar to reassign or clear it; cancel a selection and confirm it makes no change.
+- [x] Open a request from its summary.
+- [x] Open Assign from the Inbox and review the person-selection modal without leaving the list.
+- [x] Select the person responsible for triage; save and check the button becomes their avatar.
+- [x] Click the assigned avatar, select a different person, and cancel; confirm the original assignee remains unchanged.
+- [x] Click the assigned avatar and save a different person; confirm the avatar changes to the new assignee.
+- [x] Clear the assignee; confirm the avatar returns to the Assign button.
 - [ ] Change or clear Status: New to include converted, resolved, and declined outcomes.
 - [ ] Combine searchable Status, Type, Urgency, and Requester choices; select multiple values within a field and inspect matching counts.
 - [ ] Filter by Received date with an inclusive range; clear one filter or all filters and recover from an empty result.
@@ -112,16 +123,27 @@ Route: `/inbox`
 Route: `/inbox/:number`
 
 - [ ] Page review complete
-- [ ] Return to Inbox using the breadcrumb.
-- [ ] Use the assignment control beside Triage to assign, reassign, or clear the triage assignee; confirm the Inbox displays the same person.
+- [x] Return to Inbox using the breadcrumb.
+- [x] Use Assign beside Triage to select a triage assignee and save; confirm their avatar and name appear.
+- [x] Reassign the triage assignee from the intake page; confirm their avatar and name update.
+- [x] Clear the triage assignee from the intake page; confirm the Assign button returns.
+- [x] Return to Inbox after assigning from the intake page; confirm it displays the same person.
 - [ ] Open or download submitted attachments and read the original form responses.
 - [ ] Open Comments, load older comments, and draft a reply with attachments and mentions; use the shared comment checks below.
-- [ ] Open Triage → Convert to contract or Convert to matter and review the proposed title, routing, and carried fields.
-- [ ] Choose a record type when routing leaves it open; inspect fixed routing when the request type already chose one.
+- [x] Open Triage → Convert to matter and review the form's appearance.
+  - Blair approved the reduced explanatory copy, editable controls, No template default, and Matter template label. Conversion behavior remains to be reviewed below.
+- [ ] Open Triage → Convert to contract and review the proposed title, type, and carried Fields.
+- [x] Change the prefilled Priority in the conversion form; confirm the selection is retained.
+- [x] Change the prefilled record type; confirm the chosen type updates the available Fields and Matter templates, with No template selected.
+- [ ] Edit prefilled Fields, clear an optional value, and fill missing required values; confirm conversion saves the edits and preserves the original Request responses.
 - [ ] Switch Convert to matter instead / Convert to contract instead and review fields that carry across or stay only on the request.
 - [ ] Complete required fields missing from the original form; replace archived user/entity values with eligible live values.
-- [ ] For Matter conversion, select an optional template and inspect its task/key-date summary.
-- [ ] Cancel conversion; separately confirm conversion and open the resulting record.
+- [x] For Matter conversion, select an optional template; confirm the selection is retained.
+- [x] Edit a Field while a Matter template is selected, then choose No template; confirm the edit is preserved.
+- [x] Cancel conversion and reopen it; confirm unsaved edits are discarded and the original defaults return.
+- [x] Confirm Matter conversion; check the Request shows Converted with a link to the resulting Matter (R-43 → M-89).
+- [x] Open the resulting Matter and confirm its title, Type and edited Fields.
+- [ ] Confirm the Request description carries into the new record and the person completing Matter conversion becomes Matter Manager.
 - [ ] Open Triage → Resolve request without converting; check that a blank note is refused, then enter a required explanation and cancel or resolve. Confirm the note appears on the requester-visible thread.
 - [ ] Open a request after each triage outcome and inspect its outcome, linked record, and continuing conversation.
 - [ ] Handle a decision made by another staff member while a triage dialog is open; close it to read the recorded outcome.
@@ -153,11 +175,22 @@ Route: `/matters/:matterNumber/:tab?`
 
 - [ ] Page review complete
 - [ ] Use the Matters breadcrumb, parent breadcrumb, record tabs, and browser Back/Forward.
-- [ ] Change Status and check the header and tab counts after saving.
-- [ ] Open Close matter, select a closed status, inspect the warning about open children, and cancel or confirm.
-- [ ] Open Reopen matter, select an open status, and cancel or confirm.
+- [ ] Use the status progression menu to change Status; check the header and tab counts after saving. Moving between Open and Closed categories should open the appropriate confirmation.
+- [x] Review the Close confirmation with a Closing note field and no second status picker. Blair approved the dialog.
+- [ ] Confirm blank notes cannot submit and cancellation leaves the Matter open.
+- [x] Close with a note and read it in History. Blair confirmed the closing note appears on the status change.
+- [ ] Inspect the open-child warning when closing a parent Matter.
+- [x] Review the grouped progression: Open (including On hold), In progress, Waiting, and Closed. Blair approved the grouping.
+- [x] Pick a status within a group and refresh to confirm it persists. Blair confirmed On hold persists, with the progression remaining in Open.
+- [x] Use Copy link from Matter actions. Blair verified it points to this Matter.
+- [x] Use Rename matter from Matter actions. Blair confirmed it focuses Title and selects its text.
+- [ ] Check the header and Overview styling match Contracts.
+- [x] From a closed Matter, select a status in an open group and check the Reopen confirmation appears. Blair confirmed the prompt after the confirmation guard was added.
+- [ ] Cancel reopening and confirm the Matter stays closed.
+- [x] Confirm reopening and check Closed returns to Still open. Blair verified the placeholder.
 - [ ] Archive a Matter through its confirmation; open the archived record and restore it.
-- [ ] Open Comments and History on each tab; complete the shared comment and history checks below.
+- [ ] Open Team, Comments and History from the right-hand applet bar on each tab; complete the shared comment and history checks below.
+- [ ] As an Administrator, open Matter settings from its applet shortcut.
 - [ ] Follow a direct link to another Matter and confirm the title, fields, and applets belong to that new record.
 
 #### Overview
@@ -165,29 +198,44 @@ Route: `/matters/:matterNumber/:tab?`
 Route: `/matters/:matterNumber`
 
 - [ ] Tab review complete
-- [ ] Edit Title and Description; save on blur and cancel an unfinished edit with Escape.
-- [ ] Change Matter type; complete any new required fields in the change-type dialog or cancel it.
-- [ ] Assign, replace, or clear the Matter Manager.
+- [x] Cancel an unfinished Title edit with Escape. Blair confirmed the original title returns.
+- [x] Edit Title and save on blur. Blair confirmed the updated title persists after refresh in both the field and page heading.
+- [x] Cancel an unfinished Description edit with Escape. Blair confirmed the original description returns.
+- [x] Edit Description and save on blur; refresh to verify persistence. Blair confirmed the added text remains.
+- [x] Check Description grows and shrinks with its text, without a drag handle. Blair confirmed it works.
+- [x] Change Matter type from Employment to Litigation. Blair confirmed it saves immediately and displays the additional fields.
+- [ ] Change to a Matter type with unanswered required fields; complete the change-type dialog or cancel it.
+- [x] Replace the Matter Manager and refresh to verify persistence. Blair confirmed changing Blair Wentworth to Tom Iwu persists.
+- [ ] Clear the Matter Manager to Unassigned, then assign someone again.
 - [ ] Change Priority and Risk, including Not assessed.
 - [ ] Set and clear confidentiality; inspect the team-only access explanation.
 - [ ] Edit and clear each attached custom field according to its data type and required state.
+  - Blair confirmed External counsel and Budget approved save.
+  - [x] Check Budget approved displays separators, choose Budget currency, and refresh to verify both values persist. Blair confirmed AED and the formatted amount persist.
+- [x] Review the Matter team applet's people, role tags, and management controls. Blair approved the UX.
 - [ ] Add a team member with a role; check each person appears once with all their role tags, including Matter Manager and Creator. Remove one removable role tag and verify their other roles remain.
-- [ ] Create a New sub-Matter with the parent shown in its creation form.
-- [ ] Set or change the parent by searching for a Matter; clear the selection or remove the parent.
-- [ ] Add a related Matter and remove an existing relationship.
+- [ ] Check Closed reads Still open for an open Matter and shows its date after closing.
+- [x] Create a New sub-Matter with the parent shown in its creation form. Blair approved the UX; M-90 appears under Children.
+  - [x] Review the sub-Matter creation form. Blair approved the UX after type changes default to No template and Description grows with its text without a drag handle.
+- [x] Review setting a parent by searching for a Matter. Blair approved the UX; M-44 appears as Parent.
+- [x] Review adding a related Matter. Blair approved the UX; M-60 appears under Related.
+- [ ] Clear or remove the parent; remove an existing related Matter relationship.
 - [ ] Follow parent, child, related Matter, and linked Contract references; inspect restricted references without links.
-- [ ] Link an existing Contract by searching for it; unlink a Contract and inspect any confidentiality mismatch warning.
+- [x] Review linking an existing Contract and the resulting list. Blair approved the search label and tighter spacing; C-108 and C-116 are linked.
+- [ ] Unlink a Contract and inspect any confidentiality mismatch warning.
+- [ ] Use New contract in Linked Contracts; confirm this Matter is preselected, cancel without creating, then create and open the linked Contract.
 
 #### Documents
 
 Route: `/matters/:matterNumber/documents`
 
 - [ ] Tab review complete
-- [ ] Upload a document or a new version with its kind and note; cancel the composer before submitting.
+- [ ] Review uploading a document or new version with a note, without contract-specific Kind choices; cancel the composer before submitting.
+- [ ] Review switching Matter tabs with a document open. The reader closes when it overlays the record and stays open when docked beside it; both layouts are covered by regression and browser checks.
 - [ ] Choose several files or a folder, or drag them onto the card; review and run the batch import.
 - [ ] Expand/collapse folders and version history; load more documents at the root and inside a folder.
 - [ ] Open current and earlier versions in the document reader, download them, and compare eligible versions.
-- [ ] Edit document name/description and change version kind.
+- [ ] Edit document name/description; review version history without contract-specific Kind tags.
 - [ ] Create, rename, move, nest, and delete folders; move documents between folders and the record root.
 - [ ] Mark or clear document confidentiality where offered; inspect how record access limits visibility.
 - [ ] Show archived documents, archive and restore one, and use the named confirmation to delete one.
@@ -200,9 +248,10 @@ Route: `/matters/:matterNumber/key-dates`
 - [ ] Tab review complete
 - [ ] Open Add date; choose the date, event label, and optional note, then save or cancel.
 - [ ] Edit a Key date using its actions menu and save or cancel the changes.
+  - [x] Review the Edit form's date, event, and note controls. Blair approved its UX on 7 September; save/cancel behavior was not separately confirmed.
 - [ ] Remove a Key date through the confirmation dialog or cancel removal.
 - [ ] Correct an absent date/label and retry a failed save.
-- [ ] Check overdue, next, and upcoming states and counts after adding, editing, or removing dates.
+- [ ] Review date formatting, chronological order, and the upcoming/overdue summary; there is no separate State column.
 
 #### Tasks
 
@@ -546,8 +595,6 @@ Route: `/search`
 Route: `/settings/profile`
 
 - [ ] Page review complete
-- [ ] As an Administrator or Legal Team Member, use App view → View as business user to open the intake portal; complete the [view-switch checks](#view-as-business-user-and-portal-shell).
-- [ ] Confirm a Contributor's Profile does not offer View as business user.
 - [ ] Choose and upload a profile photo; correct unsupported type or excessive size.
 - [ ] Edit Full name and inspect save feedback; confirm Email and Role are read-only on this page.
 - [ ] Search/select a Timezone and check date/time displays after it saves.
@@ -556,6 +603,14 @@ Route: `/settings/profile`
 - [ ] When two-factor is enabled, re-enroll or turn it off with password confirmation.
 - [ ] Use Sign out other devices and confirm the current session remains usable.
 - [ ] Expand/collapse profile/security cards where offered.
+
+### Personal — View Business Portal
+
+Route: `/settings/app-view`
+
+- [ ] Open View Business Portal from the settings sidebar as an Administrator or Legal Team Member.
+- [ ] Use View as business user and Return to legal view; confirm the return opens View Business Portal.
+- [ ] Confirm a Contributor cannot see or directly open this pane.
 
 ### Personal — Appearance
 
@@ -948,12 +1003,12 @@ The Business User screens are the portal entry, intake home, new-request form, r
 
 ### View as business user and portal shell
 
-Routes: `/settings/profile` → `/portal` and all authenticated portal subpages
+Routes: `/settings/app-view` → `/portal` and all authenticated portal subpages
 
-- [ ] As both an Administrator and a Legal Team Member, switch from Profile and check that the portal offers intake forms and Your requests using the signed-in person's own Requests.
+- [ ] As both an Administrator and a Legal Team Member, switch from View Business Portal and check that the portal offers intake forms and Your requests using the signed-in person's own Requests.
 - [ ] Check the Viewing as business user notice explains that submissions and replies are real.
 - [ ] Navigate to a form, request detail, Knowledge item, and notification settings; check Return to legal view remains available after navigation and reload.
-- [ ] Use Return to legal view from each portal page and confirm Profile opens with the same account and role.
+- [ ] Use Return to legal view from each portal page and confirm View Business Portal opens with the same account and role.
 - [ ] As a Business User, check that the staff-view notice and return control are absent, and repeat the portal interactions using that person's own Requests.
 - [ ] Check the view-switch notice and return control on mobile and with keyboard navigation.
 
@@ -1156,6 +1211,14 @@ Applies to Matters, Contracts, the Entity List, and Knowledge wherever these con
 - [ ] Discard unsaved changes and check that the saved layout returns.
 - [ ] Reload, follow a saved-view URL, and use Back/Forward without mixing views from different destinations.
 
+### Documents in record creation forms
+
+Applies to Matter/sub-Matter creation, Contracts including renewals, Entity registration, Knowledge item creation, and intake conversion. Request submission already offers attachments.
+
+- [ ] Review the Documents area: choose or drop files, inspect the selected files, remove one, and choose a document kind.
+- [ ] Review upload progress and the failed-upload recovery controls.
+  - Automated coverage checks staging/cancellation without writes, uploading to the created record, and retrying only failed files without creating or converting twice.
+
 ### Shared document reader, uploads, and folders
 
 Applies to document cards on Contracts, Matters, Entities, and Knowledge, with folder controls only where exposed.
@@ -1244,3 +1307,8 @@ Applies to the staff Comments applet on Requests, Matters, and Contracts; the po
 - [ ] Mobile layout reviewed
 - [ ] Keyboard navigation reviewed
 - [ ] Screen-reader labels and announcements reviewed
+
+### Next deadline — UX review addition
+
+- [ ] Matters and Contracts: standalone Due date is absent from creation, conversion, and Overview.
+- [ ] List Next deadline shows the earliest unfinished Task or upcoming Key date and opens its source tab.

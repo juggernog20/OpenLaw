@@ -404,11 +404,12 @@ function TaskDialog({
           }}
         >
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="task-title">
+            <Label htmlFor="task-title" required>
               <FormattedMessage id="tasks.field.title" defaultMessage="Title" />
             </Label>
             <Input
               id="task-title"
+              aria-required="true"
               value={draft.title}
               maxLength={MAX_TASK_TITLE_LENGTH}
               autoFocus
@@ -451,7 +452,7 @@ function TaskDialog({
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="task-due-date">
-              <FormattedMessage id="tasks.field.dueDate" defaultMessage="Due date (optional)" />
+              <FormattedMessage id="tasks.field.dueDate" defaultMessage="Due date" />
             </Label>
             <Input
               id="task-due-date"

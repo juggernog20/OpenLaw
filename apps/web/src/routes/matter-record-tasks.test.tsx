@@ -183,14 +183,14 @@ describe("the Matter record's Tasks section", () => {
     const user = userEvent.setup();
     await user.click((await section()).getByRole("button", { name: "Add Task" }));
     const dialog = within(await screen.findByRole("dialog"));
-    await user.type(dialog.getByLabelText("Title"), "Prepare exhibits");
+    await user.type(dialog.getByLabelText(/^Title\*?$/), "Prepare exhibits");
     await user.click(dialog.getByLabelText("Assignee"));
     await user.click(
       within(screen.getByRole("dialog", { name: "Assign task" })).getByRole("button", {
         name: TEAMMATE.displayName,
       }),
     );
-    await user.type(dialog.getByLabelText("Due date (optional)"), "2030-01-02");
+    await user.type(dialog.getByLabelText("Due date"), "2030-01-02");
     await user.click(dialog.getByRole("button", { name: "Add Task" }));
     const row = (await section()).getByRole("listitem");
     expect(row).toHaveTextContent("Prepare exhibits");
@@ -223,8 +223,8 @@ describe("the Matter record's Tasks section", () => {
     await user.click(card.getByRole("button", { name: "Actions for Draft response" }));
     await user.click(await screen.findByRole("menuitem", { name: "Edit Task" }));
     const dialog = within(await screen.findByRole("dialog"));
-    await user.clear(dialog.getByLabelText("Title"));
-    await user.type(dialog.getByLabelText("Title"), "Draft final response");
+    await user.clear(dialog.getByLabelText(/^Title\*?$/));
+    await user.type(dialog.getByLabelText(/^Title\*?$/), "Draft final response");
     await user.click(dialog.getByRole("button", { name: "Save" }));
     expect(await card.findByText("Draft final response")).toBeInTheDocument();
 

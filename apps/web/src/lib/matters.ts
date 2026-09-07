@@ -65,3 +65,21 @@ export function matterTeamRoleLabel(intl: IntlShape, role: MatterTeamRole): stri
     { role },
   );
 }
+
+export const MATTER_PROGRESSION_GROUPS = ["open", "in_progress", "waiting", "closed"] as const;
+export type MatterProgressionGroup = (typeof MATTER_PROGRESSION_GROUPS)[number];
+
+export function matterGroupLabel(intl: IntlShape, group: MatterProgressionGroup): string {
+  return intl.formatMessage(
+    {
+      id: "matters.progression.group",
+      defaultMessage:
+        "{group, select, open {Open} in_progress {In progress} waiting {Waiting} other {Closed}}",
+    },
+    { group },
+  );
+}
+
+export function matterStatusGroup(status: MatterStatusOption): MatterProgressionGroup {
+  return status.category === "closed" ? "closed" : status.progressionGroup;
+}

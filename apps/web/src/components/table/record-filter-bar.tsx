@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
 type Choice = { id: string; displayName: string };
 export type RecordFilter = { key: string; label: string } & (
-  { kind: "choices"; choices: Choice[] } | { kind: "date" } | { kind: "flag" }
+  { kind: "choices"; choices: Choice[]; multiple?: boolean } | { kind: "date" } | { kind: "flag" }
 );
 
 function selected(filter: RecordFilter, values: Layout["filters"]): boolean {
@@ -352,17 +352,27 @@ function FilterEditor({
                   key={choice.id}
                   className="flex cursor-pointer items-center gap-3 rounded-button px-2 py-2 text-sm hover:bg-control"
                 >
-                  <Checkbox
-                    checked={ids.includes(choice.id)}
-                    disabled={!ids.includes(choice.id) && ids.length >= 50}
-                    onCheckedChange={(checked) =>
-                      setIds((current) =>
-                        checked
-                          ? [...current, choice.id]
-                          : current.filter((id) => id !== choice.id),
-                      )
-                    }
-                  />
+                  {filter.multiple === false ? (
+                    <input
+                      type="radio"
+                      name={filter.key}
+                      checked={ids.includes(choice.id)}
+                      onChange={() => setIds([choice.id])}
+                      className="size-4 shrink-0 accent-link"
+                    />
+                  ) : (
+                    <Checkbox
+                      checked={ids.includes(choice.id)}
+                      disabled={!ids.includes(choice.id) && ids.length >= 50}
+                      onCheckedChange={(checked) =>
+                        setIds((current) =>
+                          checked
+                            ? [...current, choice.id]
+                            : current.filter((id) => id !== choice.id),
+                        )
+                      }
+                    />
+                  )}
                   <span>{choice.displayName}</span>
                 </label>
               ))}
@@ -414,10 +424,15 @@ function FilterEditor({
       <div className="flex items-center justify-between gap-2 border-t border-border-default p-3">
         <span className="text-xs text-muted">
           {filter.kind === "choices"
-            ? intl.formatMessage({
-                id: "recordFilters.matchAny",
-                defaultMessage: "Matches any selected value",
-              })
+            ? filter.multiple === false
+              ? intl.formatMessage({
+                  id: "recordFilters.chooseOne",
+                  defaultMessage: "Choose one value",
+                })
+              : intl.formatMessage({
+                  id: "recordFilters.matchAny",
+                  defaultMessage: "Matches any selected value",
+                })
             : filter.kind === "date"
               ? intl.formatMessage({
                   id: "recordFilters.inclusive",

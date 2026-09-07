@@ -9,11 +9,8 @@
  * and the two surfaces then read alike because they were one shape from
  * the start rather than two that were reconciled later.
  *
- * **Task due dates deliberately do NOT feed deadline surfaces.** A task
- * due date is a team intention — "finish the redline by Friday" — not a
- * contractual obligation. Deadline surfaces (NOT-004) track dates the
- * counterparty or the law imposed; mixing the two would drown real
- * deadlines in internal housekeeping.
+ * Unfinished dated Tasks feed the record's Next deadline alongside
+ * upcoming Key dates. Tasks remain separate from the Key dates table.
  *
  * **Deliberately flat.** No comments, no statuses beyond done/not-done,
  * no sub-tasks. A checklist item that needs a conversation is a matter,

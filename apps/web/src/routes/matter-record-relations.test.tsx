@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** MTR-015's Matter relationship states through the real record route. */
-import { screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   MATTER_PARENT_CYCLE_PROBLEM_TYPE,
   MATTER_RELATION_EXISTS_PROBLEM_TYPE,
@@ -115,7 +115,7 @@ describe("Matter relationship projections", () => {
 
     await user.click(within(card).getByRole("button", { name: "Set parent" }));
     expect(await screen.findByRole("dialog")).toBeVisible();
-    expect(screen.getByLabelText("Search by M-number or title")).toBeVisible();
+    expect(screen.getByLabelText("Search by matter number or title")).toBeVisible();
   });
 
   it("navigates reachable parent, child, and related projections without leaking a restricted Matter", async () => {
@@ -126,7 +126,8 @@ describe("Matter relationship projections", () => {
     });
     renderAt("/matters/12");
 
-    expect(await screen.findAllByRole("link", { name: "M-3 Programme parent" })).toHaveLength(2);
+    expect(await screen.findAllByRole("link", { name: "M-3 Programme parent" })).toHaveLength(1);
+    expect(screen.getByRole("link", { name: "M-3" })).toHaveAttribute("href", "/matters/3");
     const card = screen.getByRole("region", { name: "Related Matters" });
     expect(within(card).getByRole("link", { name: "M-13 Local proceeding" })).toHaveAttribute(
       "href",
@@ -157,8 +158,8 @@ describe("Matter relationship projections", () => {
 
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByText("Parent: M-12 Regulatory programme")).toBeVisible();
-    await user.type(within(dialog).getByLabelText("Title"), "Child");
-    await user.selectOptions(within(dialog).getByLabelText("Matter type"), "type-general");
+    await user.type(within(dialog).getByLabelText(/^Title\*?$/), "Child");
+    await user.selectOptions(within(dialog).getByLabelText(/^Matter type\*?$/), "type-general");
     await user.click(within(dialog).getByRole("button", { name: "Create" }));
 
     await waitFor(() =>
@@ -188,7 +189,7 @@ describe("Matter relationship projections", () => {
     const user = userEvent.setup();
     const card = await screen.findByRole("region", { name: "Related Matters" });
     await user.click(within(card).getByRole("button", { name: "Change parent" }));
-    await user.type(screen.getByLabelText("Search by M-number or title"), "New parent");
+    await user.type(screen.getByLabelText("Search by matter number or title"), "New parent");
     await waitFor(() =>
       expect(
         fetch.mock.calls.some(([request]) => {
@@ -225,7 +226,7 @@ describe("Matter relationship projections", () => {
     const card = await screen.findByRole("region", { name: "Related Matters" });
 
     await user.click(within(card).getByRole("button", { name: "Change parent" }));
-    await user.type(screen.getByLabelText("Search by M-number or title"), "Descendant");
+    await user.type(screen.getByLabelText("Search by matter number or title"), "Descendant");
     await user.click(await screen.findByRole("button", { name: /Descendant/ }));
     await user.click(screen.getByRole("button", { name: "Set parent" }));
 
@@ -257,7 +258,7 @@ describe("Matter relationship projections", () => {
     const card = await screen.findByRole("region", { name: "Related Matters" });
 
     await user.click(within(card).getByRole("button", { name: "Add related Matter" }));
-    await user.type(screen.getByLabelText("Search by M-number or title"), "Existing relation");
+    await user.type(screen.getByLabelText("Search by matter number or title"), "Existing relation");
     await user.click(await screen.findByRole("button", { name: /Existing relation/ }));
     await user.click(screen.getByRole("button", { name: "Add relation" }));
 
@@ -297,6 +298,53 @@ describe("the Matter record's linked Contracts (M23/6)", () => {
     expect(screen.getByText("Restricted contract")).toBeVisible();
     expect(screen.queryByText(/C-99|Secret acquisition/)).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Link Contract" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "New contract" })).not.toBeInTheDocument();
+  });
+
+  it("creates a Contract with this Matter preselected and refreshes the linked list", async () => {
+    let created = false;
+    const writes: unknown[] = [];
+    mountApi(MEMBER, { parent: null, children: [], related: [] }, (call) => {
+      if (call.url.pathname === "/api/v1/contracts/options")
+        return json(200, {
+          contractTypes: [{ id: "ct-nda", slug: "nda", displayName: "NDA", fields: [] }],
+          users: [],
+          contractStatuses: [],
+          approverGroups: [],
+        });
+      if (call.url.pathname === "/api/v1/matters/12/contracts")
+        return json(200, { contracts: created ? [linkedContract] : [] });
+      if (call.url.pathname === "/api/v1/contracts" && call.method === "POST") {
+        writes.push(call.body);
+        created = true;
+        return json(201, { contract: { ...linkedContract, id: "contract-42" } });
+      }
+      return undefined;
+    });
+    renderAt("/matters/12");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "New contract" }));
+    let dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByLabelText("Matter")).toHaveValue("M-12 Regulatory programme");
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    expect(writes).toEqual([]);
+    await user.click(screen.getByRole("button", { name: "New contract" }));
+    dialog = await screen.findByRole("dialog");
+    await user.type(within(dialog).getByLabelText(/^Title\*?$/), linkedContract.title);
+    await user.selectOptions(within(dialog).getByLabelText(/^Contract type\*?$/), "ct-nda");
+    await user.click(within(dialog).getByRole("button", { name: "Create" }));
+    expect(
+      await screen.findByRole("link", { name: "C-42 Programme services agreement" }),
+    ).toBeVisible();
+    expect(writes).toEqual([
+      {
+        title: linkedContract.title,
+        contractTypeId: "ct-nda",
+        customFields: {},
+        isConfidential: false,
+        matterNumber: 12,
+      },
+    ]);
   });
 
   it("links an eligible standalone Contract from the Matter and refreshes the canonical list", async () => {
@@ -331,7 +379,7 @@ describe("the Matter record's linked Contracts (M23/6)", () => {
     const user = userEvent.setup();
 
     await user.click(await screen.findByRole("button", { name: "Link Contract" }));
-    await user.type(screen.getByLabelText("Search by number or title"), "Programme");
+    await user.type(screen.getByLabelText("Search by contract number or title"), "Programme");
     await user.click(await screen.findByRole("button", { name: /Programme services agreement/ }));
     await user.click(screen.getByRole("button", { name: "Link" }));
 
@@ -358,5 +406,108 @@ describe("the Matter record's linked Contracts (M23/6)", () => {
 
     await user.click(await screen.findByRole("button", { name: "Unlink" }));
     expect(await screen.findByText("No Contracts are linked to this Matter.")).toBeVisible();
+  });
+});
+
+describe("Matter document reader navigation", () => {
+  class MeasuringObserver implements ResizeObserver {
+    static instances: MeasuringObserver[] = [];
+    target: Element | null = null;
+    constructor(readonly callback: ResizeObserverCallback) {
+      MeasuringObserver.instances.push(this);
+    }
+    observe(target: Element) {
+      this.target = target;
+    }
+    unobserve() {}
+    disconnect() {}
+  }
+
+  async function openReader(width: number) {
+    MeasuringObserver.instances = [];
+    vi.stubGlobal("ResizeObserver", MeasuringObserver);
+    const document = {
+      id: "matter-document",
+      title: "Advice note.png",
+      description: null,
+      folderId: null,
+      isPrimary: false,
+      isConfidential: false,
+      archivedAt: null,
+      createdBy: { id: MEMBER.id, displayName: MEMBER.displayName, image: null, archived: false },
+      createdAt: "2026-09-01T09:00:00.000Z",
+      updatedAt: "2026-09-01T09:00:00.000Z",
+      versions: [
+        {
+          id: "matter-version",
+          versionNumber: 1,
+          kind: "general",
+          source: "uploaded",
+          comparedFromVersionNumber: null,
+          comparedToVersionNumber: null,
+          note: null,
+          originalFilename: "Advice note.png",
+          mimeType: "image/png",
+          renderFamily: "image",
+          byteSize: 100,
+          checksumSha256: "a".repeat(64),
+          isCurrent: true,
+          isExecuted: false,
+          createdAt: "2026-09-01T09:00:00.000Z",
+          uploadedBy: {
+            id: MEMBER.id,
+            displayName: MEMBER.displayName,
+            image: null,
+            archived: false,
+          },
+        },
+      ],
+    };
+    mountApi(MEMBER, { parent: null, children: [], related: [] }, (call) => {
+      if (call.url.pathname === "/api/v1/matters/12/documents")
+        return json(200, { documents: [document], nextCursor: null });
+      return undefined;
+    });
+    const { router } = renderAt("/matters/12/documents");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Advice note.png" }));
+    const panel = await screen.findByRole("complementary", { name: "Advice note.png, version 1" });
+    const observer = MeasuringObserver.instances.find(
+      (item) => item.target === panel.parentElement,
+    )!;
+    expect(observer).toBeDefined();
+    act(() => observer.callback([{ contentRect: { width } }] as ResizeObserverEntry[], observer));
+    return { user, router, observer, panel };
+  }
+
+  it("closes an overlay reader when switching tabs and does not reopen it on return", async () => {
+    const { user, router, panel } = await openReader(900);
+    expect(panel.parentElement?.querySelector("[inert]")).not.toBeNull();
+    await user.click(screen.getByRole("link", { name: "Key dates" }));
+    await waitFor(() => expect(panel).not.toBeInTheDocument());
+    expect(router.state.location.pathname).toBe("/matters/12/key-dates");
+    await user.click(
+      screen
+        .getAllByRole("link", { name: "Documents" })
+        .find((link) => link.getAttribute("href") === "/matters/12/documents")!,
+    );
+    expect(
+      screen.queryByRole("complementary", { name: "Advice note.png, version 1" }),
+    ).not.toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Advice note.png" })).toBeVisible();
+  });
+
+  it("keeps a docked reader alongside other tabs and closes it only on navigation after narrowing", async () => {
+    const { user, router, observer, panel } = await openReader(1600);
+    await user.click(screen.getByRole("link", { name: "Key dates" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/matters/12/key-dates"));
+    await screen.findByRole("button", { name: "Add date" });
+    expect(panel).toBeInTheDocument();
+    act(() =>
+      observer.callback([{ contentRect: { width: 900 } }] as ResizeObserverEntry[], observer),
+    );
+    expect(panel).toBeInTheDocument();
+    await user.click(screen.getByRole("link", { name: "Tasks" }));
+    await waitFor(() => expect(panel).not.toBeInTheDocument());
   });
 });

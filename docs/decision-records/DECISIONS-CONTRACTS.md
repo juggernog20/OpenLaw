@@ -441,3 +441,29 @@ The Team panel groups entries by person: one avatar and name, with every held ro
 | CTR-022 | Confidential flag: the Owner joins, and CMT-007 replaces the watcher grant       | Accepted                                                                                          |
 | CTR-023 | Confidential team: the roster is an audience decision (extends CTR-022)          | Accepted                                                                                          |
 | CTR-024 | Bounding the lists: keyset cursor, server-fixed page of 50, and no total         | Accepted                                                                                          |
+
+### CTR-005 UX review addendum — record Due date (2026-09-06; superseded)
+
+Contracts have an optional Due date for completing the overall work, separate from effective
+date, expiry date, Key dates, and Task deadlines. It is a nullable civil date, set in creation
+(including linked Contracts, renewal records, and intake conversion) or edited and cleared
+from Overview with the shared date picker. Existing Contracts start without a date.
+
+The field follows legal-managed edit permissions and archive guards. Changes appear in
+record activity. Term changes leave it unchanged; renewal records do not inherit it.
+
+### CTR-005 UX review addendum — Next deadline replaces record Due date (2026-09-07)
+
+A record can have several concurrent deadlines. Remove the standalone Due date from the
+record schema, creation, intake conversion, and Overview. Task due dates and Key dates
+remain the editable sources. This supersedes the previous record Due date addendum.
+
+Next deadline is derived from upcoming Key dates and unfinished Tasks with a date.
+Overdue Tasks remain candidates until completed; past Key dates and completed Tasks
+are excluded. Closed Matters, ended Contracts, and archived records have no active Next
+deadline. Contract candidates also include expiry and notice dates, as on Key dates.
+
+Lists link each deadline to its source tab. Matter Home cards and the Matter deadline
+filter use the same derivation. This supersedes the earlier exclusion of Task dates from
+Next deadline; Tasks still have their own tab and reminder behavior. No date is copied
+from Tasks into the Key dates table.

@@ -308,7 +308,7 @@ describe("the envelope (I2)", () => {
     });
     renderAt("/inbox/45");
 
-    const card = await screen.findByRole("region", { name: "Outcome" });
+    const card = await screen.findByRole("region", { name: "Status" });
     expect(within(card).getByText("Converted")).toBeInTheDocument();
     expect(within(card).getByRole("link", { name: "C-12" })).toHaveAttribute(
       "href",
@@ -332,7 +332,7 @@ describe("the envelope (I2)", () => {
     });
     renderAt("/inbox/45");
 
-    const card = await screen.findByRole("region", { name: "Outcome" });
+    const card = await screen.findByRole("region", { name: "Status" });
     expect(within(card).getByText("Declined")).toBeInTheDocument();
     expect(within(card).getByText("Procurement owns vendor paper under $10k.")).toBeInTheDocument();
   });
@@ -358,17 +358,17 @@ describe("the envelope (I2)", () => {
     });
     renderAt("/inbox/45");
 
-    const card = await screen.findByRole("region", { name: "Outcome" });
+    const card = await screen.findByRole("region", { name: "Status" });
     expect(within(card).getByText("Converted")).toBeInTheDocument();
     expect(screen.queryByText("In progress")).not.toBeInTheDocument();
   });
 
-  it("draws no Outcome card while the Request is still undecided", async () => {
+  it("draws no Status card while the Request is still undecided", async () => {
     stubApi({ signedIn: MEMBER, extra: pageApi(detailApi(detail())) });
     renderAt("/inbox/45");
 
     await screen.findByRole("heading", { level: 1 });
-    expect(screen.queryByRole("region", { name: "Outcome" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Status" })).not.toBeInTheDocument();
   });
 
   it("names a converted Request's record as absent when the server withheld it (DD-014)", async () => {
@@ -380,7 +380,7 @@ describe("the envelope (I2)", () => {
     });
     renderAt("/inbox/45");
 
-    const card = await screen.findByRole("region", { name: "Outcome" });
+    const card = await screen.findByRole("region", { name: "Status" });
     expect(within(card).getByText("Converted")).toBeInTheDocument();
     // The screen never has a reference it must decide not to render.
     expect(within(card).queryByRole("link")).not.toBeInTheDocument();

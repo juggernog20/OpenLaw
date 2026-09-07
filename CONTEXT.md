@@ -136,7 +136,7 @@ _Avoid_: queue, triage list, backlog
 The outcome chosen when a Request is picked up — Convert, Resolve, or Decline. There is no parked intermediate state [INT-007].
 
 **Convert**:
-Turning a Request into the Matter or Contract its request type already targets. Triage confirms the target; it never classifies [DD-018, INT-006].
+Turning a Request into a Matter or Contract. The Request type supplies defaults; the Legal Team Member may change the target Type, title, priority, and attached Fields before conversion [INT-002 UX review addendum].
 
 **Re-target**:
 The exception path — converting a mis-routed Request to the other kind, losslessly [DD-018].
@@ -246,18 +246,18 @@ A named deadline on a Matter or Contract — a date, a label, and an optional no
 _Avoid_: milestone, custom date, important date
 
 **Next deadline**:
-The earliest date that has not yet passed on a record's deadline surface — a date falling today still counts. On a Contract that surface is the union of its key dates, its expiry date, and its derived notice deadline, so the next deadline may be any of the three. A record whose every date has passed has none [CTR-009, MTR-004].
+The earliest upcoming Key date or unfinished dated Task, including overdue Tasks. Contracts also include expiry and notice dates. Closed Matters, ended Contracts and archived records have none [CTR-005 and MTR-016 UX review addenda, 2026-09-07].
 _Avoid_: due date, upcoming date, next date
 
 **Task**:
-A lightweight checklist item. Deliberately not an entity — no comments, no status beyond done, and task due dates never feed deadline surfaces [MTR-005, CTR-017].
+A lightweight checklist item with no comments or status beyond done. Unfinished dated Tasks feed Next deadline, including overdue Tasks [MTR-005, CTR-017, superseded by the 2026-09-07 Next deadline addenda].
 
 **Obligation**:
 A recurring entity-level compliance item — a licence renewal, annual filing, or registered-agent renewal — rolled forward only on human confirmation [ENT-006].
 _Avoid_: task, deadline, compliance item
 
 **Urgency**:
-What a requester supplies on a Request. It maps 1:1 to **priority** at conversion; **risk** is never requester-set [INT-002, MTR-012].
+What a requester supplies on a Request. It defaults **priority** at conversion, which the Legal Team Member may edit; **risk** is never requester-set [INT-002 UX review addendum, MTR-012].
 
 **Deflection link**:
 An Administrator-configured label and absolute `http` or `https` web address in the portal's "Before you submit…" panel, there to answer a question before it becomes a Request. Its **placement** is either the portal home — everybody sees it whatever they came to ask — or one request type, which shows it on that form alone. A deflection link is removed rather than archived: nothing points at one and there is no history to keep [INT-004].
@@ -317,7 +317,7 @@ _Avoid_: approval task, sign-off item, approval step, reviewer
 >
 > **Dev:** "And triage picks whether it becomes a Matter or a Contract?"
 >
-> **Domain expert:** "Never. The **request type** already targets one or the other — the admin bound that when they configured the form. Triage confirms. If it's genuinely wrong you **Re-target**, but that's the exception, not the flow."
+> **Domain expert:** "The **Request type** supplies the default. Legal can change the Type, title, priority and attached Fields during **Convert**. Choosing the other kind is **Re-target**."
 >
 > **Dev:** "The form asks who we're contracting with. Is that an **Entity**?"
 >
@@ -335,4 +335,4 @@ _Avoid_: approval task, sign-off item, approval step, reviewer
 - **"Privileged"** was explicitly rejected as the Tier 1 label, to avoid implying a formal attorney-client privilege determination and creating discovery-awkward artifacts. Use **Legal Only** [DD-016].
 - **"status" vs "stage"** was a real duplication in the contract mocks — two fields for one datum. Resolved: one stored `status_id`, stage derived from it [CTR-001].
 - **"urgency" vs "priority"** are separate on purpose: urgency is what the requester claims, priority is what legal holds. They map 1:1 at conversion and diverge thereafter [INT-002].
-- **"deadline"** must not cover task due dates. Only **Key dates** (plus a contract's expiry and derived notice date) feed deadline surfaces [MTR-005].
+- **"deadline"** includes unfinished Task due dates in **Next deadline**, alongside upcoming Key dates and Contract term dates. Tasks remain separate from Key dates and keep their own reminder behavior [2026-09-07 Next deadline addenda].

@@ -581,7 +581,7 @@ describe("the contract record's Approvals section", () => {
     await user.click(await screen.findByRole("button", { name: "Actions for Sarah Chen" }));
     await user.click(await screen.findByRole("menuitem", { name: "Approve" }));
     const dialog = await screen.findByRole("dialog");
-    await user.type(within(dialog).getByLabelText("Note (optional)"), "Fine by me.");
+    await user.type(within(dialog).getByLabelText("Note"), "Fine by me.");
     await user.click(within(dialog).getByRole("button", { name: "Approve" }));
 
     await waitFor(() => expect(api.writes).toHaveLength(1));

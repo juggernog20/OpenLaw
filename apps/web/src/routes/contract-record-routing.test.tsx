@@ -346,8 +346,8 @@ describe("the child and successor vehicles (CTR-007 §3, §4)", () => {
     ).toBeInTheDocument();
     const create = within(await createDialog());
     // The two fields this dialog draws are seeded from the record.
-    expect(create.getByLabelText("Title")).toHaveValue("Acme master services agreement");
-    expect(create.getByLabelText("Contract type")).toHaveValue("t-msa");
+    expect(create.getByLabelText(/^Title\*?$/)).toHaveValue("Acme master services agreement");
+    expect(create.getByLabelText(/^Contract type\*?$/)).toHaveValue("t-msa");
     // And CTR-015's stance is said rather than left to be discovered.
     expect(
       create.getByText(
@@ -369,10 +369,10 @@ describe("the child and successor vehicles (CTR-007 §3, §4)", () => {
 
     await screen.findByRole("heading", { name: "Create successor contract" });
     const create = within(await createDialog());
-    const title = create.getByLabelText("Title");
+    const title = create.getByLabelText(/^Title\*?$/);
     await userEvent.clear(title);
     await userEvent.type(title, "Acme MSA 2027");
-    await userEvent.selectOptions(create.getByLabelText("Contract type"), "t-nda");
+    await userEvent.selectOptions(create.getByLabelText(/^Contract type\*?$/), "t-nda");
     await userEvent.click(create.getByRole("button", { name: "Create" }));
 
     await waitFor(() =>
@@ -414,7 +414,7 @@ describe("the child and successor vehicles (CTR-007 §3, §4)", () => {
     expect(
       await create.findByText("This contract is archived. Restore it before editing."),
     ).toBeInTheDocument();
-    expect(create.getByLabelText("Title")).toHaveValue("Acme master services agreement");
+    expect(create.getByLabelText(/^Title\*?$/)).toHaveValue("Acme master services agreement");
     expect(router.state.location.pathname).toBe("/contracts/42");
   });
 

@@ -135,9 +135,6 @@ export function MatterKeyDatesCard({
                 <th scope="col" className="px-4 py-2 text-start font-medium">
                   <FormattedMessage id="matterKeyDates.event" defaultMessage="Event" />
                 </th>
-                <th scope="col" className="w-28 px-4 py-2 text-start font-medium">
-                  <FormattedMessage id="matterKeyDates.state" defaultMessage="State" />
-                </th>
                 {!frozen && (
                   <th scope="col" className="w-16 px-4 py-2">
                     <span className="sr-only">
@@ -156,19 +153,6 @@ export function MatterKeyDatesCard({
                       <span>{row.label}</span>
                       {row.note && <span className="text-xs text-muted">{row.note}</span>}
                     </div>
-                  </td>
-                  <td className="px-4 py-2.5">
-                    <span
-                      className={`inline-flex rounded-pill px-2 py-0.5 text-xs font-medium ${row.overdue ? "bg-status-danger-bg text-status-danger-fg" : row.isNext ? "bg-status-warning-bg text-status-warning-fg" : "bg-status-neutral-bg text-status-neutral-fg"}`}
-                    >
-                      {row.overdue ? (
-                        <FormattedMessage id="matterKeyDates.overdue" defaultMessage="Overdue" />
-                      ) : row.isNext ? (
-                        <FormattedMessage id="matterKeyDates.next" defaultMessage="Next" />
-                      ) : (
-                        <FormattedMessage id="matterKeyDates.upcoming" defaultMessage="Upcoming" />
-                      )}
-                    </span>
                   </td>
                   {!frozen && (
                     <td className="px-4 py-2.5 text-end">
@@ -335,11 +319,12 @@ function MatterKeyDateDialog({
           }}
         >
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="matter-key-date-date">
+            <Label htmlFor="matter-key-date-date" required>
               <FormattedMessage id="matterKeyDates.date" defaultMessage="Date" />
             </Label>
             <Input
               id="matter-key-date-date"
+              aria-required="true"
               type="date"
               value={date}
               autoFocus
@@ -350,11 +335,12 @@ function MatterKeyDateDialog({
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="matter-key-date-label">
+            <Label htmlFor="matter-key-date-label" required>
               <FormattedMessage id="matterKeyDates.event" defaultMessage="Event" />
             </Label>
             <Input
               id="matter-key-date-label"
+              aria-required="true"
               value={label}
               maxLength={MAX_KEY_DATE_LABEL_LENGTH}
               onChange={(event) => {
@@ -365,7 +351,7 @@ function MatterKeyDateDialog({
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="matter-key-date-note">
-              <FormattedMessage id="matterKeyDates.note" defaultMessage="Note (optional)" />
+              <FormattedMessage id="matterKeyDates.note" defaultMessage="Note" />
             </Label>
             <textarea
               id="matter-key-date-note"

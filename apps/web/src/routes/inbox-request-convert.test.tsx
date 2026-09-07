@@ -1,24 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * Convert on the staff request detail (#420), through the real route
- * table with the standard fetch stub.
- *
- * The screen's own subjects — the envelope, the values, the paper, the
- * thread — are `inbox-request.test.tsx`'s, and the disposition
- * scaffold's is `inbox-request-decline.test.tsx`'s. This suite is
- * Convert's own shape: that the target is confirmed and not offered
- * where the Administrator bound one, that the picker appears for the
- * one choice the form deferred, that a re-target says so, that the
- * prefill is drawn and what will not carry is named, that a
- * hard-required gap is prompted before the seam is asked, and that a
- * lost race names the record the winner made.
- *
- * What the seam does with a conversion — the contract, the carry, the
- * narration, the row lock — is the API harness's subject
- * (`convert.test.ts`). What this suite asks of it is that the screen
- * sends what it drew and reads the Request again afterwards.
- */
+/** Conversion prefills, editable values, validation and disposition outcomes. */
 
 import { describe, expect, it } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
@@ -246,7 +228,7 @@ describe("the Triage menu (INT-007)", () => {
       ),
     );
     expect(within(await subbar()).queryByRole("button", { name: "Triage" })).toBeNull();
-    // What was decided is the Outcome card's to say, and it links to the
+    // What was decided is the Status card's to say, and it links to the
     // record the ask became.
     expect(await screen.findByRole("link", { name: "C-51" })).toBeInTheDocument();
   });
@@ -259,31 +241,27 @@ describe("the prefill (INT-002, MTR-012)", () => {
     const dialog = await openConvert(user);
     expect(within(dialog).getByLabelText(/^Title/)).toHaveValue("Northwind Labs mutual NDA");
     expect(within(dialog).getByText(/submitted by Tom Iwu/)).toBeInTheDocument();
-    // I3's own note, and the promise the milestone is for.
-    expect(within(dialog).getByText(/nothing is re-keyed/)).toBeInTheDocument();
+    expect(within(dialog).queryByText(/nothing is re-keyed/)).toBeNull();
   });
 
-  it("states the priority the urgency maps to, and offers no risk", async () => {
+  it("prefills editable priority from urgency", async () => {
     const user = userEvent.setup();
     open(requestApi());
     const dialog = await openConvert(user);
     expect(within(dialog).getByText("Priority")).toBeInTheDocument();
     expect(within(dialog).getByText("High")).toBeInTheDocument();
-    expect(within(dialog).getByText(/Risk stays yours to set on the record/)).toBeInTheDocument();
+    expect(within(dialog).getByLabelText(/^Priority\*?$/)).toHaveValue("high");
   });
 
-  it("names what carries, with the value it will land as", async () => {
+  it("prefills editable carried values", async () => {
     const user = userEvent.setup();
     open(requestApi());
     const dialog = await openConvert(user);
-    expect(within(dialog).getByText("Carries into the contract")).toBeInTheDocument();
+    expect(within(dialog).getByLabelText(/^Counterparty/)).toHaveValue("Northwind Labs");
     expect(within(dialog).getByText("Counterparty")).toBeInTheDocument();
-    expect(within(dialog).getByText("Northwind Labs")).toBeInTheDocument();
-    // Stated, not re-typed: a carried value gets no box.
-    expect(within(dialog).queryByLabelText(/^Counterparty/)).toBeNull();
   });
 
-  it("draws no repair box for live carried references", async () => {
+  it("prefills editable live references with their names", async () => {
     const user = userEvent.setup();
     open(
       requestApi(
@@ -307,8 +285,36 @@ describe("the prefill (INT-002, MTR-012)", () => {
     const dialog = await openConvert(user);
     expect(within(dialog).getByText("Tom Iwu")).toBeInTheDocument();
     expect(within(dialog).getByText("Northwind GmbH")).toBeInTheDocument();
-    expect(within(dialog).queryByLabelText(/^Requesting manager/)).toBeNull();
-    expect(within(dialog).queryByLabelText(/^Contracting entity/)).toBeNull();
+    expect(within(dialog).getByLabelText(/^Requesting manager/)).toHaveValue("u7");
+    expect(within(dialog).getByLabelText(/^Contracting entity/)).toHaveValue("e1");
+  });
+
+  it("saves an edited type, title and priority, and explicitly clears a carried value", async () => {
+    const user = userEvent.setup();
+    const api = requestApi();
+    open(api);
+    const dialog = await openConvert(user);
+    await user.clear(within(dialog).getByLabelText(/^Counterparty/));
+    await user.selectOptions(within(dialog).getByLabelText(/^Contract type/), "ct-msa");
+    await user.type(within(dialog).getByLabelText(/^Governing law/), "England");
+    await user.selectOptions(within(dialog).getByLabelText(/^Contract type/), "ct-nda");
+    expect(within(dialog).getByLabelText(/^Counterparty/)).toHaveValue("");
+    await user.selectOptions(within(dialog).getByLabelText(/^Contract type/), "ct-msa");
+    expect(within(dialog).getByLabelText(/^Governing law/)).toHaveValue("England");
+    await user.clear(within(dialog).getByLabelText(/^Title/));
+    await user.type(within(dialog).getByLabelText(/^Title/), "Revised MSA");
+    await user.selectOptions(within(dialog).getByLabelText(/^Priority\*?$/), "low");
+    await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
+    await waitFor(() =>
+      expect(api.conversions).toEqual([
+        {
+          title: "Revised MSA",
+          contractTypeId: "ct-msa",
+          priority: "low",
+          customFields: { counterparty: null, governing_law: "England" },
+        },
+      ]),
+    );
   });
 
   it("draws a box for each archived carry and posts both live overrides", async () => {
@@ -342,6 +348,8 @@ describe("the prefill (INT-002, MTR-012)", () => {
     await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
     await waitFor(() => expect(api.conversions).toHaveLength(1));
     expect(api.conversions[0]).toEqual({
+      contractTypeId: "ct-nda",
+      priority: "high",
       title: "Northwind Labs mutual NDA",
       customFields: { requesting_manager: "u2", contracting_entity: "e2" },
     });
@@ -388,11 +396,11 @@ describe("the prefill (INT-002, MTR-012)", () => {
     expect(within(dialog).queryByText("Does not carry into the contract")).toBeNull();
 
     await user.selectOptions(within(dialog).getByLabelText(/^Contract type/), "ct-nda");
-    expect(within(dialog).getByText("Carries into the contract")).toBeInTheDocument();
+    expect(within(dialog).getByLabelText(/^Counterparty/)).toHaveValue("Northwind Labs");
     expect(within(dialog).getByText("Does not carry into the contract")).toBeInTheDocument();
   });
 
-  it("names what does not carry, and says it stays on the request", async () => {
+  it("names fields that do not carry without explanatory copy", async () => {
     // The INT-002 M19/7 addendum, paid where somebody can see it before
     // they press: the NDA contract type has no field for the deal desk
     // region, so it has nowhere to land.
@@ -401,32 +409,31 @@ describe("the prefill (INT-002, MTR-012)", () => {
     const dialog = await openConvert(user);
     expect(within(dialog).getByText("Does not carry into the contract")).toBeInTheDocument();
     expect(within(dialog).getByText("Deal desk region")).toBeInTheDocument();
-    expect(within(dialog).getByText(/Nothing is deleted/)).toBeInTheDocument();
+    expect(within(dialog).queryByText(/Nothing is deleted/)).toBeNull();
   });
 });
 
-describe("the target is confirmed, never classified (DD-018)", () => {
-  it("states the bound type and offers no picker", async () => {
+describe("editable conversion targets", () => {
+  it("prefills the configured type in an editable picker", async () => {
     const user = userEvent.setup();
     open(requestApi());
     const dialog = await openConvert(user);
     expect(within(dialog).getByText("NDA")).toBeInTheDocument();
-    expect(
-      within(dialog).getByText(/Triage confirms the routing rather than choosing it/),
-    ).toBeInTheDocument();
-    expect(within(dialog).queryByLabelText(/^Contract type/)).toBeNull();
+    expect(within(dialog).getByLabelText(/^Contract type/)).toHaveValue("ct-nda");
   });
 
-  it("sends no contract type on a confirmed target", async () => {
+  it("sends the selected type and priority", async () => {
     const user = userEvent.setup();
     const api = requestApi();
     open(api);
     const dialog = await openConvert(user);
     await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
     await waitFor(() => expect(api.conversions).toHaveLength(1));
-    // The seam reads its own configuration; a body naming the type would
-    // be the client asserting the routing.
-    expect(api.conversions[0]).toEqual({ title: "Northwind Labs mutual NDA" });
+    expect(api.conversions[0]).toEqual({
+      title: "Northwind Labs mutual NDA",
+      contractTypeId: "ct-nda",
+      priority: "high",
+    });
   });
 
   it("asks a module-only target for the type the form deferred", async () => {
@@ -445,9 +452,6 @@ describe("the target is confirmed, never classified (DD-018)", () => {
     );
     open(api);
     const dialog = await openConvert(user);
-    expect(
-      within(dialog).getByText(/This request type left the contract type to conversion/),
-    ).toBeInTheDocument();
 
     // Nothing is sent until the one choice is made.
     await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
@@ -458,6 +462,7 @@ describe("the target is confirmed, never classified (DD-018)", () => {
     await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
     await waitFor(() => expect(api.conversions).toHaveLength(1));
     expect(api.conversions[0]).toEqual({
+      priority: "high",
       title: "Northwind Labs mutual NDA",
       contractTypeId: "ct-nda",
     });
@@ -513,6 +518,8 @@ describe("the target is confirmed, never classified (DD-018)", () => {
     await user.click(within(dialog).getByRole("button", { name: "Convert to matter" }));
     await waitFor(() => expect(api.conversions).toHaveLength(1));
     expect(api.conversions[0]).toEqual({
+      matterTypeId: "mt-dispute",
+      priority: "high",
       title: "Northwind Labs mutual NDA",
       customFields: { governing_law: "DIFC Courts" },
     });
@@ -533,18 +540,20 @@ describe("the target is confirmed, never classified (DD-018)", () => {
     );
     open(api);
     const dialog = await openDisposition(user, "Convert to matter");
-    const template = within(dialog).getByLabelText(/^Template/);
-    expect(template).toHaveValue("tpl-employment");
+    const template = within(dialog).getByLabelText(/^Matter template/);
+    expect(template).toHaveValue("");
     expect(
       within(template)
         .getAllByRole("option")
         .map((option) => option.textContent),
     ).toEqual(["No template", "Employment response"]);
-    expect(within(dialog).getByText("Template adds 2 tasks and 1 key date.")).toBeInTheDocument();
+    expect(within(dialog).queryByText(/Template adds/)).toBeNull();
     expect(within(dialog).getByLabelText(/^Title/)).toHaveValue("Northwind Labs mutual NDA");
-    expect(within(dialog).queryByLabelText(/^Counterparty/)).toBeNull();
+    expect(within(dialog).getByLabelText(/^Counterparty/)).toHaveValue("Northwind Labs");
 
     const forum = within(dialog).getByLabelText(/^Governing law/);
+    expect(forum).toHaveValue("");
+    await user.selectOptions(template, "tpl-employment");
     expect(forum).toHaveValue("Template forum");
     await user.selectOptions(template, "");
     expect(forum).toHaveValue("");
@@ -565,6 +574,8 @@ describe("the target is confirmed, never classified (DD-018)", () => {
     await user.click(within(dialog).getByRole("button", { name: "Convert to matter" }));
     await waitFor(() => expect(api.conversions).toHaveLength(1));
     expect(api.conversions[0]).toEqual({
+      matterTypeId: "mt-employment",
+      priority: "high",
       title: "Northwind Labs mutual NDA",
       templateId: "tpl-employment",
       customFields: { governing_law: "DIFC Courts" },
@@ -579,18 +590,23 @@ describe("the target is confirmed, never classified (DD-018)", () => {
     await user.click(within(dialog).getByRole("button", { name: "Convert to matter instead" }));
     const typePicker = within(dialog).getByLabelText(/^Matter type/);
     await user.selectOptions(typePicker, "mt-employment");
-    expect(within(dialog).getByLabelText(/^Template/)).toHaveValue("tpl-employment");
+    expect(within(dialog).getByLabelText(/^Matter template/)).toHaveValue("");
+    expect(within(dialog).getByLabelText(/^Governing law/)).toHaveValue("");
+    await user.selectOptions(within(dialog).getByLabelText(/^Matter template/), "tpl-employment");
+    expect(within(dialog).getByLabelText(/^Matter template/)).toHaveValue("tpl-employment");
     expect(within(dialog).getByLabelText(/^Governing law/)).toHaveValue("Template forum");
 
     await user.selectOptions(typePicker, "mt-dispute");
-    expect(within(dialog).getByLabelText(/^Template/)).toHaveValue("");
+    await user.selectOptions(typePicker, "mt-employment");
+    expect(within(dialog).getByLabelText(/^Matter template/)).toHaveValue("");
     expect(within(dialog).getByLabelText(/^Governing law/)).toHaveValue("");
     await user.type(within(dialog).getByLabelText(/^Governing law/), "DIFC Courts");
     await user.click(within(dialog).getByRole("button", { name: "Convert to matter" }));
     await waitFor(() => expect(api.conversions).toHaveLength(1));
     expect(api.conversions[0]).toEqual({
+      priority: "high",
       title: "Northwind Labs mutual NDA",
-      matterTypeId: "mt-dispute",
+      matterTypeId: "mt-employment",
       customFields: { governing_law: "DIFC Courts" },
     });
   });
@@ -610,13 +626,15 @@ describe("the target is confirmed, never classified (DD-018)", () => {
     );
     open(api);
     const dialog = await openDisposition(user, "Convert to matter");
+    await user.selectOptions(within(dialog).getByLabelText(/^Matter template/), "tpl-employment");
     expect(within(dialog).getByLabelText(/^Governing law/)).toHaveValue("Template forum");
     await user.click(within(dialog).getByRole("button", { name: "Convert to matter" }));
     await waitFor(() => expect(api.conversions).toHaveLength(1));
     expect(api.conversions[0]).toEqual({
+      matterTypeId: "mt-employment",
+      priority: "high",
       title: "Northwind Labs mutual NDA",
       templateId: "tpl-employment",
-      customFields: { governing_law: "Template forum" },
     });
   });
 
@@ -628,9 +646,7 @@ describe("the target is confirmed, never classified (DD-018)", () => {
     await user.click(
       within(contractDialog).getByRole("button", { name: "Convert to matter instead" }),
     );
-    expect(
-      within(contractDialog).getByText(/does not target a matter.*re-target/),
-    ).toBeInTheDocument();
+
     await user.selectOptions(within(contractDialog).getByLabelText(/^Matter type/), "mt-dispute");
     await user.type(within(contractDialog).getByLabelText(/^Governing law/), "DIFC Courts");
     await user.click(within(contractDialog).getByRole("button", { name: "Convert to matter" }));
@@ -655,9 +671,7 @@ describe("the target is confirmed, never classified (DD-018)", () => {
     await user.click(
       within(matterDialog).getByRole("button", { name: "Convert to contract instead" }),
     );
-    expect(
-      within(matterDialog).getByText(/does not target a contract.*re-target/),
-    ).toBeInTheDocument();
+
     await user.selectOptions(within(matterDialog).getByLabelText(/^Contract type/), "ct-nda");
     await user.click(within(matterDialog).getByRole("button", { name: "Convert to contract" }));
     await waitFor(() => expect(matterApi.conversions).toHaveLength(1));
@@ -684,9 +698,6 @@ describe("the gaps the form did not collect (CTR-016, MTR-014)", () => {
     const dialog = await openConvert(user);
     const gap = within(dialog).getByLabelText(/^Governing law/);
     expect(gap).toBeInTheDocument();
-    expect(
-      within(dialog).getByText(/Required on this contract type. The form did not collect it./),
-    ).toBeInTheDocument();
 
     await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
     expect(await within(dialog).findByRole("alert")).toHaveTextContent(
@@ -698,6 +709,8 @@ describe("the gaps the form did not collect (CTR-016, MTR-014)", () => {
     await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
     await waitFor(() => expect(api.conversions).toHaveLength(1));
     expect(api.conversions[0]).toEqual({
+      contractTypeId: "ct-msa",
+      priority: "high",
       title: "Northwind Labs mutual NDA",
       customFields: { governing_law: "England and Wales" },
     });
@@ -720,19 +733,40 @@ describe("what happens after the press (INT-007)", () => {
   it("repaints the page as converted, with the record it became", async () => {
     const user = userEvent.setup();
     const api = requestApi();
-    open(api);
+    let attempts = 0;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/contracts/51/documents" && call.method === "POST") {
+          expect(api.conversions).toHaveLength(1);
+          attempts++;
+          return attempts === 1
+            ? json(500, { detail: "Please retry this upload." })
+            : json(201, { document: { id: "converted-doc" } });
+        }
+        return api.handler(call);
+      },
+    });
+    renderAt("/inbox/45");
     const dialog = await openConvert(user);
+    await user.upload(
+      within(dialog).getByLabelText("Attach documents"),
+      new File(["advice"], "advice.txt", { type: "text/plain" }),
+    );
     await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
+    await screen.findByText("Please retry this upload.");
+    await user.click(screen.getByRole("button", { name: "Retry failed uploads" }));
+    await waitFor(() => expect(attempts).toBe(2));
 
     // The write answers the whole envelope and the page still re-reads:
-    // the Outcome card, the status pill, and the thread's watermark all
+    // the Status card, the status pill, and the thread's watermark all
     // hang off the loader.
     expect(await screen.findByRole("link", { name: "C-51" })).toBeInTheDocument();
     await waitFor(() => expect(api.reads).toBeGreaterThan(1));
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("links a matter conversion from the Outcome card", async () => {
+  it("links a matter conversion from the Status card", async () => {
     const user = userEvent.setup();
     const api = requestApi(
       request({

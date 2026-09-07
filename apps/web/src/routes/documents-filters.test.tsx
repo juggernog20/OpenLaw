@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** M26/3's URL-backed fixed filters through the real Documents route. */
+/** Shared filters, saved views, and URL state through the real Documents route. */
 import { describe, expect, it } from "vitest";
-import { screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { pickDate } from "../testing/dates";
 import { json, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const MEMBER = {
@@ -99,7 +98,10 @@ function surface({
     if (call.url.pathname === "/api/v1/documents/options" && call.method === "GET") {
       optionReads += 1;
       return json(200, {
-        counterparties: [{ id: "counterparty-1", name: "Northwind" }],
+        counterparties: [
+          { id: "counterparty-1", name: "Northwind" },
+          { id: "counterparty-2", name: "Contoso" },
+        ],
         uploaders: [
           { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
           { id: "u3", displayName: "Blair Uploader", image: null, archived: false },
@@ -117,6 +119,7 @@ function surface({
             number: null,
             title: "UK Subsidiary Ltd",
           },
+          { reference: "knowledge-1", kind: "knowledge_item", number: null, title: "NDA playbook" },
         ],
       });
     }
@@ -141,19 +144,113 @@ async function expectQuery(queries: URLSearchParams[], key: string, value: strin
   });
 }
 
-describe("the Documents fixed filter strip", () => {
+async function openFilter(user: ReturnType<typeof userEvent.setup>, name: string) {
+  await user.click(await screen.findByRole("button", { name: /^Filter/ }));
+  await user.click(
+    within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+      name: new RegExp(`^${name}`),
+    }),
+  );
+}
+
+async function choose(
+  user: ReturnType<typeof userEvent.setup>,
+  name: string,
+  value: string | RegExp,
+  single = false,
+) {
+  await openFilter(user, name);
+  await user.click(await screen.findByRole(single ? "radio" : "checkbox", { name: value }));
+  await user.click(screen.getByRole("button", { name: "Apply" }));
+}
+
+describe("the Documents shared filters", () => {
   it("filters by Entity owner and sends the opaque Entity record id", async () => {
     const user = userEvent.setup();
     const api = surface();
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/documents");
-    await user.click(await screen.findByRole("button", { name: "Entities" }));
+    await choose(user, "Owner", "Entities", true);
     await expectQuery(api.queries, "owner", "entity");
-    const record = screen.getByRole("combobox", { name: "Record" });
-    await user.type(record, "UK Subsidiary");
-    await user.click(await screen.findByRole("option", { name: "UK Subsidiary Ltd" }));
+    await choose(user, "Record", "UK Subsidiary Ltd", true);
     await expectQuery(api.queries, "record", "entity-1");
-    expect(record).toHaveValue("UK Subsidiary Ltd");
+    expect(screen.getByRole("button", { name: "Record: UK Subsidiary Ltd" })).toBeVisible();
+  });
+
+  it("selects several choices, restores them from a URL, and edits a chip", async () => {
+    const user = userEvent.setup();
+    const api = surface();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    const { router } = renderAt(
+      "/documents?format=pdf,word&kind=executed,draft_ours&counterparty=counterparty-1,counterparty-2&uploader=u2,u3",
+    );
+    expect(await screen.findByRole("button", { name: "Format: PDF, Word" })).toBeVisible();
+    expect(lastQuery(api.queries).get("kind")).toBe("executed,draft_ours");
+    expect(lastQuery(api.queries).get("counterparty")).toBe("counterparty-1,counterparty-2");
+    expect(lastQuery(api.queries).get("uploader")).toBe("u2,u3");
+    await user.click(screen.getByRole("button", { name: "Format: PDF, Word" }));
+    expect(screen.getByRole("checkbox", { name: "PDF" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Word" })).toBeChecked();
+    await user.click(screen.getByRole("checkbox", { name: "PDF" }));
+    await user.click(screen.getByRole("checkbox", { name: "Image" }));
+    await user.click(screen.getByRole("button", { name: "Apply" }));
+    await expectQuery(api.queries, "format", "word,image");
+    expect(new URLSearchParams(router.state.location.search).get("format")).toBe("word,image");
+    expect(lastQuery(api.queries).get("kind")).toBe("executed,draft_ours");
+  });
+
+  it("clears dependent record and folder filters when the owner changes", async () => {
+    const user = userEvent.setup();
+    const api = surface();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/documents?owner=contract&record=C-42&folder=folder-1");
+    await choose(user, "Owner", "Entities", true);
+    await expectQuery(api.queries, "owner", "entity");
+    expect(lastQuery(api.queries).get("record")).toBeNull();
+    expect(lastQuery(api.queries).get("folder")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Remove Record filter" })).not.toBeInTheDocument();
+    await openFilter(user, "Record");
+    expect(screen.queryByRole("radio", { name: /Meridian/ })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("radio", { name: "UK Subsidiary Ltd" }));
+    await user.click(screen.getByRole("button", { name: "Apply" }));
+    await expectQuery(api.queries, "record", "entity-1");
+  });
+
+  it("selects Knowledge records with the required owner and offers no folder", async () => {
+    const user = userEvent.setup();
+    const api = surface();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/documents?record=C-42&folder=root");
+    await choose(user, "Record", "NDA playbook", true);
+    await expectQuery(api.queries, "record", "knowledge-1");
+    expect(lastQuery(api.queries).get("owner")).toBe("knowledge_item");
+    expect(lastQuery(api.queries).get("folder")).toBeNull();
+    await user.click(screen.getByRole("button", { name: /^Filter/ }));
+    expect(screen.queryByRole("button", { name: "Folder" })).not.toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    await user.click(screen.getByRole("button", { name: "Remove Owner filter" }));
+    await expectQuery(api.queries, "owner", null);
+    expect(lastQuery(api.queries).get("record")).toBeNull();
+  });
+
+  it("retains the previous filters and URL if the server rejects the change", async () => {
+    const user = userEvent.setup();
+    const api = surface();
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/documents" && call.url.searchParams.has("format")
+          ? json(500, { detail: "Failed" })
+          : api.handler(call),
+    });
+    const { router } = renderAt("/documents");
+    await choose(user, "Format", "PDF");
+    expect(await screen.findByRole("alert")).toBeVisible();
+    expect(router.state.location.search).toBe("");
+    expect(screen.queryByRole("button", { name: "Format: PDF" })).not.toBeInTheDocument();
+    expect(
+      screen.getAllByRole("link", { name: "Master services agreement" }).length,
+    ).toBeGreaterThan(0);
   });
 
   it("writes every control and sort to both the server query and the URL", async () => {
@@ -162,50 +259,43 @@ describe("the Documents fixed filter strip", () => {
     stubApi({ signedIn: MEMBER, extra: api.handler });
     const { router } = renderAt("/documents");
 
-    await user.click(await screen.findByRole("button", { name: "Contracts" }));
+    await choose(user, "Owner", "Contracts", true);
     await expectQuery(api.queries, "owner", "contract");
     expect(router.state.location.search).toContain("owner=contract");
 
-    const record = screen.getByRole("combobox", { name: "Record" });
-    await user.type(record, "Meridian");
-    await user.click(await screen.findByRole("option", { name: /C-42.*Meridian services/ }));
+    await choose(user, "Record", /C-42.*Meridian services/, true);
     await expectQuery(api.queries, "record", "C-42");
     expect(router.state.location.search).toContain("record=C-42");
 
-    const folder = await screen.findByRole("combobox", { name: "Folder" });
-    await waitFor(() =>
-      expect(within(folder).getByRole("option", { name: "Executed" })).toBeVisible(),
-    );
-    await user.selectOptions(folder, "folder-1");
+    await choose(user, "Folder", "Executed", true);
     await expectQuery(api.queries, "folder", "folder-1");
     expect(router.state.location.search).toContain("folder=folder-1");
 
-    await user.selectOptions(screen.getByRole("combobox", { name: "Format" }), "pdf");
+    await choose(user, "Format", "PDF");
     await expectQuery(api.queries, "format", "pdf");
     expect(router.state.location.search).toContain("format=pdf");
 
-    await user.selectOptions(screen.getByRole("combobox", { name: "Kind" }), "executed");
+    await choose(user, "Kind", "Executed");
     await expectQuery(api.queries, "kind", "executed");
     expect(router.state.location.search).toContain("kind=executed");
 
-    await user.selectOptions(
-      screen.getByRole("combobox", { name: "Counterparty" }),
-      "counterparty-1",
-    );
+    await choose(user, "Counterparty", "Northwind");
     await expectQuery(api.queries, "counterparty", "counterparty-1");
     expect(router.state.location.search).toContain("counterparty=counterparty-1");
     expect(screen.getByRole("button", { name: "Remove Counterparty filter" })).toBeVisible();
 
-    await user.selectOptions(screen.getByRole("combobox", { name: "Uploader" }), "u3");
+    await choose(user, "Uploader", "Blair Uploader");
     await expectQuery(api.queries, "uploader", "u3");
     expect(router.state.location.search).toContain("uploader=u3");
     expect(screen.getByRole("button", { name: "Remove Uploader filter" })).toBeVisible();
 
-    await pickDate(user, "Uploaded from", "2026-06-01");
+    await openFilter(user, "Uploaded");
+    fireEvent.change(screen.getByLabelText("From"), { target: { value: "2026-06-01" } });
+    fireEvent.change(screen.getByLabelText("To"), { target: { value: "2026-06-30" } });
+    await user.click(screen.getByRole("button", { name: "Apply" }));
     await expectQuery(api.queries, "uploadedFrom", "2026-06-01");
     expect(router.state.location.search).toContain("uploadedFrom=2026-06-01");
 
-    await pickDate(user, "Uploaded to", "2026-06-30");
     await expectQuery(api.queries, "uploadedTo", "2026-06-30");
     expect(router.state.location.search).toContain("uploadedTo=2026-06-30");
 
@@ -225,24 +315,19 @@ describe("the Documents fixed filter strip", () => {
     );
 
     await expectQuery(api.queries, "owner", "contract");
-    expect(await screen.findByRole("button", { name: "Contracts" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-    expect(screen.getByRole("combobox", { name: "Format" })).toHaveValue("pdf");
-    expect(screen.getByRole("combobox", { name: "Kind" })).toHaveValue("executed");
-    expect(screen.getByRole("combobox", { name: "Counterparty" })).toHaveValue("counterparty-1");
-    expect(screen.getByRole("combobox", { name: "Uploader" })).toHaveValue("u2");
-    expect(screen.getByLabelText("Uploaded from")).toHaveTextContent("Jun 1, 2026");
+    expect(await screen.findByRole("button", { name: "Owner: Contracts" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Format: PDF" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Kind: Executed" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Counterparty: Northwind" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Uploader: Nadia Counsel" })).toBeVisible();
+    expect(screen.getByRole("button", { name: /Uploaded: From/ })).toBeVisible();
 
     await user.click(screen.getByRole("button", { name: "Remove Format filter" }));
     await expectQuery(api.queries, "format", null);
     expect(router.state.location.search).not.toContain("format=");
     expect(screen.queryByRole("button", { name: "Remove Format filter" })).not.toBeInTheDocument();
 
-    await user.type(screen.getByRole("combobox", { name: "Record" }), "Al");
-    await user.click(screen.getByRole("button", { name: "Clear all filters" }));
-    expect(screen.getByRole("combobox", { name: "Record" })).toHaveValue("");
+    await user.click(screen.getByRole("button", { name: "Clear all" }));
     await waitFor(() => {
       expect(lastQuery(api.queries).get("owner")).toBeNull();
       expect(lastQuery(api.queries).get("kind")).toBeNull();
@@ -261,7 +346,7 @@ describe("the Documents fixed filter strip", () => {
 
     expect(await screen.findByText("No documents match these filters.")).toBeVisible();
     expect(screen.getByText("Clear filters to return to the whole list.")).toBeVisible();
-    await user.click(screen.getByRole("button", { name: "Clear all filters" }));
+    await user.click(screen.getByRole("button", { name: "Clear all" }));
     expect(await screen.findByRole("link", { name: "Master services agreement" })).toBeVisible();
   });
 
@@ -271,7 +356,7 @@ describe("the Documents fixed filter strip", () => {
     stubApi({ signedIn: MEMBER, extra: api.handler });
     const { router } = renderAt("/documents");
 
-    await user.selectOptions(await screen.findByRole("combobox", { name: "Format" }), "pdf");
+    await choose(user, "Format", "PDF");
     await expectQuery(api.queries, "format", "pdf");
     await waitFor(() => expect(router.state.location.search).toContain("format=pdf"));
 
@@ -279,7 +364,9 @@ describe("the Documents fixed filter strip", () => {
     await expectQuery(api.queries, "format", null);
     await waitFor(() => {
       expect(router.state.location.search).toBe("");
-      expect(screen.getByRole("combobox", { name: "Format" })).toHaveValue("");
+      expect(
+        screen.queryByRole("button", { name: "Remove Format filter" }),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -289,12 +376,14 @@ describe("the Documents fixed filter strip", () => {
     stubApi({ signedIn: MEMBER, extra: api.handler });
     const { router } = renderAt("/documents?format=pdf");
 
-    expect(await screen.findByRole("combobox", { name: "Format" })).toHaveValue("pdf");
+    expect(await screen.findByRole("button", { name: "Format: PDF" })).toBeVisible();
     await user.click(screen.getByRole("link", { name: "Documents" }));
     await expectQuery(api.queries, "format", null);
     await waitFor(() => {
       expect(router.state.location.search).toBe("");
-      expect(screen.getByRole("combobox", { name: "Format" })).toHaveValue("");
+      expect(
+        screen.queryByRole("button", { name: "Remove Format filter" }),
+      ).not.toBeInTheDocument();
     });
   });
 });
@@ -312,13 +401,10 @@ describe("Documents saved-view query state", () => {
     expect(lastQuery(api.queries).get("uploader")).toBe("u2");
     expect(lastQuery(api.queries).get("includeArchived")).toBe("true");
     expect(lastQuery(api.queries).get("sort")).toBe("uploaded");
-    expect(screen.getByRole("switch", { name: "Show archived" })).toHaveAttribute(
-      "aria-checked",
-      "true",
-    );
+    expect(screen.getByRole("button", { name: "Remove Show archived filter" })).toBeVisible();
     await waitFor(() => expect(router.state.location.search).toContain("kind=executed"));
 
-    await user.selectOptions(screen.getByRole("combobox", { name: "Format" }), "pdf");
+    await choose(user, "Format", "PDF");
     await expectQuery(api.queries, "format", "pdf");
     expect(await screen.findByRole("button", { name: /Executed copies.*Modified/s })).toBeVisible();
 
@@ -344,30 +430,25 @@ describe("Documents saved-view query state", () => {
     expect(lastQuery(api.queries).get("includeArchived")).toBeNull();
     await waitFor(() => expect(router.state.location.search).toContain("kind=executed"));
     expect(router.state.location.search).not.toContain("includeArchived");
-    expect(screen.queryByRole("switch", { name: "Show archived" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /^Filter/ }));
+    expect(screen.queryByRole("button", { name: "Show archived" })).not.toBeInTheDocument();
   });
 
-  it("picks a record from the keyboard on the candidate-picker pattern", async () => {
+  it("searches and selects a record from the keyboard", async () => {
     const user = userEvent.setup();
     const api = surface();
     stubApi({ signedIn: MEMBER, extra: api.handler });
     const { router } = renderAt("/documents");
-
-    const record = await screen.findByRole("combobox", { name: "Record" });
-    await user.type(record, "Meridian");
-    const option = await screen.findByRole("option", { name: /C-42.*Meridian services/ });
-    expect(record).toHaveAttribute("aria-expanded", "true");
-    await user.keyboard("{ArrowDown}");
-    expect(record).toHaveAttribute("aria-activedescendant", option.id);
-    expect(option).toHaveAttribute("aria-selected", "true");
+    await openFilter(user, "Record");
+    await user.type(screen.getByRole("textbox", { name: "Search choices" }), "Meridian");
+    await user.tab();
+    expect(screen.getByRole("radio", { name: /C-42.*Meridian services/ })).toHaveFocus();
+    await user.keyboard(" ");
+    await user.tab();
     await user.keyboard("{Enter}");
     await expectQuery(api.queries, "record", "C-42");
     expect(router.state.location.search).toContain("record=C-42");
     expect(api.optionReads()).toBe(1);
-    expect(record).toHaveValue("C-42");
-    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
-
-    await user.type(record, "x");
-    await expectQuery(api.queries, "record", null);
+    expect(screen.getByRole("button", { name: /Record: C-42/ })).toBeVisible();
   });
 });

@@ -67,6 +67,7 @@ import { matters } from "./matters.js";
  * admin-configurable.
  */
 export const HAND_SET_DOCUMENT_VERSION_KINDS = [
+  "general",
   "draft_ours",
   "draft_theirs",
   "redline_theirs",
@@ -387,7 +388,7 @@ export const documentVersions = pgTable(
     ),
     check(
       "document_versions_kind_check",
-      sql`${table.kind} in ('draft_ours', 'draft_theirs', 'redline_theirs', 'redline_ours', 'executed', 'amendment', 'generated_redline')`,
+      sql`${table.kind} in ('general', 'draft_ours', 'draft_theirs', 'redline_theirs', 'redline_ours', 'executed', 'amendment', 'generated_redline')`,
     ),
     check("document_versions_source_check", sql`${table.source} in ('uploaded', 'generated')`),
     check(

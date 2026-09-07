@@ -29,6 +29,7 @@
  * Confidential flag are never copied at all (CTR-015).
  */
 
+import { CreateAttachments, useCreateAttachments } from "../documents/create-attachments";
 import { useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../../lib/api";
@@ -79,6 +80,7 @@ export function CreateContractDialog({
   people,
   entities,
   renewalOf,
+  initialMatter,
   onOpenChange,
   onCreated,
 }: Readonly<{
@@ -90,10 +92,12 @@ export function CreateContractDialog({
   /** The renewal this create is routing, or undefined for the ordinary
    * create the Contracts list opens. */
   renewalOf?: RenewalPrefill;
+  initialMatter?: Pick<CreateMatterLinkCandidate, "number" | "title" | "isConfidential">;
   onOpenChange: (open: boolean) => void;
   onCreated: (row: ContractRow) => void;
 }>) {
   const intl = useIntl();
+  const attachments = useCreateAttachments();
   // Seeded once, as the initial value rather than as an effect: the
   // person may edit either box, and a prefill that re-applied itself
   // would take their edit back.
@@ -109,7 +113,10 @@ export function CreateContractDialog({
   const [confidential, setConfidential] = useState(false);
   const [matterQuery, setMatterQuery] = useState("");
   const [matterCandidates, setMatterCandidates] = useState<CreateMatterLinkCandidate[]>([]);
-  const [selectedMatter, setSelectedMatter] = useState<CreateMatterLinkCandidate | null>(null);
+  const [selectedMatter, setSelectedMatter] = useState<Pick<
+    CreateMatterLinkCandidate,
+    "number" | "title" | "isConfidential"
+  > | null>(initialMatter ?? null);
   const [matterSearching, setMatterSearching] = useState(false);
   const [matterSearchError, setMatterSearchError] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -147,7 +154,7 @@ export function CreateContractDialog({
   }, [selectedMatter, trimmedMatterQuery]);
 
   async function submit() {
-    if (busy) return;
+    if (busy || attachments.created) return;
     setError(null);
     if (title.trim() === "") {
       setError(
@@ -229,12 +236,21 @@ export function CreateContractDialog({
       );
       return;
     }
-    onCreated(data.contract);
-    onOpenChange(false);
+    await attachments.upload({ entityType: "contract", number: data.contract.number }, () => {
+      onCreated(data.contract);
+      onOpenChange(false);
+    });
   }
 
   return (
-    <Dialog open onOpenChange={onOpenChange}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (busy || attachments.pending) return;
+        if (attachments.created) attachments.finish();
+        else onOpenChange(open);
+      }}
+    >
       <DialogContent aria-describedby={undefined}>
         {/* The title says which of the two acts this is. A routed
             renewal is still an ordinary create, but a dialog that opened
@@ -256,216 +272,238 @@ export function CreateContractDialog({
             />
           )}
         </DialogTitle>
-        <form
-          className="mt-4 flex flex-col gap-4"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void submit();
-          }}
-        >
-          {/* What was copied and what was not, said before the boxes it
+        {attachments.created ? (
+          <div className="mt-4">
+            <CreateAttachments uploads={attachments} />
+          </div>
+        ) : (
+          <form
+            className="mt-4 flex flex-col gap-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void submit();
+            }}
+          >
+            {/* What was copied and what was not, said before the boxes it
               is about (DES-044). CTR-015's no-inheritance stance is
               invisible in a form whose fields are already full, so the
               dialog says it rather than letting the reader discover it
               on the record afterwards. */}
-          {renewalOf !== undefined && (
-            <p className="text-sm text-muted">
-              {renewalOf.vehicle === "child" ? (
-                <FormattedMessage
-                  id="contracts.form.prefillChild"
-                  defaultMessage="Prefilled from {reference} and born under it. The counterparties, our entity, the value, and the term came across; the team, the status, and the Confidential flag did not. Edit anything before you create it."
-                  values={{ reference: contractReference(intl, renewalOf.number) }}
-                />
-              ) : (
-                <FormattedMessage
-                  id="contracts.form.prefillSuccessor"
-                  defaultMessage="Prefilled from {reference} and linked as its renewal. The counterparties, our entity, the value, and the term came across; the team, the status, and the Confidential flag did not. Edit anything before you create it."
-                  values={{ reference: contractReference(intl, renewalOf.number) }}
-                />
-              )}
-            </p>
-          )}
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="contract-new-title">
-              <FormattedMessage id="contracts.form.titleField" defaultMessage="Title" />
-            </Label>
-            <Input
-              id="contract-new-title"
-              autoFocus
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="contract-new-matter">
-              <FormattedMessage id="contracts.form.matter" defaultMessage="Matter (optional)" />
-            </Label>
-            <Input
-              id="contract-new-matter"
-              aria-describedby="contract-new-matter-help"
-              value={
-                selectedMatter
-                  ? `${matterReference(intl, selectedMatter.number)} ${selectedMatter.title}`
-                  : matterQuery
-              }
-              placeholder={intl.formatMessage({
-                id: "contracts.form.matterPlaceholder",
-                defaultMessage: "Search by number or title; leave blank for standalone",
-              })}
-              onChange={(event) => {
-                const next = event.target.value;
-                setSelectedMatter(null);
-                setMatterQuery(next);
-                setMatterCandidates([]);
-                setMatterSearching(next.trim() !== "");
-                setMatterSearchError(false);
-                setError(null);
-              }}
-            />
-            {!selectedMatter && trimmedMatterQuery !== "" && (
-              <ul
-                className="max-h-40 overflow-y-auto rounded-md border border-border"
-                aria-label={intl.formatMessage({
-                  id: "contracts.form.matterMatches",
-                  defaultMessage: "Matter matches",
-                })}
-              >
-                {matterSearching ? (
-                  <li className="p-3 text-sm text-muted">
-                    <FormattedMessage id="contractMatter.searching" defaultMessage="Searching…" />
-                  </li>
-                ) : matterCandidates.length === 0 ? (
-                  <li className="p-3 text-sm text-muted">
-                    <FormattedMessage
-                      id="contractMatter.noMatches"
-                      defaultMessage="No eligible records found."
-                    />
-                  </li>
+            {renewalOf !== undefined && (
+              <p className="text-sm text-muted">
+                {renewalOf.vehicle === "child" ? (
+                  <FormattedMessage
+                    id="contracts.form.prefillChild"
+                    defaultMessage="Prefilled from {reference} and born under it. The counterparties, our entity, the value, and the term came across; the team, the status, and the Confidential flag did not. Edit anything before you create it."
+                    values={{ reference: contractReference(intl, renewalOf.number) }}
+                  />
                 ) : (
-                  matterCandidates.map((matter) => (
-                    <li key={matter.number}>
-                      <button
-                        type="button"
-                        className="flex w-full gap-2 px-3 py-2 text-left text-sm hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-link"
-                        onClick={() => {
-                          setSelectedMatter(matter);
-                          setMatterSearching(false);
-                        }}
-                      >
-                        <span className="font-medium">{matterReference(intl, matter.number)}</span>{" "}
-                        <span className="min-w-0 break-words">{matter.title}</span>
-                      </button>
-                    </li>
-                  ))
+                  <FormattedMessage
+                    id="contracts.form.prefillSuccessor"
+                    defaultMessage="Prefilled from {reference} and linked as its renewal. The counterparties, our entity, the value, and the term came across; the team, the status, and the Confidential flag did not. Edit anything before you create it."
+                    values={{ reference: contractReference(intl, renewalOf.number) }}
+                  />
                 )}
-              </ul>
-            )}
-            {matterSearchError && (
-              <p className="text-xs text-status-danger-fg">
-                <FormattedMessage
-                  id="contracts.form.matterSearchError"
-                  defaultMessage="Eligible Matters could not be searched."
-                />
               </p>
             )}
-            <p id="contract-new-matter-help" className="text-xs text-muted">
-              <FormattedMessage
-                id="contracts.form.matterHelp"
-                defaultMessage="Link only when this Contract is part of broader Matter work. Nothing else flows across the link."
-              />
-            </p>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="contract-new-type">
-              <FormattedMessage id="contracts.form.type" defaultMessage="Contract type" />
-            </Label>
-            <select
-              id="contract-new-type"
-              value={contractTypeId}
-              className={CONTROL_CLASS}
-              onChange={(event) => {
-                setContractTypeId(event.target.value);
-                // Picking a type answers the pick-a-type refusal.
-                if (event.target.value !== "") setError(null);
-              }}
-            >
-              <option value="">
-                {intl.formatMessage({
-                  id: "contracts.form.typePlaceholder",
-                  defaultMessage: "Type…",
-                })}
-              </option>
-              {contractTypes.map((contractType) => (
-                <option key={contractType.id} value={contractType.id}>
-                  {contractType.displayName}
-                </option>
-              ))}
-            </select>
-          </div>
-          {/* The type's hard-required fields, grown into the dialog the
-              moment a type is picked (CTR-016/MTR-014). The optional
-              ones are not here: they are set inline on the record, and
-              creation stays the smallest thing that makes a record. */}
-          {required.map((field) => (
-            <div key={field.slug} className="flex flex-col gap-1.5">
-              <Label id={`contract-new-${field.slug}-label`} htmlFor={`contract-new-${field.slug}`}>
-                {field.displayName}
-                <span aria-hidden="true" className="ms-0.5 text-status-danger-fg">
-                  *
-                </span>
-                <span className="sr-only">
-                  <FormattedMessage id="contracts.field.requiredMark" defaultMessage="(required)" />
-                </span>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="contract-new-title" required>
+                <FormattedMessage id="contracts.form.titleField" defaultMessage="Title" />
               </Label>
-              <CustomFieldControl
-                id={`contract-new-${field.slug}`}
-                field={field}
-                draft={fieldDrafts[field.slug] ?? emptyDraft(field)}
-                people={people}
-                entities={entities}
-                describedBy={field.description ? `contract-new-${field.slug}-help` : undefined}
-                onDraft={(next) => {
-                  setFieldDrafts((current) => ({ ...current, [field.slug]: next }));
+              <Input
+                id="contract-new-title"
+                aria-required="true"
+                autoFocus
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="contract-new-matter">
+                <FormattedMessage id="contracts.form.matter" defaultMessage="Matter" />
+              </Label>
+              <Input
+                id="contract-new-matter"
+                aria-describedby="contract-new-matter-help"
+                value={
+                  selectedMatter
+                    ? `${matterReference(intl, selectedMatter.number)} ${selectedMatter.title}`
+                    : matterQuery
+                }
+                placeholder={intl.formatMessage({
+                  id: "contracts.form.matterPlaceholder",
+                  defaultMessage: "Search by number or title; leave blank for standalone",
+                })}
+                onChange={(event) => {
+                  const next = event.target.value;
+                  setSelectedMatter(null);
+                  setMatterQuery(next);
+                  setMatterCandidates([]);
+                  setMatterSearching(next.trim() !== "");
+                  setMatterSearchError(false);
                   setError(null);
                 }}
               />
-              {field.description && (
-                <p id={`contract-new-${field.slug}-help`} className="text-xs text-muted">
-                  {field.description}
+              {!selectedMatter && trimmedMatterQuery !== "" && (
+                <ul
+                  className="max-h-40 overflow-y-auto rounded-md border border-border"
+                  aria-label={intl.formatMessage({
+                    id: "contracts.form.matterMatches",
+                    defaultMessage: "Matter matches",
+                  })}
+                >
+                  {matterSearching ? (
+                    <li className="p-3 text-sm text-muted">
+                      <FormattedMessage id="contractMatter.searching" defaultMessage="Searching…" />
+                    </li>
+                  ) : matterCandidates.length === 0 ? (
+                    <li className="p-3 text-sm text-muted">
+                      <FormattedMessage
+                        id="contractMatter.noMatches"
+                        defaultMessage="No eligible records found."
+                      />
+                    </li>
+                  ) : (
+                    matterCandidates.map((matter) => (
+                      <li key={matter.number}>
+                        <button
+                          type="button"
+                          className="flex w-full gap-2 px-3 py-2 text-left text-sm hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-link"
+                          onClick={() => {
+                            setSelectedMatter(matter);
+                            setMatterSearching(false);
+                          }}
+                        >
+                          <span className="font-medium">
+                            {matterReference(intl, matter.number)}
+                          </span>{" "}
+                          <span className="min-w-0 break-words">{matter.title}</span>
+                        </button>
+                      </li>
+                    ))
+                  )}
+                </ul>
+              )}
+              {matterSearchError && (
+                <p className="text-xs text-status-danger-fg">
+                  <FormattedMessage
+                    id="contracts.form.matterSearchError"
+                    defaultMessage="Eligible Matters could not be searched."
+                  />
                 </p>
               )}
+              <p id="contract-new-matter-help" className="text-xs text-muted">
+                <FormattedMessage
+                  id="contracts.form.matterHelp"
+                  defaultMessage="Link only when this Contract is part of broader Matter work. Nothing else flows across the link."
+                />
+              </p>
             </div>
-          ))}
-          {/* DD-014's flag, where the C10 mock draws it: the last row
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="contract-new-type" required>
+                <FormattedMessage id="contracts.form.type" defaultMessage="Contract type" />
+              </Label>
+              <select
+                id="contract-new-type"
+                aria-required="true"
+                value={contractTypeId}
+                className={CONTROL_CLASS}
+                onChange={(event) => {
+                  setContractTypeId(event.target.value);
+                  // Picking a type answers the pick-a-type refusal.
+                  if (event.target.value !== "") setError(null);
+                }}
+              >
+                <option value="">
+                  {intl.formatMessage({
+                    id: "contracts.form.typePlaceholder",
+                    defaultMessage: "Type…",
+                  })}
+                </option>
+                {contractTypes.map((contractType) => (
+                  <option key={contractType.id} value={contractType.id}>
+                    {contractType.displayName}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {/* The type's hard-required fields, grown into the dialog the
+              moment a type is picked (CTR-016/MTR-014). The optional
+              ones are not here: they are set inline on the record, and
+              creation stays the smallest thing that makes a record. */}
+            {required.map((field) => (
+              <div key={field.slug} className="flex flex-col gap-1.5">
+                <Label
+                  id={`contract-new-${field.slug}-label`}
+                  htmlFor={`contract-new-${field.slug}`}
+                >
+                  {field.displayName}
+                  <span aria-hidden="true" className="ms-0.5 text-status-danger-fg">
+                    *
+                  </span>
+                  <span className="sr-only">
+                    <FormattedMessage
+                      id="contracts.field.requiredMark"
+                      defaultMessage="(required)"
+                    />
+                  </span>
+                </Label>
+                <CustomFieldControl
+                  id={`contract-new-${field.slug}`}
+                  field={field}
+                  draft={fieldDrafts[field.slug] ?? emptyDraft(field)}
+                  people={people}
+                  entities={entities}
+                  describedBy={field.description ? `contract-new-${field.slug}-help` : undefined}
+                  onDraft={(next) => {
+                    setFieldDrafts((current) => ({ ...current, [field.slug]: next }));
+                    setError(null);
+                  }}
+                />
+                {field.description && (
+                  <p id={`contract-new-${field.slug}-help`} className="text-xs text-muted">
+                    {field.description}
+                  </p>
+                )}
+              </div>
+            ))}
+            {/* DD-014's flag, where the C10 mock draws it: the last row
               before the note, so the audience is decided before the
               record exists rather than in the seconds after. */}
-          <ConfidentialToggle
-            id="contract-new-confidential"
-            confidential={confidential}
-            onChange={setConfidential}
-          />
-          {selectedMatter && selectedMatter.isConfidential !== confidential && (
-            <p className="text-xs text-status-warning-fg">
-              <FormattedMessage
-                id="contracts.form.matterMismatch"
-                defaultMessage="This Contract and Matter will have different Confidential flags. Consider aligning them later if appropriate; creation changes neither flag automatically."
-              />
-            </p>
-          )}
-          {error && (
-            <p role="alert" className="text-xs text-status-danger-fg">
-              {error}
-            </p>
-          )}
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
-              <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
-            </Button>
-            <Button type="submit" disabled={busy}>
-              <FormattedMessage id="contracts.form.submit" defaultMessage="Create" />
-            </Button>
-          </div>
-        </form>
+            <ConfidentialToggle
+              id="contract-new-confidential"
+              confidential={confidential}
+              onChange={setConfidential}
+            />
+            {selectedMatter && selectedMatter.isConfidential !== confidential && (
+              <p className="text-xs text-status-warning-fg">
+                <FormattedMessage
+                  id="contracts.form.matterMismatch"
+                  defaultMessage="This Contract and Matter will have different Confidential flags. Consider aligning them later if appropriate; creation changes neither flag automatically."
+                />
+              </p>
+            )}
+            <CreateAttachments uploads={attachments} disabled={busy} />
+            {error && (
+              <p role="alert" className="text-xs text-status-danger-fg">
+                {error}
+              </p>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={busy}
+                onClick={() => onOpenChange(false)}
+              >
+                <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+              </Button>
+              <Button type="submit" disabled={busy}>
+                <FormattedMessage id="contracts.form.submit" defaultMessage="Create" />
+              </Button>
+            </div>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );

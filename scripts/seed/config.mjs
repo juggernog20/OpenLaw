@@ -150,8 +150,9 @@ export async function configureTaxonomy(admin, log) {
 
   const matterStatuses = await index(admin, "/api/v1/matter-statuses", "matterStatuses");
   for (const status of [
-    { displayName: "Awaiting the business", category: "open" },
-    { displayName: "With external counsel", category: "open" },
+    { displayName: "Awaiting the business", category: "open", progressionGroup: "waiting" },
+    { displayName: "With external counsel", category: "open", progressionGroup: "waiting" },
+    { displayName: "With counterparty", category: "open", progressionGroup: "waiting" },
   ]) {
     await ensure(admin, "/api/v1/matter-statuses", status, matterStatuses, "matterStatuses");
   }

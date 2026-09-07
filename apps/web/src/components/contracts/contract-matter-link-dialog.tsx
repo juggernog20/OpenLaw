@@ -191,10 +191,17 @@ export function ContractMatterLinkDialog(
         <div className="mt-4 flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="contract-matter-search">
-              <FormattedMessage
-                id="contractMatter.search"
-                defaultMessage="Search by number or title"
-              />
+              {props.mode === "from-contract" ? (
+                <FormattedMessage
+                  id="contractMatter.searchMatter"
+                  defaultMessage="Search by matter number or title"
+                />
+              ) : (
+                <FormattedMessage
+                  id="contractMatter.searchContract"
+                  defaultMessage="Search by contract number or title"
+                />
+              )}
             </Label>
             <Input
               id="contract-matter-search"

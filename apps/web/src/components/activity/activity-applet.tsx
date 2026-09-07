@@ -365,6 +365,7 @@ function ActivityRow({
     icon: Icon,
     sentence,
     changes,
+    closingNote,
   } = narrateActivity(intl, entry, { fields, referenceNames });
   return (
     <li className="flex gap-2.5 border-b border-border-muted px-4 py-2.5 last:border-b-0">
@@ -400,6 +401,14 @@ function ActivityRow({
             )}
           </p>
         ))}
+        {closingNote && (
+          <div className="mt-1 text-sm text-primary">
+            <p className="font-medium">
+              <FormattedMessage id="matters.close.note" defaultMessage="Closing note" />
+            </p>
+            <p className="break-words whitespace-pre-wrap">{closingNote}</p>
+          </div>
+        )}
         {/* DES-009 Tier 1's micro variant, beside the timestamp where
             the decision puts it. Decorative: the record's banner is a
             labelled landmark already saying this, and repeating it on
