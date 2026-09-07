@@ -1,6 +1,6 @@
 {
   "articleId": "document-versions",
-  "contentSha256": "6fc24d687bf1e36712a9721028436b974b2b71da17fe07dbf83363f013257a9c",
+  "contentSha256": "e7d0286c6eefad20fd0e0a08df2dc6c530d5c3fa517e1b65e17e9f338e5f147d",
   "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
   "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
   "environment": "openlaw-docs-b8e31260-conversations",
@@ -28,7 +28,8 @@
       "result": "pass",
       "evidence": [
         "docs/documentation/batches/DOC-017/independent-versions.json",
-        "docs/documentation/batches/DOC-017/independent-filing.json"
+        "docs/documentation/batches/DOC-017/independent-filing.json",
+        "docs/documentation/batches/DOC-017/independent-erasure.json"
       ],
       "startedAt": "2026-09-07T21:37:24.746Z",
       "verifiedAt": "2026-09-07T21:37:44.433Z"
@@ -43,7 +44,8 @@
       "result": "pass",
       "evidence": [
         "docs/documentation/batches/DOC-017/independent-versions.json",
-        "docs/documentation/batches/DOC-017/independent-filing.json"
+        "docs/documentation/batches/DOC-017/independent-filing.json",
+        "docs/documentation/batches/DOC-017/independent-erasure.json"
       ],
       "startedAt": "2026-09-07T21:37:17.541Z",
       "verifiedAt": "2026-09-07T21:37:41.376Z"
@@ -58,7 +60,8 @@
       "result": "pass",
       "evidence": [
         "docs/documentation/batches/DOC-017/independent-versions.json",
-        "docs/documentation/batches/DOC-017/independent-filing.json"
+        "docs/documentation/batches/DOC-017/independent-filing.json",
+        "docs/documentation/batches/DOC-017/independent-erasure.json"
       ],
       "startedAt": "2026-09-07T21:37:31.428Z",
       "verifiedAt": "2026-09-07T21:37:46.034Z"
@@ -68,11 +71,41 @@
   "limitations": [
     "Independent agent walkthrough by a different seat from the author; not a human user study and not the feature owner's approval.",
     "Deliberate API and browser-network fixtures are named step by step and are separated from the reader actions they set up.",
+    "The V-C26 scenario results were obtained against the previous bytes and are retained under the copy-only classification recorded in copyOnlyReview; the supplemental records were run against the current bytes.",
     "Linked guides remain unpublished; the article stays in review."
   ],
-  "previousEvidence": null,
-  "copyOnlyReview": null,
+  "previousEvidence": {
+    "contentSha256": "6fc24d687bf1e36712a9721028436b974b2b71da17fe07dbf83363f013257a9c",
+    "records": [
+      "docs/documentation/batches/DOC-017/independent-versions.json",
+      "docs/documentation/batches/DOC-017/independent-filing.json",
+      "docs/documentation/batches/DOC-017/independent-discovery.json"
+    ],
+    "note": "The V-C26 walkthroughs above ran against these bytes. Those three records keep that hash rather than being restamped, so the file says which bytes each run actually read."
+  },
+  "copyOnlyReview": {
+    "classification": "copy-only",
+    "reviewer": "Independent review seat (Opus 5 agent)",
+    "reviewedAt": "2026-09-08",
+    "previousContentSha256": "6fc24d687bf1e36712a9721028436b974b2b71da17fe07dbf83363f013257a9c",
+    "contentSha256": "e7d0286c6eefad20fd0e0a08df2dc6c530d5c3fa517e1b65e17e9f338e5f147d",
+    "changes": [
+      "Six passages called an immutable Document Version a \"round\". They now use Document Version or Version, the CONTEXT.md term.",
+      "Four passages used \"executed-copy designation\", \"executed-copy pin\" or \"primary/executed-copy controls\". They now use Executed pin, the CONTEXT.md term. The UI labels Mark as executed copy and Unmark as executed copy are quoted unchanged.",
+      "Two H2 headings changed with those terms: \"Add another round and read the history\" became \"Add another Version and read the history\", and \"Primary Document and executed copy\" became \"Primary Document and the Executed pin\"."
+    ],
+    "whyPriorWalkthroughsApply": "No action, prerequisite, control name, result or meaning changed. Every step, every UI label and every stated outcome is identical; only the words for an immutable snapshot and for the explicit pin changed, to the CONTEXT.md terms. EDITORIAL.md allows a reviewer to retain prior walkthrough evidence for a change of this kind. No fresh V-C26 walkthrough is claimed for these bytes.",
+    "anchorCheck": "Both changed headings are H2 anchors. Nothing links them: no guide, evidence record or redirects.json entry references document-versions.md with a fragment, and the article is unpublished, so no stable link had to be preserved and no redirect was added.",
+    "freshObservationsAtNewHash": [
+      "docs/documentation/batches/DOC-017/independent-erasure.json",
+      "docs/documentation/batches/DOC-017/independent-help-presentation.json"
+    ]
+  },
   "publicationBlockers": [
     "create-knowledge (DOC-019) does not exist yet; the linked Comparison, signing, roles and portal guides are in review."
+  ],
+  "supplementalEvidence": [
+    "docs/documentation/batches/DOC-017/independent-erasure.json",
+    "docs/documentation/batches/DOC-017/independent-help-presentation.json"
   ]
 }

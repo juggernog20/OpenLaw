@@ -1,6 +1,6 @@
 # Upload Documents and add Document Versions
 
-Keep successive rounds of the same paper in one Document. Each upload adds an immutable Document Version, so an earlier round remains available to read and download.
+Keep every Version of the same paper in one Document. Each upload adds an immutable Document Version, so an earlier Version remains available to read and download.
 
 ## Before you start
 
@@ -12,26 +12,26 @@ Every Document belongs to one owning record. Start on that record, not the centr
 
 1. Open the record's **Documents** tab. On a Knowledge Item, use its Documents section.
 2. Select **Upload**, then **Choose files**. Choose one file for a new Document. Selecting several files opens the [bulk import](document-folders.md) dialog instead.
-3. Select **Kind** and optionally enter a **Note** explaining this round. Choose the kind that describes the paper, such as **Draft · ours**, **Draft · theirs**, **Redline · theirs**, **Redline · ours**, **Executed**, or **Amendment**.
+3. Select **Kind** and optionally enter a **Note** explaining this Version. Choose the kind that describes the paper, such as **Draft · ours**, **Draft · theirs**, **Redline · theirs**, **Redline · ours**, **Executed**, or **Amendment**.
 4. Select **Upload**. Check the new row and its **v1** Version. The filename supplies the initial Document name; a Legal Team Member or Administrator can use the row's **Actions** menu, **Edit details**, and **Save** to change its name and description.
 
 Any file type can be stored, subject to the deployment's upload limit. [Preview support](document-previews.md) is narrower. A successful upload can still be processing for preview or text search.
 
-## Add another round and read the history
+## Add another Version and read the history
 
 1. Find the existing Document. Open its **Actions** menu and select **Add version**.
 2. Use **Choose file**, select **Kind**, and enter a **Note** if useful. Select **Upload**.
-3. Check that the Document's Version number increased. Expand the row to see earlier Versions, then select a filename to read that round. Check the Version number in the reader before downloading.
+3. Check that the Document's Version number increased. Expand the row to see earlier Versions, then select a filename to read that Version. Check the Version number in the reader before downloading.
 
 Uploading the same paper as a new Document creates a separate chain. OpenLaw does not merge those chains. An added Version preserves the earlier file's bytes, note, author, and place in the history; it does not overwrite them. There is no individual-Version delete action.
 
-A Legal Team Member or Administrator can correct the **Kind** control on an existing hand-set Version. This changes its classification, not its bytes or executed-copy designation. **Generated redline** is reserved for a [Comparison export](compare-versions.md), cannot be selected for an ordinary upload, and cannot be corrected to or from another kind.
+A Legal Team Member or Administrator can correct the **Kind** control on an existing hand-set Version. This changes its classification, not its bytes and not the Executed pin. **Generated redline** is reserved for a [Comparison export](compare-versions.md), cannot be selected for an ordinary upload, and cannot be corrected to or from another kind.
 
-## Primary Document and executed copy
+## Primary Document and the Executed pin
 
-On a Contract, the **Primary** mark identifies its principal Document; **Make primary** moves that designation to another Document. **Mark as executed copy** identifies one Version as the signed copy, including an earlier Version in the expanded chain. **Unmark as executed copy** clears that designation. A later upload does not replace an existing executed-copy pin merely by becoming the newest Version. Changing a Version's kind is separate from changing the pin.
+On a Contract, the **Primary** mark identifies its principal Document; **Make primary** moves that designation to another Document. **Mark as executed copy** sets the Executed pin on one Version, including an earlier Version in the expanded chain. **Unmark as executed copy** clears it. A later upload does not move an existing Executed pin merely by becoming the newest Version. Changing a Version's kind is separate from moving the pin.
 
-Use [manual signing](manual-signing.md) or [electronic signing](electronic-signing.md) for the complete Contract workflow. A Matter or Entity has no primary/executed-copy controls. Knowledge has its own **Set as primary** action for choosing the paper its readers see; see [Knowledge authoring](create-knowledge.md). Contributors cannot change these designations.
+Use [manual signing](manual-signing.md) or [electronic signing](electronic-signing.md) for the complete Contract workflow. A Matter or Entity has no Primary mark and no Executed pin. Knowledge has its own **Set as primary** action for choosing the paper its readers see; see [Knowledge authoring](create-knowledge.md). Contributors cannot change these designations.
 
 ## File a Contract conversation attachment
 
