@@ -27,10 +27,10 @@ Keep using your Request's R- reference to follow Legal's response and send furth
 
 1. Under **Conversation**, enter your message in **Reply to Legal**.
 2. Select **Attach files** if you need to send further paper. Check the selected filenames and remove any you did not intend to send.
-3. Select **Send**.
+3. Select **Send**. It stays unavailable until you have entered a message, so files cannot be sent on their own.
 4. Check that your reply and its attachments appear in the conversation. Select an attachment to download it.
 
-You can reply while the Request is Open and after conversion, resolution, or decline. The **Attach new files to a reply** link shown after Legal decides the Request takes you to the same composer. A reply does not reopen a Resolved or Declined Request or change submitted answers; explain the correction or further help you need to Legal.
+You can reply while the Request is Open and after conversion, resolution, or decline. The **Attach new files to a reply** link shown once the Request is In progress, Resolved, or Declined takes you to the same composer. A reply does not reopen a Resolved or Declined Request or change submitted answers; explain the correction or further help you need to Legal.
 
 The Portal shows the conversation shared with the Requester. You do not choose an audience or see Legal Only and Working Team messages. See [Comments, attachments, and activity](comments-and-activity.md) for the shared attachment limits and conversation behavior.
 

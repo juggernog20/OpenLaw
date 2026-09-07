@@ -38,11 +38,11 @@ fixture helpers and detailed run output are under `/tmp/openlaw-docs-run/732-*`.
 
 | Evidence                             | Result                                                                                                                                                                                                                                                                                                                                                                         |
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [Submission](author-submission.json) | Six checks: active form and guidance, missing required answers without a POST, Medium default, 20-file selection/removal, a single saved Request with supplied answers and exact original file, reported upload failure with a successful Request, disposition during upload with reply recovery, and unknown-form recovery.                                                   |
+| [Submission](author-submission.json) | Six checks covering active form and guidance, missing required answers without a POST, Medium default, 20-file selection/removal, a single saved Request with supplied answers and exact original file, reported upload failure with a successful Request, disposition during upload with reply recovery, and unknown-form recovery.                                           |
 | [Follow-up](author-follow.json)      | Twenty checks across Open, Contract conversion, Matter conversion, Resolved, and Declined: own Request and saved values, Legal replies at all three tiers with only Full thread visible, correct status and reason/resolution, later replies and downloadable files, unchanged status after reply, other Requester's Request/file refusal, and unavailable staff destinations. |
 | [Knowledge](author-knowledge.json)   | Eight checks: home/form guidance filtering, same-tab internal link, primary-first and supporting downloads, written guidance, draft/restricted/archived item and file refusal, current Version update and revocation of a saved download, broken external link without losing form answers, and signed-out refusal.                                                            |
 | [Recovery](author-recovery.json)     | Five checks: failed reply retains text and paper, real retry posts once, failed conversation and earlier-page reads recover, and later Document Versions on both converted record types leave the original Request attachment bytes unchanged.                                                                                                                                 |
-| [Discovery](author-discovery.json)   | Five checks: contextual Help for all three articles, title search, title/section focus, formal links, canonical Portal notification preferences, anonymous formal index without app API calls, and three themes at 320/720/1440 CSS pixels without horizontal overflow.                                                                                                        |
+| [Discovery](author-discovery.json)   | Five checks covering contextual Help for all three articles, title search, title/section focus, formal links, canonical Portal notification preferences, anonymous formal index without app API calls, and three themes at 320/720/1440 CSS pixels without horizontal overflow.                                                                                                |
 
 Submission recovery uses a controlled browser 413 response to exercise a rejected
 attachment; the Request is created by the real API. A separate real race resolves
@@ -54,6 +54,11 @@ The Knowledge Version check uploads new bytes, confirms that the current downloa
 changes, unpublishes the item and confirms refusal, then restores publication and
 the fixture's original current filename for independent testing. Downloaded files
 already on a user's computer are outside the app's update process.
+
+Review edits after these runs changed the submission and follow-up guide bytes:
+the optional-question sentence, the Send precondition, and the statuses that show
+the reply link. The evidence keeps the hashes it read; independent acceptance must
+cover the final text, as in DOC-011.
 
 The inline **Help with this page** entry is available on the form and Request
 pages. Knowledge uses the Portal header **Help**, which supplies the Knowledge

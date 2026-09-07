@@ -21,7 +21,7 @@
     {
       "role": "business_user",
       "action": "select at most 20 files and remove unwanted paper",
-      "actual": "First20 retained, extra file omitted, visible removal controls cleared all selected files",
+      "actual": "First 20 retained, extra file omitted, visible removal controls cleared all selected files",
       "result": "pass",
       "at": "2026-09-07T09:38:04.689Z"
     },

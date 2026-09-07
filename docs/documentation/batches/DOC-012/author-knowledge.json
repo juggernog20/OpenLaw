@@ -28,21 +28,21 @@
     {
       "role": "business_user",
       "action": "draft Knowledge and direct document downloads refused",
-      "actual": "Unavailable item returns home; item API and both saved file addresses404",
+      "actual": "Unavailable item returns home; item API and both saved file addresses 404",
       "result": "pass",
       "at": "2026-09-07T09:22:33.329Z"
     },
     {
       "role": "business_user",
       "action": "restricted Knowledge and direct document downloads refused",
-      "actual": "Unavailable item returns home; item API and both saved file addresses404",
+      "actual": "Unavailable item returns home; item API and both saved file addresses 404",
       "result": "pass",
       "at": "2026-09-07T09:22:33.928Z"
     },
     {
       "role": "business_user",
       "action": "archived Knowledge and direct document downloads refused",
-      "actual": "Unavailable item returns home; item API and both saved file addresses404",
+      "actual": "Unavailable item returns home; item API and both saved file addresses 404",
       "result": "pass",
       "at": "2026-09-07T09:22:34.517Z"
     },

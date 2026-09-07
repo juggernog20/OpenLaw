@@ -27,7 +27,7 @@ Use [Follow a Request and reply to Legal](follow-request.md) to read progress, a
 
 ## If it does not work
 
-If required answers are missing, complete the marked questions. If a number is refused, enter it as a number. Your organization may include optional questions that Legal must complete; ask Legal if you cannot answer a required question. You cannot change submitted answers in the Portal; send a correction in the existing Request's conversation.
+If required answers are missing, complete the marked questions. If a number is refused, enter it as a number. A question marked optional can stay blank; Legal completes any value its own record needs later. Ask Legal if you cannot answer a required question. You cannot change submitted answers in the Portal; send a correction in the existing Request's conversation.
 
 The confirmation appears as soon as the Request exists, before every attachment has finished. An attachment failure does not undo the Request. Check the named failure and quote the existing R- reference when contacting Legal; submitting the whole form again would create another Request. Open that Request and attach the missing file to a reply. Check any file-size error against the limit shown by your instance.
 

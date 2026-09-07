@@ -14,7 +14,7 @@
     {
       "role": "business_user",
       "action": "failed reply preserves text and files and retry posts once",
-      "actual": "Controlled503 retained words/paper; real retry produced one visible reply with its file",
+      "actual": "Controlled 503 retained words/paper; real retry produced one visible reply with its file",
       "result": "pass",
       "at": "2026-09-07T09:25:30.541Z"
     },

@@ -22,21 +22,21 @@
     {
       "role": "business_user",
       "action": "submit-request contextual discovery, search, article navigation and formal link",
-      "actual": "Page-specific Help, title search, focused title and section, formal link; no horizontal overflow in three themes at320/720/1440 CSSpixels",
+      "actual": "Page-specific Help, title search, focused title and section, formal link; no horizontal overflow in three themes at 320/720/1440 CSS pixels",
       "result": "pass",
       "at": "2026-09-07T09:24:55.028Z"
     },
     {
       "role": "business_user",
       "action": "follow-request contextual discovery, search, article navigation and formal link",
-      "actual": "Page-specific Help, title search, focused title and section, formal link; no horizontal overflow in three themes at320/720/1440 CSSpixels",
+      "actual": "Page-specific Help, title search, focused title and section, formal link; no horizontal overflow in three themes at 320/720/1440 CSS pixels",
       "result": "pass",
       "at": "2026-09-07T09:24:56.318Z"
     },
     {
       "role": "business_user",
       "action": "portal-knowledge contextual discovery, search, article navigation and formal link",
-      "actual": "Page-specific Help, title search, focused title and section, formal link; no horizontal overflow in three themes at320/720/1440 CSSpixels",
+      "actual": "Page-specific Help, title search, focused title and section, formal link; no horizontal overflow in three themes at 320/720/1440 CSS pixels",
       "result": "pass",
       "at": "2026-09-07T09:24:57.518Z"
     },
