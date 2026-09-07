@@ -2,9 +2,12 @@
 
 C21 and C29 for [issue #735](https://github.com/juggernog20/OpenLaw/issues/735).
 Two guides cover Contract analysis and Document Version Comparisons. Author
-walkthroughs use the actual app UI, real processing, and fictional records.
-Independent technical review and five scenario/role walkthroughs remain pending.
-Agent walkthroughs are not a human user study or the feature owner's approval.
+walkthroughs use the actual app UI, real processing, and fictional records. All 50
+author checks passed on the recorded article hashes. A different agent, the Fable
+review seat, then checked the guides against the committed app source and followed
+all five scenario/role combinations with its own scripts; every one passed on the
+final guide bytes. Agent checks are not a human user study or a feature owner's
+approval.
 
 ## Build and fixture
 
@@ -91,9 +94,55 @@ evidence record carries the new hash and names the edit; the author records keep
 the hash they ran against. The pending independent walkthrough covers the current
 bytes.
 
-Both articles stay in review pending independent walkthroughs and linked guides,
-including Document Versions/processing (DOC-017) and Analysis connector setup
-(DOC-022). DOC-025 owns final acceptance on the supported publication build.
+Both articles stay in review pending their linked guides: Document Versions and
+Document reading and processing (DOC-017) and Analysis connector setup (DOC-022).
+DOC-025 owns final acceptance on the supported publication build.
+
+## Independent walkthrough
+
+The Fable review seat first checked each guide's claims against the committed app
+source at `a28331f7`, then followed both guides with its own Playwright scripts on
+September 7, 2026, in the same analysis-workflow lab. It reused the sign-in, API,
+paper-generation, upload and provider-control helpers, the author's Contract
+types, prompted Fields, Counterparty and comparison files, not the author's steps
+or assertions. Every walked record was created fresh with a `Rev` prefix.
+
+C21 ran as Administrator (C-56) and Legal Team Member (C-58) with the reviewer's
+own fictional paper and known answers: a 60-day notice and a March 31, 2027 expiry
+in Version 1, an unknown Counterparty name (Unmatched, nothing linked), a
+non-numeric tier (Invalid) and a quote absent from the paper (Unsupported); then a
+90-day notice, a June 30, 2027 expiry, the real Counterparty name (linked, Written)
+and tier 2 in Version 2. The other legal role edited a prompted Field while a run
+waited at the local provider; the provider control supplied the pause and one
+malformed reply. A separate Contract per role (C-57, C-59) held only a malformed
+primary PDF. That satisfies the declared C21 workflow mode only, not C43.
+
+C29 ran as Administrator (C-65), Legal Team Member (C-66) and Contributor (C-67)
+on Contracts prepared by the Administrator's API session. Each role opened
+**Compare with previous** while this lab's worker was paused, read **Preparing
+comparison**, then **Changes** after the worker resumed; chose pairs with **Older**
+and **Newer**; moved through changes; used the reader's **Compare** link and
+**Close comparison**; read the text-mode PDF/Word pair; hit the TXT and
+malformed-PDF failures with working **Download** links and no retry; compared the
+Administrator's corrected PDF as **No changes** with different bytes; and read
+Comparisons on an archived Document and an archived owner. Legal roles exported
+Version 4 from v1 → v2 and, after Restore, Version 5 from v2 → v3; both downloaded
+files carried the expected `w:ins` and `w:del` runs. The Contributor was refused
+every export and read the Administrator's prepared redline. Priya Raman got 404.
+
+All five scenario/role combinations passed on the final guide bytes. Help
+discovery, search by title and by control name, the outline, the formal reader,
+three themes at 320/720/1440 CSS pixels, the signed-out formal edition, and the
+committed lab's exclusion passed. The sanitized step records are in
+[independent-walkthrough.json](independent-walkthrough.json) and
+[independent-discovery.json](independent-discovery.json); the per-article evidence
+files under `docs/documentation/evidence/` cite them and now read `pass`. Earlier
+reviewer runs failed on harness assumptions (a message read after navigation, the
+reader panel's landmark role, the add-version envelope, the pair control's option
+order), not on app or guide behaviour; the records name them and hold only the
+completed runs. No guide text changed because of the walkthrough. This is an
+agent walkthrough, not a human user study, and it does not stand in for the
+feature owner's approval.
 
 ## Repository validation
 
@@ -103,6 +152,14 @@ tests across 97 files, with all five Turbo tasks successful.
 All 19 static tasks and all 33 documentation/tooling tests passed. Normal and
 preview documentation builds passed. Preview reports 14 links to unpublished
 targets owned by later writing batches.
+
+After the independent walkthrough and the evidence records, the review seat ran
+the same full workspace suite again (`pnpm exec turbo run test --continue --
+--maxWorkers=8`, inside the docker group with the local doc-engine test image):
+176 API test files with 2,889 tests and 97 web test files with 1,702 tests passed,
+all five Turbo tasks successful, exit code 0. The 33 documentation/tooling tests,
+the normal and preview documentation builds, prettier, the documentation lint, and
+secretlint on the new records also passed.
 
 ## CodeRabbit disposition
 

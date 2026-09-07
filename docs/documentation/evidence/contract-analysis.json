@@ -5,11 +5,11 @@
   "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
   "environment": "openlaw-docs-b8e31260-analysis-workflow",
   "author": "Codex documentation author",
-  "technicalReviewer": null,
-  "walkthroughReviewer": null,
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
   "reviewerKind": "agent",
-  "verifiedAt": null,
-  "status": "not-run",
+  "verifiedAt": "2026-09-07T17:20:09.933Z",
+  "status": "pass",
   "sources": [
     "CONTEXT.md",
     "apps/web/src/components/contracts/ai-analysis-card.tsx",
@@ -26,9 +26,12 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "expected": "Evidence is tied to the chosen Document Version; confirming one value does not clear unrelated markers. Disabled connector, failed extraction, changed source, and stale evidence have the documented states. C43 separately verifies real provider setup.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "C-58: card read \"No analysis has run yet.\"; Run analysis answered \"This Contract has no primary Document to analyze.\" and no run was created. C-59: the malformed primary PDF reached text state failed and Run analysis refused with \"no ready, non-empty text\". With the connector disabled the card was absent and POST /analysis answered 409; enabling it brought the card back. Uploading Version 1 queued an automatic run (paused at the local provider); Overview read \"Running…\" with no Run analysis control, then, without a page load, \"Completed … on Version 1 with docs-analysis-fixture.\" Rows read Written with the exact quotes for Expiry date, Notice period and Docs Analysis location 1788793067221; Docs Analysis tier 1788793067221 (Platinum) read Invalid; Docs Analysis absent 1788793067221 (quote absent from the paper) read Unsupported; Counterparty read Unmatched for the unknown name and no Counterparty was linked. Eight values carry Unverified. Key dates already showed Mar 31 expiry and Jan 30 notice deadline; saved Value USD 2,500 monthly. Confirm beside Notice period cleared only that marker (7 left) and kept 60; a second confirmation answered 400. Renewal period 6→12 on Overview cleared its marker (6 left); Docs Analysis location 1788793067221 Muscat→Salalah on Fields cleared its marker (5 left). Expiry date still read Unverified. History listed the confirmation. Mark as executed copy on Version 1 started an automatic run on Version 1. Version 2's upload became current, did not move the pin, made no provider request and started no run. Run analysis then reported Version 1 with its March 31 quote and kept the confirmed notice, edited renewal and edited location. Marking Version 2 executed ran on Version 2: expiry became June 30, 2027 (Unverified again), tier 2 was Written, the returned notice 90 and location Doha were Kept while Overview/Fields still hold 60 and Salalah, and Docs Analysis Counterparty 1788793067221 was linked as Written. Daniel Okafor saved Docs Analysis tier 1788793067221 2→5 while the run waited at the provider. Completion kept 5 with no marker and listed the returned 2 as Kept; the expiry marker from the earlier run stayed. The provider's malformed reply produced \"Failed … on Version 2 with docs-analysis-fixture: The provider reply did not contain one JSON object.…\"; values and markers were unchanged. With valid replies restored, Run analysis completed. Clearing the edited renewal period (12) let the next run write 6 again as Unverified. A second Document with ready text left the primary Document, the latest run and the provider request count unchanged. Ravi Menon (Contributor on the team) saw no Run analysis or Confirm control and both writes answered 403; Priya Raman (Legal, not on the team) got 404. Moving to Expired (Ended) removed Run analysis and a direct run answered 409, while Confirm on Expiry date still cleared its marker. Archive removed Confirm and a direct confirmation answered 409; Restore kept the Ended stage. With the connector disabled the card still listed 6 Unverified values and Confirm all cleared them without changing any saved value.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-015/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-015/independent-discovery.json"
+      ]
     },
     {
       "id": "V-C21",
@@ -36,17 +39,26 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "expected": "Evidence is tied to the chosen Document Version; confirming one value does not clear unrelated markers. Disabled connector, failed extraction, changed source, and stale evidence have the documented states. C43 separately verifies real provider setup.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "C-56: card read \"No analysis has run yet.\"; Run analysis answered \"This Contract has no primary Document to analyze.\" and no run was created. C-57: the malformed primary PDF reached text state failed and Run analysis refused with \"no ready, non-empty text\". With the connector disabled the card was absent and POST /analysis answered 409; enabling it brought the card back. Uploading Version 1 queued an automatic run (paused at the local provider); Overview read \"Running…\" with no Run analysis control, then, without a page load, \"Completed … on Version 1 with docs-analysis-fixture.\" Rows read Written with the exact quotes for Expiry date, Notice period and Docs Analysis location 1788793067221; Docs Analysis tier 1788793067221 (Platinum) read Invalid; Docs Analysis absent 1788793067221 (quote absent from the paper) read Unsupported; Counterparty read Unmatched for the unknown name and no Counterparty was linked. Eight values carry Unverified. Key dates already showed Mar 31 expiry and Jan 30 notice deadline; saved Value USD 2,500 monthly. Confirm beside Notice period cleared only that marker (7 left) and kept 60; a second confirmation answered 400. Renewal period 6→12 on Overview cleared its marker (6 left); Docs Analysis location 1788793067221 Muscat→Salalah on Fields cleared its marker (5 left). Expiry date still read Unverified. History listed the confirmation. Mark as executed copy on Version 1 started an automatic run on Version 1. Version 2's upload became current, did not move the pin, made no provider request and started no run. Run analysis then reported Version 1 with its March 31 quote and kept the confirmed notice, edited renewal and edited location. Marking Version 2 executed ran on Version 2: expiry became June 30, 2027 (Unverified again), tier 2 was Written, the returned notice 90 and location Doha were Kept while Overview/Fields still hold 60 and Salalah, and Docs Analysis Counterparty 1788793067221 was linked as Written. Nadia Haddad saved Docs Analysis tier 1788793067221 2→5 while the run waited at the provider. Completion kept 5 with no marker and listed the returned 2 as Kept; the expiry marker from the earlier run stayed. The provider's malformed reply produced \"Failed … on Version 2 with docs-analysis-fixture: The provider reply did not contain one JSON object.…\"; values and markers were unchanged. With valid replies restored, Run analysis completed. Clearing the edited renewal period (12) let the next run write 6 again as Unverified. A second Document with ready text left the primary Document, the latest run and the provider request count unchanged. Ravi Menon (Contributor on the team) saw no Run analysis or Confirm control and both writes answered 403; Priya Raman (Legal, not on the team) got 404. Moving to Expired (Ended) removed Run analysis and a direct run answered 409, while Confirm on Expiry date still cleared its marker. Archive removed Confirm and a direct confirmation answered 409; Restore kept the Ended stage. With the connector disabled the card still listed 6 Unverified values and Confirm all cleared them without changing any saved value.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-015/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-015/independent-discovery.json"
+      ]
     }
   ],
-  "authorEvidence": ["docs/documentation/batches/DOC-015/README.md"],
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-015/README.md",
+    "docs/documentation/batches/DOC-015/author-analysis.json",
+    "docs/documentation/batches/DOC-015/author-analysis-failure.json"
+  ],
   "limitations": [
-    "Author walkthrough passed; independent source review and article walkthrough remain pending.",
-    "Agent walkthroughs are not a human user study or the feature owner's approval.",
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
     "C21 uses a declared isolated OpenAI-compatible local stand-in with known fictional paper and answers. It does not verify real provider setup or satisfy C43."
   ],
   "previousEvidence": null,
-  "copyOnlyReview": null
+  "copyOnlyReview": null,
+  "publicationBlockers": [
+    "The linked Document Versions, Document reading and processing (DOC-017) and Analysis connector setup (DOC-022) guides are unpublished."
+  ]
 }

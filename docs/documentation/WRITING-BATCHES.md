@@ -63,7 +63,7 @@ See the [batch verification record](batches/DOC-014/README.md) for the tested bu
 
 ## DOC-015 [#735](https://github.com/juggernog20/OpenLaw/issues/735)
 
-See the [author verification record](batches/DOC-015/README.md). Independent technical review and five scenario/role walkthroughs remain pending.
+See the [batch verification record](batches/DOC-015/README.md) for the tested build, author outcomes, the independent walkthrough of all five scenario/role combinations, and publication dependencies.
 
 - [ ] `contract-analysis`: Review Contract analysis and verify values (C21; P0).
 - [ ] `compare-versions`: Compare Document Versions and export a Generated redline (C29; P1).
