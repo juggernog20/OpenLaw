@@ -43,7 +43,7 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "action": "C28 step 34: processed text is findable through the app's global search",
-      "actual": "A word that exists only inside the uploaded file's text was typed into the app's global search and returned this Document — the guide is right to send readers there for words inside processed paper",
+      "actual": "A word that exists only inside the uploaded file's text was typed into the app's global search and returned this Document. The guide is right to send readers there for words inside processed paper",
       "result": "pass",
       "startedAt": "2026-09-07T21:36:41.175Z",
       "at": "2026-09-07T21:36:42.288Z"
@@ -88,7 +88,7 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "action": "C28 step 36: an unreadable file shows the failure card and a corrected Version recovers it",
-      "actual": "The intentionally damaged DOCX reached a failed rendition and drew the guide’s exact recovery card while its original still downloaded unchanged; appending a readable file produced a v2 that rendered, and the failed v1 stayed in the chain",
+      "actual": "The intentionally damaged DOCX reached a failed rendition and drew the guide's exact recovery card while its original still downloaded unchanged; appending a readable file produced a v2 that rendered, and the failed v1 stayed in the chain",
       "result": "pass",
       "startedAt": "2026-09-07T21:36:44.737Z",
       "at": "2026-09-07T21:36:46.005Z"
@@ -97,7 +97,7 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "action": "C28 step 38: a download can fail on its own while previews keep working",
-      "actual": "After the Document was permanently removed, its Version download answered 404 and its row was gone, while a different Document still previewed and downloaded normally — the guide is right that a failed download is a separate outcome from a failed preview, and re-uploading would not bring the erased bytes back",
+      "actual": "After the Document was permanently removed, its Version download answered 404 and its row was gone, while a different Document still previewed and downloaded normally. The guide is right that a failed download is a separate outcome from a failed preview, and re-uploading would not bring the erased bytes back",
       "result": "pass",
       "startedAt": "2026-09-07T21:36:46.005Z",
       "at": "2026-09-07T21:36:48.209Z"
@@ -133,7 +133,7 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "action": "C28 step 34: processed text is findable through the app's global search",
-      "actual": "A word that exists only inside the uploaded file's text was typed into the app's global search and returned this Document — the guide is right to send readers there for words inside processed paper",
+      "actual": "A word that exists only inside the uploaded file's text was typed into the app's global search and returned this Document. The guide is right to send readers there for words inside processed paper",
       "result": "pass",
       "startedAt": "2026-09-07T21:36:51.698Z",
       "at": "2026-09-07T21:36:52.707Z"
@@ -178,7 +178,7 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "action": "C28 step 36: an unreadable file shows the failure card and a corrected Version recovers it",
-      "actual": "The intentionally damaged DOCX reached a failed rendition and drew the guide’s exact recovery card while its original still downloaded unchanged; appending a readable file produced a v2 that rendered, and the failed v1 stayed in the chain",
+      "actual": "The intentionally damaged DOCX reached a failed rendition and drew the guide's exact recovery card while its original still downloaded unchanged; appending a readable file produced a v2 that rendered, and the failed v1 stayed in the chain",
       "result": "pass",
       "startedAt": "2026-09-07T21:36:55.379Z",
       "at": "2026-09-07T21:36:56.630Z"
@@ -187,7 +187,7 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "action": "C28 step 38: a download can fail on its own while previews keep working",
-      "actual": "After the Document was permanently removed, its Version download answered 404 and its row was gone, while a different Document still previewed and downloaded normally — the guide is right that a failed download is a separate outcome from a failed preview, and re-uploading would not bring the erased bytes back",
+      "actual": "After the Document was permanently removed, its Version download answered 404 and its row was gone, while a different Document still previewed and downloaded normally. The guide is right that a failed download is a separate outcome from a failed preview, and re-uploading would not bring the erased bytes back",
       "result": "pass",
       "startedAt": "2026-09-07T21:36:56.630Z",
       "at": "2026-09-07T21:36:59.169Z"
@@ -223,7 +223,7 @@
       "role": "contributor",
       "method": "browser-walkthrough",
       "action": "C28 step 34: processed text is findable through the app's global search",
-      "actual": "A word that exists only inside the uploaded file's text was typed into the app's global search and returned this Document — the guide is right to send readers there for words inside processed paper",
+      "actual": "A word that exists only inside the uploaded file's text was typed into the app's global search and returned this Document. The guide is right to send readers there for words inside processed paper",
       "result": "pass",
       "startedAt": "2026-09-07T21:37:02.646Z",
       "at": "2026-09-07T21:37:03.600Z"
@@ -268,7 +268,7 @@
       "role": "contributor",
       "method": "browser-walkthrough",
       "action": "C28 step 36: an unreadable file shows the failure card and a corrected Version recovers it",
-      "actual": "The intentionally damaged DOCX reached a failed rendition and drew the guide’s exact recovery card while its original still downloaded unchanged; appending a readable file produced a v2 that rendered, and the failed v1 stayed in the chain",
+      "actual": "The intentionally damaged DOCX reached a failed rendition and drew the guide's exact recovery card while its original still downloaded unchanged; appending a readable file produced a v2 that rendered, and the failed v1 stayed in the chain",
       "result": "pass",
       "startedAt": "2026-09-07T21:37:06.213Z",
       "at": "2026-09-07T21:37:07.446Z"
@@ -277,7 +277,7 @@
       "role": "contributor",
       "method": "browser-walkthrough",
       "action": "C28 step 38: a download can fail on its own while previews keep working",
-      "actual": "After the Document was permanently removed, its Version download answered 404 and its row was gone, while a different Document still previewed and downloaded normally — the guide is right that a failed download is a separate outcome from a failed preview, and re-uploading would not bring the erased bytes back",
+      "actual": "After the Document was permanently removed, its Version download answered 404 and its row was gone, while a different Document still previewed and downloaded normally. The guide is right that a failed download is a separate outcome from a failed preview, and re-uploading would not bring the erased bytes back",
       "result": "pass",
       "startedAt": "2026-09-07T21:37:07.446Z",
       "at": "2026-09-07T21:37:09.916Z"

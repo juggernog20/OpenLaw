@@ -58,10 +58,10 @@ The remaining suggestions were assessed against the source and browser results. 
 ## Independent walkthrough
 
 The review seat first read the five guides against the committed app source at
-`a28331f7` — the documents card and its row menus, the batch import dialog and its
+`a28331f7`. It read the documents card and its row menus, the batch import dialog and its
 retry rule, the render-family table, the folder name and cycle rules, the repository
 query and its scope, the comment filing dialog, and the archive, restore and erasure
-routes — and then followed each guide in the same conversations lab with its own
+routes. It then followed each guide in the same conversations lab with its own
 Playwright scripts on September 7, 2026. It created fresh fictional records under a
 `Rev` prefix and reused none of the author's records, steps or assertions. The author's
 91 checks are supporting evidence only.
@@ -104,7 +104,7 @@ became a managed Document.
 
 C27 ran as all three roles. Both legal roles created a parent folder and a child inside
 it, renamed the child in place, and were refused a case-only duplicate, a blank name, a
-slash, `.` and `..` — each with a visible message and nothing created. The Move picker
+slash, `.` and `..`, each with a visible message and nothing created. The Move picker
 offered the record root and unrelated folders but neither the folder itself nor its
 descendant. Move to folder filed a Document and then moved it back to the record. Delete
 stated where the contents would go, dissolved only the folder and left the Document live
@@ -130,7 +130,7 @@ original stayed downloadable. A deliberately damaged DOCX reached a failed rendi
 drew the guide's exact recovery card, still downloaded its original, and recovered
 through a v2 that rendered while the failed v1 stayed in the chain. After a disposable
 Document was permanently removed, its Version download answered 404 while a different
-Document still previewed and downloaded — the two outcomes the guide separates. The
+Document still previewed and downloaded. Those are the two outcomes the guide separates. The
 Business User supplied a file on their own Request thread and downloaded it back byte for
 byte with no reader, no v… indicator and no Version-history control, found the staff
 repository refused and its address closed, read published Knowledge with the primary
@@ -160,8 +160,8 @@ C54 ran as all three staff roles. Archive removed the row in one action and
 pin on v2 and every stored file still downloadable; **Restore** brought back the chain
 and the designation. While the owning Contract was archived a restore was refused and the
 record offered no Document controls; after the record was restored the Document restored
-normally, and a second restore from another session answered 409 — the stale state the
-guide tells the reader to reload on. The Administrator found **Delete** disabled until the
+normally, and a second restore from another session answered 409, which is the stale
+state the guide tells the reader to reload on. The Administrator found **Delete** disabled until the
 Document's displayed name was typed exactly, saw a wrong name keep it disabled and
 **Cancel** leave all three Versions in place, then confirmed and watched the row go and
 all three Version downloads answer 404 with no replacement primary chosen; the record's
@@ -214,6 +214,6 @@ match the current files.
 Each record's `at` is written by the recorder immediately after that awaited step settles,
 and this seat's records add the `startedAt` of the same step. They are real per-step
 completion times, not a single serialisation pass at the end of a run. The runs are short
-because these are automated browser assertions against a local instance — 27 steps in
-21 seconds for C26, for example. They are not measured human task times, and neither these
+because these are automated browser assertions against a local instance. C26 ran 27 steps
+in 21 seconds, for example. They are not measured human task times, and neither these
 records nor this file claims otherwise.

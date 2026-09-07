@@ -131,7 +131,7 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "action": "discovery: every DOC-017 guide this role reads still fits at an emulated 200% zoom",
-      "actual": "At an emulated 200% zoom (640x450 CSS pixels, device pixel ratio 2 — the browser's own zoom menu was not operated) every guide fitted without horizontal overflow; body/title sizes were document-versions 16px/32px, document-folders 16px/32px, document-previews 16px/32px, document-repository 16px/32px, archive-and-delete-documents 16px/32px",
+      "actual": "At an emulated 200% zoom (640x450 CSS pixels, device pixel ratio 2; the browser's own zoom menu was not operated) every guide fitted without horizontal overflow; body/title sizes were document-versions 16px/32px, document-folders 16px/32px, document-previews 16px/32px, document-repository 16px/32px, archive-and-delete-documents 16px/32px",
       "result": "pass",
       "startedAt": "2026-09-07T21:37:57.788Z",
       "at": "2026-09-07T21:38:01.833Z"
@@ -239,7 +239,7 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "action": "discovery: every DOC-017 guide this role reads still fits at an emulated 200% zoom",
-      "actual": "At an emulated 200% zoom (640x450 CSS pixels, device pixel ratio 2 — the browser's own zoom menu was not operated) every guide fitted without horizontal overflow; body/title sizes were document-versions 16px/32px, document-folders 16px/32px, document-previews 16px/32px, document-repository 16px/32px, archive-and-delete-documents 16px/32px",
+      "actual": "At an emulated 200% zoom (640x450 CSS pixels, device pixel ratio 2; the browser's own zoom menu was not operated) every guide fitted without horizontal overflow; body/title sizes were document-versions 16px/32px, document-folders 16px/32px, document-previews 16px/32px, document-repository 16px/32px, archive-and-delete-documents 16px/32px",
       "result": "pass",
       "startedAt": "2026-09-07T21:38:12.795Z",
       "at": "2026-09-07T21:38:16.855Z"
@@ -347,7 +347,7 @@
       "role": "contributor",
       "method": "browser-walkthrough",
       "action": "discovery: every DOC-017 guide this role reads still fits at an emulated 200% zoom",
-      "actual": "At an emulated 200% zoom (640x450 CSS pixels, device pixel ratio 2 — the browser's own zoom menu was not operated) every guide fitted without horizontal overflow; body/title sizes were document-versions 16px/32px, document-folders 16px/32px, document-previews 16px/32px, document-repository 16px/32px, archive-and-delete-documents 16px/32px",
+      "actual": "At an emulated 200% zoom (640x450 CSS pixels, device pixel ratio 2; the browser's own zoom menu was not operated) every guide fitted without horizontal overflow; body/title sizes were document-versions 16px/32px, document-folders 16px/32px, document-previews 16px/32px, document-repository 16px/32px, archive-and-delete-documents 16px/32px",
       "result": "pass",
       "startedAt": "2026-09-07T21:38:26.798Z",
       "at": "2026-09-07T21:38:30.883Z"

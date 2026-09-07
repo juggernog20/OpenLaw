@@ -16,7 +16,7 @@
       "role": "business_user",
       "method": "browser-walkthrough",
       "action": "C28 step 42: a thread attachment downloads and offers no Version history",
-      "actual": "On their own Request thread the Business User supplied a file and downloaded it back byte for byte; the page offered no reader, no v… indicator and no Version-history control, and the attachment never appeared in the staff Documents repository — the guide’s requester/managed distinction held",
+      "actual": "On their own Request thread the Business User supplied a file and downloaded it back byte for byte; the page offered no reader, no v… indicator and no Version-history control, and the attachment never appeared in the staff Documents repository. The guide's requester/managed distinction held",
       "result": "pass",
       "startedAt": "2026-09-07T21:24:14.236Z",
       "at": "2026-09-07T21:24:15.868Z"
@@ -25,7 +25,7 @@
       "role": "business_user",
       "method": "browser-walkthrough",
       "action": "C28 negative: the portal grants no staff Documents repository or record reach",
-      "actual": "The repository answered 403, the /documents address did not open for this reader, and a staff Document download answered 403 — the portal reaches neither, exactly as the guide's prerequisites state",
+      "actual": "The repository answered 403, the /documents address did not open for this reader, and a staff Document download answered 403. The portal reaches neither, exactly as the guide's prerequisites state",
       "result": "pass",
       "startedAt": "2026-09-07T21:24:15.868Z",
       "at": "2026-09-07T21:24:16.455Z"
@@ -43,7 +43,7 @@
       "role": "business_user",
       "method": "browser-walkthrough",
       "action": "C28 negative: an archived Knowledge Item is no longer available in the portal",
-      "actual": "Archiving the item sent the same portal link back to the portal home with no guidance shown; restoring it made the item readable again — the guide’s \"may no longer be available\" wording matches what a requester actually sees",
+      "actual": "Archiving the item sent the same portal link back to the portal home with no guidance shown; restoring it made the item readable again. The guide's \"may no longer be available\" wording matches what a requester actually sees",
       "result": "pass",
       "startedAt": "2026-09-07T21:24:17.088Z",
       "at": "2026-09-07T21:24:18.302Z"

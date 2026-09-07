@@ -34,7 +34,7 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "action": "C27 step 4: Move to folder files a Document, then moves it back out to the record",
-      "actual": "Move to folder > File in filed the Document into the folder and then, choosing \"The contract itself\", moved it back to the record root — the guide’s way out of folders",
+      "actual": "Move to folder > File in filed the Document into the folder and then, choosing \"The contract itself\", moved it back to the record root, which is the guide's way out of folders",
       "result": "pass",
       "startedAt": "2026-09-07T21:17:10.202Z",
       "at": "2026-09-07T21:17:10.897Z"
@@ -43,7 +43,7 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "action": "C27: Delete dissolves the folder and its contents move up, with nothing deleted",
-      "actual": "Delete on the child folder stated where its contents would go, dissolved only the folder, and left the Document live in the parent — folder deletion is not Document deletion, as the guide separates them",
+      "actual": "Delete on the child folder stated where its contents would go, dissolved only the folder, and left the Document live in the parent. Folder deletion is not Document deletion, as the guide separates them",
       "result": "pass",
       "startedAt": "2026-09-07T21:17:10.897Z",
       "at": "2026-09-07T21:17:11.888Z"
@@ -97,7 +97,7 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "action": "C27 step 4: Move to folder files a Document, then moves it back out to the record",
-      "actual": "Move to folder > File in filed the Document into the folder and then, choosing \"The contract itself\", moved it back to the record root — the guide’s way out of folders",
+      "actual": "Move to folder > File in filed the Document into the folder and then, choosing \"The contract itself\", moved it back to the record root, which is the guide's way out of folders",
       "result": "pass",
       "startedAt": "2026-09-07T21:17:19.280Z",
       "at": "2026-09-07T21:17:19.911Z"
@@ -106,7 +106,7 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "action": "C27: Delete dissolves the folder and its contents move up, with nothing deleted",
-      "actual": "Delete on the child folder stated where its contents would go, dissolved only the folder, and left the Document live in the parent — folder deletion is not Document deletion, as the guide separates them",
+      "actual": "Delete on the child folder stated where its contents would go, dissolved only the folder, and left the Document live in the parent. Folder deletion is not Document deletion, as the guide separates them",
       "result": "pass",
       "startedAt": "2026-09-07T21:17:19.911Z",
       "at": "2026-09-07T21:17:20.862Z"

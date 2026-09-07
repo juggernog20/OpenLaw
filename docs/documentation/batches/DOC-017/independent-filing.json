@@ -70,7 +70,7 @@
       "role": "contributor",
       "method": "browser-walkthrough",
       "action": "C26 filing negative: a Contributor supplies an attachment but gets no filing action",
-      "actual": "The Contributor attached permitted paper to the Contract conversation, saw no File control, and the attachment did not appear as a managed Document — the guide’s requester/managed distinction held",
+      "actual": "The Contributor attached permitted paper to the Contract conversation, saw no File control, and the attachment did not appear as a managed Document. The guide's requester/managed distinction held",
       "result": "pass",
       "startedAt": "2026-09-07T21:37:45.236Z",
       "at": "2026-09-07T21:37:46.034Z"

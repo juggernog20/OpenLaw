@@ -5,7 +5,7 @@
   "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
   "environment": "openlaw-docs-b8e31260-conversations",
   "author": "Codex documentation author",
-  "technicalReviewer": "Independent review seat (Opus 5 agent) — guide claims checked against the committed app source at a28331f7",
+  "technicalReviewer": "Independent review seat (Opus 5 agent); guide claims checked against the committed app source at a28331f7",
   "walkthroughReviewer": "Independent review seat (Opus 5 agent), separate from the documentation author",
   "reviewerKind": "agent",
   "verifiedAt": "2026-09-07T21:37:09.916Z",

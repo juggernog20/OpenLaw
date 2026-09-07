@@ -16,7 +16,7 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "action": "C54 step 12-15: Archive takes the whole Document out of the ordinary list and Show archived finds it",
-      "actual": "Archive removed the row from the ordinary list in one action; Show archived brought it back marked Archived with all three Versions, the executed pin on v2 and every stored file still downloadable — archiving destroys nothing",
+      "actual": "Archive removed the row from the ordinary list in one action; Show archived brought it back marked Archived with all three Versions, the executed pin on v2 and every stored file still downloadable. Archiving destroys nothing",
       "result": "pass",
       "startedAt": "2026-09-07T21:29:59.942Z",
       "at": "2026-09-07T21:30:00.989Z"
@@ -34,7 +34,7 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "action": "C54 step 25 negative: restoring is refused while the owning record is archived, and a lost race is reported",
-      "actual": "While the owning Contract was archived the restore answered 409 and the record offered no Document controls at all; after the record was restored the Document restored normally, and a second restore of the same Document from another session answered 409 — the stale state the guide tells the reader to reload on",
+      "actual": "While the owning Contract was archived the restore answered 409 and the record offered no Document controls at all; after the record was restored the Document restored normally, and a second restore of the same Document from another session answered 409, which is the stale state the guide tells the reader to reload on",
       "result": "pass",
       "startedAt": "2026-09-07T21:30:01.135Z",
       "at": "2026-09-07T21:30:02.752Z"
@@ -52,7 +52,7 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "action": "C54 step 36: the erasure is recorded and there is no way to delete a single Version",
-      "actual": "The record's History still named the erased Document after its rows and files were gone, and asking the seam to remove one Version answered 404 while that chain kept both rounds — deletion is whole-Document only, as the guide states",
+      "actual": "The record's History still named the erased Document after its rows and files were gone, and asking the seam to remove one Version answered 404 while that chain kept both rounds. Deletion is whole-Document only, as the guide states",
       "result": "pass",
       "startedAt": "2026-09-07T21:30:04.034Z",
       "at": "2026-09-07T21:30:04.158Z"
@@ -61,7 +61,7 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "action": "C54 step 12-15: Archive takes the whole Document out of the ordinary list and Show archived finds it",
-      "actual": "Archive removed the row from the ordinary list in one action; Show archived brought it back marked Archived with all three Versions, the executed pin on v2 and every stored file still downloadable — archiving destroys nothing",
+      "actual": "Archive removed the row from the ordinary list in one action; Show archived brought it back marked Archived with all three Versions, the executed pin on v2 and every stored file still downloadable. Archiving destroys nothing",
       "result": "pass",
       "startedAt": "2026-09-07T21:30:05.008Z",
       "at": "2026-09-07T21:30:05.918Z"
@@ -79,7 +79,7 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "action": "C54 step 25 negative: restoring is refused while the owning record is archived, and a lost race is reported",
-      "actual": "While the owning Contract was archived the restore answered 409 and the record offered no Document controls at all; after the record was restored the Document restored normally, and a second restore of the same Document from another session answered 409 — the stale state the guide tells the reader to reload on",
+      "actual": "While the owning Contract was archived the restore answered 409 and the record offered no Document controls at all; after the record was restored the Document restored normally, and a second restore of the same Document from another session answered 409, which is the stale state the guide tells the reader to reload on",
       "result": "pass",
       "startedAt": "2026-09-07T21:30:06.049Z",
       "at": "2026-09-07T21:30:07.648Z"

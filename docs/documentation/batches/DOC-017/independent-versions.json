@@ -79,7 +79,7 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "action": "C26: Make primary moves the designation between separate Documents",
-      "actual": "Make primary moved the single Primary mark to another Document; both chains kept every Version, matching the guide’s separate-designation wording",
+      "actual": "Make primary moved the single Primary mark to another Document; both chains kept every Version, matching the guide's separate-designation wording",
       "result": "pass",
       "startedAt": "2026-09-07T21:37:20.707Z",
       "at": "2026-09-07T21:37:20.874Z"
@@ -97,7 +97,7 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "action": "C26 negative: an archived owning record takes no new paper until it is restored",
-      "actual": "On the archived Contract the Documents tab offered no Upload control at all; restoring the record brought it straight back, matching the guide’s recovery advice",
+      "actual": "On the archived Contract the Documents tab offered no Upload control at all; restoring the record brought it straight back, matching the guide's recovery advice",
       "result": "pass",
       "startedAt": "2026-09-07T21:37:21.770Z",
       "at": "2026-09-07T21:37:23.926Z"
@@ -169,7 +169,7 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "action": "C26: Make primary moves the designation between separate Documents",
-      "actual": "Make primary moved the single Primary mark to another Document; both chains kept every Version, matching the guide’s separate-designation wording",
+      "actual": "Make primary moved the single Primary mark to another Document; both chains kept every Version, matching the guide's separate-designation wording",
       "result": "pass",
       "startedAt": "2026-09-07T21:37:27.542Z",
       "at": "2026-09-07T21:37:27.704Z"
@@ -187,7 +187,7 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "action": "C26 negative: an archived owning record takes no new paper until it is restored",
-      "actual": "On the archived Contract the Documents tab offered no Upload control at all; restoring the record brought it straight back, matching the guide’s recovery advice",
+      "actual": "On the archived Contract the Documents tab offered no Upload control at all; restoring the record brought it straight back, matching the guide's recovery advice",
       "result": "pass",
       "startedAt": "2026-09-07T21:37:28.512Z",
       "at": "2026-09-07T21:37:30.618Z"
@@ -250,7 +250,7 @@
       "role": "contributor",
       "method": "browser-walkthrough",
       "action": "C26 negative: an archived owning record takes no new paper until it is restored",
-      "actual": "On the archived Contract the Documents tab offered no Upload control at all; restoring the record brought it straight back, matching the guide’s recovery advice",
+      "actual": "On the archived Contract the Documents tab offered no Upload control at all; restoring the record brought it straight back, matching the guide's recovery advice",
       "result": "pass",
       "startedAt": "2026-09-07T21:37:35.874Z",
       "at": "2026-09-07T21:37:37.935Z"
