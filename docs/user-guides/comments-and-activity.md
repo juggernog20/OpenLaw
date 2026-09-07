@@ -45,7 +45,7 @@ An edit changes the text of an existing comment, not its selected recipients. Po
 
 Attachments have the comment's audience. They are conversation paper, with no Document Version chain of their own. A failed post does not mean the paper has been filed. Keep the draft, check the error, and retry after correcting the cause. Check for an existing post before retrying to avoid sending it twice.
 
-Administrators and Legal Team Members can use **File** on an eligible attachment to put it on the record as a new Document or a new Version. Contributors and Business Users cannot file it. Filing is a separate action; the attachment remains on the thread and shows its filing destination. See [Upload Documents and add Document Versions](document-versions.md) for that procedure.
+On a Contract conversation, Administrators and Legal Team Members can use **File** on an attachment that has not been filed yet to put it on the Contract as a new Document or a new Version. Matter and Request conversations do not offer File. Contributors and Business Users cannot file it. Filing is a separate action; the attachment remains on the thread and shows its filing destination. See [Upload Documents and add Document Versions](document-versions.md) for that procedure.
 
 ## Edit or remove a post
 
@@ -71,8 +71,8 @@ Keep using the same Request after Legal converts it to a Contract or Matter. Its
 
 ## Read the Activity feed
 
-On a reached Contract, Matter, or Legal Request page, select **History**. Read the entries in order and use **Show older** for earlier changes. The Activity feed describes actions on that record and applies your visibility limits. It is different from the Administrator's system-wide Audit log.
+On a reached Contract or Matter page, select **History**. Read the entries in order and use **Show older** for earlier changes. The Activity feed describes actions on that record and applies your visibility limits. It is different from the Administrator's system-wide Audit log.
 
-The Portal provides the Request status and conversation, not the Legal record's History panel. When a Request converts, earlier Activity entries stay on the Request; later actions appear on the resulting record. The comments themselves follow the work.
+The Portal provides the Request status and conversation, not the Legal record's History panel. A Request in the Inbox has its conversation but no History panel. When Legal converts a Request, the resulting record's History begins with the record's creation, and the comments themselves follow the work.
 
 If the conversation or History cannot load, follow its message to reopen the panel. In the Portal, reload the page. Retry **Show older** or **Show earlier replies** if only the earlier page failed. If access has changed, ask Legal to check it before posting again.

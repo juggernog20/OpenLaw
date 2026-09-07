@@ -1,0 +1,96 @@
+{
+  "articleId": "notifications",
+  "contentSha256": "7f0a7503cf875f644ef8642f7d5d6ac0c67e335c319d023faff93a30cd42f294",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-07T08:53:41.841Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS.md",
+    "apps/web/src/components/notification-bell.tsx",
+    "apps/web/src/components/notification-preferences.tsx",
+    "apps/web/src/routes/settings-notifications.tsx",
+    "apps/web/src/routes/portal-settings.tsx",
+    "apps/web/src/lib/notifications.ts",
+    "apps/api/src/lib/notifications/catalog.ts",
+    "apps/api/src/lib/notifications/preferences.ts",
+    "apps/api/src/lib/notifications/notifier.ts",
+    "apps/api/src/lib/notifications/audience.ts",
+    "apps/api/src/lib/notifications/local-day.ts",
+    "apps/api/src/lib/notifications/offsets.ts",
+    "apps/api/src/lib/notifications/email.ts",
+    "apps/api/src/pipeline/morning-round.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C08",
+      "coverage": ["C08"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Links open permitted records and each preference affects its documented channel/event group. Portal preferences expose only supported groups; disabled email, unavailable records, and timing/timezone limits are explained.",
+      "actual": "Nadia's bell read 9+ with 28 unread; opening marked the 25 displayed items read, Mark all read was offered for the 3 remaining and took unread to 0, and the control was absent once nothing was unread. A mention item linked to /contracts/33 and opened C-33; Show older grew the list to 50. Profile menu, Settings, Personal, Notifications reached the grid: five groups, Dates approaching In-app only, Knowledge items Email only, and a Briefing card with Approvals, Tasks, Dates, Obligations, and Intake. With Assigned to you Email off a mention still raised the bell item and no mail arrived in 3 s after the queue settled; Email on delivered You were mentioned naming Ravi Menon; In-app off left unread and the newest item unchanged with no mail; each saved choice survived a reload. On a fresh Legal Team Member account the initial choices matched the guide table, a Chicago timezone before 08:00 deferred the briefing, an Asia/Dubai timezone brought a 1 date on your contracts mail naming one of two same-date Key dates and a Your daily briefing is ready bell summary that opened Home, and a further round sent nothing.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-011/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-011/independent-discovery.json"
+      ]
+    },
+    {
+      "id": "V-C08",
+      "coverage": ["C08"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Links open permitted records and each preference affects its documented channel/event group. Portal preferences expose only supported groups; disabled email, unavailable records, and timing/timezone limits are explained.",
+      "actual": "With Activity on your records Email off, Nadia's Working team comment on C-33 raised a commented on bell item for Daniel as Owner with no New comment on mail in 3 s; Email on delivered it and the switch returned to off; the item opened C-33. Jonas's new Request raised New request items for Daniel and Nadia, and Daniel's item opened /inbox/26. A blocked preference save showed The change could not be saved. Try again. and the switch kept its earlier value after a reload; a blocked bell read showed Notifications could not be read. Close this and open it again. and reopening listed items; a blocked older page showed The older notifications could not be read. Try again. with the 25 rows kept and the retry loaded more. On a fresh Administrator account the initial choices matched the guide, the pre-08:00 timezone deferred the briefing, the later timezone delivered Your daily briefing with the Task section and no Dates section while Dates Email was off, the bell summary opened Home, and the same-day round sent no second briefing.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-011/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-011/independent-discovery.json"
+      ]
+    },
+    {
+      "id": "V-C08",
+      "coverage": ["C08"],
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "expected": "Links open permitted records and each preference affects its documented channel/event group. Portal preferences expose only supported groups; disabled email, unavailable records, and timing/timezone limits are explained.",
+      "actual": "Daniel's Working team mention raised exactly one Daniel Okafor mentioned you item for Ravi with no separate commented on item, and it opened C-33. Ravi's pane shows the New requests switch, yet Jonas's new Request produced no item for him. After Daniel removed his Contributor entry the bell listed no C-33 items and the old destination showed Something went wrong.; restoring the entry restored the item and the record. On a fresh Contributor account the initial choices matched the guide; with Dates approaching In-app off and Dates Email on, the post-08:00 briefing carried the Task section only, no date reminder reached the bell, the summary opened Home, and the same-day round sent nothing more.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-011/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-011/independent-discovery.json"
+      ]
+    },
+    {
+      "id": "V-C08",
+      "coverage": ["C08"],
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "expected": "Links open permitted records and each preference affects its documented channel/event group. Portal preferences expose only supported groups; disabled email, unavailable records, and timing/timezone limits are explained.",
+      "actual": "Nadia's Full thread comment on C-33 raised a Portal bell item that opened /portal/requests/17, the converted Request, and delivered Legal replied on mail. Notification settings offered Request updates In-app and Email only, with no Briefing or staff groups. Email off kept the bell item with no mail in 3 s; In-app off left the unread count unchanged with no mail; both restored delivered mail again; a blocked save showed The change could not be saved. Try again. with Email still on. A blocked Portal bell read showed Notifications could not be read. Close this and open it again. and reopening listed the Request items.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-011/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-011/independent-discovery.json"
+      ]
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-011/README.md"],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "Mail absence was observed for 3 seconds after each controlled event once the Mailpit queue had settled, paired with positive deliveries through the same worker; this bounds the lab, not an arbitrary relay.",
+    "Filing an attachment, the Administrator lead-time procedure, and Document Versions were not performed; their guides (DOC-017, DOC-021) are unpublished and both articles stay in review until they pass.",
+    "The morning rounds were queued by the reviewer rather than waiting for the hourly cron; the worker served them with its real clock and rules.",
+    "The Administrator lead-time procedure links to the unpublished reminders guide (DOC-021); the article stays in review until that target passes.",
+    "Knowledge-only briefings and Entity Obligation reminders were not produced in this lab."
+  ],
+  "publicationBlockers": ["reminders-and-audit (DOC-021) is unpublished."],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

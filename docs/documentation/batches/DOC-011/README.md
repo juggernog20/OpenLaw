@@ -1,8 +1,10 @@
 # Conversation and notification guide verification
 
 Record C07 and C08 for [issue #731](https://github.com/juggernog20/OpenLaw/issues/731).
-Both guides remain in review. The author walkthroughs below passed; independent
-source review and walkthrough evidence are pending. Agent checks are not a human user study.
+Both guides remain in review. The author walkthroughs below passed, and the independent
+source review and browser walkthrough recorded at the end of this file passed all eight
+scenario/role combinations. The articles stay in review only because two linked guides
+are unpublished. Agent checks are not a human user study.
 
 ## Build and fixtures
 
@@ -75,8 +77,8 @@ does not change reminder identity or promise every same-date label appears in ma
 ## Publication dependencies and baseline revalidation
 
 C07 links attachment filing to DOC-017's Document guide. C08 links Administrator
-lead-time configuration to DOC-021. These articles stay in review until those targets,
-other linked guides, and required independent checks pass.
+lead-time configuration to DOC-021. These articles stay in review until those targets
+and other linked guides pass; the independent checks below are complete.
 
 The edition uses one app commit for verified articles. Four articles previously
 verified against the pilot are back in review after this app correction:
@@ -101,4 +103,45 @@ consequences. The current statements were retained: prerequisites compare role a
 and the channel paragraph explains the result of a choice rather than directing users
 to disable a channel. The third reported duplicate mailbox/delivery guidance; inspection
 found one such instruction in the guide, so no removal was warranted. No functional
-finding was reported. Independent source review and walkthroughs remain pending.
+finding was reported.
+
+## Independent walkthrough
+
+A different agent, the Fable review seat, first checked both guides against the committed
+app source and then followed them with its own Playwright scripts on September 7, 2026,
+between 08:46 and 08:55 UTC, against the committed conversations lab, Mailpit, the lab
+worker's own morning round, and the draft reader. It reused the fixture identifiers, the
+sign-in helpers, and the lab connection details, not the author's steps or assertions.
+The sanitized step records are in
+[independent-walkthrough.json](independent-walkthrough.json) and
+[independent-discovery.json](independent-discovery.json); the per-article evidence files
+under `docs/documentation/evidence/` cite them. All eight required scenario/role
+combinations passed against the final guide bytes. This is an agent walkthrough, not a
+human user study, and it does not stand in for the feature owner's approval.
+
+| Scenario | Roles                                                        | Result | Notes                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| -------- | ------------------------------------------------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| V-C07    | Legal Team Member, Administrator, Contributor, Business User | pass   | Three tiers with descriptions; mentions and the Widen the audience? prompt with Cancel and Widen and post; paper with Remove, retrieval, and the File dialog on the Contract only; own edit, cancel, and delete; Administrator redaction of a deleted comment and of paper; Contributor tier limits and History tiers; Portal replies with paper, Full thread filtering, and the unconverted Request; every recovery path. |
+| V-C08    | Legal Team Member, Administrator, Contributor, Business User | pass   | 9+ badge, read-on-open, Mark all read for items beyond the page, Show older; every switch shape; Email off, Email on, and In-app off for mentions, record activity, and Portal Request updates with Mailpit timing; New requests audience; Contributor access removal and restoration; fresh-account defaults; deferred and served morning rounds by profile timezone; once per local day; failed saves and reads.         |
+
+The walkthrough corrected two statements in the comments guide and reran both scenarios
+against the corrected bytes. File is offered on Contract conversations only; the Matter
+attachment had no File control and the API refuses filing from another thread. The
+Inbox Request page has a conversation but no History panel, and a converted record's
+History begins with the record's creation, so the guide no longer lists the Legal
+Request page as a History location.
+
+Two observations are recorded for triage rather than as guide faults. A download of
+comment paper that arrives while the Administrator's redaction is still in flight
+answered 500 instead of 404, because the stored file is deleted before the comment row is
+marked; the same URL answers 404 once the redaction completes
+([issue #762](https://github.com/juggernog20/OpenLaw/issues/762)). Help with this page on
+a Portal Request opens the still-scoped portal.request topic (DOC-012) and lists no guide,
+while the Portal header Help on the same page lists both guides.
+
+Discovery passed for all four roles: contextual Help from the Contract page and from
+Personal Notifications, Portal header Help from the Request and Notification settings,
+search, title and section focus, the formal link, anonymous formal reading without API
+calls, and no horizontal overflow in light, dark, and warm at 320, 720, and 1440 CSS
+pixels. The committed lab's normal Help lists neither review article. Layout checks
+are CSS-pixel measurements, not browser zoom or assistive-technology acceptance.
