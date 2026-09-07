@@ -1,0 +1,644 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-013",
+  "issue": 733,
+  "independentReview": true,
+  "reviewerKind": "agent",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "author": "Codex documentation author",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "method": "browser-walkthrough",
+  "startedAt": "2026-09-07T11:22:54.225Z",
+  "finishedAt": "2026-09-07T11:30:14.241Z",
+  "frontend": "Committed conversations lab at port 43302 for every guide step; Mailpit at port 48427 for the Portal sign-ins and the resolution email check; the lab API for the second legal session's competing writes, one later Document Version per converted record, and state reads",
+  "browser": "Playwright 1.62.1 Chromium from the private documentation cache, headless, one isolated context per identity; scripts written by the reviewer from the guide text",
+  "articleHashesTested": [
+    {
+      "articleId": "triage-requests",
+      "contentSha256": ["b28fe6456b9259168173d057309994db811044beac40c09dcafd96ea7da36eea"]
+    },
+    {
+      "articleId": "convert-request",
+      "contentSha256": ["09ba1d034467e55a18a1b06c5942e0485d9282afbfe6b31676e239b470809abe"]
+    }
+  ],
+  "articleHashesCurrent": [
+    {
+      "articleId": "triage-requests",
+      "contentSha256": "b28fe6456b9259168173d057309994db811044beac40c09dcafd96ea7da36eea"
+    },
+    {
+      "articleId": "convert-request",
+      "contentSha256": "09ba1d034467e55a18a1b06c5942e0485d9282afbfe6b31676e239b470809abe"
+    }
+  ],
+  "authorHashesHistorical": [
+    {
+      "articleId": "triage-requests",
+      "contentSha256": ["b28fe6456b9259168173d057309994db811044beac40c09dcafd96ea7da36eea"]
+    },
+    {
+      "articleId": "convert-request",
+      "contentSha256": ["78e63862575dba04aad2449bf41830a6e47c7c3f6a3660c5bb5d00cd2766fcb3"]
+    }
+  ],
+  "fixturePreparation": [
+    "Reused the author's request types, Fields, Contract and Matter types, and Matter templates by identifier. Created two Entities of its own (Independent old Entity and Independent live Entity), created twenty fresh fictional Requests R-108 to R-127 as Jonas Weber through the Portal API (ten per staff role: triage, resolve, race, contract, matter, re-target, deferred, archived, bad template, conversion race) with two distinct PDFs each, then archived the old Entity. The contract and matter Requests carry a reference to the old Entity set while it was live; the Portal has no Entity picker.",
+    "Requests decided by earlier reviewer runs were replaced by fresh copies before the final runs: R-128 and R-129 for the Administrator's resolve steps and R-130 for the Administrator's contract conversion. The final records name the Requests they used.",
+    "Comments at all three tiers with paper were posted through the Inbox Comments panel as the acting role before each main conversion. Competing decisions were made by the other staff role through the API while the browser's write was held, so the dialog met a real conflict. The people-load and save failures used controlled browser responses; the successful retries wrote through the app.",
+    "One later Document Version was uploaded through the API to the first promoted Document on each of C-59, M-39, C-63 and M-42 to check that the Requester's original downloads did not change. DOC-017 owns that guide; this is not acceptance of it.",
+    "Fictional records created by the final runs: Administrator C-59, M-39, M-40 (re-target), C-60 (deferred), C-61 (archived type), M-41 (No template after the refused default), C-62 (won by Nadia Haddad); Legal Team Member C-63, M-42, M-43, C-64, C-65, M-44, C-66 (won by Daniel Okafor). Earlier reviewer runs left C-58 and unused fresh Requests in this disposable lab."
+  ],
+  "corrections": [
+    "None from the walkthrough. The three conversion-guide sentences changed by this seat's earlier source check (commit 4a540b8c) were followed as written: the Template control appeared as soon as a Matter type was set, and the refused template default was recovered by Cancel, reopen, No template and a typed required answer."
+  ],
+  "observations": [
+    "Six earlier steps failed on reviewer harness locators, not on app or guide behaviour: an alert whose text sits beside a Retry button, the retained assignee rendered inside a span that also carries the avatar initials, a list-row control already reading Reassign after a prior run, the dialog's single \"Priority High\" line, and a GET on a Document versions route that does not exist. Each was corrected in the harness and the run repeated on unchanged guide bytes; the failed steps are retained above with their run tag.",
+    "The retained assignee is visible on a decided Request immediately after resolution, before any reload; the earlier failure was the locator.",
+    "The resolution note also reached Jonas by email from the lab (subject \"Your request is resolved: R-N · …\"); external delivery is not claimed.",
+    "The stale template default was refused by the API with \"<Field>: pick one of the options.\" while the dialog showed no box for that optional Field, which is the case the guide's second refusal paragraph describes.",
+    "Converts to reads the bare module (\"Contract\") for a module-only request type and for one whose configured type was archived; the dialog then offers the live type picker as the guide says.",
+    "A Contract created by conversion has no Owner and a Matter no Matter Manager (both read null); the Contract team read route is POST-only, so ownership was checked on the record itself."
+  ],
+  "steps": [
+    {
+      "article": "triage-requests",
+      "role": "administrator",
+      "step": "people list failure shows Retry; a failed save keeps the prior assignment; the retry saves; only active Legal Team Members and Administrators are offered",
+      "result": "fail",
+      "actual": "expect(locator).toBeVisible() failed\n\nLocator: getByRole('dialog', { name: 'Assign R-108 for triage', exact: true }).getByText('People could not be loaded.', { exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.be.visible\" with timeout 5000ms\n  - waiting for getByRole('dialog', { name: 'Assign R-108 for triage', exact: true }).getByText('People could not be loaded.', { exact: true })",
+      "at": "2026-09-07T11:23:05.145Z",
+      "ms": 5031,
+      "run": "triage run 1 (reviewer harness fault, retained)"
+    },
+    {
+      "article": "triage-requests",
+      "role": "administrator",
+      "step": "resolve R-109 with a note: Outcome Resolved, note in Comments and on the Portal, assignee retained read-only, Requester reply does not reopen it",
+      "result": "fail",
+      "actual": "expect(locator).toBeVisible() failed\n\nLocator: getByText('Nadia Haddad', { exact: true }).first()\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.be.visible\" with timeout 5000ms\n  - waiting for getByText('Nadia Haddad', { exact: true }).first()",
+      "at": "2026-09-07T11:23:32.992Z",
+      "ms": 5352,
+      "run": "triage run 2 (reviewer harness fault, retained)"
+    },
+    {
+      "article": "triage-requests",
+      "role": "administrator",
+      "step": "assign R-108 from the list row, check it on the Request page, reassign from the avatar, Cancel keeps the saved assignee, Unassigned clears it; the other legal session keeps Triage and the status stays New",
+      "result": "fail",
+      "actual": "locator.click: Timeout 10000ms exceeded.\nCall log:\n  - waiting for getByRole('button', { name: 'Assign R-108', exact: true })",
+      "at": "2026-09-07T11:24:18.981Z",
+      "ms": 10587,
+      "run": "triage run 3 (reviewer harness fault, retained)"
+    },
+    {
+      "article": "triage-requests",
+      "role": "administrator",
+      "step": "resolve R-128 with a note: Outcome Resolved, note in Comments and on the Portal, assignee retained read-only, Requester reply does not reopen it",
+      "result": "fail",
+      "actual": "expect(locator).toBeVisible() failed\n\nLocator: getByText('Nadia Haddad', { exact: true }).first()\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.be.visible\" with timeout 5000ms\n  - waiting for getByText('Nadia Haddad', { exact: true }).first()",
+      "at": "2026-09-07T11:24:50.385Z",
+      "ms": 5902,
+      "run": "triage run 4 (reviewer harness fault, retained)"
+    },
+    {
+      "article": "convert-request",
+      "role": "administrator",
+      "step": "R-111 (contract): dialog review — Converts to, fixed contract type, Title from Summary, Priority from Urgency, carry and stay lists, required Field and archived Entity refusals; Cancel leaves it undecided",
+      "result": "fail",
+      "actual": "expect(locator).toBeVisible() failed\n\nLocator: getByRole('dialog').getByText('Priority', { exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.be.visible\" with timeout 5000ms\n  - waiting for getByRole('dialog').getByText('Priority', { exact: true })",
+      "at": "2026-09-07T11:28:55.526Z",
+      "ms": 5693,
+      "run": "conversion run 1 (reviewer harness fault, retained)"
+    },
+    {
+      "article": "convert-request",
+      "role": "business_user",
+      "step": "R-111 after conversion to C-58: same address In progress, Full thread only, original downloads unchanged after a later Document Version, reply reaches the contract, no contract page for Business Users, Amara refused",
+      "result": "fail",
+      "actual": "get /documents/01a07ba1-3c4d-7186-adac-40dd32ac0e3f/versions 404 {\"type\":\"about:blank\",\"title\":\"Not found\",\"status\":404,\"detail\":\"Route GET /api/v1/documents/01a07ba1-3c4d-7186-adac-40dd32ac0e3f/versions does not exist.\",\"instance\":\"/api/v1/documents/01a07ba1-3c4d-7186-adac-40dd32ac0e3f/versions\"}",
+      "at": "2026-09-07T11:29:20.815Z",
+      "ms": 629,
+      "run": "conversion run 2 (reviewer harness fault, retained)"
+    },
+    {
+      "article": "triage-requests",
+      "role": "administrator",
+      "step": "open Inbox: the built-in view opens on Status: New ordered by urgency then age; open R-108 and read Description, Form responses, Attachments, Converts to, Requester and Urgency; download an attachment by its filename",
+      "result": "pass",
+      "actual": "Status: New chip and ordering line present; R-108 listed after 0 Show more presses; historical R-77 listed in New view: false; Request page showed the summary heading, the three sections, the retained description line, the carried answer, Converts to Docs intake contract 1788777391069, Requester Jonas Weber, Urgency High; independent-administrator-triage-first.pdf downloaded from /api/v1/requests/108/attachments/01a07b9a-211a-74aa-98e6-2e3716104e7c with the original bytes",
+      "at": "2026-09-07T11:25:24.899Z",
+      "ms": 735,
+      "run": "triage run 5 (final)"
+    },
+    {
+      "article": "triage-requests",
+      "role": "administrator",
+      "step": "assign R-108 from the list row, check it on the Request page, reassign from the avatar, Cancel keeps the saved assignee, Unassigned clears it; the other legal session keeps Triage and the status stays New",
+      "result": "pass",
+      "actual": "List-row control read \"DO\"; saved Nadia Haddad and the row and Request page both showed Reassign R-108: Nadia Haddad; the other session still had Triage enabled; reassigned to Daniel Okafor; Cancel after choosing Nadia Haddad left Daniel Okafor saved; Unassigned restored Assign R-108; status stayed new throughout",
+      "at": "2026-09-07T11:25:27.339Z",
+      "ms": 2440,
+      "run": "triage run 5 (final)"
+    },
+    {
+      "article": "triage-requests",
+      "role": "administrator",
+      "step": "people list failure shows Retry; a failed save keeps the prior assignment; the retry saves; only active Legal Team Members and Administrators are offered",
+      "result": "pass",
+      "actual": "Aborted people load showed \"People could not be loaded.\" with Retry; Retry listed Daniel Okafor and offered Ravi Menon 0 times and Jonas Weber 0 times; a 503 on save showed the retry text and left the Request unassigned; the real retry saved Daniel Okafor and survived reload",
+      "at": "2026-09-07T11:25:28.275Z",
+      "ms": 936,
+      "run": "triage run 5 (final)"
+    },
+    {
+      "article": "triage-requests",
+      "role": "administrator",
+      "step": "a Full thread clarification reaches the Requester and leaves R-108 New; a Legal only note does not reach them",
+      "result": "pass",
+      "actual": "Posted a Legal only note and a Full thread reply from the Comments panel; status stayed new; Jonas's Portal page showed the Full thread text only",
+      "at": "2026-09-07T11:25:29.146Z",
+      "ms": 871,
+      "run": "triage run 5 (final)"
+    },
+    {
+      "article": "triage-requests",
+      "role": "administrator",
+      "step": "Triage on R-129 offers Convert to contract, Convert to matter and Resolve request without converting, and no Decline",
+      "result": "pass",
+      "actual": "Menu items: Convert to contract | Convert to matter | Resolve request without converting",
+      "at": "2026-09-07T11:25:29.805Z",
+      "ms": 658,
+      "run": "triage run 5 (final)"
+    },
+    {
+      "article": "triage-requests",
+      "role": "administrator",
+      "step": "Resolve refuses a blank note; Cancel leaves R-129 undecided and posts nothing",
+      "result": "pass",
+      "actual": "Dialog \"Resolve R-129 without converting\" refused the empty note with the displayed sentence; Cancel with typed text left the Request new with Triage available and nothing on the Portal",
+      "at": "2026-09-07T11:25:30.571Z",
+      "ms": 766,
+      "run": "triage run 5 (final)"
+    },
+    {
+      "article": "triage-requests",
+      "role": "administrator",
+      "step": "resolve R-129 with a note: Outcome Resolved, note in Comments and on the Portal, assignee retained read-only, Requester reply does not reopen it",
+      "result": "pass",
+      "actual": "Assigned Nadia Haddad first; resolved with the note; Outcome region shows Resolved; Triage and Assign controls gone; Nadia Haddad shown as read-only text 1 times before reload and shown after reload; the note is in Comments; Portal shows Resolved and the note; Jonas's reply appeared to Legal and the status stayed resolved; new email to Jonas: Your request is resolved: R-129 · Independent administrator-resolve rerun 1788780321468 | Legal replied on R-129 · Independent administrator-resolve rerun 1788780321468",
+      "at": "2026-09-07T11:25:32.294Z",
+      "ms": 1723,
+      "run": "triage run 5 (final)"
+    },
+    {
+      "article": "triage-requests",
+      "role": "administrator",
+      "step": "find decided Requests: removing the Status filter lists R-129; Status Declined lists the historical R-77 with its reason and no Assign or Triage controls",
+      "result": "pass",
+      "actual": "New view excluded R-129; Remove Status filter listed it after 2 Show more presses; Filter > Status > Declined > Apply showed the Status: Declined chip and listed R-77; its Outcome shows Declined with the reason, no Triage or Assign control, and its Attachments section",
+      "at": "2026-09-07T11:25:33.408Z",
+      "ms": 1114,
+      "run": "triage run 5 (final)"
+    },
+    {
+      "article": "triage-requests",
+      "role": "administrator",
+      "step": "competing resolution on R-110: the other legal session resolves first; the open dialog states the outcome and offers Close; the losing note is not posted",
+      "result": "pass",
+      "actual": "Nadia Haddad's API resolution landed while the browser write was held; the dialog said \"Somebody else already resolved this request.\" and \"Close this to read what they recorded.\"; after Close the page showed Outcome Resolved with only the winning note in Comments and on the Portal",
+      "at": "2026-09-07T11:25:34.886Z",
+      "ms": 1478,
+      "run": "triage run 5 (final)"
+    },
+    {
+      "article": "triage-requests",
+      "role": "legal_team_member",
+      "step": "open Inbox: the built-in view opens on Status: New ordered by urgency then age; open R-118 and read Description, Form responses, Attachments, Converts to, Requester and Urgency; download an attachment by its filename",
+      "result": "pass",
+      "actual": "Status: New chip and ordering line present; R-118 listed after 0 Show more presses; historical R-77 listed in New view: false; Request page showed the summary heading, the three sections, the retained description line, the carried answer, Converts to Docs intake contract 1788777391069, Requester Jonas Weber, Urgency High; independent-legal_team_member-triage-first.pdf downloaded from /api/v1/requests/118/attachments/01a07b9a-2269-71f6-b125-44a0562260f2 with the original bytes",
+      "at": "2026-09-07T11:25:35.605Z",
+      "ms": 699,
+      "run": "triage run 5 (final)"
+    },
+    {
+      "article": "triage-requests",
+      "role": "legal_team_member",
+      "step": "assign R-118 from the list row, check it on the Request page, reassign from the avatar, Cancel keeps the saved assignee, Unassigned clears it; the other legal session keeps Triage and the status stays New",
+      "result": "pass",
+      "actual": "List-row control read \"Assign\"; saved Daniel Okafor and the row and Request page both showed Reassign R-118: Daniel Okafor; the other session still had Triage enabled; reassigned to Nadia Haddad; Cancel after choosing Daniel Okafor left Nadia Haddad saved; Unassigned restored Assign R-118; status stayed new throughout",
+      "at": "2026-09-07T11:25:38.061Z",
+      "ms": 2456,
+      "run": "triage run 5 (final)"
+    },
+    {
+      "article": "triage-requests",
+      "role": "legal_team_member",
+      "step": "people list failure shows Retry; a failed save keeps the prior assignment; the retry saves; only active Legal Team Members and Administrators are offered",
+      "result": "pass",
+      "actual": "Aborted people load showed \"People could not be loaded.\" with Retry; Retry listed Nadia Haddad and offered Ravi Menon 0 times and Jonas Weber 0 times; a 503 on save showed the retry text and left the Request unassigned; the real retry saved Nadia Haddad and survived reload",
+      "at": "2026-09-07T11:25:38.987Z",
+      "ms": 926,
+      "run": "triage run 5 (final)"
+    },
+    {
+      "article": "triage-requests",
+      "role": "legal_team_member",
+      "step": "a Full thread clarification reaches the Requester and leaves R-118 New; a Legal only note does not reach them",
+      "result": "pass",
+      "actual": "Posted a Legal only note and a Full thread reply from the Comments panel; status stayed new; Jonas's Portal page showed the Full thread text only",
+      "at": "2026-09-07T11:25:39.819Z",
+      "ms": 832,
+      "run": "triage run 5 (final)"
+    },
+    {
+      "article": "triage-requests",
+      "role": "legal_team_member",
+      "step": "Triage on R-119 offers Convert to contract, Convert to matter and Resolve request without converting, and no Decline",
+      "result": "pass",
+      "actual": "Menu items: Convert to contract | Convert to matter | Resolve request without converting",
+      "at": "2026-09-07T11:25:40.468Z",
+      "ms": 649,
+      "run": "triage run 5 (final)"
+    },
+    {
+      "article": "triage-requests",
+      "role": "legal_team_member",
+      "step": "Resolve refuses a blank note; Cancel leaves R-119 undecided and posts nothing",
+      "result": "pass",
+      "actual": "Dialog \"Resolve R-119 without converting\" refused the empty note with the displayed sentence; Cancel with typed text left the Request new with Triage available and nothing on the Portal",
+      "at": "2026-09-07T11:25:41.204Z",
+      "ms": 736,
+      "run": "triage run 5 (final)"
+    },
+    {
+      "article": "triage-requests",
+      "role": "legal_team_member",
+      "step": "resolve R-119 with a note: Outcome Resolved, note in Comments and on the Portal, assignee retained read-only, Requester reply does not reopen it",
+      "result": "pass",
+      "actual": "Assigned Daniel Okafor first; resolved with the note; Outcome region shows Resolved; Triage and Assign controls gone; Daniel Okafor shown as read-only text 1 times before reload and shown after reload; the note is in Comments; Portal shows Resolved and the note; Jonas's reply appeared to Legal and the status stayed resolved; new email to Jonas: Your request is resolved: R-119 · Independent legal_team_member-resolve 1788780091776 | Legal replied on R-119 · Independent legal_team_member-resolve 1788780091776",
+      "at": "2026-09-07T11:25:42.978Z",
+      "ms": 1774,
+      "run": "triage run 5 (final)"
+    },
+    {
+      "article": "triage-requests",
+      "role": "legal_team_member",
+      "step": "find decided Requests: removing the Status filter lists R-119; Status Declined lists the historical R-77 with its reason and no Assign or Triage controls",
+      "result": "pass",
+      "actual": "New view excluded R-119; Remove Status filter listed it after 1 Show more presses; Filter > Status > Declined > Apply showed the Status: Declined chip and listed R-77; its Outcome shows Declined with the reason, no Triage or Assign control, and its Attachments section",
+      "at": "2026-09-07T11:25:43.991Z",
+      "ms": 1013,
+      "run": "triage run 5 (final)"
+    },
+    {
+      "article": "triage-requests",
+      "role": "legal_team_member",
+      "step": "competing resolution on R-120: the other legal session resolves first; the open dialog states the outcome and offers Close; the losing note is not posted",
+      "result": "pass",
+      "actual": "Daniel Okafor's API resolution landed while the browser write was held; the dialog said \"Somebody else already resolved this request.\" and \"Close this to read what they recorded.\"; after Close the page showed Outcome Resolved with only the winning note in Comments and on the Portal",
+      "at": "2026-09-07T11:25:45.453Z",
+      "ms": 1462,
+      "run": "triage run 5 (final)"
+    },
+    {
+      "article": "triage-requests",
+      "role": "contributor",
+      "step": "Contributors and Business Users cannot open the Inbox",
+      "result": "pass",
+      "actual": "Ravi Menon: /inbox landed on /, staff list API 403; Jonas Weber: /inbox landed on /portal, staff list API 403",
+      "at": "2026-09-07T11:25:47.410Z",
+      "ms": 1163,
+      "run": "triage run 5 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "administrator",
+      "step": "R-130 (contract): post Legal only, Working team and Full thread comments with paper before converting; the Requester sees the Full thread one only",
+      "result": "pass",
+      "actual": "Three comments with distinct PDFs posted through the Comments panel; Jonas's Portal page showed only the Full thread text and file",
+      "at": "2026-09-07T11:29:38.024Z",
+      "ms": 1641,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "administrator",
+      "step": "R-130 (contract): dialog review — Converts to, fixed contract type, Title from Summary, Priority from Urgency, carry and stay lists, required Field and archived Entity refusals; Cancel leaves it undecided",
+      "result": "pass",
+      "actual": "Converts to Docs intake contract 1788777391069; dialog \"Convert R-130 to a contract\" with Title = Summary, fixed type and no type picker, Priority High, carry list with the carried answer, stay list naming Docs intake stays 1788777391069, a required box for Docs intake gap 1788777391069, and the archived Independent old Entity 1788780091776 refused with only Independent live Entity 1788780091776 offered; empty required box refused with \"Fill Docs intake gap 1788777391069\"; archived reference refused with \"Pick a live value for Docs intake entity 1788777391069\"; Cancel left the Request new with Triage available and the Portal not In progress",
+      "at": "2026-09-07T11:29:39.448Z",
+      "ms": 1424,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "administrator",
+      "step": "R-130 (contract): convert — one contract under Outcome, Title, type, Priority, Fields, no Owner/Manager, Risk or Description, Request keeps its own answers, Triage gone",
+      "result": "pass",
+      "actual": "C-59 created once; Outcome shows Converted with the link and no Triage; record Title \"Independent contract from R-130 1788780572727\", type Docs intake contract 1788777391069 shown 1x, Priority high (High shown 2x), Risk null, Owner null, Description null; team read: get /contracts/59/team 404 {\"type\":\"about:blank\",\"title\":\"Not found\",\"status\":40; Fields shows the carried and typed answers; live Entity shown: true; Docs intake stays 1788777391069 not on the record; the Request keeps the carried answer, the request-only answer and the archived Entity reference",
+      "at": "2026-09-07T11:29:39.875Z",
+      "ms": 426,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "administrator",
+      "step": "C-59: two Documents at Version 1 with the original bytes, primary Document on the Contract only, comment paper stays in the retained conversation with its tiers",
+      "result": "pass",
+      "actual": "Documents lists independent-administrator-contract-second-1788780572727.pdf and independent-administrator-contract-first-1788780572727.pdf; each opened as version 1 and downloaded with the original bytes; primary: [\"independent-administrator-contract-first-1788780572727.pdf\"]; all three comments and their files are in the contract's Comments panel (tier labels Legal only:2, Working team:2, Full thread:2); no Document was made from comment paper",
+      "at": "2026-09-07T11:29:40.266Z",
+      "ms": 391,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "business_user",
+      "step": "R-130 after conversion to C-59: same address In progress, Full thread only, original downloads unchanged after a later Document Version, reply reaches the contract, no contract page for Business Users, Amara refused",
+      "result": "pass",
+      "actual": "Portal R-130 shows In progress with the Full thread comment only (Legal only file 404, Working team file 404, Full thread file 200); after Legal added version a later to independent-administrator-contract-first-1788780572727.pdf both original downloads still matched their bytes; Jonas's reply appeared in the contract's Comments; Jonas's browser at /contracts/59 landed on /portal and the staff read answered 403; Amara landed on /portal and her Portal read answered 404",
+      "at": "2026-09-07T11:29:42.791Z",
+      "ms": 2525,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "administrator",
+      "step": "R-112 (matter): post Legal only, Working team and Full thread comments with paper before converting; the Requester sees the Full thread one only",
+      "result": "pass",
+      "actual": "Three comments with distinct PDFs posted through the Comments panel; Jonas's Portal page showed only the Full thread text and file",
+      "at": "2026-09-07T11:29:44.471Z",
+      "ms": 1672,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "administrator",
+      "step": "R-112 (matter): dialog review — Converts to, fixed matter type, Title from Summary, Priority from Urgency, carry and stay lists, required Field and archived Entity refusals, template auto-selection and No template; Cancel leaves it undecided",
+      "result": "pass",
+      "actual": "Converts to Docs intake matter 1788777391069; dialog \"Convert R-112 to a matter\" with Title = Summary, fixed type and no type picker, Priority High, carry list with the carried answer, stay list naming Docs intake stays 1788777391069, a required box for Docs intake gap 1788777391069, and the archived Independent old Entity 1788780091776 refused with only Independent live Entity 1788780091776 offered; Template (optional) opened on Docs intake matter template 1788777391069 with \"Template adds 1 task and 1 key date.\" and the required box prefilled \"Template gap default\"; No template emptied both; empty required box refused with \"Fill Docs intake gap 1788777391069\"; archived reference refused with \"Pick a live value for Docs intake entity 1788777391069\"; Cancel left the Request new with Triage available and the Portal not In progress",
+      "at": "2026-09-07T11:29:45.875Z",
+      "ms": 1404,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "administrator",
+      "step": "R-112 (matter): convert — one matter under Outcome, Title, type, Priority, Custom fields on Overview, no Owner/Manager, Risk or Description, Request keeps its own answers, Triage gone",
+      "result": "pass",
+      "actual": "M-39 created once; Outcome shows Converted with the link and no Triage; record Title \"Independent matter from R-112 1788780572727\", type Docs intake matter 1788777391069 shown 1x, Priority high (High shown 2x), Risk null, Matter Manager null, Description null; Overview > Custom fields shows the carried and typed answers; live Entity shown: true; Docs intake stays 1788777391069 not on the record; the Request keeps the carried answer, the request-only answer and the archived Entity reference",
+      "at": "2026-09-07T11:29:46.190Z",
+      "ms": 315,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "administrator",
+      "step": "M-39: two Documents at Version 1 with the original bytes, primary Document on the Contract only, comment paper stays in the retained conversation with its tiers",
+      "result": "pass",
+      "actual": "Documents lists independent-administrator-matter-second.pdf and independent-administrator-matter-first.pdf; each opened as version 1 and downloaded with the original bytes; primary: []; all three comments and their files are in the matter's Comments panel (tier labels Legal only:2, Working team:2, Full thread:2); no Document was made from comment paper",
+      "at": "2026-09-07T11:29:46.550Z",
+      "ms": 360,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "business_user",
+      "step": "R-112 after conversion to M-39: same address In progress, Full thread only, original downloads unchanged after a later Document Version, reply reaches the matter, no matter page for Business Users, Amara refused",
+      "result": "pass",
+      "actual": "Portal R-112 shows In progress with the Full thread comment only (Legal only file 404, Working team file 404, Full thread file 200); after Legal added version a later to independent-administrator-matter-first.pdf both original downloads still matched their bytes; Jonas's reply appeared in the matter's Comments; Jonas's browser at /matters/39 landed on /portal and the staff read answered 403; Amara landed on /portal and her Portal read answered 404",
+      "at": "2026-09-07T11:29:49.021Z",
+      "ms": 2471,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "administrator",
+      "step": "M-39: the template filled its optional default only, kept the confirmed Title and Urgency-based Priority, left Risk and Manager unset, and created an unassigned Task at +3 days and a Key date at +5 days",
+      "result": "pass",
+      "actual": "Template Docs intake matter template 1788777391069: optional default \"Template optional default\" present, carried and typed values kept, Title without the template prefix, Priority high not the template's low, Risk null not critical, Manager null; Task \"Check fictional evaluation scope\" unassigned (Unassigned shown 2x) due 2026-09-10 = created 2026-09-07 + 3; Key date \"Fictional intake checkpoint\" on 2026-09-12 = + 5",
+      "at": "2026-09-07T11:29:50.209Z",
+      "ms": 1188,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "administrator",
+      "step": "R-113 re-target: Converts to names the Contract type; Convert to matter states the re-target, needs a Matter type, auto-selects the single template, keeps a typed answer across Convert to contract instead and back, and creates one Matter",
+      "result": "pass",
+      "actual": "Re-target note shown; \"Pick a matter type.\" refused the empty picker; Docs intake matter 1788777391069 chosen, template auto-selected with its counts, typed answer survived Convert to contract instead (fixed Contract type shown) and Convert to matter instead (type still chosen); M-40 created with the carried and typed answers; no Contract was made; Portal shows In progress",
+      "at": "2026-09-07T11:29:51.717Z",
+      "ms": 1499,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "administrator",
+      "step": "R-114 module-only routing: the dialog says the type was left to conversion, refuses without a type, and converts once a live Contract type is chosen",
+      "result": "pass",
+      "actual": "Overview read \"Requester JW Jonas Weber Type Docs intake deferred form 1788777391069 Converts to Contract Urgency High Submitted 8 minutes ago\"; dialog offered the Contract type picker with the deferred-routing sentence; empty picker refused with \"Pick a contract type.\"; C-60 created with Docs intake contract 1788777391069",
+      "at": "2026-09-07T11:29:52.548Z",
+      "ms": 822,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "administrator",
+      "step": "R-115 archived configured type: the dialog offers only live Contract types, refuses without one, and converts with a live replacement",
+      "result": "pass",
+      "actual": "Overview read \"Requester JW Jonas Weber Type Docs intake archived form 1788777391069 Converts to Contract Urgency High Submitted 8 minutes ago\"; the archived Docs intake archivedContract 1788777391069 was not offered; empty picker refused; C-61 created with the live Docs intake contract 1788777391069",
+      "at": "2026-09-07T11:29:53.397Z",
+      "ms": 844,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "administrator",
+      "step": "R-116 template with a stale optional default: the write is refused naming the value and the Request stays undecided; following the guide, Cancel, reopen, No template and a typed required answer convert it",
+      "result": "pass",
+      "actual": "Template Docs intake badMatter template 1788777391069 auto-selected with no box for Docs intake choice 1788777391069; confirming was refused with \"Docs intake choice 1788777391069: pick one of the options.\" and the Request stayed new; Cancel, reopen, No template (required box emptied) and a typed answer created M-41 without the stale value and with no template Task",
+      "at": "2026-09-07T11:29:54.382Z",
+      "ms": 980,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "administrator",
+      "step": "R-117 competing conversion: Nadia Haddad converts first; the open dialog names the record and offers Close; no second Contract is created",
+      "result": "pass",
+      "actual": "Nadia Haddad's API conversion landed while the browser write was held; the dialog said \"Somebody else already converted this request.\", \"It became C-62.\" and \"Close this to read what they recorded.\"; after Close the Outcome linked C-62 once, Triage was gone, and C-62 carries the winner's Title and answer",
+      "at": "2026-09-07T11:29:55.257Z",
+      "ms": 870,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "legal_team_member",
+      "step": "R-121 (contract): post Legal only, Working team and Full thread comments with paper before converting; the Requester sees the Full thread one only",
+      "result": "pass",
+      "actual": "Three comments with distinct PDFs posted through the Comments panel; Jonas's Portal page showed only the Full thread text and file",
+      "at": "2026-09-07T11:29:56.899Z",
+      "ms": 1638,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "legal_team_member",
+      "step": "R-121 (contract): dialog review — Converts to, fixed contract type, Title from Summary, Priority from Urgency, carry and stay lists, required Field and archived Entity refusals; Cancel leaves it undecided",
+      "result": "pass",
+      "actual": "Converts to Docs intake contract 1788777391069; dialog \"Convert R-121 to a contract\" with Title = Summary, fixed type and no type picker, Priority High, carry list with the carried answer, stay list naming Docs intake stays 1788777391069, a required box for Docs intake gap 1788777391069, and the archived Independent old Entity 1788780091776 refused with only Independent live Entity 1788780091776 offered; empty required box refused with \"Fill Docs intake gap 1788777391069\"; archived reference refused with \"Pick a live value for Docs intake entity 1788777391069\"; Cancel left the Request new with Triage available and the Portal not In progress",
+      "at": "2026-09-07T11:29:58.319Z",
+      "ms": 1419,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "legal_team_member",
+      "step": "R-121 (contract): convert — one contract under Outcome, Title, type, Priority, Fields, no Owner/Manager, Risk or Description, Request keeps its own answers, Triage gone",
+      "result": "pass",
+      "actual": "C-63 created once; Outcome shows Converted with the link and no Triage; record Title \"Independent contract from R-121 1788780572727\", type Docs intake contract 1788777391069 shown 1x, Priority high (High shown 2x), Risk null, Owner null, Description null; team read: get /contracts/63/team 404 {\"type\":\"about:blank\",\"title\":\"Not found\",\"status\":40; Fields shows the carried and typed answers; live Entity shown: true; Docs intake stays 1788777391069 not on the record; the Request keeps the carried answer, the request-only answer and the archived Entity reference",
+      "at": "2026-09-07T11:29:58.785Z",
+      "ms": 465,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "legal_team_member",
+      "step": "C-63: two Documents at Version 1 with the original bytes, primary Document on the Contract only, comment paper stays in the retained conversation with its tiers",
+      "result": "pass",
+      "actual": "Documents lists independent-legal_team_member-contract-second.pdf and independent-legal_team_member-contract-first.pdf; each opened as version 1 and downloaded with the original bytes; primary: [\"independent-legal_team_member-contract-first.pdf\"]; all three comments and their files are in the contract's Comments panel (tier labels Legal only:2, Working team:2, Full thread:2); no Document was made from comment paper",
+      "at": "2026-09-07T11:29:59.140Z",
+      "ms": 354,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "business_user",
+      "step": "R-121 after conversion to C-63: same address In progress, Full thread only, original downloads unchanged after a later Document Version, reply reaches the contract, no contract page for Business Users, Amara refused",
+      "result": "pass",
+      "actual": "Portal R-121 shows In progress with the Full thread comment only (Legal only file 404, Working team file 404, Full thread file 200); after Legal added version a later to independent-legal_team_member-contract-first.pdf both original downloads still matched their bytes; Jonas's reply appeared in the contract's Comments; Jonas's browser at /contracts/63 landed on /portal and the staff read answered 403; Amara landed on /portal and her Portal read answered 404",
+      "at": "2026-09-07T11:30:01.664Z",
+      "ms": 2524,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "legal_team_member",
+      "step": "R-122 (matter): post Legal only, Working team and Full thread comments with paper before converting; the Requester sees the Full thread one only",
+      "result": "pass",
+      "actual": "Three comments with distinct PDFs posted through the Comments panel; Jonas's Portal page showed only the Full thread text and file",
+      "at": "2026-09-07T11:30:03.294Z",
+      "ms": 1621,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "legal_team_member",
+      "step": "R-122 (matter): dialog review — Converts to, fixed matter type, Title from Summary, Priority from Urgency, carry and stay lists, required Field and archived Entity refusals, template auto-selection and No template; Cancel leaves it undecided",
+      "result": "pass",
+      "actual": "Converts to Docs intake matter 1788777391069; dialog \"Convert R-122 to a matter\" with Title = Summary, fixed type and no type picker, Priority High, carry list with the carried answer, stay list naming Docs intake stays 1788777391069, a required box for Docs intake gap 1788777391069, and the archived Independent old Entity 1788780091776 refused with only Independent live Entity 1788780091776 offered; Template (optional) opened on Docs intake matter template 1788777391069 with \"Template adds 1 task and 1 key date.\" and the required box prefilled \"Template gap default\"; No template emptied both; empty required box refused with \"Fill Docs intake gap 1788777391069\"; archived reference refused with \"Pick a live value for Docs intake entity 1788777391069\"; Cancel left the Request new with Triage available and the Portal not In progress",
+      "at": "2026-09-07T11:30:04.706Z",
+      "ms": 1412,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "legal_team_member",
+      "step": "R-122 (matter): convert — one matter under Outcome, Title, type, Priority, Custom fields on Overview, no Owner/Manager, Risk or Description, Request keeps its own answers, Triage gone",
+      "result": "pass",
+      "actual": "M-42 created once; Outcome shows Converted with the link and no Triage; record Title \"Independent matter from R-122 1788780572727\", type Docs intake matter 1788777391069 shown 1x, Priority high (High shown 2x), Risk null, Matter Manager null, Description null; Overview > Custom fields shows the carried and typed answers; live Entity shown: true; Docs intake stays 1788777391069 not on the record; the Request keeps the carried answer, the request-only answer and the archived Entity reference",
+      "at": "2026-09-07T11:30:05.055Z",
+      "ms": 349,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "legal_team_member",
+      "step": "M-42: two Documents at Version 1 with the original bytes, primary Document on the Contract only, comment paper stays in the retained conversation with its tiers",
+      "result": "pass",
+      "actual": "Documents lists independent-legal_team_member-matter-second.pdf and independent-legal_team_member-matter-first.pdf; each opened as version 1 and downloaded with the original bytes; primary: []; all three comments and their files are in the matter's Comments panel (tier labels Legal only:2, Working team:2, Full thread:2); no Document was made from comment paper",
+      "at": "2026-09-07T11:30:05.430Z",
+      "ms": 375,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "business_user",
+      "step": "R-122 after conversion to M-42: same address In progress, Full thread only, original downloads unchanged after a later Document Version, reply reaches the matter, no matter page for Business Users, Amara refused",
+      "result": "pass",
+      "actual": "Portal R-122 shows In progress with the Full thread comment only (Legal only file 404, Working team file 404, Full thread file 200); after Legal added version a later to independent-legal_team_member-matter-first.pdf both original downloads still matched their bytes; Jonas's reply appeared in the matter's Comments; Jonas's browser at /matters/42 landed on /portal and the staff read answered 403; Amara landed on /portal and her Portal read answered 404",
+      "at": "2026-09-07T11:30:07.926Z",
+      "ms": 2496,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "legal_team_member",
+      "step": "M-42: the template filled its optional default only, kept the confirmed Title and Urgency-based Priority, left Risk and Manager unset, and created an unassigned Task at +3 days and a Key date at +5 days",
+      "result": "pass",
+      "actual": "Template Docs intake matter template 1788777391069: optional default \"Template optional default\" present, carried and typed values kept, Title without the template prefix, Priority high not the template's low, Risk null not critical, Manager null; Task \"Check fictional evaluation scope\" unassigned (Unassigned shown 2x) due 2026-09-10 = created 2026-09-07 + 3; Key date \"Fictional intake checkpoint\" on 2026-09-12 = + 5",
+      "at": "2026-09-07T11:30:09.114Z",
+      "ms": 1188,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "legal_team_member",
+      "step": "R-123 re-target: Converts to names the Contract type; Convert to matter states the re-target, needs a Matter type, auto-selects the single template, keeps a typed answer across Convert to contract instead and back, and creates one Matter",
+      "result": "pass",
+      "actual": "Re-target note shown; \"Pick a matter type.\" refused the empty picker; Docs intake matter 1788777391069 chosen, template auto-selected with its counts, typed answer survived Convert to contract instead (fixed Contract type shown) and Convert to matter instead (type still chosen); M-43 created with the carried and typed answers; no Contract was made; Portal shows In progress",
+      "at": "2026-09-07T11:30:10.602Z",
+      "ms": 1480,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "legal_team_member",
+      "step": "R-124 module-only routing: the dialog says the type was left to conversion, refuses without a type, and converts once a live Contract type is chosen",
+      "result": "pass",
+      "actual": "Overview read \"Requester JW Jonas Weber Type Docs intake deferred form 1788777391069 Converts to Contract Urgency High Submitted 8 minutes ago\"; dialog offered the Contract type picker with the deferred-routing sentence; empty picker refused with \"Pick a contract type.\"; C-64 created with Docs intake contract 1788777391069",
+      "at": "2026-09-07T11:30:11.481Z",
+      "ms": 872,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "legal_team_member",
+      "step": "R-125 archived configured type: the dialog offers only live Contract types, refuses without one, and converts with a live replacement",
+      "result": "pass",
+      "actual": "Overview read \"Requester JW Jonas Weber Type Docs intake archived form 1788777391069 Converts to Contract Urgency High Submitted 8 minutes ago\"; the archived Docs intake archivedContract 1788777391069 was not offered; empty picker refused; C-65 created with the live Docs intake contract 1788777391069",
+      "at": "2026-09-07T11:30:12.348Z",
+      "ms": 861,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "legal_team_member",
+      "step": "R-126 template with a stale optional default: the write is refused naming the value and the Request stays undecided; following the guide, Cancel, reopen, No template and a typed required answer convert it",
+      "result": "pass",
+      "actual": "Template Docs intake badMatter template 1788777391069 auto-selected with no box for Docs intake choice 1788777391069; confirming was refused with \"Docs intake choice 1788777391069: pick one of the options.\" and the Request stayed new; Cancel, reopen, No template (required box emptied) and a typed answer created M-44 without the stale value and with no template Task",
+      "at": "2026-09-07T11:30:13.365Z",
+      "ms": 1013,
+      "run": "conversion run 3 (final)"
+    },
+    {
+      "article": "convert-request",
+      "role": "legal_team_member",
+      "step": "R-127 competing conversion: Daniel Okafor converts first; the open dialog names the record and offers Close; no second Contract is created",
+      "result": "pass",
+      "actual": "Daniel Okafor's API conversion landed while the browser write was held; the dialog said \"Somebody else already converted this request.\", \"It became C-66.\" and \"Close this to read what they recorded.\"; after Close the Outcome linked C-66 once, Triage was gone, and C-66 carries the winner's Title and answer",
+      "at": "2026-09-07T11:30:14.241Z",
+      "ms": 870,
+      "run": "conversion run 3 (final)"
+    }
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "Competing decisions and later Document Versions were applied through the lab API by the second staff role; assignment and people-load failures used controlled browser responses.",
+    "Layout checks are CSS-pixel measurements in three themes, not browser zoom or assistive technology acceptance. External email delivery is not claimed.",
+    "The conversion guide links to Matter templates and Document Versions, which are unpublished (DOC-021, DOC-017); the shared conversation and notification guides carry their own onward dependencies. Both articles stay in review."
+  ]
+}

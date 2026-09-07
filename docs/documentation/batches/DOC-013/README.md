@@ -2,8 +2,10 @@
 
 C12–C13 for [issue #733](https://github.com/juggernog20/OpenLaw/issues/733).
 This batch completes the triage pilot and covers conversion of a Request to exactly one Contract or Matter.
-Both articles remain in review pending independent walkthroughs and their linked
-publication dependencies. Agent checks are not a human user study.
+The author walkthroughs below passed, and the independent source check and browser
+walkthrough recorded at the end of this file passed all four scenario and role
+combinations. Both articles stay in review only because linked guides are unpublished.
+Agent checks are not a human user study.
 
 ## Build and fixtures
 
@@ -119,4 +121,46 @@ the isolated notification file then passed all 20 tests. No runtime change was m
 for this unrelated timing failure. The full API rerun then passed all 2,889 tests in 176 files. The other four
 workspaces had passed in the initial run, including all 1,702 web tests. All 19
 static checks, 33 documentation-tool tests, and normal/preview builds passed.
-Independent review is recorded below when complete.
+
+## Independent walkthrough
+
+A different agent, the Fable review seat, first checked both guides against the
+committed app source and then followed them with its own Playwright scripts on
+September 7, 2026, against the committed conversations lab, Mailpit, and the preview
+reader. It reused the sign-in helpers, the lab connection details, and the author's
+type, Field, and template identifiers, not the author's steps or assertions. It created
+its own Entities and twenty fresh fictional Requests, R-108 to R-127, with three
+replacements (R-128 to R-130) for Requests its earlier runs had decided. The sanitized
+step records are in [independent-walkthrough.json](independent-walkthrough.json) and
+[independent-discovery.json](independent-discovery.json); the per-article evidence
+files under `docs/documentation/evidence/` cite them. All four scenario and role
+combinations passed against the final guide bytes, including the corrected conversion
+guide (`09ba1d03…`). This is an agent walkthrough, not a human user study, and it does
+not stand in for the feature owner's approval.
+
+| Scenario | Role              | Result | Notes                                                                                                                                                                                                                                                                                                                                                                                                             |
+| -------- | ----------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| V-C12    | Administrator     | pass   | R-108 review and download; list-row Assign, avatar reassign, Cancel, Unassigned; people-load Retry and failed save; Full thread and Legal only reach; three Triage actions and no Decline; blank note refused; R-129 resolved with the note, assignee kept, Portal reply, email; Status filter to R-77 Declined; R-110 competing resolution by Nadia; Ravi and Jonas refused the Inbox.                           |
+| V-C12    | Legal Team Member | pass   | The same path on R-118, R-119, R-120, with Daniel as the other session.                                                                                                                                                                                                                                                                                                                                           |
+| V-C13    | Administrator     | pass   | R-130 to C-59 and R-112 to M-39 with three-tier paper, dialog refusals, Cancel, Fields and Custom fields, promoted Documents and primary, retained thread, Portal reach after a later Version, Jonas and Amara refused; template defaults, unassigned Task and Key date; R-113 re-target to M-40, R-114 deferred to C-60, R-115 archived type to C-61, R-116 refused default to M-41, R-117 won by Nadia as C-62. |
+| V-C13    | Legal Team Member | pass   | The same path on R-121 to C-63, R-122 to M-42, R-123 to M-43, R-124 to C-64, R-125 to C-65, R-126 to M-44, and R-127 won by Daniel as C-66.                                                                                                                                                                                                                                                                       |
+
+The walkthrough changed no guide text. Six earlier reviewer steps failed on harness
+locators, not on the app or the guides: an alert whose text sits beside its Retry
+button, the retained assignee's span that also carries the avatar initials, a list-row
+control already reading Reassign after a prior run, the dialog's single "Priority High"
+line, and a Document versions read route that does not exist. Each run was repeated on
+unchanged guide bytes and the failed steps are retained in the record with their run tag.
+
+Three observations are recorded rather than guide faults. The retained assignee is
+visible immediately after resolution, before any reload. The stale template default is
+refused by the API as "<Field>: pick one of the options." while the dialog shows no box
+for that optional Field, which is the case the guide's second refusal paragraph covers.
+Converts to reads the bare module for a module-only request type and for one whose
+configured type was archived, and the dialog then offers the live type picker.
+
+Discovery passed on the preview reader for both roles: Help with this page from the
+Inbox and from a Request, exact-title and phrase search, title and section focus, the
+related-guide links, formal reading of both guides, anonymous formal reading without
+API calls, and no horizontal overflow in light, warm, and dark at 320, 720, and 1440
+CSS pixels. The committed lab's normal Help lists neither article.

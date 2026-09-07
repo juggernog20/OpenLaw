@@ -1,0 +1,68 @@
+{
+  "articleId": "convert-request",
+  "contentSha256": "09ba1d034467e55a18a1b06c5942e0485d9282afbfe6b31676e239b470809abe",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-07T11:33:34.068Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-INTAKE.md",
+    "apps/web/src/routes/inbox-request.tsx",
+    "apps/web/src/components/intake/convert-dialog.tsx",
+    "apps/web/src/routes/contract-record.tsx",
+    "apps/web/src/routes/matter-record.tsx",
+    "apps/api/src/modules/requests/convert.ts",
+    "apps/api/src/modules/requests/promote-paper.ts",
+    "apps/api/src/modules/requests/move-thread.ts",
+    "apps/api/src/modules/requests/projection.ts",
+    "apps/api/src/modules/matters/create.ts",
+    "apps/api/src/modules/contracts/create.ts",
+    "apps/api/src/lib/custom-fields.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C13",
+      "coverage": ["C13"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Each Request creates one work object of its configured target; paper and conversation retain the documented ownership and reach. Concurrent conversion, archived carried references, and missing required values have supported repair or refusal paths.",
+      "actual": "Daniel Okafor posted Legal only, Working team and Full thread comments with paper on R-130 and R-112; Jonas Weber saw the Full thread ones only. The dialog showed Converts to, the fixed type without a picker, Title from the Summary, Priority High from Urgency, the carry and stay lists, a required box for the uncollected Field, the archived Entity refused with only live Entities offered, and on the Matter the single template auto-selected with its Task and Key date counts and No template clearing the prefilled default; an empty required box and the archived reference were refused by name and Cancel left the Request undecided. Converting created C-59 and M-39 once each, with the confirmed Title, type, Priority high, Risk, Owner or Matter Manager and Description unset, the carried and typed answers on Fields or on Overview under Custom fields, the request-only answer and the archived reference retained on the Request, and no Triage afterwards. Both original attachments became separate Documents at version 1 with the original bytes, the first was primary on the Contract only, and the three comments and their files moved with their tiers without new Documents. On the Portal the same R- address showed In progress with the Full thread comment only, the original downloads were unchanged after a later Document Version, Jonas's reply reached the record, and Jonas and Amara Nwosu were refused the record and the other's Request. The template filled only its optional default, kept the Title without its prefix and the Urgency-based Priority, left Risk and Manager unset, and created an unassigned Task at +3 days and a Key date at +5 days. Re-target from R-113 to M-40 kept a typed answer across Convert to contract instead and back; R-114 with module-only routing and R-115 with an archived configured type each needed a live type and became C-60 and C-61; R-116's stale template default was refused by name without deciding the Request and Cancel, reopen, No template and a typed answer made M-41; a competing conversion of R-117 by the other session showed the winning C-62 in the dialog and created no second record.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-013/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-013/independent-discovery.json"
+      ]
+    },
+    {
+      "id": "V-C13",
+      "coverage": ["C13"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Each Request creates one work object of its configured target; paper and conversation retain the documented ownership and reach. Concurrent conversion, archived carried references, and missing required values have supported repair or refusal paths.",
+      "actual": "Nadia Haddad posted Legal only, Working team and Full thread comments with paper on R-121 and R-122; Jonas Weber saw the Full thread ones only. The dialog showed Converts to, the fixed type without a picker, Title from the Summary, Priority High from Urgency, the carry and stay lists, a required box for the uncollected Field, the archived Entity refused with only live Entities offered, and on the Matter the single template auto-selected with its Task and Key date counts and No template clearing the prefilled default; an empty required box and the archived reference were refused by name and Cancel left the Request undecided. Converting created C-63 and M-42 once each, with the confirmed Title, type, Priority high, Risk, Owner or Matter Manager and Description unset, the carried and typed answers on Fields or on Overview under Custom fields, the request-only answer and the archived reference retained on the Request, and no Triage afterwards. Both original attachments became separate Documents at version 1 with the original bytes, the first was primary on the Contract only, and the three comments and their files moved with their tiers without new Documents. On the Portal the same R- address showed In progress with the Full thread comment only, the original downloads were unchanged after a later Document Version, Jonas's reply reached the record, and Jonas and Amara Nwosu were refused the record and the other's Request. The template filled only its optional default, kept the Title without its prefix and the Urgency-based Priority, left Risk and Manager unset, and created an unassigned Task at +3 days and a Key date at +5 days. Re-target from R-123 to M-43 kept a typed answer across Convert to contract instead and back; R-124 with module-only routing and R-125 with an archived configured type each needed a live type and became C-64 and C-65; R-126's stale template default was refused by name without deciding the Request and Cancel, reopen, No template and a typed answer made M-44; a competing conversion of R-127 by the other session showed the winning C-66 in the dialog and created no second record.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-013/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-013/independent-discovery.json"
+      ]
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-013/README.md"],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "Six earlier reviewer steps failed on harness locators and are retained in the batch record; each was rerun on unchanged guide bytes and passed.",
+    "Competing conversions and later Document Versions were written through the lab API by the second staff role.",
+    "The Matter template and Document Versions guides it links to are unpublished; the article stays in review until they pass."
+  ],
+  "publicationBlockers": [
+    "matter-templates (DOC-021) and document-versions (DOC-017) do not exist yet; comments-and-activity and follow-request are in review."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

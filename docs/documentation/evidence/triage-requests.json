@@ -1,0 +1,66 @@
+{
+  "articleId": "triage-requests",
+  "contentSha256": "b28fe6456b9259168173d057309994db811044beac40c09dcafd96ea7da36eea",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-07T11:33:34.068Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-INTAKE.md",
+    "apps/web/src/routes/inbox.tsx",
+    "apps/web/src/routes/inbox-request.tsx",
+    "apps/web/src/components/inbox/request-assignment.tsx",
+    "apps/web/src/components/inbox/inbox-filter-definitions.ts",
+    "apps/web/src/components/intake/resolve-dialog.tsx",
+    "apps/api/src/modules/requests/assignment.ts",
+    "apps/api/src/modules/requests/resolve.ts",
+    "apps/api/src/modules/requests/disposition.ts",
+    "apps/api/src/modules/requests/inbox.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C12",
+      "coverage": ["C12"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Assignment persists without deciding the Request or reserving it. Dispositioned Requests leave the undecided Inbox and retain their outcome. Resolve requires an explanatory Full Thread note; Decline is absent from the current Triage menu. A concurrent disposition produces a clear lost-race result rather than a second outcome.",
+      "actual": "Daniel Okafor opened the Inbox on Status: New ordered by urgency then age, opened R-108, read Description, Form responses, Attachments, Converts to, Requester and Urgency, and downloaded the original PDF byte-for-byte. Assign from the list row, reassignment from the avatar, Cancel, and Unassigned behaved as the guide says; the other legal session kept Triage and the status stayed New; a people-load failure offered Retry, a failed save kept the prior assignment, and the retry saved. A Full thread clarification reached Jonas Weber while a Legal only note did not, and the Request stayed New. Triage offered Convert to contract, Convert to matter and Resolve request without converting, with no Decline. A blank resolution note was refused and Cancel changed nothing; resolving R-129 with a note showed Outcome Resolved, the note in Comments and on the Portal, the assignee retained read-only, Jonas's reply without reopening, and a resolution email. Removing the Status filter listed the resolved Request; Status Declined listed historical R-77 with its reason and no Assign or Triage controls. A competing resolution on R-110 by the other session left the dialog stating the outcome with Close and only the winning note posted. Ravi Menon and Jonas Weber could not open the Inbox.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-013/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-013/independent-discovery.json"
+      ]
+    },
+    {
+      "id": "V-C12",
+      "coverage": ["C12"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Assignment persists without deciding the Request or reserving it. Dispositioned Requests leave the undecided Inbox and retain their outcome. Resolve requires an explanatory Full Thread note; Decline is absent from the current Triage menu. A concurrent disposition produces a clear lost-race result rather than a second outcome.",
+      "actual": "Nadia Haddad opened the Inbox on Status: New ordered by urgency then age, opened R-118, read Description, Form responses, Attachments, Converts to, Requester and Urgency, and downloaded the original PDF byte-for-byte. Assign from the list row, reassignment from the avatar, Cancel, and Unassigned behaved as the guide says; the other legal session kept Triage and the status stayed New; a people-load failure offered Retry, a failed save kept the prior assignment, and the retry saved. A Full thread clarification reached Jonas Weber while a Legal only note did not, and the Request stayed New. Triage offered Convert to contract, Convert to matter and Resolve request without converting, with no Decline. A blank resolution note was refused and Cancel changed nothing; resolving R-119 with a note showed Outcome Resolved, the note in Comments and on the Portal, the assignee retained read-only, Jonas's reply without reopening, and a resolution email. Removing the Status filter listed the resolved Request; Status Declined listed historical R-77 with its reason and no Assign or Triage controls. A competing resolution on R-120 by the other session left the dialog stating the outcome with Close and only the winning note posted. Ravi Menon and Jonas Weber could not open the Inbox.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-013/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-013/independent-discovery.json"
+      ]
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-013/README.md"],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "Six earlier reviewer steps failed on harness locators and are retained in the batch record; each was rerun on unchanged guide bytes and passed.",
+    "Competing resolutions were written by the other staff role through the lab API while the browser write was held; assignment failures used controlled browser responses.",
+    "The linked conversation, notification, and request-form guides are in review or unpublished; the article stays in review until they pass."
+  ],
+  "publicationBlockers": [
+    "comments-and-activity (DOC-011, onward DOC-017), notifications (onward DOC-021), and request-forms (DOC-021) are unpublished."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}
