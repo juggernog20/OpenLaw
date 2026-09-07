@@ -37,6 +37,7 @@
 import type { FastifyReply } from "fastify";
 import { z } from "zod";
 import {
+  alias,
   and,
   asc,
   contracts,
@@ -484,6 +485,18 @@ const StaffRequesterSchema = z.object({
  * answers it on the way out (INT-007), so the read that opens the screen
  * and the write that changes it say one sentence about one Request.
  */
+export const requestAssignees = alias(users, "request_assignee");
+export const RequestAssigneeSchema = z.object({
+  id: z.string(),
+  displayName: z.string(),
+  image: z.string().nullable(),
+});
+export const requestAssigneeSelection = {
+  id: requestAssignees.id,
+  displayName: requestAssignees.displayName,
+  image: requestAssignees.image,
+};
+
 export const StaffRequestSchema = z.object({
   id: z.string(),
   /** INT-002's global reference; the screen renders it R-###. */
@@ -501,6 +514,7 @@ export const StaffRequestSchema = z.object({
   createdAt: z.string(),
   requestType: StaffRequestTypeSchema,
   requester: StaffRequesterSchema,
+  assignee: RequestAssigneeSchema.nullable(),
   /** The record a conversion made, when this viewer reaches it, and
    * `null` in every other case — never converted, converted into a
    * record they may not see, or converted into another module. */
@@ -544,6 +558,7 @@ export async function staffRequestRow(db: Executor, user: AuthenticatedUser, num
       targetContractTypeName: contractTypes.displayName,
       targetMatterTypeId: matterTypes.id,
       targetMatterTypeName: matterTypes.displayName,
+      assignee: requestAssigneeSelection,
       requesterId: users.id,
       requesterDisplayName: users.displayName,
       requesterEmail: users.email,
@@ -552,6 +567,7 @@ export async function staffRequestRow(db: Executor, user: AuthenticatedUser, num
     .from(requests)
     .innerJoin(requestTypes, eq(requests.requestTypeId, requestTypes.id))
     .innerJoin(users, eq(requests.requesterId, users.id))
+    .leftJoin(requestAssignees, eq(requests.assigneeId, requestAssignees.id))
     .leftJoin(contractTypes, liveTargetContractType())
     .leftJoin(matterTypes, liveTargetMatterType())
     .where(and(eq(requests.number, number), isNull(requests.archivedAt)))
@@ -567,6 +583,7 @@ export function toStaffRequest(row: Awaited<ReturnType<typeof staffRequestRow>>)
     id: row.id,
     number: row.number,
     status: row.status,
+    assignee: row.assignee,
     summary: row.summary,
     description: row.description,
     urgency: row.urgency,

@@ -149,7 +149,7 @@ describe("the full daily briefing template", () => {
     expect(message!.text).toContain("Sep 8, 2026");
   });
 
-  it("names the rows a section's three-row cap kept out", () => {
+  it("names the rows a section's preview cap kept out", () => {
     const message = renderBriefingMail(
       { ...FULL_BRIEFING, tasks: { ...FULL_BRIEFING.tasks!, total: 5 } },
       "casey@example.com",

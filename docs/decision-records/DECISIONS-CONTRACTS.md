@@ -278,6 +278,12 @@ _None — queue cleared 2026-08-04 (CTR-001 through CTR-019). New questions from
 - **Alternatives considered** — Both now (recommended, declined). Neither: breaks standalone contracts.
 - **Consequences** — `contract_tasks` in SCHEMA.md. FUTURE-FEATURES entry added. MTR-013's template machinery stays matters-only for now.
 
+### UX review addendum (2026-09-05): Task responsibility and team membership
+
+Each Task shows its own assignee's avatar and name, independently of the Contract Owner. Clicking it opens searchable choices from active staff on the Contract team, including its Owner, plus Unassigned. An eligible team editor can choose **Add someone to the team…**, search other active staff, and confirm **Add to team and assign**. The confirmation states that this grants access to the record. Both writes and their activity entries commit in one transaction; the Task assignment notification sees the new membership. Contributors join with the contributor team role; other staff join as members. The existing confidential-team permission applies. Add/edit forms stage membership until the Task is saved; cancelling leaves the team unchanged. Changing or clearing an assignee does not remove team membership. Existing assignments remain visible, and editing another field does not silently reassign the task.
+
+The Team panel groups entries by person: one avatar and name, with every held role shown as a tag, including Owner and Creator. A removable role has its own remove control; removing it leaves the person’s other roles intact. Creator and the record’s responsible role remain informational tags.
+
 ## CTR-018 — Confidentiality: independent flags, link-time nudge, no cascade
 
 - **Status** — Accepted
@@ -404,6 +410,8 @@ _None — queue cleared 2026-08-04 (CTR-001 through CTR-019). New questions from
   All four now end in `id`. This is not a new rule, it is the one the other two paged reads already keep — `activity_log_created_at_idx` for the audit log and `notifications_user_idx` for the bell were both written with the pair from the start. **A route that pages on `(created_at, id)` gets an index that ends in `id`**, and the next module reads that off the six sites rather than deriving it again.
 
   Migration `0064` does it. A column cannot be appended to an index in place, so each one is dropped and rebuilt, and the file opens its own transaction (TECH-006's 2026-08-21 addendum) because a rebuild that failed after its drop would leave the table with no index at all. The rebuild is plain rather than `CONCURRENTLY`: migrations run at container start (TECH-005), before the app answers `/readyz`, so the lock is held against no traffic of our own — and `CONCURRENTLY` cannot run inside the transaction that makes the drop-and-rebuild safe.
+
+- **Addendum (2026-09-05, UX review) — matching totals for the Contracts and Matters destinations.** These two list endpoints now return `total`, computed from the same access and filter predicates as the paged read, before the cursor is applied. Quick filters need to show how many records match, and Home's personal portfolio links must agree with the destination count. Confidentiality tests compare totals and filter choices to the records the viewer can reach. The fixed page size and scoped cursor lookup remain in place. This amends the no-total rule for these two destinations only; comments and per-record document lists retain their existing envelopes. DES-046's UX-review addendum records the controls and saved-view behavior.
 
 ## Index of decisions
 

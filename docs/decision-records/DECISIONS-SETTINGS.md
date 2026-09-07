@@ -153,6 +153,12 @@ The setup checklist reports current configuration, not a stored history of skip 
 - **Consequences** — `users` gains the `timezone` column DES-014 anticipated. FUTURE-FEATURES entry (self-service email change; the v1 workaround is admin-driven: archive + re-invite under the new address). The Personal → Notifications pane is unaffected — it ships in M18 with the notification engine (NOT-001).
 - **Addendum (2026-09-06, better-auth 1.7.3)** — Re-enrol is **a disable followed by an enrolment**, not a replacement. better-auth 1.7.3 refuses `two-factor/enable` while a verified authenticator is active (`TOTP_ALREADY_ENABLED`); 1.7.2 replaced the secret in place, which left an abandoned re-enrolment holding a secret nobody had proven. The Re-enroll button asks for the password once and spends it on both calls. The window between them is the abandoned-enrolment state the pane already draws — two-factor off, sign-in working — and the Audit log records the disable and the enrolment as the two transitions they are (both `admin_only`, so the Activity feed never showed them). See TECH-008's 1.7.3 addendum.
 
+### Addendum (2026-09-05) — View as business user
+
+Settings → Personal → Profile includes an **App view** card for Administrators and Legal Team Members. **View as business user** opens `/portal`, using the existing requester-scoped forms, Your requests list, and conversations. The signed-in account and role stay the same; the portal shows that person's own Requests, and submissions and replies are real.
+
+Every authenticated portal page shows Member+ staff a **Viewing as business user** notice and **Return to legal view** link to `/settings/profile`. The route determines the view, so reloads and portal navigation retain the return control without a stored preference. Business Users and Contributors see neither control. This supersedes the INT-001 M20/2 addendum's decision to omit a staff return control; its session gate and requester scoping still apply.
+
 ## SET-007 — E-signature lives in Organization → Integrations, not in Contracts
 
 - **Status** — Accepted

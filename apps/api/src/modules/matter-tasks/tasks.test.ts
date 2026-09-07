@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** Matter Tasks through the real-Postgres HTTP seam (MTR-005, #492). */
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   activityLog,
   and,
@@ -183,7 +183,13 @@ describe("Matter Tasks", () => {
     const rows = await list(matter.number);
     expect(rows.map((row) => row.title)).toEqual(["Second", "First by id tie"]);
     expect(rows.map((row) => row.displayOrder)).toEqual([0, 1]);
-    expect(rows[0]).toMatchObject({ assigneeId: teammateId, dueDate: "2030-01-02", isDone: false });
+    expect(rows[0]).toMatchObject({
+      assigneeId: teammateId,
+      assigneeName: TEAMMATE.displayName,
+      assigneeImage: null,
+      dueDate: "2030-01-02",
+      isDone: false,
+    });
     expect((await listRaw(matter.number)).json()).toMatchObject({ doneCount: 0, totalCount: 2 });
   });
 
@@ -390,5 +396,129 @@ describe("Matter Tasks", () => {
       await removeRaw(frozenTask.id),
     ])
       expect(response.statusCode).toBe(409);
+  });
+});
+
+describe("explicit team expansion during assignment", () => {
+  it("requires an explicit add, persists membership and assignment, and retries without duplicate activity", async () => {
+    const record = await newMatter("Task team expansion");
+    const refused = await addRaw(record.number, { title: "Draft", assigneeId: contributorId });
+    expect(refused.statusCode, refused.body).toBe(400);
+    const created = await addRaw(record.number, {
+      title: "Draft",
+      assigneeId: contributorId,
+      addToTeam: true,
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const taskId = created.json().tasks[0].id;
+    const retry = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/matter-tasks/${taskId}`,
+      cookies: memberCookies,
+      payload: { assigneeId: contributorId, addToTeam: true },
+    });
+    expect(retry.statusCode, retry.body).toBe(200);
+    const members = await harness.db
+      .select()
+      .from(matterTeam)
+      .where(and(eq(matterTeam.matterId, record.id), eq(matterTeam.userId, contributorId)));
+    expect(members).toHaveLength(1);
+    expect(members[0]?.role).toBe("contributor");
+    expect((await list(record.number))[0]?.assigneeId).toBe(contributorId);
+    const activity = await harness.db
+      .select()
+      .from(activityLog)
+      .where(and(eq(activityLog.entityId, record.id), eq(activityLog.action, "matter.team_added")));
+    expect(activity).toHaveLength(1);
+    expect((await listRaw(record.number, contributorCookies)).statusCode).toBe(200);
+  });
+
+  it("adds a new team member while reassigning an existing task", async () => {
+    const record = await newMatter("Reassignment adds team member");
+    const created = await addRaw(record.number, { title: "Draft", assigneeId: memberId });
+    const taskId = created.json().tasks[0].id;
+    const response = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/matter-tasks/${taskId}`,
+      cookies: memberCookies,
+      payload: { assigneeId: outsiderId, addToTeam: true },
+    });
+    expect(response.statusCode, response.body).toBe(200);
+    expect((await list(record.number))[0]?.assigneeId).toBe(outsiderId);
+    const [member] = await harness.db
+      .select()
+      .from(matterTeam)
+      .where(and(eq(matterTeam.matterId, record.id), eq(matterTeam.userId, outsiderId)));
+    expect(member?.role).toBe("member");
+  });
+
+  it("does not let an ordinary team member expand a confidential audience", async () => {
+    const record = await newMatter("Confidential task team");
+    await harness.db.update(matters).set({ isConfidential: true }).where(eq(matters.id, record.id));
+    await harness.db
+      .insert(matterTeam)
+      .values({ matterId: record.id, userId: outsiderId, role: "member" });
+    const created = await addRaw(record.number, { title: "Draft", assigneeId: memberId });
+    const taskId = created.json().tasks[0].id;
+    const response = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/matter-tasks/${taskId}`,
+      cookies: outsiderCookies,
+      payload: { assigneeId: contributorId, addToTeam: true },
+    });
+    expect(response.statusCode, response.body).toBe(403);
+    expect((await list(record.number))[0]?.assigneeId).toBe(memberId);
+    expect(
+      await harness.db
+        .select()
+        .from(matterTeam)
+        .where(and(eq(matterTeam.matterId, record.id), eq(matterTeam.userId, contributorId))),
+    ).toHaveLength(0);
+    const existing = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/matter-tasks/${taskId}`,
+      cookies: outsiderCookies,
+      payload: { assigneeId: outsiderId },
+    });
+    expect(existing.statusCode, existing.body).toBe(200);
+    const owner = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/matter-tasks/${taskId}`,
+      cookies: memberCookies,
+      payload: { assigneeId: contributorId, addToTeam: true },
+    });
+    expect(owner.statusCode, owner.body).toBe(200);
+  });
+
+  it("rolls back membership if assignment notification fails", async () => {
+    const record = await newMatter("Atomic team assignment");
+    const spy = vi
+      .spyOn(harness.app.notifier, "matterTaskAssigned")
+      .mockRejectedValueOnce(new Error("notification failure"));
+    try {
+      const response = await addRaw(record.number, {
+        title: "Draft",
+        assigneeId: contributorId,
+        addToTeam: true,
+      });
+      expect(response.statusCode).toBe(500);
+      expect(await list(record.number)).toHaveLength(0);
+      expect(
+        await harness.db
+          .select()
+          .from(matterTeam)
+          .where(and(eq(matterTeam.matterId, record.id), eq(matterTeam.userId, contributorId))),
+      ).toHaveLength(0);
+      expect(
+        await harness.db
+          .select()
+          .from(activityLog)
+          .where(
+            and(eq(activityLog.entityId, record.id), eq(activityLog.action, "matter.team_added")),
+          ),
+      ).toHaveLength(0);
+    } finally {
+      spy.mockRestore();
+    }
   });
 });

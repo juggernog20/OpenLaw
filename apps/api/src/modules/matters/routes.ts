@@ -4,6 +4,13 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
+  FilterChoices,
+  FilterOptionsSchema,
+  choiceFilter,
+  dateFilter,
+  validDateRanges,
+} from "../../lib/record-filters.js";
+import {
   and,
   asc,
   count,
@@ -41,6 +48,7 @@ import {
 } from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
+import { TimezoneSchema } from "../../lib/timezones.js";
 import { civilToday } from "../../lib/contract-term.js";
 import {
   applyCustomFields,
@@ -379,21 +387,44 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "The managed Matters list, filtered and keyset-paged after access scope, with active counts",
         tags: ["matters"],
-        querystring: z.object({
-          includeClosed: z.enum(["true", "false"]).optional(),
-          includeArchived: z.enum(["true", "false"]).optional(),
-          status: z.string().min(1).max(64).optional(),
-          type: z.string().min(1).max(64).optional(),
-          priority: SeveritySchema.optional(),
-          manager: z.string().min(1).max(64).optional(),
-          incomplete: z.enum(["true", "false"]).optional(),
-          sort: z.enum(MATTER_SORT_KEYS).optional(),
-          dir: z.enum(SORT_DIRECTIONS).optional(),
-          cursor: CursorSchema.optional(),
-        }),
+        querystring: z
+          .object({
+            includeClosed: z.enum(["true", "false"]).optional(),
+            includeArchived: z.enum(["true", "false"]).optional(),
+            status: FilterChoices.optional(),
+            type: FilterChoices.optional(),
+            priority: FilterChoices.refine((value) =>
+              value
+                .split(",")
+                .every((item) =>
+                  SEVERITY_LEVELS.includes(item as (typeof SEVERITY_LEVELS)[number]),
+                ),
+            ).optional(),
+            risk: FilterChoices.refine((value) =>
+              value
+                .split(",")
+                .every(
+                  (item) =>
+                    item === "unassigned" ||
+                    SEVERITY_LEVELS.includes(item as (typeof SEVERITY_LEVELS)[number]),
+                ),
+            ).optional(),
+            timeZone: TimezoneSchema.optional(),
+            openedFrom: z.iso.date().optional(),
+            openedTo: z.iso.date().optional(),
+            deadlineFrom: z.iso.date().optional(),
+            deadlineTo: z.iso.date().optional(),
+            manager: FilterChoices.optional(),
+            incomplete: z.enum(["true", "false"]).optional(),
+            sort: z.enum(MATTER_SORT_KEYS).optional(),
+            dir: z.enum(SORT_DIRECTIONS).optional(),
+            cursor: CursorSchema.optional(),
+          })
+          .refine(validDateRanges, "The end date must be on or after the start date"),
         response: {
           200: z.object({
             matters: z.array(MatterRowSchema),
+            total: z.number().int(),
             nextCursor: z.string().nullable(),
             counts: z.object({ open: z.number().int(), onHold: z.number().int() }),
           }),
@@ -406,24 +437,32 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
       const sort: SortRequest | null = request.query.sort
         ? { key: request.query.sort, dir: request.query.dir ?? "asc" }
         : null;
+      const predicates = and(
+        request.query.includeArchived === "true" ? undefined : isNull(matters.archivedAt),
+        request.query.includeClosed === "true" ? undefined : eq(matterStatuses.category, "open"),
+        choiceFilter(matters.statusId, request.query.status),
+        choiceFilter(matters.matterTypeId, request.query.type),
+        choiceFilter(matters.priority, request.query.priority),
+        choiceFilter(matters.risk, request.query.risk),
+        choiceFilter(matters.managerId, request.query.manager, request.user.id),
+        dateFilter(
+          sql`(${matters.openedAt} at time zone ${request.query.timeZone ?? request.user.timezone ?? "UTC"})::date`,
+          request.query.openedFrom,
+          request.query.openedTo,
+        ),
+        dateFilter(
+          sql`case when ${matterStatuses.category} = 'open' and ${matters.archivedAt} is null then
+              (select min(${matterKeyDates.date}) from ${matterKeyDates} where ${matterKeyDates.matterId} = ${matters.id} and ${matterKeyDates.date} >= ${today}) end`,
+          request.query.deadlineFrom,
+          request.query.deadlineTo,
+        ),
+        request.query.incomplete === "true" ? incomplete : undefined,
+        scope(request.user),
+      );
       const rows = await selectMatters(app.db, today)
         .where(
           and(
-            request.query.includeArchived === "true" ? undefined : isNull(matters.archivedAt),
-            request.query.includeClosed === "true"
-              ? undefined
-              : eq(matterStatuses.category, "open"),
-            request.query.status ? eq(matters.statusId, request.query.status) : undefined,
-            request.query.type ? eq(matters.matterTypeId, request.query.type) : undefined,
-            request.query.priority ? eq(matters.priority, request.query.priority) : undefined,
-            request.query.manager
-              ? eq(
-                  matters.managerId,
-                  request.query.manager === "me" ? request.user.id : request.query.manager,
-                )
-              : undefined,
-            request.query.incomplete === "true" ? incomplete : undefined,
-            scope(request.user),
+            predicates,
             request.query.cursor
               ? furtherDownThan(request.query.cursor, request.user, sort)
               : undefined,
@@ -434,12 +473,13 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
       const page = rows.slice(0, PAGE_SIZE);
       const [counts] = await app.db
         .select({
+          total: sql<number>`count(*)::int`,
           open: sql<number>`count(*) filter (where ${matterStatuses.slug} = 'open')::int`,
           onHold: sql<number>`count(*) filter (where ${matterStatuses.slug} = 'on_hold')::int`,
         })
         .from(matters)
         .innerJoin(matterStatuses, eq(matters.statusId, matterStatuses.id))
-        .where(and(isNull(matters.archivedAt), scope(request.user)));
+        .where(predicates);
       const contributorFields =
         request.user.role === "contributor"
           ? new Map(
@@ -455,6 +495,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
             )
           : null;
       return {
+        total: counts?.total ?? 0,
         matters: page.map((context) =>
           toRow(
             context,
@@ -469,6 +510,49 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         ),
         nextCursor: rows.length > PAGE_SIZE ? (page.at(-1)?.row.id ?? null) : null,
         counts: counts ?? { open: 0, onHold: 0 },
+      };
+    },
+  );
+
+  app.get(
+    "/matters/filter-options",
+    {
+      preHandler: requireReader,
+      schema: {
+        operationId: "listMatterFilterOptions",
+        tags: ["matters"],
+        response: { 200: FilterOptionsSchema, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const rows = await app.db
+        .selectDistinct({
+          typeId: matters.matterTypeId,
+          typeName: matterTypes.displayName,
+          statusId: matters.statusId,
+          statusName: matterStatuses.displayName,
+          personId: users.id,
+          personName: users.displayName,
+        })
+        .from(matters)
+        .innerJoin(matterTypes, eq(matters.matterTypeId, matterTypes.id))
+        .innerJoin(matterStatuses, eq(matters.statusId, matterStatuses.id))
+        .leftJoin(users, eq(matters.managerId, users.id))
+        .where(scope(request.user));
+      const unique = (values: { id: string; displayName: string }[]) =>
+        [...new Map(values.map((value) => [value.id, value])).values()].sort((a, b) =>
+          a.displayName.localeCompare(b.displayName),
+        );
+      return {
+        types: unique(rows.map((row) => ({ id: row.typeId, displayName: row.typeName }))),
+        statuses: unique(rows.map((row) => ({ id: row.statusId, displayName: row.statusName }))),
+        people: unique(
+          rows.flatMap((row) =>
+            row.personId && row.personName
+              ? [{ id: row.personId, displayName: row.personName }]
+              : [],
+          ),
+        ),
       };
     },
   );

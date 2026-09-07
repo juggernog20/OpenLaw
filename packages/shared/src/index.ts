@@ -354,6 +354,7 @@ export const MAX_ENVELOPE_REASON_LENGTH = 1000;
  * save views nobody's list ever asks for.
  */
 export const LIST_VIEW_SURFACES = [
+  "inbox",
   "contracts",
   "matters",
   "documents",

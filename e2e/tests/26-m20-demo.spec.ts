@@ -298,7 +298,7 @@ test.describe.serial("M20 demo path", () => {
       // way out, and exactly two destinations — a bell and a gear.
       const banner = portal.getByRole("banner");
       await expect(banner.getByText("Legal request portal")).toBeVisible();
-      await expect(banner.getByText(REQUESTER)).toBeVisible();
+      await expect(banner.getByText(REQUESTER, { exact: true }).first()).toBeVisible();
       await expect(banner.getByRole("button", { name: "Sign out" })).toBeVisible();
       await expect(banner.getByRole("link", { name: "Notification settings" })).toBeVisible();
 
@@ -313,7 +313,9 @@ test.describe.serial("M20 demo path", () => {
       const picker = portal.getByRole("list", { name: "Request types" });
       await picker.getByRole("link", { name: new RegExp(TYPE_NAME) }).click();
       await expect(portal).toHaveURL(new RegExp(`/portal/new/${TYPE_SLUG}$`));
-      await expect(portal.getByRole("heading", { name: TYPE_NAME })).toBeVisible();
+      await expect(
+        portal.getByRole("heading", { level: 1, name: TYPE_NAME, exact: true }),
+      ).toBeVisible();
 
       // The four basics are drawn as facts about every form (INT-002's
       // M19/4 addendum), and the attached field follows them.

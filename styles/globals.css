@@ -162,6 +162,13 @@
      number of request types and the mock's six is not the count. */
   --grid-template-columns-portal-picker: repeat(auto-fill, minmax(16rem, 1fr));
 
+  /* The portal's two-column page: the main column takes what is left
+     after an 18rem aside. The home puts the deflection panel there, the
+     form its type's own links, and the request detail the "What you
+     submitted" card. Applied from @3xl of the page container; below it
+     the two stack in the mocks' single-column order. */
+  --grid-template-columns-portal-split: minmax(0, 1fr) 18rem;
+
   /* One label-and-value row of the portal's "What you submitted" card
      (I7): a fixed label column and the value taking the rest. Applied
      only above the row's own container width — below it the pair
@@ -190,7 +197,11 @@
   --height-section-header: 38px; /* settings-card header strip (ST1/ST4 mocks) */
   --height-compare-card: 32rem; /* comparison reader's minimum document-card height (DOC3) */
   --width-settings-card: 45rem; /* settings-card max width (ST1/ST4 mocks) */
-  --width-portal-col: 55rem; /* portal centered column (I5–I7 mocks) */
+  /* The portal's centered column. Widened from the I5–I7 mocks' 55rem
+     when the home, the form, and the request detail gained a side
+     column (`--grid-template-columns-portal-split`): the main column
+     keeps the mocks' reading width and the aside sits beside it. */
+  --width-portal-col: 64rem;
   --width-compare-page: 640px; /* comparison reader's paper width (DOC3) */
 
   /* ------------------------------------------------------------------ *
@@ -277,6 +288,27 @@
   :focus-visible {
     outline: var(--ring-width) solid var(--ring-color);
     outline-offset: 2px;
+  }
+}
+
+/* Keep the completed row mounted through the checkmark, fade, and gap closure. */
+.home-task-exit {
+  animation: home-task-exit 650ms ease-out both;
+}
+
+@keyframes home-task-exit {
+  0%,
+  45% {
+    opacity: 1;
+    grid-template-rows: 1fr;
+  }
+  78% {
+    opacity: 0;
+    grid-template-rows: 1fr;
+  }
+  100% {
+    opacity: 0;
+    grid-template-rows: 0fr;
   }
 }
 

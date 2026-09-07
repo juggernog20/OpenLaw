@@ -49,6 +49,7 @@ import {
   reachedContract,
   type ReachedContract,
 } from "../../lib/contract-access.js";
+import { prepareTaskAssignee } from "../../lib/task-assignment.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
 /** The contract read floor (CTR-021): a Contributor on the team reads the
@@ -75,6 +76,8 @@ const TaskSchema = z.object({
   title: z.string(),
   isDone: z.boolean(),
   assigneeId: z.string().nullable(),
+  assigneeName: z.string().nullable(),
+  assigneeImage: z.string().nullable(),
   dueDate: z.iso.date().nullable(),
   displayOrder: z.int(),
 });
@@ -147,10 +150,13 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         title: contractTasks.title,
         isDone: contractTasks.isDone,
         assigneeId: contractTasks.assigneeId,
+        assigneeName: users.displayName,
+        assigneeImage: users.image,
         dueDate: contractTasks.dueDate,
         displayOrder: contractTasks.displayOrder,
       })
       .from(contractTasks)
+      .leftJoin(users, eq(contractTasks.assigneeId, users.id))
       .where(eq(contractTasks.contractId, contractId))
       .orderBy(asc(contractTasks.displayOrder), asc(contractTasks.id));
 
@@ -215,6 +221,8 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireMember,
       schema: {
         operationId: "addContractTask",
+        description:
+          "Assignees must be active staff who manage the record or belong to its team. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.",
         summary:
           "Add a task to a contract's checklist (CTR-017). A blank " +
           "title is refused. The task starts not done, with the " +
@@ -228,6 +236,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         body: z.strictObject({
           title: TitleSchema,
           assigneeId: z.string().nullable().optional(),
+          addToTeam: z.boolean().optional(),
           dueDate: z.iso.date().nullable().optional(),
         }),
         response: { 201: TasksEnvelope, default: problemResponse },
@@ -247,13 +256,14 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         assertOpen(contract);
 
-        if (assigneeId) {
-          const [user] = await tx
-            .select({ id: users.id })
-            .from(users)
-            .where(eq(users.id, assigneeId));
-          if (!user) throw httpError(400, "The assignee does not exist.");
-        }
+        await prepareTaskAssignee(
+          tx,
+          "contract",
+          contract,
+          request.user,
+          assigneeId,
+          request.body.addToTeam,
+        );
 
         const displayOrder = await nextDisplayOrder(tx, contract.id);
 
@@ -309,6 +319,8 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireMember,
       schema: {
         operationId: "updateContractTask",
+        description:
+          "Assignees must be active staff who manage the record or belong to its team. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.",
         summary:
           "Edit a task's title, assignee, or due date (CTR-017). " +
           "Every field is optional and only what is sent is read. A " +
@@ -323,6 +335,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
           .strictObject({
             title: TitleSchema.optional(),
             assigneeId: z.string().nullable().optional(),
+            addToTeam: z.boolean().optional(),
             dueDate: z.iso.date().nullable().optional(),
           })
           .refine((body) => Object.keys(body).length > 0, {
@@ -341,13 +354,14 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
 
         const wantedAssignee =
           request.body.assigneeId === undefined ? task.assigneeId : request.body.assigneeId;
-        if (wantedAssignee) {
-          const [found] = await tx
-            .select({ id: users.id })
-            .from(users)
-            .where(eq(users.id, wantedAssignee));
-          if (!found) throw httpError(400, "The assignee does not exist.");
-        }
+        await prepareTaskAssignee(
+          tx,
+          "contract",
+          task.contract,
+          request.user,
+          request.body.assigneeId,
+          request.body.addToTeam,
+        );
 
         const wanted = {
           title: request.body.title ?? task.title,

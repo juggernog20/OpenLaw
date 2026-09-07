@@ -2783,6 +2783,38 @@ export function ContractRecordPage() {
                 tasks={tasks}
                 doneCount={taskDoneCount}
                 totalCount={taskTotalCount}
+                assignees={users.filter(
+                  (person) =>
+                    !person.archived &&
+                    person.role !== "business_user" &&
+                    (saved.manager?.id === person.id ||
+                      roster.some((member) => member.id === person.id)),
+                )}
+                teamExpansion={
+                  !frozen && (!saved.isConfidential || canFlag)
+                    ? {
+                        people: users.filter(
+                          (person) => !person.archived && person.role !== "business_user",
+                        ),
+                        onAdded: (id) => {
+                          const person = users.find((candidate) => candidate.id === id);
+                          if (person)
+                            setRoster((current) =>
+                              current.some((member) => member.id === id)
+                                ? current
+                                : [
+                                    ...current,
+                                    {
+                                      ...person,
+                                      role:
+                                        person.role === "contributor" ? "contributor" : "member",
+                                    },
+                                  ],
+                            );
+                        },
+                      }
+                    : undefined
+                }
                 onTasksChange={(outcome) => {
                   setTasks(outcome.tasks);
                   setTaskDoneCount(outcome.doneCount);

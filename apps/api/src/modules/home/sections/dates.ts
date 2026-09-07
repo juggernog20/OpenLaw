@@ -54,6 +54,11 @@ export const DatesHomeSectionSchema = z.object({
 
 export type DatesHomeSection = z.infer<typeof DatesHomeSectionSchema>;
 
+export const PersonalDatesSchema = z.object({
+  total: z.number().int().nonnegative(),
+  rows: z.array(DateHomeRowSchema),
+});
+
 interface DateDbRow extends Record<string, unknown> {
   source: (typeof DATE_SOURCES)[number];
   key_date_id: string | null;
@@ -85,6 +90,15 @@ export async function readDatesHomeSection(
   db: Executor,
   user: AuthenticatedUser,
 ): Promise<DatesHomeSection | null> {
+  const dates = await readPersonalDates(db, user, { limit: HOME_SECTION_LIMIT });
+  return dates.total === 0 ? null : { type: "dates", ...dates };
+}
+
+export async function readPersonalDates(
+  db: Executor,
+  user: AuthenticatedUser,
+  options: { from?: string; to?: string; limit?: number },
+): Promise<z.infer<typeof PersonalDatesSchema>> {
   const personalContracts = or(
     eq(contracts.managerId, user.id),
     inArray(
@@ -119,7 +133,9 @@ export async function readDatesHomeSection(
     matterTeamScope(db, user),
   );
   const inWindow = (date: AnyPgColumn | SQL) =>
-    sql`${date} between current_date and current_date + 30`;
+    options.from && options.to
+      ? sql`${date} between ${options.from}::date and ${options.to}::date`
+      : sql`${date} between current_date and current_date + 30`;
   const noticeDeadline = sql<string>`${contracts.expiryDate} - ${contracts.noticePeriodDays}`;
 
   const result = await db.execute<DateDbRow>(sql`
@@ -224,14 +240,12 @@ export async function readDatesHomeSection(
       count(*) over()::integer as total
     from home_dates
     order by date asc, source_rank asc, record_kind asc, record_id asc, key_date_id asc nulls first
-    limit ${HOME_SECTION_LIMIT}
+    ${options.limit ? sql`limit ${options.limit}` : sql``}
   `);
 
   const first = result.rows[0];
-  if (!first) return null;
   return {
-    type: "dates",
-    total: first.total,
+    total: first?.total ?? 0,
     rows: result.rows.map((row) => ({
       source: row.source,
       keyDateId: row.key_date_id,

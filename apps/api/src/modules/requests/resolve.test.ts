@@ -5,12 +5,12 @@
  * — asserted at the HTTP seam the screen presses.
  *
  * The subject is Resolve's own two halves and what separates them. The
- * **closing reply** is optional, and when it is given it is an ordinary
+ * **closing reply** is required and is posted as an ordinary
  * Full Thread comment: it is on the thread the next read answers, it
  * narrates as `comment.posted`, and it reaches the requester as a reply.
  * The **closure** moves the Request to `resolved`, narrates
  * `request.resolved` with its actor, and raises `requestStatusChanged` —
- * the event's first caller. Both may reach the requester, which is what
+ * the event's first caller. Both reach the requester, which is what
  * makes Resolve different from Decline.
  *
  * The scaffold itself — the row lock, the `new` guard, the recorded
@@ -90,7 +90,11 @@ async function submit(summary: string): Promise<{ id: string; number: number }> 
   return res.json().request as { id: string; number: number };
 }
 
-function resolve(number: number, reply?: string, cookies = memberCookies) {
+function resolve(
+  number: number,
+  reply = "Answered in the thread; no contract or matter is needed.",
+  cookies = memberCookies,
+) {
   return harness.app.inject({
     method: "POST",
     url: `/api/v1/requests/${number}/resolve`,
@@ -139,7 +143,7 @@ describe("who may resolve (INT-006, DD-013)", () => {
     const res = await harness.app.inject({
       method: "POST",
       url: `/api/v1/requests/${request.number}/resolve`,
-      payload: {},
+      payload: { reply: "No further legal work is needed." },
     });
     expect(res.statusCode, res.body).toBe(401);
   });
@@ -194,13 +198,21 @@ describe("what a resolution writes (INT-007)", () => {
     expect(resolved.payload).toEqual({ number: request.number });
   });
 
-  it("narrates the closure alone when no reply was written", async () => {
-    const request = await submit("The answer was already on the thread");
-    expect((await resolve(request.number)).statusCode).toBe(200);
-
-    const entries = await entriesOn(request.id);
-    expect(entries.map((row) => row.action)).toEqual(["request.created", "request.resolved"]);
-    expect((await stored(request.id)).status).toBe("resolved");
+  it("refuses a missing resolution note without changing the request or notifying anyone", async () => {
+    const request = await submit("A resolution needs an explanation");
+    const res = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/requests/${request.number}/resolve`,
+      cookies: memberCookies,
+      payload: {},
+    });
+    expect(res.statusCode, res.body).toBe(400);
+    expect((await stored(request.id)).status).toBe("new");
+    expect(await commentsOn(request.id)).toEqual([]);
+    expect((await entriesOn(request.id)).map((row) => row.action)).toEqual(["request.created"]);
+    expect((await bellRowsOn(requesterId, request.id)).map((row) => row.eventType)).toEqual([
+      "request.created",
+    ]);
   });
 
   it("shows the Request under the triaged toggle and takes it out of the queue", async () => {
@@ -276,16 +288,8 @@ describe("the closing reply (INT-006, CMT-010)", () => {
     ]);
   });
 
-  it("writes no comment at all when none was given", async () => {
-    const request = await submit("Closed in silence");
-    expect((await resolve(request.number)).statusCode).toBe(200);
-    expect(await commentsOn(request.id)).toEqual([]);
-  });
-
   it("refuses a blank reply rather than posting an empty comment", async () => {
-    // A box of spaces is not an answer. The screen sends no `reply` at
-    // all when its box is empty, so this is the seam holding the same
-    // rule against a client that did not come from it.
+    // The API enforces the required note independently of the form.
     const request = await submit("A reply written in whitespace");
     const res = await resolve(request.number, "   \n  ");
     expect(res.statusCode, res.body).toBe(400);
@@ -307,7 +311,7 @@ describe("the closing reply (INT-006, CMT-010)", () => {
 });
 
 describe("what a resolution tells the requester (INT-003, NOT-002 group 5)", () => {
-  it("raises the status change, and the reply beside it when there was one", async () => {
+  it("raises both the status change and the required reply", async () => {
     // The two are different news — an answer and a closure — which is
     // what separates Resolve from Decline, where the notification fires
     // instead of the status change (the M20/8 rule).
@@ -326,17 +330,6 @@ describe("what a resolution tells the requester (INT-003, NOT-002 group 5)", () 
     });
     // A resolution is not a decline, and never borrows its event.
     expect(rows.some((row) => row.eventType === "request.declined")).toBe(false);
-  });
-
-  it("raises the status change alone when no reply was written", async () => {
-    const request = await submit("One piece of news");
-    expect((await resolve(request.number)).statusCode).toBe(200);
-
-    const rows = await bellRowsOn(requesterId, request.id);
-    expect(rows.map((row) => row.eventType).sort()).toEqual([
-      "request.created",
-      "request.status_changed",
-    ]);
   });
 
   it("mails the closure in the requester's own words", async () => {

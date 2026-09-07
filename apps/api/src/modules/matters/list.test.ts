@@ -33,6 +33,7 @@ const BUSINESS = {
 } as const;
 
 interface MatterListAnswer {
+  total: number;
   matters: {
     id: string;
     number: number;
@@ -306,6 +307,93 @@ describe("the Matters list", () => {
     expect(invalid.statusCode).toBe(400);
   });
 
+  it("combines multi-value filters before paging and counts only the matching reachable records", async () => {
+    const query = {
+      manager: "me,unassigned",
+      priority: "critical,medium",
+      type: plainTypeId,
+      risk: "unassigned",
+    };
+    const first = await list(memberCookies, query);
+    expect(first.total).toBe(52);
+    expect(first.matters).toHaveLength(50);
+    const second = await list(memberCookies, { ...query, cursor: first.nextCursor! });
+    expect(second.total).toBe(52);
+    expect(second.matters).toHaveLength(2);
+    expect(new Set([...first.matters, ...second.matters].map((row) => row.id))).toEqual(
+      new Set(visibleIds),
+    );
+    expect((await list(memberCookies, { manager: "me", priority: "critical" })).total).toBe(0);
+    expect((await list(contributorCookies, query)).total).toBe(1);
+    expect(
+      (await list(memberCookies, { openedFrom: "2000-01-01", openedTo: "2000-01-01" })).total,
+    ).toBe(0);
+    for (const suffix of [
+      "openedFrom=2026-12-02&openedTo=2026-12-01",
+      "priority=critical,invalid",
+      "deadlineFrom=2026-02-30",
+      `manager=${Array(51).fill("me").join(",")}`,
+    ]) {
+      const invalid = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/matters?${suffix}`,
+        cookies: memberCookies,
+      });
+      expect(invalid.statusCode, suffix).toBe(400);
+    }
+  });
+
+  it("filters Opened dates in the reader's timezone, including daylight-saving boundaries", async () => {
+    const id = visibleIds[1]!;
+    const [original] = await harness.db
+      .select({ openedAt: matters.openedAt })
+      .from(matters)
+      .where(eq(matters.id, id));
+    try {
+      for (const [instant, timeZone, date] of [
+        ["2026-08-31T21:30:00Z", "Asia/Dubai", "2026-09-01"],
+        ["2026-03-29T22:30:00Z", "Europe/Berlin", "2026-03-30"],
+      ]) {
+        await harness.db
+          .update(matters)
+          .set({ openedAt: new Date(instant!) })
+          .where(eq(matters.id, id));
+        const query = { manager: "me", openedFrom: date!, openedTo: date! };
+        expect(
+          (await list(memberCookies, { ...query, timeZone: timeZone! })).matters.map(
+            (row) => row.id,
+          ),
+        ).toEqual([id]);
+        expect((await list(memberCookies, { ...query, timeZone: "UTC" })).total).toBe(0);
+      }
+    } finally {
+      await harness.db
+        .update(matters)
+        .set({ openedAt: original!.openedAt })
+        .where(eq(matters.id, id));
+    }
+  });
+
+  it("offers filter labels only from records the reader can reach", async () => {
+    const response = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/matters/filter-options",
+      cookies: contributorCookies,
+    });
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.json()).toEqual({
+      types: [{ id: plainTypeId, displayName: "Matter list plain" }],
+      statuses: [{ id: onHoldStatusId, displayName: "On hold" }],
+      people: [],
+    });
+    const refused = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/matters/filter-options",
+      cookies: businessCookies,
+    });
+    expect(refused.statusCode).toBe(403);
+  });
+
   it("continues every keyset ordering through unique, tied, joined, and null values", async () => {
     for (const sort of [
       "number",
@@ -345,6 +433,10 @@ describe("the Matters list", () => {
       date: today,
       label: "Today deadline",
     });
+    const bounded = await list(contributorCookies, { deadlineFrom: today, deadlineTo: today });
+    expect(bounded.matters.map((row) => row.id)).toEqual([visibleIds[0]]);
+    expect(bounded.total).toBe(1);
+    expect((await list(contributorCookies, { deadlineFrom: "2099-01-01" })).total).toBe(0);
     const pastOnly = await list(memberCookies, { manager: memberId });
     expect(deadlineOf(pastOnly, visibleIds[1]!)).toBeNull();
 

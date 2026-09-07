@@ -47,6 +47,8 @@ import {
   type Layout,
 } from "../../lib/list-views";
 
+import { fitColumnWidths, resizeColumnWidths } from "../../lib/table-widths";
+
 /** How far one arrow key moves a column edge, and how far with Shift
  * held. Sixteen is the spacing scale's four steps — enough to see, small
  * enough to land on a width you meant (DES-007). */
@@ -151,12 +153,40 @@ export function ManagedTable<Row>({
   actionsColumn?: {
     /** The accessible name of a column whose heading is drawn empty. */
     label: string;
+    /** Reserve the trailing edge and fit resizable columns into the space beside it. */
+    pinned?: boolean;
     width: number;
     render: (row: Row) => ReactNode;
   };
 }>) {
   const intl = useIntl();
-  const shown = shownColumns(catalogue, layout);
+  const scrollArea = useRef<HTMLDivElement>(null);
+  const [availableWidth, setAvailableWidth] = useState(0);
+  const pinned = actionsColumn?.pinned === true;
+  useEffect(() => {
+    const element = scrollArea.current;
+    if (!pinned || !element) return;
+    const observer = new ResizeObserver(() => setAvailableWidth(element.clientWidth));
+    observer.observe(element);
+    setAvailableWidth(element.clientWidth);
+    return () => observer.disconnect();
+  }, [pinned]);
+  const original = shownColumns(catalogue, layout);
+  const fitted =
+    pinned && availableWidth > 0
+      ? fitColumnWidths(
+          original.map(({ def, width }) => ({
+            key: def.key,
+            width,
+            minWidth: def.minWidth,
+            flex: def.key === catalogue.flexColumnKey,
+          })),
+          availableWidth - (actionsColumn?.width ?? 0),
+        )
+      : null;
+  const shown = original.map((column, index) =>
+    fitted ? { ...column, width: fitted[index]!, flex: false } : column,
+  );
   /** Whether a real column is absorbing the card's spare width. When none
    * is, the filler column absorbs it as trailing space. */
   const flexing = shown.some(({ flex }) => flex);
@@ -177,6 +207,28 @@ export function ManagedTable<Row>({
   function resize(key: string, width: number) {
     const def = catalogue.columns.find((candidate) => candidate.key === key);
     if (!def) return;
+    if (pinned && availableWidth > 0) {
+      const next = resizeColumnWidths(
+        shown.map((column) => ({
+          key: column.def.key,
+          width: column.width,
+          minWidth: column.def.minWidth,
+          flex: column.def.key === catalogue.flexColumnKey,
+        })),
+        availableWidth - (actionsColumn?.width ?? 0),
+        key,
+        Math.min(1200, Math.round(width)),
+      );
+      onLayoutChange({
+        ...layout,
+        flexKey: catalogue.flexColumnKey,
+        columns: shown.map((column, index) => ({
+          key: column.def.key,
+          width: Math.floor(next[index]!),
+        })),
+      });
+      return;
+    }
     onLayoutChange({
       ...layout,
       flexKey: layout.flexKey === key ? null : layout.flexKey,
@@ -214,11 +266,11 @@ export function ManagedTable<Row>({
     <div className="rounded-card border border-border-default bg-raised">
       {/* The sideways scroll belongs to the table, not to the card: the
           paging foot below must not slide out of reach (DES-031). */}
-      <div className="overflow-x-auto">
+      <div ref={scrollArea} className="relative overflow-x-auto">
         <table
           className="w-full table-fixed"
           style={{
-            minWidth: `${String(tableMinWidth(catalogue, layout) + (actionsColumn?.width ?? 0))}px`,
+            minWidth: `${String((pinned ? shown.reduce((sum, column) => sum + column.def.minWidth, 0) : tableMinWidth(catalogue, layout)) + (actionsColumn?.width ?? 0))}px`,
           }}
         >
           {/* Where a width becomes a width, and where the card's spare
@@ -269,7 +321,10 @@ export function ManagedTable<Row>({
               })}
               <FillerCell head />
               {actionsColumn && (
-                <th scope="col" className="px-4 py-2 text-end font-medium">
+                <th
+                  scope="col"
+                  className={`px-4 py-2 text-end font-medium ${pinned ? "sticky end-0 z-10 bg-section-header" : ""}`}
+                >
                   <span className="sr-only">{actionsColumn.label}</span>
                 </th>
               )}
@@ -310,7 +365,11 @@ export function ManagedTable<Row>({
                   ))}
                   <FillerCell />
                   {actionsColumn && (
-                    <td className="px-4 py-2.5 text-end">{actionsColumn.render(row)}</td>
+                    <td
+                      className={`px-4 py-2.5 text-end ${pinned ? "sticky end-0 z-10 bg-raised" : ""}`}
+                    >
+                      {actionsColumn.render(row)}
+                    </td>
                   )}
                 </tr>
               );

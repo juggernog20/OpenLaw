@@ -34,13 +34,9 @@
  * The loader is the client half of INT-006's floor: Member+ only,
  * everyone else bounced home. The API's 403 is the real refusal.
  *
- * **The sub-bar carries the disposition** (INT-007, DES-058): Decline
- * (#418), Resolve (#419), and Convert (#420) — all three of INT-007's
- * outcomes, with Convert on the CTA because it is the one the Inbox
- * exists to reach. The actions are drawn only while the Request is
- * `new`: a decided Request has nothing left to decide, and the Outcome
- * card says what was decided. Convert opens on the module the Request
- * type targets and the dialog holds Re-target as the deliberate switch.
+ * The sub-bar's Triage menu offers conversion to a contract or matter,
+ * or resolution with a required explanatory note. Historical outcomes
+ * remain readable once the Request has been decided.
  *
  * **Opening a disposition dialog writes nothing.** INT-007 has no claim
  * step and no parked state, so the Inbox row's Assign button is an entry
@@ -50,9 +46,8 @@
  *
  * ### Recorded normalization points (I2 deviations accepted)
  *
- * 1. **The sub-bar originally drew I2's three M21 actions.** M22/8
- *    superseded that normalization: Convert now names the configured
- *    target module, and either dialog offers the opposite Re-target.
+ * 1. The sub-bar now uses one Triage menu for both conversion targets
+ *    and resolution, as agreed in the UX review.
  * 2. **The hero scrolls with the page** where I2 draws it as a second
  *    fixed band under the sub-bar. What it says is a fact about the
  *    Request rather than a control that must stay in reach, and a
@@ -99,13 +94,20 @@ import {
   type LoaderFunctionArgs,
 } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
-import { Ban, Check, ChevronRight, FilePen, FileText } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  ChevronRight,
+  FilePen,
+  FileText,
+  BriefcaseBusiness,
+} from "lucide-react";
 import { api } from "../lib/api";
 import { readRegistry } from "../lib/entities";
 import { useCommentApplet } from "../components/comments/comment-applet";
 import { ConvertDialog } from "../components/intake/convert-dialog";
 import { CustomFieldValueText } from "../components/intake/custom-field-value";
-import { DeclineDialog } from "../components/intake/decline-dialog";
+import { RequestAssignment } from "../components/inbox/request-assignment";
 import { ResolveDialog } from "../components/intake/resolve-dialog";
 import {
   contractPath,
@@ -120,7 +122,6 @@ import { isAnswered } from "../lib/custom-fields";
 import { formatLongDateTime, formatRelativeOrShort } from "../lib/format";
 import {
   convertRequest,
-  declineRequest,
   resolveRequest,
   type DispositionOutcome,
   REQUEST_STATUS_PILL,
@@ -137,6 +138,13 @@ import { isMemberPlus } from "../lib/roles";
 import { requireUser, useSignOut } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
 import { Button } from "../components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "../components/ui/dropdown-menu";
 import { RecordApplets } from "../components/shell/record-applets";
 import { Avatar } from "../components/avatar";
 import { PageTitle } from "../components/page-title";
@@ -199,7 +207,7 @@ export function InboxRequestPage() {
    * until the seam answers. One piece of state rather than one flag per
    * dialog, because a Request has one fate and two open dialogs would be
    * two answers to it. */
-  const [disposing, setDisposing] = useState<"convert" | "decline" | "resolve" | null>(null);
+  const [disposing, setDisposing] = useState<"contract" | "matter" | "resolve" | null>(null);
   /** Whether a disposition is out. Every dialog holds its own submit
    * inert while it is, and the sub-bar's actions with it, so one press
    * is one disposition. */
@@ -283,42 +291,53 @@ export function InboxRequestPage() {
               then and there. Drawn only while the Request is `new` —
               a decided one has nothing left to decide, and the Outcome
               card states what was decided. */}
+          <RequestAssignment
+            request={request}
+            showName
+            onAssigned={() => {
+              void revalidator.revalidate();
+            }}
+          />
           {request.status === "new" && (
-            <div className="flex shrink-0 items-center gap-2">
-              <Button
-                variant="secondary"
-                className="text-status-danger-fg"
-                disabled={busy}
-                onClick={() => setDisposing("decline")}
-              >
-                <Ban size={16} aria-hidden="true" />
-                <FormattedMessage id="decline.action" defaultMessage="Decline" />
-              </Button>
-              {/* I2's second action, a plain secondary: Resolve is an
-                  honest ending but it is not the outcome the Inbox
-                  exists to reach, so the CTA belongs to Convert. */}
-              <Button variant="secondary" disabled={busy} onClick={() => setDisposing("resolve")}>
-                <Check size={16} aria-hidden="true" />
-                <FormattedMessage id="resolve.action" defaultMessage="Resolve" />
-              </Button>
-              {/* I2's third action and the page's call to action. Its
-                  label states the configured module; the dialog owns
-                  the deliberate Re-target to the other one. */}
-              <Button disabled={busy} onClick={() => setDisposing("convert")}>
-                <FilePen size={16} aria-hidden="true" />
-                <FormattedMessage
-                  id="convert.action"
-                  defaultMessage="Convert to {module, select, matter {matter} other {contract}}"
-                  values={{ module: request.requestType.targetModule ?? "contract" }}
-                />
-              </Button>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button disabled={busy} className="shrink-0">
+                  <FormattedMessage id="inbox.request.triage" defaultMessage="Triage" />
+                  <ChevronDown size={16} aria-hidden="true" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={() => setDisposing("contract")}>
+                  <FilePen size={16} aria-hidden="true" />
+                  <FormattedMessage
+                    id="inbox.request.convertContract"
+                    defaultMessage="Convert to contract"
+                  />
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setDisposing("matter")}>
+                  <BriefcaseBusiness size={16} aria-hidden="true" />
+                  <FormattedMessage
+                    id="inbox.request.convertMatter"
+                    defaultMessage="Convert to matter"
+                  />
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => setDisposing("resolve")}>
+                  <Check size={16} aria-hidden="true" />
+                  <FormattedMessage
+                    id="inbox.request.resolveWithoutConverting"
+                    defaultMessage="Resolve request without converting"
+                  />
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </section>
       }
     >
-      {disposing === "convert" && (
+      {(disposing === "contract" || disposing === "matter") && (
         <ConvertDialog
+          initialTargetModule={disposing}
           reference={reference}
           request={request}
           fields={fields}
@@ -337,14 +356,6 @@ export function InboxRequestPage() {
           busy={busy}
           onClose={() => setDisposing(null)}
           onConvert={(input) => dispose(() => convertRequest(request.number, input))}
-        />
-      )}
-      {disposing === "decline" && (
-        <DeclineDialog
-          reference={reference}
-          busy={busy}
-          onClose={() => setDisposing(null)}
-          onDecline={(reason) => dispose(() => declineRequest(request.number, reason))}
         />
       )}
       {disposing === "resolve" && (

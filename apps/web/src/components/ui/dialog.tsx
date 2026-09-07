@@ -24,11 +24,13 @@ import { cn } from "../../lib/utils";
 
 const Dialog = DialogPrimitive.Root;
 const DialogClose = DialogPrimitive.Close;
+const DialogTrigger = DialogPrimitive.Trigger;
 
 const DIALOG_WIDTH = {
   md: "md:max-w-md",
   lg: "md:max-w-lg",
   xl: "md:max-w-xl",
+  wide: "md:max-w-5xl",
 } as const;
 
 type DialogWidth = keyof typeof DIALOG_WIDTH;
@@ -57,4 +59,4 @@ function DialogTitle({ className, ...props }: React.ComponentProps<typeof Dialog
   return <DialogPrimitive.Title className={cn("text-lg font-semibold", className)} {...props} />;
 }
 
-export { Dialog, DialogClose, DialogContent, DialogTitle };
+export { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger };

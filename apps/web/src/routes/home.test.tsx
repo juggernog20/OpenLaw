@@ -2,9 +2,16 @@
 
 /** The M29 Home surface through the real route table and standard fetch stub. */
 import { describe, expect, it } from "vitest";
-import { act, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { json, problem, renderAt, stubApi, stubEventSource } from "../testing/helpers";
 import { formatDeadline } from "../lib/format";
+
+function finishTaskAnimation(row: HTMLElement) {
+  // Without AnimationEvent, React selects jsdom's WebKit event name.
+  const type = "AnimationEvent" in window ? "animationend" : "webkitAnimationEnd";
+  fireEvent(row, new Event(type, { bubbles: true }));
+}
 
 const MEMBER = {
   id: "u2",
@@ -307,6 +314,10 @@ describe("Home", () => {
 
     const card = await screen.findByRole("region", { name: "Tasks assigned to you" });
     expect(within(card).getByText("4")).toBeInTheDocument();
+    expect(within(card).getByRole("link", { name: "View all 4" })).toHaveAttribute(
+      "href",
+      "/home/tasks",
+    );
 
     const contractTask = within(card).getByText("Prepare financing signature pages");
     expect(contractTask.closest("a")).toHaveAttribute("href", "/contracts/42/tasks");
@@ -324,6 +335,301 @@ describe("Home", () => {
     expect(within(card).getByText("Jan 1, 2099")).toBeInTheDocument();
     expect(within(card).getByText("No due date")).toBeInTheDocument();
     expect(screen.queryByText("Welcome to OpenLaw")).not.toBeInTheDocument();
+  });
+
+  it("opens all assigned Tasks from Home, including the fourth Task, and returns Home", async () => {
+    const user = userEvent.setup();
+    const fourth = {
+      ...tasksSection.rows[2],
+      id: "fourth",
+      title: "Follow up with external counsel",
+    };
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/home") return json(200, { sections: [tasksSection] });
+        if (call.url.pathname === "/api/v1/home/tasks")
+          return json(200, {
+            total: 4,
+            rows: [...tasksSection.rows, fourth],
+            nextCursor: null,
+          });
+        return undefined;
+      },
+    });
+    renderAt("/");
+    await user.click(await screen.findByRole("link", { name: "View all 4" }));
+    await screen.findByRole("heading", { level: 1, name: "Your Tasks" });
+    const card = await screen.findByRole("region", { name: "Tasks assigned to you" });
+    expect(within(card).getAllByRole("listitem")).toHaveLength(4);
+    expect(
+      within(card).getByRole("link", { name: /Follow up with external counsel/ }),
+    ).toHaveAttribute("href", "/matters/13/tasks");
+    expect(screen.queryByRole("link", { name: "View all 4" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("link", { name: "Back to Home" }));
+    expect(await screen.findByRole("link", { name: "View all 4" })).toBeInTheDocument();
+  });
+
+  it.each([
+    ["Contract", tasksSection.rows[0], "/api/v1/tasks/contract-task-1/toggle"],
+    ["Matter", tasksSection.rows[1], "/api/v1/matter-tasks/matter-task-1/toggle"],
+  ] as const)(
+    "completes a %s Task in place and updates the Home count",
+    async (_kind, task, endpoint) => {
+      const user = userEvent.setup();
+      let done = false;
+      let save: ((response: Response) => void) | undefined;
+      const remaining = tasksSection.rows.filter((row) => row.id !== task.id);
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call) => {
+          if (call.url.pathname === "/api/v1/home/tasks")
+            return json(200, { total: 3, rows: tasksSection.rows, nextCursor: null });
+          if (call.url.pathname === "/api/v1/home")
+            return json(200, {
+              sections: [
+                {
+                  ...tasksSection,
+                  total: done ? 2 : 3,
+                  rows: done ? remaining : tasksSection.rows,
+                },
+              ],
+            });
+          if (call.url.pathname === endpoint && call.method === "POST")
+            return new Promise<Response>((resolve) => {
+              save = resolve;
+            });
+          return undefined;
+        },
+      });
+      const { router } = renderAt("/home/tasks");
+      const checkbox = await screen.findByRole("checkbox", {
+        name: `Complete Task: ${task.title}`,
+      });
+      await user.click(checkbox);
+      expect(checkbox).toBeDisabled();
+      expect(checkbox).toBeChecked();
+      expect(screen.getByText(task.title)).toBeInTheDocument();
+      expect(router.state.location.pathname).toBe("/home/tasks");
+      done = true;
+      await act(async () => {
+        save!(json(200, { tasks: [{ id: task.id, isDone: true }], doneCount: 1, totalCount: 1 }));
+      });
+      expect(checkbox).toBeChecked();
+      expect(checkbox.closest("li")).toHaveClass("home-task-exit");
+      expect(screen.getByRole("checkbox", { name: `Complete Task: ${task.title}` })).toBe(checkbox);
+      finishTaskAnimation(checkbox.closest("li")!);
+      await waitFor(() =>
+        expect(
+          screen.queryByRole("checkbox", { name: `Complete Task: ${task.title}` }),
+        ).not.toBeInTheDocument(),
+      );
+      const card = screen.getByRole("region", { name: "Tasks assigned to you" });
+      expect(within(card).getAllByRole("listitem")).toHaveLength(2);
+      expect(within(card).getByText("2")).toBeInTheDocument();
+      expect(screen.getByRole("status")).toHaveTextContent(`Completed: ${task.title}`);
+      await user.click(screen.getByRole("link", { name: "Back to Home" }));
+      expect(await screen.findByRole("link", { name: "View all 2" })).toBeInTheDocument();
+    },
+  );
+
+  it.each([
+    ["Contract", tasksSection.rows[0], "/api/v1/tasks/contract-task-1/toggle"],
+    ["Matter", tasksSection.rows[1], "/api/v1/matter-tasks/matter-task-1/toggle"],
+  ] as const)(
+    "undoes a %s completion after fading, restoring order and count",
+    async (_kind, task, endpoint) => {
+      const user = userEvent.setup();
+      let writes = 0;
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call) => {
+          if (call.url.pathname === "/api/v1/home/tasks")
+            return json(200, { total: 3, rows: tasksSection.rows, nextCursor: null });
+          if (call.url.pathname === endpoint && call.method === "POST") {
+            writes += 1;
+            return json(200, {
+              tasks: [{ id: task.id, isDone: writes === 1 }],
+              doneCount: writes === 1 ? 1 : 0,
+              totalCount: 1,
+            });
+          }
+          return undefined;
+        },
+      });
+      renderAt("/home/tasks");
+      const name = `Complete Task: ${task.title}`;
+      await user.click(await screen.findByRole("checkbox", { name }));
+      await screen.findByRole("button", { name: "Undo" });
+      finishTaskAnimation(screen.getByRole("checkbox", { name }).closest("li")!);
+      await waitFor(() => expect(screen.queryByRole("checkbox", { name })).not.toBeInTheDocument());
+      await user.click(screen.getByRole("button", { name: "Undo" }));
+      expect(await screen.findByRole("checkbox", { name })).not.toBeChecked();
+      const card = screen.getByRole("region", { name: "Tasks assigned to you" });
+      expect(
+        within(card)
+          .getAllByRole("checkbox")
+          .map((box) => box.getAttribute("aria-label")),
+      ).toEqual(tasksSection.rows.map((row) => `Complete Task: ${row.title}`));
+      expect(within(card).getByText("3")).toBeInTheDocument();
+      expect(screen.getByRole("status")).toHaveTextContent(`Reopened: ${task.title}`);
+      expect(screen.queryByRole("button", { name: "Undo" })).not.toBeInTheDocument();
+      expect(writes).toBe(2);
+    },
+  );
+
+  it("allows Undo during the checkmark hold without removing the restored row later", async () => {
+    const user = userEvent.setup();
+    const task = tasksSection.rows[0];
+    let writes = 0;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/home/tasks")
+          return json(200, { total: 1, rows: [task], nextCursor: null });
+        if (call.url.pathname === `/api/v1/tasks/${task.id}/toggle` && call.method === "POST") {
+          writes += 1;
+          return json(200, {
+            tasks: [{ id: task.id, isDone: writes === 1 }],
+            doneCount: writes === 1 ? 1 : 0,
+            totalCount: 1,
+          });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/home/tasks");
+    const checkbox = await screen.findByRole("checkbox", { name: `Complete Task: ${task.title}` });
+    await user.click(checkbox);
+    await user.click(await screen.findByRole("button", { name: "Undo" }));
+    await waitFor(() => expect(checkbox).not.toBeChecked());
+    finishTaskAnimation(checkbox.closest("li")!);
+    expect(checkbox).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("region", { name: "Tasks assigned to you" })).getByText("1"),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps Undo available after a failed reopen and retries without changing the count", async () => {
+    const user = userEvent.setup();
+    const task = tasksSection.rows[0];
+    let writes = 0;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/home/tasks")
+          return json(200, { total: 1, rows: [task], nextCursor: null });
+        if (call.url.pathname === `/api/v1/tasks/${task.id}/toggle` && call.method === "POST") {
+          writes += 1;
+          if (writes === 2) return problem(503, "Unavailable");
+          return json(200, {
+            tasks: [{ id: task.id, isDone: writes === 1 }],
+            doneCount: writes === 1 ? 1 : 0,
+            totalCount: 1,
+          });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/home/tasks");
+    const name = `Complete Task: ${task.title}`;
+    await user.click(await screen.findByRole("checkbox", { name }));
+    await screen.findByRole("button", { name: "Undo" });
+    finishTaskAnimation(screen.getByRole("checkbox", { name }).closest("li")!);
+    await screen.findByText("No open Tasks assigned to you.");
+    await user.click(screen.getByRole("button", { name: "Undo" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("The Task could not be reopened");
+    expect(screen.queryByRole("checkbox", { name })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Undo" }));
+    expect(await screen.findByRole("checkbox", { name })).not.toBeChecked();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("keeps a failed completion available for retry and shows the empty state after success", async () => {
+    const user = userEvent.setup();
+    const task = tasksSection.rows[0];
+    let fail = true;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/home/tasks")
+          return json(200, { total: 1, rows: [task], nextCursor: null });
+        if (call.url.pathname === `/api/v1/tasks/${task.id}/toggle` && call.method === "POST")
+          return fail
+            ? problem(409, "Task unavailable")
+            : json(200, { tasks: [{ id: task.id, isDone: true }], doneCount: 1, totalCount: 1 });
+        return undefined;
+      },
+    });
+    renderAt("/home/tasks");
+    const checkbox = await screen.findByRole("checkbox", { name: `Complete Task: ${task.title}` });
+    await user.click(checkbox);
+    expect(await screen.findByRole("alert")).toHaveTextContent("The Task could not be marked done");
+    expect(checkbox).toBeEnabled();
+    expect(checkbox).not.toBeChecked();
+    fail = false;
+    await user.click(checkbox);
+    await screen.findByRole("button", { name: "Undo" });
+    finishTaskAnimation(checkbox.closest("li")!);
+    expect(await screen.findByText("No open Tasks assigned to you.")).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("keeps assigned Task links read-only for a Contributor", async () => {
+    stubApi({
+      signedIn: { ...MEMBER, role: "contributor" },
+      extra: (call) =>
+        call.url.pathname === "/api/v1/home/tasks"
+          ? json(200, { total: 3, rows: tasksSection.rows, nextCursor: null })
+          : undefined,
+    });
+    renderAt("/home/tasks");
+    expect(
+      await screen.findByRole("link", { name: /Prepare financing signature pages/ }),
+    ).toHaveAttribute("href", "/contracts/42/tasks");
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+  });
+
+  it("retains loaded Tasks on a paging failure and allows retry", async () => {
+    const user = userEvent.setup();
+    let fail = true;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname !== "/api/v1/home/tasks") return undefined;
+        if (!call.url.searchParams.has("cursor"))
+          return json(200, {
+            total: 3,
+            rows: tasksSection.rows.slice(0, 2),
+            nextCursor: "page-two",
+          });
+        expect(call.url.searchParams.get("cursor")).toBe("page-two");
+        if (fail) return problem(500, "Unavailable");
+        return json(200, { total: 3, rows: tasksSection.rows.slice(2), nextCursor: null });
+      },
+    });
+    renderAt("/home/tasks");
+    await user.click(await screen.findByRole("button", { name: "Load more Tasks" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("More Tasks could not be loaded");
+    expect(screen.getByText("Prepare financing signature pages")).toBeInTheDocument();
+    fail = false;
+    await user.click(screen.getByRole("button", { name: "Load more Tasks" }));
+    expect(await screen.findByText("Confirm interview list")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load more Tasks" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("shows an empty personal Tasks page for a Contributor with no open Tasks", async () => {
+    stubApi({
+      signedIn: { ...MEMBER, role: "contributor" },
+      extra: (call) =>
+        call.url.pathname === "/api/v1/home/tasks"
+          ? json(200, { total: 0, rows: [], nextCursor: null })
+          : undefined,
+    });
+    renderAt("/home/tasks");
+    expect(await screen.findByText("No open Tasks assigned to you.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Back to Home" })).toHaveAttribute("href", "/");
   });
 
   it("renders Dates with DES-042 names, DES-014 dates, record links, and CONFI", async () => {
@@ -573,7 +879,7 @@ describe("Home", () => {
     expect(within(contracts).getByText("No upcoming date")).toBeInTheDocument();
     expect(within(contracts).getByRole("link", { name: "View all 7" })).toHaveAttribute(
       "href",
-      "/contracts",
+      "/contracts?owner=me",
     );
 
     const matters = screen.getByRole("region", { name: "Your matters" });

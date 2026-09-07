@@ -102,6 +102,7 @@ export type ConvertResult =
   | { ok: false; alreadyDecided?: undefined; detail?: string };
 
 export function ConvertDialog({
+  initialTargetModule,
   reference,
   request,
   fields,
@@ -116,6 +117,7 @@ export function ConvertDialog({
 }: Readonly<{
   /** The Request's R-### reference, which the title quotes. */
   reference: string;
+  initialTargetModule?: "contract" | "matter";
   request: StaffRequest;
   /** The request type's own attached fields — what the form collected,
    * and the labels the collected values are named by. */
@@ -152,7 +154,8 @@ export function ConvertDialog({
    * screen without the screen knowing the rule.
    */
   type TargetModule = "contract" | "matter";
-  const initialModule: TargetModule = request.requestType.targetModule ?? "contract";
+  const initialModule: TargetModule =
+    initialTargetModule ?? request.requestType.targetModule ?? "contract";
   const [targetModule, setTargetModule] = useState<TargetModule>(initialModule);
   const targetTypes = targetModule === "contract" ? contractTypes : matterTypes;
   const bound =

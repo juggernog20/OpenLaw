@@ -231,6 +231,12 @@ type RequestPayloads = {
    * resolution with no closing reply looks identical here, because what
    * this entry records is the closure and not the answer. */
   "request.resolved": { number: number };
+  "request.assignee_changed": {
+    number: number;
+    assignee: string | null;
+    from: string | null;
+    to: string | null;
+  };
   /**
    * INT-007's third disposition (M21/9): the ask became a record.
    *

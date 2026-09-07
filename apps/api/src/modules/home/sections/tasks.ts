@@ -44,6 +44,23 @@ export const TasksHomeSectionSchema = z.object({
 
 export type TasksHomeSection = z.infer<typeof TasksHomeSectionSchema>;
 
+export const AssignedTasksCursorSchema = z.string().refine((value) => {
+  const parts = value.split(":");
+  return z
+    .tuple([
+      z.union([z.iso.date(), z.literal("undated")]),
+      z.enum(["contract", "matter"]),
+      z.uuid(),
+    ])
+    .safeParse(parts).success;
+}, "Invalid Tasks cursor");
+
+export const AssignedTasksPageSchema = z.object({
+  total: z.number().int().nonnegative(),
+  rows: z.array(TaskHomeRowSchema),
+  nextCursor: z.string().nullable(),
+});
+
 interface TaskDbRow extends Record<string, unknown> {
   id: string;
   title: string;
@@ -61,7 +78,7 @@ interface TaskDbRow extends Record<string, unknown> {
  * Every unfinished Task assigned to the viewer across both workspaces.
  *
  * Each arm applies the owning record's ordinary reach and lifecycle
- * predicates before the union. The window total and cap therefore see
+ * predicates before the union. The total and cap therefore see
  * only reachable work: a walled record leaves no row, count, or gap.
  * Civil due dates sort overdue first, then forward, with NULL last.
  */
@@ -75,8 +92,24 @@ export async function readTasksHomeSection(
    */
   dueThrough?: string,
 ): Promise<TasksHomeSection | null> {
+  const page = await readAssignedTasks(db, user, { limit: HOME_SECTION_LIMIT, dueThrough });
+  return page.total === 0 ? null : { type: "tasks", total: page.total, rows: page.rows };
+}
+
+export async function readAssignedTasks(
+  db: Executor,
+  user: AuthenticatedUser,
+  { limit, cursor, dueThrough }: { limit: number; cursor?: string; dueThrough?: string },
+): Promise<z.infer<typeof AssignedTasksPageSchema>> {
   const today = dueThrough ? sql`${dueThrough}::date` : sql`current_date`;
-  const result = await db.execute<TaskDbRow>(sql`
+  const [cursorDate, cursorKind, cursorId] = cursor?.split(":") ?? [];
+  const after = cursor
+    ? sql`where (coalesce(due_date, 'infinity'::date), record_kind, id) > (
+        coalesce(${cursorDate === "undated" ? null : cursorDate}::date, 'infinity'::date),
+        ${cursorKind}::text, ${cursorId}::text
+      )`
+    : sql``;
+  const result = await db.execute<TaskDbRow | { id: null; total: number }>(sql`
     with home_tasks as (
       select
         ${contractTasks.id} as id,
@@ -123,7 +156,7 @@ export async function readTasksHomeSection(
         eq(matterStatuses.category, "open"),
         matterTeamScope(db, user),
       )}
-    )
+    ), page_tasks as (
     select
       id,
       title,
@@ -133,19 +166,28 @@ export async function readTasksHomeSection(
       record_id,
       record_number,
       record_title,
-      record_is_confidential,
-      count(*) over()::integer as total
+      record_is_confidential
     from home_tasks
-    order by is_overdue desc, due_date asc nulls last, record_kind asc, id asc
-    limit ${HOME_SECTION_LIMIT}
+    ${after}
+    order by due_date asc nulls last, record_kind asc, id asc
+    limit ${limit + 1}
+    )
+    select page_tasks.*, totals.total
+    from (select count(*)::integer as total from home_tasks) totals
+    left join page_tasks on true
+    order by page_tasks.due_date asc nulls last, page_tasks.record_kind asc, page_tasks.id asc
   `);
 
-  const first = result.rows[0];
-  if (!first) return null;
+  const pageRows = result.rows.filter((row): row is TaskDbRow => row.id !== null);
+  const rows = pageRows.slice(0, limit);
+  const last = rows.at(-1);
   return {
-    type: "tasks",
-    total: first.total,
-    rows: result.rows.map((row) => ({
+    total: result.rows[0]?.total ?? 0,
+    nextCursor:
+      pageRows.length > limit && last
+        ? `${last.due_date ?? "undated"}:${last.record_kind}:${last.id}`
+        : null,
+    rows: rows.map((row) => ({
       id: row.id,
       title: row.title,
       dueDate: row.due_date,

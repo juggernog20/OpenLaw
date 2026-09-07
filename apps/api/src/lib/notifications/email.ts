@@ -261,6 +261,12 @@ function staffRequestMail(
   const hello = `Hello ${notification.recipientName},`;
   const who = notification.actorName ?? "Somebody";
   switch (notification.eventType) {
+    case "request.assigned":
+      return {
+        to,
+        subject: `Request assigned for triage: ${named}`,
+        text: [hello, "", `${who} assigned you to triage ${named}.`, "", link].join("\n"),
+      };
     case "request.submitted": {
       // **Opt-in, so the copy can be short.** Nobody receives one
       // without having asked for it, and the queue is already the

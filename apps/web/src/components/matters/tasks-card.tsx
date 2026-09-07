@@ -2,6 +2,12 @@
 
 /** A Matter's lightweight Task checklist (MTR-005, M23/4). */
 import { useState } from "react";
+import {
+  TaskAssigneePicker,
+  taskAssignee,
+  type TaskAssigneePerson,
+  type TaskTeamExpansion,
+} from "../tasks/assignee-picker";
 import { useRecord } from "../record-context";
 import { FormattedMessage, useIntl } from "react-intl";
 import { ArrowDown, ArrowUp, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
@@ -17,7 +23,6 @@ import {
   type MatterTasksOutcome,
 } from "../../lib/matter-tasks";
 import { formatShortDate } from "../../lib/format";
-import { CONTROL_CLASS } from "../../lib/form-controls";
 import { StatusNote, type FieldStatus } from "../status-note";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
@@ -31,10 +36,7 @@ import {
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 
-export interface MatterTaskPerson {
-  id: string;
-  displayName: string;
-}
+export type MatterTaskPerson = TaskAssigneePerson;
 
 type Editing = { row: MatterTask | null };
 
@@ -43,12 +45,14 @@ export function MatterTasksCard({
   doneCount,
   totalCount,
   assignees,
+  teamExpansion,
   onTasksChange,
 }: Readonly<{
   tasks: readonly MatterTask[];
   doneCount: number;
   totalCount: number;
   assignees: readonly MatterTaskPerson[];
+  teamExpansion?: TaskTeamExpansion;
   onTasksChange: (value: { tasks: MatterTask[]; doneCount: number; totalCount: number }) => void;
 }>) {
   const { record, frozen } = useRecord();
@@ -145,6 +149,17 @@ export function MatterTasksCard({
             <TaskRow
               key={task.id}
               task={task}
+              assignees={assignees}
+              teamExpansion={teamExpansion}
+              onAssign={async (assigneeId, addToTeam) => {
+                const refusal = await run(
+                  () =>
+                    updateMatterTask(task.id, { assigneeId, ...(addToTeam ? { addToTeam } : {}) }),
+                  true,
+                );
+                if (!refusal && addToTeam && assigneeId) teamExpansion?.onAdded(assigneeId);
+                return refusal;
+              }}
               frozen={frozen}
               busy={busy}
               first={index === 0}
@@ -162,6 +177,7 @@ export function MatterTasksCard({
         <TaskDialog
           row={editing.row}
           assignees={assignees}
+          teamExpansion={teamExpansion}
           busy={busy}
           onClose={() => setEditing(null)}
           onConfirm={async (input) => {
@@ -172,6 +188,8 @@ export function MatterTasksCard({
                   : addMatterTask(matterNumber, input),
               true,
             );
+            if (!refusal && input.addToTeam && input.assigneeId)
+              teamExpansion?.onAdded(input.assigneeId);
             if (!refusal) setEditing(null);
             return refusal;
           }}
@@ -183,6 +201,9 @@ export function MatterTasksCard({
 
 function TaskRow({
   task,
+  assignees,
+  teamExpansion,
+  onAssign,
   frozen,
   busy,
   first,
@@ -194,6 +215,9 @@ function TaskRow({
   onRemove,
 }: Readonly<{
   task: MatterTask;
+  assignees: readonly TaskAssigneePerson[];
+  teamExpansion?: TaskTeamExpansion;
+  onAssign: (id: string | null, addToTeam?: boolean) => Promise<string | null>;
   frozen: boolean;
   busy: boolean;
   first: boolean;
@@ -224,24 +248,25 @@ function TaskRow({
         <span className={`text-base ${task.isDone ? "text-muted line-through" : "text-primary"}`}>
           {task.title}
         </span>
-        {(task.assigneeName || task.dueDate) && (
+        {task.dueDate && (
           <span className="text-xs text-muted">
-            {task.assigneeName}
-            {task.assigneeName && task.dueDate && (
-              <span aria-hidden="true">
-                {intl.formatMessage({ id: "matterTasks.separator", defaultMessage: " · " })}
-              </span>
-            )}
-            {task.dueDate && (
-              <FormattedMessage
-                id="matterTasks.due"
-                defaultMessage="Due {date}"
-                values={{ date: formatShortDate(task.dueDate) }}
-              />
-            )}
+            <FormattedMessage
+              id="matterTasks.due"
+              defaultMessage="Due {date}"
+              values={{ date: formatShortDate(task.dueDate) }}
+            />
           </span>
         )}
       </div>
+      <TaskAssigneePicker
+        value={taskAssignee(task, assignees)}
+        people={assignees}
+        additionalPeople={teamExpansion?.people}
+        taskTitle={task.title}
+        disabled={busy}
+        readOnly={frozen}
+        onChange={onAssign}
+      />
       {!frozen && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -285,17 +310,21 @@ function TaskRow({
 function TaskDialog({
   row,
   assignees,
+  teamExpansion,
   busy,
   onClose,
   onConfirm,
 }: Readonly<{
   row: MatterTask | null;
   assignees: readonly MatterTaskPerson[];
+  teamExpansion?: TaskTeamExpansion;
   busy: boolean;
   onClose: () => void;
   onConfirm: (input: MatterTaskInput) => Promise<string | null>;
 }>) {
   const intl = useIntl();
+  const [addToTeam, setAddToTeam] = useState(false);
+  const allPeople = [...assignees, ...(teamExpansion?.people ?? [])];
   const [title, setTitle] = useState(row?.title ?? "");
   const [assigneeId, setAssigneeId] = useState(row?.assigneeId ?? "");
   const [dueDate, setDueDate] = useState(row?.dueDate ?? "");
@@ -315,6 +344,7 @@ function TaskDialog({
       await onConfirm({
         title: title.trim(),
         ...(row && assigneeId === (row.assigneeId ?? "") ? {} : { assigneeId: assigneeId || null }),
+        ...(addToTeam ? { assigneeId, addToTeam: true } : {}),
         dueDate: dueDate || null,
       }),
     );
@@ -357,26 +387,37 @@ function TaskDialog({
             <Label htmlFor="matter-task-assignee">
               <FormattedMessage id="matterTasks.field.assignee" defaultMessage="Assignee" />
             </Label>
-            <select
+            <TaskAssigneePicker
               id="matter-task-assignee"
-              className={CONTROL_CLASS}
-              value={assigneeId}
-              onChange={(event) => setAssigneeId(event.target.value)}
-            >
-              <option value="">
-                {intl.formatMessage({ id: "matterTasks.unassigned", defaultMessage: "Unassigned" })}
-              </option>
-              {row?.assigneeId && !assignees.some((person) => person.id === row.assigneeId) && (
-                <option value={row.assigneeId} disabled>
-                  {row.assigneeName ?? row.assigneeId}
-                </option>
-              )}
-              {assignees.map((person) => (
-                <option key={person.id} value={person.id}>
-                  {person.displayName}
-                </option>
-              ))}
-            </select>
+              label={intl.formatMessage({
+                id: "matterTasks.field.assignee",
+                defaultMessage: "Assignee",
+              })}
+              taskTitle={title}
+              value={
+                assigneeId
+                  ? (allPeople.find((person) => person.id === assigneeId) ??
+                    (row ? taskAssignee(row, assignees) : null))
+                  : null
+              }
+              deferred
+              people={assignees}
+              additionalPeople={teamExpansion?.people}
+              disabled={busy}
+              onChange={async (id, adding) => {
+                setAddToTeam(adding ?? false);
+                setAssigneeId(id ?? "");
+                return null;
+              }}
+            />
+            {addToTeam && (
+              <p className="text-sm text-muted">
+                <FormattedMessage
+                  id="taskAssignee.deferred"
+                  defaultMessage="Team membership and assignment are saved when you save the task."
+                />
+              </p>
+            )}
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="matter-task-due">

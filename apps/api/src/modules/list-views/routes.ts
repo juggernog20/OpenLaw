@@ -108,7 +108,7 @@ const ViewConfigSchema = z.strictObject({
   flexKey: z.string().min(1).max(64).nullable().optional(),
   /** The sort in force, or null for the list's natural order. */
   sort: ViewSortSchema.nullable(),
-  filters: z.record(z.string().min(1).max(64), z.union([z.boolean(), z.string().max(200)])),
+  filters: z.record(z.string().min(1).max(64), z.union([z.boolean(), z.string().max(2000)])),
 });
 
 const ViewSchema = z.object({

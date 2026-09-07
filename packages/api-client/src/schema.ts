@@ -1015,6 +1015,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/matters/filter-options": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listMatterFilterOptions"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/matters/options": {
     parameters: {
       query?: never;
@@ -1235,7 +1251,10 @@ export interface paths {
     /** List a reached Matter's lightweight checklist in stable display order. Contributors on the Matter can read it; Task due dates are internal and never enter deadline surfaces */
     get: operations["listMatterTasks"];
     put?: never;
-    /** Add a Task to a reached, non-archived Matter. Closing does not freeze the checklist */
+    /**
+     * Add a Task to a reached, non-archived Matter. Closing does not freeze the checklist
+     * @description Assignees must be active staff who manage the record or belong to its team. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.
+     */
     post: operations["addMatterTask"];
     delete?: never;
     options?: never;
@@ -1257,7 +1276,10 @@ export interface paths {
     delete: operations["removeMatterTask"];
     options?: never;
     head?: never;
-    /** Edit a Task's title, assignee, or internal due date on a reached Matter */
+    /**
+     * Edit a Task's title, assignee, or internal due date on a reached Matter
+     * @description Assignees must be active staff who manage the record or belong to its team. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.
+     */
     patch: operations["updateMatterTask"];
     trace?: never;
   };
@@ -1718,7 +1740,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The Inbox (INT-006, INT-007): the Requests whose fate is undecided, ordered by urgency rank — critical first — then age, oldest first, and paged by cursor. The answer is exactly the `new` Requests; includeTriaged=true widens it to the converted, resolved, and declined ones with their outcomes. A converted row carries the contract or matter it became only when the caller reaches that record, and carries null otherwise (DD-014). Member+ only: a Contributor and a Business User are refused */
+    /** The Inbox (INT-006, INT-007): the Requests whose fate is undecided, ordered by urgency rank — critical first — then age, oldest first, and paged by cursor. The answer is the `new` Requests by default; status choices or includeTriaged=true widen it to the converted, resolved, and declined ones with their outcomes. A converted row carries the contract or matter it became only when the caller reaches that record, and carries null otherwise (DD-014). Member+ only: a Contributor and a Business User are refused */
     get: operations["listInbox"];
     put?: never;
     /** Submit a Request through a request type's portal form (INT-001). The Requester is the session; the type must be live; Summary, Description, and Urgency are required, as is every attached field the type marks required; values are accepted for exactly the fields the type attaches, and a user or entity field's value must name a live row */
@@ -1797,6 +1819,57 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/requests/assignees": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Active staff who can triage Requests */
+    get: operations["requestAssigneeOptions"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/requests/{number}/assignee": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Assign, reassign or clear the person responsible for triaging an open Request */
+    patch: operations["assignRequest"];
+    trace?: never;
+  };
+  "/api/v1/requests/filter-options": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Request types and requesters across the live Inbox, including triaged requests */
+    get: operations["inboxFilterOptions"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/requests/{number}": {
     parameters: {
       query?: never;
@@ -1857,7 +1930,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Close a Request that has been answered (INT-006). The second of INT-007's three dispositions: it transitions the Request from `new` to `resolved` under the Request's own row lock, so two triagers racing one Request produce one resolution. The loser is answered 409 with the recorded outcome rather than a second resolution. `reply` is optional — the answer is often already on the thread, and INT-006 asks for a closing reply rather than requiring one. Given, it is posted as an ordinary Full Thread comment: it lands on the conversation, narrates as comment.posted, and notifies the Requester as any staff reply does. Raises `requestStatusChanged` beside it, because an answer and a closure are two pieces of news and the requester may have both. Appends one request.resolved entry naming the actor (DD-017, INT-007: who dispositioned is audit data); what was said is on the thread, not in the payload. Answers the Request as the staff detail reads it. Member+ only */
+    /** Resolve a Request without converting it. Requires a nonblank reply explaining the resolution, posted to the requester-visible thread. Records the comment, closure and notifications atomically. Member+ only; already decided Requests return 409. */
     post: operations["resolveRequest"];
     delete?: never;
     options?: never;
@@ -2067,6 +2140,22 @@ export interface paths {
     put?: never;
     /** Create a contract from a title, a live type, and any custom fields that type hard-requires (CTR-016/MTR-014 — creation is refused while one is empty); the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward — except the Confidential flag (DD-014), which may be set here so a sensitive record is never visible to the wrong audience, even briefly. `renewalOf` routes a renewal into a new record (CTR-007's third and fourth vehicles, M16/5): the successor is born carrying its predecessor's business facts — our entity, the value, the term shape, and the counterparties — and linked to it, as a child by contracts.parent_id or as a standalone successor by a CTR-015 `renews` row. The team, the status, and the Confidential flag are **never** copied: CTR-015's no-inheritance stance, applied at birth. The title and the type are the body's, so whatever the person edited before pressing Create is what the record is born with. Appends the link's own activity action beside contract.created */
     post: operations["createContract"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/filter-options": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listContractFilterOptions"];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -2586,7 +2675,10 @@ export interface paths {
     /** One contract's task checklist (CTR-017): lightweight items with a done flag, an optional assignee, an optional due date, and a display order. Task due dates never appear in the deadline union or the next-deadline marker. Access is inherited from the contract: a Contributor on the team reads the checklist, and anyone who cannot reach the contract is answered 404 */
     get: operations["listContractTasks"];
     put?: never;
-    /** Add a task to a contract's checklist (CTR-017). A blank title is refused. The task starts not done, with the display order after the last existing task. Appends one task.added entry on the owning contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403. An archived contract takes no new task until it is restored */
+    /**
+     * Add a task to a contract's checklist (CTR-017). A blank title is refused. The task starts not done, with the display order after the last existing task. Appends one task.added entry on the owning contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403. An archived contract takes no new task until it is restored
+     * @description Assignees must be active staff who manage the record or belong to its team. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.
+     */
     post: operations["addContractTask"];
     delete?: never;
     options?: never;
@@ -2608,7 +2700,10 @@ export interface paths {
     delete: operations["removeContractTask"];
     options?: never;
     head?: never;
-    /** Edit a task's title, assignee, or due date (CTR-017). Every field is optional and only what is sent is read. A request that changes nothing writes nothing and narrates nothing. Appends one task.edited entry naming only what moved, at the working-team tier (DD-017). A task on a contract this viewer cannot reach answers 404; an archived contract takes no edit until it is restored */
+    /**
+     * Edit a task's title, assignee, or due date (CTR-017). Every field is optional and only what is sent is read. A request that changes nothing writes nothing and narrates nothing. Appends one task.edited entry naming only what moved, at the working-team tier (DD-017). A task on a contract this viewer cannot reach answers 404; an archived contract takes no edit until it is restored
+     * @description Assignees must be active staff who manage the record or belong to its team. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.
+     */
     patch: operations["updateContractTask"];
     trace?: never;
   };
@@ -4264,6 +4359,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/home/dates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** All dates in a calendar window on active Contracts and Matters the viewer manages or is on the team of */
+    get: operations["listPersonalDates"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/home/tasks": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Open Tasks assigned to the signed-in user, across reachable active Contracts and Matters */
+    get: operations["listAssignedTasks"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/home": {
     parameters: {
       query?: never;
@@ -4271,7 +4400,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The signed-in staff user's personal Home sections in stable order. Zero-total sections are omitted; every present section carries a three-row cap and its full eligible total. Record reach is applied inside each section query, before totals and caps */
+    /** The signed-in staff user's personal Home sections in stable order. Zero-total sections are omitted; every present section carries a four-row cap and its full eligible total. Record reach is applied inside each section query, before totals and caps */
     get: operations["getHome"];
     put?: never;
     post?: never;
@@ -8323,7 +8452,13 @@ export interface operations {
         includeArchived?: "true" | "false";
         status?: string;
         type?: string;
-        priority?: "low" | "medium" | "high" | "critical";
+        priority?: string;
+        risk?: string;
+        timeZone?: string;
+        openedFrom?: string;
+        openedTo?: string;
+        deadlineFrom?: string;
+        deadlineTo?: string;
         manager?: string;
         incomplete?: "true" | "false";
         sort?:
@@ -8382,6 +8517,7 @@ export interface operations {
                 label: string;
               } | null;
             }[];
+            total: number;
             nextCursor: string | null;
             counts: {
               open: number;
@@ -8473,6 +8609,48 @@ export interface operations {
                 label: string;
               } | null;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listMatterFilterOptions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            types: {
+              id: string;
+              displayName: string;
+            }[];
+            statuses: {
+              id: string;
+              displayName: string;
+            }[];
+            people: {
+              id: string;
+              displayName: string;
+            }[];
           };
         };
       };
@@ -9827,6 +10005,7 @@ export interface operations {
               isDone: boolean;
               assigneeId: string | null;
               assigneeName: string | null;
+              assigneeImage: string | null;
               dueDate: string | null;
               displayOrder: number;
             }[];
@@ -9860,6 +10039,7 @@ export interface operations {
         "application/json": {
           title: string;
           assigneeId?: string | null;
+          addToTeam?: boolean;
           dueDate?: string | null;
         };
       };
@@ -9878,6 +10058,7 @@ export interface operations {
               isDone: boolean;
               assigneeId: string | null;
               assigneeName: string | null;
+              assigneeImage: string | null;
               dueDate: string | null;
               displayOrder: number;
             }[];
@@ -9921,6 +10102,7 @@ export interface operations {
               isDone: boolean;
               assigneeId: string | null;
               assigneeName: string | null;
+              assigneeImage: string | null;
               dueDate: string | null;
               displayOrder: number;
             }[];
@@ -9954,6 +10136,7 @@ export interface operations {
         "application/json": {
           title?: string;
           assigneeId?: string | null;
+          addToTeam?: boolean;
           dueDate?: string | null;
         };
       };
@@ -9972,6 +10155,7 @@ export interface operations {
               isDone: boolean;
               assigneeId: string | null;
               assigneeName: string | null;
+              assigneeImage: string | null;
               dueDate: string | null;
               displayOrder: number;
             }[];
@@ -10015,6 +10199,7 @@ export interface operations {
               isDone: boolean;
               assigneeId: string | null;
               assigneeName: string | null;
+              assigneeImage: string | null;
               dueDate: string | null;
               displayOrder: number;
             }[];
@@ -10064,6 +10249,7 @@ export interface operations {
               isDone: boolean;
               assigneeId: string | null;
               assigneeName: string | null;
+              assigneeImage: string | null;
               dueDate: string | null;
               displayOrder: number;
             }[];
@@ -11830,6 +12016,13 @@ export interface operations {
   listInbox: {
     parameters: {
       query?: {
+        status?: string;
+        type?: string;
+        urgency?: string;
+        requester?: string;
+        receivedFrom?: string;
+        receivedTo?: string;
+        timeZone?: string;
         includeTriaged?: "true" | "false";
         cursor?: string;
       };
@@ -11865,6 +12058,11 @@ export interface operations {
                 id: string;
                 displayName: string;
               };
+              assignee: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              } | null;
               createdAt: string;
               convertedContract: {
                 number: number;
@@ -11884,6 +12082,7 @@ export interface operations {
                   )
                 | null;
             }[];
+            total: number;
             nextCursor: string | null;
           };
         };
@@ -12213,6 +12412,167 @@ export interface operations {
       };
     };
   };
+  requestAssigneeOptions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            people: {
+              id: string;
+              displayName: string;
+              image: string | null;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  assignRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          assigneeId: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            request: {
+              id: string;
+              number: number;
+              /** @enum {string} */
+              status: "new" | "converted" | "resolved" | "declined";
+              summary: string;
+              description: string | null;
+              /** @enum {string} */
+              urgency: "low" | "medium" | "high" | "critical";
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              declinedReason: string | null;
+              createdAt: string;
+              requestType: {
+                id: string;
+                displayName: string;
+                targetModule: ("matter" | "contract") | null;
+                targetTypeId: string | null;
+                targetTypeName: string | null;
+              };
+              requester: {
+                id: string;
+                displayName: string;
+                email: string;
+                image: string | null;
+              };
+              assignee: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              } | null;
+              convertedContract: {
+                number: number;
+              } | null;
+              convertedRecord:
+                | (
+                    | {
+                        /** @enum {string} */
+                        module: "contract";
+                        number: number;
+                      }
+                    | {
+                        /** @enum {string} */
+                        module: "matter";
+                        number: number;
+                      }
+                  )
+                | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  inboxFilterOptions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            types: {
+              id: string;
+              displayName: string;
+            }[];
+            people: {
+              id: string;
+              displayName: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   readRequest: {
     parameters: {
       query?: never;
@@ -12258,6 +12618,11 @@ export interface operations {
                 email: string;
                 image: string | null;
               };
+              assignee: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              } | null;
               convertedContract: {
                 number: number;
               } | null;
@@ -12421,6 +12786,11 @@ export interface operations {
                 email: string;
                 image: string | null;
               };
+              assignee: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              } | null;
               convertedContract: {
                 number: number;
               } | null;
@@ -12512,7 +12882,7 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": {
-          reply?: string;
+          reply: string;
         };
       };
     };
@@ -12551,6 +12921,11 @@ export interface operations {
                 email: string;
                 image: string | null;
               };
+              assignee: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              } | null;
               convertedContract: {
                 number: number;
               } | null;
@@ -12687,6 +13062,11 @@ export interface operations {
                 email: string;
                 image: string | null;
               };
+              assignee: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              } | null;
               convertedContract: {
                 number: number;
               } | null;
@@ -13355,6 +13735,13 @@ export interface operations {
   listContracts: {
     parameters: {
       query?: {
+        owner?: string;
+        status?: string;
+        type?: string;
+        effectiveFrom?: string;
+        effectiveTo?: string;
+        expiryFrom?: string;
+        expiryTo?: string;
         includeArchived?: "true" | "false";
         includeEnded?: "true" | "false";
         sort?:
@@ -13459,6 +13846,7 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             }[];
+            total: number;
             nextCursor: string | null;
           };
         };
@@ -13605,6 +13993,48 @@ export interface operations {
             errors?: {
               path: string;
               message: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listContractFilterOptions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            types: {
+              id: string;
+              displayName: string;
+            }[];
+            statuses: {
+              id: string;
+              displayName: string;
+            }[];
+            people: {
+              id: string;
+              displayName: string;
             }[];
           };
         };
@@ -16873,6 +17303,8 @@ export interface operations {
               title: string;
               isDone: boolean;
               assigneeId: string | null;
+              assigneeName: string | null;
+              assigneeImage: string | null;
               dueDate: string | null;
               displayOrder: number;
             }[];
@@ -16906,6 +17338,7 @@ export interface operations {
         "application/json": {
           title: string;
           assigneeId?: string | null;
+          addToTeam?: boolean;
           dueDate?: string | null;
         };
       };
@@ -16923,6 +17356,8 @@ export interface operations {
               title: string;
               isDone: boolean;
               assigneeId: string | null;
+              assigneeName: string | null;
+              assigneeImage: string | null;
               dueDate: string | null;
               displayOrder: number;
             }[];
@@ -16965,6 +17400,8 @@ export interface operations {
               title: string;
               isDone: boolean;
               assigneeId: string | null;
+              assigneeName: string | null;
+              assigneeImage: string | null;
               dueDate: string | null;
               displayOrder: number;
             }[];
@@ -16998,6 +17435,7 @@ export interface operations {
         "application/json": {
           title?: string;
           assigneeId?: string | null;
+          addToTeam?: boolean;
           dueDate?: string | null;
         };
       };
@@ -17015,6 +17453,8 @@ export interface operations {
               title: string;
               isDone: boolean;
               assigneeId: string | null;
+              assigneeName: string | null;
+              assigneeImage: string | null;
               dueDate: string | null;
               displayOrder: number;
             }[];
@@ -17057,6 +17497,8 @@ export interface operations {
               title: string;
               isDone: boolean;
               assigneeId: string | null;
+              assigneeName: string | null;
+              assigneeImage: string | null;
               dueDate: string | null;
               displayOrder: number;
             }[];
@@ -17105,6 +17547,8 @@ export interface operations {
               title: string;
               isDone: boolean;
               assigneeId: string | null;
+              assigneeName: string | null;
+              assigneeImage: string | null;
               dueDate: string | null;
               displayOrder: number;
             }[];
@@ -25634,6 +26078,161 @@ export interface operations {
       };
     };
   };
+  listPersonalDates: {
+    parameters: {
+      query: {
+        from: string;
+        to: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            total: number;
+            rows: {
+              /** @enum {string} */
+              source: "key_date" | "expiry" | "notice_deadline";
+              keyDateId: string | null;
+              /** Format: date */
+              date: string;
+              label: string | null;
+              noticePeriodDays: number | null;
+              unverified: boolean;
+              record: {
+                /** @enum {string} */
+                kind: "contract" | "matter";
+                id: string;
+                number: number;
+                title: string;
+                isConfidential: boolean;
+              };
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listAssignedTasks: {
+    parameters: {
+      query?: {
+        limit?: number;
+        cursor?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            total: number;
+            rows: {
+              id: string;
+              title: string;
+              dueDate: string | null;
+              isOverdue: boolean;
+              record: {
+                /** @enum {string} */
+                kind: "contract" | "matter";
+                id: string;
+                number: number;
+                title: string;
+                isConfidential: boolean;
+              };
+            }[];
+            nextCursor: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   getHome: {
     parameters: {
       query?: never;
@@ -26196,7 +26795,7 @@ export interface operations {
   listSavedViews: {
     parameters: {
       query: {
-        surface: "contracts" | "matters" | "documents" | "entities" | "knowledge";
+        surface: "inbox" | "contracts" | "matters" | "documents" | "entities" | "knowledge";
       };
       header?: never;
       path?: never;
@@ -26214,7 +26813,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts" | "matters" | "documents" | "entities" | "knowledge";
+              surface: "inbox" | "contracts" | "matters" | "documents" | "entities" | "knowledge";
               name: string;
               config: {
                 columns: {
@@ -26258,7 +26857,7 @@ export interface operations {
       content: {
         "application/json": {
           /** @enum {string} */
-          surface: "contracts" | "matters" | "documents" | "entities" | "knowledge";
+          surface: "inbox" | "contracts" | "matters" | "documents" | "entities" | "knowledge";
           name: string;
           config: {
             columns: {
@@ -26290,7 +26889,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts" | "matters" | "documents" | "entities" | "knowledge";
+              surface: "inbox" | "contracts" | "matters" | "documents" | "entities" | "knowledge";
               name: string;
               config: {
                 columns: {
@@ -26344,7 +26943,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts" | "matters" | "documents" | "entities" | "knowledge";
+              surface: "inbox" | "contracts" | "matters" | "documents" | "entities" | "knowledge";
               name: string;
               config: {
                 columns: {
@@ -26420,7 +27019,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts" | "matters" | "documents" | "entities" | "knowledge";
+              surface: "inbox" | "contracts" | "matters" | "documents" | "entities" | "knowledge";
               name: string;
               config: {
                 columns: {

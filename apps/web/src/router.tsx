@@ -25,6 +25,7 @@ import { KnowledgePage, knowledgeLoader } from "./routes/knowledge";
 import { KnowledgeRecordPage, knowledgeRecordLoader } from "./routes/knowledge-record";
 import { RouteErrorPage } from "./routes/error-page";
 import { HomePage, homeLoader } from "./routes/home";
+import { HomeTasksPage, homeTasksLoader } from "./routes/home-tasks";
 import { InboxPage, inboxLoader } from "./routes/inbox";
 import { InboxRequestPage, inboxRequestLoader } from "./routes/inbox-request";
 import { LinkExpiredPage, linkExpiredLoader } from "./routes/link-expired";
@@ -158,6 +159,13 @@ function KeyedByParam({ name, children }: { name: string; children: ReactNode })
 }
 
 export const routes: RouteObject[] = [
+  {
+    path: "/home/tasks",
+    loader: homeTasksLoader,
+    element: <HomeTasksPage />,
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <></>,
+  },
   {
     path: "/",
     loader: homeLoader,

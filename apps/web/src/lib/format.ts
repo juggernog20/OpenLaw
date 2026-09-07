@@ -42,7 +42,7 @@ function resolveLocale(options?: FormatOptions): string {
   return options?.locale ?? configured.locale ?? "en-US";
 }
 
-function resolveTimeZone(options?: FormatOptions): string {
+export function resolveTimeZone(options?: FormatOptions): string {
   return (
     options?.timeZone ??
     configured.timeZone ??

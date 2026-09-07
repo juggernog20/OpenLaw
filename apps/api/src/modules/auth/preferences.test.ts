@@ -8,13 +8,15 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, asc, eq } from "@openlaw/db";
+import { activityLog, asc, eq, users } from "@openlaw/db";
 import {
   signInCookies as harnessSignInCookies,
   startHarness,
   TEST_ADMIN as ADMIN,
   type TestHarness,
 } from "../../testing/harness.js";
+
+import { provisionUser } from "../../auth/instance.js";
 
 let harness: TestHarness;
 
@@ -244,4 +246,27 @@ describe("the DD-017 audit trail (#63)", () => {
     expect(noop.statusCode, noop.body).toBe(200);
     expect((await timezoneRows()).slice(before)).toHaveLength(2);
   });
+});
+
+it("stores all three themes for a Business User across sessions", async () => {
+  const person = {
+    email: "portal-theme@example.com",
+    displayName: "Portal Theme User",
+    password: "correct-horse-battery",
+  };
+  const user = await provisionUser(harness.app.auth, person);
+  await harness.db.update(users).set({ role: "business_user" }).where(eq(users.id, user.id));
+  const cookies = await harnessSignInCookies(harness.app, person.email, person.password);
+  for (const theme of ["dark", "warm", "light"]) {
+    const saved = await harness.app.inject({
+      method: "PATCH",
+      url: "/api/v1/me/preferences",
+      cookies,
+      payload: { theme },
+    });
+    expect(saved.statusCode, saved.body).toBe(200);
+    const fresh = await harnessSignInCookies(harness.app, person.email, person.password);
+    const me = await harness.app.inject({ method: "GET", url: "/api/v1/me", cookies: fresh });
+    expect(me.json().user).toMatchObject({ role: "business_user", theme });
+  }
 });
