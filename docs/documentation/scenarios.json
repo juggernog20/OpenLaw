@@ -600,7 +600,9 @@
       "articles": ["compare-versions"],
       "roles": ["legal_team_member", "administrator", "contributor"],
       "environment": "analysis-workflow",
-      "prerequisites": ["Two Word Versions and a PDF/Word pair with known small differences."],
+      "prerequisites": [
+        "Two Word Versions and a PDF/Word pair with known small differences, plus a plain TXT/PDF pair for the unsupported-format check."
+      ],
       "actions": [
         "Compare both pairs, read changes, and export a Generated redline where permitted."
       ],

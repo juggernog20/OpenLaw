@@ -169,6 +169,33 @@ plain TXT as an unsupported extracted-text input. Evidence terminology was
 normalized to Generated redline and Document Version without changing recorded
 execution times, hashes, or outcomes.
 
+CodeRabbit's second run, after the independent walkthrough, reported eight
+findings. One factual clarification was applied. The author Comparison archive
+record's shared sentence omitted the intermediate Document restore and, for the
+Contributor, implied that a legal-role export had occurred. The author script
+archives the Document, checks reading and the export refusal, restores the
+Document, archives the owning Contract, checks again, and restores the owner;
+only the Administrator and Legal Team Member then retry the export and reach
+Version 5. Each role's recorded outcome now states that sequence and its own
+result, read back from the saved fixtures: C-49 and C-50 hold five Document
+Versions, C-51 holds four, and nothing is archived. Execution times, guide hashes
+and the checked actions are unchanged, and no other role's action is credited to
+the Contributor. The V-C29 prerequisites now also name the plain TXT/PDF pair
+that both the author and the independent walkthrough used.
+
+The remaining suggestions were rejected. The claim that a Generated redline is
+not a Version contradicts `CONTEXT.md`, which defines a Generated redline as the
+Document Version a Comparison's export appends to the chain, and the export route,
+which answers with that Version; both guides and records keep "Generated redline
+Document Version". The repeated imperative rewrites of this record and of the
+WRITING-BATCHES status line are declined for the reason given above: these
+report completed and pending verification work rather than instruct a reader.
+Renaming "Unverified dates and Value" in the check summary would drop the exact
+fields whose operational effect was tested. Replacing "run" with "Analysis run"
+throughout the analysis guide, and every "Versions" with "Document Versions" in
+the Comparison guide, would change verified bytes for wording the guides already
+introduce in full at first use.
+
 Seven minor suggestions were left unapplied. Four requested imperative rewrites
 of explanatory prose or verification status records; the procedures already use
 instructions where the reader acts, and the records report completed or pending

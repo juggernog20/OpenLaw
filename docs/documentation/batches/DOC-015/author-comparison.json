@@ -51,7 +51,7 @@
     {
       "role": "administrator",
       "action": "archiving preserves comparison reading and refuses Generated writes until the owning record is restored",
-      "actual": "Archived Document and archived owner both retained readable Changes. Generated redline export was refused (409 for legal roles; 403 for Contributor). Restoring the owner allowed legal roles to retry the previously unexported pair and append Version 5.",
+      "actual": "With the Word Document archived, the v2 → v3 Comparison still read Changes, no export control was shown, and a direct export answered 409. The Document was restored. With the owning Contract then archived, Changes stayed readable, the visible Export track changes control answered with an archived refusal, and a direct export answered 409. The owning Contract was restored. With both restored, this role retried Export track changes on the previously unexported v2 → v3 pair and appended Generated redline Document Version 5; the chain held five Document Versions.",
       "result": "pass",
       "at": "2026-09-07T16:55:17.218Z"
     },
@@ -116,7 +116,7 @@
     {
       "role": "legal_team_member",
       "action": "archiving preserves comparison reading and refuses Generated writes until the owning record is restored",
-      "actual": "Archived Document and archived owner both retained readable Changes. Generated redline export was refused (409 for legal roles; 403 for Contributor). Restoring the owner allowed legal roles to retry the previously unexported pair and append Version 5.",
+      "actual": "With the Word Document archived, the v2 → v3 Comparison still read Changes, no export control was shown, and a direct export answered 409. The Document was restored. With the owning Contract then archived, Changes stayed readable, the visible Export track changes control answered with an archived refusal, and a direct export answered 409. The owning Contract was restored. With both restored, this role retried Export track changes on the previously unexported v2 → v3 pair and appended Generated redline Document Version 5; the chain held five Document Versions.",
       "result": "pass",
       "at": "2026-09-07T16:55:40.224Z"
     },
@@ -181,7 +181,7 @@
     {
       "role": "contributor",
       "action": "archiving preserves comparison reading and refuses Generated writes until the owning record is restored",
-      "actual": "Archived Document and archived owner both retained readable Changes. Generated redline export was refused (409 for legal roles; 403 for Contributor). Restoring the owner allowed legal roles to retry the previously unexported pair and append Version 5.",
+      "actual": "With the Word Document archived, the v2 → v3 Comparison still read Changes, no export control was shown, and a direct export answered 403. The Document was restored. With the owning Contract then archived, Changes stayed readable, no export control was shown, and a direct export answered 403. The owning Contract was restored. No export was attempted after restore in this role's scenario, and no legal-role export is credited here; the chain stayed at four Document Versions, Version 4 being the Generated redline the Administrator had prepared earlier as setup.",
       "result": "pass",
       "at": "2026-09-07T16:56:03.083Z"
     },
