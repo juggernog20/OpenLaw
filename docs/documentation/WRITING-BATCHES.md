@@ -42,8 +42,11 @@ author outcomes, independent review, and publication dependencies.
 
 ## DOC-013 [#733](https://github.com/juggernog20/OpenLaw/issues/733)
 
+See [the batch verification record](batches/DOC-013/README.md) for the tested build,
+walkthroughs, and publication dependencies.
+
 - [ ] `triage-requests`: Assign and triage Requests (C12; P0).
-- [ ] `convert-request`: Convert a Request to a Contract (C13; P0). Add the Matter path and restore the full title.
+- [ ] `convert-request`: Convert a Request to a Contract or Matter (C13; P0).
 
 ## DOC-014 [#734](https://github.com/juggernog20/OpenLaw/issues/734)
 

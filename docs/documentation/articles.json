@@ -205,7 +205,7 @@
     },
     {
       "id": "convert-request",
-      "title": "Convert a Request to a Contract",
+      "title": "Convert a Request to a Contract or Matter",
       "section": "working-with-legal",
       "kind": "how-to",
       "coverage": ["C13"],

@@ -1,0 +1,56 @@
+{
+  "name": "discovery",
+  "startedAt": "2026-09-07T11:03:36.453Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "triage-requests",
+      "contentSha256": "b28fe6456b9259168173d057309994db811044beac40c09dcafd96ea7da36eea"
+    },
+    {
+      "articleId": "convert-request",
+      "contentSha256": "78e63862575dba04aad2449bf41830a6e47c7c3f6a3660c5bb5d00cd2766fcb3"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "triage-requests contextual Help, search, section and formal link",
+      "actual": "Contextual entry, exact-title search, title and section focus, formal link; no horizontal overflow in light/dark/warm at 320/720/1440 CSS pixels",
+      "result": "pass",
+      "at": "2026-09-07T11:03:39.217Z"
+    },
+    {
+      "role": "administrator",
+      "action": "convert-request contextual Help, search, section and formal link",
+      "actual": "Contextual entry, exact-title search, title and section focus, formal link; no horizontal overflow in light/dark/warm at 320/720/1440 CSS pixels",
+      "result": "pass",
+      "at": "2026-09-07T11:03:40.521Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "triage-requests contextual Help, search, section and formal link",
+      "actual": "Contextual entry, exact-title search, title and section focus, formal link; no horizontal overflow in light/dark/warm at 320/720/1440 CSS pixels",
+      "result": "pass",
+      "at": "2026-09-07T11:03:43.018Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "convert-request contextual Help, search, section and formal link",
+      "actual": "Contextual entry, exact-title search, title and section focus, formal link; no horizontal overflow in light/dark/warm at 320/720/1440 CSS pixels",
+      "result": "pass",
+      "at": "2026-09-07T11:03:44.250Z"
+    },
+    {
+      "role": "signed-out",
+      "action": "formal preview serves both guides without app API calls",
+      "actual": "Both formal guide titles discoverable anonymously with zero application API requests",
+      "result": "pass",
+      "at": "2026-09-07T11:03:45.228Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T11:03:45.228Z"
+}

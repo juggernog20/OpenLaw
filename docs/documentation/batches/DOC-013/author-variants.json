@@ -1,0 +1,87 @@
+{
+  "name": "variants",
+  "startedAt": "2026-09-07T11:03:19.487Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "convert-request",
+      "contentSha256": "78e63862575dba04aad2449bf41830a6e47c7c3f6a3660c5bb5d00cd2766fcb3"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "retarget configuration has an explicit conversion path",
+      "actual": "R-95 \u2192 M-35; other module explicitly selected; switching preserves typed gap; original Request remains",
+      "result": "pass",
+      "at": "2026-09-07T11:03:22.927Z"
+    },
+    {
+      "role": "administrator",
+      "action": "deferred configuration has an explicit conversion path",
+      "actual": "R-96 \u2192 C-52; module-only routing required live type selection",
+      "result": "pass",
+      "at": "2026-09-07T11:03:24.392Z"
+    },
+    {
+      "role": "administrator",
+      "action": "archived configuration has an explicit conversion path",
+      "actual": "R-97 \u2192 C-53; archived configured type replaced by live choice",
+      "result": "pass",
+      "at": "2026-09-07T11:03:25.791Z"
+    },
+    {
+      "role": "administrator",
+      "action": "bad configuration has an explicit conversion path",
+      "actual": "R-98 \u2192 M-36; stale optional template option refused without deciding; Cancel/reopen/No template plus required answer succeeded",
+      "result": "pass",
+      "at": "2026-09-07T11:03:27.962Z"
+    },
+    {
+      "role": "administrator",
+      "action": "concurrent conversion reports the winning record and creates no second outcome",
+      "actual": "R-99 retained one winning C-54; losing write answered real409 and dialog names winner; no second outcome recorded",
+      "result": "pass",
+      "at": "2026-09-07T11:03:28.845Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "retarget configuration has an explicit conversion path",
+      "actual": "R-100 \u2192 M-37; other module explicitly selected; switching preserves typed gap; original Request remains",
+      "result": "pass",
+      "at": "2026-09-07T11:03:30.364Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "deferred configuration has an explicit conversion path",
+      "actual": "R-101 \u2192 C-55; module-only routing required live type selection",
+      "result": "pass",
+      "at": "2026-09-07T11:03:31.748Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "archived configuration has an explicit conversion path",
+      "actual": "R-102 \u2192 C-56; archived configured type replaced by live choice",
+      "result": "pass",
+      "at": "2026-09-07T11:03:33.153Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "bad configuration has an explicit conversion path",
+      "actual": "R-103 \u2192 M-38; stale optional template option refused without deciding; Cancel/reopen/No template plus required answer succeeded",
+      "result": "pass",
+      "at": "2026-09-07T11:03:35.322Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "concurrent conversion reports the winning record and creates no second outcome",
+      "actual": "R-104 retained one winning C-57; losing write answered real409 and dialog names winner; no second outcome recorded",
+      "result": "pass",
+      "at": "2026-09-07T11:03:36.186Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T11:03:36.187Z"
+}
