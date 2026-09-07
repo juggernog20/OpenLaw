@@ -171,7 +171,7 @@
       "coverage": ["C09"],
       "articles": ["submit-request"],
       "roles": ["business_user"],
-      "environment": "authoring",
+      "environment": "conversations",
       "prerequisites": [
         "An active request type with required Fields, deflection guidance, and a small PDF."
       ],
@@ -192,7 +192,7 @@
       "coverage": ["C10"],
       "articles": ["follow-request"],
       "roles": ["business_user"],
-      "environment": "authoring",
+      "environment": "conversations",
       "prerequisites": ["Jonas's open Request and a Legal Team Member able to act on it."],
       "actions": [
         "Reply from both roles, supply additional paper, and follow the Request through disposition."
@@ -211,7 +211,7 @@
       "coverage": ["C11"],
       "articles": ["portal-knowledge"],
       "roles": ["business_user"],
-      "environment": "authoring",
+      "environment": "conversations",
       "prerequisites": [
         "Published portal Knowledge, restricted/unpublished Knowledge, and configured deflection links."
       ],

@@ -1,0 +1,157 @@
+{
+  "name": "follow",
+  "startedAt": "2026-09-07T09:24:51.301Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "follow-request",
+      "contentSha256": "b77a14c08ea129691c6c1e9a237ed21ffa17a2a55acaac436cada24b6f648f00"
+    }
+  ],
+  "steps": [
+    {
+      "role": "business_user",
+      "action": "open Request: open own submission and reply before any new disposition",
+      "actual": "Own R-29 opened, saved values visible, reply appears once",
+      "result": "pass",
+      "at": "2026-09-07T09:24:54.876Z"
+    },
+    {
+      "role": "business_user",
+      "action": "open Request: Legal replies and narrower conversations remain unavailable",
+      "actual": "Full thread Legal response visible; Legal only/Working team absent, no audience chooser",
+      "result": "pass",
+      "at": "2026-09-07T09:24:56.575Z"
+    },
+    {
+      "role": "business_user",
+      "action": "open Request: disposition status, later reply and original paper",
+      "actual": "Open; further reply and original/further files retrieved byte-for-byte; Legal reads reply; status unchanged by reply",
+      "result": "pass",
+      "at": "2026-09-07T09:24:57.942Z"
+    },
+    {
+      "role": "business_user",
+      "action": "open Request: other Requester and staff record access refused",
+      "actual": "Amara own-session direct Request/file refused; Jonas projection contains no convertedRecord; resulting staff destinations refused where applicable",
+      "result": "pass",
+      "at": "2026-09-07T09:24:58.534Z"
+    },
+    {
+      "role": "business_user",
+      "action": "contract Request: open own submission and reply before any new disposition",
+      "actual": "Own R-30 opened, saved values visible, reply appears once",
+      "result": "pass",
+      "at": "2026-09-07T09:24:59.241Z"
+    },
+    {
+      "role": "business_user",
+      "action": "contract Request: Legal replies and narrower conversations remain unavailable",
+      "actual": "Full thread Legal response visible; Legal only/Working team absent, no audience chooser",
+      "result": "pass",
+      "at": "2026-09-07T09:25:00.883Z"
+    },
+    {
+      "role": "business_user",
+      "action": "contract Request: disposition status, later reply and original paper",
+      "actual": "In progress; further reply and original/further files retrieved byte-for-byte; Legal reads reply; status unchanged by reply",
+      "result": "pass",
+      "at": "2026-09-07T09:25:02.274Z"
+    },
+    {
+      "role": "business_user",
+      "action": "contract Request: other Requester and staff record access refused",
+      "actual": "Amara own-session direct Request/file refused; Jonas projection contains no convertedRecord; resulting staff destinations refused where applicable",
+      "result": "pass",
+      "at": "2026-09-07T09:25:03.461Z"
+    },
+    {
+      "role": "business_user",
+      "action": "matter Request: open own submission and reply before any new disposition",
+      "actual": "Own R-31 opened, saved values visible, reply appears once",
+      "result": "pass",
+      "at": "2026-09-07T09:25:04.176Z"
+    },
+    {
+      "role": "business_user",
+      "action": "matter Request: Legal replies and narrower conversations remain unavailable",
+      "actual": "Full thread Legal response visible; Legal only/Working team absent, no audience chooser",
+      "result": "pass",
+      "at": "2026-09-07T09:25:05.740Z"
+    },
+    {
+      "role": "business_user",
+      "action": "matter Request: disposition status, later reply and original paper",
+      "actual": "In progress; further reply and original/further files retrieved byte-for-byte; Legal reads reply; status unchanged by reply",
+      "result": "pass",
+      "at": "2026-09-07T09:25:07.127Z"
+    },
+    {
+      "role": "business_user",
+      "action": "matter Request: other Requester and staff record access refused",
+      "actual": "Amara own-session direct Request/file refused; Jonas projection contains no convertedRecord; resulting staff destinations refused where applicable",
+      "result": "pass",
+      "at": "2026-09-07T09:25:08.302Z"
+    },
+    {
+      "role": "business_user",
+      "action": "resolved Request: open own submission and reply before any new disposition",
+      "actual": "Own R-32 opened, saved values visible, reply appears once",
+      "result": "pass",
+      "at": "2026-09-07T09:25:08.990Z"
+    },
+    {
+      "role": "business_user",
+      "action": "resolved Request: Legal replies and narrower conversations remain unavailable",
+      "actual": "Full thread Legal response visible; Legal only/Working team absent, no audience chooser",
+      "result": "pass",
+      "at": "2026-09-07T09:25:10.591Z"
+    },
+    {
+      "role": "business_user",
+      "action": "resolved Request: disposition status, later reply and original paper",
+      "actual": "Resolved; further reply and original/further files retrieved byte-for-byte; Legal reads reply; status unchanged by reply",
+      "result": "pass",
+      "at": "2026-09-07T09:25:11.960Z"
+    },
+    {
+      "role": "business_user",
+      "action": "resolved Request: other Requester and staff record access refused",
+      "actual": "Amara own-session direct Request/file refused; Jonas projection contains no convertedRecord; resulting staff destinations refused where applicable",
+      "result": "pass",
+      "at": "2026-09-07T09:25:12.561Z"
+    },
+    {
+      "role": "business_user",
+      "action": "declined Request: open own submission and reply before any new disposition",
+      "actual": "Own R-33 opened, saved values visible, reply appears once",
+      "result": "pass",
+      "at": "2026-09-07T09:25:13.255Z"
+    },
+    {
+      "role": "business_user",
+      "action": "declined Request: Legal replies and narrower conversations remain unavailable",
+      "actual": "Full thread Legal response visible; Legal only/Working team absent, no audience chooser",
+      "result": "pass",
+      "at": "2026-09-07T09:25:14.837Z"
+    },
+    {
+      "role": "business_user",
+      "action": "declined Request: disposition status, later reply and original paper",
+      "actual": "Declined; further reply and original/further files retrieved byte-for-byte; Legal reads reply; status unchanged by reply",
+      "result": "pass",
+      "at": "2026-09-07T09:25:16.205Z"
+    },
+    {
+      "role": "business_user",
+      "action": "declined Request: other Requester and staff record access refused",
+      "actual": "Amara own-session direct Request/file refused; Jonas projection contains no convertedRecord; resulting staff destinations refused where applicable",
+      "result": "pass",
+      "at": "2026-09-07T09:25:16.784Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T09:25:16.784Z"
+}

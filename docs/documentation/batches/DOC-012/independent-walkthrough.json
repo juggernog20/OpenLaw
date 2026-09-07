@@ -1,0 +1,819 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-012",
+  "issue": 732,
+  "independentReview": true,
+  "reviewerKind": "agent",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "author": "Codex documentation author",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "method": "browser-walkthrough",
+  "startedAt": "2026-09-07T09:58:08.778Z",
+  "finishedAt": "2026-09-07T10:07:20.254Z",
+  "frontend": "Committed conversations lab at port 43302 for every guide step; Mailpit at port 48427 for the Portal magic-link sign-in; the lab API for setup actions",
+  "browser": "Playwright 1.62.1 Chromium from the workspace, headless, one isolated context per identity (Jonas Weber and Amara Nwosu through Portal magic links; Nadia Haddad and Daniel Okafor through the staff sign-in); scripts written by the reviewer from the guide text, not the author's scripts",
+  "articleHashesTested": [
+    {
+      "articleId": "submit-request",
+      "contentSha256": [
+        "addff933bea86d2a220723624202824c6245af0f3ddb76b56dd63a2ba4a89964",
+        "29e285e98a77548c08f8958fed91f0200db47c8188ef90619dab061925059f90"
+      ]
+    },
+    {
+      "articleId": "follow-request",
+      "contentSha256": ["ca5dff1ef7d999e36d8655c3d00ffb6b5a2136427e86f2be168889ca417dbca3"]
+    },
+    {
+      "articleId": "portal-knowledge",
+      "contentSha256": ["f44331f28896c6fbdebed9d636bb937d06330e9a52e850bb0b755f987aacb559"]
+    }
+  ],
+  "articleHashesCurrent": [
+    {
+      "articleId": "submit-request",
+      "contentSha256": "29e285e98a77548c08f8958fed91f0200db47c8188ef90619dab061925059f90"
+    },
+    {
+      "articleId": "follow-request",
+      "contentSha256": "ca5dff1ef7d999e36d8655c3d00ffb6b5a2136427e86f2be168889ca417dbca3"
+    },
+    {
+      "articleId": "portal-knowledge",
+      "contentSha256": "f44331f28896c6fbdebed9d636bb937d06330e9a52e850bb0b755f987aacb559"
+    }
+  ],
+  "authorHashesHistorical": [
+    {
+      "articleId": "submit-request",
+      "contentSha256": [
+        "fa5864c512a998a2f4f0b8e002174659513716f4234010b45ed70c598833029f",
+        "addff933bea86d2a220723624202824c6245af0f3ddb76b56dd63a2ba4a89964"
+      ],
+      "note": "author run, then the cold-review edit before this walkthrough"
+    },
+    {
+      "articleId": "follow-request",
+      "contentSha256": [
+        "b77a14c08ea129691c6c1e9a237ed21ffa17a2a55acaac436cada24b6f648f00",
+        "ca5dff1ef7d999e36d8655c3d00ffb6b5a2136427e86f2be168889ca417dbca3"
+      ],
+      "note": "author run, then the cold-review edit; the second hash is the bytes this walkthrough tested"
+    },
+    {
+      "articleId": "portal-knowledge",
+      "contentSha256": ["f44331f28896c6fbdebed9d636bb937d06330e9a52e850bb0b755f987aacb559"],
+      "note": "unchanged since the author run"
+    }
+  ],
+  "fixturePreparation": [
+    "Reused the author's request types, required Field, Knowledge Items, and deflection links by identifier; created five fresh fictional Requests R-46 to R-50 as Jonas Weber through the API with one original PDF each, then posted Legal only, Working team, and Full thread replies (the last with paper) through the Inbox comment panel as Nadia Haddad before any disposition.",
+    "Applied the dispositions through the API as the Legal Team Member: R-47 converted to Contract C-37, R-48 to Matter M-24, R-49 resolved with a reply, R-50 declined with a reason. DOC-013 owns those staff controls; this is not acceptance of that guide.",
+    "After each disposition Nadia posted a later Full thread reply with paper and a later Legal only note through the staff UI on the Inbox page or the resulting record. Later Document Versions were uploaded to the promoted paper on C-37 and M-24 through the API.",
+    "Five failed setup attempts left fictional Requests R-41 to R-45 on Jonas's list without Legal replies; they were not used.",
+    "The Knowledge fixture's eligibility, current filenames, and body were read first and restored at the end; the primary Document carries the extra Versions this run uploaded, with the original filename and bytes current again."
+  ],
+  "corrections": [
+    "submit-request, If it does not work: the sentence \"If a number is refused, enter it as a number.\" was removed. The form's number question is a native number control, which holds an empty value for letters, so the form reports a missing answer and the \"enter this as a number\" refusal cannot be produced by typing in Chromium. The fixture type has no number question; the control behaviour was checked directly. The submission and discovery walkthroughs were rerun in full against the corrected bytes; the tested hashes list both revisions."
+  ],
+  "observations": [
+    "A failed step in the first follow-up run was a reviewer harness fault: after 55 extra Full thread markers the newest page no longer carried the \"later reply\" text the check looked for. The step record is retained; the two recovery checks were rerun with the newest marker as the target and passed on unchanged guide bytes.",
+    "Deflection links carry the Administrator's label (\"Docs available guidance \u2026\"), not the Knowledge Item's title; the guide already tells the reader to check the title under From Legal after opening.",
+    "The fixture's unavailable external address is served by the lab app as a not-found route (HTTP 200 with the app shell), not a network failure; the new-tab, retained-answers, and successful-submission checks hold either way.",
+    "Help with this page on a Portal Request lists only the follow-up guide (topic portal.request); the Portal header Help on the same routes combines topics and also lists the comments and notifications guides.",
+    "The Knowledge page has no Help with this page entry; its header Help resolves topic portal.knowledge on the preview reader and plain /portal/help on the committed lab, where the article is excluded as intended."
+  ],
+  "steps": [
+    {
+      "article": "follow-request",
+      "role": "legal_team_member",
+      "step": "open R-46: Legal posts a later Full thread reply with paper and a Legal only note after the disposition",
+      "result": "pass",
+      "actual": "Posted on /inbox/46: Full thread \"Later reply open 1788774982723\" with legal-open-later.pdf, Legal only \"Later legal-only open 1788774982723\"",
+      "at": "2026-09-07T09:58:13.769Z",
+      "ms": 1193,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "open R-46: open the Request from Your requests and read the summary, reference, status, and banner",
+      "result": "pass",
+      "actual": "Row \"R-46\" opened /portal/requests/46; h1 \"Independent open 1788774982723\"; meta \"R-46 \u00b7 Docs Portal contract request 1788772698955 \u00b7 Submitted Sep 7\"; pill \"Open\"; banner \"Legal has received your request.\"; reply link absent; no C-/M- reference on the page",
+      "at": "2026-09-07T09:58:14.607Z",
+      "ms": 838,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "open R-46: Conversation shows Legal's Full thread replies and paper only, with no audience choice",
+      "result": "pass",
+      "actual": "Full thread texts visible (2 Legal pills); Legal only and Working team texts absent; no radios or Audience control; legal-open-later.pdf and legal-open-reply.pdf downloaded byte-for-byte",
+      "at": "2026-09-07T09:58:14.688Z",
+      "ms": 81,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "open R-46: What you submitted shows the description, original attachment, urgency, and answers",
+      "result": "pass",
+      "actual": "Description, Urgency High, answer \"Independent purpose open\" shown; independent-original-open.pdf downloaded from /api/v1/portal/requests/46/attachments/<id> with the original bytes",
+      "at": "2026-09-07T09:58:14.717Z",
+      "ms": 29,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "open R-46: reply with further paper; Send needs a message; the reply and file appear and the status is unchanged",
+      "result": "pass",
+      "actual": "Send disabled with no text (also with a file selected); reply \"Requester reply open 1788774982723\" posted once under You with jonas-open-reply.pdf (bytes match); after reload the pill stayed \"Open\"",
+      "at": "2026-09-07T09:58:15.501Z",
+      "ms": 784,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "legal_team_member",
+      "step": "open R-46: Legal reads the Requester's reply and paper on the staff page",
+      "result": "pass",
+      "actual": "\"Requester reply open 1788774982723\" and jonas-open-reply.pdf visible in the Comments panel on /inbox/46",
+      "at": "2026-09-07T09:58:16.253Z",
+      "ms": 752,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "open R-46: another Business User and staff destinations are refused",
+      "result": "pass",
+      "actual": "Amara: /portal/requests/46 returned to /portal, API 404, original file 404; Jonas staff read /api/v1/requests/46 403",
+      "at": "2026-09-07T09:58:16.362Z",
+      "ms": 109,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "legal_team_member",
+      "step": "contract R-47: Legal posts a later Full thread reply with paper and a Legal only note after the disposition",
+      "result": "pass",
+      "actual": "Posted on /contracts/37: Full thread \"Later reply contract 1788774982723\" with legal-contract-later.pdf, Legal only \"Later legal-only contract 1788774982723\"",
+      "at": "2026-09-07T09:58:17.403Z",
+      "ms": 1041,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "contract R-47: open the Request from Your requests and read the summary, reference, status, and banner",
+      "result": "pass",
+      "actual": "Row \"R-47\" opened /portal/requests/47; h1 \"Independent contract 1788774982723\"; meta \"R-47 \u00b7 Docs Portal contract request 1788772698955 \u00b7 Submitted Sep 7\"; pill \"In progress\"; banner \"Legal is working on this. Follow it here.\"; reply link present; no C-/M- reference on the page",
+      "at": "2026-09-07T09:58:18.215Z",
+      "ms": 812,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "contract R-47: Conversation shows Legal's Full thread replies and paper only, with no audience choice",
+      "result": "pass",
+      "actual": "Full thread texts visible (2 Legal pills); Legal only and Working team texts absent; no radios or Audience control; legal-contract-later.pdf and legal-contract-reply.pdf downloaded byte-for-byte",
+      "at": "2026-09-07T09:58:18.286Z",
+      "ms": 71,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "contract R-47: What you submitted shows the description, original attachment, urgency, and answers",
+      "result": "pass",
+      "actual": "Description, Urgency High, answer \"Independent purpose contract\" shown; independent-original-contract.pdf downloaded from /api/v1/portal/requests/47/attachments/<id> with the original bytes",
+      "at": "2026-09-07T09:58:18.312Z",
+      "ms": 26,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "contract R-47: reply with further paper; Send needs a message; the reply and file appear and the status is unchanged",
+      "result": "pass",
+      "actual": "Send disabled with no text (also with a file selected); reply \"Requester reply contract 1788774982723\" posted once under You with jonas-contract-reply.pdf (bytes match); after reload the pill stayed \"In progress\"",
+      "at": "2026-09-07T09:58:19.123Z",
+      "ms": 811,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "legal_team_member",
+      "step": "contract R-47: Legal reads the Requester's reply and paper on the staff page",
+      "result": "pass",
+      "actual": "\"Requester reply contract 1788774982723\" and jonas-contract-reply.pdf visible in the Comments panel on /contracts/37",
+      "at": "2026-09-07T09:58:19.971Z",
+      "ms": 848,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "contract R-47: the banner's Attach new files to a reply link reaches the composer",
+      "result": "pass",
+      "actual": "Link moved to #portal-request-composer; the Reply to Legal form is in the viewport",
+      "at": "2026-09-07T09:58:20.019Z",
+      "ms": 48,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "contract R-47: another Business User and staff destinations are refused",
+      "result": "pass",
+      "actual": "Amara: /portal/requests/47 returned to /portal, API 404, original file 404; Jonas staff read /api/v1/requests/47 403; Jonas: API /contracts/37 403, browser /contracts/37 landed on /portal",
+      "at": "2026-09-07T09:58:21.415Z",
+      "ms": 1396,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "contract R-47: a later Document Version on the contract leaves the original Request attachment unchanged",
+      "result": "pass",
+      "actual": "Version 2 uploaded to promoted Document \"independent-original-contract.pdf\" on contract 37; the Portal still lists independent-original-contract.pdf with the original bytes and no later file",
+      "at": "2026-09-07T09:58:22.140Z",
+      "ms": 725,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "legal_team_member",
+      "step": "matter R-48: Legal posts a later Full thread reply with paper and a Legal only note after the disposition",
+      "result": "pass",
+      "actual": "Posted on /matters/24: Full thread \"Later reply matter 1788774982723\" with legal-matter-later.pdf, Legal only \"Later legal-only matter 1788774982723\"",
+      "at": "2026-09-07T09:58:23.233Z",
+      "ms": 1093,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "matter R-48: open the Request from Your requests and read the summary, reference, status, and banner",
+      "result": "pass",
+      "actual": "Row \"R-48\" opened /portal/requests/48; h1 \"Independent matter 1788774982723\"; meta \"R-48 \u00b7 Docs Portal matter request 1788772698955 \u00b7 Submitted Sep 7\"; pill \"In progress\"; banner \"Legal is working on this. Follow it here.\"; reply link present; no C-/M- reference on the page",
+      "at": "2026-09-07T09:58:24.116Z",
+      "ms": 883,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "matter R-48: Conversation shows Legal's Full thread replies and paper only, with no audience choice",
+      "result": "pass",
+      "actual": "Full thread texts visible (2 Legal pills); Legal only and Working team texts absent; no radios or Audience control; legal-matter-later.pdf and legal-matter-reply.pdf downloaded byte-for-byte",
+      "at": "2026-09-07T09:58:24.195Z",
+      "ms": 79,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "matter R-48: What you submitted shows the description, original attachment, urgency, and answers",
+      "result": "pass",
+      "actual": "Description, Urgency High, no configured question on this type; independent-original-matter.pdf downloaded from /api/v1/portal/requests/48/attachments/<id> with the original bytes",
+      "at": "2026-09-07T09:58:24.218Z",
+      "ms": 23,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "matter R-48: reply with further paper; Send needs a message; the reply and file appear and the status is unchanged",
+      "result": "pass",
+      "actual": "Send disabled with no text (also with a file selected); reply \"Requester reply matter 1788774982723\" posted once under You with jonas-matter-reply.pdf (bytes match); after reload the pill stayed \"In progress\"",
+      "at": "2026-09-07T09:58:25.083Z",
+      "ms": 864,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "legal_team_member",
+      "step": "matter R-48: Legal reads the Requester's reply and paper on the staff page",
+      "result": "pass",
+      "actual": "\"Requester reply matter 1788774982723\" and jonas-matter-reply.pdf visible in the Comments panel on /matters/24",
+      "at": "2026-09-07T09:58:25.878Z",
+      "ms": 795,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "matter R-48: the banner's Attach new files to a reply link reaches the composer",
+      "result": "pass",
+      "actual": "Link moved to #portal-request-composer; the Reply to Legal form is in the viewport",
+      "at": "2026-09-07T09:58:25.936Z",
+      "ms": 58,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "matter R-48: another Business User and staff destinations are refused",
+      "result": "pass",
+      "actual": "Amara: /portal/requests/48 returned to /portal, API 404, original file 404; Jonas staff read /api/v1/requests/48 403; Jonas: API /matters/24 403, browser /matters/24 landed on /portal",
+      "at": "2026-09-07T09:58:27.343Z",
+      "ms": 1407,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "matter R-48: a later Document Version on the matter leaves the original Request attachment unchanged",
+      "result": "pass",
+      "actual": "Version 2 uploaded to promoted Document \"independent-original-matter.pdf\" on matter 24; the Portal still lists independent-original-matter.pdf with the original bytes and no later file",
+      "at": "2026-09-07T09:58:28.087Z",
+      "ms": 744,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "legal_team_member",
+      "step": "resolved R-49: Legal posts a later Full thread reply with paper and a Legal only note after the disposition",
+      "result": "pass",
+      "actual": "Posted on /inbox/49: Full thread \"Later reply resolved 1788774982723\" with legal-resolved-later.pdf, Legal only \"Later legal-only resolved 1788774982723\"",
+      "at": "2026-09-07T09:58:29.081Z",
+      "ms": 994,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "resolved R-49: open the Request from Your requests and read the summary, reference, status, and banner",
+      "result": "pass",
+      "actual": "Row \"R-49\" opened /portal/requests/49; h1 \"Independent resolved 1788774982723\"; meta \"R-49 \u00b7 Docs Portal contract request 1788772698955 \u00b7 Submitted Sep 7\"; pill \"Resolved\"; banner \"Legal has answered this request and closed it.\"; reply link present; no C-/M- reference on the page",
+      "at": "2026-09-07T09:58:29.881Z",
+      "ms": 800,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "resolved R-49: Conversation shows Legal's Full thread replies and paper only, with no audience choice",
+      "result": "pass",
+      "actual": "Full thread texts visible (3 Legal pills); Legal only and Working team texts absent; no radios or Audience control; legal-resolved-later.pdf and legal-resolved-reply.pdf downloaded byte-for-byte; resolution text visible in Conversation",
+      "at": "2026-09-07T09:58:29.951Z",
+      "ms": 70,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "resolved R-49: What you submitted shows the description, original attachment, urgency, and answers",
+      "result": "pass",
+      "actual": "Description, Urgency High, answer \"Independent purpose resolved\" shown; independent-original-resolved.pdf downloaded from /api/v1/portal/requests/49/attachments/<id> with the original bytes",
+      "at": "2026-09-07T09:58:29.980Z",
+      "ms": 28,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "resolved R-49: reply with further paper; Send needs a message; the reply and file appear and the status is unchanged",
+      "result": "pass",
+      "actual": "Send disabled with no text (also with a file selected); reply \"Requester reply resolved 1788774982723\" posted once under You with jonas-resolved-reply.pdf (bytes match); after reload the pill stayed \"Resolved\"",
+      "at": "2026-09-07T09:58:30.838Z",
+      "ms": 857,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "legal_team_member",
+      "step": "resolved R-49: Legal reads the Requester's reply and paper on the staff page",
+      "result": "pass",
+      "actual": "\"Requester reply resolved 1788774982723\" and jonas-resolved-reply.pdf visible in the Comments panel on /inbox/49",
+      "at": "2026-09-07T09:58:31.660Z",
+      "ms": 822,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "resolved R-49: the banner's Attach new files to a reply link reaches the composer",
+      "result": "pass",
+      "actual": "Link moved to #portal-request-composer; the Reply to Legal form is in the viewport",
+      "at": "2026-09-07T09:58:31.718Z",
+      "ms": 58,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "resolved R-49: another Business User and staff destinations are refused",
+      "result": "pass",
+      "actual": "Amara: /portal/requests/49 returned to /portal, API 404, original file 404; Jonas staff read /api/v1/requests/49 403",
+      "at": "2026-09-07T09:58:31.817Z",
+      "ms": 98,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "legal_team_member",
+      "step": "declined R-50: Legal posts a later Full thread reply with paper and a Legal only note after the disposition",
+      "result": "pass",
+      "actual": "Posted on /inbox/50: Full thread \"Later reply declined 1788774982723\" with legal-declined-later.pdf, Legal only \"Later legal-only declined 1788774982723\"",
+      "at": "2026-09-07T09:58:32.797Z",
+      "ms": 980,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "declined R-50: open the Request from Your requests and read the summary, reference, status, and banner",
+      "result": "pass",
+      "actual": "Row \"R-50\" opened /portal/requests/50; h1 \"Independent declined 1788774982723\"; meta \"R-50 \u00b7 Docs Portal contract request 1788772698955 \u00b7 Submitted Sep 7\"; pill \"Declined\"; banner \"Legal declined this request.\" with the reason; reply link present; no C-/M- reference on the page",
+      "at": "2026-09-07T09:58:33.582Z",
+      "ms": 785,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "declined R-50: Conversation shows Legal's Full thread replies and paper only, with no audience choice",
+      "result": "pass",
+      "actual": "Full thread texts visible (2 Legal pills); Legal only and Working team texts absent; no radios or Audience control; legal-declined-later.pdf and legal-declined-reply.pdf downloaded byte-for-byte",
+      "at": "2026-09-07T09:58:33.644Z",
+      "ms": 62,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "declined R-50: What you submitted shows the description, original attachment, urgency, and answers",
+      "result": "pass",
+      "actual": "Description, Urgency High, answer \"Independent purpose declined\" shown; independent-original-declined.pdf downloaded from /api/v1/portal/requests/50/attachments/<id> with the original bytes",
+      "at": "2026-09-07T09:58:33.666Z",
+      "ms": 22,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "declined R-50: reply with further paper; Send needs a message; the reply and file appear and the status is unchanged",
+      "result": "pass",
+      "actual": "Send disabled with no text (also with a file selected); reply \"Requester reply declined 1788774982723\" posted once under You with jonas-declined-reply.pdf (bytes match); after reload the pill stayed \"Declined\"",
+      "at": "2026-09-07T09:58:34.437Z",
+      "ms": 771,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "legal_team_member",
+      "step": "declined R-50: Legal reads the Requester's reply and paper on the staff page",
+      "result": "pass",
+      "actual": "\"Requester reply declined 1788774982723\" and jonas-declined-reply.pdf visible in the Comments panel on /inbox/50",
+      "at": "2026-09-07T09:58:35.197Z",
+      "ms": 759,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "declined R-50: the banner's Attach new files to a reply link reaches the composer",
+      "result": "pass",
+      "actual": "Link moved to #portal-request-composer; the Reply to Legal form is in the viewport",
+      "at": "2026-09-07T09:58:35.251Z",
+      "ms": 53,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "declined R-50: another Business User and staff destinations are refused",
+      "result": "pass",
+      "actual": "Amara: /portal/requests/50 returned to /portal, API 404, original file 404; Jonas staff read /api/v1/requests/50 403",
+      "at": "2026-09-07T09:58:35.347Z",
+      "ms": 95,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "open R-46: Show earlier replies loads the older conversation",
+      "result": "pass",
+      "actual": "Newest page had 50 rows without \"Full-thread reply open 1788774982723\"; Show earlier replies grew it to 61 rows with that reply visible; focus on LI:NH Nadia Haddad Legal 2 minutes ago  Ful",
+      "at": "2026-09-07T09:58:37.559Z",
+      "ms": 2212,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "open R-46: a failed reply keeps the text and file, and the retry posts once",
+      "result": "pass",
+      "actual": "Aborted POST showed \"The reply could not be sent. Try again.\" with the text and retry-paper.pdf retained; retry posted exactly one row (staff read counts 1)",
+      "at": "2026-09-07T09:58:38.434Z",
+      "ms": 875,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "open R-46: a failed conversation read keeps What you submitted and reload recovers",
+      "result": "fail",
+      "actual": "expect(locator).toBeVisible() failed  Locator: getByRole('region', { name: 'Conversation' }).getByText('Later reply open 1788774982723', { exact: true }) Expected: visible Timeout: 5000ms Error: element(s) not found  Call log:   - Expect \"to.be.visible\" with timeout 5000ms   - waiting for getByRole('region', { name: 'Conversation' }).getByText('Later reply open 1788774982723', { exact: true })",
+      "at": "2026-09-07T09:58:44.936Z",
+      "ms": 6502,
+      "run": "follow full run"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "open R-46: a failed conversation read keeps What you submitted and reload recovers",
+      "result": "pass",
+      "actual": "Blocked read showed \"The conversation could not be read. Reload the page to try again.\" beside the intact submitted card; reload restored the conversation (newest page shows the latest marker)",
+      "at": "2026-09-07T10:00:29.629Z",
+      "ms": 2113,
+      "run": "follow recovery rerun"
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "open R-46: a failed earlier-replies read keeps the page and the retry loads",
+      "result": "pass",
+      "actual": "Blocked page showed \"The earlier replies could not be read. Try again.\" with 51 rows kept; retry loaded the earlier reply",
+      "at": "2026-09-07T10:00:29.782Z",
+      "ms": 153,
+      "run": "follow recovery rerun"
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "step": "choose the request type from the Portal home after reading Before you submit",
+      "result": "pass",
+      "actual": "Home listed guidance link \"Docs available guidance 1788772698955\" (to the available Knowledge Item) under Before you submit; type link opened /portal/new/docs_portal_contract_request_1788772698955 with h1 \"Docs Portal contract request 1788772698955\" and Help with this page",
+      "at": "2026-09-07T10:03:51.665Z",
+      "ms": 661,
+      "run": "submission run 1 (pre-correction bytes)"
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "step": "an empty form is refused with the required questions named and nothing is sent; Urgency starts at Medium",
+      "result": "pass",
+      "actual": "Alert \"Fill Summary, Description, and Evaluation purpose 1788772698955 first \u2014 the form requires them.\"; per-field notes [\"Summary is required.\",\"Description is required.\",\"Evaluation purpose 1788772698955 is required.\"]; Summary label carries *; Urgency value medium with options Low/Medium/High/Critical; POST requests sent: 0",
+      "at": "2026-09-07T10:03:51.726Z",
+      "ms": 61,
+      "run": "submission run 1 (pre-correction bytes)"
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "step": "more than 20 files keeps the first 20 and says so; Remove drops one",
+      "result": "pass",
+      "actual": "21 selected -> 20 listed (many-1.pdf\u2026many-20.pdf, many-21.pdf omitted) with \"A request carries at most 20 files.\"; Remove many-1.pdf left 19 and cleared the notice",
+      "at": "2026-09-07T10:03:51.786Z",
+      "ms": 60,
+      "run": "submission run 1 (pre-correction bytes)"
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "step": "a number question refuses letters at the control, so the enter-as-a-number refusal is not reachable in Chromium",
+      "result": "pass",
+      "actual": "Form has 0 number questions on this type; a native number control given \"abc\" holds \"\" (empty), so the form treats it as unanswered and the \"{field}: enter this as a number.\" message cannot be produced by typing",
+      "at": "2026-09-07T10:03:51.801Z",
+      "ms": 15,
+      "run": "submission run 1 (pre-correction bytes)"
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "step": "submit a complete form with one PDF; the confirmation names R-, attachments finish, and Open request shows the saved values",
+      "result": "pass",
+      "actual": "POSTs [\"/api/v1/requests\",\"/api/v1/requests/51/attachments\"]; confirmation \"Request R-51 is with Legal\" and \"Quote R-51 when you talk to Legal about it. You'll get updat\u2026\"; Attaching your files\u2026 cleared with no failure; Open request showed description, High, the answer, and independent-success.pdf byte-for-byte; home lists R-51",
+      "at": "2026-09-07T10:03:53.198Z",
+      "ms": 1396,
+      "run": "submission run 1 (pre-correction bytes)"
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "step": "a failed attachment does not undo the Request; the file is sent later in a reply",
+      "result": "pass",
+      "actual": "R-52 confirmed with the failure notice naming independent-failed.pdf; API shows the Request saved with 0 attachments and summary \"Independent failed-file 1788775431003\"; the file then went in a reply on the same Request",
+      "at": "2026-09-07T10:03:54.047Z",
+      "ms": 849,
+      "run": "submission run 1 (pre-correction bytes)"
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "step": "Legal decides the Request while a file uploads; the confirmation links to a reply on the same Request",
+      "result": "pass",
+      "actual": "R-53 declined during upload; notice \"This file did not attach. Add it to a reply on R-53. independent-race.pdf \u2014 This Request has already been dispositioned. Attach new paper to\"; link landed on /portal/requests/53#portal-request-composer with pill Declined, saved answers intact, and the file sent in a reply",
+      "at": "2026-09-07T10:03:54.946Z",
+      "ms": 899,
+      "run": "submission run 1 (pre-correction bytes)"
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "step": "an unknown form address returns to the Portal home",
+      "result": "pass",
+      "actual": "/portal/new/independent-missing-form landed on /portal with \"Docs Portal contract request 1788772698955\" available",
+      "at": "2026-09-07T10:03:55.051Z",
+      "ms": 104,
+      "run": "submission run 1 (pre-correction bytes)"
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "step": "a submission error without confirmation keeps the form and creates no Request",
+      "result": "pass",
+      "actual": "Aborted POST showed \"The request could not be submitted.\" with the Summary retained; Your requests count stayed 40",
+      "at": "2026-09-07T10:03:55.725Z",
+      "ms": 674,
+      "run": "submission run 1 (pre-correction bytes)"
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "step": "choose the request type from the Portal home after reading Before you submit",
+      "result": "pass",
+      "actual": "Home listed guidance link \"Docs available guidance 1788772698955\" (to the available Knowledge Item) under Before you submit; type link opened /portal/new/docs_portal_contract_request_1788772698955 with h1 \"Docs Portal contract request 1788772698955\" and Help with this page",
+      "at": "2026-09-07T10:07:16.059Z",
+      "ms": 664,
+      "run": "submission run 2 (final bytes)"
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "step": "an empty form is refused with the required questions named and nothing is sent; Urgency starts at Medium",
+      "result": "pass",
+      "actual": "Alert \"Fill Summary, Description, and Evaluation purpose 1788772698955 first \u2014 the form requires them.\"; per-field notes [\"Summary is required.\",\"Description is required.\",\"Evaluation purpose 1788772698955 is required.\"]; Summary label carries *; Urgency value medium with options Low/Medium/High/Critical; POST requests sent: 0",
+      "at": "2026-09-07T10:07:16.139Z",
+      "ms": 80,
+      "run": "submission run 2 (final bytes)"
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "step": "more than 20 files keeps the first 20 and says so; Remove drops one",
+      "result": "pass",
+      "actual": "21 selected -> 20 listed (many-1.pdf\u2026many-20.pdf, many-21.pdf omitted) with \"A request carries at most 20 files.\"; Remove many-1.pdf left 19 and cleared the notice",
+      "at": "2026-09-07T10:07:16.217Z",
+      "ms": 78,
+      "run": "submission run 2 (final bytes)"
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "step": "a number question refuses letters at the control, so the enter-as-a-number refusal is not reachable in Chromium",
+      "result": "pass",
+      "actual": "Form has 0 number questions on this type; a native number control given \"abc\" holds \"\" (empty), so the form treats it as unanswered and the \"{field}: enter this as a number.\" message cannot be produced by typing",
+      "at": "2026-09-07T10:07:16.231Z",
+      "ms": 14,
+      "run": "submission run 2 (final bytes)"
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "step": "submit a complete form with one PDF; the confirmation names R-, attachments finish, and Open request shows the saved values",
+      "result": "pass",
+      "actual": "POSTs [\"/api/v1/requests\",\"/api/v1/requests/56/attachments\"]; confirmation \"Request R-56 is with Legal\" and \"Quote R-56 when you talk to Legal about it. You'll get updat\u2026\"; Attaching your files\u2026 cleared with no failure; Open request showed description, High, the answer, and independent-success.pdf byte-for-byte; home lists R-56",
+      "at": "2026-09-07T10:07:17.613Z",
+      "ms": 1382,
+      "run": "submission run 2 (final bytes)"
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "step": "a failed attachment does not undo the Request; the file is sent later in a reply",
+      "result": "pass",
+      "actual": "R-57 confirmed with the failure notice naming independent-failed.pdf; API shows the Request saved with 0 attachments and summary \"Independent failed-file 1788775635395\"; the file then went in a reply on the same Request",
+      "at": "2026-09-07T10:07:18.481Z",
+      "ms": 868,
+      "run": "submission run 2 (final bytes)"
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "step": "Legal decides the Request while a file uploads; the confirmation links to a reply on the same Request",
+      "result": "pass",
+      "actual": "R-58 declined during upload; notice \"This file did not attach. Add it to a reply on R-58. independent-race.pdf \u2014 This Request has already been dispositioned. Attach new paper to\"; link landed on /portal/requests/58#portal-request-composer with pill Declined, saved answers intact, and the file sent in a reply",
+      "at": "2026-09-07T10:07:19.400Z",
+      "ms": 919,
+      "run": "submission run 2 (final bytes)"
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "step": "an unknown form address returns to the Portal home",
+      "result": "pass",
+      "actual": "/portal/new/independent-missing-form landed on /portal with \"Docs Portal contract request 1788772698955\" available",
+      "at": "2026-09-07T10:07:19.544Z",
+      "ms": 144,
+      "run": "submission run 2 (final bytes)"
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "step": "a submission error without confirmation keeps the form and creates no Request",
+      "result": "pass",
+      "actual": "Aborted POST showed \"The request could not be submitted.\" with the Summary retained; Your requests count stayed 45",
+      "at": "2026-09-07T10:07:20.254Z",
+      "ms": 710,
+      "run": "submission run 2 (final bytes)"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "administrator",
+      "step": "shared fixture state before the walkthrough",
+      "result": "pass",
+      "actual": "Available item published/everyone with primary primary-available.pdf, documents primary-available.pdf@v3, supporting-available.pdf@v3, body present; others {\"draft\":\"draft/everyone\",\"restricted\":\"published/legal_only\",\"archived\":\"published/everyone/archived\"}",
+      "at": "2026-09-07T10:05:38.562Z",
+      "ms": 54,
+      "run": "knowledge"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "Before you submit lists only eligible guidance; the internal link opens in the same tab",
+      "result": "pass",
+      "actual": "Home guidance links [\"How to ask legal for help\",\"Contract review turnaround times\",\"When you need a DPA\",\"Using customer names in marketing\",\"Helix intranet - Legal\\n(opens in a new tab)\",\"Docs available guidance 1788772698955\"] with no address for the draft, restricted, or archived fixtures; internal link \"Docs available guidance\" kept the tab and opened /portal/knowledge/<id> with From Legal and the title",
+      "at": "2026-09-07T10:05:39.245Z",
+      "ms": 683,
+      "run": "knowledge"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "Documents lists the primary first and downloads the current Version; Guidance and Your requests work",
+      "result": "pass",
+      "actual": "Order primary-available.pdf | supporting-available.pdf (primary primary-available.pdf first although created later); Download primary-available.pdf -> matches the staff current Version of the same Document; Download supporting-available.pdf -> matches the staff current Version of the same Document; no version picker; Guidance \"Guidance  Read the Northstar evaluation terms before submitting. These are ficti\u2026\"; Your requests returned to /portal",
+      "at": "2026-09-07T10:05:39.347Z",
+      "ms": 102,
+      "run": "knowledge"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "a broken external link opens in a new tab and the form keeps its answers and submits",
+      "result": "pass",
+      "actual": "External link (target _blank, host 127.0.0.1 shown) opened http://127.0.0.1:43302/docs-fictional-missing-site which answers 200; the original tab kept the answers and \"Request R-55 is with Legal\"",
+      "at": "2026-09-07T10:05:40.212Z",
+      "ms": 864,
+      "run": "knowledge"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "draft, restricted, and archived items and their files are refused alike",
+      "result": "pass",
+      "actual": "draft: page->/portal, item 404, file 404; restricted: page->/portal, item 404, file 404; archived: page->/portal, item 404, file 404; unknown id 404; distinct 404 bodies across the four: 1",
+      "at": "2026-09-07T10:05:40.404Z",
+      "ms": 192,
+      "run": "knowledge"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "a new Version replaces the download, unpublishing revokes the item and a saved address, and republishing restores it",
+      "result": "pass",
+      "actual": "Version 2 showed independent-new-version.pdf and both the Download link and the saved address served the new bytes; unpublished item returned to /portal and the saved address answered 404; republished and restored: first row primary-available.pdf with the original bytes",
+      "at": "2026-09-07T10:05:41.729Z",
+      "ms": 1325,
+      "run": "knowledge"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "signed-out",
+      "step": "Everyone still requires a Portal sign-in",
+      "result": "pass",
+      "actual": "Anonymous page went to /portal/enter; item API 401; file 401",
+      "at": "2026-09-07T10:05:41.906Z",
+      "ms": 176,
+      "run": "knowledge"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "the Knowledge page offers the Portal header Help, not Help with this page",
+      "result": "pass",
+      "actual": "No Help with this page; header Help href /portal/help",
+      "at": "2026-09-07T10:05:42.512Z",
+      "ms": 606,
+      "run": "knowledge"
+    }
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "Dispositions were applied through the API as the Legal Team Member; the Inbox conversion, resolution, and decline controls belong to DOC-013.",
+    "No upload size limit was exercised; the guide's file-size sentence stays conditional and unverified in this lab.",
+    "The Knowledge Documents check keys on filename; the first run compared bytes across Documents and its wording was ambiguous, so the scenario was rerun with the filename-keyed comparison on unchanged guide bytes.",
+    "Layout checks are CSS-pixel measurements in three themes, not browser zoom or assistive technology acceptance.",
+    "The linked conversation guide (DOC-011) and notifications guide are still in review, and their onward targets DOC-017 and DOC-021 are unpublished; all three articles stay in review."
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "articleId": "portal-knowledge",
+  "contentSha256": "f44331f28896c6fbdebed9d636bb937d06330e9a52e850bb0b755f987aacb559",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-07T10:07:20.254Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "apps/web/src/routes/portal-knowledge.tsx",
+    "apps/web/src/components/portal/deflection-panel.tsx",
+    "apps/web/src/components/portal/portal-shell.tsx",
+    "apps/api/src/modules/portal/routes.ts",
+    "apps/api/src/modules/intake-links/routes.ts",
+    "apps/api/src/modules/knowledge/routes.ts",
+    "apps/api/src/modules/documents/routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C11",
+      "coverage": ["C11"],
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "expected": "Only eligible published Knowledge appears and allowed files open through their intended links. Unpublished or out-of-audience items and their files remain unavailable; a broken external link does not block the Request form.",
+      "actual": "The Portal home and form listed the eligible link 'Docs available guidance \u2026' and no address for the draft, restricted, or archived fixtures. The internal link kept the tab and opened From Legal with the title; Documents listed primary-available.pdf first although created later, both Download links matched the staff current Version of the same Document, no Version picker was offered, Guidance showed the written text, and Your requests returned to /portal. The form's external link opened its address in a new tab with 127.0.0.1 shown beneath the label; the original tab kept the answers and confirmed R-54. Draft, restricted, archived, and unknown items answered one identical 404 for the item and its files, and their pages returned to /portal. A new Version changed the listed filename, the Download link, and a saved address; unpublishing returned the page to /portal and the saved address answered 404; republishing and restoring the filename served the original bytes again. A signed-out browser went to /portal/enter with the item and file APIs answering 401.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-012/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-012/independent-discovery.json"
+      ]
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-012/README.md"],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "The unavailable external address is served by the lab app as a not-found route rather than failing at the network.",
+    "The Knowledge Version, unpublish, and republish actions were performed through the API as the Administrator; the Knowledge authoring guides are later batches.",
+    "The onward notifications guide is in review; the article stays in review until it passes."
+  ],
+  "publicationBlockers": ["notifications (DOC-011, onward DOC-021) is unpublished."],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}
