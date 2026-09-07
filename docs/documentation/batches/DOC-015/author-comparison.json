@@ -1,0 +1,212 @@
+{
+  "name": "comparison",
+  "startedAt": "2026-09-07T16:55:01.850Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-analysis-workflow",
+  "articleHashes": [
+    {
+      "articleId": "compare-versions",
+      "contentSha256": "0199b96fd4cfc7b542b3c225280c53851b8d8576b39be403ac84ab8732ae169c"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "Compare with previous opens v2 to v3, shows real pending processing, and becomes ready without appending a Version",
+      "actual": "C-49 supporting Word Document compared Versions 2 and 3. The owned worker was paused to observe Preparing comparison, then resumed; the page reached Changes and the chain still had three Versions.",
+      "result": "pass",
+      "at": "2026-09-07T16:55:10.725Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Previous and Next navigate changes; Older and Newer immediately select v1 to v2 and show the known wording changes",
+      "actual": "Next selected another change and Previous returned to the first. Selecting Older 1 then Newer 2 opened stored pairs immediately; v1 to v2 showed thirty to sixty days and monthly to quarterly fees, without adding Versions.",
+      "result": "pass",
+      "at": "2026-09-07T16:55:14.309Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Word export produces a readable tracked DOCX and records both operands; Contributors are refused export",
+      "actual": {
+        "document": "01a07ccb-750b-7b13-9492-9ba8f630b817",
+        "version": "01a07ccb-9ea3-7f1f-b9f0-8853733d54ec",
+        "downloadSha256": "187bcf0e8abacc00e4398010434e64756a6abffd2abb7ff93568197033c4842d",
+        "trackedChanges": {
+          "inserted": ["sixty", "quarterly"],
+          "deleted": ["thirty", "monthly"]
+        },
+        "roleOutcome": "UI export appended Generated redline Document Version 4 with operands 1 and 2; Open redline and Download worked."
+      },
+      "result": "pass",
+      "at": "2026-09-07T16:55:14.594Z"
+    },
+    {
+      "role": "administrator",
+      "action": "reopening and repeated export reuse the Generated redline Document Version; Generated redline operands are excluded and rejected",
+      "actual": "The stored v1 to v2 Comparison remained readable; repeat export reused Version 4 for legal roles and remained 403 for Contributor. Both selectors excluded Generated redline Document Version 4 and direct use of it returned 400.",
+      "result": "pass",
+      "at": "2026-09-07T16:55:15.286Z"
+    },
+    {
+      "role": "administrator",
+      "action": "archiving preserves comparison reading and refuses Generated writes until the owning record is restored",
+      "actual": "With the Word Document archived, the v2 → v3 Comparison still read Changes, no export control was shown, and a direct export answered 409. The Document was restored. With the owning Contract then archived, Changes stayed readable, the visible Export track changes control answered with an archived refusal, and a direct export answered 409. The owning Contract was restored. With both restored, this role retried Export track changes on the previously unexported v2 → v3 pair and appended Generated redline Document Version 5; the chain held five Document Versions.",
+      "result": "pass",
+      "at": "2026-09-07T16:55:17.218Z"
+    },
+    {
+      "role": "administrator",
+      "action": "PDF and Word use extracted text and have no tracked-change export",
+      "actual": "The mixed PDF/Word pair showed the known wording changes with the extracted-text/formatting notice. Legal roles saw Export needs two Word files; no role could export tracked changes and the chain stayed at two Versions.",
+      "result": "pass",
+      "at": "2026-09-07T16:55:19.808Z"
+    },
+    {
+      "role": "administrator",
+      "action": "an unsupported input fails durably, downloads remain available, and a corrected new pair can show No changes for different bytes",
+      "actual": "TXT Version 1 failed because it supplies no extracted text; both originals downloaded. Reopening kept the same failed pair with no Retry. Administrator prerequisite setup added corrected PDF Version 3; comparing 2 to 3 showed No changes although their file hashes differed.",
+      "result": "pass",
+      "at": "2026-09-07T16:55:24.261Z"
+    },
+    {
+      "role": "administrator",
+      "action": "failed PDF extraction gives a specific Comparison failure and Confidential access denies an unrelated legal user",
+      "actual": "The malformed fictional PDF had a failed extraction state and the Comparison named that failure while preserving original downloads. Priya outside the Confidential Contract received 404 for the known Comparison and could not see its Changes page.",
+      "result": "pass",
+      "at": "2026-09-07T16:55:26.745Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Compare with previous opens v2 to v3, shows real pending processing, and becomes ready without appending a Version",
+      "actual": "C-50 supporting Word Document compared Versions 2 and 3. The owned worker was paused to observe Preparing comparison, then resumed; the page reached Changes and the chain still had three Versions.",
+      "result": "pass",
+      "at": "2026-09-07T16:55:33.815Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Previous and Next navigate changes; Older and Newer immediately select v1 to v2 and show the known wording changes",
+      "actual": "Next selected another change and Previous returned to the first. Selecting Older 1 then Newer 2 opened stored pairs immediately; v1 to v2 showed thirty to sixty days and monthly to quarterly fees, without adding Versions.",
+      "result": "pass",
+      "at": "2026-09-07T16:55:37.404Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Word export produces a readable tracked DOCX and records both operands; Contributors are refused export",
+      "actual": {
+        "document": "01a07ccb-cf4c-7fca-84e9-a73eb628bb10",
+        "version": "01a07ccb-f8c9-7113-a6db-653369c9ad6c",
+        "downloadSha256": "1d4d5b99a17428c2cdcea017de0dd9b51bef83697de4589eed88adc8925f88a7",
+        "trackedChanges": {
+          "inserted": ["sixty", "quarterly"],
+          "deleted": ["thirty", "monthly"]
+        },
+        "roleOutcome": "UI export appended Generated redline Document Version 4 with operands 1 and 2; Open redline and Download worked."
+      },
+      "result": "pass",
+      "at": "2026-09-07T16:55:37.604Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "reopening and repeated export reuse the Generated redline Document Version; Generated redline operands are excluded and rejected",
+      "actual": "The stored v1 to v2 Comparison remained readable; repeat export reused Version 4 for legal roles and remained 403 for Contributor. Both selectors excluded Generated redline Document Version 4 and direct use of it returned 400.",
+      "result": "pass",
+      "at": "2026-09-07T16:55:38.285Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "archiving preserves comparison reading and refuses Generated writes until the owning record is restored",
+      "actual": "With the Word Document archived, the v2 → v3 Comparison still read Changes, no export control was shown, and a direct export answered 409. The Document was restored. With the owning Contract then archived, Changes stayed readable, the visible Export track changes control answered with an archived refusal, and a direct export answered 409. The owning Contract was restored. With both restored, this role retried Export track changes on the previously unexported v2 → v3 pair and appended Generated redline Document Version 5; the chain held five Document Versions.",
+      "result": "pass",
+      "at": "2026-09-07T16:55:40.224Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "PDF and Word use extracted text and have no tracked-change export",
+      "actual": "The mixed PDF/Word pair showed the known wording changes with the extracted-text/formatting notice. Legal roles saw Export needs two Word files; no role could export tracked changes and the chain stayed at two Versions.",
+      "result": "pass",
+      "at": "2026-09-07T16:55:42.823Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "an unsupported input fails durably, downloads remain available, and a corrected new pair can show No changes for different bytes",
+      "actual": "TXT Version 1 failed because it supplies no extracted text; both originals downloaded. Reopening kept the same failed pair with no Retry. Administrator prerequisite setup added corrected PDF Version 3; comparing 2 to 3 showed No changes although their file hashes differed.",
+      "result": "pass",
+      "at": "2026-09-07T16:55:47.346Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "failed PDF extraction gives a specific Comparison failure and Confidential access denies an unrelated legal user",
+      "actual": "The malformed fictional PDF had a failed extraction state and the Comparison named that failure while preserving original downloads. Priya outside the Confidential Contract received 404 for the known Comparison and could not see its Changes page.",
+      "result": "pass",
+      "at": "2026-09-07T16:55:49.837Z"
+    },
+    {
+      "role": "contributor",
+      "action": "Compare with previous opens v2 to v3, shows real pending processing, and becomes ready without appending a Version",
+      "actual": "C-51 supporting Word Document compared Versions 2 and 3. The owned worker was paused to observe Preparing comparison, then resumed; the page reached Changes and the chain still had three Versions.",
+      "result": "pass",
+      "at": "2026-09-07T16:55:56.887Z"
+    },
+    {
+      "role": "contributor",
+      "action": "Previous and Next navigate changes; Older and Newer immediately select v1 to v2 and show the known wording changes",
+      "actual": "Next selected another change and Previous returned to the first. Selecting Older 1 then Newer 2 opened stored pairs immediately; v1 to v2 showed thirty to sixty days and monthly to quarterly fees, without adding Versions.",
+      "result": "pass",
+      "at": "2026-09-07T16:56:00.473Z"
+    },
+    {
+      "role": "contributor",
+      "action": "Word export produces a readable tracked DOCX and records both operands; Contributors are refused export",
+      "actual": {
+        "document": "01a07ccc-297e-7276-9436-c46d7bcdbc16",
+        "version": "01a07ccc-52e1-780b-a489-31ef4dbd1685",
+        "downloadSha256": "f4ece751d2fb6ecffc89e683ae4163c61abba22d51737f5bde5c856169d49766",
+        "trackedChanges": {
+          "inserted": ["sixty", "quarterly"],
+          "deleted": ["thirty", "monthly"]
+        },
+        "roleOutcome": "Contributor had no export control and POST returned 403. Administrator prepared Version 4 separately; Contributor read and downloaded that existing Generated redline."
+      },
+      "result": "pass",
+      "at": "2026-09-07T16:56:01.179Z"
+    },
+    {
+      "role": "contributor",
+      "action": "reopening and repeated export reuse the Generated redline Document Version; Generated redline operands are excluded and rejected",
+      "actual": "The stored v1 to v2 Comparison remained readable; repeat export reused Version 4 for legal roles and remained 403 for Contributor. Both selectors excluded Generated redline Document Version 4 and direct use of it returned 400.",
+      "result": "pass",
+      "at": "2026-09-07T16:56:01.833Z"
+    },
+    {
+      "role": "contributor",
+      "action": "archiving preserves comparison reading and refuses Generated writes until the owning record is restored",
+      "actual": "With the Word Document archived, the v2 → v3 Comparison still read Changes, no export control was shown, and a direct export answered 403. The Document was restored. With the owning Contract then archived, Changes stayed readable, no export control was shown, and a direct export answered 403. The owning Contract was restored. No export was attempted after restore in this role's scenario, and no legal-role export is credited here; the chain stayed at four Document Versions, Version 4 being the Generated redline the Administrator had prepared earlier as setup.",
+      "result": "pass",
+      "at": "2026-09-07T16:56:03.083Z"
+    },
+    {
+      "role": "contributor",
+      "action": "PDF and Word use extracted text and have no tracked-change export",
+      "actual": "The mixed PDF/Word pair showed the known wording changes with the extracted-text/formatting notice. Legal roles saw Export needs two Word files; no role could export tracked changes and the chain stayed at two Versions.",
+      "result": "pass",
+      "at": "2026-09-07T16:56:05.616Z"
+    },
+    {
+      "role": "contributor",
+      "action": "an unsupported input fails durably, downloads remain available, and a corrected new pair can show No changes for different bytes",
+      "actual": "TXT Version 1 failed because it supplies no extracted text; both originals downloaded. Reopening kept the same failed pair with no Retry. Administrator prerequisite setup added corrected PDF Version 3; comparing 2 to 3 showed No changes although their file hashes differed.",
+      "result": "pass",
+      "at": "2026-09-07T16:56:10.083Z"
+    },
+    {
+      "role": "contributor",
+      "action": "failed PDF extraction gives a specific Comparison failure and Confidential access denies an unrelated legal user",
+      "actual": "The malformed fictional PDF had a failed extraction state and the Comparison named that failure while preserving original downloads. Priya outside the Confidential Contract received 404 for the known Comparison and could not see its Changes page.",
+      "result": "pass",
+      "at": "2026-09-07T16:56:12.755Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T16:56:12.756Z"
+}

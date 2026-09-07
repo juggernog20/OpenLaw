@@ -1,0 +1,143 @@
+{
+  "name": "analysis",
+  "startedAt": "2026-09-07T15:10:53.738Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-analysis-workflow",
+  "articleHashes": [
+    {
+      "articleId": "contract-analysis",
+      "contentSha256": "24e4375567bdf273873018732f93743584b71b260a07890f4f4719f257050243"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "disabled connector, missing primary Document and unsupported target text refuse a run without creating an Analysis run",
+      "actual": "Disabled connector hid the card on unmarked C-39 and direct run returned 409; enabled/no-primary Run analysis displayed its refusal and queued nothing; C-40 had a download-only TXT primary and Run analysis refused its absent extracted text.",
+      "result": "pass",
+      "at": "2026-09-07T15:10:59.669Z"
+    },
+    {
+      "role": "administrator",
+      "action": "the first primary PDF starts an automatic run; Running updates to results with exact Version/model/evidence and independently operational Unverified values",
+      "actual": "C-39 automatically analyzed primary Version 1 with the declared local model; the open page updated without reload. Nine values were written/marked, one numeric answer was Invalid, one unsupported quote was Unsupported; saved USD 2,500 monthly and the September 17 notice deadline were already active before confirmation.",
+      "result": "pass",
+      "at": "2026-09-07T15:11:02.292Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Confirm clears only one marker, manual edits clear their own markers, and History records the confirmation",
+      "actual": "Expiry stayed October 17 while only its marker cleared (repeat confirmation refused 400); editing notice to 15 moved the derived deadline to October 2 and cleared only that marker; the routing Field edit cleared its marker. Six others remained; History recorded confirmation.",
+      "result": "pass",
+      "at": "2026-09-07T15:11:04.197Z"
+    },
+    {
+      "role": "administrator",
+      "action": "an executed pin remains the target after a newer upload; a manual rerun records that older Version",
+      "actual": "After Version 1 was marked executed, Version 2 became current without displacing its pin. Run analysis still recorded Version 1 and its Dubai evidence; the newer uploaded text was not substituted.",
+      "result": "pass",
+      "at": "2026-09-07T15:11:07.661Z"
+    },
+    {
+      "role": "administrator",
+      "action": "marking the newer Version triggers Analysis; supported unverified values change while confirmed and edited values are Kept",
+      "actual": "Marking ready Version 2 triggered its own run. The location changed to Abu Dhabi with Version 2 evidence; confirmed expiry remained October 17 although the returned result said November 17/Kept. Edited notice and routing stayed; the existing Counterparty was retained and the returned name was Unmatched.",
+      "result": "pass",
+      "at": "2026-09-07T15:11:09.321Z"
+    },
+    {
+      "role": "administrator",
+      "action": "another person edits an unverified value while Analysis is pending; completion keeps the saved edit rather than replacing it with the returned answer",
+      "actual": "The other legal role saved Sharjah during the pending Version 2 run. Completion kept Sharjah, cleared no unrelated markers, and recorded the returned Abu Dhabi answer as Kept. Evidence from that run did not change what the human had saved.",
+      "result": "pass",
+      "at": "2026-09-07T15:11:10.576Z"
+    },
+    {
+      "role": "administrator",
+      "action": "a provider reply failure records Failed without changing values; retry succeeds; a cleared core value can be filled and marked again",
+      "actual": "The local provider returned malformed reply text; the run reported Failed on Version 2 with a JSON reason and preserved saved values/markers. Restoring valid replies and Run analysis succeeded. Clearing notice removed the saved 15; the next run filled 45 and marked it Unverified again.",
+      "result": "pass",
+      "at": "2026-09-07T15:11:11.372Z"
+    },
+    {
+      "role": "administrator",
+      "action": "a supporting Document with ready text does not change the primary target or start another Analysis run",
+      "actual": "The additional supporting PDF finished text extraction, while the primary Document and latest Analysis run stayed unchanged and no provider request was made for that upload.",
+      "result": "pass",
+      "at": "2026-09-07T15:11:15.450Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Contributors cannot run or confirm, outsiders cannot reach the Confidential Contract, Ended allows confirmation but not a run, and archive blocks confirmation until restored",
+      "actual": "Ravi on the team had no Run/Confirm actions and both writes returned 403; unrelated Priya got 404. Ended refused a run but allowed notice confirmation. Archive refused confirmation with 409 and Restore retained Ended. With the connector disabled, the remaining markers still showed and Confirm all cleared them without changing values.",
+      "result": "pass",
+      "at": "2026-09-07T15:11:18.625Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "disabled connector, missing primary Document and unsupported target text refuse a run without creating an Analysis run",
+      "actual": "Disabled connector hid the card on unmarked C-41 and direct run returned 409; enabled/no-primary Run analysis displayed its refusal and queued nothing; C-42 had a download-only TXT primary and Run analysis refused its absent extracted text.",
+      "result": "pass",
+      "at": "2026-09-07T15:11:21.247Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "the first primary PDF starts an automatic run; Running updates to results with exact Version/model/evidence and independently operational Unverified values",
+      "actual": "C-41 automatically analyzed primary Version 1 with the declared local model; the open page updated without reload. Nine values were written/marked, one numeric answer was Invalid, one unsupported quote was Unsupported; saved USD 2,500 monthly and the September 17 notice deadline were already active before confirmation.",
+      "result": "pass",
+      "at": "2026-09-07T15:11:23.865Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Confirm clears only one marker, manual edits clear their own markers, and History records the confirmation",
+      "actual": "Expiry stayed October 17 while only its marker cleared (repeat confirmation refused 400); editing notice to 15 moved the derived deadline to October 2 and cleared only that marker; the routing Field edit cleared its marker. Six others remained; History recorded confirmation.",
+      "result": "pass",
+      "at": "2026-09-07T15:11:25.832Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "an executed pin remains the target after a newer upload; a manual rerun records that older Version",
+      "actual": "After Version 1 was marked executed, Version 2 became current without displacing its pin. Run analysis still recorded Version 1 and its Dubai evidence; the newer uploaded text was not substituted.",
+      "result": "pass",
+      "at": "2026-09-07T15:11:29.277Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "marking the newer Version triggers Analysis; supported unverified values change while confirmed and edited values are Kept",
+      "actual": "Marking ready Version 2 triggered its own run. The location changed to Abu Dhabi with Version 2 evidence; confirmed expiry remained October 17 although the returned result said November 17/Kept. Edited notice and routing stayed; the existing Counterparty was retained and the returned name was Unmatched.",
+      "result": "pass",
+      "at": "2026-09-07T15:11:30.863Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "another person edits an unverified value while Analysis is pending; completion keeps the saved edit rather than replacing it with the returned answer",
+      "actual": "The other legal role saved Sharjah during the pending Version 2 run. Completion kept Sharjah, cleared no unrelated markers, and recorded the returned Abu Dhabi answer as Kept. Evidence from that run did not change what the human had saved.",
+      "result": "pass",
+      "at": "2026-09-07T15:11:32.140Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "a provider reply failure records Failed without changing values; retry succeeds; a cleared core value can be filled and marked again",
+      "actual": "The local provider returned malformed reply text; the run reported Failed on Version 2 with a JSON reason and preserved saved values/markers. Restoring valid replies and Run analysis succeeded. Clearing notice removed the saved 15; the next run filled 45 and marked it Unverified again.",
+      "result": "pass",
+      "at": "2026-09-07T15:11:32.951Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "a supporting Document with ready text does not change the primary target or start another Analysis run",
+      "actual": "The additional supporting PDF finished text extraction, while the primary Document and latest Analysis run stayed unchanged and no provider request was made for that upload.",
+      "result": "pass",
+      "at": "2026-09-07T15:11:37.025Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Contributors cannot run or confirm, outsiders cannot reach the Confidential Contract, Ended allows confirmation but not a run, and archive blocks confirmation until restored",
+      "actual": "Ravi on the team had no Run/Confirm actions and both writes returned 403; unrelated Priya got 404. Ended refused a run but allowed notice confirmation. Archive refused confirmation with 409 and Restore retained Ended. With the connector disabled, the remaining markers still showed and Confirm all cleared them without changing values.",
+      "result": "pass",
+      "at": "2026-09-07T15:11:40.222Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T15:11:40.223Z"
+}

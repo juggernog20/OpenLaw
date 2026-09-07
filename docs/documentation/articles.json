@@ -331,7 +331,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["contracts.analysis"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "create-matter",
@@ -435,7 +435,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["documents.compare"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "document-repository",

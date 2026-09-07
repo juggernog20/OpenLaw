@@ -439,7 +439,7 @@
       "coverage": ["C21"],
       "articles": ["contract-analysis"],
       "roles": ["legal_team_member", "administrator"],
-      "environment": "scenario-fixture",
+      "environment": "analysis-workflow",
       "prerequisites": [
         "A dedicated Analysis fixture, known extracted text, target Fields, and a declared local or live AI provider."
       ],
@@ -599,8 +599,10 @@
       "coverage": ["C29"],
       "articles": ["compare-versions"],
       "roles": ["legal_team_member", "administrator", "contributor"],
-      "environment": "scenario-fixture",
-      "prerequisites": ["Two Word Versions and a PDF/text pair with known small differences."],
+      "environment": "analysis-workflow",
+      "prerequisites": [
+        "Two Word Versions and a PDF/Word pair with known small differences, plus a plain TXT/PDF pair for the unsupported-format check."
+      ],
       "actions": [
         "Compare both pairs, read changes, and export a Generated redline where permitted."
       ],
@@ -608,7 +610,7 @@
         "Comparison operands and output are correct; an exported redline is a new derived Version with provenance."
       ],
       "negativeChecks": [
-        "Pending/failed processing and unauthorized export are handled; a Comparison is not misrepresented as a Version."
+        "Pending/failed processing and unauthorized export are handled; a Comparison is not misrepresented as a Version. A plain TXT input is checked as an unsupported extracted-text format."
       ],
       "requiredMethods": ["browser-walkthrough"],
       "status": "not-run"

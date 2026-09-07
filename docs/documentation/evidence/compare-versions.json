@@ -1,0 +1,75 @@
+{
+  "articleId": "compare-versions",
+  "contentSha256": "2bfbd81cb149cd8bed215e1ada5736bf85fe9e4445241fea4307f2c36dae09df",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-analysis-workflow",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-07T17:32:59.448Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "apps/web/src/routes/document-compare.tsx",
+    "apps/web/src/components/documents/doc-panel.tsx",
+    "apps/web/src/components/documents/documents-card.tsx",
+    "apps/api/src/modules/documents/routes.ts",
+    "apps/api/src/pipeline/document-comparison.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C29",
+      "coverage": ["C29"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Comparison operands and output are correct; an exported redline is a new derived Version with provenance. Pending/failed processing and unauthorized export are handled; a Comparison is not misrepresented as a Version. A plain TXT input is checked as an unsupported extracted-text format.",
+      "actual": "Compare with previous answered 202 and opened /documents/…/compare for v2 → v3. With the lab worker paused the page read \"Preparing comparison\" (a live status region) while the API said pending; after resuming, the page updated to \"Changes\" (2 changes, Word mode) without any new Document Version. Older v1 opened v1 → v3 at once, then Newer v2 opened v1 → v2. The compared text struck through \"thirty\" and \"monthly\" and underlined \"sixty\" and \"quarterly\"; the Changes pane listed 2 changes, Next change moved the current change to the second and Previous change back to the first. With v1 → v2 selected, Older offered only v1 and Newer v2 and v3. Still three Versions. The reader panel for 735-compare-older.docx version 3 showed a Compare link named \"Compare with the previous version, 2 changes\"; it opened the existing v2 → v3 Comparison, which was already ready. Export track changes answered 201 and the control became Open redline. Version 4 is kind generated_redline, source generated, made from v1 and v2; Open redline opened the reader on version 4. The downloaded DOCX (sha256 6ba748627333…) carries w:ins [\"sixty\",\"quarterly\"] and w:del [\"thirty\",\"monthly\"]. Exporting the same pair again answered 200 with the same Version; reopening v1 → v2 answered 200 and showed Open redline; Newer still offered only v2 and v3 and a direct request naming Version 4 answered 400. Four Versions. The PDF → Word pair opened in text mode with the extracted-text sentence, struck \"thirty\" and underlined \"sixty\". The page read \"Export needs two Word files.\" with no export control and a direct export answered 409; the chain stayed at two Versions. TXT v1 → PDF v2 read \"Comparison failed: Version 1 does not support extracted text.\" with two Download links whose bytes matched the uploaded files. Reopening returned the same failed Comparison and no retry control. After the Administrator added the corrected PDF as Version 3, the acting role chose v2 → v3 and read \"No changes\" while the two files' hashes differ. The malformed-PDF pair read \"Version 1 text extraction failed.\" With the Word Document archived the v2 → v3 Comparison still read Changes, no export control was shown and a direct export answered 409. With the Document restored and the owning Contract archived (Contract actions → Archive), Changes stayed readable and the export was refused with 409 (the visible control showed the refusal). After Restore, Export track changes on v2 → v3 answered 201 and appended Version 5 (generated_redline from v2 and v3; w:ins [\"ninety\",\"annually\"], w:del [\"sixty\",\"quarterly\"]). Priya Raman (Legal, not on the Confidential team) got 404 reading and requesting the v1 → v2 Comparison, and the compare page showed no Changes pane or pair control for her. Close comparison on the ready v1 → v2 Comparison opened /contracts/66/documents, where the Word Document's row and its Actions menu were shown again.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-015/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-015/independent-discovery.json"
+      ]
+    },
+    {
+      "id": "V-C29",
+      "coverage": ["C29"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Comparison operands and output are correct; an exported redline is a new derived Version with provenance. Pending/failed processing and unauthorized export are handled; a Comparison is not misrepresented as a Version. A plain TXT input is checked as an unsupported extracted-text format.",
+      "actual": "Compare with previous answered 202 and opened /documents/…/compare for v2 → v3. With the lab worker paused the page read \"Preparing comparison\" (a live status region) while the API said pending; after resuming, the page updated to \"Changes\" (2 changes, Word mode) without any new Document Version. Older v1 opened v1 → v3 at once, then Newer v2 opened v1 → v2. The compared text struck through \"thirty\" and \"monthly\" and underlined \"sixty\" and \"quarterly\"; the Changes pane listed 2 changes, Next change moved the current change to the second and Previous change back to the first. With v1 → v2 selected, Older offered only v1 and Newer v2 and v3. Still three Versions. The reader panel for 735-compare-older.docx version 3 showed a Compare link named \"Compare with the previous version, 2 changes\"; it opened the existing v2 → v3 Comparison, which was already ready. Export track changes answered 201 and the control became Open redline. Version 4 is kind generated_redline, source generated, made from v1 and v2; Open redline opened the reader on version 4. The downloaded DOCX (sha256 1a44306290c0…) carries w:ins [\"sixty\",\"quarterly\"] and w:del [\"thirty\",\"monthly\"]. Exporting the same pair again answered 200 with the same Version; reopening v1 → v2 answered 200 and showed Open redline; Newer still offered only v2 and v3 and a direct request naming Version 4 answered 400. Four Versions. The PDF → Word pair opened in text mode with the extracted-text sentence, struck \"thirty\" and underlined \"sixty\". The page read \"Export needs two Word files.\" with no export control and a direct export answered 409; the chain stayed at two Versions. TXT v1 → PDF v2 read \"Comparison failed: Version 1 does not support extracted text.\" with two Download links whose bytes matched the uploaded files. Reopening returned the same failed Comparison and no retry control. After the Administrator added the corrected PDF as Version 3, the acting role chose v2 → v3 and read \"No changes\" while the two files' hashes differ. The malformed-PDF pair read \"Version 1 text extraction failed.\" With the Word Document archived the v2 → v3 Comparison still read Changes, no export control was shown and a direct export answered 409. With the Document restored and the owning Contract archived (Contract actions → Archive), Changes stayed readable and the export was refused with 409 (the visible control showed the refusal). After Restore, Export track changes on v2 → v3 answered 201 and appended Version 5 (generated_redline from v2 and v3; w:ins [\"ninety\",\"annually\"], w:del [\"sixty\",\"quarterly\"]). Priya Raman (Legal, not on the Confidential team) got 404 reading and requesting the v1 → v2 Comparison, and the compare page showed no Changes pane or pair control for her. Close comparison on the ready v1 → v2 Comparison opened /contracts/65/documents, where the Word Document's row and its Actions menu were shown again.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-015/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-015/independent-discovery.json"
+      ]
+    },
+    {
+      "id": "V-C29",
+      "coverage": ["C29"],
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "expected": "Comparison operands and output are correct; an exported redline is a new derived Version with provenance. Pending/failed processing and unauthorized export are handled; a Comparison is not misrepresented as a Version. A plain TXT input is checked as an unsupported extracted-text format.",
+      "actual": "Compare with previous answered 202 and opened /documents/…/compare for v2 → v3. With the lab worker paused the page read \"Preparing comparison\" (a live status region) while the API said pending; after resuming, the page updated to \"Changes\" (2 changes, Word mode) without any new Document Version. Older v1 opened v1 → v3 at once, then Newer v2 opened v1 → v2. The compared text struck through \"thirty\" and \"monthly\" and underlined \"sixty\" and \"quarterly\"; the Changes pane listed 2 changes, Next change moved the current change to the second and Previous change back to the first. With v1 → v2 selected, Older offered only v1 and Newer v2 and v3. Still three Versions. The reader panel for 735-compare-older.docx version 3 showed a Compare link named \"Compare with the previous version, 2 changes\"; it opened the existing v2 → v3 Comparison, which was already ready. On the ready v1 → v2 Word Comparison Ravi Menon saw neither Export track changes, Open redline nor the Word-files sentence; a direct export answered 403 and the chain stayed at three Versions. The Administrator's setup export appended Version 4 (generated_redline); the Contributor then opened it in the reader and downloaded it (w:ins [\"sixty\",\"quarterly\"], w:del [\"thirty\",\"monthly\"]); a further export attempt still answered 403. This is not credited as a Contributor export. The PDF → Word pair opened in text mode with the extracted-text sentence, struck \"thirty\" and underlined \"sixty\". No export control or sentence was shown and a direct export answered 403; the chain stayed at two Versions. TXT v1 → PDF v2 read \"Comparison failed: Version 1 does not support extracted text.\" with two Download links whose bytes matched the uploaded files. Reopening returned the same failed Comparison and no retry control. After the Administrator added the corrected PDF as Version 3, the acting role chose v2 → v3 and read \"No changes\" while the two files' hashes differ. The malformed-PDF pair read \"Version 1 text extraction failed.\" With the Word Document archived the v2 → v3 Comparison still read Changes, no export control was shown and a direct export answered 403. With the Document restored and the owning Contract archived (Administrator setup), Changes stayed readable and the export was refused with 403. After Restore the Contributor still read Changes and a direct export still answered 403; four Versions. Priya Raman (Legal, not on the Confidential team) got 404 reading and requesting the v1 → v2 Comparison, and the compare page showed no Changes pane or pair control for her. Close comparison on the ready v1 → v2 Comparison opened /contracts/67/documents, where the Word Document's row and its Actions menu were shown again.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-015/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-015/independent-discovery.json"
+      ]
+    }
+  ],
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-015/README.md",
+    "docs/documentation/batches/DOC-015/author-comparison.json"
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "The guide changed after the author walkthrough (author record hash 0199b96fd4cfc7b542b3c225280c53851b8d8576b39be403ac84ab8732ae169c): the archive sentence now says a person who can read the Document instead of a reached reader. The wording change describes the same tested behaviour; the pending independent walkthrough runs on the current bytes."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null,
+  "publicationBlockers": [
+    "The linked Document Versions and Document reading and processing guides (DOC-017) are unpublished."
+  ]
+}
