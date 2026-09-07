@@ -129,9 +129,10 @@ were rerun against the corrected bytes:
   sign-in page shows in oidc mode with no provider registered.
 
 A follow-up on the same day, 05:06 to 05:09 UTC, covered the pagination and view
-instructions the first pass had left unexercised, with the same three roles. With 53
-open Tasks per role, **Load more Tasks** added the remaining rows with no duplicates
-and no loss. With 30 reachable `cormorant` Contracts, **Show more** added the second
+instructions the first pass had left unexercised, with the same three roles. With 52 new pagination Tasks per role alongside the existing assignments,
+**Load more Tasks** added the remaining tracked fixture rows with no duplicates
+or loss among those rows. The check tracked those 52 Tasks and the existing
+navigation Task; its count of 53 is not the complete list total. With 30 reachable `cormorant` Contracts, **Show more** added the second
 page, a blocked next-page read kept the first page with "The next results could not be read. Try again.",
 and **Show more** after unblocking recovered. Column reordering survived **Save as…**
 and a reload; **Set as default** reopened Contracts on the view after leaving through

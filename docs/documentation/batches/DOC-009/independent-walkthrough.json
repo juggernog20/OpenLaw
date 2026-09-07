@@ -1060,7 +1060,7 @@
           "role": "administrator",
           "step": "Load more Tasks adds the next page without duplicates or loss",
           "result": "pass",
-          "actual": "First page 46 rows at /home/tasks; Load more Tasks added 7 rows (53 total) at /home/tasks, no duplicates, first page kept; Load more Tasks still shown: false",
+          "actual": "First page 46 tracked fixture rows at /home/tasks; Load more Tasks added 7 tracked fixture rows (53 tracked total) at /home/tasks, no duplicates or loss among tracked fixture rows; Load more Tasks still shown: false",
           "at": "2026-09-07T05:06:36.366Z",
           "ms": 1770
         },
@@ -1069,7 +1069,7 @@
           "role": "legal_team_member",
           "step": "Load more Tasks adds the next page without duplicates or loss",
           "result": "pass",
-          "actual": "First page 49 rows at /home/tasks; Load more Tasks added 4 rows (53 total) at /home/tasks, no duplicates, first page kept; Load more Tasks still shown: false",
+          "actual": "First page 49 tracked fixture rows at /home/tasks; Load more Tasks added 4 tracked fixture rows (53 tracked total) at /home/tasks, no duplicates or loss among tracked fixture rows; Load more Tasks still shown: false",
           "at": "2026-09-07T05:06:38.383Z",
           "ms": 1714
         },
@@ -1078,7 +1078,7 @@
           "role": "contributor",
           "step": "Load more Tasks adds the next page without duplicates or loss",
           "result": "pass",
-          "actual": "First page 50 rows at /home/tasks; Load more Tasks added 3 rows (53 total) at /home/tasks, no duplicates, first page kept; Load more Tasks still shown: false",
+          "actual": "First page 50 tracked fixture rows at /home/tasks; Load more Tasks added 3 tracked fixture rows (53 tracked total) at /home/tasks, no duplicates or loss among tracked fixture rows; Load more Tasks still shown: false",
           "at": "2026-09-07T05:06:40.353Z",
           "ms": 1694
         }
@@ -1280,6 +1280,7 @@
       "Nadia's default view has no Owner column, so the reorder step moves whichever column is last.",
       "The first cleanup attempt for accounts without an original default expected the Default view trigger while the temporary view was still the default; the deletion was repeated in its own run and passed."
     ],
-    "restoration": "Nadia's My commercial desk is the default again; Daniel and Ravi have no default, as before; every Docs review view was deleted through Delete…. Fixture Tasks and Contracts remain open and unowned."
+    "restoration": "Nadia's My commercial desk is the default again; Daniel and Ravi have no default, as before; every Docs review view was deleted through Delete…. Fixture Tasks and Contracts remain open and unowned.",
+    "countingScope": "The Task pagination script counted only links titled Docs pagination task or Check navigation evidence, not every Task on the page. Its final 53 is the 52 new pagination fixtures plus the existing navigation fixture. First-page counts vary because other existing assignments also occupy the 50-row page. Duplicate and retention assertions apply to those tracked fixture rows. The documentation lead clarified these labels from the reviewer script without changing the observed counts or results."
   }
 }
