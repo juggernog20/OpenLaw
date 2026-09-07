@@ -1,4 +1,4 @@
-# Organise folders and upload in bulk
+# Organize folders and upload in bulk
 
 Use folders inside one Contract, Matter, or Entity to organize its Documents. Import several files together while keeping each file's success or failure visible.
 

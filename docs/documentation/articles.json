@@ -400,7 +400,7 @@
     },
     {
       "id": "document-folders",
-      "title": "Organise folders and upload in bulk",
+      "title": "Organize folders and upload in bulk",
       "section": "documents",
       "kind": "how-to",
       "coverage": ["C27"],
