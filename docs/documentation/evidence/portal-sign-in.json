@@ -1,0 +1,39 @@
+{
+  "articleId": "portal-sign-in",
+  "contentSha256": "9d419eb6c397fcaca5aac93331cb5dd06905f8152446485705714e07995adf7d",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "buildId": "app sha256:69c7cd47338eff05c787e985743dd45b2229792827d82fd5f54a50a9c63d8757; engine sha256:1dce5b67898cc8ae720231fa66e049208ed207e69053a2cf4c1bd0e172cea401",
+  "environment": "openlaw-docs-b8e31260-pilot",
+  "author": "Codex documentation author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "not-run",
+  "sources": [
+    "apps/web/src/routes/portal-entry.tsx",
+    "apps/web/src/routes/link-expired.tsx",
+    "apps/web/src/components/magic-link-request.tsx",
+    "apps/api/src/modules/portal/routes.ts",
+    "apps/api/src/modules/auth/routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C02",
+      "coverage": ["C02"],
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "expected": "Only the intended Business User session opens; the portal shows that person's Requests. An unapproved domain gets the supported refusal/neutral response; a bad link offers a working recovery route.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-009/README.md"],
+  "limitations": [
+    "Independent technical review and article walkthrough pending.",
+    "Normal publication waits for the linked canonical articles to finish their owning batches."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

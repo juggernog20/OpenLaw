@@ -1,0 +1,59 @@
+{
+  "articleId": "personal-settings",
+  "contentSha256": "155c97620d4f7999fa850eb2923f73ee797df09b2e62bf61cf0e5b292c16b2b8",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "buildId": "app sha256:69c7cd47338eff05c787e985743dd45b2229792827d82fd5f54a50a9c63d8757; engine sha256:1dce5b67898cc8ae720231fa66e049208ed207e69053a2cf4c1bd0e172cea401",
+  "environment": "openlaw-docs-b8e31260-pilot",
+  "author": "Codex documentation author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "not-run",
+  "sources": [
+    "apps/web/src/routes/settings-profile.tsx",
+    "apps/web/src/routes/settings-appearance.tsx",
+    "apps/web/src/components/portal/portal-shell.tsx",
+    "apps/web/src/components/timezone-picker.tsx",
+    "docs/decision-records/DECISIONS-SETTINGS.md"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C05",
+      "coverage": ["C05"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Preferences persist for the intended user. App view is a card within Profile for Member+, with a working Return to legal view link. Contributors have personal settings without this card. Another account's preferences remain unchanged; no absent M33 App view route is claimed.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C05",
+      "coverage": ["C05"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Preferences persist for the intended user. App view is a card within Profile for Member+, with a working Return to legal view link. Contributors have personal settings without this card. Another account's preferences remain unchanged; no absent M33 App view route is claimed.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C05",
+      "coverage": ["C05"],
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "expected": "Preferences persist for the intended user. App view is a card within Profile for Member+, with a working Return to legal view link. Contributors have personal settings without this card. Another account's preferences remain unchanged; no absent M33 App view route is claimed.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-009/README.md"],
+  "limitations": [
+    "Independent technical review and article walkthrough pending.",
+    "Normal publication waits for the linked canonical articles to finish their owning batches."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

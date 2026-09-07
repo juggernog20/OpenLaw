@@ -1,0 +1,56 @@
+{
+  "articleId": "find-your-work",
+  "contentSha256": "12c89ad41d38a35d2bdb8c7f64a262d216ccc6d6a1211af802fd9e3e2a2aea61",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "buildId": "app sha256:69c7cd47338eff05c787e985743dd45b2229792827d82fd5f54a50a9c63d8757; engine sha256:1dce5b67898cc8ae720231fa66e049208ed207e69053a2cf4c1bd0e172cea401",
+  "environment": "openlaw-docs-b8e31260-pilot",
+  "author": "Codex documentation author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "not-run",
+  "sources": [
+    "apps/web/src/routes/home.tsx",
+    "apps/web/src/routes/home-tasks.tsx",
+    "apps/web/src/components/home/tasks-card.tsx",
+    "apps/web/src/lib/keyboard.ts",
+    "apps/api/src/modules/home/routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C03",
+      "coverage": ["C03"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Links reach the intended records; Tasks remain distinct from deadline surfaces; ? opens shortcuts. Empty sections and unavailable records have useful outcomes; / and Escape retain their existing behavior.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C03",
+      "coverage": ["C03"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Links reach the intended records; Tasks remain distinct from deadline surfaces; ? opens shortcuts. Empty sections and unavailable records have useful outcomes; / and Escape retain their existing behavior.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C03",
+      "coverage": ["C03"],
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "expected": "Links reach the intended records; Tasks remain distinct from deadline surfaces; ? opens shortcuts. Empty sections and unavailable records have useful outcomes; / and Escape retain their existing behavior.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-009/README.md"],
+  "limitations": ["Independent technical review and article walkthrough pending."],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

@@ -1,0 +1,33 @@
+{
+  "author": "Codex",
+  "independentReview": false,
+  "startedAt": "2026-09-07T03:46:20.440Z",
+  "finishedAt": "2026-09-07T03:46:31.264Z",
+  "phase": "contributor password",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "articleHashes": {
+    "personal-settings": "155c97620d4f7999fa850eb2923f73ee797df09b2e62bf61cf0e5b292c16b2b8"
+  },
+  "results": [
+    {
+      "id": "V-C05",
+      "role": "administrator",
+      "result": "pass",
+      "actual": "Name, PNG photo and Asia/Dubai timezone saved and survived reload; Email read-only; all three themes persisted; another account stayed unchanged; Member+ own Portal view and return worked, Contributor control absent; other-session revocation retained current session; wrong current password refused, successful password change revoked other session, old password failed and new password worked; original password and preferences restored."
+    },
+    {
+      "id": "V-C05",
+      "role": "legal_team_member",
+      "result": "pass",
+      "actual": "Name, PNG photo and Asia/Dubai timezone saved and survived reload; Email read-only; all three themes persisted; another account stayed unchanged; Member+ own Portal view and return worked, Contributor control absent; other-session revocation retained current session; wrong current password refused, successful password change revoked other session, old password failed and new password worked; original password and preferences restored."
+    },
+    {
+      "id": "V-C05",
+      "role": "contributor",
+      "result": "pass",
+      "actual": "Name, PNG photo and Asia/Dubai timezone saved and survived reload; Email read-only; all three themes persisted; another account stayed unchanged; Member+ own Portal view and return worked, Contributor control absent; other-session revocation retained current session; wrong current password refused, successful password change revoked other session, old password failed and new password worked; original password and preferences restored."
+    }
+  ],
+  "environment": "openlaw-docs-b8e31260-pilot",
+  "buildId": "app sha256:69c7cd47338eff05c787e985743dd45b2229792827d82fd5f54a50a9c63d8757; engine sha256:1dce5b67898cc8ae720231fa66e049208ed207e69053a2cf4c1bd0e172cea401"
+}

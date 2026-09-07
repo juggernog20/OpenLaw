@@ -1,0 +1,58 @@
+{
+  "articleId": "search-and-views",
+  "contentSha256": "e303479e3b19bde3f34d5131d4f5c59de37b6feab2ef9b50bacdb97cb5478b23",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "buildId": "app sha256:69c7cd47338eff05c787e985743dd45b2229792827d82fd5f54a50a9c63d8757; engine sha256:1dce5b67898cc8ae720231fa66e049208ed207e69053a2cf4c1bd0e172cea401",
+  "environment": "openlaw-docs-b8e31260-pilot",
+  "author": "Codex documentation author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "not-run",
+  "sources": [
+    "apps/web/src/routes/search.tsx",
+    "apps/web/src/components/shell/search-input.tsx",
+    "apps/web/src/components/search/search-result-row.tsx",
+    "apps/web/src/routes/contracts.tsx",
+    "apps/web/src/components/table/record-filter-definitions.ts",
+    "apps/web/src/components/table/views-menu.tsx",
+    "docs/decision-records/DECISIONS.md"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C04",
+      "coverage": ["C04"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Results respect reach and the saved view restores its configuration; URL, chips, and rows agree. The hidden record never appears; no-match search and failed reads preserve understandable state. Track rapid-click issue #751 separately.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C04",
+      "coverage": ["C04"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Results respect reach and the saved view restores its configuration; URL, chips, and rows agree. The hidden record never appears; no-match search and failed reads preserve understandable state. Track rapid-click issue #751 separately.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C04",
+      "coverage": ["C04"],
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "expected": "Results respect reach and the saved view restores its configuration; URL, chips, and rows agree. The hidden record never appears; no-match search and failed reads preserve understandable state. Track rapid-click issue #751 separately.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-009/README.md"],
+  "limitations": ["Independent technical review and article walkthrough pending."],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}
