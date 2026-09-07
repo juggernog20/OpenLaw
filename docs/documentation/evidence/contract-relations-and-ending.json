@@ -1,6 +1,6 @@
 {
   "articleId": "contract-relations-and-ending",
-  "contentSha256": "29377c21400749c9f3e4fcc59863b7ae77ec6d916dedcdcf198ff93726745a4c",
+  "contentSha256": "b7d0d7f38fce31efb808b3fa88742ed0f7899299189472d89378450a3ad0c885",
   "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
   "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
   "environment": "openlaw-docs-b8e31260-conversations",
@@ -43,7 +43,8 @@
   "authorEvidence": ["docs/documentation/batches/DOC-014/README.md"],
   "limitations": [
     "Author walkthrough passed; independent source review and article walkthrough remain pending.",
-    "Agent walkthroughs are not a human user study or the feature owner's approval."
+    "Agent walkthroughs are not a human user study or the feature owner's approval.",
+    "Review edit after the author walkthrough (author record hash 29377c21400749c9f3e4fcc59863b7ae77ec6d916dedcdcf198ff93726745a4c): the relation guide now names the Flag as confidential? prompt and states that accepting it sets the other Contract's Confidential flag, from the link dialog's nudge. The author run declined that prompt; the accept path is documented from source and awaits the independent walkthrough."
   ],
   "previousEvidence": null,
   "copyOnlyReview": null

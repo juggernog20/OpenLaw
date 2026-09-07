@@ -13,7 +13,7 @@ Move the Contract to the intended Signature Status before sending if completion 
 1. Open **Approvals**, then select **Send for signature** on **Approvals & signing**.
 2. Choose **Version**. Check the filename and Document Version number, including whether it is current. Only the primary Document goes out; supporting Documents and attachments are not included.
 3. Enter every Signer's name and email. Use **Add signer** for another person or remove an unwanted row. Each Signer needs a distinct address.
-4. Enter **Subject (optional)** if needed. A blank subject uses the Contract's name.
+4. Enter **Subject (optional)** if needed. A blank subject uses the C- reference and title.
 5. Select **Send envelope** and check the new **Out for signature** row, its Document Version, Signers, and sent time. **Cancel** does not send.
 
 Everyone is asked at once and can sign in any order. Signers do not need OpenLaw accounts. One Contract can have only one live Envelope; another send is unavailable while it is out.

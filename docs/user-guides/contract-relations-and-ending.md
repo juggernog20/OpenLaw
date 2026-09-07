@@ -12,7 +12,7 @@ On **Overview**, find **Related contracts**. Select **Set parent** to place this
 
 Check the direction: this Contract **Renews** or **Amends** the selected Contract. The other record reads **Renewed by** or **Amended by**. Parent and child are separate from typed links. Use **Remove parent** or **Remove link** on the corresponding row to remove only that relationship.
 
-The app refuses self-links, duplicate typed links, and a parent choice that creates a cycle. Choose a different record or inspect the existing relationship. If a confidentiality suggestion appears, review it deliberately; creating the link alone does not change either flag or grant access. A reader who cannot reach a related Contract sees **Restricted contract** instead of its details.
+The app refuses self-links, duplicate typed links, and a parent choice that creates a cycle. Choose a different record or inspect the existing relationship. If **Flag as confidential?** appears after linking, read it before choosing. **Flag as confidential** sets the other Contract's Confidential flag. **No, leave it open** changes nothing. The link itself does not change either flag or grant access. A reader who cannot reach a related Contract sees **Restricted contract** instead of its details.
 
 ## Link a Matter
 

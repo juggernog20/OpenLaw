@@ -110,7 +110,17 @@ that the separate navigation/list issue #751 has been fixed.
 Other interrupted runs involved harness assumptions about API field/envelope names,
 async save settlement, counted navigation labels, historical filename labels,
 radio hit targets, modal titles, the symmetric Related direction, and the header
-Help entry. Final records include only the completed runs and matching guide hashes.
+Help entry. Final records include only the completed runs and the guide hashes they ran
+against.
+
+Two guides changed after their author walkthroughs, during the Fable review. The
+electronic-signing guide now says a blank subject uses the C- reference and title,
+which is the send route's default. The relations guide now names the
+**Flag as confidential?** prompt and says that accepting it sets the other
+Contract's Confidential flag; the author run only declined that prompt. Both
+article evidence records carry the new hashes and a limitation naming the edit.
+The author records keep the hashes they ran against. The independent walkthrough
+covers the current bytes.
 
 The articles stay in review pending independent verification and linked guides.
 Dependencies include Document Versions (DOC-017), analysis (DOC-015), Matter

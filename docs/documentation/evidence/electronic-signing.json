@@ -1,6 +1,6 @@
 {
   "articleId": "electronic-signing",
-  "contentSha256": "22b416df0a54d3b1bb5b427fc11253a1404e828ab648530fe40c3862e7cd861d",
+  "contentSha256": "df172df43d2efc94cbd2daa7f03cc1161332885578c353e5137b1e0ffe4c90fc",
   "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
   "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
   "environment": "openlaw-docs-b8e31260-signing-workflow",
@@ -43,7 +43,8 @@
   "limitations": [
     "Author walkthrough passed; independent source review and article walkthrough remain pending.",
     "Agent walkthroughs are not a human user study or the feature owner's approval.",
-    "C17 uses a declared isolated local DocuSign protocol stand-in with fictional paper and Signers. It does not verify real provider setup or satisfy C42."
+    "C17 uses a declared isolated local DocuSign protocol stand-in with fictional paper and Signers. It does not verify real provider setup or satisfy C42.",
+    "Review edit after the author walkthrough (author record hash 22b416df0a54d3b1bb5b427fc11253a1404e828ab648530fe40c3862e7cd861d): the blank-subject sentence now names the C- reference and title, from the send route's default subject. No step, prerequisite, or result changed; the independent walkthrough covers the current bytes."
   ],
   "previousEvidence": null,
   "copyOnlyReview": null
