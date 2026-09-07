@@ -136,6 +136,7 @@
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
+import { nextDeadline, NextDeadlineSchema } from "../../lib/next-deadline.js";
 import {
   FilterChoices,
   FilterOptionsSchema,
@@ -513,6 +514,7 @@ const ContractRowSchema = z.object({
    */
   proposedRenewalExpiry: z.iso.date().nullable(),
   description: z.string().nullable(),
+  nextDeadline: NextDeadlineSchema,
   /** CTR-016's custom fields, keyed by the catalog field's slug. Which
    * of these the record draws is the type's attachment join to say, not
    * this map's: a value under a slug the type no longer attaches is
@@ -742,6 +744,7 @@ interface RecordCounterparty extends JoinedCounterparty {
  * two display names, the derived stage, the Owner, the entity that
  * signs, and the party the other side is named by. */
 interface ContractContext {
+  nextDeadline?: z.infer<typeof NextDeadlineSchema>;
   row: Contract;
   contractTypeName: string;
   statusName: string;
@@ -844,6 +847,7 @@ function toRow(
     renewalPendingConfirmation: renewalPending(row),
     proposedRenewalExpiry: proposedRollExpiry(row),
     description: row.description,
+    nextDeadline: context.nextDeadline ?? null,
     customFields,
     aiUnverified: publicUnverified(row.aiUnverified),
     isConfidential: row.isConfidential,
@@ -868,6 +872,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     return db
       .select({
         row: contracts,
+        nextDeadline: nextDeadline("contract"),
         contractTypeName: contractTypes.displayName,
         statusName: contractStatuses.displayName,
         stage: contractStatuses.stage,

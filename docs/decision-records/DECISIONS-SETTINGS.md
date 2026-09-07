@@ -181,3 +181,10 @@ Every authenticated portal page shows Member+ staff a **Viewing as business user
 | SET-006 | Personal profile scope; email change deferred                              | Accepted                                                                           |
 | SET-007 | E-signature lives in Organization → Integrations, not in Contracts         | Accepted; the AI-pane sentence superseded by SET-008                               |
 | SET-008 | AI analysis is an Organization section of its own, not an Integrations tab | Accepted                                                                           |
+
+### SET-006 UX review addendum (2026-09-06) — View Business Portal navigation
+
+View Business Portal moves from the Profile card to its own Personal sidebar entry and page at
+`/settings/app-view`. It remains available to Administrators and Legal Team Members.
+The portal's Return to legal view control returns to this page. The existing session,
+role and requester scope are unchanged.

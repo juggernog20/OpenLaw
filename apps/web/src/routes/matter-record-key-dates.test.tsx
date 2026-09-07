@@ -176,7 +176,7 @@ function recordApi(
 const section = async () => within(await screen.findByRole("region", { name: "Key dates" }));
 
 describe("the Matter record's Key dates section", () => {
-  it("draws empty, overdue, today, and upcoming states in the seam's chronological order", async () => {
+  it("draws dates and events in chronological order without a redundant State column", async () => {
     const api = recordApi();
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/matters/12/key-dates");
@@ -188,10 +188,8 @@ describe("the Matter record's Key dates section", () => {
       expect.stringContaining("Response due"),
       expect.stringContaining("Hearing"),
     ]);
-    expect(rows[0]).toHaveTextContent("Overdue");
-    expect(rows[1]).toHaveTextContent("Next");
     expect(rows[1]).toHaveTextContent("today");
-    expect(rows[2]).toHaveTextContent("Upcoming");
+    expect(card.queryByRole("columnheader", { name: "State" })).not.toBeInTheDocument();
     expect(rows[2]).toHaveTextContent("Bring the filing receipt.");
     expect(card.getByText("2 upcoming · 1 overdue")).toBeInTheDocument();
   });
@@ -205,8 +203,8 @@ describe("the Matter record's Key dates section", () => {
     expect(card.getByText("No Key dates on this Matter yet.")).toBeInTheDocument();
 
     await user.click(card.getByRole("button", { name: "Add date" }));
-    await user.type(screen.getByLabelText("Date"), "2026-08-24");
-    await user.type(screen.getByLabelText("Event"), "Initial hearing");
+    await user.type(screen.getByLabelText(/^Date\*?$/), "2026-08-24");
+    await user.type(screen.getByLabelText(/^Event\*?$/), "Initial hearing");
     await user.click(screen.getByRole("button", { name: "Add date", hidden: false }));
     expect(await screen.findByText("Initial hearing")).toBeInTheDocument();
 
@@ -214,8 +212,8 @@ describe("the Matter record's Key dates section", () => {
       (await section()).getByRole("button", { name: "Actions for Initial hearing" }),
     );
     await user.click(await screen.findByRole("menuitem", { name: "Edit date" }));
-    await user.clear(screen.getByLabelText("Event"));
-    await user.type(screen.getByLabelText("Event"), "Final hearing");
+    await user.clear(screen.getByLabelText(/^Event\*?$/));
+    await user.type(screen.getByLabelText(/^Event\*?$/), "Final hearing");
     await user.click(screen.getByRole("button", { name: "Save" }));
     expect(await screen.findByText("Final hearing")).toBeInTheDocument();
 
@@ -238,11 +236,11 @@ describe("the Matter record's Key dates section", () => {
     await user.click(screen.getByRole("button", { name: "Add date", hidden: false }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Pick a date.");
     expect(postApi.writes).toEqual([]);
-    await user.type(screen.getByLabelText("Date"), "2026-08-25");
+    await user.type(screen.getByLabelText(/^Date\*?$/), "2026-08-25");
     await user.click(screen.getByRole("button", { name: "Add date", hidden: false }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Name what the date is.");
     expect(postApi.writes).toEqual([]);
-    await user.type(screen.getByLabelText("Event"), "Rejected filing");
+    await user.type(screen.getByLabelText(/^Event\*?$/), "Rejected filing");
     await user.click(screen.getByRole("button", { name: "Add date", hidden: false }));
     expect(await screen.findByRole("alert")).toHaveTextContent("The Key date change was refused.");
     expect((await section()).getByText("No Key dates on this Matter yet.")).toBeInTheDocument();
@@ -254,8 +252,8 @@ describe("the Matter record's Key dates section", () => {
     card = await section();
     await user.click(card.getByRole("button", { name: "Actions for Response due" }));
     await user.click(await screen.findByRole("menuitem", { name: "Edit date" }));
-    await user.clear(screen.getByLabelText("Event"));
-    await user.type(screen.getByLabelText("Event"), "Rejected response");
+    await user.clear(screen.getByLabelText(/^Event\*?$/));
+    await user.type(screen.getByLabelText(/^Event\*?$/), "Rejected response");
     await user.click(screen.getByRole("button", { name: "Save" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("The Key date change was refused.");
     expect((await section()).getByText("Response due")).toBeInTheDocument();

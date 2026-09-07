@@ -21,7 +21,7 @@ Decisions are numbered `MTR-###`.
 Queued 2026-08-07 from the matters.pen ↔ decision-record audit — mock drift that needs a decision rather than a silent strip:
 
 1. ~~**Key-date owner** — M5 mocks an Owner column per key date; **MTR-004** modeled key dates as `date + label + note`.~~ **Resolved by M23/3 (#491):** the Owner column is stripped. A Key date remains date + label + optional note, with no owner and no per-date schedule.
-2. ~~**Close dialog "Resolution" and closing note** — M10 mocks a Resolution select ("Completed") plus an optional closing note; **MTR-002**/**MTR-008** define closing as moving to a closed-category status, with no resolution concept.~~ **Resolved by M23/7 (#495):** the dialog asks only for one live closed-Category Status. Resolution and closing note are out; no field, payload, or control is created for either.
+2. ~~**Close dialog "Resolution" and closing note** — M10 mocks a Resolution select ("Completed") plus an optional closing note; **MTR-002**/**MTR-008** define closing as moving to a closed-category status, with no resolution concept.~~ **Resolved by M23/7 (#495):** the dialog asks only for one live closed-Category Status. Resolution and closing note were excluded at that point. **Closing-note handling is superseded by the 2026-09-06 UX review addendum below.**
 3. ~~**Template key dates** — M8 mocks "Template adds 4 tasks and 2 key dates"; **MTR-013** template content is pre-fill values + tasks only.~~ **Resolved by M24/4 (#514):** templates carry ordered relative Key dates with a required day offset, label, and optional note. Applying one resolves each date from the Matter creation date.
 4. **"My matters" / "matters I'm on" affordance** — **MTR-003** defines both views; M1 offers only a Manager filter chip and Saved views. Decide: first-class views, saved-view presets, or filter-chip-only.
 
@@ -666,6 +666,10 @@ New **`matter_templates`** entity, Admin-managed:
 - Intake triage (**DD-010**) can apply a template at handoff.
 - If a template's type detaches a custom field the template pre-fills, the template editor flags it (stale value warning).
 
+### Addendum (2026-09-06, UX review) — creation defaults to No template
+
+Matter and sub-Matter creation start with **No template** whenever the Matter type changes, including types with a single template. This supersedes the optional single-template default above. A person must explicitly choose a template to apply its values, tasks, and Key dates. The creation form's Description grows and shrinks with its contents and has no manual resize handle.
+
 ### Addendum (2026-08-26, M24/4, [#514](https://github.com/juggernog20/OpenLaw/issues/514)) — templates carry relative Key dates
 
 The M8 mock's “4 tasks and 2 key dates” promise is accepted. Alongside its ordered task checklist, a Matter template carries an ordered list of **relative Key dates**: a required label, a whole-number offset from 0 through 3,650 days after Matter creation, and an optional note. Applying the template resolves each row to a civil date from the Matter creation date and copies it into `matter_key_dates`; like every other template value, later edits never reach an existing Matter.
@@ -809,3 +813,106 @@ The create callable writes `opened_at` once. The status write sets `closed_at` o
 | MTR-014 | Custom fields — hard-required per type at creation; conditional logic deferred                      | Accepted |
 | MTR-015 | Matter relationships — parent/child hierarchy plus flat related links; no cascade semantics         | Accepted |
 | MTR-016 | Lifecycle timestamps — opened_at/closed_at maintained on category transitions                       | Accepted |
+
+### MTR-007 UX review addendum — create a linked Contract (2026-09-06)
+
+The Matter's Linked Contracts card offers New contract beside Link Contract. New contract
+opens the existing Contract creation form with the current Matter preselected. Creation
+uses the existing matterNumber API input, so the record and link commit together. The
+card refreshes after creation and shows the new Contract's link. Cancelling creates nothing.
+The action follows the same Member+ and archived-record restrictions as linking.
+
+### MTR-002 / MTR-003 UX review addendum — record controls (2026-09-06)
+
+Matters and Contracts share the status progression component. Matters display their
+four progression groups: Open → In progress → Waiting → Closed. Each group opens
+its configured statuses. Open and On hold belong to Open; waiting-on-someone statuses
+belong to Waiting. The current pill
+opens the status menu; selecting another category uses the existing Close/Reopen
+confirmation, including warnings about open children. Read-only records show position
+without a move control. The Closed date reads Still open while the Matter is open.
+
+Team moves from the Overview column into the right-hand applet bar, alongside Comments
+and Activity. Administrators also get the Matter settings shortcut. The Team panel keeps
+one row per person with multiple role tags, existing permissions, and the Manage team
+fragment link. It is available on every Matter tab.
+
+### MTR-002 UX review addendum — status groups and record consistency (2026-09-06)
+
+Open-category statuses have a persisted `progression_group`: `open`, `in_progress`, or
+`waiting`. Closed-category statuses always appear under Closed; their stored open group
+is unused. Grouping is presentation metadata and does not alter lifecycle rules. Admins
+choose the group when adding a status and can change it in Matters Settings → Statuses.
+Changes are audited. Renaming a status preserves its group. Existing Open/On hold statuses
+are migrated into Open, existing `with_`, `awaiting_`, and `waiting_` slugs into Waiting,
+and other open statuses into In progress. New custom statuses default to In progress.
+The status pill beside the Matter title retains the exact status name.
+
+The header and Overview use the Contract record's typography, spacing, labels and card
+styles. The progression sits at the right of the header so the title gets remaining space.
+The shared actions menu provides Copy link, Rename matter and Archive/Restore. Close and
+Reopen are reached through progression choices and retain their confirmation dialogs;
+there is no separate Close/Reopen button in the header.
+
+### MTR-008 UX review addendum — closing note (2026-09-06)
+
+The progression menu supplies the chosen status. The Close confirmation asks for a short,
+required Closing note (1–2,000 characters after trimming), with no second status picker
+and no lifecycle explanation paragraph. Open-child warnings remain. Reopen also retains
+the status already selected instead of asking for it again.
+
+Closing an open Matter requires the note at the API boundary. The note is committed in
+`matter.status_changed` activity alongside the status and closed timestamp, in one
+transaction. It appears under Closing note in the record's Activity and the Administrator's
+audit log. Historical closures without notes remain readable. Reopening keeps previous
+notes; each later closure records its own. Notes cannot be submitted as an unrelated edit
+or attached to a no-op status change. Cancelling discards the draft; a failed save keeps it.
+This supersedes M23/7's exclusion of a closing note. No Resolution field is introduced.
+
+Reopening additionally requires `confirmReopen: true` at the API boundary. An unconfirmed
+closed-to-open transition returns the named `matter-reopen-confirmation` problem and
+commits nothing. If the page was stale and attempted an ordinary status change, this
+response opens the Reopen confirmation using the server's current lifecycle choices.
+
+### MTR-011 UX review addendum — budget amount and currency (2026-09-06)
+
+Number custom fields show locale grouping separators when unfocused, with an ungrouped
+editable draft and locale-aware decimal input. Formatting never changes the numeric value
+sent to the API. Empty and zero remain distinct.
+
+The demo's Budget approved field is paired with a Budget currency single-select Field,
+collected by the same Matter types and ordered beside the amount. Currency is stored per
+Matter through the existing custom-field API. It is an explicit choice rather than an
+assumption embedded in the field description. Seeded budgets carry USD; no exchange-rate
+conversion is performed when choosing a different currency.
+
+The Matter Description expands and shrinks with its text and available width, with no
+manual resize handle. Related Matters actions use the same secondary buttons as Linked
+Contracts. Text custom fields take a full row; the demo orders External counsel above
+the Budget approved / Budget currency row.
+
+### MTR-016 UX review addendum — record Due date (2026-09-06; superseded)
+
+Matters have an optional Due date for completing the overall work, separate from Key dates
+and Task deadlines. It is a nullable civil date, set in creation (including sub-Matters and
+intake conversion) or edited and cleared from Overview with the shared date picker. Opened,
+Due date, and Closed share a row on wider layouts. Existing Matters start without a date.
+
+The field follows legal-managed edit permissions and archive guards. Changes appear in
+record activity. Closing or reopening preserves it; linked records do not inherit it.
+
+### MTR-016 UX review addendum — Next deadline replaces record Due date (2026-09-07)
+
+A record can have several concurrent deadlines. Remove the standalone Due date from the
+record schema, creation, intake conversion, and Overview. Task due dates and Key dates
+remain the editable sources. This supersedes the previous record Due date addendum.
+
+Next deadline is derived from upcoming Key dates and unfinished Tasks with a date.
+Overdue Tasks remain candidates until completed; past Key dates and completed Tasks
+are excluded. Closed Matters, ended Contracts, and archived records have no active Next
+deadline. Contract candidates also include expiry and notice dates, as on Key dates.
+
+Lists link each deadline to its source tab. Matter Home cards and the Matter deadline
+filter use the same derivation. This supersedes the earlier exclusion of Task dates from
+Next deadline; Tasks still have their own tab and reminder behavior. No date is copied
+from Tasks into the Key dates table.

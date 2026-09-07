@@ -2,6 +2,10 @@
 
 /** M27's routed Calendar, managed registry List, and ownership Chart destination. */
 
+import {
+  CreateAttachments,
+  useCreateAttachments,
+} from "../components/documents/create-attachments";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   Form,
@@ -1157,6 +1161,7 @@ function RegisterEntityDialog({
   onRegistered: (row: EntityRow) => void;
 }>) {
   const intl = useIntl();
+  const attachments = useCreateAttachments();
   const [draft, setDraft] = useState<RegisterDraft>(EMPTY_DRAFT);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -1165,7 +1170,7 @@ function RegisterEntityDialog({
     setDraft((current) => ({ ...current, [key]: value }));
 
   async function submit() {
-    if (busy) return;
+    if (busy || attachments.created) return;
     setError(null);
     if (draft.legalName.trim() === "") {
       setError(
@@ -1213,172 +1218,196 @@ function RegisterEntityDialog({
       );
       return;
     }
-    onRegistered(data.entity);
-    onOpenChange(false);
+    await attachments.upload({ entityType: "entity", id: data.entity.id }, () => {
+      onRegistered(data.entity);
+      onOpenChange(false);
+    });
   }
 
   return (
-    <Dialog open onOpenChange={onOpenChange}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (busy || attachments.pending) return;
+        if (attachments.created) attachments.finish();
+        else onOpenChange(open);
+      }}
+    >
       <DialogContent aria-describedby={undefined}>
         <DialogTitle>
           <FormattedMessage id="entities.form.title" defaultMessage="Register entity" />
         </DialogTitle>
-        <form
-          className="mt-4 flex flex-col gap-4"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void submit();
-          }}
-        >
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="entity-legal-name">
-              <FormattedMessage id="entities.form.legalName" defaultMessage="Legal name" />
-            </Label>
-            <Input
-              id="entity-legal-name"
-              autoFocus
-              value={draft.legalName}
-              onChange={(event) => set("legalName", event.target.value)}
-            />
+        {attachments.created ? (
+          <div className="mt-4">
+            <CreateAttachments uploads={attachments} />
           </div>
-          <div className="flex gap-3">
-            <div className="flex flex-1 flex-col gap-1.5">
-              <Label htmlFor="entity-type">
-                <FormattedMessage id="entities.form.type" defaultMessage="Entity type" />
+        ) : (
+          <form
+            className="mt-4 flex flex-col gap-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void submit();
+            }}
+          >
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="entity-legal-name" required>
+                <FormattedMessage id="entities.form.legalName" defaultMessage="Legal name" />
               </Label>
-              <select
-                id="entity-type"
-                value={draft.entityTypeId}
-                className={CONTROL_CLASS}
-                onChange={(event) => {
-                  set("entityTypeId", event.target.value);
-                  // Picking a type answers the pick-a-type refusal.
-                  if (event.target.value !== "") setError(null);
-                }}
-              >
-                <option value="">
-                  {intl.formatMessage({
-                    id: "entities.form.typePlaceholder",
-                    defaultMessage: "Type…",
-                  })}
-                </option>
-                {entityTypes.map((entityType) => (
-                  <option key={entityType.id} value={entityType.id}>
-                    {entityType.displayName}
-                  </option>
-                ))}
-              </select>
+              <Input
+                id="entity-legal-name"
+                aria-required="true"
+                autoFocus
+                value={draft.legalName}
+                onChange={(event) => set("legalName", event.target.value)}
+              />
             </div>
-            <div className="flex flex-1 flex-col gap-1.5">
-              <Label htmlFor="entity-status">
-                <FormattedMessage id="entities.form.status" defaultMessage="Status" />
-              </Label>
-              <select
-                id="entity-status"
-                value={draft.status}
-                className={CONTROL_CLASS}
-                onChange={(event) => set("status", event.target.value as EntityStatus)}
-              >
-                {ENTITY_STATUSES.map((status: EntityStatus) => (
-                  <option key={status} value={status}>
-                    {statusLabel(intl, status)}
+            <div className="flex gap-3">
+              <div className="flex flex-1 flex-col gap-1.5">
+                <Label htmlFor="entity-type" required>
+                  <FormattedMessage id="entities.form.type" defaultMessage="Entity type" />
+                </Label>
+                <select
+                  id="entity-type"
+                  aria-required="true"
+                  value={draft.entityTypeId}
+                  className={CONTROL_CLASS}
+                  onChange={(event) => {
+                    set("entityTypeId", event.target.value);
+                    // Picking a type answers the pick-a-type refusal.
+                    if (event.target.value !== "") setError(null);
+                  }}
+                >
+                  <option value="">
+                    {intl.formatMessage({
+                      id: "entities.form.typePlaceholder",
+                      defaultMessage: "Type…",
+                    })}
                   </option>
-                ))}
-              </select>
+                  {entityTypes.map((entityType) => (
+                    <option key={entityType.id} value={entityType.id}>
+                      {entityType.displayName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-1 flex-col gap-1.5">
+                <Label htmlFor="entity-status" required>
+                  <FormattedMessage id="entities.form.status" defaultMessage="Status" />
+                </Label>
+                <select
+                  id="entity-status"
+                  aria-required="true"
+                  value={draft.status}
+                  className={CONTROL_CLASS}
+                  onChange={(event) => set("status", event.target.value as EntityStatus)}
+                >
+                  {ENTITY_STATUSES.map((status: EntityStatus) => (
+                    <option key={status} value={status}>
+                      {statusLabel(intl, status)}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-          </div>
-          <div className="flex gap-3">
-            <div className="flex flex-1 flex-col gap-1.5">
-              <Label htmlFor="entity-jurisdiction">
+            <div className="flex gap-3">
+              <div className="flex flex-1 flex-col gap-1.5">
+                <Label htmlFor="entity-jurisdiction">
+                  <FormattedMessage
+                    id="entities.form.jurisdiction"
+                    defaultMessage="Formation jurisdiction"
+                  />
+                </Label>
+                <Input
+                  id="entity-jurisdiction"
+                  value={draft.jurisdiction}
+                  onChange={(event) => set("jurisdiction", event.target.value)}
+                />
+              </div>
+              <div className="flex flex-1 flex-col gap-1.5">
+                <Label htmlFor="entity-formed-on">
+                  <FormattedMessage id="entities.form.formedOn" defaultMessage="Formed on" />
+                </Label>
+                <Input
+                  id="entity-formed-on"
+                  type="date"
+                  value={draft.formedOn}
+                  onChange={(event) => set("formedOn", event.target.value)}
+                />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <div className="flex flex-1 flex-col gap-1.5">
+                <Label htmlFor="entity-registration-number">
+                  <FormattedMessage
+                    id="entities.form.registrationNumber"
+                    defaultMessage="Registration no."
+                  />
+                </Label>
+                <Input
+                  id="entity-registration-number"
+                  value={draft.registrationNumber}
+                  onChange={(event) => set("registrationNumber", event.target.value)}
+                />
+              </div>
+              <div className="flex flex-1 flex-col gap-1.5">
+                <Label htmlFor="entity-tax-id">
+                  <FormattedMessage id="entities.form.taxId" defaultMessage="Tax ID" />
+                </Label>
+                <Input
+                  id="entity-tax-id"
+                  value={draft.taxId}
+                  onChange={(event) => set("taxId", event.target.value)}
+                />
+              </div>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="entity-registered-agent">
                 <FormattedMessage
-                  id="entities.form.jurisdiction"
-                  defaultMessage="Formation jurisdiction"
+                  id="entities.form.registeredAgent"
+                  defaultMessage="Registered agent"
                 />
               </Label>
               <Input
-                id="entity-jurisdiction"
-                value={draft.jurisdiction}
-                onChange={(event) => set("jurisdiction", event.target.value)}
+                id="entity-registered-agent"
+                value={draft.registeredAgent}
+                onChange={(event) => set("registeredAgent", event.target.value)}
               />
             </div>
-            <div className="flex flex-1 flex-col gap-1.5">
-              <Label htmlFor="entity-formed-on">
-                <FormattedMessage id="entities.form.formedOn" defaultMessage="Formed on" />
-              </Label>
-              <Input
-                id="entity-formed-on"
-                type="date"
-                value={draft.formedOn}
-                onChange={(event) => set("formedOn", event.target.value)}
-              />
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <div className="flex flex-1 flex-col gap-1.5">
-              <Label htmlFor="entity-registration-number">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="entity-registered-address">
                 <FormattedMessage
-                  id="entities.form.registrationNumber"
-                  defaultMessage="Registration no."
+                  id="entities.form.registeredAddress"
+                  defaultMessage="Registered address"
                 />
               </Label>
-              <Input
-                id="entity-registration-number"
-                value={draft.registrationNumber}
-                onChange={(event) => set("registrationNumber", event.target.value)}
+              <textarea
+                id="entity-registered-address"
+                value={draft.registeredAddress}
+                className={TEXTAREA_CLASS}
+                onChange={(event) => set("registeredAddress", event.target.value)}
               />
             </div>
-            <div className="flex flex-1 flex-col gap-1.5">
-              <Label htmlFor="entity-tax-id">
-                <FormattedMessage id="entities.form.taxId" defaultMessage="Tax ID" />
-              </Label>
-              <Input
-                id="entity-tax-id"
-                value={draft.taxId}
-                onChange={(event) => set("taxId", event.target.value)}
-              />
+            <CreateAttachments uploads={attachments} disabled={busy} />
+            {error && (
+              <p role="alert" className="text-xs text-status-danger-fg">
+                {error}
+              </p>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={busy}
+                onClick={() => onOpenChange(false)}
+              >
+                <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+              </Button>
+              <Button type="submit" disabled={busy}>
+                <FormattedMessage id="entities.form.submit" defaultMessage="Register" />
+              </Button>
             </div>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="entity-registered-agent">
-              <FormattedMessage
-                id="entities.form.registeredAgent"
-                defaultMessage="Registered agent"
-              />
-            </Label>
-            <Input
-              id="entity-registered-agent"
-              value={draft.registeredAgent}
-              onChange={(event) => set("registeredAgent", event.target.value)}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="entity-registered-address">
-              <FormattedMessage
-                id="entities.form.registeredAddress"
-                defaultMessage="Registered address"
-              />
-            </Label>
-            <textarea
-              id="entity-registered-address"
-              value={draft.registeredAddress}
-              className={TEXTAREA_CLASS}
-              onChange={(event) => set("registeredAddress", event.target.value)}
-            />
-          </div>
-          {error && (
-            <p role="alert" className="text-xs text-status-danger-fg">
-              {error}
-            </p>
-          )}
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
-              <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
-            </Button>
-            <Button type="submit" disabled={busy}>
-              <FormattedMessage id="entities.form.submit" defaultMessage="Register" />
-            </Button>
-          </div>
-        </form>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );

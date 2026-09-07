@@ -27,6 +27,7 @@ function statuses() {
     slug,
     displayName,
     category,
+    progressionGroup: slug === "open" || slug === "on_hold" ? "open" : "in_progress",
     displayOrder: index + 1,
     isSystemDefault: true,
     archivedAt: null,
@@ -83,7 +84,7 @@ describe("the Matters Statuses pane", () => {
     );
     const openRow = screen.getByRole("button", { name: "Rename Open" }).closest("li")!;
     const closedRow = screen.getByRole("button", { name: "Rename Closed" }).closest("li")!;
-    expect(within(openRow).getByText(fullText("Category: Open"))).toBeInTheDocument();
+    expect(within(openRow).getByRole("combobox", { name: "Group for Open" })).toHaveValue("open");
     expect(within(closedRow).getByText(fullText("Category: Closed"))).toBeInTheDocument();
     expect(
       within(openRow).getByRole("img", {
@@ -110,7 +111,9 @@ describe("the Matters Statuses pane", () => {
     expect(screen.queryByText("Pick a category for the new status.")).not.toBeInTheDocument();
     await user.type(screen.getByRole("textbox", { name: "New status name" }), "{Enter}");
     await waitFor(() =>
-      expect(calls.creates).toEqual([{ displayName: "Awaiting input", category: "open" }]),
+      expect(calls.creates).toEqual([
+        { displayName: "Awaiting input", category: "open", progressionGroup: "in_progress" },
+      ]),
     );
   });
 
@@ -133,4 +136,29 @@ describe("the Matters Statuses pane", () => {
     await user.click(within(dialog).getByRole("button", { name: "Archive status" }));
     await waitFor(() => expect(calls.archives).toEqual([{ reassignToId: "s3" }]));
   });
+});
+
+it("saves a status group in Settings", async () => {
+  const changes: unknown[] = [];
+  const rows = statuses();
+  stubApi({
+    signedIn: ADMIN,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/matter-statuses" && call.method === "GET")
+        return json(200, { matterStatuses: rows });
+      if (
+        call.url.pathname === "/api/v1/matter-statuses/s2/progression-group" &&
+        call.method === "PUT"
+      ) {
+        changes.push(call.body);
+        return json(200, { matterStatus: { ...rows[1], progressionGroup: "waiting" } });
+      }
+      return undefined;
+    },
+  });
+  renderAt("/settings/matters/statuses");
+  const select = await screen.findByRole("combobox", { name: "Group for In progress" });
+  await userEvent.setup().selectOptions(select, "waiting");
+  await waitFor(() => expect(changes).toEqual([{ progressionGroup: "waiting" }]));
+  expect(select).toHaveValue("waiting");
 });

@@ -833,8 +833,8 @@ const UPLOAD_FIELDS = {
     type: "string",
     enum: [...HAND_SET_DOCUMENT_VERSION_KINDS],
     description:
-      "What this version is in the negotiation (CTR-014). Defaults to " +
-      "`draft_ours`. Must be sent before the file part.",
+      "What this version is in the negotiation (CTR-014), or `general` for Matter documents. " +
+      "Defaults to `general` on Matters and `draft_ours` otherwise. Must be sent before the file part.",
   },
   note: {
     type: "string",
@@ -2162,7 +2162,12 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
 
       const documentId = uuidv7();
       const versionId = uuidv7();
-      const file = await receiveUpload(request, versionStorageKey(documentId, versionId), true);
+      const file = await receiveUpload(
+        request,
+        versionStorageKey(documentId, versionId),
+        true,
+        "general",
+      );
       const created = await withStoredFile(request, file, () =>
         app.db.transaction(async (tx) => {
           const locked = await reachedMatter(tx, request.user, request.params.number, {
@@ -2424,7 +2429,12 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       }
 
       const versionId = uuidv7();
-      const file = await receiveUpload(request, versionStorageKey(documentId, versionId));
+      const file = await receiveUpload(
+        request,
+        versionStorageKey(documentId, versionId),
+        false,
+        reached.owner.kind === "matter" ? "general" : "draft_ours",
+      );
 
       // The seam's transaction, for the create path's reason: a new
       // round on a chain is ambient movement on the record (NOT-002
@@ -4382,12 +4392,13 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     request: FastifyRequest,
     key: string,
     filed = false,
+    defaultKind: HandSetDocumentVersionKind = "draft_ours",
   ): Promise<StoredUpload> {
     const part = await request.file().catch((error: unknown) => {
       throw asSharedUploadRefusal(error, app.maxUploadBytes);
     });
     if (!part) throw httpError(400, "Attach a file to upload.");
-    return storeUploadPart(request, part, key, filed);
+    return storeUploadPart(request, part, key, filed, defaultKind);
   }
 
   async function storeUploadPart(
@@ -4395,6 +4406,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     part: NonNullable<Awaited<ReturnType<FastifyRequest["file"]>>>,
     key: string,
     filed = false,
+    defaultKind: HandSetDocumentVersionKind = "draft_ours",
   ): Promise<StoredUpload> {
     // Read before the file is consumed. The parser reports the fields
     // it has already seen, and the file part ends the ones it can
@@ -4415,7 +4427,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     }
     const kind: HandSetDocumentVersionKind = rawKind
       ? (HandSetKindSchema.safeParse(rawKind).data ?? refuseKind())
-      : "draft_ours";
+      : defaultKind;
     // Refused rather than shortened. A note is what the uploader wrote
     // about this round, and silently keeping the first 2000 characters
     // of it would put words on the record that nobody chose to stop

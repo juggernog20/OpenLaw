@@ -136,7 +136,7 @@ _Avoid_: queue, triage list, backlog
 The outcome chosen when a Request is picked up — Convert, Resolve, or Decline. There is no parked intermediate state [INT-007].
 
 **Convert**:
-Turning a Request into the Matter or Contract its request type already targets. Triage confirms the target; it never classifies [DD-018, INT-006].
+Turning a Request into a Matter or Contract. The Request type supplies defaults; the Legal Team Member may change the target Type, title, priority, and attached Fields before conversion [INT-002 UX review addendum].
 
 **Re-target**:
 The exception path — converting a mis-routed Request to the other kind, losslessly [DD-018].
@@ -245,7 +245,7 @@ A recurring entity-level compliance item — a licence renewal, annual filing, o
 _Avoid_: task, deadline, compliance item
 
 **Urgency**:
-What a requester supplies on a Request. It maps 1:1 to **priority** at conversion; **risk** is never requester-set [INT-002, MTR-012].
+What a requester supplies on a Request. It defaults **priority** at conversion, which the Legal Team Member may edit; **risk** is never requester-set [INT-002 UX review addendum, MTR-012].
 
 **Deflection link**:
 An Administrator-configured label and absolute `http` or `https` web address in the portal's "Before you submit…" panel, there to answer a question before it becomes a Request. Its **placement** is either the portal home — everybody sees it whatever they came to ask — or one request type, which shows it on that form alone. A deflection link is removed rather than archived: nothing points at one and there is no history to keep [INT-004].

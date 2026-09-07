@@ -274,10 +274,8 @@ test.describe.serial("M23 deployer journey", () => {
       expect(forbiddenClose.status(), await forbiddenClose.text()).toBe(403);
 
       await page.goto(`/matters/${matter.number}`);
-      await page
-        .getByRole("region", { name: MATTER_TITLE })
-        .getByRole("button", { name: "Close matter" })
-        .click();
+      await page.getByRole("button", { name: "Closed — move matter" }).click();
+      await page.getByRole("menuitemradio", { name: "Closed", exact: true }).click();
       const close = page.getByRole("dialog", { name: `Close ${MATTER_TITLE}?` });
       await expect(close.getByText(`M-${childNumber} ${CHILD_TITLE}`)).toBeVisible();
       await expect(close.getByLabel(/Resolution/i)).toHaveCount(0);
@@ -286,13 +284,15 @@ test.describe.serial("M23 deployer journey", () => {
           response.url().endsWith(`/api/v1/matters/${matter.number}`) &&
           response.request().method() === "PATCH",
       );
+      await expect(close.getByRole("combobox")).toHaveCount(0);
+      await close
+        .getByRole("textbox", { name: "Closing note" })
+        .fill("Advice delivered; work complete.");
       await close.getByRole("button", { name: "Close matter" }).click();
       expect((await closed).status()).toBe(200);
       await expect(
-        page.getByRole("region", { name: MATTER_TITLE }).getByRole("button", {
-          name: "Reopen matter",
-        }),
-      ).toBeVisible();
+        page.getByRole("list", { name: "Status" }).locator('[aria-current="step"]'),
+      ).toHaveText(/Closed/);
 
       const comments = await openComments(page);
       await comments.getByLabel("New comment").fill(POST_CLOSE_COMMENT);

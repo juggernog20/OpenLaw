@@ -212,6 +212,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     displayName: "Investigation",
     category: "open",
   },
+  "matter_status.progression_group_changed": { slug: "investigation", from: "open", to: "waiting" },
   "matter_status.renamed": { slug: "investigation", from: "Review", to: "Investigation" },
   "matter_status.reordered": { order: ["open", "investigation", "closed"] },
   "matter_status.archived": {
@@ -1301,4 +1302,20 @@ describe("the fallback arm (DD-017: the log outlives the code)", () => {
     );
     expect(narrate("contract.status_changed", {}).changes).toEqual([]);
   });
+});
+
+it("includes the closing note in Matter activity without inventing one for older entries", () => {
+  const payload = {
+    from: "On hold",
+    to: "Closed",
+    fromCategory: "open",
+    toCategory: "closed",
+    closingNote: "Advice delivered.\nNo further action required.",
+  };
+  const narration = narrate("matter.status_changed", payload);
+  expect(narration.closingNote).toBe(payload.closingNote);
+  expect(narration.changes[0]).toMatchObject({ from: "On hold", to: "Closed" });
+  expect(
+    narrate("matter.status_changed", { from: "Open", to: "Closed" }).closingNote,
+  ).toBeUndefined();
 });

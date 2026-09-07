@@ -66,6 +66,7 @@ export const DOCUMENT_REPOSITORY_FORMATS = [
 export type DocumentRepositoryFormat = (typeof DOCUMENT_REPOSITORY_FORMATS)[number];
 
 export const DOCUMENT_REPOSITORY_KINDS = [
+  "general",
   "draft_ours",
   "draft_theirs",
   "redline_theirs",
@@ -89,8 +90,8 @@ export interface DocumentRepositoryFilters {
   owner: "" | DocumentOwner;
   record: string;
   folder: string;
-  format: "" | DocumentRepositoryFormat;
-  kind: "" | DocumentVersionKind;
+  format: string;
+  kind: string;
   counterparty: string;
   uploader: string;
   uploadedFrom: string;
@@ -102,8 +103,12 @@ export function documentRepositoryFilters(
   filters: Record<string, boolean | string>,
 ): DocumentRepositoryFilters {
   const owner = filters.owner;
-  const format = filters.format;
-  const kind = filters.kind;
+  const choices = (value: boolean | string | undefined, allowed: readonly string[]) =>
+    typeof value === "string"
+      ? [...new Set(value.split(",").filter((item) => allowed.includes(item)))]
+          .slice(0, 50)
+          .join(",")
+      : "";
   return {
     owner:
       owner === "contract" || owner === "matter" || owner === "entity" || owner === "knowledge_item"
@@ -111,12 +116,8 @@ export function documentRepositoryFilters(
         : "",
     record: typeof filters.record === "string" ? filters.record : "",
     folder: typeof filters.folder === "string" ? filters.folder : "",
-    format: DOCUMENT_REPOSITORY_FORMATS.some((candidate) => candidate === format)
-      ? (format as DocumentRepositoryFormat)
-      : "",
-    kind: DOCUMENT_REPOSITORY_KINDS.some((candidate) => candidate === kind)
-      ? (kind as DocumentVersionKind)
-      : "",
+    format: choices(filters.format, DOCUMENT_REPOSITORY_FORMATS),
+    kind: choices(filters.kind, DOCUMENT_REPOSITORY_KINDS),
     counterparty: typeof filters.counterparty === "string" ? filters.counterparty : "",
     uploader: typeof filters.uploader === "string" ? filters.uploader : "",
     uploadedFrom: typeof filters.uploadedFrom === "string" ? filters.uploadedFrom : "",
@@ -220,6 +221,7 @@ export type DocumentVersionKind = DocumentVersion["kind"];
 
 /** DES-066's kind families, shared by record paper and the repository. */
 export const DOCUMENT_KIND_PILL: Record<DocumentVersionKind, string> = {
+  general: "bg-status-neutral-bg text-status-neutral-fg",
   draft_ours: "bg-status-info-bg text-status-info-fg",
   redline_ours: "bg-status-info-bg text-status-info-fg",
   draft_theirs: "bg-status-warning-bg text-status-warning-fg",
@@ -238,7 +240,7 @@ export function documentKindLabel(intl: IntlShape, kind: DocumentVersionKind): s
         "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} " +
         "redline_theirs {Redline · theirs} redline_ours {Redline · ours} " +
         "executed {Executed} amendment {Amendment} " +
-        "generated_redline {Generated redline} other {Unknown}}",
+        "general {General} generated_redline {Generated redline} other {Unknown}}",
     },
     { kind },
   );
@@ -355,7 +357,7 @@ export const DOCUMENT_VERSION_KINDS = [
   "amendment",
   "executed",
 ] as const satisfies readonly DocumentVersionKind[];
-export type HandSetDocumentVersionKind = (typeof DOCUMENT_VERSION_KINDS)[number];
+export type HandSetDocumentVersionKind = (typeof DOCUMENT_VERSION_KINDS)[number] | "general";
 
 /**
  * One document's chain, split the way the section draws it: the version

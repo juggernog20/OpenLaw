@@ -184,9 +184,11 @@ describe("the /documents destination", () => {
     renderAt("/documents");
     const user = userEvent.setup();
 
-    const toggle = await screen.findByRole("switch", { name: "Show archived" });
-    await user.click(toggle);
-    await waitFor(() => expect(toggle).toHaveAttribute("aria-checked", "true"));
+    await user.click(await screen.findByRole("button", { name: "Filter" }));
+    await user.click(screen.getByRole("button", { name: "Show archived" }));
+    expect(
+      await screen.findByRole("button", { name: "Remove Show archived filter" }),
+    ).toBeVisible();
     expect(
       calls.some(
         (call) =>

@@ -13,6 +13,8 @@ import {
 } from "drizzle-orm/pg-core";
 import { uuidPk } from "./helpers.js";
 
+export const MATTER_PROGRESSION_GROUPS = ["open", "in_progress", "waiting"] as const;
+
 export const MATTER_STATUS_CATEGORIES = ["open", "closed"] as const;
 export type MatterStatusCategory = (typeof MATTER_STATUS_CATEGORIES)[number];
 
@@ -23,6 +25,9 @@ export const matterStatuses = pgTable(
     slug: text("slug").notNull(),
     displayName: text("display_name").notNull(),
     category: text("category", { enum: MATTER_STATUS_CATEGORIES }).notNull(),
+    progressionGroup: text("progression_group", { enum: MATTER_PROGRESSION_GROUPS })
+      .notNull()
+      .default("in_progress"),
     displayOrder: integer("display_order").notNull(),
     isSystemDefault: boolean("is_system_default").notNull().default(false),
     // Null means the status remains available for new and existing matters.
@@ -35,6 +40,10 @@ export const matterStatuses = pgTable(
   },
   (table) => [
     uniqueIndex("matter_statuses_slug_unique").on(table.slug),
+    check(
+      "matter_statuses_progression_group_check",
+      sql`${table.progressionGroup} in ('open', 'in_progress', 'waiting')`,
+    ),
     check("matter_statuses_category_check", sql`${table.category} in ('open', 'closed')`),
   ],
 );

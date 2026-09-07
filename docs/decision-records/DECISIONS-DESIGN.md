@@ -222,6 +222,10 @@ The implementation counterpart of this decision is recorded in `DECISIONS-TECH-S
 
 ---
 
+### Addendum (2026-09-06, UX review) — required fields in creation forms
+
+Creation forms use the existing red asterisk for required fields and no marker for optional fields. Labels do not append “(optional)”. Required controls also expose their required state to assistive technology; the decorative star is hidden from it.
+
 ## DES-005: Color tokens — semantic, theme-aware, four surface tiers, paired status pills
 
 - **Status:** Accepted

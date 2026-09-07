@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** M28's Member+ Knowledge library and folder-scoped managed list. */
+import {
+  CreateAttachments,
+  useCreateAttachments,
+} from "../components/documents/create-attachments";
 import { useState } from "react";
 import {
   BookOpen,
@@ -887,13 +891,14 @@ function CreateItemDialog({
   onCreated: (item: KnowledgeItem) => void;
 }>) {
   const intl = useIntl();
+  const attachments = useCreateAttachments();
   const [title, setTitle] = useState("");
   const [typeId, setTypeId] = useState(types[0]?.id ?? "");
   const [folderId, setFolderId] = useState(initialFolder);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
   async function create() {
-    if (!title.trim() || !typeId || busy) return;
+    if (!title.trim() || !typeId || busy || attachments.created) return;
     setBusy(true);
     setError(undefined);
     const answer = await api
@@ -903,91 +908,112 @@ function CreateItemDialog({
       .catch(() => ({ data: undefined, error: undefined }));
     setBusy(false);
     if (!answer.data) return setError((await problem(answer)).detail);
-    onOpenChange(false);
-    onCreated(answer.data.knowledgeItem);
+    const item = answer.data.knowledgeItem;
+    await attachments.upload({ entityType: "knowledge_item", id: item.id }, () => {
+      onOpenChange(false);
+      onCreated(item);
+    });
   }
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (busy || attachments.pending) return;
+        if (attachments.created) attachments.finish();
+        else onOpenChange(next);
+      }}
+    >
       <DialogContent>
         <DialogTitle>
           <FormattedMessage id="knowledge.create.title" defaultMessage="New Knowledge Item" />
         </DialogTitle>
-        <div className="mt-4 flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="knowledge-title">
-              <FormattedMessage id="knowledge.form.title" defaultMessage="Title" />
-            </Label>
-            <Input
-              id="knowledge-title"
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              autoFocus
-            />
+        {attachments.created ? (
+          <div className="mt-4">
+            <CreateAttachments uploads={attachments} />
           </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="knowledge-type">
-              <FormattedMessage id="knowledge.form.type" defaultMessage="Type" />
-            </Label>
-            <select
-              id="knowledge-type"
-              className={CONTROL_CLASS}
-              value={typeId}
-              onChange={(event) => setTypeId(event.target.value)}
-            >
-              {types.map((row) => (
-                <option key={row.id} value={row.id}>
-                  {row.displayName}
-                </option>
-              ))}
-            </select>
-            {types.length === 0 ? (
-              <p className="text-sm text-status-danger-fg">
-                <FormattedMessage
-                  id="knowledge.form.noTypes"
-                  defaultMessage="An Administrator must add a Knowledge type first."
+        ) : (
+          <>
+            <div className="mt-4 flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="knowledge-title" required>
+                  <FormattedMessage id="knowledge.form.title" defaultMessage="Title" />
+                </Label>
+                <Input
+                  id="knowledge-title"
+                  aria-required="true"
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  autoFocus
                 />
-              </p>
-            ) : null}
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="knowledge-folder">
-              <FormattedMessage id="knowledge.form.folder" defaultMessage="Folder" />
-            </Label>
-            <select
-              id="knowledge-folder"
-              className={CONTROL_CLASS}
-              value={folderId}
-              onChange={(event) => setFolderId(event.target.value)}
-            >
-              <option value="">
-                <FormattedMessage id="knowledge.folder.root" defaultMessage="Library" />
-              </option>
-              {folders.map((row) => (
-                <option key={row.id} value={row.id}>
-                  {folderLabel(folders, row.id)}
-                </option>
-              ))}
-            </select>
-          </div>
-          {error ? (
-            <p role="alert" className="text-sm text-status-danger-fg">
-              {error}
-            </p>
-          ) : null}
-        </div>
-        <div className="mt-5 flex justify-end gap-2">
-          <Button variant="secondary" onClick={() => onOpenChange(false)}>
-            <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
-          </Button>
-          <Button disabled={busy || !title.trim() || !typeId} onClick={() => void create()}>
-            {busy
-              ? intl.formatMessage({ id: "knowledge.creating", defaultMessage: "Creating…" })
-              : intl.formatMessage({
-                  id: "knowledge.create.submit",
-                  defaultMessage: "Create item",
-                })}
-          </Button>
-        </div>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="knowledge-type" required>
+                  <FormattedMessage id="knowledge.form.type" defaultMessage="Type" />
+                </Label>
+                <select
+                  id="knowledge-type"
+                  aria-required="true"
+                  className={CONTROL_CLASS}
+                  value={typeId}
+                  onChange={(event) => setTypeId(event.target.value)}
+                >
+                  {types.map((row) => (
+                    <option key={row.id} value={row.id}>
+                      {row.displayName}
+                    </option>
+                  ))}
+                </select>
+                {types.length === 0 ? (
+                  <p className="text-sm text-status-danger-fg">
+                    <FormattedMessage
+                      id="knowledge.form.noTypes"
+                      defaultMessage="An Administrator must add a Knowledge type first."
+                    />
+                  </p>
+                ) : null}
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="knowledge-folder">
+                  <FormattedMessage id="knowledge.form.folder" defaultMessage="Folder" />
+                </Label>
+                <select
+                  id="knowledge-folder"
+                  className={CONTROL_CLASS}
+                  value={folderId}
+                  onChange={(event) => setFolderId(event.target.value)}
+                >
+                  <option value="">
+                    <FormattedMessage id="knowledge.folder.root" defaultMessage="Library" />
+                  </option>
+                  {folders.map((row) => (
+                    <option key={row.id} value={row.id}>
+                      {folderLabel(folders, row.id)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <CreateAttachments uploads={attachments} disabled={busy} />
+              {error ? (
+                <p role="alert" className="text-sm text-status-danger-fg">
+                  {error}
+                </p>
+              ) : null}
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <Button variant="secondary" disabled={busy} onClick={() => onOpenChange(false)}>
+                <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+              </Button>
+              <Button disabled={busy || !title.trim() || !typeId} onClick={() => void create()}>
+                {busy
+                  ? intl.formatMessage({ id: "knowledge.creating", defaultMessage: "Creating…" })
+                  : intl.formatMessage({
+                      id: "knowledge.create.submit",
+                      defaultMessage: "Create item",
+                    })}
+              </Button>
+            </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
@@ -1086,11 +1112,12 @@ function CreateFromFilesDialog({
             />
           </label>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="knowledge-files-type">
+            <Label htmlFor="knowledge-files-type" required>
               <FormattedMessage id="knowledge.form.type" defaultMessage="Type" />
             </Label>
             <select
               id="knowledge-files-type"
+              aria-required="true"
               className={CONTROL_CLASS}
               value={typeId}
               onChange={(event) => setTypeId(event.target.value)}

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** The matter record's working-team tray and compound add dialog (M22/5). */
-import { useRef, useState } from "react";
-import { Plus } from "lucide-react";
-import { FormattedMessage, useIntl } from "react-intl";
+/** The matter record's Team applet and compound add dialog (M22/5). */
+import { useRef, useState, type RefObject } from "react";
+import { Plus, User } from "lucide-react";
+import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { api } from "../../lib/api";
 import { CONTROL_CLASS } from "../../lib/form-controls";
 import {
@@ -16,6 +16,7 @@ import {
 } from "../../lib/matters";
 import { problem as readProblem } from "../../lib/problem";
 import { TeamRoster, type TeamRosterEntry } from "../team-roster";
+import type { Applet } from "../shell/applets";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { Label } from "../ui/label";
@@ -24,15 +25,7 @@ function isAddableMatterTeamRole(value: string): value is Exclude<MatterTeamRole
   return ADDABLE_MATTER_TEAM_ROLES.some((role) => role === value);
 }
 
-export function MatterTeamTray({
-  number,
-  manager,
-  team,
-  users,
-  frozen,
-  audienceLocked,
-  onTeam,
-}: Readonly<{
+interface MatterTeamOptions {
   number: number;
   manager: MatterRow["manager"];
   team: readonly MatterTeamMember[];
@@ -40,9 +33,57 @@ export function MatterTeamTray({
   frozen: boolean;
   audienceLocked: boolean;
   onTeam: (team: MatterTeamMember[]) => void;
-}>) {
+}
+
+export function useMatterTeamApplet(options: MatterTeamOptions): Applet {
   const intl = useIntl();
   const [adding, setAdding] = useState(false);
+  const addControl = useRef<HTMLButtonElement>(null);
+  return {
+    id: "team",
+    icon: User,
+    label: defineMessage({ id: "matters.applet.team", defaultMessage: "Matter team" }),
+    hash: "matter-team",
+    accessory: () => (
+      <Button
+        ref={addControl}
+        variant="ghost"
+        size="icon"
+        disabled={options.frozen || options.audienceLocked}
+        aria-label={intl.formatMessage({
+          id: "matters.team.add",
+          defaultMessage: "Add team member",
+        })}
+        onClick={() => setAdding(true)}
+      >
+        <Plus size={16} aria-hidden="true" />
+      </Button>
+    ),
+    render: () => (
+      <MatterTeamPanel {...options} adding={adding} onAdding={setAdding} addControl={addControl} />
+    ),
+  };
+}
+
+function MatterTeamPanel({
+  number,
+  manager,
+  team,
+  users,
+  frozen,
+  audienceLocked,
+  onTeam,
+  adding,
+  onAdding,
+  addControl,
+}: Readonly<
+  MatterTeamOptions & {
+    adding: boolean;
+    onAdding: (open: boolean) => void;
+    addControl: RefObject<HTMLButtonElement | null>;
+  }
+>) {
+  const intl = useIntl();
   const [error, setError] = useState<string | null>(null);
   const busy = useRef(false);
 
@@ -69,31 +110,11 @@ export function MatterTeamTray({
       return;
     }
     onTeam(result.data.team);
+    addControl.current?.focus();
   }
 
   return (
-    <aside
-      id="matter-team"
-      aria-labelledby="matter-team-title"
-      className="rounded-card border border-border-default bg-raised"
-    >
-      <header className="flex items-center justify-between border-b border-border-default px-4 py-3">
-        <h2 id="matter-team-title" className="font-semibold">
-          <FormattedMessage id="matters.team.title" defaultMessage="Matter team" />
-        </h2>
-        <Button
-          variant="ghost"
-          size="icon"
-          disabled={frozen || audienceLocked}
-          aria-label={intl.formatMessage({
-            id: "matters.team.add",
-            defaultMessage: "Add team member",
-          })}
-          onClick={() => setAdding(true)}
-        >
-          <Plus size={16} aria-hidden="true" />
-        </Button>
-      </header>
+    <>
       <div className="py-1">
         <TeamRoster
           entries={[
@@ -148,11 +169,11 @@ export function MatterTeamTray({
         <AddMatterTeamDialog
           number={number}
           users={users}
-          onOpenChange={setAdding}
+          onOpenChange={onAdding}
           onAdded={onTeam}
         />
       )}
-    </aside>
+    </>
   );
 }
 

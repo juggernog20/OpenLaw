@@ -542,3 +542,7 @@ export const MAX_DECLINE_REASON_LENGTH = 2000;
  * one number.
  */
 export const MAX_COMMENT_BODY_LENGTH = 10_000;
+
+/** The record must obtain confirmation before reopening a closed Matter. */
+export const MATTER_REOPEN_CONFIRMATION_PROBLEM_TYPE =
+  "urn:openlaw:problem:matter-reopen-confirmation";

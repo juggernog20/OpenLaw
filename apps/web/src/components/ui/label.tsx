@@ -12,9 +12,18 @@ import { cn } from "../../lib/utils";
 
 export function Label({
   className,
+  children,
+  required = false,
   ...props
-}: Readonly<React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>>) {
+}: Readonly<React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> & { required?: boolean }>) {
   return (
-    <LabelPrimitive.Root className={cn("text-sm font-medium text-primary", className)} {...props} />
+    <LabelPrimitive.Root className={cn("text-sm font-medium text-primary", className)} {...props}>
+      {children}
+      {required && (
+        <span aria-hidden="true" className="ms-0.5 text-status-danger-fg">
+          *
+        </span>
+      )}
+    </LabelPrimitive.Root>
   );
 }

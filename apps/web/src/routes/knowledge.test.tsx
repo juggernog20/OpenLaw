@@ -301,7 +301,7 @@ describe("the Knowledge library", () => {
       new File(["one"], "one.docx"),
       new File(["two"], "two.pdf"),
     ]);
-    await user.selectOptions(within(dialog).getByLabelText("Type"), "type-article");
+    await user.selectOptions(within(dialog).getByLabelText(/^Type\*?$/), "type-article");
     await user.selectOptions(within(dialog).getByLabelText("Folder"), "contracts");
     await user.click(within(dialog).getByRole("button", { name: "Create drafts" }));
     await waitFor(() => expect(form).toBeDefined());
@@ -327,6 +327,7 @@ describe("the Knowledge library", () => {
 
   it("creates an item with its required title, type, and selected nested folder", async () => {
     let posted: unknown;
+    let uploaded = false;
     const base = libraryApi([]);
     stubApi({
       signedIn: MEMBER,
@@ -343,6 +344,14 @@ describe("the Knowledge library", () => {
         if (call.url.pathname === "/api/v1/knowledge/knowledge-new" && call.method === "GET") {
           return json(200, { knowledgeItem: item({ id: "knowledge-new" }) });
         }
+        if (
+          call.url.pathname === "/api/v1/knowledge/knowledge-new/documents" &&
+          call.method === "POST"
+        ) {
+          expect(posted).toBeDefined();
+          uploaded = true;
+          return json(201, { document: { id: "guide-doc" } });
+        }
         return base(call);
       },
     });
@@ -351,10 +360,15 @@ describe("the Knowledge library", () => {
     await user.click((await screen.findAllByRole("button", { name: "New" }))[0]!);
     await user.click(await screen.findByRole("menuitem", { name: "New Knowledge Item" }));
     const dialog = await screen.findByRole("dialog", { name: "New Knowledge Item" });
-    await user.type(within(dialog).getByLabelText("Title"), "Review guide");
-    await user.selectOptions(within(dialog).getByLabelText("Type"), "type-article");
+    await user.type(within(dialog).getByLabelText(/^Title\*?$/), "Review guide");
+    await user.selectOptions(within(dialog).getByLabelText(/^Type\*?$/), "type-article");
     await user.selectOptions(within(dialog).getByLabelText("Folder"), "contracts");
+    await user.upload(
+      within(dialog).getByLabelText("Attach documents"),
+      new File(["guide"], "guide.txt", { type: "text/plain" }),
+    );
     await user.click(within(dialog).getByRole("button", { name: "Create item" }));
+    await waitFor(() => expect(uploaded).toBe(true));
     await waitFor(() =>
       expect(posted).toEqual({
         title: "Review guide",
@@ -387,7 +401,7 @@ describe("the Knowledge library", () => {
     await user.click(await screen.findByRole("menuitem", { name: "New Knowledge Item" }));
     const dialog = await screen.findByRole("dialog", { name: "New Knowledge Item" });
     expect(within(dialog).getByLabelText("Folder")).toHaveValue("contracts");
-    await user.type(within(dialog).getByLabelText("Title"), "Filed guide");
+    await user.type(within(dialog).getByLabelText(/^Title\*?$/), "Filed guide");
     await user.click(within(dialog).getByRole("button", { name: "Create item" }));
     await waitFor(() =>
       expect(posted).toEqual({
@@ -484,11 +498,11 @@ describe("a Knowledge record", () => {
     stubApi({ signedIn: ADMIN, extra: recordApi(patches) });
     renderAt("/knowledge/knowledge-1");
     const user = userEvent.setup();
-    const title = await screen.findByLabelText("Title");
+    const title = await screen.findByLabelText(/^Title\*?$/);
     await user.clear(title);
     await user.type(title, "Updated playbook");
     await user.tab();
-    await user.selectOptions(screen.getByLabelText("Type"), "type-article");
+    await user.selectOptions(screen.getByLabelText(/^Type\*?$/), "type-article");
     await user.selectOptions(screen.getByLabelText("Folder"), "");
     await waitFor(() =>
       expect(patches).toEqual([

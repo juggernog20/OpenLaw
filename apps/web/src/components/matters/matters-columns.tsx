@@ -99,7 +99,7 @@ const COLUMNS: ColumnDef<MatterRow>[] = [
     render: (row) =>
       row.nextDeadline ? (
         <Link
-          to={`${matterPath(row.number)}/key-dates`}
+          to={`${matterPath(row.number)}/${row.nextDeadline.source === "task" ? "tasks" : "key-dates"}`}
           className="flex min-w-0 flex-col rounded-chip hover:text-link hover:underline"
         >
           <span className="truncate">{row.nextDeadline.label}</span>

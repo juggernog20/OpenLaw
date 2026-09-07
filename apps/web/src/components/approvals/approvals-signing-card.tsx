@@ -1540,7 +1540,7 @@ function DecisionDialog({
           </p>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="approval-note">
-              <FormattedMessage id="approvals.note" defaultMessage="Note (optional)" />
+              <FormattedMessage id="approvals.note" defaultMessage="Note" />
             </Label>
             <textarea
               id="approval-note"
@@ -1969,7 +1969,7 @@ function SendEnvelopeDialog({
           </fieldset>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="envelope-subject">
-              <FormattedMessage id="signing.subject" defaultMessage="Subject (optional)" />
+              <FormattedMessage id="signing.subject" defaultMessage="Subject" />
             </Label>
             <input
               id="envelope-subject"

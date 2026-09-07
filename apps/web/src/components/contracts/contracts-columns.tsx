@@ -9,8 +9,7 @@
  * with stable keys, not an ordering of JSX — renaming a key orphans it out
  * of every view that named it.
  *
- * **Seventeen columns, seven of them on by default.** The seven are the
- * ones the C1 mock draws and the list shipped with. The other ten are
+ * **The default columns include Next deadline.** Additional columns are
  * fields the row already carries — CTR-005's risk and priority, CTR-006's
  * term dates and the two counts derived from them, CTR-011's signing
  * entity, and the two timestamps — and every one of them is what somebody
@@ -29,7 +28,7 @@ import { Link } from "react-router";
 import { FormattedMessage } from "react-intl";
 import type { IntlShape } from "react-intl";
 import { FileText } from "lucide-react";
-import { formatShortDate } from "../../lib/format";
+import { formatDeadline, formatShortDate } from "../../lib/format";
 import {
   contractReference,
   formatContractValue,
@@ -184,6 +183,26 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
         <span className="text-muted">
           <FormattedMessage id="contracts.valueNone" defaultMessage="No value" />
         </span>
+      ),
+  },
+  {
+    key: "nextDeadline",
+    header: <FormattedMessage id="matters.column.nextDeadline" defaultMessage="Next deadline" />,
+    label: (intl) =>
+      intl.formatMessage({ id: "matters.column.nextDeadline", defaultMessage: "Next deadline" }),
+    defaultWidth: 220,
+    minWidth: 144,
+    render: (row) =>
+      row.nextDeadline ? (
+        <Link
+          to={`/contracts/${row.number}/${row.nextDeadline.source === "task" ? "tasks" : "key-dates"}`}
+          className="flex min-w-0 flex-col rounded-chip hover:text-link hover:underline"
+        >
+          <span className="truncate">{row.nextDeadline.label}</span>
+          <span className="text-xs text-muted">{formatDeadline(row.nextDeadline.date)}</span>
+        </Link>
+      ) : (
+        <NotRecorded />
       ),
   },
   {
@@ -383,7 +402,16 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
 export const CONTRACTS_CATALOGUE: ColumnCatalogue<ContractRow> = {
   surface: "contracts",
   columns: COLUMNS,
-  defaultColumnKeys: ["reference", "title", "counterparty", "type", "status", "value", "owner"],
+  defaultColumnKeys: [
+    "reference",
+    "title",
+    "counterparty",
+    "type",
+    "status",
+    "value",
+    "owner",
+    "nextDeadline",
+  ],
   flexColumnKey: "title",
 };
 

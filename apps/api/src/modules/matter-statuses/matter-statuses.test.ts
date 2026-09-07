@@ -311,3 +311,68 @@ describe("archive and delete invariants", () => {
     expect(narration.at(-1)!.payload).toMatchObject({ from: "Discovery", to: "Investigation" });
   });
 });
+
+describe("progression groups", () => {
+  it("persists a group independently of the status name and lifecycle category", async () => {
+    const created = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/matter-statuses",
+      cookies: adminCookies,
+      payload: {
+        displayName: "Waiting for instructions",
+        category: "open",
+        progressionGroup: "waiting",
+      },
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const id = created.json().matterStatus.id;
+    const changed = await harness.app.inject({
+      method: "PUT",
+      url: `/api/v1/matter-statuses/${id}/progression-group`,
+      cookies: adminCookies,
+      payload: { progressionGroup: "open" },
+    });
+    expect(changed.statusCode, changed.body).toBe(200);
+    expect(changed.json().matterStatus).toMatchObject({
+      category: "open",
+      progressionGroup: "open",
+    });
+    await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/matter-statuses/${id}`,
+      cookies: adminCookies,
+      payload: { displayName: "Queued" },
+    });
+    const options = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/matters/options",
+      cookies: adminCookies,
+    });
+    expect(
+      options.json().matterStatuses.find((row: { id: string }) => row.id === id),
+    ).toMatchObject({ displayName: "Queued", progressionGroup: "open" });
+    const memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
+    const denied = await harness.app.inject({
+      method: "PUT",
+      url: `/api/v1/matter-statuses/${id}/progression-group`,
+      cookies: memberCookies,
+      payload: { progressionGroup: "waiting" },
+    });
+    expect(denied.statusCode).toBe(403);
+    const invalid = await harness.app.inject({
+      method: "PUT",
+      url: `/api/v1/matter-statuses/${id}/progression-group`,
+      cookies: adminCookies,
+      payload: { progressionGroup: "unknown" },
+    });
+    expect(invalid.statusCode).toBe(400);
+    const closed = await bySlug("closed");
+    const refused = await harness.app.inject({
+      method: "PUT",
+      url: `/api/v1/matter-statuses/${closed.id}/progression-group`,
+      cookies: adminCookies,
+      payload: { progressionGroup: "waiting" },
+    });
+    expect(refused.statusCode).toBe(400);
+  });
+});

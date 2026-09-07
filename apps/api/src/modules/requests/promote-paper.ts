@@ -261,7 +261,7 @@ async function promotePaper(
       versionId,
       versionNumber: 1,
       fileRef: copied.fileRef,
-      kind: "draft_ours",
+      kind: record.module === "matter" ? "general" : "draft_ours",
       source: "uploaded",
       comparedFromVersionId: null,
       comparedToVersionId: null,

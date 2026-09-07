@@ -57,7 +57,7 @@
  *    the sub-bar and the Urgency in the hero, and the mock predates
  *    INT-007 — there is no assignment and no parked state for that card
  *    to hold.
- * 4. **The Outcome card draws only once there is an outcome.** I2 draws
+ * 4. **The Status card draws only once there is an outcome.** I2 draws
  *    it on a `new` Request saying what the Request would convert to;
  *    that is the routing, which the hero already states. Here it says
  *    what actually happened, so the promise and the fact are never two
@@ -230,7 +230,7 @@ export function InboxRequestPage() {
    * Runs one disposition, and repaints the page from the record.
    *
    * The write answers the whole envelope, and the page still re-reads:
-   * the Outcome card, the status pill, and the thread's own unread
+   * the Status card, the status pill, and the thread's own unread
    * watermark all hang off the loader, and one revalidation is what
    * keeps them from disagreeing. A resolution's closing reply is a
    * comment on that thread, so the re-read is what puts it there too.
@@ -242,7 +242,10 @@ export function InboxRequestPage() {
    * dialog closing on success. What differs is the call it is handed,
    * which is the seam's own shape (INT-007).
    */
-  async function dispose(write: () => Promise<DispositionOutcome>): Promise<DispositionOutcome> {
+  async function dispose(
+    write: () => Promise<DispositionOutcome>,
+    closeOnSuccess = true,
+  ): Promise<DispositionOutcome> {
     setBusy(true);
     try {
       const result = await write();
@@ -250,7 +253,7 @@ export function InboxRequestPage() {
       // already says what the other triager decided by the time it is
       // closed (INT-007).
       if (result.ok || result.alreadyDecided) void revalidator.revalidate();
-      if (result.ok) setDisposing(null);
+      if (result.ok && closeOnSuccess) setDisposing(null);
       return result;
     } finally {
       setBusy(false);
@@ -355,7 +358,7 @@ export function InboxRequestPage() {
           }))}
           busy={busy}
           onClose={() => setDisposing(null)}
-          onConvert={(input) => dispose(() => convertRequest(request.number, input))}
+          onConvert={(input) => dispose(() => convertRequest(request.number, input), false)}
         />
       )}
       {disposing === "resolve" && (
@@ -461,7 +464,7 @@ export function InboxRequestPage() {
                   <Card
                     id="outcome"
                     heading={
-                      <FormattedMessage id="inbox.request.outcome" defaultMessage="Outcome" />
+                      <FormattedMessage id="inbox.request.outcome" defaultMessage="Status" />
                     }
                   >
                     <Outcome request={request} />

@@ -139,7 +139,7 @@ export function PortalShell({
             </p>
           </div>
           <Button asChild variant="secondary" size="sm">
-            <Link to="/settings/profile">
+            <Link to="/settings/app-view">
               <FormattedMessage
                 id="portal.businessView.return"
                 defaultMessage="Return to legal view"

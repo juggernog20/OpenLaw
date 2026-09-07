@@ -118,7 +118,14 @@ describe("Matter Closing", () => {
     const closedChild = await createMatter("Finished workstream", {
       parentMatterNumber: parent.number,
     });
-    expect((await patch(closedChild.number, { statusId: closedStatusId })).statusCode).toBe(200);
+    expect(
+      (
+        await patch(closedChild.number, {
+          statusId: closedStatusId,
+          closingNote: "Advice delivered; work complete.",
+        })
+      ).statusCode,
+    ).toBe(200);
 
     const restrictedResponse = await harness.app.inject({
       method: "POST",
@@ -184,7 +191,10 @@ describe("Matter Closing", () => {
       .from(notifications)
       .where(eq(notifications.entityId, parent.id));
 
-    const close = await patch(parent.number, { statusId: closedStatusId });
+    const close = await patch(parent.number, {
+      statusId: closedStatusId,
+      closingNote: "Advice delivered; work complete.",
+    });
     expect(close.statusCode, close.body).toBe(200);
     expect(close.json().matter).toMatchObject({
       openedAt: parent.openedAt,
@@ -226,7 +236,14 @@ describe("Matter Closing", () => {
       openChildren: [],
       statuses: expect.arrayContaining([expect.objectContaining({ id: reopenedStatusId })]),
     });
-    const reopen = await patch(parent.number, { statusId: reopenedStatusId });
+    const unconfirmed = await patch(parent.number, { statusId: reopenedStatusId });
+    expect(unconfirmed.statusCode).toBe(409);
+    expect(unconfirmed.json().type).toBe("urn:openlaw:problem:matter-reopen-confirmation");
+    const stillClosed = await harness.db.query.matters.findFirst({
+      where: eq(matters.id, parent.id),
+    });
+    expect(stillClosed?.closedAt?.toISOString()).toBe(close.json().matter.closedAt);
+    const reopen = await patch(parent.number, { statusId: reopenedStatusId, confirmReopen: true });
     expect(reopen.statusCode, reopen.body).toBe(200);
     expect(reopen.json().matter).toMatchObject({
       openedAt: parent.openedAt,
@@ -268,7 +285,14 @@ describe("Matter Closing", () => {
       payload: { date: future, label: "Response due" },
     });
     expect(keyDate.statusCode, keyDate.body).toBe(201);
-    expect((await patch(matter.number, { statusId: closedStatusId })).statusCode).toBe(200);
+    expect(
+      (
+        await patch(matter.number, {
+          statusId: closedStatusId,
+          closingNote: "Advice delivered; work complete.",
+        })
+      ).statusCode,
+    ).toBe(200);
 
     const fieldWrite = await patch(matter.number, { description: "Closing papers arrived." });
     const commentWrite = await harness.app.inject({
@@ -338,4 +362,53 @@ describe("Matter Closing", () => {
     });
     expect(archivedLifecycle.statusCode, archivedLifecycle.body).toBe(409);
   });
+});
+
+it("requires a short closing note and records it atomically with the closure", async () => {
+  const matter = await createMatter("Closing note validation");
+  for (const closingNote of [undefined, "   ", "x".repeat(2001)]) {
+    const refused = await patch(matter.number, {
+      statusId: closedStatusId,
+      ...(closingNote === undefined ? {} : { closingNote }),
+    });
+    expect(refused.statusCode, refused.body).toBe(400);
+  }
+  const before = await harness.db.query.matters.findFirst({ where: eq(matters.id, matter.id) });
+  expect(before?.closedAt).toBeNull();
+  expect(before?.statusId).not.toBe(closedStatusId);
+  const invalid = await patch(matter.number, { closingNote: "Not a closure" });
+  expect(invalid.statusCode).toBe(400);
+  const closed = await patch(matter.number, {
+    statusId: closedStatusId,
+    closingNote: "  Advice delivered.\nNo further action required.  ",
+  });
+  expect(closed.statusCode, closed.body).toBe(200);
+  const saved = await harness.db.query.matters.findFirst({ where: eq(matters.id, matter.id) });
+  expect(saved?.statusId).toBe(closedStatusId);
+  expect(saved?.closedAt).not.toBeNull();
+  const entries = await harness.db
+    .select()
+    .from(activityLog)
+    .where(eq(activityLog.entityId, matter.id));
+  const closures = entries.filter((entry) => entry.action === "matter.status_changed");
+  expect(closures).toHaveLength(1);
+  expect(closures[0]!.actorId).toBe(memberId);
+  expect(closures[0]!.payload).toMatchObject({
+    closingNote: "Advice delivered.\nNo further action required.",
+    fromCategory: "open",
+    toCategory: "closed",
+  });
+  const repeated = await patch(matter.number, {
+    statusId: closedStatusId,
+    closingNote: "Duplicate closure",
+  });
+  expect(repeated.statusCode).toBe(400);
+  expect(
+    (await patch(matter.number, { statusId: reopenedStatusId, confirmReopen: true })).statusCode,
+  ).toBe(200);
+  const after = await harness.db
+    .select()
+    .from(activityLog)
+    .where(eq(activityLog.entityId, matter.id));
+  expect(after.filter((entry) => typeof entry.payload.closingNote === "string")).toHaveLength(1);
 });

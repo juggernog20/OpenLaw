@@ -39,13 +39,14 @@ function RelativeRow({
         {relative.statusName}
       </span>
       {remove && (
-        <button
+        <Button
           type="button"
-          className="ml-auto text-xs text-link hover:underline"
+          variant="secondary"
+          className="ml-auto"
           onClick={remove}
         >
           <FormattedMessage id="matters.relations.remove" defaultMessage="Remove" />
-        </button>
+        </Button>
       )}
     </li>
   );
@@ -124,16 +125,16 @@ export function RelatedMattersCard({
       aria-labelledby="related-matters-heading"
       className="w-full overflow-hidden rounded-card border border-border-default bg-raised"
     >
-      <header className="flex min-h-(--height-section-header) flex-wrap items-center gap-1 border-b border-border-default bg-section-header px-4 py-2">
+      <header className="flex min-h-(--height-section-header) flex-wrap items-center gap-2 border-b border-border-default bg-section-header px-4 py-2">
         <h2 id="related-matters-heading" className="mr-auto text-base font-semibold">
           <FormattedMessage id="matters.relations.section" defaultMessage="Related Matters" />
         </h2>
         {editable && (
-          <>
-            <Button variant="ghost" size="sm" onClick={onCreateChild}>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" onClick={onCreateChild}>
               <FormattedMessage id="matters.relations.newChild" defaultMessage="New sub-Matter" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setDialog("parent")}>
+            <Button variant="secondary" onClick={() => setDialog("parent")}>
               {relations.parent ? (
                 <FormattedMessage
                   id="matters.relations.changeParent"
@@ -143,13 +144,13 @@ export function RelatedMattersCard({
                 <FormattedMessage id="matters.relations.setParent" defaultMessage="Set parent" />
               )}
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setDialog("related")}>
+            <Button variant="secondary" onClick={() => setDialog("related")}>
               <FormattedMessage
                 id="matters.relations.addRelated"
                 defaultMessage="Add related Matter"
               />
             </Button>
-          </>
+          </div>
         )}
       </header>
       <div className="p-4">

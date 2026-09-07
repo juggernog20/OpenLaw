@@ -81,6 +81,7 @@ export function toValue(
   const text = typeof draft === "string" ? draft.trim() : "";
   if (text === "") return { value: null };
   if (field.fieldType === "number") {
+    if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(text)) return { error: "number" };
     const parsed = Number(text);
     return Number.isFinite(parsed) ? { value: parsed } : { error: "number" };
   }

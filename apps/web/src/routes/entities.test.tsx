@@ -121,18 +121,27 @@ describe("the /entities destination", () => {
 
   it("explains the empty registry and registers the first entity through the dialog", async () => {
     let posted: unknown;
+    let uploaded = false;
+    const base = registryApi([], (call) => {
+      posted = call.body;
+      return json(201, {
+        entity: entityRow({
+          id: "e-new",
+          legalName: "Aldgate UK Ltd",
+          jurisdiction: "England & Wales",
+        }),
+      });
+    });
     stubApi({
       signedIn: ADMIN,
-      extra: registryApi([], (call) => {
-        posted = call.body;
-        return json(201, {
-          entity: entityRow({
-            id: "e-new",
-            legalName: "Aldgate UK Ltd",
-            jurisdiction: "England & Wales",
-          }),
-        });
-      }),
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/entities/e-new/documents" && call.method === "POST") {
+          expect(posted).toBeDefined();
+          uploaded = true;
+          return json(201, { document: { id: "incorporation-doc" } });
+        }
+        return base(call);
+      },
     });
     renderAt("/entities?view=list");
 
@@ -145,12 +154,17 @@ describe("the /entities destination", () => {
     const user = userEvent.setup();
     await user.click(screen.getAllByRole("button", { name: "Register entity" }).at(-1)!);
     const dialog = await screen.findByRole("dialog");
-    await user.type(within(dialog).getByLabelText("Legal name"), "Aldgate UK Ltd");
-    await user.selectOptions(within(dialog).getByLabelText("Entity type"), "t-corp");
+    await user.type(within(dialog).getByLabelText(/^Legal name\*?$/), "Aldgate UK Ltd");
+    await user.selectOptions(within(dialog).getByLabelText(/^Entity type\*?$/), "t-corp");
     await user.type(within(dialog).getByLabelText("Formation jurisdiction"), "England & Wales");
+    await user.upload(
+      within(dialog).getByLabelText("Attach documents"),
+      new File(["certificate"], "incorporation.txt", { type: "text/plain" }),
+    );
     await user.click(within(dialog).getByRole("button", { name: "Register" }));
 
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(uploaded).toBe(true);
     expect(posted).toMatchObject({
       legalName: "Aldgate UK Ltd",
       entityTypeId: "t-corp",
@@ -176,7 +190,7 @@ describe("the /entities destination", () => {
       "Name the entity — its registered legal name.",
     );
 
-    await user.type(within(dialog).getByLabelText("Legal name"), "Aldgate UK Ltd");
+    await user.type(within(dialog).getByLabelText(/^Legal name\*?$/), "Aldgate UK Ltd");
     await user.click(within(dialog).getByRole("button", { name: "Register" }));
     expect(await within(dialog).findByRole("alert")).toHaveTextContent("Pick an entity type.");
   });
@@ -192,8 +206,8 @@ describe("the /entities destination", () => {
     await user.click(screen.getAllByRole("button", { name: "Register entity" })[0]!);
     const dialog = await screen.findByRole("dialog");
 
-    await user.type(within(dialog).getByLabelText("Legal name"), "Refused Ltd");
-    await user.selectOptions(within(dialog).getByLabelText("Entity type"), "t-corp");
+    await user.type(within(dialog).getByLabelText(/^Legal name\*?$/), "Refused Ltd");
+    await user.selectOptions(within(dialog).getByLabelText(/^Entity type\*?$/), "t-corp");
     await user.type(within(dialog).getByLabelText("Formation jurisdiction"), "England");
     await user.click(within(dialog).getByRole("button", { name: "Register" }));
 
@@ -201,8 +215,8 @@ describe("the /entities destination", () => {
       "The entity type must be a live type.",
     );
     expect(dialog).toBeInTheDocument();
-    expect(within(dialog).getByLabelText("Legal name")).toHaveValue("Refused Ltd");
-    expect(within(dialog).getByLabelText("Entity type")).toHaveValue("t-corp");
+    expect(within(dialog).getByLabelText(/^Legal name\*?$/)).toHaveValue("Refused Ltd");
+    expect(within(dialog).getByLabelText(/^Entity type\*?$/)).toHaveValue("t-corp");
     expect(within(dialog).getByLabelText("Formation jurisdiction")).toHaveValue("England");
   });
 
