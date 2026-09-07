@@ -1,0 +1,75 @@
+{
+  "articleId": "document-previews",
+  "contentSha256": "12cf5181a1b0c37788c1cd3d07ce04d8ac6c41efc68fed4188d47074307bd24a",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "not-run",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-DOCUMENTS.md",
+    "apps/web/src/components/documents/doc-panel.tsx",
+    "apps/web/src/components/documents/email-preview.tsx",
+    "apps/web/src/components/documents/pdf-preview.tsx",
+    "apps/web/src/routes/portal-knowledge.tsx",
+    "apps/web/src/routes/portal-request.tsx",
+    "apps/api/src/lib/render-family.ts",
+    "apps/api/src/pipeline/display-conversion.ts",
+    "apps/api/src/pipeline/text-extraction.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C28",
+      "coverage": ["C28"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Supported renditions/text become available and downloads preserve the original bytes. Failure/unsupported states offer the documented download or recovery path; portal file reach is checked separately.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C28",
+      "coverage": ["C28"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Supported renditions/text become available and downloads preserve the original bytes. Failure/unsupported states offer the documented download or recovery path; portal file reach is checked separately.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C28",
+      "coverage": ["C28"],
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "expected": "Supported renditions/text become available and downloads preserve the original bytes. Failure/unsupported states offer the documented download or recovery path; portal file reach is checked separately.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C28",
+      "coverage": ["C28"],
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "expected": "Supported renditions/text become available and downloads preserve the original bytes. Failure/unsupported states offer the documented download or recovery path; portal file reach is checked separately.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-017/README.md"],
+  "limitations": [
+    "Author browser checks passed; independent technical review and required role walkthroughs are pending.",
+    "Agent walkthroughs are not human user studies or feature-owner approval.",
+    "Shared links to later Knowledge and operator guides remain publication dependencies."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

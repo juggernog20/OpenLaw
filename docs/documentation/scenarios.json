@@ -536,7 +536,7 @@
       "coverage": ["C26"],
       "articles": ["document-versions"],
       "roles": ["legal_team_member", "administrator", "contributor"],
-      "environment": "authoring",
+      "environment": "conversations",
       "prerequisites": [
         "Reached owning records, PDF/Word fixtures, two Versions, and comment paper."
       ],
@@ -557,7 +557,7 @@
       "coverage": ["C27"],
       "articles": ["document-folders"],
       "roles": ["legal_team_member", "administrator", "contributor"],
-      "environment": "authoring",
+      "environment": "conversations",
       "prerequisites": [
         "A reached record, nested local folders, valid files, and one intentionally failing file."
       ],
@@ -578,7 +578,7 @@
       "coverage": ["C28"],
       "articles": ["document-previews"],
       "roles": ["legal_team_member", "administrator", "contributor", "business_user"],
-      "environment": "scenario-fixture",
+      "environment": "conversations",
       "prerequisites": [
         "Real PDF, DOCX, scanned PDF, unsupported file, and an isolated processing-failure fixture."
       ],
@@ -620,7 +620,7 @@
       "coverage": ["C30"],
       "articles": ["document-repository"],
       "roles": ["legal_team_member", "administrator", "contributor"],
-      "environment": "authoring",
+      "environment": "conversations",
       "prerequisites": [
         "Documents under several owner kinds, including a hidden owner and an archived Document."
       ],
@@ -1106,7 +1106,7 @@
       "coverage": ["C54"],
       "articles": ["archive-and-delete-documents"],
       "roles": ["legal_team_member", "administrator", "contributor"],
-      "environment": "authoring",
+      "environment": "conversations",
       "prerequisites": [
         "Disposable Documents with multiple Versions and independent Administrator/Member/Contributor sessions."
       ],

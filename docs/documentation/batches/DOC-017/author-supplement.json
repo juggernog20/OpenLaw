@@ -1,0 +1,56 @@
+{
+  "name": "supplement",
+  "startedAt": "2026-09-07T20:32:36.255Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "document-versions",
+      "contentSha256": "b39e52e71277824890a02ec9d8432bbb57dc4da4a974c085a5d727035ba20699"
+    },
+    {
+      "articleId": "document-previews",
+      "contentSha256": "12cf5181a1b0c37788c1cd3d07ce04d8ac6c41efc68fed4188d47074307bd24a"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "C26 supply conversation attachments then file only for permitted legal roles",
+      "actual": "Browser comments posted two attachments; File created new named Document then v2 on same chain; both attachments retained Filed to markers",
+      "result": "pass",
+      "at": "2026-09-07T20:32:38.340Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "C26 supply conversation attachments then file only for permitted legal roles",
+      "actual": "Browser comments posted two attachments; File created new named Document then v2 on same chain; both attachments retained Filed to markers",
+      "result": "pass",
+      "at": "2026-09-07T20:32:40.347Z"
+    },
+    {
+      "role": "contributor",
+      "action": "C26 supply conversation attachments then file only for permitted legal roles",
+      "actual": "Contributor posted two permitted comment attachments; no File action offered",
+      "result": "pass",
+      "at": "2026-09-07T20:32:41.865Z"
+    },
+    {
+      "role": "business_user",
+      "action": "C28 own Request attachment downloads original without staff Version controls",
+      "actual": "Fixture created own Request and attachment; reader followed Request link and downloaded identical PDF; no Version tools and repository refused",
+      "result": "pass",
+      "at": "2026-09-07T20:32:43.476Z"
+    },
+    {
+      "role": "business_user",
+      "action": "C28 published Knowledge current file downloads; unpublished and restricted links refused",
+      "actual": "Published Knowledge offered current-file Download links with identical bytes and no canvas; draft, Legal-only and archived item links returned portal home with API404",
+      "result": "pass",
+      "at": "2026-09-07T20:32:45.928Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T20:32:45.931Z"
+}

@@ -1,0 +1,101 @@
+{
+  "name": "folders",
+  "startedAt": "2026-09-07T20:22:26.098Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "document-folders",
+      "contentSha256": "31d4331ec433ff13df120a9c3f9dd61098fef0d3cf594d0aad1cc1541214aa03"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "C27 create nested folder, rename and refuse invalid/duplicate names",
+      "actual": "Created Evidence/Drafts through nested and rename controls; duplicate case and .. name refused",
+      "result": "pass",
+      "at": "2026-09-07T20:22:29.395Z"
+    },
+    {
+      "role": "administrator",
+      "action": "C27 folder move excludes self/descendant and moves child to record root",
+      "actual": "Move dialog did not offer invalid cycles; child moved to record root",
+      "result": "pass",
+      "at": "2026-09-07T20:22:29.725Z"
+    },
+    {
+      "role": "administrator",
+      "action": "C27 two-file import retains success through one network failure and retries only failed item",
+      "actual": "Browser request fixture refused one file with 503; other persisted; row Retry produced two Documents with only failed file resent and selected kind",
+      "result": "pass",
+      "at": "2026-09-07T20:22:30.067Z"
+    },
+    {
+      "role": "administrator",
+      "action": "C27 move Document into folder then dissolve folder without deleting paper",
+      "actual": "Move filed selected Document; folder Delete returned it to Matter root intact",
+      "result": "pass",
+      "at": "2026-09-07T20:22:30.521Z"
+    },
+    {
+      "role": "administrator",
+      "action": "C27 native folder picker imports nested files with top-level path",
+      "actual": "Actual directory filechooser preserved top-level/Nested paths and both files; empty directory absent as documented",
+      "result": "pass",
+      "at": "2026-09-07T20:22:30.768Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "C27 create nested folder, rename and refuse invalid/duplicate names",
+      "actual": "Created Evidence/Drafts through nested and rename controls; duplicate case and .. name refused",
+      "result": "pass",
+      "at": "2026-09-07T20:22:32.907Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "C27 folder move excludes self/descendant and moves child to record root",
+      "actual": "Move dialog did not offer invalid cycles; child moved to record root",
+      "result": "pass",
+      "at": "2026-09-07T20:22:33.203Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "C27 two-file import retains success through one network failure and retries only failed item",
+      "actual": "Browser request fixture refused one file with 503; other persisted; row Retry produced two Documents with only failed file resent and selected kind",
+      "result": "pass",
+      "at": "2026-09-07T20:22:33.521Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "C27 move Document into folder then dissolve folder without deleting paper",
+      "actual": "Move filed selected Document; folder Delete returned it to Matter root intact",
+      "result": "pass",
+      "at": "2026-09-07T20:22:33.927Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "C27 native folder picker imports nested files with top-level path",
+      "actual": "Actual directory filechooser preserved top-level/Nested paths and both files; empty directory absent as documented",
+      "result": "pass",
+      "at": "2026-09-07T20:22:34.185Z"
+    },
+    {
+      "role": "contributor",
+      "action": "C27 Contributor has supporting upload but no folder creation/picker",
+      "actual": "New folder and folder picker absent for Contributor on reached Matter",
+      "result": "pass",
+      "at": "2026-09-07T20:22:35.693Z"
+    },
+    {
+      "role": "contributor",
+      "action": "C27 two-file import retains success through one network failure and retries only failed item",
+      "actual": "Browser request fixture refused one file with 503; other persisted; row Retry produced two Documents with only failed file resent and selected kind",
+      "result": "pass",
+      "at": "2026-09-07T20:22:35.979Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T20:22:35.982Z"
+}

@@ -396,7 +396,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["documents.versions", "comments.files"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "document-folders",
@@ -409,7 +409,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["documents.folders", "documents.upload"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "document-previews",
@@ -422,7 +422,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P0",
       "contexts": ["documents.preview", "portal.files"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "compare-versions",
@@ -448,7 +448,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["documents.repository"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "entities-and-counterparties",
@@ -772,7 +772,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["documents.actions"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "approver-groups",

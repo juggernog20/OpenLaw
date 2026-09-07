@@ -1,0 +1,61 @@
+{
+  "articleId": "document-repository",
+  "contentSha256": "59f88467c3a576764b212e36ebf5cb8bd49ff84a146a1ec3321d3d0a3da19969",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "not-run",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-DOCUMENTS.md",
+    "apps/web/src/routes/documents.tsx",
+    "apps/web/src/components/documents/document-filter-bar.tsx",
+    "apps/web/src/components/documents/documents-columns.tsx",
+    "apps/api/src/modules/documents/repository.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C30",
+      "coverage": ["C30"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "The repository shows permitted Documents and links to the correct owners/Versions. Hidden owners do not leak through results or filters; archived/empty result behavior matches the guide.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C30",
+      "coverage": ["C30"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "The repository shows permitted Documents and links to the correct owners/Versions. Hidden owners do not leak through results or filters; archived/empty result behavior matches the guide.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C30",
+      "coverage": ["C30"],
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "expected": "The repository shows permitted Documents and links to the correct owners/Versions. Hidden owners do not leak through results or filters; archived/empty result behavior matches the guide.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-017/README.md"],
+  "limitations": [
+    "Author browser checks passed; independent technical review and required role walkthroughs are pending.",
+    "Agent walkthroughs are not human user studies or feature-owner approval.",
+    "Shared links to later Knowledge and operator guides remain publication dependencies."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

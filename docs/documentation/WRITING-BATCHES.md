@@ -78,6 +78,8 @@ See the [batch verification record](batches/DOC-016/README.md) for the tested bu
 
 ## DOC-017 [#737](https://github.com/juggernog20/OpenLaw/issues/737)
 
+See the [author verification record](batches/DOC-017/README.md). Independent review and 16 scenario/role walkthroughs remain pending.
+
 - [ ] `document-versions`: Upload Documents and add Document Versions (C26; P0).
 - [ ] `document-folders`: Organise folders and upload in bulk (C27; P1).
 - [ ] `document-previews`: Read and download Documents (C28; P0).

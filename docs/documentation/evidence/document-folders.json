@@ -1,0 +1,61 @@
+{
+  "articleId": "document-folders",
+  "contentSha256": "31d4331ec433ff13df120a9c3f9dd61098fef0d3cf594d0aad1cc1541214aa03",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "not-run",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-DOCUMENTS.md",
+    "apps/web/src/components/documents/documents-card.tsx",
+    "apps/web/src/components/documents/batch-dialog.tsx",
+    "apps/web/src/lib/batch-upload.ts",
+    "apps/api/src/modules/documents/folders.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C27",
+      "coverage": ["C27"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Successful files remain available and the failed item is identified separately. Unsupported folder actions or uploads are refused for the relevant role without claiming the whole batch succeeded.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C27",
+      "coverage": ["C27"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Successful files remain available and the failed item is identified separately. Unsupported folder actions or uploads are refused for the relevant role without claiming the whole batch succeeded.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C27",
+      "coverage": ["C27"],
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "expected": "Successful files remain available and the failed item is identified separately. Unsupported folder actions or uploads are refused for the relevant role without claiming the whole batch succeeded.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-017/README.md"],
+  "limitations": [
+    "Author browser checks passed; independent technical review and required role walkthroughs are pending.",
+    "Agent walkthroughs are not human user studies or feature-owner approval.",
+    "Shared links to later Knowledge and operator guides remain publication dependencies."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

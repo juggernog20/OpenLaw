@@ -1,0 +1,80 @@
+{
+  "name": "repository",
+  "startedAt": "2026-09-07T20:44:19.151Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "document-repository",
+      "contentSha256": "59f88467c3a576764b212e36ebf5cb8bd49ff84a146a1ec3321d3d0a3da19969"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "C30 filter by owning record, format, kind and uploader then land on current Version",
+      "actual": "Record/Format/Kind/Uploader filters composed; folder facet exposed; current v1 opened on matching Matter; Recent hidden while narrowed",
+      "result": "pass",
+      "at": "2026-09-07T20:44:22.037Z"
+    },
+    {
+      "role": "administrator",
+      "action": "C30 four owner arms obey role reach and hidden owner is absent from matches",
+      "actual": "Contract/Entity/Knowledge landing checked for permitted roles; Contributor lacks Entity/Knowledge paper; Confidential owner omitted from Legal/Contributor matches and direct download404",
+      "result": "pass",
+      "at": "2026-09-07T20:44:24.857Z"
+    },
+    {
+      "role": "administrator",
+      "action": "C30 archived repository row Restore preserves history; empty filters can be cleared",
+      "actual": "Show archived revealed row; Restore made it live with same chain; mismatched kind/format combination gave empty state and Clear all returned Recent",
+      "result": "pass",
+      "at": "2026-09-07T20:44:25.730Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "C30 filter by owning record, format, kind and uploader then land on current Version",
+      "actual": "Record/Format/Kind/Uploader filters composed; folder facet exposed; current v1 opened on matching Matter; Recent hidden while narrowed",
+      "result": "pass",
+      "at": "2026-09-07T20:44:27.490Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "C30 four owner arms obey role reach and hidden owner is absent from matches",
+      "actual": "Contract/Entity/Knowledge landing checked for permitted roles; Contributor lacks Entity/Knowledge paper; Confidential owner omitted from Legal/Contributor matches and direct download404",
+      "result": "pass",
+      "at": "2026-09-07T20:44:30.341Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "C30 archived repository row Restore preserves history; empty filters can be cleared",
+      "actual": "Show archived revealed row; Restore made it live with same chain; mismatched kind/format combination gave empty state and Clear all returned Recent",
+      "result": "pass",
+      "at": "2026-09-07T20:44:31.194Z"
+    },
+    {
+      "role": "contributor",
+      "action": "C30 filter by owning record, format, kind and uploader then land on current Version",
+      "actual": "Record/Format/Kind/Uploader filters composed; folder facet exposed; current v1 opened on matching Matter; Recent hidden while narrowed",
+      "result": "pass",
+      "at": "2026-09-07T20:44:32.919Z"
+    },
+    {
+      "role": "contributor",
+      "action": "C30 four owner arms obey role reach and hidden owner is absent from matches",
+      "actual": "Contract/Entity/Knowledge landing checked for permitted roles; Contributor lacks Entity/Knowledge paper; Confidential owner omitted from Legal/Contributor matches and direct download404",
+      "result": "pass",
+      "at": "2026-09-07T20:44:35.493Z"
+    },
+    {
+      "role": "contributor",
+      "action": "C30 Contributor has no archived management toggle",
+      "actual": "Contributor repository omitted Show archived and restoration controls",
+      "result": "pass",
+      "at": "2026-09-07T20:44:36.095Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T20:44:36.098Z"
+}

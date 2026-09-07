@@ -1,0 +1,60 @@
+{
+  "articleId": "document-versions",
+  "contentSha256": "b39e52e71277824890a02ec9d8432bbb57dc4da4a974c085a5d727035ba20699",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "not-run",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-DOCUMENTS.md",
+    "apps/web/src/components/documents/documents-card.tsx",
+    "apps/web/src/components/comments/comment-attachments.tsx",
+    "apps/api/src/modules/documents/routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C26",
+      "coverage": ["C26"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "A logical Document retains its linear Version chain and the paper's ownership/provenance is visible. Unsupported corrections, failed uploads, and insufficient access do not silently alter a Version or its provenance.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C26",
+      "coverage": ["C26"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "A logical Document retains its linear Version chain and the paper's ownership/provenance is visible. Unsupported corrections, failed uploads, and insufficient access do not silently alter a Version or its provenance.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C26",
+      "coverage": ["C26"],
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "expected": "A logical Document retains its linear Version chain and the paper's ownership/provenance is visible. Unsupported corrections, failed uploads, and insufficient access do not silently alter a Version or its provenance.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-017/README.md"],
+  "limitations": [
+    "Author browser checks passed; independent technical review and required role walkthroughs are pending.",
+    "Agent walkthroughs are not human user studies or feature-owner approval.",
+    "Shared links to later Knowledge and operator guides remain publication dependencies."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}
