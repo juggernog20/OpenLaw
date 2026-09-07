@@ -357,7 +357,7 @@ The surface is `renderDigestMail` in `apps/api/src/lib/notifications/email.ts`, 
 
 Clauses 1 to 6 now have a wider reading. A dates-only email keeps the date-count subject and date framing above. A Knowledge-only email names its new Knowledge item count. An email that carries Approvals, Tasks, or Intake, or that mixes Dates and Knowledge, uses `Your daily briefing` and the framing line `Here is your daily briefing.`
 
-The body renders the present sections in one fixed order: Approvals, Tasks, Dates, Obligations, Knowledge, then Intake. Empty sections disappear. Approvals, Tasks, and Intake use the same three-row section contracts as Home and add `And N more on Home.` when the cap omits eligible rows. Each row links to the Contract, Matter, Entity, Knowledge Item, or Request surface that resolves it. Date order and distance keep clauses 3 to 7 above. The settings link and the no-empty-send rule keep clauses 8 and 9.
+The body renders the present sections in one fixed order: Approvals, Tasks, Dates, Obligations, Knowledge, then Intake. Empty sections disappear. Approvals, Tasks, and Intake use the same four-row section contracts as Home and add `And N more on Home.` when the cap omits eligible rows. Each row links to the Contract, Matter, Entity, Knowledge Item, or Request surface that resolves it. Date order and distance keep clauses 3 to 7 above. The settings link and the no-empty-send rule keep clauses 8 and 9.
 
 Both HTML and plain text are authored outputs of `briefing-template.ts`. User-written values are escaped in HTML. The plain-text part keeps the same section order and links. DES-051 still owns the sentence register.
 
@@ -472,7 +472,7 @@ The Knowledge row in Personal → Notifications exposes its email section toggle
 
 #### M29 built addendum: the six-section briefing and its Home-linked summary
 
-[M29/7](https://github.com/juggernog20/OpenLaw/issues/624) completes the briefing. Approvals waiting on the reader, the reader's Tasks due today or overdue, and open Intake Requests join the existing Dates, Entity Obligations, and Knowledge sections. Present sections render in clause 2 order in both mail parts. Empty sections disappear, and a day with no enabled content sends nothing. Approvals, Tasks, and Intake share their query contracts with Home. Their email names any rows hidden by Home's three-row cap.
+[M29/7](https://github.com/juggernog20/OpenLaw/issues/624) completes the briefing. Approvals waiting on the reader, the reader's Tasks due today or overdue, and open Intake Requests join the existing Dates, Entity Obligations, and Knowledge sections. Present sections render in clause 2 order in both mail parts. Empty sections disappear, and a day with no enabled content sends nothing. Approvals, Tasks, and Intake share their query contracts with Home. Their email names any rows hidden by Home's four-row cap.
 
 The five `briefing.*` preference keys are email-only overrides. Approvals, Tasks, Dates, and Obligations default on. Intake defaults off. Existing users receive those defaults from application code because migration `0084_lush_ender_wiggin` inserts no preference rows. The Knowledge section is already live from M28/6 and keeps its `knowledge` email preference. It has no Home card. A Knowledge-only briefing sends email but does not create the Home-linked bell summary.
 

@@ -216,7 +216,7 @@ Split the scope into:
 
 ### Addendum (2026-09-01, M29 close, [#625](https://github.com/juggernog20/OpenLaw/issues/625)): dashboards landed as Home
 
-The cross-cutting dashboards capability now has one personal staff surface. Home reads the signed-in person's pending Approvals, assigned Tasks, approaching Dates, assigned Entity Obligations, the Inbox, managed Contracts, and managed Matters. Each section applies its existing record reach and lifecycle rules before totals and the three-row cap. Home adds no reporting store, backfill, saved view, or configurable widget model.
+The cross-cutting dashboards capability now has one personal staff surface. Home reads the signed-in person's pending Approvals, assigned Tasks, approaching Dates, assigned Entity Obligations, the Inbox, managed Contracts, and managed Matters. Each section applies its existing record reach and lifecycle rules before totals and the four-row cap. Home adds no reporting store, backfill, saved view, or configurable widget model.
 
 Reporting and analytics remain deferred as a destination. Org-wide cuts such as Contracts by Stage, Matter risk and urgency, cycle time, capacity, and per-Entity analytics stay in `FUTURE-FEATURES.md`. Home answers what waits on one person. It does not answer how the organization performs.
 
