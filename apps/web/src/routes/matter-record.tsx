@@ -1623,7 +1623,7 @@ function MatterLifecycleDialog({
         )}
         {closing && (
           <div className="mt-4 flex flex-col gap-1.5">
-            <Label htmlFor="matter-closing-note">
+            <Label htmlFor="matter-closing-note" required>
               <FormattedMessage id="matters.close.note" defaultMessage="Closing note" />
             </Label>
             <textarea
@@ -1631,6 +1631,7 @@ function MatterLifecycleDialog({
               className={TEXTAREA_CLASS}
               autoFocus
               required
+              aria-required="true"
               maxLength={2000}
               rows={3}
               value={closingNote}

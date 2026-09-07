@@ -1335,10 +1335,10 @@
     "defaultMessage": "Eligible records could not be searched."
   },
   "contractMatter.searchContract": {
-    "defaultMessage": "Search by Contract number or title"
+    "defaultMessage": "Search by contract number or title"
   },
   "contractMatter.searchMatter": {
-    "defaultMessage": "Search by Matter number or title"
+    "defaultMessage": "Search by matter number or title"
   },
   "contractMatter.searching": {
     "defaultMessage": "Searching…"

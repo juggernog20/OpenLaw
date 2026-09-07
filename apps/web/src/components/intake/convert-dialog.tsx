@@ -395,17 +395,12 @@ export function ConvertDialog({
               />
             </p>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="convert-title">
+              <Label htmlFor="convert-title" required>
                 <FormattedMessage id="convert.titleField" defaultMessage="Title" />
-                <span aria-hidden="true" className="ms-0.5 text-status-danger-fg">
-                  *
-                </span>
-                <span className="sr-only">
-                  <FormattedMessage id="intake.field.requiredMark" defaultMessage="(required)" />
-                </span>
               </Label>
               <Input
                 id="convert-title"
+                aria-required="true"
                 autoFocus
                 value={title}
                 // The seam is what enforces it; the box restates it so
@@ -424,21 +419,16 @@ export function ConvertDialog({
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="convert-type">
+              <Label htmlFor="convert-type" required>
                 <FormattedMessage
                   id="convert.typeField"
                   defaultMessage="{module, select, matter {Matter} other {Contract}} type"
                   values={{ module: targetModule }}
                 />
-                <span aria-hidden="true" className="ms-0.5 text-status-danger-fg">
-                  *
-                </span>
-                <span className="sr-only">
-                  <FormattedMessage id="intake.field.requiredMark" defaultMessage="(required)" />
-                </span>
               </Label>
               <select
                 id="convert-type"
+                aria-required="true"
                 value={pickedId}
                 className={CONTROL_CLASS}
                 onChange={(event) => {

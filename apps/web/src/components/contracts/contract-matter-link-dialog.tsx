@@ -194,12 +194,12 @@ export function ContractMatterLinkDialog(
               {props.mode === "from-contract" ? (
                 <FormattedMessage
                   id="contractMatter.searchMatter"
-                  defaultMessage="Search by Matter number or title"
+                  defaultMessage="Search by matter number or title"
                 />
               ) : (
                 <FormattedMessage
                   id="contractMatter.searchContract"
-                  defaultMessage="Search by Contract number or title"
+                  defaultMessage="Search by contract number or title"
                 />
               )}
             </Label>

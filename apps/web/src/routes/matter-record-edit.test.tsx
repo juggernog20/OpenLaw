@@ -890,7 +890,7 @@ describe("the editable matter record", () => {
     await user.click(screen.getByRole("link", { name: "Manage team" }));
     await user.click(await screen.findByRole("button", { name: "Add team member" }));
     const add = await screen.findByRole("dialog", { name: "Add team member" });
-    await user.selectOptions(within(add).getByLabelText("Person"), MEMBER.id);
+    await user.selectOptions(within(add).getByLabelText(/^Person\*?$/), MEMBER.id);
     await user.selectOptions(within(add).getByLabelText("Role"), "watcher");
     await user.click(within(add).getByRole("button", { name: "Add to team" }));
     expect(
