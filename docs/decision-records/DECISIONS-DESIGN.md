@@ -3162,7 +3162,7 @@ The Entity registry adopts the managed table whole under the Calendar/List/Chart
 
 Both destinations use one Filter popover with searchable properties and checkbox choices. Values within one property match any selection; separate properties combine with AND. There is no nested condition builder. Active filters are editable chips with individual removal, plus Clear all. Date ranges accept either endpoint and include both boundary dates.
 
-Contracts offer Owner (including Me and Unassigned), Status, Type, Effective date, Expiry date, Show ended, and Show archived. Matters offer Manager (including Me and Unassigned), Status, Type, Priority, Risk (including Not assessed), Opened date, Next deadline, Show closed, and Show archived. Next deadline means the same next date displayed in the table, rather than any date attached to the Matter.
+Contracts offer Owner (including Me and Unassigned), Status, Type, Effective date, Expiry date, Show ended, and Show archived. Matters offer Manager (including Me and Unassigned), Status, Type, Priority, Risk (including Not assessed), Opened date, Next deadline, Incomplete, Show closed, and Show archived. Next deadline means the same next date displayed in the table, rather than any date attached to the Matter.
 
 The API applies filters and access scope before pagination, and uses those same predicates for the matching total. Filter choices come from the entire reachable collection, including retired labels still in use. Links carry filters and sort; browser history, refresh, and saved views restore them. Existing single-value saved filters remain readable. Home's Your Contracts opens Owner: Me; Your Matters opens Manager: Me. Explicit link filters override the saved default view's filters.
 

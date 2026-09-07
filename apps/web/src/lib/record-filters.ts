@@ -26,6 +26,7 @@ export const MATTER_FILTER_KEYS = [
   "openedTo",
   "deadlineFrom",
   "deadlineTo",
+  "incomplete",
   "includeClosed",
   "includeArchived",
 ] as const;
@@ -37,7 +38,7 @@ export const INBOX_FILTER_KEYS = [
   "receivedFrom",
   "receivedTo",
 ] as const;
-const FLAGS = new Set(["includeEnded", "includeArchived", "includeClosed"]);
+const FLAGS = new Set(["includeEnded", "includeArchived", "includeClosed", "incomplete"]);
 
 export function filterQuery(
   filters: Layout["filters"],

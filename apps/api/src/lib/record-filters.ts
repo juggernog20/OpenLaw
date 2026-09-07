@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** DES-046 shares multi-value and date-range filters across record lists and the Inbox. */
+
 import { z } from "zod";
 import { and, inArray, isNull, or, sql, type AnyPgColumn, type SQL } from "@openlaw/db";
 

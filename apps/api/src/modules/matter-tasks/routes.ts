@@ -139,6 +139,8 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireMember,
       schema: {
         operationId: "addMatterTask",
+        description:
+          "Assignees must be active staff who manage the record or belong to its team. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.",
         summary:
           "Add a Task to a reached, non-archived Matter. Closing does not freeze the checklist",
         tags: ["matter-tasks"],
@@ -196,6 +198,8 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireMember,
       schema: {
         operationId: "updateMatterTask",
+        description:
+          "Assignees must be active staff who manage the record or belong to its team. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.",
         summary: "Edit a Task's title, assignee, or internal due date on a reached Matter",
         tags: ["matter-tasks"],
         params: TaskParams,

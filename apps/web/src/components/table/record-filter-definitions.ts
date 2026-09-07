@@ -124,6 +124,16 @@ export function useRecordFilterDefinitions(
             kind: "date",
           },
           {
+            // MTR-014: a required field attached after the fact does not
+            // rewrite old rows. This flag is how those rows are found.
+            key: "incomplete",
+            label: intl.formatMessage({
+              id: "matters.filter.incomplete",
+              defaultMessage: "Incomplete",
+            }),
+            kind: "flag",
+          },
+          {
             key: "includeClosed",
             label: intl.formatMessage({ id: "matters.showClosed", defaultMessage: "Show closed" }),
             kind: "flag",

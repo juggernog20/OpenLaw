@@ -264,7 +264,6 @@ export const requestInboxRoutes: FastifyPluginAsyncZod = async (app) => {
           .selectDistinct({ id: users.id, displayName: users.displayName })
           .from(requests)
           .innerJoin(users, eq(requests.requesterId, users.id))
-          .leftJoin(requestAssignees, eq(requests.assigneeId, requestAssignees.id))
           .where(isNull(requests.archivedAt))
           .orderBy(asc(users.displayName), asc(users.id)),
       ]);

@@ -273,6 +273,16 @@ describe("the Matters destination", () => {
     );
     expect(await screen.findByText("Archived advice")).toBeInTheDocument();
     expect(calls.at(-1)?.searchParams.get("includeArchived")).toBe("true");
+    // MTR-014: the Incomplete flag is how rows missing a later-required
+    // field are found, so the shared filter bar has to keep offering it.
+    await user.click(screen.getByRole("button", { name: /^Filter/ }));
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+        name: "Incomplete",
+      }),
+    );
+    await waitFor(() => expect(calls.at(-1)?.searchParams.get("incomplete")).toBe("true"));
+    expect(screen.getByRole("button", { name: "Remove Incomplete filter" })).toBeInTheDocument();
   });
 
   it("keeps saved views available on the empty state and names a filter that matches nothing", async () => {

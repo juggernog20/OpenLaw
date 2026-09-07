@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** INT-007 assigns, reassigns or clears triage responsibility. Decided Requests retain a read-only assignee. */
+
 import { useEffect, useRef, useState } from "react";
 import { Check, Search, UserPlus, UserRound } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
