@@ -73,6 +73,15 @@ input values, and API envelope names; their incomplete results are not presented
 successful acceptance. The final records all passed against their recorded guide
 bytes.
 
+The Fable review seat's source check against the app commit changed three sentences
+in the conversion guide after those runs: the Template control appears whenever a
+Matter type is set rather than only when templates exist, the template re-review
+sentence is now an instruction, and the refused template default recovery names
+the case it covers. The conversion, variants, and discovery records keep the hash
+they read (`78e63862…`); the current conversion guide hash is `09ba1d03…`. The
+triage guide bytes did not change. As in DOC-012, independent acceptance must cover
+the final text.
+
 The browser executable expected by the pinned Playwright package was missing from
 the shared cache. The author installed it into a private documentation cache and
 ran these checks there. This did not change the app, dependency lockfile, or another
