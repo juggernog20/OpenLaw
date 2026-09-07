@@ -5,11 +5,11 @@
   "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
   "environment": "openlaw-docs-b8e31260-conversations",
   "author": "Codex documentation author",
-  "technicalReviewer": null,
-  "walkthroughReviewer": null,
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
   "reviewerKind": "agent",
-  "verifiedAt": null,
-  "status": "not-run",
+  "verifiedAt": "2026-09-07T19:07:24.300Z",
+  "status": "pass",
   "sources": [
     "CONTEXT.md",
     "docs/decision-records/DECISIONS-MATTERS.md",
@@ -31,9 +31,12 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "expected": "Checklist work, deadlines, relationships, and corresponding history remain distinct and accurate. Invalid cycles/restricted targets and unauthorized changes do not expose or alter hidden work.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "Empty title kept the dialog open (\"Name what needs doing.\") with no Task; staging Priya Raman via Add someone to the team… / Use this person and then Cancel left 0 Tasks and no Priya on the team; the same staging saved with Add Task created the Task (assignee Priya, due 2026-09-08) and added Priya as Member. Row picker → Add someone → Sofia Lindqvist → Add to team and assign saved assignee and Member role at once; Unassigned cleared the assignee and kept Sofia on the team; second Task assigned to Nadia Haddad from the team list; completing the first showed \"1 of 2 done\" and reopening reset it; Move down persisted the new order without touching completion. Edit Task → Cancel kept the title; Edit Task → Save renamed it; Remove Task removed that row (the dialog was not a confirmation), leaving \"Rev first Task\" and \"0 of 1 done\". The Add a Key date dialog offers Date, Event and Note only; an empty submit kept it open with no row; three dates saved with notes: \"Overdue\" for 2026-09-04, \"Next\" for 2026-09-11, \"Upcoming\" for 2026-09-27; the Task due 2026-09-08 appears nowhere on Key dates and the Matters list shows Next deadline \"Rev soon\". Edit date saved a new note; Remove date asked \"Remove Key date? Remove Rev later 1788807909038 on Sep 27 (in 20 days)…\", Cancel kept three rows and confirming removed only Rev later; closed (by API) the tab showed no Next and the list reported nextDeadline=null while the Event stayed editable; reopened, Rev soon is Next again. Set parent → Cancel left no parent; Set parent saved M-127; on the parent, choosing this child as its parent was refused (That parent would close a loop in the Matter hierarchy.); Add related Matter listed M-128 on both records; Remove on the Related row detached it while M-128 kept its Manager Priya Raman and its own state; the Parent link remained. New sub-Matter opened \"Create sub-Matter\" and created M-131 with parent M-126, no Manager, not Confidential, 0 Tasks and 0 Key dates; after the Administrator related Confidential M-129, Nadia Haddad saw \"Restricted Matter\" with no title or number, the direct API read answered 404, and the page said \"Something went wrong. The page could not load. Reload to try\". Link Contract on Confidential M-126 with the plain C-382 opened \"Confidentiality differs\" (\"Confidentiality differs C-382 and M-126 keep independent Confidential flags. Consider aligning them if that matches the work. This suggestio…\"); Leave them as they are linked it with the Contract still not Confidential and the Matter still Confidential, and \"Rev Counterparty\" still on the Contract only; Ravi Menon (Contributor on the Matter, not the Contract) saw \"Restricted contract\"; linking the same Contract to M-130 by API answered 409; after Unlink the Contract linked to M-130 without a Confidentiality dialog. Ravi Menon read the Task and Key date rows and the Parent as Restricted Matter (he is not on that Matter's team), with no Add Task, Add date, Actions or relationship buttons and a disabled completion box; his Task/Key date/relation writes answered 403/403/403; archived, the Tasks tab hid Add Task and row actions and a Key date write answered 409; Restore brought back Add Task with the 1 Task and 2 Key dates intact; History mentions Rev first Task, Rev soon, Rev parent legal_team_member 1788807909038.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-016/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-016/independent-discovery.json"
+      ]
     },
     {
       "id": "V-C24",
@@ -41,15 +44,21 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "expected": "Checklist work, deadlines, relationships, and corresponding history remain distinct and accurate. Invalid cycles/restricted targets and unauthorized changes do not expose or alter hidden work.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "Empty title kept the dialog open (\"Name what needs doing.\") with no Task; staging Priya Raman via Add someone to the team… / Use this person and then Cancel left 0 Tasks and no Priya on the team; the same staging saved with Add Task created the Task (assignee Priya, due 2026-09-08) and added Priya as Member. Row picker → Add someone → Sofia Lindqvist → Add to team and assign saved assignee and Member role at once; Unassigned cleared the assignee and kept Sofia on the team; second Task assigned to Daniel Okafor from the team list; completing the first showed \"1 of 2 done\" and reopening reset it; Move down persisted the new order without touching completion. Edit Task → Cancel kept the title; Edit Task → Save renamed it; Remove Task removed that row (the dialog was not a confirmation), leaving \"Rev first Task\" and \"0 of 1 done\". The Add a Key date dialog offers Date, Event and Note only; an empty submit kept it open with no row; three dates saved with notes: \"Overdue\" for 2026-09-04, \"Next\" for 2026-09-11, \"Upcoming\" for 2026-09-27; the Task due 2026-09-08 appears nowhere on Key dates and the Matters list shows Next deadline \"Rev soon\". Edit date saved a new note; Remove date asked \"Remove Key date? Remove Rev later 1788807909038 on Sep 27 (in 20 days)…\", Cancel kept three rows and confirming removed only Rev later; closed (by API) the tab showed no Next and the list reported nextDeadline=null while the Event stayed editable; reopened, Rev soon is Next again. Set parent → Cancel left no parent; Set parent saved M-121; on the parent, choosing this child as its parent was refused (That parent would close a loop in the Matter hierarchy.); Add related Matter listed M-122 on both records; Remove on the Related row detached it while M-122 kept its Manager Priya Raman and its own state; the Parent link remained. New sub-Matter opened \"Create sub-Matter\" and created M-125 with parent M-120, no Manager, not Confidential, 0 Tasks and 0 Key dates; after the Administrator related Confidential M-123, Priya Raman saw \"Restricted Matter\" with no title or number, the direct API read answered 404, and the page said \"Something went wrong. The page could not load. Reload to try\". Link Contract on Confidential M-120 with the plain C-381 opened \"Confidentiality differs\" (\"Confidentiality differs C-381 and M-120 keep independent Confidential flags. Consider aligning them if that matches the work. This suggestio…\"); Leave them as they are linked it with the Contract still not Confidential and the Matter still Confidential, and \"Rev Counterparty\" still on the Contract only; Ravi Menon (Contributor on the Matter, not the Contract) saw \"Restricted contract\"; linking the same Contract to M-124 by API answered 409; after Unlink the Contract linked to M-124 without a Confidentiality dialog. Ravi Menon read the Task and Key date rows and the Parent as Restricted Matter (he is not on that Matter's team), with no Add Task, Add date, Actions or relationship buttons and a disabled completion box; his Task/Key date/relation writes answered 403/403/403; archived, the Tasks tab hid Add Task and row actions and a Key date write answered 409; Restore brought back Add Task with the 1 Task and 2 Key dates intact; History mentions Rev first Task, Rev soon, Rev parent administrator 1788807909038.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-016/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-016/independent-discovery.json"
+      ]
     }
   ],
-  "authorEvidence": ["docs/documentation/batches/DOC-016/README.md"],
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-016/README.md",
+    "docs/documentation/batches/DOC-016/author-work.json"
+  ],
   "limitations": [
-    "Author walkthrough passed; independent source review and article walkthrough remain pending.",
-    "Agent walkthroughs are not a human user study or the feature owner's approval."
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "Linked guides remain unpublished; the article stays in review."
   ],
   "previousEvidence": null,
   "copyOnlyReview": null

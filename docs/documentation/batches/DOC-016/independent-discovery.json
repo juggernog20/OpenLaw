@@ -1,0 +1,120 @@
+{
+  "kind": "independent-help-discovery",
+  "task": "DOC-016",
+  "issue": 736,
+  "independentReview": true,
+  "reviewerKind": "agent",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "startedAt": "2026-09-07T19:07:24.549Z",
+  "finishedAt": "2026-09-07T19:08:24.538Z",
+  "frontend": "Vite preview reader at port 43312 serving the working canonical Markdown, proxied to the conversations lab at port 43302",
+  "articleHashesTested": [
+    {
+      "articleId": "create-matter",
+      "contentSha256": ["078e5ac72d41fa7ed55e02131b55dcdb86cb26d646485e64f5a494969e1aef73"]
+    },
+    {
+      "articleId": "matter-status-and-archive",
+      "contentSha256": ["7b4f1d4b77f4979d273e68ffcefe9be849c7e371cd518b256e466a6ba2df60cf"]
+    },
+    {
+      "articleId": "matter-work",
+      "contentSha256": ["621ed4366708c7b55defb625733358b565eef3a0bd443e500a1f24352e875ffd"]
+    }
+  ],
+  "articleHashesCurrent": [
+    {
+      "articleId": "create-matter",
+      "contentSha256": "078e5ac72d41fa7ed55e02131b55dcdb86cb26d646485e64f5a494969e1aef73"
+    },
+    {
+      "articleId": "matter-status-and-archive",
+      "contentSha256": "7b4f1d4b77f4979d273e68ffcefe9be849c7e371cd518b256e466a6ba2df60cf"
+    },
+    {
+      "articleId": "matter-work",
+      "contentSha256": "621ed4366708c7b55defb625733358b565eef3a0bd443e500a1f24352e875ffd"
+    }
+  ],
+  "themes": ["light", "dark", "warm"],
+  "widths": [320, 720, 1440],
+  "limitations": [
+    "Preview reader checks of the working canonical Markdown on the development edition; all three articles are still in review.",
+    "CSS-pixel overflow measurements only; not browser zoom or assistive technology acceptance.",
+    "The theme attribute was set on the document element by script; the measured body background was transparent in all three themes, so the theme check verifies layout width only."
+  ],
+  "passed": true,
+  "steps": [
+    {
+      "article": "create-matter",
+      "role": "administrator",
+      "step": "create-matter: contextual Help from /matters carries matters.list and lists the guide; exact-title search opens it; title and section headings take focus; the full documentation link works",
+      "result": "pass",
+      "actual": "Help href from /matters = /help?topic=matters.list&topic=lists&topic=search&topic=notifications…; contextual Help and exact-title search both list \"Create a Matter and use a template\"; title heading focused; outline \"Use a template\" → #use-a-template, section heading focused; direct section link focuses the section; full documentation link → /documentation/create-matter",
+      "at": "2026-09-07T19:07:25.979Z",
+      "ms": 4205,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "matter-status-and-archive",
+      "role": "administrator",
+      "step": "matter-status-and-archive: contextual Help from /matters/79 carries matters.progression and lists the guide; exact-title search opens it; title and section headings take focus; the full documentation link works",
+      "result": "pass",
+      "actual": "Help href from /matters/79 = /help?topic=matters.overview&topic=matters.progression&topic=matters.actions&topic=matters.tasks&topic=matters.dates&top…; contextual Help and exact-title search both list \"Change a Matter Status or archive it\"; title heading focused; outline \"Close or reopen the Matter\" → #close-or-reopen-the-matter, section heading focused; direct section link focuses the section; full documentation link → /documentation/matter-status-and-archive",
+      "at": "2026-09-07T19:07:30.184Z",
+      "ms": 4003,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "matter-work",
+      "role": "administrator",
+      "step": "matter-work: contextual Help from /matters/79/tasks carries matters.tasks and lists the guide; exact-title search opens it; title and section headings take focus; the full documentation link works",
+      "result": "pass",
+      "actual": "Help href from /matters/79/tasks = /help?topic=matters.overview&topic=matters.progression&topic=matters.actions&topic=matters.tasks&topic=matters.dates&top…; contextual Help and exact-title search both list \"Manage Matter Tasks, Key dates, and relationships\"; title heading focused; outline \"Maintain Key dates\" → #maintain-key-dates, section heading focused; direct section link focuses the section; full documentation link → /documentation/matter-work",
+      "at": "2026-09-07T19:07:34.187Z",
+      "ms": 4031,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "create-matter",
+      "role": "legal_team_member",
+      "step": "create-matter: contextual Help from /matters carries matters.list and lists the guide; exact-title search opens it; title and section headings take focus; the full documentation link works",
+      "result": "pass",
+      "actual": "Help href from /matters = /help?topic=matters.list&topic=lists&topic=search&topic=notifications…; contextual Help and exact-title search both list \"Create a Matter and use a template\"; title heading focused; outline \"Use a template\" → #use-a-template, section heading focused; direct section link focuses the section; full documentation link → /documentation/create-matter",
+      "at": "2026-09-07T19:07:39.502Z",
+      "ms": 4183,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "matter-status-and-archive",
+      "role": "legal_team_member",
+      "step": "matter-status-and-archive: contextual Help from /matters/79 carries matters.progression and lists the guide; exact-title search opens it; title and section headings take focus; the full documentation link works",
+      "result": "pass",
+      "actual": "Help href from /matters/79 = /help?topic=matters.overview&topic=matters.progression&topic=matters.actions&topic=matters.tasks&topic=matters.dates&top…; contextual Help and exact-title search both list \"Change a Matter Status or archive it\"; title heading focused; outline \"Close or reopen the Matter\" → #close-or-reopen-the-matter, section heading focused; direct section link focuses the section; full documentation link → /documentation/matter-status-and-archive",
+      "at": "2026-09-07T19:07:43.686Z",
+      "ms": 3931,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "matter-work",
+      "role": "legal_team_member",
+      "step": "matter-work: contextual Help from /matters/79/tasks carries matters.tasks and lists the guide; exact-title search opens it; title and section headings take focus; the full documentation link works",
+      "result": "pass",
+      "actual": "Help href from /matters/79/tasks = /help?topic=matters.overview&topic=matters.progression&topic=matters.actions&topic=matters.tasks&topic=matters.dates&top…; contextual Help and exact-title search both list \"Manage Matter Tasks, Key dates, and relationships\"; title heading focused; outline \"Maintain Key dates\" → #maintain-key-dates, section heading focused; direct section link focuses the section; full documentation link → /documentation/matter-work",
+      "at": "2026-09-07T19:07:47.617Z",
+      "ms": 4052,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "create-matter",
+      "role": "signed-out",
+      "step": "formal index lists all three guides without application API requests; formal search finds each; every article fits 320, 720 and 1440 CSS pixels in light, dark and warm without horizontal overflow",
+      "result": "pass",
+      "actual": "formal index and search list all three titles; non-session API requests: 0; 27 article/theme/width combinations measured with document and main scrollWidth ≤ innerWidth; theme backgrounds light=rgba(0, 0, 0, 0), dark=rgba(0, 0, 0, 0), warm=rgba(0, 0, 0, 0); CSS-pixel widths only",
+      "at": "2026-09-07T19:07:51.751Z",
+      "ms": 32752,
+      "reader": "preview 43312"
+    }
+  ]
+}

@@ -2,8 +2,10 @@
 
 C22–C24 for [issue #736](https://github.com/juggernog20/OpenLaw/issues/736).
 Three separate articles cover creation/templates, Status and archive lifecycle,
-and Tasks, Key dates, and relationships. Author checks passed; independent
-technical review and all six scenario/role walkthroughs remain pending.
+and Tasks, Key dates, and relationships. Author checks passed. The Fable review
+seat then checked the guides against the app source and walked all six
+scenario/role combinations independently; the per-article evidence records read
+`pass`.
 
 ## Build and evidence
 
@@ -32,10 +34,10 @@ follow these text guides. Agent checks are not a human user study or owner appro
 | [Matter work](author-work.json)    |     18 | Task assignment/team expansion, completion/order/edit/removal, Key dates, hierarchy and flat relations, linked Contracts and access boundaries              |
 | [Discovery](author-discovery.json) |      7 | Six role/article Help searches and formal links, heading focus, three themes at three widths, anonymous formal index                                        |
 
-The 51 checks identify tested guide bytes. Detailed outcomes distinguish the
-acting role from fixture setup and from a different reader's refusal check.
-All three articles have per-article evidence records; author success does not
-mark the pending independent scenarios passed.
+The 51 author checks identify tested guide bytes. Detailed outcomes distinguish
+the acting role from fixture setup and from a different reader's refusal check.
+The independent walkthrough below is recorded separately and is what marks the
+per-article evidence records passed.
 
 ## Corrections and limits
 
@@ -70,6 +72,72 @@ Shared Document and administrator configuration guides are scheduled later in th
 program. Their links remain publication dependencies. Request conversion and
 Contributor guidance are linked rather than duplicated. DOC-025 still governs
 final suite acceptance and DOC-027 governs actual publication.
+
+## Independent walkthrough
+
+The Fable review seat first checked each guide's claims against the committed app
+source at `a28331f7` (the creation body and template instantiation, the lifecycle
+handler, the Key date Next rule, the relation and Contract-link routes, and the
+role guards), then followed the three guides with its own Playwright scripts on
+September 7, 2026, in the same conversations lab. It reused the author's Matter
+types, Fields, templates, Statuses, Entity and Contract type by identifier, not
+the author's steps or assertions. Every walked record was created fresh with a
+`Rev` prefix.
+
+C22 ran as Administrator and Legal Team Member: refused creation for a missing
+title and a missing required Field, direct Confidential creation with Entity and
+person references (the referenced person could not read the Matter), Overview
+edits including a refused required clear and Change matter type, explicit team
+roles with Priya Raman as the outsider, the single template's auto-selection and
+No template reset, template creation with UTC offsets and the Manager-targeted
+Task, the #770 optional-default return and its Overview workaround, a template
+archived while the form was open, and the Contributor's refusal.
+
+C23 ran as both roles: the open-only Status control with a relabelled open
+Status, the Close dialog with a plain child and a Confidential child (Restricted
+Matter for the Legal Team Member), Cancel and confirm, writes while closed, Show
+closed, Reopen Cancel and confirm with the Key date back on Next, Archive Cancel
+and confirm with the child and linked Contract unaffected, both filters to find
+a closed archived Matter, Restore Cancel and confirm, the Contributor's read
+without lifecycle controls, and History.
+
+C24 ran as both roles: the blank Task refusal, staging a person through Add
+someone to the team… with Cancel and with save, Add to team and assign on a row,
+completion, Move down, Edit Task and Remove Task, Key dates with Overdue, Next
+and Upcoming states and the confirmed removal, the closed Matter's dates, Set
+parent with Cancel, the refused loop, a flat relation on both records and its
+removal, New sub-Matter, Restricted Matter for an unreadable relation, Link
+Contract with Confidentiality differs and Leave them as they are, Restricted
+contract for the Contributor, the refused second link, Unlink and the move, the
+Contributor's read-only sections, and the archive freeze and Restore.
+
+The discovery run checked, for both roles, the contextual Help topics from the
+Matters list and a Matter record, exact-title search, heading focus for the title,
+an outline section and a direct section link, and the full documentation link;
+signed out, the formal index and search list all three guides with no
+application API request, and the three articles fit 320, 720 and 1440 CSS pixels
+in the light, dark and warm themes without horizontal overflow.
+
+All 44 walkthrough steps and 7 discovery steps passed. They are in
+[independent-walkthrough.json](independent-walkthrough.json) and
+[independent-discovery.json](independent-discovery.json); the per-article
+evidence files under `docs/documentation/evidence/` cite them and now read
+`pass`. Earlier reviewer runs failed on harness assumptions (a number Field is a
+spinbutton, the Key dates tab needed a reload after Reopen, the Filter button is
+renamed once a filter is active, a completed Task's checkbox is named Reopen
+Task, and the Contributor sees a parent he is not on as Restricted Matter), not
+on app or guide behaviour; the records name them and hold only the completed
+runs. No guide text changed because of the walkthrough. This is an agent
+walkthrough, not a human user study, and it does not stand in for the feature
+owner's approval.
+
+## Repository validation
+
+After the independent walkthrough and the evidence records, the review seat ran
+the documentation build in its normal and preview forms, the documentation
+tooling tests, prettier, the documentation lint, and secretlint on the new
+records. The application runtime is unchanged by this task, so the workspace
+test suite was not rerun here.
 
 ## CodeRabbit disposition
 

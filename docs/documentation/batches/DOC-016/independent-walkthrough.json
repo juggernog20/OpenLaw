@@ -1,0 +1,583 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-016",
+  "issue": 736,
+  "independentReview": true,
+  "reviewerKind": "agent",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "author": "Codex documentation author",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "environments": {
+    "conversations": {
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0"
+    }
+  },
+  "method": "browser-walkthrough",
+  "startedAt": "2026-09-07T18:51:22.049Z",
+  "finishedAt": "2026-09-07T19:07:24.300Z",
+  "frontend": "The conversations lab at port 43302 (Mailpit 48427) for all three guides; separate browser sessions for Priya Raman (the other Legal Team Member) and Ravi Menon (Contributor); the lab API under each acting identity for prerequisite records and read-back, and under the Administrator for the Status rename, the template archive/restore and description edit, and the Confidential relation target",
+  "browser": "Playwright 1.62.1 driving the installed Chromium 1243 build from the shared Playwright cache, headless, one isolated context per identity at 1280×1800 CSS px; scripts written by the reviewer from the guide text",
+  "articleHashesTested": [
+    {
+      "articleId": "create-matter",
+      "contentSha256": ["078e5ac72d41fa7ed55e02131b55dcdb86cb26d646485e64f5a494969e1aef73"]
+    },
+    {
+      "articleId": "matter-status-and-archive",
+      "contentSha256": ["7b4f1d4b77f4979d273e68ffcefe9be849c7e371cd518b256e466a6ba2df60cf"]
+    },
+    {
+      "articleId": "matter-work",
+      "contentSha256": ["621ed4366708c7b55defb625733358b565eef3a0bd443e500a1f24352e875ffd"]
+    }
+  ],
+  "articleHashesCurrent": [
+    {
+      "articleId": "create-matter",
+      "contentSha256": "078e5ac72d41fa7ed55e02131b55dcdb86cb26d646485e64f5a494969e1aef73"
+    },
+    {
+      "articleId": "matter-status-and-archive",
+      "contentSha256": "7b4f1d4b77f4979d273e68ffcefe9be849c7e371cd518b256e466a6ba2df60cf"
+    },
+    {
+      "articleId": "matter-work",
+      "contentSha256": "621ed4366708c7b55defb625733358b565eef3a0bd443e500a1f24352e875ffd"
+    }
+  ],
+  "authorHashesHistorical": [
+    {
+      "articleId": "create-matter",
+      "contentSha256": ["078e5ac72d41fa7ed55e02131b55dcdb86cb26d646485e64f5a494969e1aef73"]
+    },
+    {
+      "articleId": "matter-status-and-archive",
+      "contentSha256": ["7b4f1d4b77f4979d273e68ffcefe9be849c7e371cd518b256e466a6ba2df60cf"]
+    },
+    {
+      "articleId": "matter-work",
+      "contentSha256": ["621ed4366708c7b55defb625733358b565eef3a0bd443e500a1f24352e875ffd"]
+    }
+  ],
+  "fixturePreparation": [
+    "Reused by identifier the author's Matter types (plain, required, single, multi, retype), their attached Fields, the single/alpha/beta templates, the open and closed Statuses, the live Entity, the Matter-linked Contract type, and the seeded accounts. Every walked record was created fresh by the reviewer with a 'Rev …' title and the run stamp; the author's Matters were only opened read-only for control probes.",
+    "C22: per role, direct creation in the dialog (required text, Entity and person references, Manager Priya Raman, Confidential), a second Confidential Matter for the outsider/team-role checks, a template creation of the single type, and a stale-template attempt with the beta template archived by the Administrator's API while the form was open and restored afterwards. The single template's description was edited and reverted by API to show that later template edits do not touch the copied rows.",
+    "C23: per role, a Matter with one plain child and one Confidential child created by the Administrator, a linked Contract, one Task and one Key date five days out, all by the acting role's API session. The Administrator's API renamed the 'Docs Matter otherOpen' Status to 'Resolved <stamp>' for the relabel check and renamed it back. Closing the Matter before the archive check and adding Ravi Menon as Contributor used the API.",
+    "C24: per role, a Confidential Matter with the acting role as Manager and Ravi Menon as Contributor, a parent, a related Matter managed by Priya Raman, a Confidential Matter of the Administrator's for the Restricted Matter check, a second Matter for moving the Contract link, and a standalone Contract with an inline Counterparty, all by API. Closing and reopening for the Key date state check, archiving and restoring for the freeze check, and the Administrator's Confidential relation used the API; every other action used the page controls."
+  ],
+  "corrections": [
+    "No guide text changed as a result of the walkthrough: every checked instruction and outcome in the three guides matched the app on the tested bytes, which are the bytes in the evidence records."
+  ],
+  "observations": [
+    "Issue #770 reproduced in both roles: an optional Field cleared in the Create dialog while a template was selected came back as the template default on the saved Matter; clearing it on Overview persisted and a nonempty replacement saved normally, as the guide says.",
+    "The Create dialog refuses with an alert naming the missing Fields (\"Fill Docs Matter required …, Docs Matter entity ….\"); clearing a required Field on Overview marks it invalid with \"Fill … first — the type requires it.\"; a stale template answers \"The template must be live and belong to the selected matter type.\"; a blank Task answers \"Name what needs doing.\"",
+    "Change matter type opens \"Change matter type to <type>\" with the new type's required Fields; a number Field is a spinbutton. Cancel keeps the old type; after switching back, the value entered for the other type stays in the record but is not shown.",
+    "The Close dialog reads \"Closing is a signal, not a lock. The Matter leaves active surfaces but stays fully writable.\" and lists open children under \"These child Matters will stay open.\"; the Legal Team Member saw the Confidential child as \"Restricted Matter\" while the Administrator saw its title. Reopen reads \"Its original opened date is preserved.\"; Archive reads \"The matter leaves the default list. Its history and M-number are kept.\"",
+    "Restoring a closed archived Matter leaves it closed with no Next date; the Matters list needed both Show archived and Show closed to list it. Once a filter is active the Filter button reads \"Filter 1\" and each filter has a removable chip.",
+    "Remove Task removes the row immediately; Remove date asks \"Remove Key date? …\" first. The Task due date never appeared on Key dates or as the list's Next deadline; the Key date dialog offers Date, Event and Note only.",
+    "Choosing a child as its own parent's parent is refused in the dialog with \"That parent would close a loop in the Matter hierarchy.\"",
+    "Linking a plain Contract to a Confidential Matter opened \"Confidentiality differs\" (\"C-… and M-… keep independent Confidential flags. Consider aligning them if that matches the work.\"); Leave them as they are linked without changing either flag. Linking the same Contract elsewhere by API answered 409 until Unlink; linking to a plain Matter showed no dialog.",
+    "A Contributor on the Matter team saw a parent he is not on as \"Restricted Matter\" even though that parent is not Confidential, saw a linked Contract he is not on as \"Restricted contract\", had no add/edit controls and a disabled completion box, and his direct Task, Key date, relation, Status, archive and restore writes answered 403.",
+    "Navigating directly to a Confidential Matter the reader cannot open rendered \"Something went wrong. The page could not load.\" while the API answered 404; the relationship row itself showed only \"Restricted Matter\".",
+    "Earlier reviewer runs failed on harness assumptions, not on app or guide behaviour: the retype Field is a spinbutton rather than a textbox; the Key dates tab reached by the in-app tab link still showed the pre-reopen rows until the page was reloaded; the Filter button is renamed once a filter is active; a completed Task's checkbox is named \"Reopen Task\"; and the reviewer expected the Contributor to see the parent's title. Each was corrected in the harness and the run repeated on unchanged bytes; these records hold only the completed runs."
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "Browser contexts were 1280×1800 CSS px; the discovery record's layout checks are CSS-pixel measurements, not browser zoom or assistive technology acceptance.",
+    "Prerequisite records, the Status relabel, the template archive/restore and description edit, the Contributor team role, and (in the C24 run) closing, reopening, archiving and restoring were applied through the lab API; the C23 run exercised the Close, Reopen, Archive and Restore dialogs themselves.",
+    "Not exercised: uploading a Document to a closed Matter (the author record covers it), linking an archived Contract or Matter, Request conversion, and Comments/notifications from these guides' links.",
+    "Linked guides remain unpublished: types and Statuses and Fields, Matter templates (administrator configuration), and Document Versions and Document reading (DOC-017). The three articles stay in review.",
+    "Disposable reviewer records remain in the owned lab, including two 'Rev lifecycle' Matters left archived by the first, aborted lifecycle run."
+  ],
+  "passed": true,
+  "steps": [
+    {
+      "article": "create-matter",
+      "scenario": "V-C22",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Before you start / Create the Matter: a missing title, a missing required Field, and Cancel create nothing; the Manager list offers only Legal Team Members and Administrators",
+      "result": "pass",
+      "actual": "Create with an empty Title and then with the required text Field empty kept the dialog open (message: \"Fill Docs Matter required 1788804353434, Docs Matter entity 1788804353434.\"); Manager list excludes Contributors and Business Users; Cancel closed the dialog; highest M-number stayed 89",
+      "at": "2026-09-07T18:51:24.200Z",
+      "ms": 3187
+    },
+    {
+      "article": "create-matter",
+      "scenario": "V-C22",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Create the Matter: a direct Confidential Matter with Manager, required text, Entity and person references opens with its M- reference, open-Category Status, Medium Priority and Not assessed Risk; the referenced person gains no access",
+      "result": "pass",
+      "actual": "M-90 opened after Create: Status Open (open Category), Priority Medium, Risk Not assessed, Manager Priya Raman, team roster shows Priya as Matter Manager and Daniel Okafor as Creator; saved required text, Entity \"Docs Matter live Entity 1788804353434\" and person Ravi Menon; Ravi's direct read answered 404; renaming kept M-90",
+      "at": "2026-09-07T18:51:27.387Z",
+      "ms": 3002
+    },
+    {
+      "article": "create-matter",
+      "scenario": "V-C22",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Set responsibility and maintain the record: Overview saves Priority and Risk, refuses clearing a required value, Change matter type asks for the new type's required Field, and a detached value is retained but hidden",
+      "result": "pass",
+      "actual": "Priority High and Risk Medium saved; clearing the required text was refused (\"Fill Docs Matter required 1788804353434 first — the type requires it.\") and the value stayed; choosing \"Docs Matter retype 1788804353434\" opened \"Change matter type\" (Change matter type to Docs Matter retype 1788804353434 Complete the new type's required fi…), Cancel kept the type, Change type saved it with {\"docs_matter_extra_1788804353434\":42,\"docs_matter_entity_1788804353434\":\"01a07d0c-5382-7025-baa9-afe41b6c8d92\",\"docs_matter_person_1788804353434\":\"01a07ac6-5983-71e0-bd2e-7e29e6163e60\",\"docs_matter_required_1788804353434\":\"Rev fictional scope\"}; switching back to \"Docs Matter required 1788804353434\" kept the extra value in the record but Overview no longer shows it",
+      "at": "2026-09-07T18:51:30.390Z",
+      "ms": 8961
+    },
+    {
+      "article": "create-matter",
+      "scenario": "V-C22",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Set responsibility: team roles are explicit; a Legal Team Member outside a Confidential Matter cannot read it until added, cannot manage the audience once added, and removing one role leaves another intact",
+      "result": "pass",
+      "actual": "As Manager of M-90 Priya could already read it (200); on the new Confidential M-91 her read answered 404 until Daniel Okafor added her as Member and Watcher; she then read it, edited the Description, had Add team member disabled/absent and her direct team write answered 403; removing her Watcher role left Member; making her Manager did not change her team roles",
+      "at": "2026-09-07T18:51:39.351Z",
+      "ms": 7286
+    },
+    {
+      "article": "create-matter",
+      "scenario": "V-C22",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Use a template: one live template selects itself, No template clears its defaults, a type with several templates starts without one, and a typed title survives switching templates",
+      "result": "pass",
+      "actual": "\"Docs Matter single 1788804353434\" auto-selected its only live template (title \"Fictional single review\", Priority High, Risk Critical, legal Field \"Legal single default\", \"Template adds 2 tasks and 2 key dates.\"); No template cleared them to Medium/Not assessed; \"Docs Matter multi 1788804353434\" offered No template, Docs Matter alpha playbook 1788804353434, Docs Matter beta playbook 1788804353434 with No template selected; alpha set \"Fictional alpha review\", and after typing a title beta kept it while switching Priority/Risk to Low/Low",
+      "at": "2026-09-07T18:51:46.637Z",
+      "ms": 3016
+    },
+    {
+      "article": "create-matter",
+      "scenario": "V-C22",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Use a template: creation copies Tasks and Key dates at UTC offsets from the creation date, assigns the Manager-targeted Task, saves a nonempty override, returns a cleared optional default (#770) until cleared on Overview, and ignores later template or Manager changes",
+      "result": "pass",
+      "actual": "M-92 created 2026-09-07T18:51:50.894Z (UTC date 2026-09-07): Tasks \"Review single evidence\" due 2026-09-10 (+3) assigned to Daniel Okafor and \"Arrange single discussion\" without a date; Key dates 2026-09-07 (+0) and 2026-09-14 (+7); Status Open; legal Field kept the typed \"Rev override\"; the optional Field cleared in the dialog came back as \"Optional single default\" (issue #770) and Overview showed \"Optional single default\"; clearing it on Overview persisted; a template description edit and a Manager change to Priya left the copied rows unchanged",
+      "at": "2026-09-07T18:51:49.654Z",
+      "ms": 6944
+    },
+    {
+      "article": "create-matter",
+      "scenario": "V-C22",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Create the Matter: a template archived after the form opened is refused without creating, a fresh form omits it, and a Contributor has no New matter and cannot create",
+      "result": "pass",
+      "actual": "Create with the beta template archived after the form opened was refused (\"The template must be live and belong to the selected matter type.\") and the highest M-number stayed 92; a fresh form listed No template, Docs Matter alpha playbook 1788804353434; Ravi Menon saw no New matter button and his direct create answered 403",
+      "at": "2026-09-07T18:51:56.598Z",
+      "ms": 5712
+    },
+    {
+      "article": "create-matter",
+      "scenario": "V-C22",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Before you start / Create the Matter: a missing title, a missing required Field, and Cancel create nothing; the Manager list offers only Legal Team Members and Administrators",
+      "result": "pass",
+      "actual": "Create with an empty Title and then with the required text Field empty kept the dialog open (message: \"Fill Docs Matter required 1788804353434, Docs Matter entity 1788804353434.\"); Manager list excludes Contributors and Business Users; Cancel closed the dialog; highest M-number stayed 92",
+      "at": "2026-09-07T18:52:04.156Z",
+      "ms": 3157
+    },
+    {
+      "article": "create-matter",
+      "scenario": "V-C22",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Create the Matter: a direct Confidential Matter with Manager, required text, Entity and person references opens with its M- reference, open-Category Status, Medium Priority and Not assessed Risk; the referenced person gains no access",
+      "result": "pass",
+      "actual": "M-93 opened after Create: Status Open (open Category), Priority Medium, Risk Not assessed, Manager Priya Raman, team roster shows Priya as Matter Manager and Nadia Haddad as Creator; saved required text, Entity \"Docs Matter live Entity 1788804353434\" and person Ravi Menon; Ravi's direct read answered 404; renaming kept M-93",
+      "at": "2026-09-07T18:52:07.314Z",
+      "ms": 3029
+    },
+    {
+      "article": "create-matter",
+      "scenario": "V-C22",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Set responsibility and maintain the record: Overview saves Priority and Risk, refuses clearing a required value, Change matter type asks for the new type's required Field, and a detached value is retained but hidden",
+      "result": "pass",
+      "actual": "Priority High and Risk Medium saved; clearing the required text was refused (\"Fill Docs Matter required 1788804353434 first — the type requires it.\") and the value stayed; choosing \"Docs Matter retype 1788804353434\" opened \"Change matter type\" (Change matter type to Docs Matter retype 1788804353434 Complete the new type's required fi…), Cancel kept the type, Change type saved it with {\"docs_matter_extra_1788804353434\":42,\"docs_matter_entity_1788804353434\":\"01a07d0c-5382-7025-baa9-afe41b6c8d92\",\"docs_matter_person_1788804353434\":\"01a07ac6-5983-71e0-bd2e-7e29e6163e60\",\"docs_matter_required_1788804353434\":\"Rev fictional scope\"}; switching back to \"Docs Matter required 1788804353434\" kept the extra value in the record but Overview no longer shows it",
+      "at": "2026-09-07T18:52:10.344Z",
+      "ms": 8974
+    },
+    {
+      "article": "create-matter",
+      "scenario": "V-C22",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Set responsibility: team roles are explicit; a Legal Team Member outside a Confidential Matter cannot read it until added, cannot manage the audience once added, and removing one role leaves another intact",
+      "result": "pass",
+      "actual": "As Manager of M-93 Priya could already read it (200); on the new Confidential M-94 her read answered 404 until Nadia Haddad added her as Member and Watcher; she then read it, edited the Description, had Add team member disabled/absent and her direct team write answered 403; removing her Watcher role left Member; making her Manager did not change her team roles",
+      "at": "2026-09-07T18:52:19.319Z",
+      "ms": 7289
+    },
+    {
+      "article": "create-matter",
+      "scenario": "V-C22",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Use a template: one live template selects itself, No template clears its defaults, a type with several templates starts without one, and a typed title survives switching templates",
+      "result": "pass",
+      "actual": "\"Docs Matter single 1788804353434\" auto-selected its only live template (title \"Fictional single review\", Priority High, Risk Critical, legal Field \"Legal single default\", \"Template adds 2 tasks and 2 key dates.\"); No template cleared them to Medium/Not assessed; \"Docs Matter multi 1788804353434\" offered No template, Docs Matter alpha playbook 1788804353434, Docs Matter beta playbook 1788804353434 with No template selected; alpha set \"Fictional alpha review\", and after typing a title beta kept it while switching Priority/Risk to Low/Low",
+      "at": "2026-09-07T18:52:26.609Z",
+      "ms": 3026
+    },
+    {
+      "article": "create-matter",
+      "scenario": "V-C22",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Use a template: creation copies Tasks and Key dates at UTC offsets from the creation date, assigns the Manager-targeted Task, saves a nonempty override, returns a cleared optional default (#770) until cleared on Overview, and ignores later template or Manager changes",
+      "result": "pass",
+      "actual": "M-95 created 2026-09-07T18:52:30.859Z (UTC date 2026-09-07): Tasks \"Review single evidence\" due 2026-09-10 (+3) unassigned because no Manager was chosen and \"Arrange single discussion\" without a date; Key dates 2026-09-07 (+0) and 2026-09-14 (+7); Status Open; legal Field kept the typed \"Rev override\"; the optional Field cleared in the dialog came back as \"Optional single default\" (issue #770) and Overview showed \"Optional single default\"; clearing it on Overview persisted; a template description edit and a Manager change to Priya left the copied rows unchanged",
+      "at": "2026-09-07T18:52:29.636Z",
+      "ms": 6905
+    },
+    {
+      "article": "create-matter",
+      "scenario": "V-C22",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Create the Matter: a template archived after the form opened is refused without creating, a fresh form omits it, and a Contributor has no New matter and cannot create",
+      "result": "pass",
+      "actual": "Create with the beta template archived after the form opened was refused (\"The template must be live and belong to the selected matter type.\") and the highest M-number stayed 95; a fresh form listed No template, Docs Matter alpha playbook 1788804353434; Ravi Menon saw no New matter button and his direct create answered 403",
+      "at": "2026-09-07T18:52:36.541Z",
+      "ms": 5691
+    },
+    {
+      "article": "matter-status-and-archive",
+      "scenario": "V-C23",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Change Status within the current Category: the Status control offers only open Statuses, a renamed open label keeps Close matter available, and a same-Category move preserves Opened and Closed",
+      "result": "pass",
+      "actual": "Status offered Open, In progress, On hold, Awaiting the business, With external counsel, Docs Matter open 1788804353434, Resolved 1788807554914 (no closed labels); choosing \"Resolved 1788807554914\" (an open Status renamed by the Administrator for this check) saved as open Category, Opened unchanged, Closed still null; Close matter still offered",
+      "at": "2026-09-07T18:59:16.345Z",
+      "ms": 1941
+    },
+    {
+      "article": "matter-status-and-archive",
+      "scenario": "V-C23",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Close or reopen: the Close dialog names the open children (an unreadable one as Restricted Matter), Cancel keeps the Matter open, confirming records Closed and takes the Key date off Next without closing children, ending the Contract or completing the Task",
+      "result": "pass",
+      "actual": "Close dialog listed \"Rev open child administrator 1788807554914\" and \"Rev private child administrator 1788807554914\" (These child Matters will stay open.); Cancel left it open; confirming with \"Docs Matter closed 1788804353434\" set Closed 2026-09-07T18:59:19.409Z with Opened unchanged; children still open, Contract still draft, Task not done, Key date no longer Next; default list includes it=false; Overview shows Closed=true",
+      "at": "2026-09-07T18:59:18.287Z",
+      "ms": 2065
+    },
+    {
+      "article": "matter-status-and-archive",
+      "scenario": "V-C23",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Close or reopen: a closed Matter stays editable (closed-Category Status move keeps both dates, Description and a new Task save)",
+      "result": "pass",
+      "actual": "Status offered Closed, Docs Matter closed 1788804353434, Docs Matter otherClosed 1788804353434; moving to \"Docs Matter otherClosed 1788804353434\" kept Opened and Closed; Description saved and a second Task was added while closed",
+      "at": "2026-09-07T18:59:20.352Z",
+      "ms": 4840
+    },
+    {
+      "article": "matter-status-and-archive",
+      "scenario": "V-C23",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Close or reopen: Show closed reveals the Matter; Reopen Cancel keeps it closed; confirming clears Closed, keeps Opened, and the future Key date becomes Next again",
+      "result": "pass",
+      "actual": "Default Matters list omitted \"Rev lifecycle administrator 1788807554914\"; Filter → Show closed listed it; Reopen dialog (\"The Matter returns to active surfaces. Its original opened date is preserved.\") Cancel kept it closed; confirming with Open cleared Closed, kept Opened 2026-09-07T18:59:16.264Z, and the Key dates tab marks the future date Next again",
+      "at": "2026-09-07T18:59:25.193Z",
+      "ms": 6671
+    },
+    {
+      "article": "matter-status-and-archive",
+      "scenario": "V-C23",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Archive or restore: Archive Cancel changes nothing, confirming freezes writes without archiving the child or the Contract, a closed archived Matter needs both Show archived and Show closed, Restore Cancel keeps it archived, and Restore makes it editable while still closed",
+      "result": "pass",
+      "actual": "Archive dialog (\"The matter leaves the default list. Its history and M-number are kept.\") Cancel changed nothing; confirming set archived while the child and the linked Contract stayed unarchived; Description was not editable and direct Description/Task writes answered 409/409; Show archived alone did not list the closed archived Matter, Show archived plus Show closed did; Restore dialog (\"Restore Rev lifecycle administrator 1788807554914? The matter returns to the def\") Cancel kept it archived; confirming restored it still closed with no Next date, and a Description write then answered 200",
+      "at": "2026-09-07T18:59:31.864Z",
+      "ms": 10490
+    },
+    {
+      "article": "matter-status-and-archive",
+      "scenario": "V-C23",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Before you start: a Contributor on the team reads the Status but has no Status, Close, Reopen, Archive or Restore control and direct lifecycle writes are refused; History keeps the transitions",
+      "result": "pass",
+      "actual": "Ravi Menon (Contributor on the team) read \"Rev lifecycle administrator 1788807554914\" with Status \"Docs Matter closed 1788804353434\" shown and none of Status/Close matter/Reopen matter/Archive/Restore rendered; his direct Status, archive and restore writes answered 403/403/403; the History applet text names Resolved 1788807554914, Docs Matter closed 1788804353434, Docs Matter otherClosed 1788804353434, Open",
+      "at": "2026-09-07T18:59:42.354Z",
+      "ms": 3974
+    },
+    {
+      "article": "matter-status-and-archive",
+      "scenario": "V-C23",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Change Status within the current Category: the Status control offers only open Statuses, a renamed open label keeps Close matter available, and a same-Category move preserves Opened and Closed",
+      "result": "pass",
+      "actual": "Status offered Open, In progress, On hold, Awaiting the business, With external counsel, Docs Matter open 1788804353434, Resolved 1788807554914 (no closed labels); choosing \"Resolved 1788807554914\" (an open Status renamed by the Administrator for this check) saved as open Category, Opened unchanged, Closed still null; Close matter still offered",
+      "at": "2026-09-07T18:59:47.364Z",
+      "ms": 1916
+    },
+    {
+      "article": "matter-status-and-archive",
+      "scenario": "V-C23",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Close or reopen: the Close dialog names the open children (an unreadable one as Restricted Matter), Cancel keeps the Matter open, confirming records Closed and takes the Key date off Next without closing children, ending the Contract or completing the Task",
+      "result": "pass",
+      "actual": "Close dialog listed \"Rev open child legal_team_member 1788807554914\" and \"Restricted Matter\" for the Confidential child (These child Matters will stay open.); Cancel left it open; confirming with \"Docs Matter closed 1788804353434\" set Closed 2026-09-07T18:59:50.407Z with Opened unchanged; children still open, Contract still draft, Task not done, Key date no longer Next; default list includes it=false; Overview shows Closed=true",
+      "at": "2026-09-07T18:59:49.281Z",
+      "ms": 2075
+    },
+    {
+      "article": "matter-status-and-archive",
+      "scenario": "V-C23",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Close or reopen: a closed Matter stays editable (closed-Category Status move keeps both dates, Description and a new Task save)",
+      "result": "pass",
+      "actual": "Status offered Closed, Docs Matter closed 1788804353434, Docs Matter otherClosed 1788804353434; moving to \"Docs Matter otherClosed 1788804353434\" kept Opened and Closed; Description saved and a second Task was added while closed",
+      "at": "2026-09-07T18:59:51.357Z",
+      "ms": 4790
+    },
+    {
+      "article": "matter-status-and-archive",
+      "scenario": "V-C23",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Close or reopen: Show closed reveals the Matter; Reopen Cancel keeps it closed; confirming clears Closed, keeps Opened, and the future Key date becomes Next again",
+      "result": "pass",
+      "actual": "Default Matters list omitted \"Rev lifecycle legal_team_member 1788807554914\"; Filter → Show closed listed it; Reopen dialog (\"The Matter returns to active surfaces. Its original opened date is preserved.\") Cancel kept it closed; confirming with Open cleared Closed, kept Opened 2026-09-07T18:59:47.285Z, and the Key dates tab marks the future date Next again",
+      "at": "2026-09-07T18:59:56.148Z",
+      "ms": 6678
+    },
+    {
+      "article": "matter-status-and-archive",
+      "scenario": "V-C23",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Archive or restore: Archive Cancel changes nothing, confirming freezes writes without archiving the child or the Contract, a closed archived Matter needs both Show archived and Show closed, Restore Cancel keeps it archived, and Restore makes it editable while still closed",
+      "result": "pass",
+      "actual": "Archive dialog (\"The matter leaves the default list. Its history and M-number are kept.\") Cancel changed nothing; confirming set archived while the child and the linked Contract stayed unarchived; Description was not editable and direct Description/Task writes answered 409/409; Show archived alone did not list the closed archived Matter, Show archived plus Show closed did; Restore dialog (\"Restore Rev lifecycle legal_team_member 1788807554914? The matter returns to the\") Cancel kept it archived; confirming restored it still closed with no Next date, and a Description write then answered 200",
+      "at": "2026-09-07T19:00:02.827Z",
+      "ms": 10959
+    },
+    {
+      "article": "matter-status-and-archive",
+      "scenario": "V-C23",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Before you start: a Contributor on the team reads the Status but has no Status, Close, Reopen, Archive or Restore control and direct lifecycle writes are refused; History keeps the transitions",
+      "result": "pass",
+      "actual": "Ravi Menon (Contributor on the team) read \"Rev lifecycle legal_team_member 1788807554914\" with Status \"Docs Matter closed 1788804353434\" shown and none of Status/Close matter/Reopen matter/Archive/Restore rendered; his direct Status, archive and restore writes answered 403/403/403; the History applet text names Resolved 1788807554914, Docs Matter closed 1788804353434, Docs Matter otherClosed 1788804353434, Open",
+      "at": "2026-09-07T19:00:13.786Z",
+      "ms": 3907
+    },
+    {
+      "article": "matter-work",
+      "scenario": "V-C24",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Maintain Tasks: a blank Task is refused; staging a person through Add someone to the team… then Cancel saves neither Task nor membership; saving the Task saves both",
+      "result": "pass",
+      "actual": "Empty title kept the dialog open (\"Name what needs doing.\") with no Task; staging Priya Raman via Add someone to the team… / Use this person and then Cancel left 0 Tasks and no Priya on the team; the same staging saved with Add Task created the Task (assignee Priya, due 2026-09-08) and added Priya as Member",
+      "at": "2026-09-07T19:05:10.375Z",
+      "ms": 7547
+    },
+    {
+      "article": "matter-work",
+      "scenario": "V-C24",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Maintain Tasks: Add to team and assign on a row is immediate, clearing the assignee keeps the membership, completion and Move up/down are independent",
+      "result": "pass",
+      "actual": "Row picker → Add someone → Sofia Lindqvist → Add to team and assign saved assignee and Member role at once; Unassigned cleared the assignee and kept Sofia on the team; second Task assigned to Daniel Okafor from the team list; completing the first showed \"1 of 2 done\" and reopening reset it; Move down persisted the new order without touching completion",
+      "at": "2026-09-07T19:05:17.923Z",
+      "ms": 9564
+    },
+    {
+      "article": "matter-work",
+      "scenario": "V-C24",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Maintain Tasks: Edit Task Cancel keeps the title, Save renames, Remove Task removes only that row",
+      "result": "pass",
+      "actual": "Edit Task → Cancel kept the title; Edit Task → Save renamed it; Remove Task removed that row (the dialog was not a confirmation), leaving \"Rev first Task\" and \"0 of 1 done\"",
+      "at": "2026-09-07T19:05:27.487Z",
+      "ms": 4008
+    },
+    {
+      "article": "matter-work",
+      "scenario": "V-C24",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Maintain Key dates: missing values are refused; a past date is Overdue and the earliest upcoming is Next; the Task due date is not a Key date; the dialog has no assignee or reminder",
+      "result": "pass",
+      "actual": "The Add a Key date dialog offers Date, Event and Note only; an empty submit kept it open with no row; three dates saved with notes: \"Overdue\" for 2026-09-04, \"Next\" for 2026-09-11, \"Upcoming\" for 2026-09-27; the Task due 2026-09-08 appears nowhere on Key dates and the Matters list shows Next deadline \"Rev soon\"",
+      "at": "2026-09-07T19:05:31.495Z",
+      "ms": 5563
+    },
+    {
+      "article": "matter-work",
+      "scenario": "V-C24",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Maintain Key dates: Edit date saves, Remove date asks to confirm, a closed Matter keeps its dates editable without a Next marker, and reopening restores it",
+      "result": "pass",
+      "actual": "Edit date saved a new note; Remove date asked \"Remove Key date? Remove Rev later 1788807909038 on Sep 27 (in 20 days)…\", Cancel kept three rows and confirming removed only Rev later; closed (by API) the tab showed no Next and the list reported nextDeadline=null while the Event stayed editable; reopened, Rev soon is Next again",
+      "at": "2026-09-07T19:05:37.058Z",
+      "ms": 6943
+    },
+    {
+      "article": "matter-work",
+      "scenario": "V-C24",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Connect related Matters: Set parent Cancel changes nothing, a parent is saved, a loop back is refused, a flat relation shows on both Matters and Remove detaches only the link",
+      "result": "pass",
+      "actual": "Set parent → Cancel left no parent; Set parent saved M-121; on the parent, choosing this child as its parent was refused (That parent would close a loop in the Matter hierarchy.); Add related Matter listed M-122 on both records; Remove on the Related row detached it while M-122 kept its Manager Priya Raman and its own state; the Parent link remained",
+      "at": "2026-09-07T19:05:44.002Z",
+      "ms": 10610
+    },
+    {
+      "article": "matter-work",
+      "scenario": "V-C24",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Connect related Matters: New sub-Matter creates an independent child; a related Matter the reader cannot open shows as Restricted Matter without a title, and its direct link answers 404",
+      "result": "pass",
+      "actual": "New sub-Matter opened \"Create sub-Matter\" and created M-125 with parent M-120, no Manager, not Confidential, 0 Tasks and 0 Key dates; after the Administrator related Confidential M-123, Priya Raman saw \"Restricted Matter\" with no title or number, the direct API read answered 404, and the page said \"Something went wrong. The page could not load. Reload to try\"",
+      "at": "2026-09-07T19:05:54.612Z",
+      "ms": 5220
+    },
+    {
+      "article": "matter-work",
+      "scenario": "V-C24",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Link Contracts: linking a standalone Contract shows Confidentiality differs, Leave them as they are keeps both flags, the Counterparty stays on the Contract, a Contributor sees Restricted contract, a second link is refused until Unlink, then the Contract moves",
+      "result": "pass",
+      "actual": "Link Contract on Confidential M-120 with the plain C-381 opened \"Confidentiality differs\" (\"Confidentiality differs C-381 and M-120 keep independent Confidential flags. Consider aligning them if that matches the work. This suggestio…\"); Leave them as they are linked it with the Contract still not Confidential and the Matter still Confidential, and \"Rev Counterparty\" still on the Contract only; Ravi Menon (Contributor on the Matter, not the Contract) saw \"Restricted contract\"; linking the same Contract to M-124 by API answered 409; after Unlink the Contract linked to M-124 without a Confidentiality dialog",
+      "at": "2026-09-07T19:05:59.832Z",
+      "ms": 10762
+    },
+    {
+      "article": "matter-work",
+      "scenario": "V-C24",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Before you start: a Contributor reads Tasks, Key dates and relationships without controls and direct writes are refused; an archived Matter hides the controls and refuses Key date writes; Restore keeps the rows and History",
+      "result": "pass",
+      "actual": "Ravi Menon read the Task and Key date rows and the Parent as Restricted Matter (he is not on that Matter's team), with no Add Task, Add date, Actions or relationship buttons and a disabled completion box; his Task/Key date/relation writes answered 403/403/403; archived, the Tasks tab hid Add Task and row actions and a Key date write answered 409; Restore brought back Add Task with the 1 Task and 2 Key dates intact; History mentions Rev first Task, Rev soon, Rev parent administrator 1788807909038",
+      "at": "2026-09-07T19:06:10.594Z",
+      "ms": 6800
+    },
+    {
+      "article": "matter-work",
+      "scenario": "V-C24",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Maintain Tasks: a blank Task is refused; staging a person through Add someone to the team… then Cancel saves neither Task nor membership; saving the Task saves both",
+      "result": "pass",
+      "actual": "Empty title kept the dialog open (\"Name what needs doing.\") with no Task; staging Priya Raman via Add someone to the team… / Use this person and then Cancel left 0 Tasks and no Priya on the team; the same staging saved with Add Task created the Task (assignee Priya, due 2026-09-08) and added Priya as Member",
+      "at": "2026-09-07T19:06:18.412Z",
+      "ms": 7541
+    },
+    {
+      "article": "matter-work",
+      "scenario": "V-C24",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Maintain Tasks: Add to team and assign on a row is immediate, clearing the assignee keeps the membership, completion and Move up/down are independent",
+      "result": "pass",
+      "actual": "Row picker → Add someone → Sofia Lindqvist → Add to team and assign saved assignee and Member role at once; Unassigned cleared the assignee and kept Sofia on the team; second Task assigned to Nadia Haddad from the team list; completing the first showed \"1 of 2 done\" and reopening reset it; Move down persisted the new order without touching completion",
+      "at": "2026-09-07T19:06:25.953Z",
+      "ms": 9463
+    },
+    {
+      "article": "matter-work",
+      "scenario": "V-C24",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Maintain Tasks: Edit Task Cancel keeps the title, Save renames, Remove Task removes only that row",
+      "result": "pass",
+      "actual": "Edit Task → Cancel kept the title; Edit Task → Save renamed it; Remove Task removed that row (the dialog was not a confirmation), leaving \"Rev first Task\" and \"0 of 1 done\"",
+      "at": "2026-09-07T19:06:35.417Z",
+      "ms": 3971
+    },
+    {
+      "article": "matter-work",
+      "scenario": "V-C24",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Maintain Key dates: missing values are refused; a past date is Overdue and the earliest upcoming is Next; the Task due date is not a Key date; the dialog has no assignee or reminder",
+      "result": "pass",
+      "actual": "The Add a Key date dialog offers Date, Event and Note only; an empty submit kept it open with no row; three dates saved with notes: \"Overdue\" for 2026-09-04, \"Next\" for 2026-09-11, \"Upcoming\" for 2026-09-27; the Task due 2026-09-08 appears nowhere on Key dates and the Matters list shows Next deadline \"Rev soon\"",
+      "at": "2026-09-07T19:06:39.389Z",
+      "ms": 5526
+    },
+    {
+      "article": "matter-work",
+      "scenario": "V-C24",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Maintain Key dates: Edit date saves, Remove date asks to confirm, a closed Matter keeps its dates editable without a Next marker, and reopening restores it",
+      "result": "pass",
+      "actual": "Edit date saved a new note; Remove date asked \"Remove Key date? Remove Rev later 1788807909038 on Sep 27 (in 20 days)…\", Cancel kept three rows and confirming removed only Rev later; closed (by API) the tab showed no Next and the list reported nextDeadline=null while the Event stayed editable; reopened, Rev soon is Next again",
+      "at": "2026-09-07T19:06:44.916Z",
+      "ms": 6952
+    },
+    {
+      "article": "matter-work",
+      "scenario": "V-C24",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Connect related Matters: Set parent Cancel changes nothing, a parent is saved, a loop back is refused, a flat relation shows on both Matters and Remove detaches only the link",
+      "result": "pass",
+      "actual": "Set parent → Cancel left no parent; Set parent saved M-127; on the parent, choosing this child as its parent was refused (That parent would close a loop in the Matter hierarchy.); Add related Matter listed M-128 on both records; Remove on the Related row detached it while M-128 kept its Manager Priya Raman and its own state; the Parent link remained",
+      "at": "2026-09-07T19:06:51.868Z",
+      "ms": 10626
+    },
+    {
+      "article": "matter-work",
+      "scenario": "V-C24",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Connect related Matters: New sub-Matter creates an independent child; a related Matter the reader cannot open shows as Restricted Matter without a title, and its direct link answers 404",
+      "result": "pass",
+      "actual": "New sub-Matter opened \"Create sub-Matter\" and created M-131 with parent M-126, no Manager, not Confidential, 0 Tasks and 0 Key dates; after the Administrator related Confidential M-129, Nadia Haddad saw \"Restricted Matter\" with no title or number, the direct API read answered 404, and the page said \"Something went wrong. The page could not load. Reload to try\"",
+      "at": "2026-09-07T19:07:02.494Z",
+      "ms": 4225
+    },
+    {
+      "article": "matter-work",
+      "scenario": "V-C24",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Link Contracts: linking a standalone Contract shows Confidentiality differs, Leave them as they are keeps both flags, the Counterparty stays on the Contract, a Contributor sees Restricted contract, a second link is refused until Unlink, then the Contract moves",
+      "result": "pass",
+      "actual": "Link Contract on Confidential M-126 with the plain C-382 opened \"Confidentiality differs\" (\"Confidentiality differs C-382 and M-126 keep independent Confidential flags. Consider aligning them if that matches the work. This suggestio…\"); Leave them as they are linked it with the Contract still not Confidential and the Matter still Confidential, and \"Rev Counterparty\" still on the Contract only; Ravi Menon (Contributor on the Matter, not the Contract) saw \"Restricted contract\"; linking the same Contract to M-130 by API answered 409; after Unlink the Contract linked to M-130 without a Confidentiality dialog",
+      "at": "2026-09-07T19:07:06.719Z",
+      "ms": 10760
+    },
+    {
+      "article": "matter-work",
+      "scenario": "V-C24",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Before you start: a Contributor reads Tasks, Key dates and relationships without controls and direct writes are refused; an archived Matter hides the controls and refuses Key date writes; Restore keeps the rows and History",
+      "result": "pass",
+      "actual": "Ravi Menon read the Task and Key date rows and the Parent as Restricted Matter (he is not on that Matter's team), with no Add Task, Add date, Actions or relationship buttons and a disabled completion box; his Task/Key date/relation writes answered 403/403/403; archived, the Tasks tab hid Add Task and row actions and a Key date write answered 409; Restore brought back Add Task with the 1 Task and 2 Key dates intact; History mentions Rev first Task, Rev soon, Rev parent legal_team_member 1788807909038",
+      "at": "2026-09-07T19:07:17.479Z",
+      "ms": 6813
+    }
+  ]
+}
