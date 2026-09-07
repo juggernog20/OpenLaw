@@ -75,6 +75,25 @@ An independent reviewer must follow the articles with their own steps and record
 which required scenarios they actually completed. Replaying the author scripts is
 not independent verification.
 
+## Corrections from the Fable source review
+
+The Fable review seat checked every named control and behavior claim in the five
+guides against the app source at `d1d098ba` on September 7, 2026, and recorded that
+check as the technical reviewer in each evidence file. The feature owner's human
+technical review is not recorded there. One claim changed:
+
+- `staff-sign-in` now states that single sign-on mode refuses password sign-in for
+  Legal Team Members and Contributors, with the message **Password sign-in is
+  disabled while single sign-on is required.** The earlier wording read as advice.
+  The author records keep the hash of the earlier bytes they walked through; the
+  evidence file carries the current hash. The changed sentence names no new control,
+  so the independent walkthrough covers it by attempting a non-Administrator password
+  sign-in in that mode.
+
+The five guides do not use the how-to template's section headings that the DOC-008
+pilot guides follow. Their substance is present inline. That layout choice is left
+for the documentation lead; restructuring would replace the walked-through bytes.
+
 ## Review and publication handoff
 
 The five files under [evidence](../../evidence/) hold separate pending independent

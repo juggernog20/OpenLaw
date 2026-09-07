@@ -5,7 +5,7 @@
   "buildId": "app sha256:69c7cd47338eff05c787e985743dd45b2229792827d82fd5f54a50a9c63d8757; engine sha256:1dce5b67898cc8ae720231fa66e049208ed207e69053a2cf4c1bd0e172cea401",
   "environment": "openlaw-docs-b8e31260-pilot",
   "author": "Codex documentation author",
-  "technicalReviewer": null,
+  "technicalReviewer": "Fable review seat (agent source check against d1d098ba); the feature owner's human technical review is not recorded here",
   "walkthroughReviewer": null,
   "reviewerKind": "agent",
   "verifiedAt": null,

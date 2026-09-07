@@ -19,7 +19,7 @@ If the passwords do not match, correct them and try again. If the link has expir
 
 If the page offers **Continue with single sign-on**, select it and complete your organization's identity-provider sign-in. Ask your Administrator about a failed sign-in or an account that has not been allowed access.
 
-**Administrator sign-in** opens the password form when single sign-on is the main method. It is for an Administrator's password access. Legal Team Members and Contributors should use the configured single sign-on method.
+**Administrator sign-in** opens the password form when single sign-on is the main method. Only an Administrator can sign in with a password in that mode. A Legal Team Member or Contributor who tries it sees **Password sign-in is disabled while single sign-on is required.** and must use the single sign-on method instead.
 
 If **Email me a sign-in link** is available, you can request a link with your work email. Follow the newest email within five minutes. It works once. This option depends on the organization's authentication settings and email delivery.
 
