@@ -1038,8 +1038,248 @@
   "limitations": [
     "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
     "No live identity provider exists in the lab. The Continue with single sign-on instruction is source-checked; the oidc mode check covered the unconfigured message, Administrator sign-in, and the non-Administrator refusal.",
-    "Load more Tasks and Show more were not exercised because no account had a second page.",
-    "Set as default and Rename… in the views menu were not exercised.",
     "Layout checks changed the theme attribute directly and measured horizontal overflow only; DOC-025 owns zoom and assistive-technology review."
-  ]
+  ],
+  "followUp": {
+    "purpose": "Exercise Load more Tasks, search Show more with a blocked next page, Set as default, Rename…, Save on a Modified view, and column reordering, which the first walkthrough left unexercised.",
+    "startedAt": "2026-09-07T05:06:35.984Z",
+    "finishedAt": "2026-09-07T05:08:47.123Z",
+    "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+    "buildId": "app sha256:69c7cd47338eff05c787e985743dd45b2229792827d82fd5f54a50a9c63d8757; engine sha256:1dce5b67898cc8ae720231fa66e049208ed207e69053a2cf4c1bd0e172cea401",
+    "environment": "openlaw-docs-b8e31260-pilot",
+    "browser": "Playwright 1.62.1 Chromium from the workspace, headless, one isolated context per role or account, 1440x900; scripts written by the reviewer from the guide prose, not the author's scripts",
+    "articleHashesTested": {
+      "find-your-work": "6fa8eb3a4f1302279ec5419435fbeeb34596a17d1897bc90d62c52037f8ac8d0",
+      "search-and-views": "e303479e3b19bde3f34d5131d4f5c59de37b6feab2ef9b50bacdb97cb5478b23"
+    },
+    "fixtures": "Through the Administrator API: 52 open Tasks per role on Contract C-43, titled Docs pagination task <role> NN <stamp> and due from October 2, 2026 onward, so each role's Your Tasks exceeded the 50-row page; and 30 Contracts titled Docs pagination cormorant NN <stamp> (C-46 to C-75) with Ravi Menon on each team so all three roles have 30 reachable results for cormorant, above the 25-result search page. These fictional records remain in the lab.",
+    "scenarios": {
+      "V-C03": [
+        {
+          "article": "find-your-work",
+          "role": "administrator",
+          "step": "Load more Tasks adds the next page without duplicates or loss",
+          "result": "pass",
+          "actual": "First page 46 rows at /home/tasks; Load more Tasks added 7 rows (53 total) at /home/tasks, no duplicates, first page kept; Load more Tasks still shown: false",
+          "at": "2026-09-07T05:06:36.366Z",
+          "ms": 1770
+        },
+        {
+          "article": "find-your-work",
+          "role": "legal_team_member",
+          "step": "Load more Tasks adds the next page without duplicates or loss",
+          "result": "pass",
+          "actual": "First page 49 rows at /home/tasks; Load more Tasks added 4 rows (53 total) at /home/tasks, no duplicates, first page kept; Load more Tasks still shown: false",
+          "at": "2026-09-07T05:06:38.383Z",
+          "ms": 1714
+        },
+        {
+          "article": "find-your-work",
+          "role": "contributor",
+          "step": "Load more Tasks adds the next page without duplicates or loss",
+          "result": "pass",
+          "actual": "First page 50 rows at /home/tasks; Load more Tasks added 3 rows (53 total) at /home/tasks, no duplicates, first page kept; Load more Tasks still shown: false",
+          "at": "2026-09-07T05:06:40.353Z",
+          "ms": 1694
+        }
+      ],
+      "V-C04": [
+        {
+          "article": "search-and-views",
+          "role": "administrator",
+          "step": "Show more adds the next page of results without duplicates",
+          "result": "pass",
+          "actual": "First page 25 results at /search?q=cormorant; Show more added 5 (30 total), no duplicates, first page kept; Show more still shown: false; URL /search?q=cormorant",
+          "at": "2026-09-07T05:06:36.389Z",
+          "ms": 2185
+        },
+        {
+          "article": "search-and-views",
+          "role": "administrator",
+          "step": "blocked next page keeps the displayed rows; Show more again after unblocking recovers",
+          "result": "pass",
+          "actual": "Blocked next page kept 25 rows and said \"could not be read.\"; Show more after unblocking added 5 rows",
+          "at": "2026-09-07T05:06:38.574Z",
+          "ms": 3641
+        },
+        {
+          "article": "search-and-views",
+          "role": "legal_team_member",
+          "step": "Show more adds the next page of results without duplicates",
+          "result": "pass",
+          "actual": "First page 25 results at /search?q=cormorant; Show more added 5 (30 total), no duplicates, first page kept; Show more still shown: false; URL /search?q=cormorant",
+          "at": "2026-09-07T05:06:42.478Z",
+          "ms": 2174
+        },
+        {
+          "article": "search-and-views",
+          "role": "legal_team_member",
+          "step": "blocked next page keeps the displayed rows; Show more again after unblocking recovers",
+          "result": "pass",
+          "actual": "Blocked next page kept 25 rows and said \"could not be read.\"; Show more after unblocking added 5 rows",
+          "at": "2026-09-07T05:06:44.652Z",
+          "ms": 3644
+        },
+        {
+          "article": "search-and-views",
+          "role": "contributor",
+          "step": "Show more adds the next page of results without duplicates",
+          "result": "pass",
+          "actual": "First page 25 results at /search?q=cormorant; Show more added 5 (30 total), no duplicates, first page kept; Show more still shown: false; URL /search?q=cormorant",
+          "at": "2026-09-07T05:06:48.559Z",
+          "ms": 2131
+        },
+        {
+          "article": "search-and-views",
+          "role": "contributor",
+          "step": "blocked next page keeps the displayed rows; Show more again after unblocking recovers",
+          "result": "pass",
+          "actual": "Blocked next page kept 25 rows and said \"could not be read.\"; Show more after unblocking added 5 rows",
+          "at": "2026-09-07T05:06:50.690Z",
+          "ms": 3643
+        },
+        {
+          "article": "search-and-views",
+          "role": "administrator",
+          "step": "Columns: move a column earlier; Save as… keeps the order",
+          "result": "pass",
+          "actual": "Owner moved from position 7 to 5; view \"Docs review default administrator 1788757596043\" saved and reload kept the order (Reference, Title, Counterparty, Type, Owner, Status, Value)",
+          "at": "2026-09-07T05:06:36.467Z",
+          "ms": 1903
+        },
+        {
+          "article": "search-and-views",
+          "role": "administrator",
+          "step": "Set as default: leaving and reopening Contracts opens the saved view",
+          "result": "pass",
+          "actual": "Set as default stored (db); Home then Contracts opened /contracts on \"Docs review default administrator 1788757596043\" with Owner at position 5",
+          "at": "2026-09-07T05:06:38.371Z",
+          "ms": 2568
+        },
+        {
+          "article": "search-and-views",
+          "role": "administrator",
+          "step": "Rename… persists in a fresh browser",
+          "result": "pass",
+          "actual": "Renamed to \"Docs review renamed administrator 1788757596043\"; a fresh browser opened Contracts on the renamed default and the menu listed only the new name",
+          "at": "2026-09-07T05:06:40.940Z",
+          "ms": 1755
+        },
+        {
+          "article": "search-and-views",
+          "role": "administrator",
+          "step": "Save on a Modified view replaces its stored layout",
+          "result": "pass",
+          "actual": "Title sort marked the view Modified; Save cleared the marker; a fresh browser opened the default with Title ascending and Owner still at position 5",
+          "at": "2026-09-07T05:06:42.695Z",
+          "ms": 3531
+        },
+        {
+          "article": "search-and-views",
+          "role": "legal_team_member",
+          "step": "Columns: move a column earlier; Save as… keeps the order",
+          "result": "pass",
+          "actual": "Priority moved from position 6 to 4; view \"Docs review default legal_team_member 1788757596043\" saved and reload kept the order (Reference, Title, Counterparty, Priority, Type, Status)",
+          "at": "2026-09-07T05:07:16.560Z",
+          "ms": 1856
+        },
+        {
+          "article": "search-and-views",
+          "role": "legal_team_member",
+          "step": "Set as default: leaving and reopening Contracts opens the saved view",
+          "result": "pass",
+          "actual": "Set as default stored (db); Home then Contracts opened /contracts on \"Docs review default legal_team_member 1788757596043\" with Priority at position 4",
+          "at": "2026-09-07T05:07:18.417Z",
+          "ms": 2541
+        },
+        {
+          "article": "search-and-views",
+          "role": "legal_team_member",
+          "step": "Rename… persists in a fresh browser",
+          "result": "pass",
+          "actual": "Renamed to \"Docs review renamed legal_team_member 1788757596043\"; a fresh browser opened Contracts on the renamed default and the menu listed only the new name",
+          "at": "2026-09-07T05:07:20.959Z",
+          "ms": 1706
+        },
+        {
+          "article": "search-and-views",
+          "role": "legal_team_member",
+          "step": "Save on a Modified view replaces its stored layout",
+          "result": "pass",
+          "actual": "Title sort marked the view Modified; Save cleared the marker; a fresh browser opened the default with Title ascending and Priority still at position 4",
+          "at": "2026-09-07T05:07:22.665Z",
+          "ms": 3523
+        },
+        {
+          "article": "search-and-views",
+          "role": "legal_team_member",
+          "step": "restore the original default and delete only the temporary view",
+          "result": "pass",
+          "actual": "Temporary view deleted; default is \"My commercial desk\" as before",
+          "at": "2026-09-07T05:07:26.188Z",
+          "ms": 4057
+        },
+        {
+          "article": "search-and-views",
+          "role": "contributor",
+          "step": "Columns: move a column earlier; Save as… keeps the order",
+          "result": "pass",
+          "actual": "Owner moved from position 7 to 5; view \"Docs review default contributor 1788757596043\" saved and reload kept the order (Reference, Title, Counterparty, Type, Owner, Status, Value)",
+          "at": "2026-09-07T05:07:30.556Z",
+          "ms": 1838
+        },
+        {
+          "article": "search-and-views",
+          "role": "contributor",
+          "step": "Set as default: leaving and reopening Contracts opens the saved view",
+          "result": "pass",
+          "actual": "Set as default stored (db); Home then Contracts opened /contracts on \"Docs review default contributor 1788757596043\" with Owner at position 5",
+          "at": "2026-09-07T05:07:32.394Z",
+          "ms": 2498
+        },
+        {
+          "article": "search-and-views",
+          "role": "contributor",
+          "step": "Rename… persists in a fresh browser",
+          "result": "pass",
+          "actual": "Renamed to \"Docs review renamed contributor 1788757596043\"; a fresh browser opened Contracts on the renamed default and the menu listed only the new name",
+          "at": "2026-09-07T05:07:34.892Z",
+          "ms": 1670
+        },
+        {
+          "article": "search-and-views",
+          "role": "contributor",
+          "step": "Save on a Modified view replaces its stored layout",
+          "result": "pass",
+          "actual": "Title sort marked the view Modified; Save cleared the marker; a fresh browser opened the default with Title ascending and Owner still at position 5",
+          "at": "2026-09-07T05:07:36.563Z",
+          "ms": 3517
+        },
+        {
+          "article": "search-and-views",
+          "role": "administrator",
+          "step": "deleting the temporary default view returns Contracts to the built-in layout",
+          "result": "pass",
+          "actual": "Delete… removed \"Docs review renamed administrator 1788757596043\"; the trigger showed Default view and reopening Contracts used the built-in layout; no default remains, as before",
+          "at": "2026-09-07T05:08:39.247Z",
+          "ms": 3818
+        },
+        {
+          "article": "search-and-views",
+          "role": "contributor",
+          "step": "deleting the temporary default view returns Contracts to the built-in layout",
+          "result": "pass",
+          "actual": "Delete… removed \"Docs review renamed contributor 1788757596043\"; the trigger showed Default view and reopening Contracts used the built-in layout; no default remains, as before",
+          "at": "2026-09-07T05:08:43.292Z",
+          "ms": 3828
+        }
+      ]
+    },
+    "harnessRework": [
+      "The Rename dialog's text box was targeted through the dialog's textbox role; the label locator also matched the dialog.",
+      "Nadia's default view has no Owner column, so the reorder step moves whichever column is last.",
+      "The first cleanup attempt for accounts without an original default expected the Default view trigger while the temporary view was still the default; the deletion was repeated in its own run and passed."
+    ],
+    "restoration": "Nadia's My commercial desk is the default again; Daniel and Ravi have no default, as before; every Docs review view was deleted through Delete…. Fixture Tasks and Contracts remain open and unowned."
+  }
 }

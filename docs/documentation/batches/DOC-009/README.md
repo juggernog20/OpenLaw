@@ -128,6 +128,18 @@ were rerun against the corrected bytes:
 - `staff-sign-in` names the **Single sign-on is not configured yet** state that the
   sign-in page shows in oidc mode with no provider registered.
 
+A follow-up on the same day, 05:06 to 05:09 UTC, covered the pagination and view
+instructions the first pass had left unexercised, with the same three roles. With 53
+open Tasks per role, **Load more Tasks** added the remaining rows with no duplicates
+and no loss. With 30 reachable `cormorant` Contracts, **Show more** added the second
+page, a blocked next-page read kept the first page with "The next results could not be read. Try again.",
+and **Show more** after unblocking recovered. Column reordering survived **Save as…**
+and a reload; **Set as default** reopened Contracts on the view after leaving through
+Home; **Rename…** persisted in a fresh browser; **Save** on a Modified view replaced
+its layout. The fixture Tasks and Contracts were created through the Administrator
+API and remain in the lab; the temporary views were deleted and Nadia's original
+default was restored.
+
 The author records keep the hashes of the bytes they walked through; each evidence file
 carries the current hash and the reviewer's verification time. Fixture preparation
 (token expiry, invitation resend, mode and toggle switches with restoration, blocked
