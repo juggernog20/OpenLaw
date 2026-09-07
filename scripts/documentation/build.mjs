@@ -23,6 +23,16 @@ import { compileDocumentation } from "./compiler.mjs";
 
 export const repository = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
+const GENERATED_DIRECTORIES = [
+  "node_modules",
+  "dist",
+  ".turbo",
+  ".git",
+  "coverage",
+  "test-results",
+  "playwright-report",
+];
+
 /** The same source bytes are available in a checkout and the Docker build context. */
 export function applicationDigest(root = repository) {
   const hash = createHash("sha256");
@@ -32,7 +42,13 @@ export function applicationDigest(root = repository) {
     if (stat.isSymbolicLink()) throw new Error(`Application source symlink: ${relative}`);
     if (stat.isDirectory())
       for (const name of readdirSync(path).sort()) {
-        if (["node_modules", "dist", ".turbo", ".git"].includes(name) || name.startsWith(".env"))
+        // Ignored build, dependency, and test output is absent from a clean checkout,
+        // so it must not move the digest on a machine that has run the suites.
+        if (
+          GENERATED_DIRECTORIES.includes(name) ||
+          name.startsWith(".env") ||
+          /\.(log|tsbuildinfo)$/.test(name)
+        )
           continue;
         visit(`${relative}/${name}`);
       }

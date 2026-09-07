@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { test } from "node:test";
-import { buildIdentity, compileWorkspace } from "./build.mjs";
+import { applicationDigest, buildIdentity, compileWorkspace } from "./build.mjs";
 import { compileDocumentation } from "./compiler.mjs";
 import { searchDocumentation, resolveDocumentationLink } from "./reader.mjs";
 
@@ -171,6 +171,8 @@ test("one source supplies formal, Help, outlines, search and offline files", (t)
   assert.match(files.get("index.html"), /submit.html/);
   assert.match(files.get("submit.html"), /Open the fixture/);
   assert.doesNotMatch(files.get("search.js"), /\bfetch\s*\(/);
+  // Retained copies open in older browsers; URLSearchParams.size is too new for them.
+  assert.doesNotMatch(files.get("search.js"), /\.size\b/);
   assert.doesNotMatch(JSON.stringify(bundle), /Fixture author|fixture observation/);
   assert.equal(bundle.report.verified, 2);
 });
@@ -409,4 +411,27 @@ test("injected build identities require an explicit working-tree declaration", (
     if (previousDirty === undefined) delete process.env.OPENLAW_BUILD_DIRTY;
     else process.env.OPENLAW_BUILD_DIRTY = previousDirty;
   }
+});
+
+test("the application digest ignores generated test and build output", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "openlaw-digest-test-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  for (const directory of ["apps/api/src", "packages", "styles"])
+    mkdirSync(join(root, directory), { recursive: true });
+  for (const file of [
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "tsconfig.base.json",
+  ])
+    writeFileSync(join(root, file), "{}");
+  writeFileSync(join(root, "apps/api/src/app.ts"), "export const app = 1;");
+  const clean = applicationDigest(root);
+  mkdirSync(join(root, "apps/api/coverage"));
+  writeFileSync(join(root, "apps/api/coverage/lcov.info"), "TN:");
+  writeFileSync(join(root, "apps/api/tsconfig.tsbuildinfo"), "{}");
+  writeFileSync(join(root, "apps/api/.env"), "SECRET=1");
+  assert.equal(applicationDigest(root), clean);
+  writeFileSync(join(root, "apps/api/src/app.ts"), "export const app = 2;");
+  assert.notEqual(applicationDigest(root), clean);
 });

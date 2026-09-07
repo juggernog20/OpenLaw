@@ -12,7 +12,6 @@
 
 import { Fragment, type ReactNode } from "react";
 import { useParams, type RouteObject } from "react-router";
-import { FormalDocumentationPage } from "./components/documentation/documentation-reader";
 import { AuthLayout } from "./routes/auth-layout";
 import { ContractRecordPage, contractRecordLoader } from "./routes/contract-record";
 import { ContractsPage, contractsLoader } from "./routes/contracts";
@@ -160,7 +159,15 @@ function KeyedByParam({ name, children }: { name: string; children: ReactNode })
 }
 
 export const routes: RouteObject[] = [
-  { path: "/documentation/*", element: <FormalDocumentationPage /> },
+  {
+    // The compiled manual ships every article's HTML. Loading it on demand
+    // keeps that bundle out of the chunk every signed-in screen downloads.
+    path: "/documentation/*",
+    lazy: async () => ({
+      Component: (await import("./components/documentation/documentation-reader"))
+        .FormalDocumentationPage,
+    }),
+  },
   {
     path: "/home/tasks",
     loader: homeTasksLoader,
