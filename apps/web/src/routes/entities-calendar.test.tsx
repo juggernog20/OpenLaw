@@ -142,6 +142,43 @@ describe("the Entities compliance calendar", () => {
     expect(search.get("includeCompleted")).toBe("true");
   });
 
+  it.each(["entity", "completed"])(
+    "applies the %s filter while leaving the other optional controls blank",
+    async (filter) => {
+      const queries: URLSearchParams[] = [];
+      const read = calendarApi(obligations, queries);
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call) => {
+          const response = read(call);
+          if (
+            call.url.pathname === "/api/v1/entities/calendar" &&
+            [...call.url.searchParams.values()].some((value) => value === "")
+          ) {
+            return json(400, { detail: "Optional filters must be omitted when unused." });
+          }
+          return response;
+        },
+      });
+      const { router } = renderAt("/entities");
+      await screen.findByRole("heading", { name: "Compliance calendar" });
+      const user = userEvent.setup();
+      if (filter === "entity") await user.selectOptions(screen.getByLabelText("Entity"), "e1");
+      else await user.click(screen.getByLabelText("Include completed"));
+      await user.click(screen.getByRole("button", { name: "Apply" }));
+
+      await waitFor(() => {
+        expect(router.state.location.search).not.toBe("");
+        expect(router.state.navigation.state).toBe("idle");
+      });
+      expect(screen.getByRole("heading", { name: "Compliance calendar" })).toBeInTheDocument();
+      expect(screen.getByText("Overdue annual return")).toBeInTheDocument();
+      expect(queries.at(-1)?.toString()).toBe(
+        filter === "entity" ? "entity=e1" : "includeCompleted=true",
+      );
+    },
+  );
+
   it("draws the month as a CSS grid and steps months with a Today control", async () => {
     stubApi({ signedIn: MEMBER, extra: calendarApi() });
     renderAt("/entities?calendar=month&month=2026-09");
