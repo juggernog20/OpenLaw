@@ -21,3 +21,8 @@ fb3c9439823e9d0e824e596d393fb7e96d1e130b:apps/api/src/modules/auth/profile.test.
 # Public source commit for the documentation fixture API build, not an API key.
 # The metadata field is now backendSourceCommit to avoid the misleading key name.
 6d0f5bd4d412da406b6e39ea8ec8be5802250c85:docs/documentation/help-readiness.json:generic-api-key:7
+
+# Public guide-content SHA-256 values, matched because the article ID contains
+# "access". The current records use separate articleId and contentSha256 fields.
+294cc3175d1e5c747b3a1ee9790ae622b8caab6b:docs/documentation/batches/DOC-010/author-recovery.json:generic-api-key:6
+294cc3175d1e5c747b3a1ee9790ae622b8caab6b:docs/documentation/batches/DOC-010/author-discovery.json:generic-api-key:7
