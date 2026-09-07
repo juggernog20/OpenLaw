@@ -15,7 +15,7 @@ Add business information, supporting Documents, and comments to the Contract or 
 
 1. Open **Overview** to update permitted value controls such as **Amount**, **Currency**, and **Cadence**, or **Effective date**.
 2. Open **Fields** to edit the business Fields supplied by that Contract's type. Your organization chooses their names and required values.
-3. Leave the edited field to save it. Wait for the saved indication, then reload the record and check the value before relying on it.
+3. Leave the edited field to save it. **Amount**, **Currency**, and **Cadence** save together when you leave that group of controls, not when you move between them. Wait for the saved indication, then reload the record and check the value before relying on it.
 
 The Contract's title, type, Owner, parties, Description, Priority, Risk, Status, and legal Fields are not Contributor edits. The page states **Legal-managed details are read-only. You can edit the business Fields available to you.**
 
