@@ -6,10 +6,10 @@
   "environment": "openlaw-docs-b8e31260-pilot",
   "author": "Codex documentation author",
   "technicalReviewer": "Fable review seat (agent source check against d1d098ba); the feature owner's human technical review is not recorded here",
-  "walkthroughReviewer": null,
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
   "reviewerKind": "agent",
-  "verifiedAt": null,
-  "status": "not-run",
+  "verifiedAt": "2026-09-07T04:50:31.333Z",
+  "status": "pass",
   "sources": [
     "apps/web/src/routes/settings-profile.tsx",
     "apps/web/src/routes/settings-appearance.tsx",
@@ -24,9 +24,12 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "expected": "Preferences persist for the intended user. App view is a card within Profile for Member+, with a working Return to legal view link. Contributors have personal settings without this card. Another account's preferences remain unchanged; no absent M33 App view route is claimed.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "Full name saved on leaving the field, updated the header and survived reload; Email is read-only and Role is not editable. Searching Dubai and selecting Asia/Dubai stored the zone; the Use browser timezone option removed it. A small PNG saved as the photo; a 1.1 MB file and a text file were refused with the JPG or PNG, 1 MB max. hint. Dark, Warm and Light each applied and persisted, and another seed account's preferences stayed unchanged. The App view card at the top of Profile opened the Portal with the Viewing as business user banner and Return to legal view came back to Profile with the role unchanged. Change password refused a wrong current password, then the change signed the other browser out and kept this session; Sign out other devices ended the other session only; Sign out ended this one. The seed password, name, theme, timezone and photo were restored afterwards.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-009/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-009/independent-discovery.json"
+      ]
     },
     {
       "id": "V-C05",
@@ -34,9 +37,12 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "expected": "Preferences persist for the intended user. App view is a card within Profile for Member+, with a working Return to legal view link. Contributors have personal settings without this card. Another account's preferences remain unchanged; no absent M33 App view route is claimed.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "Full name saved on leaving the field, updated the header and survived reload; Email is read-only and Role is not editable. Searching Dubai and selecting Asia/Dubai stored the zone; the Use browser timezone option removed it. A small PNG saved as the photo; a 1.1 MB file and a text file were refused with the JPG or PNG, 1 MB max. hint. Dark, Warm and Light each applied and persisted, and another seed account's preferences stayed unchanged. The App view card at the top of Profile opened the Portal with the Viewing as business user banner and Return to legal view came back to Profile with the role unchanged. Change password refused a wrong current password, then the change signed the other browser out and kept this session; Sign out other devices ended the other session only; Sign out ended this one. The seed password, name, theme, timezone and photo were restored afterwards.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-009/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-009/independent-discovery.json"
+      ]
     },
     {
       "id": "V-C05",
@@ -44,15 +50,19 @@
       "role": "contributor",
       "method": "browser-walkthrough",
       "expected": "Preferences persist for the intended user. App view is a card within Profile for Member+, with a working Return to legal view link. Contributors have personal settings without this card. Another account's preferences remain unchanged; no absent M33 App view route is claimed.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "Full name saved on leaving the field, updated the header and survived reload; Email is read-only and Role is not editable. Searching Dubai and selecting Asia/Dubai stored the zone; the Use browser timezone option removed it. A small PNG saved as the photo; a 1.1 MB file and a text file were refused with the JPG or PNG, 1 MB max. hint. Dark, Warm and Light each applied and persisted, and another seed account's preferences stayed unchanged. Profile had no App view card or View as business user control; a direct /portal address still opened the Portal. Change password refused a wrong current password, then the change signed the other browser out and kept this session; Sign out other devices ended the other session only; Sign out ended this one. The seed password, name, theme, timezone and photo were restored afterwards.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-009/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-009/independent-discovery.json"
+      ]
     }
   ],
   "authorEvidence": ["docs/documentation/batches/DOC-009/README.md"],
   "limitations": [
-    "Independent technical review and article walkthrough pending.",
-    "Normal publication waits for the linked canonical articles to finish their owning batches."
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "Profile offers no photo removal; the fixture photo was cleared in the lab database after the check.",
+    "Normal publication waits for the linked canonical articles to finish their owning batches; the article stays in review."
   ],
   "previousEvidence": null,
   "copyOnlyReview": null

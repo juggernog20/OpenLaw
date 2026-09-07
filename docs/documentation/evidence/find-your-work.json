@@ -1,15 +1,15 @@
 {
   "articleId": "find-your-work",
-  "contentSha256": "12c89ad41d38a35d2bdb8c7f64a262d216ccc6d6a1211af802fd9e3e2a2aea61",
+  "contentSha256": "6fa8eb3a4f1302279ec5419435fbeeb34596a17d1897bc90d62c52037f8ac8d0",
   "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
   "buildId": "app sha256:69c7cd47338eff05c787e985743dd45b2229792827d82fd5f54a50a9c63d8757; engine sha256:1dce5b67898cc8ae720231fa66e049208ed207e69053a2cf4c1bd0e172cea401",
   "environment": "openlaw-docs-b8e31260-pilot",
   "author": "Codex documentation author",
   "technicalReviewer": "Fable review seat (agent source check against d1d098ba); the feature owner's human technical review is not recorded here",
-  "walkthroughReviewer": null,
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
   "reviewerKind": "agent",
-  "verifiedAt": null,
-  "status": "not-run",
+  "verifiedAt": "2026-09-07T04:53:56.953Z",
+  "status": "pass",
   "sources": [
     "apps/web/src/routes/home.tsx",
     "apps/web/src/routes/home-tasks.tsx",
@@ -24,9 +24,12 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "expected": "Links reach the intended records; Tasks remain distinct from deadline surfaces; ? opens shortcuts. Empty sections and unavailable records have useful outcomes; / and Escape retain their existing behavior.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "Home showed Tasks assigned to you, Dates approaching, Entity obligations, Inbox and Your contracts. The fixture Task link opened /contracts/43/tasks with the C-43 title; Fields and Documents sections were reached and Documents listed navigation-search.pdf; Home returned. View all opened Your Tasks with the Task; Complete Task completed it (stored as done) and Undo reopened it; Back to Home returned. Dates approaching's View all opened Your dates and Escape closed it. ? opened Keyboard shortcuts and Escape closed it; / focused the header Search and a typed ? stayed in the field; Help opened /help. /contracts/45 showed Something went wrong. The page could not load. Reload to try again.; /contracts/99999 showed the same generic page.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-009/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-009/independent-discovery.json"
+      ]
     },
     {
       "id": "V-C03",
@@ -34,9 +37,12 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "expected": "Links reach the intended records; Tasks remain distinct from deadline surfaces; ? opens shortcuts. Empty sections and unavailable records have useful outcomes; / and Escape retain their existing behavior.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "Home showed Tasks assigned to you, Dates approaching, Entity obligations, Inbox, Your contracts and Your matters. The fixture Task link opened /contracts/43/tasks with the C-43 title; Fields and Documents sections were reached and Documents listed navigation-search.pdf; Home returned. View all opened Your Tasks with the Task; Complete Task completed it (stored as done) and Undo reopened it; Back to Home returned. Dates approaching's View all opened Your dates and Escape closed it. ? opened Keyboard shortcuts and Escape closed it; / focused the header Search and a typed ? stayed in the field; Help opened /help. C-45 opened with its Confidential contract banner; /contracts/99999 showed the same generic page.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-009/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-009/independent-discovery.json"
+      ]
     },
     {
       "id": "V-C03",
@@ -44,13 +50,18 @@
       "role": "contributor",
       "method": "browser-walkthrough",
       "expected": "Links reach the intended records; Tasks remain distinct from deadline surfaces; ? opens shortcuts. Empty sections and unavailable records have useful outcomes; / and Escape retain their existing behavior.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "Home showed only Tasks assigned to you. The fixture Task link opened /contracts/43/tasks with the C-43 title; Fields and Documents sections were reached and Documents listed navigation-search.pdf; Home returned. View all opened Your Tasks with the Task; no completion control was offered; Back to Home returned. No Dates approaching section existed for this account. ? opened Keyboard shortcuts and Escape closed it; / focused the header Search and a typed ? stayed in the field; Help opened /help. /contracts/45 showed Something went wrong. The page could not load. Reload to try again.; /contracts/99999 showed the same generic page. A fresh Contributor account saw Welcome to OpenLaw and No open Tasks assigned to you.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-009/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-009/independent-discovery.json"
+      ]
     }
   ],
   "authorEvidence": ["docs/documentation/batches/DOC-009/README.md"],
-  "limitations": ["Independent technical review and article walkthrough pending."],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval."
+  ],
   "previousEvidence": null,
   "copyOnlyReview": null
 }

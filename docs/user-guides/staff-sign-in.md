@@ -17,7 +17,7 @@ If the passwords do not match, correct them and try again. If the link has expir
 
 ## Use your organization's sign-in method
 
-If the page offers **Continue with single sign-on**, select it and complete your organization's identity-provider sign-in. Ask your Administrator about a failed sign-in or an account that has not been allowed access.
+If the page offers **Continue with single sign-on**, select it and complete your organization's identity-provider sign-in. Ask your Administrator about a failed sign-in or an account that has not been allowed access. If the page says **Single sign-on is not configured yet**, no identity provider is connected. Ask your Administrator which method to use.
 
 **Administrator sign-in** opens the password form when single sign-on is the main method. Only an Administrator can sign in with a password in that mode. A Legal Team Member or Contributor who tries it sees **Password sign-in is disabled while single sign-on is required.** and must use the single sign-on method instead.
 

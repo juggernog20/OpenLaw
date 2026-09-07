@@ -3,7 +3,13 @@
   "id": "documentation-development",
   "channel": "development",
   "supportedAppVersion": "0.0.1",
-  "supportedAppCommit": null,
+  "supportedAppCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
   "publicationTarget": "feature-review",
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "testedAppCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+    "applicationSha256": "00a83d8635282fece830a98421093e6fdc777c0da916e08012accbd82c6f12a4",
+    "reviewer": "Fable review seat (agent)",
+    "reviewedAt": "2026-09-07T04:54:30Z",
+    "summary": "Application source digest computed on the docs/729-access-navigation branch matches the pilot lab source d1d098ba (no non-documentation changes between them). The Home guide (C03) and the search and views guide (C04) were walked through independently in the browser as Administrator, Legal Team Member, and Contributor against that build and its immutable images. Other articles remain in review because their linked canonical guides are unpublished."
+  }
 }

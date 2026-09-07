@@ -46,4 +46,4 @@ Task due dates belong to Tasks. They do not become Key dates and do not feed **D
 
 Typing in a field keeps these characters in that field. **Help** in the header opens product instructions. Its search searches guides. The header's record search searches work you can reach. See [Search, filter, and save views](search-and-views.md).
 
-If a record becomes unavailable, return to Home or its module list and refresh. An Administrator can check changed access. A copied record link does not grant access, and an absent result does not prove that the record was deleted.
+If a record becomes unavailable, its page shows **Something went wrong.** with a **Reload** control. Reload does not restore access. Return to Home or its module list and refresh. An Administrator can check changed access. A copied record link does not grant access, and an absent result does not prove that the record was deleted.

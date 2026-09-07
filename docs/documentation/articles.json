@@ -84,7 +84,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["home"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "search-and-views",
@@ -97,7 +97,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["search", "lists"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "personal-settings",

@@ -6,10 +6,10 @@
   "environment": "openlaw-docs-b8e31260-pilot",
   "author": "Codex documentation author",
   "technicalReviewer": "Fable review seat (agent source check against d1d098ba); the feature owner's human technical review is not recorded here",
-  "walkthroughReviewer": null,
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
   "reviewerKind": "agent",
-  "verifiedAt": null,
-  "status": "not-run",
+  "verifiedAt": "2026-09-07T04:12:15.835Z",
+  "status": "pass",
   "sources": [
     "apps/web/src/routes/portal-entry.tsx",
     "apps/web/src/routes/link-expired.tsx",
@@ -24,15 +24,18 @@
       "role": "business_user",
       "method": "browser-walkthrough",
       "expected": "Only the intended Business User session opens; the portal shows that person's Requests. An unapproved domain gets the supported refusal/neutral response; a bad link offers a working recovery route.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "Jonas: the entry page said Legal request portal; Send link showed Check your email; the Sign in to OpenLaw link opened the Portal listing his R-30 and none of Amara's Requests; /inbox, /contracts/43, /matters and / all redirected to /portal; Sign out returned to /portal/enter; the reused link opened Sign-in link expired with Email and Send link, and a fresh link recovered. Amara, in a separate context, saw only R-2 and R-15, and Jonas's /portal/requests/30 redirected to her Portal home. An address at an unapproved domain got Check your email and no Mailpit message. With links switched off the entry page said Sign-in links are switched off and its Sign in link opened the password sign-in page; the expired-link page offered only Back to sign-in. The toggle was restored.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-009/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-009/independent-discovery.json"
+      ]
     }
   ],
   "authorEvidence": ["docs/documentation/batches/DOC-009/README.md"],
   "limitations": [
-    "Independent technical review and article walkthrough pending.",
-    "Normal publication waits for the linked canonical articles to finish their owning batches."
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "Normal publication waits for the linked canonical articles to finish their owning batches; the article stays in review."
   ],
   "previousEvidence": null,
   "copyOnlyReview": null

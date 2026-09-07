@@ -85,26 +85,65 @@ technical review is not recorded there. One claim changed:
 - `staff-sign-in` now states that single sign-on mode refuses password sign-in for
   Legal Team Members and Contributors, with the message **Password sign-in is
   disabled while single sign-on is required.** The earlier wording read as advice.
-  The author records keep the hash of the earlier bytes they walked through; the
-  evidence file carries the current hash. The changed sentence names no new control,
-  so the independent walkthrough covers it by attempting a non-Administrator password
-  sign-in in that mode.
 
-The five guides do not use the how-to template's section headings that the DOC-008
-pilot guides follow. Their substance is present inline. That layout choice is left
-for the documentation lead; restructuring would replace the walked-through bytes.
+The five guides keep their task-specific section headings instead of the how-to
+template's generic ones. The EDITORIAL requirements are the prerequisite, procedure,
+outcome and recovery substance, and that substance is present inline. This is an
+accepted editorial choice for this batch, not a pending approval.
+
+## Independent walkthrough
+
+The same Fable seat then followed the five guides with its own Playwright scripts on
+September 7, 2026, between 04:08 and 04:54 UTC, against the committed pilot lab and
+the draft reader. It did not replay the author's scripts. The sanitized step records
+are in [independent-walkthrough.json](independent-walkthrough.json) and
+[independent-discovery.json](independent-discovery.json). All 13 required
+scenario/role combinations passed, including the alternate and failure outcomes each
+guide names. This is an agent walkthrough, not a human user study, and it does not
+stand in for the feature owner's approval.
+
+| Scenario | Roles                                              | Result | Notes                                                                                                                                                                                                                                                      |
+| -------- | -------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| V-C01    | Administrator, Legal Team Member, Contributor      | pass   | Fresh invited accounts: expired, mismatched, consumed and wrong-password refusals; enrollment, challenge, backup-code single use, revocation, re-enrollment, disable. Nadia and Ravi were refused with the documented message in oidc mode; Daniel got in. |
+| V-C02    | Business User (Jonas and Amara, separate contexts) | pass   | Own Requests only; staff routes bounce to the Portal; reused link recovers; unapproved domain gets the neutral response and no mail; links switched off offers Sign in and Back to sign-in.                                                                |
+| V-C03    | Administrator, Legal Team Member, Contributor      | pass   | Role-specific Home sections; Task to C-43 sections; Your Tasks completion and Undo for Member+ only; Your dates; shortcuts; Help; unreachable-record page; fresh-account empty states.                                                                     |
+| V-C04    | Administrator, Legal Team Member, Contributor      | pass   | PDF-only text to the exact Version with find prefilled; C-45 hidden from non-team roles; Owner filter, Title sort, Back/Forward; saved view in a second browser; duplicate name; empty and failed reads.                                                   |
+| V-C05    | Administrator, Legal Team Member, Contributor      | pass   | Name, timezone, photo limits, three themes with another account unchanged; App view card for Member+ and its absence for the Contributor; password change and session controls; preferences restored.                                                      |
+
+Discovery: the signed-out formal index listed all five guides with no API request, and
+its search found the sign-in guides. Each staff role reached the Home, search/list and
+Profile guides through the header Help topic, Help search, and the full-documentation
+link. **Help with this page** on the sign-in, set-password, expired-link and Portal
+entry pages opens the formal reader filtered to that page's topic. Portal Help opened
+from the Portal home is scoped to `portal.home`, so its search does not list the entry
+guide; the Help index and an unscoped search do. Light, Warm and Dark fitted 320, 720
+and 1440 CSS pixels without horizontal overflow.
+
+Two guide passages changed from what the walkthrough observed, and their scenarios
+were rerun against the corrected bytes:
+
+- `find-your-work` names the generic **Something went wrong.** page that every role
+  sees for a Contract outside reach or a missing number, and says Reload does not
+  restore access.
+- `staff-sign-in` names the **Single sign-on is not configured yet** state that the
+  sign-in page shows in oidc mode with no provider registered.
+
+The author records keep the hashes of the bytes they walked through; each evidence file
+carries the current hash and the reviewer's verification time. Fixture preparation
+(token expiry, invitation resend, mode and toggle switches with restoration, blocked
+reads) is recorded in the walkthrough file and is not guide content. Nine disposable
+`docs.review.*` accounts remain in the lab as fictional fixtures.
 
 ## Review and publication handoff
 
-The five files under [evidence](../../evidence/) hold separate pending independent
-results for the 13 required scenario/role combinations. Do not promote the articles
-from `review` until their evidence and publication dependencies are satisfied.
-The notification-preferences link deliberately targets DOC-011's canonical
-`notifications` article. The Portal entry guide links DOC-012's `submit-request`.
-The linked Request guidance continues to DOC-013's triage and conversion articles
-and DOC-021's Request form configuration.
-Those owning batches must complete the linked guides before normal publication
-can include the connected access/settings/intake group. The Home and search guides
-have no link to these pending articles and can enter normal publication after their
-own technical and independent checks pass. The explicit preview reports the unpublished
+`find-your-work` and `search-and-views` are `verified` in the catalog. The edition
+records the tested app commit `d1d098ba` and an application compatibility review whose
+source digest matched this branch; neither guide links to unpublished content.
+
+`staff-sign-in`, `portal-sign-in` and `personal-settings` stay in `review` even though
+their evidence passed. The notification-preferences link deliberately targets
+DOC-011's canonical `notifications` article. The Portal entry guide links DOC-012's
+`submit-request`, and the staff guide links the Portal and Profile guides. Those owning
+batches must complete the linked guides before normal publication can include the
+connected access/settings/intake group. The explicit preview reports the unpublished
 notification target; the normal edition continues to exclude review content.

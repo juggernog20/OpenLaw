@@ -1,0 +1,1045 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-009",
+  "issue": 729,
+  "independentReview": true,
+  "reviewerKind": "agent",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "technicalReviewer": "Fable review seat (agent source check against d1d098ba); the feature owner's human technical review is not recorded here",
+  "author": "Codex documentation author",
+  "method": "browser-walkthrough",
+  "startedAt": "2026-09-07T04:08:00Z",
+  "finishedAt": "2026-09-07T04:53:56.953Z",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "buildId": "app sha256:69c7cd47338eff05c787e985743dd45b2229792827d82fd5f54a50a9c63d8757; engine sha256:1dce5b67898cc8ae720231fa66e049208ed207e69053a2cf4c1bd0e172cea401",
+  "environment": "openlaw-docs-b8e31260-pilot",
+  "frontend": "Committed lab at port 43301 for the task walkthroughs; Vite draft reader at port 43310 with unchanged app source and the working canonical Markdown for discovery",
+  "browser": "Playwright 1.62.1 Chromium from the workspace, headless, one isolated context per role or account, 1440x900; scripts written by the reviewer from the guide prose, not the author's scripts",
+  "articleHashesTested": {
+    "staff-sign-in": [
+      "e8dd7ebce70905825dd3d9efe282fd750fa82ab5621513b99352f7f93ff56bd2",
+      "3c7ed38f6e42d021121f8566c99a6f9a45e3ec63cebe90e28a957ee20c575651"
+    ],
+    "portal-sign-in": ["9d419eb6c397fcaca5aac93331cb5dd06905f8152446485705714e07995adf7d"],
+    "find-your-work": [
+      "12c89ad41d38a35d2bdb8c7f64a262d216ccc6d6a1211af802fd9e3e2a2aea61",
+      "6fa8eb3a4f1302279ec5419435fbeeb34596a17d1897bc90d62c52037f8ac8d0"
+    ],
+    "search-and-views": ["e303479e3b19bde3f34d5131d4f5c59de37b6feab2ef9b50bacdb97cb5478b23"],
+    "personal-settings": ["155c97620d4f7999fa850eb2923f73ee797df09b2e62bf61cf0e5b292c16b2b8"]
+  },
+  "articleHashesCurrent": {
+    "staff-sign-in": "3c7ed38f6e42d021121f8566c99a6f9a45e3ec63cebe90e28a957ee20c575651",
+    "portal-sign-in": "9d419eb6c397fcaca5aac93331cb5dd06905f8152446485705714e07995adf7d",
+    "find-your-work": "6fa8eb3a4f1302279ec5419435fbeeb34596a17d1897bc90d62c52037f8ac8d0",
+    "search-and-views": "e303479e3b19bde3f34d5131d4f5c59de37b6feab2ef9b50bacdb97cb5478b23",
+    "personal-settings": "155c97620d4f7999fa850eb2923f73ee797df09b2e62bf61cf0e5b292c16b2b8"
+  },
+  "authorHashesHistorical": {
+    "staff-sign-in": "8ad02d5fc14664f6ba625ed31e65d93a4b6af5b79b63efc3c274e481d5e64a9b",
+    "portal-sign-in": "9d419eb6c397fcaca5aac93331cb5dd06905f8152446485705714e07995adf7d",
+    "find-your-work": "12c89ad41d38a35d2bdb8c7f64a262d216ccc6d6a1211af802fd9e3e2a2aea61",
+    "search-and-views": "e303479e3b19bde3f34d5131d4f5c59de37b6feab2ef9b50bacdb97cb5478b23",
+    "personal-settings": "155c97620d4f7999fa850eb2923f73ee797df09b2e62bf61cf0e5b292c16b2b8"
+  },
+  "fixtures": {
+    "accounts": "Seed accounts Daniel Okafor, Nadia Haddad, Ravi Menon (staff) and Jonas Weber, Amara Nwosu (Business Users). Nine disposable invited accounts docs.review.<stamp>.<n>@helix.example were created through the Administrator invitation API for activation and two-factor checks; the first C01 attempt left three of them with two-factor on. They stay in the lab as fictional fixtures.",
+    "records": "Contract C-43 (shared, Owner Daniel) with navigation-search.pdf and one open Task per role, C-44 (shared, Owner Nadia), and C-45 (Confidential, outside Nadia's and Ravi's teams), all created by the author.",
+    "preparation": "Expiring one invitation token per new account in the lab database, resending the invitation through the API, switching the authentication mode to oidc and the Portal magic-link toggle off for single checks, and blocking the search and Contract list reads in the browser are test preparation, not guide instructions. The Administrator session was retained and both settings were restored in finally blocks; the authentication discovery endpoint reported built_in with magic links enabled afterwards.",
+    "cleanup": "Seed names, themes, timezones, passwords, and the fixture profile photos were restored (the photo through the lab database because Profile offers no removal control); the four saved views the reviewer created were deleted; the fixture Tasks are open again."
+  },
+  "scenarios": {
+    "V-C01": [
+      {
+        "article": "staff-sign-in",
+        "role": "administrator",
+        "step": "expired invitation link refused",
+        "result": "pass",
+        "actual": "Expired link: \"This link has expired or was already used\" shown; no password set",
+        "at": "2026-09-07T04:52:10.523Z",
+        "ms": 399
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "administrator",
+        "step": "Administrator resends invitation (fixture) and mismatch is refused",
+        "result": "pass",
+        "actual": "Subject \"Set your OpenLaw password\"; mismatch refused with \"The passwords do not match.\"",
+        "at": "2026-09-07T04:52:10.922Z",
+        "ms": 142
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "administrator",
+        "step": "set password, Password set, Sign in link, wrong then right password",
+        "result": "pass",
+        "actual": "Landed on http://127.0.0.1:43301/ with header name Docs Review Administrator; Home says: Entity obligations 10 View all 10 Corporate income tax return Helix Software Israel Ltd · Due Sep 19, 2026 Sep 19 (in 12",
+        "at": "2026-09-07T04:52:11.064Z",
+        "ms": 403
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "administrator",
+        "step": "consumed invitation link refused",
+        "result": "pass",
+        "actual": "Used link refused after activation with the expired-or-used message",
+        "at": "2026-09-07T04:52:11.467Z",
+        "ms": 225
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "administrator",
+        "step": "enroll two-factor from Settings > Profile",
+        "result": "pass",
+        "actual": "QR and manual secret shown; code accepted; 10 backup codes shown once; Profile now offers Re-enroll and Turn off two-factor",
+        "at": "2026-09-07T04:52:11.692Z",
+        "ms": 439
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "administrator",
+        "step": "sign-in challenge: wrong code refused, current code accepted",
+        "result": "pass",
+        "actual": "Wrong code stayed on challenge (OpenLaw Two-factor authentication Enter the 6-digit code from your authenticator app. Wron); current code reached http://127.0.0.1:43301/",
+        "at": "2026-09-07T04:52:12.131Z",
+        "ms": 1156
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "administrator",
+        "step": "backup code works once; replay refused",
+        "result": "pass",
+        "actual": "First use reached Home; replay stayed on challenge (OpenLaw Two-factor authentication Enter one of your backup codes. Each works onc)",
+        "at": "2026-09-07T04:52:13.287Z",
+        "ms": 1489
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "administrator",
+        "step": "Sign out other devices revokes the other session",
+        "result": "pass",
+        "actual": "Other device returned to sign-in on reload; the revoking session stayed open",
+        "at": "2026-09-07T04:52:14.776Z",
+        "ms": 2139
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "administrator",
+        "step": "Re-enroll issues a new secret; Turn off restores password-only sign-in",
+        "result": "pass",
+        "actual": "New secret differed; disable required the password; password-only sign-in reached Home; Sign out returned to the sign-in page",
+        "at": "2026-09-07T04:52:16.916Z",
+        "ms": 802
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "legal_team_member",
+        "step": "expired invitation link refused",
+        "result": "pass",
+        "actual": "Expired link: \"This link has expired or was already used\" shown; no password set",
+        "at": "2026-09-07T04:52:17.736Z",
+        "ms": 283
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "legal_team_member",
+        "step": "Administrator resends invitation (fixture) and mismatch is refused",
+        "result": "pass",
+        "actual": "Subject \"Set your OpenLaw password\"; mismatch refused with \"The passwords do not match.\"",
+        "at": "2026-09-07T04:52:18.019Z",
+        "ms": 139
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "legal_team_member",
+        "step": "set password, Password set, Sign in link, wrong then right password",
+        "result": "pass",
+        "actual": "Landed on http://127.0.0.1:43301/ with header name Docs Review Legal Team Member; Home says: Inbox 11 View all 11 Can we name Woodgrove Bank plc as a reference customer? R-3 · Legal question · Sara Haddadi High ur",
+        "at": "2026-09-07T04:52:18.158Z",
+        "ms": 387
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "legal_team_member",
+        "step": "consumed invitation link refused",
+        "result": "pass",
+        "actual": "Used link refused after activation with the expired-or-used message",
+        "at": "2026-09-07T04:52:18.545Z",
+        "ms": 208
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "legal_team_member",
+        "step": "enroll two-factor from Settings > Profile",
+        "result": "pass",
+        "actual": "QR and manual secret shown; code accepted; 10 backup codes shown once; Profile now offers Re-enroll and Turn off two-factor",
+        "at": "2026-09-07T04:52:18.754Z",
+        "ms": 500
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "legal_team_member",
+        "step": "sign-in challenge: wrong code refused, current code accepted",
+        "result": "pass",
+        "actual": "Wrong code stayed on challenge (OpenLaw Two-factor authentication Enter the 6-digit code from your authenticator app. Wron); current code reached http://127.0.0.1:43301/",
+        "at": "2026-09-07T04:52:19.254Z",
+        "ms": 1158
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "legal_team_member",
+        "step": "backup code works once; replay refused",
+        "result": "pass",
+        "actual": "First use reached Home; replay stayed on challenge (OpenLaw Two-factor authentication Enter one of your backup codes. Each works onc)",
+        "at": "2026-09-07T04:52:20.413Z",
+        "ms": 1494
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "legal_team_member",
+        "step": "Sign out other devices revokes the other session",
+        "result": "pass",
+        "actual": "Other device returned to sign-in on reload; the revoking session stayed open",
+        "at": "2026-09-07T04:52:21.907Z",
+        "ms": 2102
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "legal_team_member",
+        "step": "Re-enroll issues a new secret; Turn off restores password-only sign-in",
+        "result": "pass",
+        "actual": "New secret differed; disable required the password; password-only sign-in reached Home; Sign out returned to the sign-in page",
+        "at": "2026-09-07T04:52:24.009Z",
+        "ms": 872
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "contributor",
+        "step": "expired invitation link refused",
+        "result": "pass",
+        "actual": "Expired link: \"This link has expired or was already used\" shown; no password set",
+        "at": "2026-09-07T04:52:24.899Z",
+        "ms": 269
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "contributor",
+        "step": "Administrator resends invitation (fixture) and mismatch is refused",
+        "result": "pass",
+        "actual": "Subject \"Set your OpenLaw password\"; mismatch refused with \"The passwords do not match.\"",
+        "at": "2026-09-07T04:52:25.168Z",
+        "ms": 144
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "contributor",
+        "step": "set password, Password set, Sign in link, wrong then right password",
+        "result": "pass",
+        "actual": "Landed on http://127.0.0.1:43301/ with header name Docs Review Contributor; Home says: Welcome to OpenLaw Nothing is waiting on you. Approvals, Tasks, dates, obligations, contracts, matters, and Requests wil",
+        "at": "2026-09-07T04:52:25.312Z",
+        "ms": 333
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "contributor",
+        "step": "consumed invitation link refused",
+        "result": "pass",
+        "actual": "Used link refused after activation with the expired-or-used message",
+        "at": "2026-09-07T04:52:25.645Z",
+        "ms": 207
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "contributor",
+        "step": "enroll two-factor from Settings > Profile",
+        "result": "pass",
+        "actual": "QR and manual secret shown; code accepted; 10 backup codes shown once; Profile now offers Re-enroll and Turn off two-factor",
+        "at": "2026-09-07T04:52:25.853Z",
+        "ms": 426
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "contributor",
+        "step": "sign-in challenge: wrong code refused, current code accepted",
+        "result": "pass",
+        "actual": "Wrong code stayed on challenge (OpenLaw Two-factor authentication Enter the 6-digit code from your authenticator app. Wron); current code reached http://127.0.0.1:43301/",
+        "at": "2026-09-07T04:52:26.280Z",
+        "ms": 1146
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "contributor",
+        "step": "backup code works once; replay refused",
+        "result": "pass",
+        "actual": "First use reached Home; replay stayed on challenge (OpenLaw Two-factor authentication Enter one of your backup codes. Each works onc)",
+        "at": "2026-09-07T04:52:27.426Z",
+        "ms": 1451
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "contributor",
+        "step": "Sign out other devices revokes the other session",
+        "result": "pass",
+        "actual": "Other device returned to sign-in on reload; the revoking session stayed open",
+        "at": "2026-09-07T04:52:28.878Z",
+        "ms": 2083
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "contributor",
+        "step": "Re-enroll issues a new secret; Turn off restores password-only sign-in",
+        "result": "pass",
+        "actual": "New secret differed; disable required the password; password-only sign-in reached Home; Sign out returned to the sign-in page",
+        "at": "2026-09-07T04:52:30.961Z",
+        "ms": 801
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "all",
+        "step": "auth methods before mode checks",
+        "result": "info",
+        "actual": "{\"mode\":\"built_in\",\"magicLinkEnabled\":true,\"emailConfigured\":true,\"ssoProviderId\":null}",
+        "at": "2026-09-07T04:52:31.766Z"
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "legal_team_member",
+        "step": "single sign-on mode refuses a non-Administrator password sign-in",
+        "result": "pass",
+        "actual": "Landing view: \"OpenLaw Sign in Single sign-on is not configured yet. Use administrator sign-in. Email me a sign-in link Admin\"; Continue with single sign-on buttons: 0; Nadia Haddad refused with the documented message",
+        "at": "2026-09-07T04:52:31.774Z",
+        "ms": 303
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "contributor",
+        "step": "single sign-on mode refuses a non-Administrator password sign-in",
+        "result": "pass",
+        "actual": "Landing view: \"OpenLaw Sign in Single sign-on is not configured yet. Use administrator sign-in. Email me a sign-in link Admin\"; Continue with single sign-on buttons: 0; Ravi Menon refused with the documented message",
+        "at": "2026-09-07T04:52:32.077Z",
+        "ms": 409
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "administrator",
+        "step": "single sign-on mode keeps Administrator password sign-in",
+        "result": "pass",
+        "actual": "Daniel reached Home through Administrator sign-in",
+        "at": "2026-09-07T04:52:32.486Z",
+        "ms": 278
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "all",
+        "step": "auth mode restored",
+        "result": "info",
+        "actual": "built_in -> 200",
+        "at": "2026-09-07T04:52:32.771Z"
+      },
+      {
+        "article": "staff-sign-in",
+        "role": "contributor",
+        "step": "Email me a sign-in link signs the staff account in once",
+        "result": "pass",
+        "actual": "Link signed in the Contributor; reopening it went to http://127.0.0.1:43301/auth/link-expired",
+        "at": "2026-09-07T04:52:32.771Z",
+        "ms": 493
+      }
+    ],
+    "V-C02": [
+      {
+        "article": "portal-sign-in",
+        "role": "business_user",
+        "step": "Jonas requests a link, opens it once, sees only his Requests",
+        "result": "pass",
+        "actual": "Entry page said Legal request portal; Check your email shown; subject \"Sign in to OpenLaw\"; Portal opened at http://127.0.0.1:43301/portal listing Jonas's R-30 and none of Amara's (R-2, R-15); header: OpenLaw Legal request portal Help 9+ JW Jonas Weber jonas.weber@helix.example Si",
+        "at": "2026-09-07T04:12:06.585Z",
+        "ms": 445
+      },
+      {
+        "article": "portal-sign-in",
+        "role": "business_user",
+        "step": "Business User cannot open staff Inbox, Contracts, or Matters",
+        "result": "pass",
+        "actual": "/inbox -> /portal; /contracts/43 -> /portal; /matters -> /portal; / -> /portal",
+        "at": "2026-09-07T04:12:07.030Z",
+        "ms": 3294
+      },
+      {
+        "article": "portal-sign-in",
+        "role": "business_user",
+        "step": "Sign out, reused link goes to Sign-in link expired, fresh link recovers",
+        "result": "pass",
+        "actual": "Sign out returned to 127.0.0.1:43301/portal/enter; reused link opened Sign-in link expired with Email and Send link; new link opened the Portal again",
+        "at": "2026-09-07T04:12:10.325Z",
+        "ms": 353
+      },
+      {
+        "article": "portal-sign-in",
+        "role": "business_user",
+        "step": "Amara's separate context sees her own Requests; Jonas's Request link is refused",
+        "result": "pass",
+        "actual": "Amara listed R-2 and R-15 only; /portal/requests/30 gave /portal: What do you need from Legal? Pick a request type — the form collects what Legal needs to get started",
+        "at": "2026-09-07T04:12:10.700Z",
+        "ms": 1609
+      },
+      {
+        "article": "portal-sign-in",
+        "role": "business_user",
+        "step": "unapproved domain gets the neutral response and no email",
+        "result": "pass",
+        "actual": "Check your email shown for outsider@unapproved.example; Mailpit received 0 messages for it",
+        "at": "2026-09-07T04:12:12.310Z",
+        "ms": 3229
+      },
+      {
+        "article": "portal-sign-in",
+        "role": "business_user",
+        "step": "links switched off: entry offers Sign in; expired page offers Back to sign-in",
+        "result": "pass",
+        "actual": "Entry said links are switched off; Sign in led to /auth/link-expired showing \"OpenLaw Sign in Email Password Sign in Help with this page\"; expired page offered only Back to sign-in",
+        "at": "2026-09-07T04:12:15.561Z",
+        "ms": 257
+      },
+      {
+        "article": "portal-sign-in",
+        "role": "business_user",
+        "step": "magic link restored",
+        "result": "info",
+        "actual": "200",
+        "at": "2026-09-07T04:12:15.835Z"
+      }
+    ],
+    "V-C03": [
+      {
+        "article": "find-your-work",
+        "role": "administrator",
+        "step": "Home sections match the role",
+        "result": "pass",
+        "actual": "Sections: Tasks assigned to you | Dates approaching | Entity obligations | Inbox | Your contracts | Your matters",
+        "at": "2026-09-07T04:53:42.345Z",
+        "ms": 156
+      },
+      {
+        "article": "find-your-work",
+        "role": "administrator",
+        "step": "open the Task's record from Home, use Fields and Documents, return Home",
+        "result": "pass",
+        "actual": "Task link opened /contracts/43/tasks \"Home\"; Fields and Documents sections reached; Documents listed navigation-search.pdf; Home returned",
+        "at": "2026-09-07T04:53:42.502Z",
+        "ms": 466
+      },
+      {
+        "article": "find-your-work",
+        "role": "administrator",
+        "step": "View all opens Your Tasks; completion control per role; Back to Home",
+        "result": "pass",
+        "actual": "Complete controls for the fixture Task: 1; Load more Tasks present: false; completed (db t) then Undo reopened (db f)",
+        "at": "2026-09-07T04:53:42.968Z",
+        "ms": 930
+      },
+      {
+        "article": "find-your-work",
+        "role": "administrator",
+        "step": "Dates approaching View all opens Your dates; Escape closes it",
+        "result": "pass",
+        "actual": "Your dates calendar opened from Dates approaching and closed with Escape",
+        "at": "2026-09-07T04:53:43.898Z",
+        "ms": 144
+      },
+      {
+        "article": "find-your-work",
+        "role": "administrator",
+        "step": "? opens Keyboard shortcuts, / focuses search, typing stays in the field",
+        "result": "pass",
+        "actual": "Shortcut sheet opened and closed; / focused {\"tag\":\"INPUT\",\"label\":\"Search\"}; typing ? into it kept the character in the field",
+        "at": "2026-09-07T04:53:44.042Z",
+        "ms": 672
+      },
+      {
+        "article": "find-your-work",
+        "role": "administrator",
+        "step": "Help in the header opens product instructions for Home",
+        "result": "pass",
+        "actual": "/help: Help All documentation Search documentation Search Help Guides for Administrator No verified articles are available in t",
+        "at": "2026-09-07T04:53:44.715Z",
+        "ms": 136
+      },
+      {
+        "article": "find-your-work",
+        "role": "administrator",
+        "step": "unavailable and confidential records have a useful outcome",
+        "result": "pass",
+        "actual": "/contracts/45 -> /contracts/45: Confidential contract — the contract team, the Owner, and Administrators see it. Manage team Contracts C-45 Docs navigation confid || /contracts/99999 -> /contracts/99999: Something went wrong. The page could not load. Reload to try again. Reload",
+        "at": "2026-09-07T04:53:44.852Z",
+        "ms": 2471
+      },
+      {
+        "article": "find-your-work",
+        "role": "legal_team_member",
+        "step": "Home sections match the role",
+        "result": "pass",
+        "actual": "Sections: Tasks assigned to you | Dates approaching | Entity obligations | Inbox | Your contracts",
+        "at": "2026-09-07T04:53:47.570Z",
+        "ms": 146
+      },
+      {
+        "article": "find-your-work",
+        "role": "legal_team_member",
+        "step": "open the Task's record from Home, use Fields and Documents, return Home",
+        "result": "pass",
+        "actual": "Task link opened /contracts/43/tasks \"Docs navigation shared 0 1788751383104\"; Fields and Documents sections reached; Documents listed navigation-search.pdf; Home returned",
+        "at": "2026-09-07T04:53:47.716Z",
+        "ms": 412
+      },
+      {
+        "article": "find-your-work",
+        "role": "legal_team_member",
+        "step": "View all opens Your Tasks; completion control per role; Back to Home",
+        "result": "pass",
+        "actual": "Complete controls for the fixture Task: 1; Load more Tasks present: false; completed (db t) then Undo reopened (db f)",
+        "at": "2026-09-07T04:53:48.128Z",
+        "ms": 882
+      },
+      {
+        "article": "find-your-work",
+        "role": "legal_team_member",
+        "step": "Dates approaching View all opens Your dates; Escape closes it",
+        "result": "pass",
+        "actual": "Your dates calendar opened from Dates approaching and closed with Escape",
+        "at": "2026-09-07T04:53:49.010Z",
+        "ms": 126
+      },
+      {
+        "article": "find-your-work",
+        "role": "legal_team_member",
+        "step": "? opens Keyboard shortcuts, / focuses search, typing stays in the field",
+        "result": "pass",
+        "actual": "Shortcut sheet opened and closed; / focused {\"tag\":\"INPUT\",\"label\":\"Search\"}; typing ? into it kept the character in the field",
+        "at": "2026-09-07T04:53:49.136Z",
+        "ms": 671
+      },
+      {
+        "article": "find-your-work",
+        "role": "legal_team_member",
+        "step": "Help in the header opens product instructions for Home",
+        "result": "pass",
+        "actual": "/help: Help All documentation Search documentation Search Help Guides for Legal Team Member No verified articles are available ",
+        "at": "2026-09-07T04:53:49.808Z",
+        "ms": 124
+      },
+      {
+        "article": "find-your-work",
+        "role": "legal_team_member",
+        "step": "unavailable and confidential records have a useful outcome",
+        "result": "pass",
+        "actual": "/contracts/45 -> /contracts/45: Something went wrong. The page could not load. Reload to try again. Reload || /contracts/99999 -> /contracts/99999: Something went wrong. The page could not load. Reload to try again. Reload",
+        "at": "2026-09-07T04:53:49.933Z",
+        "ms": 2463
+      },
+      {
+        "article": "find-your-work",
+        "role": "contributor",
+        "step": "Home sections match the role",
+        "result": "pass",
+        "actual": "Sections: Tasks assigned to you",
+        "at": "2026-09-07T04:53:52.631Z",
+        "ms": 103
+      },
+      {
+        "article": "find-your-work",
+        "role": "contributor",
+        "step": "open the Task's record from Home, use Fields and Documents, return Home",
+        "result": "pass",
+        "actual": "Task link opened /contracts/43/tasks \"Docs navigation shared 0 1788751383104\"; Fields and Documents sections reached; Documents listed navigation-search.pdf; Home returned",
+        "at": "2026-09-07T04:53:52.735Z",
+        "ms": 343
+      },
+      {
+        "article": "find-your-work",
+        "role": "contributor",
+        "step": "View all opens Your Tasks; completion control per role; Back to Home",
+        "result": "pass",
+        "actual": "Complete controls for the fixture Task: 0; Load more Tasks present: false",
+        "at": "2026-09-07T04:53:53.079Z",
+        "ms": 164
+      },
+      {
+        "article": "find-your-work",
+        "role": "contributor",
+        "step": "Dates approaching View all opens Your dates; Escape closes it",
+        "result": "pass",
+        "actual": "Dates approaching section absent for this account (no matching dates), as the guide allows",
+        "at": "2026-09-07T04:53:53.243Z",
+        "ms": 52
+      },
+      {
+        "article": "find-your-work",
+        "role": "contributor",
+        "step": "? opens Keyboard shortcuts, / focuses search, typing stays in the field",
+        "result": "pass",
+        "actual": "Shortcut sheet opened and closed; / focused {\"tag\":\"INPUT\",\"label\":\"Search\"}; typing ? into it kept the character in the field",
+        "at": "2026-09-07T04:53:53.295Z",
+        "ms": 651
+      },
+      {
+        "article": "find-your-work",
+        "role": "contributor",
+        "step": "Help in the header opens product instructions for Home",
+        "result": "pass",
+        "actual": "/help: Help All documentation Search documentation Search Help Guides for Contributor No verified articles are available in thi",
+        "at": "2026-09-07T04:53:53.947Z",
+        "ms": 116
+      },
+      {
+        "article": "find-your-work",
+        "role": "contributor",
+        "step": "unavailable and confidential records have a useful outcome",
+        "result": "pass",
+        "actual": "/contracts/45 -> /contracts/45: Something went wrong. The page could not load. Reload to try again. Reload || /contracts/99999 -> /contracts/99999: Something went wrong. The page could not load. Reload to try again. Reload",
+        "at": "2026-09-07T04:53:54.064Z",
+        "ms": 2473
+      },
+      {
+        "article": "find-your-work",
+        "role": "contributor",
+        "step": "fresh account: Welcome to OpenLaw and empty Your Tasks",
+        "result": "pass",
+        "actual": "Welcome to OpenLaw shown; Tasks card present: false; Your Tasks said No open Tasks assigned to you.",
+        "at": "2026-09-07T04:53:56.541Z",
+        "ms": 412
+      }
+    ],
+    "V-C04": [
+      {
+        "article": "search-and-views",
+        "role": "administrator",
+        "step": "header search finds PDF-only text and opens the matching Version with find prefilled",
+        "result": "pass",
+        "actual": "Results page /search?q=cobalt+skylark; kind Document -> /search?q=cobalt+skylark&kind=document; result row \"v1 navigation-search.pdf Owned by C-43 search example The cobalt skylark transpo\"; opened /contracts/43/documents?doc=01a079e4-0afc-7a31-8313-4bad9a4cb720&version=01a079e4-0afc-7a31-8313-4bae51c98c70&find=cobalt+skylark with find control value \"cobalt skylark\"",
+        "at": "2026-09-07T04:39:35.008Z",
+        "ms": 3785
+      },
+      {
+        "article": "search-and-views",
+        "role": "administrator",
+        "step": "Confidential record outside reach never appears; No matches for nonsense",
+        "result": "pass",
+        "actual": "C-45 result link present: true (page said \"C-45 Docs navigation confidential 1788751383104 CONFI\"); nonsense query showed No matches",
+        "at": "2026-09-07T04:39:38.793Z",
+        "ms": 2107
+      },
+      {
+        "article": "search-and-views",
+        "role": "administrator",
+        "step": "search failure is distinct from an empty answer and retry recovers",
+        "result": "pass",
+        "actual": "Blocked read showed: \"Search could not load. Try again.\"; reload after recovery listed the Document",
+        "at": "2026-09-07T04:39:40.900Z",
+        "ms": 1632
+      },
+      {
+        "article": "search-and-views",
+        "role": "administrator",
+        "step": "Contracts list: Owner filter chip and rows agree; Title sort cycles; Back/Forward restore",
+        "result": "pass",
+        "actual": "Filter URL /contracts?filters=1&view=all&owner=01a07997-75c1-7e8a-b0d9-86c0b4f50444; Title sort ascending then descending (/contracts?filters=1&view=all&owner=01a07997-75c1-7e8a-b0d9-86c0b4f50444&sort=title&dir=desc); Back -> /contracts?filters=1&view=all&owner=01a07997-75c1-7e8a-b0d9-86c0b4f50444&sort=title&dir=asc sort ascending; Forward -> /contracts?filters=1&view=all&owner=01a07997-75c1-7e8a-b0d9-86c0b4f50444&sort=title&dir=desc sort descending",
+        "at": "2026-09-07T04:39:42.532Z",
+        "ms": 5202
+      },
+      {
+        "article": "search-and-views",
+        "role": "administrator",
+        "step": "Columns, Save as…, Modified, Discard unsaved changes, duplicate name refused",
+        "result": "pass",
+        "actual": "Value column hidden; view \"Docs review administrator 1788755974565\" saved (db 1); sort change showed Modified; Discard unsaved changes restored the stored layout; duplicate name refused",
+        "at": "2026-09-07T04:39:47.734Z",
+        "ms": 3817
+      },
+      {
+        "article": "search-and-views",
+        "role": "administrator",
+        "step": "saved view follows the account to another browser; Default view; Delete… with confirmation",
+        "result": "pass",
+        "actual": "Second browser restored Owner chip, rows, and hidden column from the saved view; Default view showed the built-in layout; Delete… asked for confirmation and removed only the view (records intact)",
+        "at": "2026-09-07T04:39:51.551Z",
+        "ms": 4509
+      },
+      {
+        "article": "search-and-views",
+        "role": "administrator",
+        "step": "date filter with no matches shows the Contract empty message; Clear all recovers; blocked list read keeps rows",
+        "result": "pass",
+        "actual": "Effective date in 2090 -> No contracts match these filters; Clear all restored rows; blocked read after a filter change kept prior rows: true, page said \"Filter The contract list could not be read. Try again. Reference Title Counterparty Type Status Value Owner C-45 \"; reload recovered",
+        "at": "2026-09-07T04:39:56.060Z",
+        "ms": 2088
+      },
+      {
+        "article": "search-and-views",
+        "role": "legal_team_member",
+        "step": "header search finds PDF-only text and opens the matching Version with find prefilled",
+        "result": "pass",
+        "actual": "Results page /search?q=cobalt+skylark; kind Document -> /search?q=cobalt+skylark&kind=document; result row \"v1 navigation-search.pdf Owned by C-43 search example The cobalt skylark transpo\"; opened /contracts/43/documents?doc=01a079e4-0afc-7a31-8313-4bad9a4cb720&version=01a079e4-0afc-7a31-8313-4bae51c98c70&find=cobalt+skylark with find control value \"cobalt skylark\"",
+        "at": "2026-09-07T04:39:58.473Z",
+        "ms": 3732
+      },
+      {
+        "article": "search-and-views",
+        "role": "legal_team_member",
+        "step": "Confidential record outside reach never appears; No matches for nonsense",
+        "result": "pass",
+        "actual": "C-45 result link present: false (page said \"No matches No matches for “Docs navigation confidential”. Try another \"); nonsense query showed No matches",
+        "at": "2026-09-07T04:40:02.205Z",
+        "ms": 2110
+      },
+      {
+        "article": "search-and-views",
+        "role": "legal_team_member",
+        "step": "search failure is distinct from an empty answer and retry recovers",
+        "result": "pass",
+        "actual": "Blocked read showed: \"Search could not load. Try again.\"; reload after recovery listed the Document",
+        "at": "2026-09-07T04:40:04.316Z",
+        "ms": 1685
+      },
+      {
+        "article": "search-and-views",
+        "role": "legal_team_member",
+        "step": "Contracts list: Owner filter chip and rows agree; Title sort cycles; Back/Forward restore",
+        "result": "pass",
+        "actual": "Filter URL /contracts?filters=1&view=01a07997-9eb3-716e-8016-f80e8e1b1787&owner=01a07997-75c1-7e8a-b0d9-86c0b4f50444&sort=status&dir=asc; Title sort ascending then descending (/contracts?filters=1&view=01a07997-9eb3-716e-8016-f80e8e1b1787&owner=01a07997-75c1-7e8a-b0d9-86c0b4f50444&sort=title&dir=desc); Back -> /contracts?filters=1&view=01a07997-9eb3-716e-8016-f80e8e1b1787&owner=01a07997-75c1-7e8a-b0d9-86c0b4f50444&sort=title&dir=asc sort ascending; Forward -> /contracts?filters=1&view=01a07997-9eb3-716e-8016-f80e8e1b1787&owner=01a07997-75c1-7e8a-b0d9-86c0b4f50444&sort=title&dir=desc sort descending",
+        "at": "2026-09-07T04:40:06.002Z",
+        "ms": 5166
+      },
+      {
+        "article": "search-and-views",
+        "role": "legal_team_member",
+        "step": "Columns, Save as…, Modified, Discard unsaved changes, duplicate name refused",
+        "result": "pass",
+        "actual": "Value column hidden; view \"Docs review legal_team_member 1788755974565\" saved (db 1); sort change showed Modified; Discard unsaved changes restored the stored layout; duplicate name refused",
+        "at": "2026-09-07T04:40:11.169Z",
+        "ms": 4395
+      },
+      {
+        "article": "search-and-views",
+        "role": "legal_team_member",
+        "step": "saved view follows the account to another browser; Default view; Delete… with confirmation",
+        "result": "pass",
+        "actual": "Second browser restored Owner chip, rows, and hidden column from the saved view; Default view showed the built-in layout; Delete… asked for confirmation and removed only the view (records intact)",
+        "at": "2026-09-07T04:40:15.565Z",
+        "ms": 4411
+      },
+      {
+        "article": "search-and-views",
+        "role": "legal_team_member",
+        "step": "date filter with no matches shows the Contract empty message; Clear all recovers; blocked list read keeps rows",
+        "result": "pass",
+        "actual": "Effective date in 2090 -> No contracts match these filters; Clear all restored rows; blocked read after a filter change kept prior rows: true, page said \"Filter The contract list could not be read. Try again. Reference Title Counterparty Type Status Priority C-44 \"; reload recovered",
+        "at": "2026-09-07T04:40:19.977Z",
+        "ms": 2113
+      },
+      {
+        "article": "search-and-views",
+        "role": "contributor",
+        "step": "header search finds PDF-only text and opens the matching Version with find prefilled",
+        "result": "pass",
+        "actual": "Results page /search?q=cobalt+skylark; kind Document -> /search?q=cobalt+skylark&kind=document; result row \"v1 navigation-search.pdf Owned by C-43 search example The cobalt skylark transpo\"; opened /contracts/43/documents?doc=01a079e4-0afc-7a31-8313-4bad9a4cb720&version=01a079e4-0afc-7a31-8313-4bae51c98c70&find=cobalt+skylark with find control value \"cobalt skylark\"",
+        "at": "2026-09-07T04:40:22.401Z",
+        "ms": 3754
+      },
+      {
+        "article": "search-and-views",
+        "role": "contributor",
+        "step": "Confidential record outside reach never appears; No matches for nonsense",
+        "result": "pass",
+        "actual": "C-45 result link present: false (page said \"No matches No matches for “Docs navigation confidential”. Try another \"); nonsense query showed No matches",
+        "at": "2026-09-07T04:40:26.156Z",
+        "ms": 2101
+      },
+      {
+        "article": "search-and-views",
+        "role": "contributor",
+        "step": "search failure is distinct from an empty answer and retry recovers",
+        "result": "pass",
+        "actual": "Blocked read showed: \"Search could not load. Try again.\"; reload after recovery listed the Document",
+        "at": "2026-09-07T04:40:28.258Z",
+        "ms": 1626
+      },
+      {
+        "article": "search-and-views",
+        "role": "contributor",
+        "step": "Contracts list: Owner filter chip and rows agree; Title sort cycles; Back/Forward restore",
+        "result": "pass",
+        "actual": "Filter URL /contracts?filters=1&view=all&owner=01a07997-75c1-7e8a-b0d9-86c0b4f50444; Title sort ascending then descending (/contracts?filters=1&view=all&owner=01a07997-75c1-7e8a-b0d9-86c0b4f50444&sort=title&dir=desc); Back -> /contracts?filters=1&view=all&owner=01a07997-75c1-7e8a-b0d9-86c0b4f50444&sort=title&dir=asc sort ascending; Forward -> /contracts?filters=1&view=all&owner=01a07997-75c1-7e8a-b0d9-86c0b4f50444&sort=title&dir=desc sort descending",
+        "at": "2026-09-07T04:40:29.884Z",
+        "ms": 5130
+      },
+      {
+        "article": "search-and-views",
+        "role": "contributor",
+        "step": "Columns, Save as…, Modified, Discard unsaved changes, duplicate name refused",
+        "result": "pass",
+        "actual": "Value column hidden; view \"Docs review contributor 1788755974565\" saved (db 1); sort change showed Modified; Discard unsaved changes restored the stored layout; duplicate name refused",
+        "at": "2026-09-07T04:40:35.015Z",
+        "ms": 3787
+      },
+      {
+        "article": "search-and-views",
+        "role": "contributor",
+        "step": "saved view follows the account to another browser; Default view; Delete… with confirmation",
+        "result": "pass",
+        "actual": "Second browser restored Owner chip, rows, and hidden column from the saved view; Default view showed the built-in layout; Delete… asked for confirmation and removed only the view (records intact)",
+        "at": "2026-09-07T04:40:38.803Z",
+        "ms": 4487
+      },
+      {
+        "article": "search-and-views",
+        "role": "contributor",
+        "step": "date filter with no matches shows the Contract empty message; Clear all recovers; blocked list read keeps rows",
+        "result": "pass",
+        "actual": "Effective date in 2090 -> No contracts match these filters; Clear all restored rows; blocked read after a filter change kept prior rows: true, page said \"Filter The contract list could not be read. Try again. Reference Title Counterparty Type Status Value Owner C-44 \"; reload recovered",
+        "at": "2026-09-07T04:40:43.291Z",
+        "ms": 2084
+      }
+    ],
+    "V-C05": [
+      {
+        "article": "personal-settings",
+        "role": "administrator",
+        "step": "Profile: Full name saves on leaving the field and persists; Email and Role are read-only",
+        "result": "pass",
+        "actual": "Name saved on blur and survived reload; header shows \"Daniel Okafor (review)\"; Email readonly attribute: true; editable Role inputs: 0",
+        "at": "2026-09-07T04:49:16.217Z",
+        "ms": 1592
+      },
+      {
+        "article": "personal-settings",
+        "role": "administrator",
+        "step": "Timezone search and select persists; Use browser timezone clears it",
+        "result": "pass",
+        "actual": "Asia/Dubai stored and shown after reload (false); Use browser timezone removed the explicit preference",
+        "at": "2026-09-07T04:49:17.809Z",
+        "ms": 2937
+      },
+      {
+        "article": "personal-settings",
+        "role": "administrator",
+        "step": "Profile photo: PNG under 1 MB saves; oversize and non-image files are refused",
+        "result": "pass",
+        "actual": "1x1 PNG saved (db image present); 1.1 MB file message: \"1 MB max.\"; text file message: \"JPG or PNG, 1 MB max.\"",
+        "at": "2026-09-07T04:49:20.746Z",
+        "ms": 4005
+      },
+      {
+        "article": "personal-settings",
+        "role": "administrator",
+        "step": "Appearance: Light, Warm, and Dark each save, persist, and leave the other account unchanged",
+        "result": "pass",
+        "actual": "Dark: html dark, db dark; Warm: html warm, db warm; Light: html light, db light; nadia.haddad unchanged (Nadia Haddad|light||false)",
+        "at": "2026-09-07T04:49:24.752Z",
+        "ms": 5919
+      },
+      {
+        "article": "personal-settings",
+        "role": "administrator",
+        "step": "App view card: Member+ opens own Portal view and returns; Contributor has no card",
+        "result": "pass",
+        "actual": "Card at top of Profile; Portal showed the Viewing as business user banner (What do you need from Legal? Pick a request type — the form collects what Legal ); Return to legal view came back to Profile; role still administrator",
+        "at": "2026-09-07T04:49:30.672Z",
+        "ms": 382
+      },
+      {
+        "article": "personal-settings",
+        "role": "administrator",
+        "step": "Change password: wrong current refused; success signs out other devices, keeps this one",
+        "result": "pass",
+        "actual": "Wrong current password: \"could not be changed.\"; correct change signed the other browser out and kept this session; password restored to the seed value afterwards",
+        "at": "2026-09-07T04:49:31.072Z",
+        "ms": 4916
+      },
+      {
+        "article": "personal-settings",
+        "role": "administrator",
+        "step": "Sign out other devices ends the other session only; Sign out ends this one",
+        "result": "pass",
+        "actual": "Other browser returned to sign-in; this session stayed; Sign out from the name menu ended it",
+        "at": "2026-09-07T04:49:35.988Z",
+        "ms": 1950
+      },
+      {
+        "article": "personal-settings",
+        "role": "administrator",
+        "step": "preferences restored",
+        "result": "info",
+        "actual": "Daniel Okafor|warm||false -> Daniel Okafor|warm||false",
+        "at": "2026-09-07T04:49:40.640Z"
+      },
+      {
+        "article": "personal-settings",
+        "role": "legal_team_member",
+        "step": "Profile: Full name saves on leaving the field and persists; Email and Role are read-only",
+        "result": "pass",
+        "actual": "Name saved on blur and survived reload; header shows \"Nadia Haddad (review)\"; Email readonly attribute: true; editable Role inputs: 0",
+        "at": "2026-09-07T04:49:41.061Z",
+        "ms": 1614
+      },
+      {
+        "article": "personal-settings",
+        "role": "legal_team_member",
+        "step": "Timezone search and select persists; Use browser timezone clears it",
+        "result": "pass",
+        "actual": "Asia/Dubai stored and shown after reload (false); Use browser timezone removed the explicit preference",
+        "at": "2026-09-07T04:49:42.675Z",
+        "ms": 2938
+      },
+      {
+        "article": "personal-settings",
+        "role": "legal_team_member",
+        "step": "Profile photo: PNG under 1 MB saves; oversize and non-image files are refused",
+        "result": "pass",
+        "actual": "1x1 PNG saved (db image present); 1.1 MB file message: \"1 MB max.\"; text file message: \"JPG or PNG, 1 MB max.\"",
+        "at": "2026-09-07T04:49:45.614Z",
+        "ms": 4005
+      },
+      {
+        "article": "personal-settings",
+        "role": "legal_team_member",
+        "step": "Appearance: Light, Warm, and Dark each save, persist, and leave the other account unchanged",
+        "result": "pass",
+        "actual": "Dark: html dark, db dark; Warm: html warm, db warm; Light: html light, db light; ravi.menon unchanged (Ravi Menon|light||false)",
+        "at": "2026-09-07T04:49:49.619Z",
+        "ms": 5935
+      },
+      {
+        "article": "personal-settings",
+        "role": "legal_team_member",
+        "step": "App view card: Member+ opens own Portal view and returns; Contributor has no card",
+        "result": "pass",
+        "actual": "Card at top of Profile; Portal showed the Viewing as business user banner (What do you need from Legal? Pick a request type — the form collects what Legal ); Return to legal view came back to Profile; role still legal_team_member",
+        "at": "2026-09-07T04:49:55.554Z",
+        "ms": 359
+      },
+      {
+        "article": "personal-settings",
+        "role": "legal_team_member",
+        "step": "Change password: wrong current refused; success signs out other devices, keeps this one",
+        "result": "pass",
+        "actual": "Wrong current password: \"could not be changed.\"; correct change signed the other browser out and kept this session; password restored to the seed value afterwards",
+        "at": "2026-09-07T04:49:55.932Z",
+        "ms": 4937
+      },
+      {
+        "article": "personal-settings",
+        "role": "legal_team_member",
+        "step": "Sign out other devices ends the other session only; Sign out ends this one",
+        "result": "pass",
+        "actual": "Other browser returned to sign-in; this session stayed; Sign out from the name menu ended it",
+        "at": "2026-09-07T04:50:00.870Z",
+        "ms": 1916
+      },
+      {
+        "article": "personal-settings",
+        "role": "legal_team_member",
+        "step": "preferences restored",
+        "result": "info",
+        "actual": "Nadia Haddad|light||false -> Nadia Haddad|light||false",
+        "at": "2026-09-07T04:50:05.488Z"
+      },
+      {
+        "article": "personal-settings",
+        "role": "contributor",
+        "step": "Profile: Full name saves on leaving the field and persists; Email and Role are read-only",
+        "result": "pass",
+        "actual": "Name saved on blur and survived reload; header shows \"Ravi Menon (review)\"; Email readonly attribute: true; editable Role inputs: 0",
+        "at": "2026-09-07T04:50:05.853Z",
+        "ms": 1577
+      },
+      {
+        "article": "personal-settings",
+        "role": "contributor",
+        "step": "Timezone search and select persists; Use browser timezone clears it",
+        "result": "pass",
+        "actual": "Asia/Dubai stored and shown after reload (false); Use browser timezone removed the explicit preference",
+        "at": "2026-09-07T04:50:07.430Z",
+        "ms": 2950
+      },
+      {
+        "article": "personal-settings",
+        "role": "contributor",
+        "step": "Profile photo: PNG under 1 MB saves; oversize and non-image files are refused",
+        "result": "pass",
+        "actual": "1x1 PNG saved (db image present); 1.1 MB file message: \"1 MB max.\"; text file message: \"JPG or PNG, 1 MB max.\"",
+        "at": "2026-09-07T04:50:10.380Z",
+        "ms": 3997
+      },
+      {
+        "article": "personal-settings",
+        "role": "contributor",
+        "step": "Appearance: Light, Warm, and Dark each save, persist, and leave the other account unchanged",
+        "result": "pass",
+        "actual": "Dark: html dark, db dark; Warm: html warm, db warm; Light: html light, db light; daniel.okafor unchanged (Daniel Okafor|warm||false)",
+        "at": "2026-09-07T04:50:14.378Z",
+        "ms": 5935
+      },
+      {
+        "article": "personal-settings",
+        "role": "contributor",
+        "step": "App view card: Member+ opens own Portal view and returns; Contributor has no card",
+        "result": "pass",
+        "actual": "No App view card or View as business user control; direct /portal went to /portal",
+        "at": "2026-09-07T04:50:20.314Z",
+        "ms": 1379
+      },
+      {
+        "article": "personal-settings",
+        "role": "contributor",
+        "step": "Change password: wrong current refused; success signs out other devices, keeps this one",
+        "result": "pass",
+        "actual": "Wrong current password: \"could not be changed.\"; correct change signed the other browser out and kept this session; password restored to the seed value afterwards",
+        "at": "2026-09-07T04:50:21.711Z",
+        "ms": 4941
+      },
+      {
+        "article": "personal-settings",
+        "role": "contributor",
+        "step": "Sign out other devices ends the other session only; Sign out ends this one",
+        "result": "pass",
+        "actual": "Other browser returned to sign-in; this session stayed; Sign out from the name menu ended it",
+        "at": "2026-09-07T04:50:26.652Z",
+        "ms": 1918
+      },
+      {
+        "article": "personal-settings",
+        "role": "contributor",
+        "step": "preferences restored",
+        "result": "info",
+        "actual": "Ravi Menon|light||false -> Ravi Menon|light||false",
+        "at": "2026-09-07T04:50:31.325Z"
+      }
+    ]
+  },
+  "articleCorrections": [
+    "find-your-work: the tested text said to return to Home when a record becomes unavailable. Every role saw a generic page, Something went wrong. The page could not load. Reload to try again., for a Contract outside reach and for a missing number, and Reload does not restore access. The paragraph now names that page and says Reload does not help. C03 was rerun against the corrected bytes.",
+    "staff-sign-in: with the authentication mode set to oidc and no provider registered, the sign-in page says Single sign-on is not configured yet. Use administrator sign-in. and shows no Continue with single sign-on button. The guide now names that state. C01 was rerun against the corrected bytes."
+  ],
+  "harnessRework": [
+    "Invitation tokens are stored under the user id, so expiry had to target that column; the first attempt expired nothing.",
+    "The used or expired activation link says This link has expired or was already used. Ask for a new one., not the missing-token message the script first waited for.",
+    "The two-factor disable dialog confirms with Continue.",
+    "Record titles sit outside main; section tabs were selected by href; the Task completion control is a checkbox named Complete Task: <title>; See all results is a listbox option; Filter opens a dialog of property buttons; the views trigger is named after the current view; the To date label collided with Back to filters; the timezone input was targeted by id.",
+    "A regex matched the query echoed in No matches for ..., which briefly looked like a confidentiality leak; the check now requires a result link.",
+    "Portal Help search is scoped to the current topic; the sign-in guide is bound to the entry page, so the index or an unscoped search reaches it.",
+    "One C03 rerun raced a concurrent C01 rerun on a freshly invited account and was repeated alone."
+  ],
+  "timing": {
+    "walkthroughWindow": "04:08Z to 04:54Z on September 7, 2026, about 46 minutes, including reading the prose, writing the scripts, probes, and reruns",
+    "browserSecondsFinalRuns": 237,
+    "note": "Script time, not human task time. Earlier attempts spent most of their time in the reviewer's own selector timeouts listed under harnessRework."
+  },
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "No live identity provider exists in the lab. The Continue with single sign-on instruction is source-checked; the oidc mode check covered the unconfigured message, Administrator sign-in, and the non-Administrator refusal.",
+    "Load more Tasks and Show more were not exercised because no account had a second page.",
+    "Set as default and Rename… in the views menu were not exercised.",
+    "Layout checks changed the theme attribute directly and measured horizontal overflow only; DOC-025 owns zoom and assistive-technology review."
+  ]
+}

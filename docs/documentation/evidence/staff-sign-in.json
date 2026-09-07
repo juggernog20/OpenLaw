@@ -1,15 +1,15 @@
 {
   "articleId": "staff-sign-in",
-  "contentSha256": "e8dd7ebce70905825dd3d9efe282fd750fa82ab5621513b99352f7f93ff56bd2",
+  "contentSha256": "3c7ed38f6e42d021121f8566c99a6f9a45e3ec63cebe90e28a957ee20c575651",
   "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
   "buildId": "app sha256:69c7cd47338eff05c787e985743dd45b2229792827d82fd5f54a50a9c63d8757; engine sha256:1dce5b67898cc8ae720231fa66e049208ed207e69053a2cf4c1bd0e172cea401",
   "environment": "openlaw-docs-b8e31260-pilot",
   "author": "Codex documentation author",
   "technicalReviewer": "Fable review seat (agent source check against d1d098ba); the feature owner's human technical review is not recorded here",
-  "walkthroughReviewer": null,
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
   "reviewerKind": "agent",
-  "verifiedAt": null,
-  "status": "not-run",
+  "verifiedAt": "2026-09-07T04:52:33.264Z",
+  "status": "pass",
   "sources": [
     "apps/web/src/routes/login.tsx",
     "apps/web/src/routes/set-password.tsx",
@@ -25,9 +25,12 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "expected": "The intended account reaches its permitted landing page; two-factor and session controls have their documented effects. Expired activation, incorrect password/code, and revoked-session behavior are observable without exposing another account.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "Newly invited legal_team_member account: the expired activation link was refused with This link has expired or was already used. Ask for a new one.; the Administrator's resend delivered a fresh Set your OpenLaw password email; a password mismatch was refused; Password set offered Sign in; a wrong password was refused with Check your email and password.; the correct password reached Home with the account name in the header; the consumed link was refused. Settings > Profile > Turn on two-factor asked for the password, showed the QR code and manual secret, accepted the current code, showed ten backup codes once, and Profile then offered Re-enroll and Turn off two-factor. The sign-in challenge refused a wrong code and accepted the current code; a backup code worked once and its replay was refused; Sign out other devices from a second browser returned the first browser to sign-in on reload while the second stayed open; Re-enroll issued a different secret; Turn off two-factor required the password and password-only sign-in reached Home; Sign out returned to the sign-in page. In oidc mode with no provider the page said Single sign-on is not configured yet. Use administrator sign-in. with no Continue with single sign-on button; Nadia's password sign-in through Administrator sign-in was refused with Password sign-in is disabled while single sign-on is required.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-009/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-009/independent-discovery.json"
+      ]
     },
     {
       "id": "V-C01",
@@ -35,9 +38,12 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "expected": "The intended account reaches its permitted landing page; two-factor and session controls have their documented effects. Expired activation, incorrect password/code, and revoked-session behavior are observable without exposing another account.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "Newly invited administrator account: the expired activation link was refused with This link has expired or was already used. Ask for a new one.; the Administrator's resend delivered a fresh Set your OpenLaw password email; a password mismatch was refused; Password set offered Sign in; a wrong password was refused with Check your email and password.; the correct password reached Home with the account name in the header; the consumed link was refused. Settings > Profile > Turn on two-factor asked for the password, showed the QR code and manual secret, accepted the current code, showed ten backup codes once, and Profile then offered Re-enroll and Turn off two-factor. The sign-in challenge refused a wrong code and accepted the current code; a backup code worked once and its replay was refused; Sign out other devices from a second browser returned the first browser to sign-in on reload while the second stayed open; Re-enroll issued a different secret; Turn off two-factor required the password and password-only sign-in reached Home; Sign out returned to the sign-in page. In oidc mode Administrator sign-in opened the password form and Daniel reached Home.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-009/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-009/independent-discovery.json"
+      ]
     },
     {
       "id": "V-C01",
@@ -45,15 +51,19 @@
       "role": "contributor",
       "method": "browser-walkthrough",
       "expected": "The intended account reaches its permitted landing page; two-factor and session controls have their documented effects. Expired activation, incorrect password/code, and revoked-session behavior are observable without exposing another account.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "Newly invited contributor account: the expired activation link was refused with This link has expired or was already used. Ask for a new one.; the Administrator's resend delivered a fresh Set your OpenLaw password email; a password mismatch was refused; Password set offered Sign in; a wrong password was refused with Check your email and password.; the correct password reached Home with the account name in the header; the consumed link was refused. Settings > Profile > Turn on two-factor asked for the password, showed the QR code and manual secret, accepted the current code, showed ten backup codes once, and Profile then offered Re-enroll and Turn off two-factor. The sign-in challenge refused a wrong code and accepted the current code; a backup code worked once and its replay was refused; Sign out other devices from a second browser returned the first browser to sign-in on reload while the second stayed open; Re-enroll issued a different secret; Turn off two-factor required the password and password-only sign-in reached Home; Sign out returned to the sign-in page. In oidc mode with no provider the page said Single sign-on is not configured yet. Use administrator sign-in. with no Continue with single sign-on button; Ravi's password sign-in through Administrator sign-in was refused with Password sign-in is disabled while single sign-on is required. Email me a sign-in link signed the Contributor in once; the reopened link went to Sign-in link expired. The fresh account's Home said Welcome to OpenLaw.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-009/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-009/independent-discovery.json"
+      ]
     }
   ],
   "authorEvidence": ["docs/documentation/batches/DOC-009/README.md"],
   "limitations": [
-    "Independent technical review and article walkthrough pending.",
-    "Normal publication waits for the linked canonical articles to finish their owning batches."
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "No live identity provider: the Continue with single sign-on step is source-checked; the oidc mode check covered the unconfigured message, Administrator sign-in, and the non-Administrator refusal.",
+    "Normal publication waits for the linked canonical articles to finish their owning batches; the article stays in review."
   ],
   "previousEvidence": null,
   "copyOnlyReview": null

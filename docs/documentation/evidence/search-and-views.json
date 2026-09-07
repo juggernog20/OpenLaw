@@ -6,10 +6,10 @@
   "environment": "openlaw-docs-b8e31260-pilot",
   "author": "Codex documentation author",
   "technicalReviewer": "Fable review seat (agent source check against d1d098ba); the feature owner's human technical review is not recorded here",
-  "walkthroughReviewer": null,
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
   "reviewerKind": "agent",
-  "verifiedAt": null,
-  "status": "not-run",
+  "verifiedAt": "2026-09-07T04:40:45.378Z",
+  "status": "pass",
   "sources": [
     "apps/web/src/routes/search.tsx",
     "apps/web/src/components/shell/search-input.tsx",
@@ -26,9 +26,12 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "expected": "Results respect reach and the saved view restores its configuration; URL, chips, and rows agree. The hidden record never appears; no-match search and failed reads preserve understandable state. Track rapid-click issue #751 separately.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "/ then cobalt skylark listed v1 navigation-search.pdf owned by C-43; See all results opened /search?q=cobalt+skylark; the Document kind narrowed the answer; opening the result reached /contracts/43/documents with the matching Version and the find control prefilled with cobalt skylark. Docs navigation confidential returned No matches and /contracts/45 was refused; a nonsense query showed No matches; a blocked search read showed Search could not load. Try again. and a reload after unblocking listed the Document. On Contracts, Filter > Owner > Daniel Okafor > Apply showed the chip and only C-43 of the two shared fixtures; the Title heading sorted ascending then descending; Back and Forward restored the URL and sort marker; Columns hid Value; Save as… stored the view; a sort change showed Modified; Discard unsaved changes restored the stored layout; a duplicate name was refused; a second browser restored the chip, rows and hidden column from the saved view; Default view showed the built-in layout; Delete… asked Delete this view? and removed only the view. An Effective date filter in 2090 showed No contracts match these filters and Clear all recovered; a blocked list read after a filter change kept the prior rows with The contract list could not be read. Try again., and a reload recovered.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-009/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-009/independent-discovery.json"
+      ]
     },
     {
       "id": "V-C04",
@@ -36,9 +39,12 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "expected": "Results respect reach and the saved view restores its configuration; URL, chips, and rows agree. The hidden record never appears; no-match search and failed reads preserve understandable state. Track rapid-click issue #751 separately.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "/ then cobalt skylark listed v1 navigation-search.pdf owned by C-43; See all results opened /search?q=cobalt+skylark; the Document kind narrowed the answer; opening the result reached /contracts/43/documents with the matching Version and the find control prefilled with cobalt skylark. Docs navigation confidential returned C-45; a nonsense query showed No matches; a blocked search read showed Search could not load. Try again. and a reload after unblocking listed the Document. On Contracts, Filter > Owner > Daniel Okafor > Apply showed the chip and only C-43 of the two shared fixtures; the Title heading sorted ascending then descending; Back and Forward restored the URL and sort marker; Columns hid Value; Save as… stored the view; a sort change showed Modified; Discard unsaved changes restored the stored layout; a duplicate name was refused; a second browser restored the chip, rows and hidden column from the saved view; Default view showed the built-in layout; Delete… asked Delete this view? and removed only the view. An Effective date filter in 2090 showed No contracts match these filters and Clear all recovered; a blocked list read after a filter change kept the prior rows with The contract list could not be read. Try again., and a reload recovered.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-009/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-009/independent-discovery.json"
+      ]
     },
     {
       "id": "V-C04",
@@ -46,13 +52,18 @@
       "role": "contributor",
       "method": "browser-walkthrough",
       "expected": "Results respect reach and the saved view restores its configuration; URL, chips, and rows agree. The hidden record never appears; no-match search and failed reads preserve understandable state. Track rapid-click issue #751 separately.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "/ then cobalt skylark listed v1 navigation-search.pdf owned by C-43; See all results opened /search?q=cobalt+skylark; the Document kind narrowed the answer; opening the result reached /contracts/43/documents with the matching Version and the find control prefilled with cobalt skylark. Docs navigation confidential returned No matches and /contracts/45 was refused; a nonsense query showed No matches; a blocked search read showed Search could not load. Try again. and a reload after unblocking listed the Document. On Contracts, Filter > Owner > Daniel Okafor > Apply showed the chip and only C-43 of the two shared fixtures; the Title heading sorted ascending then descending; Back and Forward restored the URL and sort marker; Columns hid Value; Save as… stored the view; a sort change showed Modified; Discard unsaved changes restored the stored layout; a duplicate name was refused; a second browser restored the chip, rows and hidden column from the saved view; Default view showed the built-in layout; Delete… asked Delete this view? and removed only the view. An Effective date filter in 2090 showed No contracts match these filters and Clear all recovered; a blocked list read after a filter change kept the prior rows with The contract list could not be read. Try again., and a reload recovered.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-009/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-009/independent-discovery.json"
+      ]
     }
   ],
   "authorEvidence": ["docs/documentation/batches/DOC-009/README.md"],
-  "limitations": ["Independent technical review and article walkthrough pending."],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval."
+  ],
   "previousEvidence": null,
   "copyOnlyReview": null
 }
