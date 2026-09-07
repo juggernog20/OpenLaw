@@ -510,8 +510,7 @@ test.describe.serial("M21 demo path", () => {
 
       // I1's row, as INT-007 revised it: the reference, the ask, the
       // front door with the routing bound to it, who asked, how urgent
-      // they said it is, and the Assign button. No Status column and no
-      // Assignee column — everything in the queue is `new`.
+      // they said it is, its status, and the Assign button.
       const row = page.getByRole("row").filter({ hasText: SUMMARY });
       await expect(row).toBeVisible();
       await expect(row).toContainText(reference);
@@ -523,9 +522,9 @@ test.describe.serial("M21 demo path", () => {
       // than leaving the reader to infer it (INT-006).
       await expect(page.getByText("Ordered by urgency, then age")).toBeVisible();
 
-      // Assign is the entry to the disposition, not a claim step
-      // (INT-007): it opens the Request where the three actions live.
-      await row.getByRole("link", { name: `Assign ${reference}` }).click();
+      // Open the Request from its summary; Assign now chooses its triager.
+      await expect(row.getByRole("button", { name: `Assign ${reference}` })).toBeVisible();
+      await row.getByRole("link", { name: SUMMARY, exact: true }).click();
       await expect(page).toHaveURL(new RegExp(`/inbox/${String(number)}$`));
 
       // ---- The staff detail (I2) ----
@@ -557,7 +556,8 @@ test.describe.serial("M21 demo path", () => {
 
       // ---- Convert ----
 
-      await page.getByRole("button", { name: "Convert to contract" }).click();
+      await page.getByRole("button", { name: "Triage", exact: true }).click();
+      await page.getByRole("menuitem", { name: "Convert to contract", exact: true }).click();
       const dialog = page.getByRole("dialog", { name: `Convert ${reference} to a contract` });
       await expect(dialog).toBeVisible();
 
@@ -594,8 +594,8 @@ test.describe.serial("M21 demo path", () => {
       const became = /C-(\d+)/.exec((await contractLink.textContent()) ?? "");
       expect(became, "the Outcome card names no C-###").not.toBeNull();
       const contractNumber = Number(became![1]);
-      // The three actions are gone: a decided Request has nothing left
-      // to decide.
+      // A decided Request no longer offers the Triage menu.
+      await expect(page.getByRole("button", { name: "Triage", exact: true })).toHaveCount(0);
       await expect(page.getByRole("button", { name: "Convert to contract" })).toHaveCount(0);
       await expect(page.getByRole("button", { name: "Resolve" })).toHaveCount(0);
       await expect(page.getByRole("button", { name: "Decline" })).toHaveCount(0);

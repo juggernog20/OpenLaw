@@ -79,6 +79,8 @@ export const requests = pgTable(
     requesterId: text("requester_id")
       .notNull()
       .references(() => users.id),
+    /** The staff member responsible for triage, independently of the outcome. */
+    assigneeId: text("assignee_id").references(() => users.id, { onDelete: "set null" }),
     /** Born `new`; M21's disposition routes write the other three. */
     status: text("status", { enum: REQUEST_STATUSES }).notNull().default("new"),
     /** The one-line ask. Required on every form (INT-002). */
@@ -135,6 +137,7 @@ export const requests = pgTable(
     uniqueIndex("requests_number_unique").on(table.number),
     // The requester's own list, which is the only list a Business User
     // ever sees (DD-013), newest first.
+    index("requests_assignee_idx").on(table.assigneeId),
     index("requests_requester_idx").on(table.requesterId, table.createdAt),
     // The back-link, read from the record's end (CMT-001, M21/11): every
     // comment on a contract asks whether a Request converted into it, so

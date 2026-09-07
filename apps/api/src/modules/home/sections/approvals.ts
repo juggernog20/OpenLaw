@@ -18,7 +18,7 @@ import type { AuthenticatedUser } from "../../../auth/user.js";
 import { contractTeamScope } from "../../../lib/contract-access.js";
 
 /** DES-069's fixed cap. Totals always describe the whole eligible set. */
-export const HOME_SECTION_LIMIT = 3;
+export const HOME_SECTION_LIMIT = 4;
 
 export const ApprovalHomeRowSchema = z.object({
   id: z.string(),

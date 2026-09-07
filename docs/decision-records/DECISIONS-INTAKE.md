@@ -494,6 +494,14 @@ Read back at the M21 close. The M21/2 and M21/3 addenda give exactly one reason 
 
 The Inbox row, staff detail, disposition conflict, and Requester's stable portal window now read one module-aware converted-record projection. Its Matter arm joins `converted_matter_id` under the viewer's matter reach predicate and the same live-record rule as Contracts: an unreachable confidential or archived Matter yields no reference and leaks neither title nor number. A reachable one yields `{ module: "matter", number }`, so both staff surfaces link to `/matters/{number}` without client-side permission logic.
 
+### UX review addendum (2026-09-05): Inbox quick filters and saved views
+
+Inbox adopts the shared filter bar, managed columns, and private saved views used by Contracts and Matters. This supersedes the earlier toggle-only presentation. The built-in view shows a visible **Status: New** filter; removing it includes all triage outcomes. Status, request type, urgency, and requester support searchable multi-selection (OR within a field, AND across fields). Received date supports inclusive ranges in the viewer’s timezone. Choices come from the whole live collection, including past requesters and retired types with existing requests. Filters and matching totals are applied server-side before pagination. The urgency-then-age queue order remains unchanged.
+
+The Assign action occupies a fixed trailing column outside the editable catalogue and saved layouts. Summary always absorbs the remaining width. Resizing another data column trades space only with Summary and stops at its minimum; resizing Summary trades with the next visible column (or the previous one if Summary is last). Other widths remain steady during the drag. If the viewport cannot fit the columns’ minimum widths, the data scrolls while Assign remains pinned and visible.
+
+Views store filters and column layout under the `inbox` surface, with save, rename, default, reset, and delete controls. URL filters and the selected view survive reload and browser history; explicit filter links override the saved default. Clearing filters widens the list, and an empty filtered result says so. The existing `includeTriaged` API query remains compatible. Member+ retains sole access to the list and filter options, and converted-record links remain subject to the caller’s record access.
+
 ## INT-007 — Disposition-at-pickup: triage decides the outcome; no parked in-review state
 
 - **Status** — Accepted
@@ -607,3 +615,42 @@ The `new` row lock, single transaction, 409 loser, and no-claim UI now serve Con
 | INT-005 | No auto-classification: the form is the classification                       | Accepted                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | INT-006 | Triage: one Inbox, pickup assignment, four actions, lossless re-convert      | Accepted; revised by INT-007; the Inbox read's address, toggle, ordering, and converted-link rule added by the M21/2 addendum; the staff detail read, its projection, and the staff attachment download added by the M21/3 addendum; Decline's required reason and its narration added by the INT-007 M21/7 addendum; Resolve's optional closing reply added by the INT-007 M21/8 addendum; Convert, the confirmed target, and Re-target added by the INT-007 M21/9 addendum; the archived contract's dropped trail recorded by the M21/12 addendum; the first nav slot given to Home by the M21/13 addendum                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | INT-007 | Disposition-at-pickup: triage decides the outcome; no parked in-review state | Accepted; the triaged toggle's shape recorded by the INT-006 M21/2 addendum; "a reply changes no status" pinned by the M21/3 addendum; the disposition scaffold, its race problem type, and Decline added by the M21/7 addendum; Resolve, its two events, and the shared comment write added by the M21/8 addendum; Convert, its server-landed carry-through, and the refusal's second extension member added by the M21/9 addendum; the paper Convert promotes recorded by the INT-002 M21/10 addendum; Convert's title rule and the body's silent `null` veto recorded by the M21/12 addendum                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+
+### UX review addendum — request triage menu (2026-09-05)
+
+The request detail now has one primary **Triage** dropdown: **Convert to contract**,
+**Convert to matter**, and **Resolve request without converting**. Choosing a conversion
+opens that module's form, even when the request type routes to the other module.
+Decline is removed from the staff action menu; historical declined outcomes remain readable.
+
+Resolving requires a nonblank explanation in the dialog and API, superseding the optional
+closing reply in the INT-007 M21/8 addendum. The note is a requester-visible Full Thread
+comment and is saved in the same transaction as the resolved status, activity and
+notifications. The dialog states that the note appears on the thread and is emailed to
+the requester. Cancelling makes no changes.
+
+### INT-007 UX review addendum — triage assignment (2026-09-05)
+
+Assignment now records the person responsible for triaging a Request. This supersedes
+INT-007's previous rule that Assign only opens the disposition flow. It does not introduce
+another status or prevent other Legal Team Members from triaging the Request.
+
+The Inbox's fixed Assign column opens a searchable modal of active Administrators and
+Legal Team Members. Saving replaces Assign with the person's avatar; clicking it reopens
+the modal. The intake page also shows the assignee and supports reassignment. Clearing
+restores the unassigned state. Closed Requests retain their historical assignee and cannot
+be reassigned.
+
+The API validates eligibility and serializes assignment with disposition using the Request
+row lock. Assignment, activity and notification commit together. The new assignee receives
+an Assigned to you notification pointing to the intake, subject to their preferences;
+self-assignment and unchanged assignments do not generate notifications. Assignment does
+not change the Request's status or assign ownership of a later Contract or Matter.
+
+### INT-001 UX review addendum — portal layout and themes (2026-09-06)
+
+Your requests spans the full portal content width below the request-type picker and
+Before you submit panel. On narrow screens the order remains picker, guidance, requests.
+The portal header offers Light, Warm and Dark to every signed-in requester, including
+Business Users. Theme changes apply immediately and save through the existing personal
+preference endpoint. A failed save restores the previous theme and reports the failure.

@@ -593,7 +593,7 @@ describe("GET /api/events", () => {
             method: "POST",
             url: `/api/v1/requests/${resolved.number}/resolve`,
             cookies: memberCookies,
-            payload: {},
+            payload: { reply: "Answered in the thread; no further legal work is needed." },
           }),
         () =>
           harness.app.inject({
@@ -655,7 +655,7 @@ describe("GET /api/events", () => {
           method: "POST",
           url: `/api/v1/requests/${first.number}/resolve`,
           cookies: memberCookies,
-          payload: {},
+          payload: { reply: "Answered in the thread; no further legal work is needed." },
         }),
         harness.app.inject({
           method: "POST",

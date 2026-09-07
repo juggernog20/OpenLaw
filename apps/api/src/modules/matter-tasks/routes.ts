@@ -18,6 +18,7 @@ import { MAX_TASK_TITLE_LENGTH, type ChangedFields } from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import { matterTeamScope, NO_MATTER, reachedMatter } from "../../lib/matter-access.js";
+import { prepareTaskAssignee } from "../../lib/task-assignment.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { assertValidMatterTaskAssignee, createMatterTask } from "./create.js";
 
@@ -35,6 +36,7 @@ const TaskSchema = z.object({
   isDone: z.boolean(),
   assigneeId: z.string().nullable(),
   assigneeName: z.string().nullable(),
+  assigneeImage: z.string().nullable(),
   dueDate: z.iso.date().nullable(),
   displayOrder: z.int(),
 });
@@ -63,6 +65,7 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         isDone: matterTasks.isDone,
         assigneeId: matterTasks.assigneeId,
         assigneeName: users.displayName,
+        assigneeImage: users.image,
         dueDate: matterTasks.dueDate,
         displayOrder: matterTasks.displayOrder,
       })
@@ -143,6 +146,7 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         body: z.strictObject({
           title: TitleSchema,
           assigneeId: z.string().nullable().optional(),
+          addToTeam: z.boolean().optional(),
           dueDate: z.iso.date().nullable().optional(),
         }),
         response: { 201: TasksEnvelope, default: problemResponse },
@@ -153,6 +157,14 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         const matter = await reachedMatter(tx, request.user, request.params.number, { lock: true });
         assertWritable(matter);
         const assigneeId = request.body.assigneeId ?? null;
+        await prepareTaskAssignee(
+          tx,
+          "matter",
+          matter,
+          request.user,
+          assigneeId,
+          request.body.addToTeam,
+        );
         const created = await createMatterTask(tx, {
           matter,
           title: request.body.title,
@@ -191,6 +203,7 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
           .strictObject({
             title: TitleSchema.optional(),
             assigneeId: z.string().nullable().optional(),
+            addToTeam: z.boolean().optional(),
             dueDate: z.iso.date().nullable().optional(),
           })
           .meta({ minProperties: 1 })
@@ -206,6 +219,14 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         assertTaskWritable(task);
         const assigneeId =
           request.body.assigneeId === undefined ? task.assigneeId : request.body.assigneeId;
+        await prepareTaskAssignee(
+          tx,
+          "matter",
+          task.matter,
+          request.user,
+          request.body.assigneeId,
+          request.body.addToTeam,
+        );
         if (request.body.assigneeId !== undefined) {
           await assertValidMatterTaskAssignee(tx, task.matter, assigneeId);
         }

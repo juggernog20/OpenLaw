@@ -17,8 +17,8 @@
  * on login.
  */
 
-import { describe, expect, it } from "vitest";
-import { screen, waitFor, within } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
@@ -190,6 +190,80 @@ function listApi(
 async function openCreateDialog(user: ReturnType<typeof userEvent.setup>) {
   const subbar = await screen.findByRole("region", { name: "Contracts" });
   await user.click(within(subbar).getByRole("button", { name: "Create contract" }));
+}
+
+/**
+ * Runs an action that starts a navigation and, inside the same act
+ * scope, waits for the router to reach a URL `arrived` accepts and go
+ * idle. Renders the router schedules while the scope is open queue
+ * behind it and commit before this returns, so the list's read-version
+ * bump has landed by the time the test clicks again.
+ *
+ * A waitFor on router.state outside act is not enough. The router
+ * settles outside React, and the render it schedules can still be
+ * pending when the next click lands. That click starts a list read the
+ * late bump then discards, and the URL keeps the old filter. This is
+ * the gap 98e894b6 narrowed and CI still fell into.
+ */
+async function navigated(
+  router: ReturnType<typeof renderAt>["router"],
+  action: () => Promise<void>,
+  arrived: (search: URLSearchParams) => boolean,
+) {
+  await act(async () => {
+    await action();
+    await vi.waitFor(
+      () => {
+        expect(arrived(new URLSearchParams(router.state.location.search))).toBe(true);
+        expect(router.state.navigation.state).toBe("idle");
+      },
+      { timeout: 3000 },
+    );
+  });
+}
+
+/**
+ * Flips a list flag through the chip when it is on, or the Filter
+ * dialog when it is off. With `settle`, the click runs through
+ * `navigated`, so the flag's navigation has committed before the
+ * caller's next click; leave it out when the read is expected to fail
+ * and no navigation follows.
+ */
+async function toggleListFlag(
+  user: ReturnType<typeof userEvent.setup>,
+  label: string,
+  settle?: { router: ReturnType<typeof renderAt>["router"]; flag: string },
+) {
+  // The chip is what says the flag is on. While the Filter dialog is
+  // still closing, Radix keeps the rest of the page aria-hidden, and a
+  // role query that skips hidden elements would miss the chip, fall
+  // through to the dialog, and set the flag again instead of clearing
+  // it. So look for the chip hidden or not, then click it once it is
+  // reachable.
+  const name = `Remove ${label} filter`;
+  const turningOff = screen.queryByRole("button", { name, hidden: true }) !== null;
+  let control: HTMLElement;
+  if (turningOff) {
+    await waitFor(() => expect(screen.getByRole("button", { name })).toBeEnabled());
+    control = screen.getByRole("button", { name });
+  } else {
+    const filter = await screen.findByRole("button", { name: /^Filter/ });
+    await waitFor(() => expect(filter).toBeEnabled());
+    await user.click(filter);
+    control = within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+      name: label,
+    });
+  }
+  if (!settle) {
+    await user.click(control);
+    return;
+  }
+  const { router, flag } = settle;
+  await navigated(
+    router,
+    () => user.click(control),
+    (search) => (turningOff ? !search.has(flag) : search.get(flag) === "true"),
+  );
 }
 
 describe("the /contracts destination", () => {
@@ -455,7 +529,7 @@ describe("the /contracts destination", () => {
     expect(await screen.findByText("C-42")).toBeInTheDocument();
     expect(screen.queryByText("C-7")).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("switch", { name: "Show archived" }));
+    await toggleListFlag(user, "Show archived");
     expect(await screen.findByText("C-7")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Restore Old pilot" }));
@@ -487,21 +561,25 @@ describe("the /contracts destination", () => {
       ],
     );
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts");
+    const { router } = renderAt("/contracts");
     const user = userEvent.setup();
 
     // The default list hides the dead deal (CTR-019).
     expect(await screen.findByText("C-42")).toBeInTheDocument();
     expect(screen.queryByText("C-9")).not.toBeInTheDocument();
 
-    // The toggle re-reads with includeEnded and the deal appears.
-    await user.click(screen.getByRole("switch", { name: "Show ended" }));
+    // The toggle re-reads with includeEnded and the deal appears. Each
+    // toggle settles its navigation before the next click: a chip click
+    // that lands before the list's re-render commits is dropped.
+    await toggleListFlag(user, "Show ended", { router, flag: "includeEnded" });
     expect(await screen.findByText("C-9")).toBeInTheDocument();
 
     // And back: the toggle off re-reads the default list.
-    await user.click(screen.getByRole("switch", { name: "Show ended" }));
-    await waitFor(() => expect(screen.queryByText("C-9")).not.toBeInTheDocument());
-    expect(screen.getByText("C-42")).toBeInTheDocument();
+    await toggleListFlag(user, "Show ended", { router, flag: "includeEnded" });
+    await waitFor(() => {
+      expect(screen.queryByText("C-9")).not.toBeInTheDocument();
+      expect(screen.getByText("C-42")).toBeInTheDocument();
+    });
   });
 
   it("reports a failed archived re-read instead of showing a stale list", async () => {
@@ -525,13 +603,15 @@ describe("the /contracts destination", () => {
     renderAt("/contracts");
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole("switch", { name: "Show archived" }));
+    await toggleListFlag(user, "Show archived");
     expect(
       await screen.findByText("The contract list could not be read. Try again."),
     ).toBeInTheDocument();
     // The live list stands; the toggle did not flip on a failed read.
     expect(screen.getByText("C-42")).toBeInTheDocument();
-    expect(screen.getByRole("switch", { name: "Show archived" })).not.toBeChecked();
+    expect(
+      screen.queryByRole("button", { name: "Remove Show archived filter" }),
+    ).not.toBeInTheDocument();
   });
 
   it("bounces a Business User to the portal", async () => {
@@ -673,7 +753,7 @@ describe("a Contributor on the /contracts destination (M9/1)", () => {
     renderAt("/contracts");
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole("switch", { name: "Show archived" }));
+    await toggleListFlag(user, "Show archived");
     const archived = await screen.findByRole("row", { name: /Mutual NDA/ });
     expect(within(archived).getByText("Archived")).toBeInTheDocument();
     // Restore is a mutation, so no row offers one and the actions
@@ -709,8 +789,8 @@ describe("the paged contract list (CTR-024, DES-031)", () => {
         const cursor = call.url.searchParams.get("cursor");
         cursors.push(cursor);
         return cursor === null
-          ? json(200, { contracts: FIRST, nextCursor: "c-1" })
-          : json(200, { contracts: SECOND, nextCursor: null });
+          ? json(200, { contracts: FIRST, total: 2, nextCursor: "c-1" })
+          : json(200, { contracts: SECOND, total: 2, nextCursor: null });
       }
       return undefined;
     };
@@ -725,7 +805,7 @@ describe("the paged contract list (CTR-024, DES-031)", () => {
 
     // One row, and the page says so without claiming to be the list.
     expect(await screen.findByRole("link", { name: FIRST[0]!.title })).toBeInTheDocument();
-    expect(screen.getByText("1 contract shown")).toBeInTheDocument();
+    expect(screen.getByText("1 of 2 contracts")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Show more" }));
 
@@ -771,12 +851,12 @@ describe("the paged contract list (CTR-024, DES-031)", () => {
         }
         if (call.url.pathname === "/api/v1/contracts" && call.method === "GET") {
           if (call.url.searchParams.get("cursor") === null) {
-            return json(200, { contracts: FIRST, nextCursor: "c-1" });
+            return json(200, { contracts: FIRST, total: 2, nextCursor: "c-1" });
           }
           reached += 1;
           return reached === 1
             ? problem(503, "The list is not available.")
-            : json(200, { contracts: SECOND, nextCursor: null });
+            : json(200, { contracts: SECOND, total: 2, nextCursor: null });
         }
         return undefined;
       },
@@ -795,7 +875,7 @@ describe("the paged contract list (CTR-024, DES-031)", () => {
     expect(again).toBeInTheDocument();
     // Nothing was appended, and the count still hedges.
     expect(screen.queryByRole("link", { name: SECOND[0]!.title })).not.toBeInTheDocument();
-    expect(screen.getByText("1 contract shown")).toBeInTheDocument();
+    expect(screen.getByText("1 of 2 contracts")).toBeInTheDocument();
 
     await user.click(again);
 
@@ -813,5 +893,151 @@ describe("the paged contract list (CTR-024, DES-031)", () => {
     await screen.findByRole("link", { name: /Acme master services agreement/ });
     expect(screen.queryByRole("button", { name: "Show more" })).not.toBeInTheDocument();
     expect(screen.getByText("1 contract")).toBeInTheDocument();
+  });
+});
+
+describe("quick contract filters", () => {
+  function filteringApi() {
+    const queries: URLSearchParams[] = [];
+    const base = listApi([contractRow()]);
+    const saved: {
+      id: string;
+      surface: string;
+      name: string;
+      isDefault: boolean;
+      config: unknown;
+    }[] = [];
+    const handler = (call: StubCall) => {
+      if (call.url.pathname === "/api/v1/contracts/filter-options")
+        return json(200, {
+          types: OPTIONS.contractTypes,
+          statuses: OPTIONS.contractStatuses,
+          people: OPTIONS.users,
+        });
+      if (call.url.pathname === "/api/v1/list-views") {
+        if (call.method === "POST") {
+          const body = call.body as { name: string; config: unknown };
+          saved.push({
+            id: "saved-1",
+            surface: "contracts",
+            name: body.name,
+            config: body.config,
+            isDefault: false,
+          });
+          return json(201, { views: saved });
+        }
+        return json(200, { views: saved });
+      }
+      if (call.url.pathname === "/api/v1/contracts" && call.method === "GET")
+        queries.push(call.url.searchParams);
+      return base.handler(call);
+    };
+    return { handler, queries, saved };
+  }
+
+  it("keeps multi-selection, dates, removal and browser history in shareable URLs", async () => {
+    const surface = filteringApi();
+    stubApi({ signedIn: MEMBER, extra: surface.handler });
+    const { router } = renderAt("/contracts?owner=me");
+    const user = userEvent.setup();
+    expect(await screen.findByRole("button", { name: "Owner: Me" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /^Filter/ }));
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+        name: "Status",
+      }),
+    );
+    await user.type(screen.getByRole("textbox", { name: "Search choices" }), "dra");
+    await user.click(screen.getByRole("checkbox", { name: "Draft" }));
+    await user.clear(screen.getByRole("textbox", { name: "Search choices" }));
+    await user.click(screen.getByRole("checkbox", { name: "Active" }));
+    await navigated(
+      router,
+      () => user.click(screen.getByRole("button", { name: "Apply" })),
+      (search) => search.get("status") === "s-draft,s-active",
+    );
+    expect(surface.queries.at(-1)?.get("owner")).toBe("me");
+    expect(surface.queries.at(-1)?.get("status")).toBe("s-draft,s-active");
+    expect(screen.getByRole("button", { name: /^Filter/ })).toBeEnabled();
+    await user.click(screen.getByRole("button", { name: /^Filter/ }));
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+        name: "Expiry date",
+      }),
+    );
+    fireEvent.change(screen.getByLabelText("From"), { target: { value: "2027-01-01" } });
+    fireEvent.change(screen.getByLabelText("To"), { target: { value: "2027-01-31" } });
+    await navigated(
+      router,
+      () => user.click(screen.getByRole("button", { name: "Apply" })),
+      (search) => search.get("expiryTo") === "2027-01-31",
+    );
+    expect(screen.getByRole("button", { name: /^Filter/ })).toBeEnabled();
+    await navigated(
+      router,
+      () => user.click(screen.getByRole("button", { name: "Remove Status filter" })),
+      (search) => !search.has("status"),
+    );
+    await act(() => router.navigate(-1));
+    expect(
+      await screen.findByRole("button", { name: "Status: Draft, Active" }),
+    ).toBeInTheDocument();
+    await act(() => router.navigate(1));
+    expect(screen.queryByRole("button", { name: "Status: Draft, Active" })).not.toBeInTheDocument();
+    await navigated(
+      router,
+      () => user.click(screen.getByRole("button", { name: "Clear all" })),
+      (search) => !search.has("owner") && !search.has("expiryTo"),
+    );
+    expect(screen.queryByRole("button", { name: "Clear all" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Filter/ })).toBeEnabled();
+    expect(surface.queries.at(-1)?.has("owner")).toBe(false);
+    expect(surface.queries.at(-1)?.has("expiryTo")).toBe(false);
+    await act(() => router.revalidate());
+    expect(screen.queryByRole("button", { name: "Owner: Me" })).not.toBeInTheDocument();
+  });
+
+  it("saves multi-value filters and date ranges with the view and restores them", async () => {
+    const surface = filteringApi();
+    stubApi({ signedIn: MEMBER, extra: surface.handler });
+    const { router } = renderAt(
+      "/contracts?owner=me&status=s-draft,s-active&expiryFrom=2027-01-01&expiryTo=2027-12-31",
+    );
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: /Default view/ }));
+    await user.click(screen.getByRole("menuitem", { name: "Save as…" }));
+    const name = screen.getByLabelText("Name");
+    await user.clear(name);
+    await user.type(name, "My renewals");
+    // Saving adopts the view and navigates to it. Settle that navigation
+    // before clearing: a Clear all click that lands before the list's
+    // re-render commits is dropped.
+    await navigated(
+      router,
+      () => user.click(screen.getByRole("button", { name: "Save" })),
+      (search) => search.get("view") === "saved-1",
+    );
+    expect(surface.saved).toHaveLength(1);
+    expect(surface.saved[0]?.config).toMatchObject({
+      filters: {
+        owner: "me",
+        status: "s-draft,s-active",
+        expiryFrom: "2027-01-01",
+        expiryTo: "2027-12-31",
+      },
+    });
+    expect(screen.getByRole("button", { name: /My renewals/ })).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Save this view" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Filter/ })).toBeEnabled();
+    await navigated(
+      router,
+      () => user.click(screen.getByRole("button", { name: "Clear all" })),
+      (search) => !search.has("status"),
+    );
+    expect(screen.queryByRole("button", { name: "Clear all" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /My renewals/ }));
+    await user.click(screen.getByRole("menuitemradio", { name: "My renewals" }));
+    await waitFor(() => expect(surface.queries.at(-1)?.get("status")).toBe("s-draft,s-active"));
+    expect(await screen.findByRole("button", { name: "Owner: Me" })).toBeInTheDocument();
   });
 });

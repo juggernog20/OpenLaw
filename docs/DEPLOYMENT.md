@@ -279,6 +279,17 @@ Migrations run automatically when the app container boots (TECH-005); replicas b
 
 This path is exercised on every commit rather than assumed. CI fills a baseline install with Contracts across the lifecycle, Documents, users in several roles and a signing connector, then brings the new version up against that same database and checks every record still reads back (TECH-018). It is not a promise that no upgrade ever needs care — it is a promise that the ordinary one is tested with rows in the tables, not only against an empty install.
 
+### Home and Intake update
+
+The Home and Intake update makes `reply` required when calling
+`POST /api/v1/requests/:number/resolve`. Send a nonblank reply. Clients that omit
+it now receive HTTP 400. Reload open browser tabs to use the updated Resolve form.
+
+Installs from the former `fix/home-all-tasks` branch also have a separate migration
+history. The update recognizes its exact migration hashes and applies missing dev
+onboarding and account changes before adding Request assignment. Existing Request
+assignments remain intact. Other unrecognized histories still stop at the guard below.
+
 ### A stranded migration journal
 
 The app applies a migration only when it is stamped later than the newest stamp recorded in your database. A recorded stamp that is _too high_ hides every migration behind it — permanently, and with no error at the time.

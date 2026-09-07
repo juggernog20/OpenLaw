@@ -213,6 +213,45 @@ interface RecordedMigration extends Record<string, unknown> {
   created_at: string | number | null;
 }
 
+// These exact migrations were applied on fix/home-all-tasks before it joined dev.
+const HOME_BRANCH_MIGRATIONS = new Map<number, string>([
+  [1788637394684, "a74c7240bdfda1ef490996e0295d81f23f6d81e53a2d79b6f4b814f6ed12af19"],
+  [1788691314282, "bb3373780f9442de87864fdc179e836658a4c65b9cb7f85be72ba1420e83c277"],
+  [1788712604796, "4144917cd695eb221c439732ca04439a853f57a0de51b5f09db9ec2711ca7824"],
+  [1788715661978, "14372b5844cd06f42a670ddbcf39f7593c5930f65ce2b50719f5b5817a9b39e4"],
+  [1788771065247, "65218ed7fcce341502e52bbb3e0bf61609aa07389b9a58ecaa4af39795c8e6b0"],
+]);
+
+/** Apply the two dev migrations skipped by the known Home branch history. */
+async function reconcileHomeBranch(
+  db: Db,
+  migrationsFolder: string,
+  entries: JournalEntry[],
+  recorded: RecordedMigration[],
+): Promise<string[]> {
+  const hashes = new Set(recorded.map((row) => row.hash));
+  const canonicalHashes = new Set(entries.map((entry) => entry.hash));
+  const foreign = recorded.filter((row) => !canonicalHashes.has(row.hash));
+  if (
+    foreign.length === 0 ||
+    !foreign.some((row) => Number(row.created_at) === 1788637394684) ||
+    foreign.some((row) => HOME_BRANCH_MIGRATIONS.get(Number(row.created_at)) !== row.hash)
+  )
+    return [];
+  const newest = Math.max(...recorded.map((row) => Number(row.created_at ?? 0)));
+  const missing = entries.filter((entry) => !hashes.has(entry.hash) && entry.when <= newest);
+  const repairable = new Set(["0090_onboarding_reviewed_types", "0091_account_issuer_retired"]);
+  if (missing.length === 0 || missing.some((entry) => !repairable.has(entry.tag))) return [];
+  await db.transaction(async (tx) => {
+    for (const entry of missing) {
+      await tx.execute(sql.raw(readFileSync(join(migrationsFolder, `${entry.tag}.sql`), "utf8")));
+      await tx.execute(sql`insert into ${BOOKKEEPING} (hash, created_at)
+        values (${entry.hash}, ${entry.when})`);
+    }
+  });
+  return missing.map((entry) => entry.tag);
+}
+
 /**
  * Repairs the known-bad stamp, then refuses to continue if any migration
  * would still be skipped.
@@ -254,10 +293,18 @@ export async function guardMigrationJournal(
   }
 
   // 2. Detect, on what the table says *after* the repair.
-  const recorded = await db.execute<RecordedMigration>(
+  let recorded = await db.execute<RecordedMigration>(
     sql`select hash, created_at from ${BOOKKEEPING}`,
   );
   if (recorded.rows.length === 0) return outcome;
+
+  const reconciled = await reconcileHomeBranch(db, migrationsFolder, entries, recorded.rows);
+  if (reconciled.length > 0) {
+    outcome.repaired.push(...reconciled);
+    recorded = await db.execute<RecordedMigration>(
+      sql`select hash, created_at from ${BOOKKEEPING}`,
+    );
+  }
 
   const appliedHashes = new Set(recorded.rows.map((row) => row.hash));
   const newestApplied = Math.max(...recorded.rows.map((row) => Number(row.created_at ?? 0)));

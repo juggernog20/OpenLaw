@@ -187,7 +187,8 @@ test.describe.serial("M22 demo path", () => {
         .parse(await submittedResponse.json());
 
       await page.goto(`/inbox/${String(submittedBody.request.number)}`);
-      await page.getByRole("button", { name: "Convert to matter" }).click();
+      await page.getByRole("button", { name: "Triage", exact: true }).click();
+      await page.getByRole("menuitem", { name: "Convert to matter", exact: true }).click();
       const convert = page.getByRole("dialog", {
         name: `Convert R-${String(submittedBody.request.number)} to a matter`,
       });

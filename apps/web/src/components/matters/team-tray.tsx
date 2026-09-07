@@ -2,7 +2,7 @@
 
 /** The matter record's working-team tray and compound add dialog (M22/5). */
 import { useRef, useState } from "react";
-import { Plus, X } from "lucide-react";
+import { Plus } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../../lib/api";
 import { CONTROL_CLASS } from "../../lib/form-controls";
@@ -15,7 +15,7 @@ import {
   type MatterUserOption,
 } from "../../lib/matters";
 import { problem as readProblem } from "../../lib/problem";
-import { Avatar } from "../avatar";
+import { TeamRoster, type TeamRosterEntry } from "../team-roster";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { Label } from "../ui/label";
@@ -95,35 +95,41 @@ export function MatterTeamTray({
         </Button>
       </header>
       <div className="py-1">
-        {manager && (
-          <TeamRow
-            name={manager.displayName}
-            image={manager.image}
-            archived={manager.archived}
-            role={intl.formatMessage({
-              id: "matters.field.manager",
-              defaultMessage: "Matter Manager",
-            })}
-          />
-        )}
-        {team.map((member) => (
-          <TeamRow
-            key={`${member.id}:${member.role}`}
-            name={member.displayName}
-            image={member.image}
-            archived={member.archived}
-            role={matterTeamRoleLabel(intl, member.role)}
-            removeDisabled={audienceLocked}
-            onRemove={frozen || member.role === "creator" ? undefined : () => void remove(member)}
-            removeLabel={intl.formatMessage(
-              {
-                id: "matters.team.remove",
-                defaultMessage: "Take {name} off the matter team as {role}",
+        <TeamRoster
+          entries={[
+            ...(manager
+              ? [
+                  {
+                    person: manager,
+                    role: {
+                      id: "manager",
+                      label: intl.formatMessage({
+                        id: "matters.field.manager",
+                        defaultMessage: "Matter Manager",
+                      }),
+                    },
+                  },
+                ]
+              : []),
+            ...team.map((member): TeamRosterEntry => ({
+              person: member,
+              role: {
+                id: member.role,
+                label: matterTeamRoleLabel(intl, member.role),
+                onRemove:
+                  frozen || member.role === "creator" ? undefined : () => void remove(member),
+                removeDisabled: audienceLocked,
+                removeLabel: intl.formatMessage(
+                  {
+                    id: "matters.team.remove",
+                    defaultMessage: "Take {name} off the matter team as {role}",
+                  },
+                  { name: member.displayName, role: matterTeamRoleLabel(intl, member.role) },
+                ),
               },
-              { name: member.displayName, role: matterTeamRoleLabel(intl, member.role) },
-            )}
-          />
-        ))}
+            })),
+          ]}
+        />
         {!manager && team.length === 0 && (
           <p className="px-4 py-3 text-sm text-muted">
             <FormattedMessage
@@ -147,46 +153,6 @@ export function MatterTeamTray({
         />
       )}
     </aside>
-  );
-}
-
-function TeamRow({
-  name,
-  image,
-  archived,
-  role,
-  onRemove,
-  removeLabel,
-  removeDisabled = false,
-}: Readonly<{
-  name: string;
-  image: string | null;
-  archived: boolean;
-  role: string;
-  onRemove?: () => void;
-  removeLabel?: string;
-  removeDisabled?: boolean;
-}>) {
-  return (
-    <div className={`flex min-h-11 items-center gap-2.5 px-4 ${archived ? "opacity-50" : ""}`}>
-      <Avatar name={name} image={image} className="size-6" />
-      <div className="min-w-0">
-        <p className="truncate text-sm font-medium">{name}</p>
-        <p className="text-xs text-muted">{role}</p>
-      </div>
-      {onRemove && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="ms-auto"
-          disabled={removeDisabled}
-          aria-label={removeLabel}
-          onClick={onRemove}
-        >
-          <X size={16} aria-hidden="true" />
-        </Button>
-      )}
-    </div>
   );
 }
 

@@ -137,6 +137,13 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
+  FilterChoices,
+  FilterOptionsSchema,
+  choiceFilter,
+  dateFilter,
+  validDateRanges,
+} from "../../lib/record-filters.js";
+import {
   activityLog,
   and,
   approverGroupMembers,
@@ -1553,31 +1560,41 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           "its Owner, and Administrators — silently absent for " +
           "everyone else, so no count can reveal it",
         tags: ["contracts"],
-        querystring: z.object({
-          includeArchived: z.enum(["true", "false"]).optional(),
-          /** CTR-019: bring ended contracts back into the list. The
-           * default list shows all non-ended stages, because ended is
-           * a signal that the deal is done, not a lock. */
-          includeEnded: z.enum(["true", "false"]).optional(),
-          /**
-           * Which column to order on (DD-019 clause 2). Omit for the
-           * list's natural order, newest reference first. A closed set:
-           * the reference breaks every tie, so the cursor can reproduce
-           * the ordering exactly on the next page.
-           */
-          sort: z.enum(CONTRACT_SORT_KEYS).optional(),
-          /** Which way the sorted column runs; ignored without `sort`,
-           * and ascending when `sort` is given without it. */
-          dir: z.enum(SORT_DIRECTIONS).optional(),
-          /** The previous page's `nextCursor`. Omit for the first page.
-           * Carry the same `sort` and `dir` with it: a cursor is a
-           * position in one ordering, and a page read under a different
-           * one is a page of a different list. */
-          cursor: CursorSchema.optional(),
-        }),
+        querystring: z
+          .object({
+            owner: FilterChoices.optional(),
+            status: FilterChoices.optional(),
+            type: FilterChoices.optional(),
+            effectiveFrom: z.iso.date().optional(),
+            effectiveTo: z.iso.date().optional(),
+            expiryFrom: z.iso.date().optional(),
+            expiryTo: z.iso.date().optional(),
+            includeArchived: z.enum(["true", "false"]).optional(),
+            /** CTR-019: bring ended contracts back into the list. The
+             * default list shows all non-ended stages, because ended is
+             * a signal that the deal is done, not a lock. */
+            includeEnded: z.enum(["true", "false"]).optional(),
+            /**
+             * Which column to order on (DD-019 clause 2). Omit for the
+             * list's natural order, newest reference first. A closed set:
+             * the reference breaks every tie, so the cursor can reproduce
+             * the ordering exactly on the next page.
+             */
+            sort: z.enum(CONTRACT_SORT_KEYS).optional(),
+            /** Which way the sorted column runs; ignored without `sort`,
+             * and ascending when `sort` is given without it. */
+            dir: z.enum(SORT_DIRECTIONS).optional(),
+            /** The previous page's `nextCursor`. Omit for the first page.
+             * Carry the same `sort` and `dir` with it: a cursor is a
+             * position in one ordering, and a page read under a different
+             * one is a page of a different list. */
+            cursor: CursorSchema.optional(),
+          })
+          .refine(validDateRanges, "The end date must be on or after the start date"),
         response: {
           200: z.object({
             contracts: z.array(ContractRowSchema),
+            total: z.number().int(),
             /** Pass back as `cursor` for the next page. NULL when this
              * page is the end of the list. */
             nextCursor: z.string().nullable(),
@@ -1595,38 +1612,40 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         request.query.sort === undefined
           ? null
           : { key: request.query.sort, dir: request.query.dir ?? "asc" };
+      const predicates = and(
+        request.query.includeArchived === "true" ? undefined : isNull(contracts.archivedAt),
+        // The stage check also excludes legacy ended records without an endedAt stamp.
+        request.query.includeEnded === "true"
+          ? undefined
+          : and(isNull(contracts.endedAt), ne(contractStatuses.stage, "ended")),
+        choiceFilter(contracts.managerId, request.query.owner, request.user.id),
+        choiceFilter(contracts.statusId, request.query.status),
+        choiceFilter(contracts.contractTypeId, request.query.type),
+        dateFilter(contracts.effectiveDate, request.query.effectiveFrom, request.query.effectiveTo),
+        dateFilter(contracts.expiryDate, request.query.expiryFrom, request.query.expiryTo),
+        // A Contributor's list is the contracts they are on. An
+        // empty answer is a real state — the list's own empty
+        // state, never a refusal.
+        //
+        // The scope is in the WHERE clause, so the limit below cuts
+        // rows this viewer can already reach. A read that limited
+        // first and filtered after would answer pages that shrink by
+        // however many confidential contracts sat in the window, and
+        // a page length that varies with what is hidden is the
+        // existence leak DD-014 exists to close (CTR-024).
+        teamScope(request.user),
+      );
       const rows = await selectContracts(app.db, request.user)
         .where(
           and(
-            request.query.includeArchived === "true" ? undefined : isNull(contracts.archivedAt),
-            // CTR-019: the default list hides ended contracts the same
-            // way it hides archived ones — a dead deal drops out of the
-            // working surfaces. The filter is on the column rather than
-            // on the joined stage, because the column is the queryable
-            // summary the stage transition stamps.
-            request.query.includeEnded === "true" ? undefined : isNull(contracts.endedAt),
-            // A Contributor's list is the contracts they are on. An
-            // empty answer is a real state — the list's own empty
-            // state, never a refusal.
-            //
-            // The scope is in the WHERE clause, so the limit below cuts
-            // rows this viewer can already reach. A read that limited
-            // first and filtered after would answer pages that shrink by
-            // however many confidential contracts sat in the window, and
-            // a page length that varies with what is hidden is the
-            // existence leak DD-014 exists to close (CTR-024).
-            teamScope(request.user),
+            predicates,
             request.query.cursor === undefined
               ? undefined
               : furtherDownThan(request.query.cursor, request.user, sort),
           ),
         )
-        // The sorted column, then the reference. Unsorted that is the
-        // reference alone: it is monotonic, so newest-first can tie with
-        // nothing.
         .orderBy(...listOrder(sort, request.user))
-        // One past the page, which is how the answer knows whether there
-        // is more without counting anything.
+        // Read one extra row to determine whether to offer another page.
         .limit(PAGE_SIZE + 1);
       const page = rows.slice(0, PAGE_SIZE);
       const contributorFields =
@@ -1640,7 +1659,13 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
               ),
             )
           : null;
+      const [counted] = await app.db
+        .select({ total: sql<number>`count(*)::int` })
+        .from(contracts)
+        .innerJoin(contractStatuses, eq(contracts.statusId, contractStatuses.id))
+        .where(predicates);
       return {
+        total: counted?.total ?? 0,
         contracts: page.map((context) =>
           toRow(
             context,
@@ -1656,6 +1681,49 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         // Only when a further row was actually read. A cursor on the
         // last page would send the client for an empty one.
         nextCursor: rows.length > PAGE_SIZE ? (page.at(-1)?.row.id ?? null) : null,
+      };
+    },
+  );
+
+  app.get(
+    "/contracts/filter-options",
+    {
+      preHandler: requireContractReader,
+      schema: {
+        operationId: "listContractFilterOptions",
+        tags: ["contracts"],
+        response: { 200: FilterOptionsSchema, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const rows = await app.db
+        .selectDistinct({
+          typeId: contracts.contractTypeId,
+          typeName: contractTypes.displayName,
+          statusId: contracts.statusId,
+          statusName: contractStatuses.displayName,
+          personId: users.id,
+          personName: users.displayName,
+        })
+        .from(contracts)
+        .innerJoin(contractTypes, eq(contracts.contractTypeId, contractTypes.id))
+        .innerJoin(contractStatuses, eq(contracts.statusId, contractStatuses.id))
+        .leftJoin(users, eq(contracts.managerId, users.id))
+        .where(teamScope(request.user));
+      const unique = (values: { id: string; displayName: string }[]) =>
+        [...new Map(values.map((value) => [value.id, value])).values()].sort((a, b) =>
+          a.displayName.localeCompare(b.displayName),
+        );
+      return {
+        types: unique(rows.map((row) => ({ id: row.typeId, displayName: row.typeName }))),
+        statuses: unique(rows.map((row) => ({ id: row.statusId, displayName: row.statusName }))),
+        people: unique(
+          rows.flatMap((row) =>
+            row.personId && row.personName
+              ? [{ id: row.personId, displayName: row.personName }]
+              : [],
+          ),
+        ),
       };
     },
   );

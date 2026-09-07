@@ -27,6 +27,7 @@ export type ContractTask = ListResponse["tasks"][number];
 export interface TaskInput {
   title: string;
   assigneeId?: string | null;
+  addToTeam?: boolean;
   dueDate?: string | null;
 }
 
@@ -60,7 +61,7 @@ export async function addContractTask(
   const result = await api
     .POST("/api/v1/contracts/{number}/tasks", {
       params: { path: { number: contractNumber } },
-      body: { title: input.title, assigneeId: input.assigneeId, dueDate: input.dueDate },
+      body: input,
     })
     .catch(() => undefined);
   return result?.data
@@ -74,11 +75,14 @@ export async function addContractTask(
 }
 
 /** Edits a task's title, assignee, or due date. */
-export async function updateContractTask(taskId: string, input: TaskInput): Promise<TasksOutcome> {
+export async function updateContractTask(
+  taskId: string,
+  input: Partial<TaskInput>,
+): Promise<TasksOutcome> {
   const result = await api
     .PATCH("/api/v1/tasks/{taskId}", {
       params: { path: { taskId } },
-      body: { title: input.title, assigneeId: input.assigneeId, dueDate: input.dueDate },
+      body: input,
     })
     .catch(() => undefined);
   return result?.data

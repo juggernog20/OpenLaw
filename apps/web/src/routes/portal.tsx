@@ -34,17 +34,22 @@
  *    as one auto-filling grid, per DES-012's preference for intrinsic
  *    layout over fixed rows: an Administrator may configure any number
  *    of types, and the mock's six is not the count.
+ * 3. I5 stacks the three blocks in one column. From @3xl of the page
+ *    container the deflection panel moves into an aside beside the
+ *    picker (`grid-cols-portal-split`), with the list spanning both columns.
+ *    The reading sits next to the doors.
+ *    Below that width the mock's order holds: picker, panel, list.
  */
 
 import { Link, redirect, useLoaderData } from "react-router";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
+import { ArrowRight, FolderOpen } from "lucide-react";
 import { api } from "../lib/api";
 import { currentUser, useSignOut } from "../lib/session";
 import { PageTitle } from "../components/page-title";
 import { DeflectionPanel } from "../components/portal/deflection-panel";
 import { MyRequests, REQUEST_TYPE_PICKER_ID } from "../components/portal/my-requests";
 import { PortalShell } from "../components/portal/portal-shell";
-import { Card, CardContent } from "../components/ui/card";
 
 export async function portalHomeLoader() {
   const user = await currentUser();
@@ -87,7 +92,7 @@ export function PortalHomePage() {
           <FormattedMessage {...TITLE} />
         </h1>
         {requestTypes.length > 0 && (
-          <p className="text-base text-muted">
+          <p className="max-w-prose text-md text-muted">
             <FormattedMessage
               id="portal.home.lead"
               defaultMessage="Pick a request type — the form collects what Legal needs to get started."
@@ -95,52 +100,70 @@ export function PortalHomePage() {
           </p>
         )}
       </div>
-      {requestTypes.length > 0 ? (
-        <ul
-          id={REQUEST_TYPE_PICKER_ID}
-          // The empty my-requests block points here. A scroll target is
-          // not a focus target on its own, so the list takes the focus
-          // the jump sends it and a keyboard reader arrives at the
-          // cards rather than back at the top of the page (DES-011).
-          tabIndex={-1}
-          aria-label={intl.formatMessage({
-            id: "portal.home.pickerLabel",
-            defaultMessage: "Request types",
-          })}
-          className="grid grid-cols-portal-picker gap-3"
-        >
-          {requestTypes.map((type) => (
-            <li key={type.id} className="flex">
-              <Link
-                to={`/portal/new/${type.slug}`}
-                className="flex w-full flex-col gap-2 rounded-card border border-border-default bg-raised p-4 transition-colors duration-150 hover:border-border-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
-              >
-                <span className="text-base font-semibold">{type.displayName}</span>
-                {type.description !== null && (
-                  <span className="text-sm text-muted">{type.description}</span>
-                )}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        /* Not a placeholder: an instance whose Administrator has
-           archived every request type says exactly this, and so does
-           one that has configured none yet. */
-        <Card>
-          <CardContent className="text-md text-muted">
-            <FormattedMessage
-              id="portal.home.noTypes"
-              defaultMessage="No request types are available yet. Ask your legal team to open one."
-            />
-          </CardContent>
-        </Card>
-      )}
-      <DeflectionPanel links={deflectionLinks} />
-      {/* Last on the page, as I5 stacks it: the picker is what a first
-          visit needs, and a returning requester scrolls to the list
-          that is theirs. */}
-      <MyRequests requests={requests} hasRequestTypes={requestTypes.length > 0} />
+      <div className="grid gap-section-gap @3xl/page:grid-cols-portal-split">
+        {requestTypes.length > 0 ? (
+          <ul
+            id={REQUEST_TYPE_PICKER_ID}
+            // The empty my-requests block points here. A scroll target is
+            // not a focus target on its own, so the list takes the focus
+            // the jump sends it and a keyboard reader arrives at the
+            // cards rather than back at the top of the page (DES-011).
+            tabIndex={-1}
+            aria-label={intl.formatMessage({
+              id: "portal.home.pickerLabel",
+              defaultMessage: "Request types",
+            })}
+            className="grid grid-cols-portal-picker gap-3 @3xl/page:col-start-1"
+          >
+            {requestTypes.map((type) => (
+              <li key={type.id} className="flex">
+                <Link
+                  to={`/portal/new/${type.slug}`}
+                  className="group flex w-full items-start justify-between gap-3 rounded-card border border-border-default bg-raised p-4 transition-colors duration-150 hover:border-border-strong hover:bg-control focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+                >
+                  <span className="flex min-w-0 flex-col gap-1">
+                    <span className="text-md font-semibold text-primary">{type.displayName}</span>
+                    {type.description !== null && (
+                      <span className="text-sm text-muted">{type.description}</span>
+                    )}
+                  </span>
+                  {/* The door's arrow: it says the card opens something,
+                      and steps forward on hover within DES-003's 200ms. */}
+                  <ArrowRight
+                    aria-hidden="true"
+                    className="mt-0.5 size-4 shrink-0 text-subtle transition-[color,translate] duration-150 group-hover:translate-x-0.5 group-hover:text-primary"
+                  />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          /* Not a placeholder: an instance whose Administrator has
+             archived every request type says exactly this, and so does
+             one that has configured none yet. */
+          <div className="flex flex-col items-center gap-2 rounded-card border border-border-default bg-raised px-4 py-10 text-center @3xl/page:col-start-1">
+            <FolderOpen aria-hidden="true" className="size-6 text-subtle" />
+            <p className="text-md text-muted">
+              <FormattedMessage
+                id="portal.home.noTypes"
+                defaultMessage="No request types are available yet. Ask your legal team to open one."
+              />
+            </p>
+          </div>
+        )}
+        {/* Second in the DOM, so a narrow page reads picker, panel, list
+            as I5 stacks them; the aside slot is where it goes once there
+            is room beside the column. */}
+        <aside className="flex flex-col gap-4 @3xl/page:col-start-2 @3xl/page:row-start-1 @3xl/page:self-start">
+          <DeflectionPanel links={deflectionLinks} />
+        </aside>
+        {/* Last in the column, as I5 stacks it: the picker is what a
+            first visit needs, and a returning requester scrolls to the
+            list that is theirs. */}
+        <div className="min-w-0 @3xl/page:col-span-2">
+          <MyRequests requests={requests} hasRequestTypes={requestTypes.length > 0} />
+        </div>
+      </div>
     </PortalShell>
   );
 }

@@ -30,8 +30,7 @@
  *    the surface that did not line up with the ones above it.
  */
 
-import { Link, redirect, useLoaderData } from "react-router";
-import { ChevronLeft } from "lucide-react";
+import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, defineMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
 import { currentUser, useSignOut } from "../lib/session";
@@ -41,6 +40,7 @@ import {
   useNotificationPreferences,
   type EventGroup,
 } from "../components/notification-preferences";
+import { PortalBackLink } from "../components/portal/back-link";
 import { PortalShell } from "../components/portal/portal-shell";
 import { StatusNote } from "../components/status-note";
 
@@ -75,16 +75,20 @@ export function PortalSettingsPage() {
       <PageTitle title={intl.formatMessage(TITLE)} />
       {/* Back goes to the portal home, where the requester's own list is.
           Same target as the Request detail's back link. */}
-      <Link
-        to="/portal"
-        className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-muted hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
-      >
-        <ChevronLeft aria-hidden="true" className="size-4 shrink-0" />
+      <PortalBackLink>
         <FormattedMessage id="portal.request.back" defaultMessage="Your requests" />
-      </Link>
-      <h1 className="text-xl font-semibold">
-        <FormattedMessage {...TITLE} />
-      </h1>
+      </PortalBackLink>
+      <div className="flex flex-col gap-1.5">
+        <h1 className="text-2xl font-semibold">
+          <FormattedMessage {...TITLE} />
+        </h1>
+        <p className="max-w-prose text-md text-muted">
+          <FormattedMessage
+            id="portal.settings.lead"
+            defaultMessage="Choose how Legal reaches you about the requests you submit."
+          />
+        </p>
+      </div>
       <section
         aria-labelledby="portal-settings-heading"
         className="w-full overflow-hidden rounded-card border border-border-default bg-raised"
@@ -92,7 +96,7 @@ export function PortalSettingsPage() {
         {/* A `div` rather than a `header`, the my-requests block's rule.
             The portal draws one banner. A card strip that also claimed
             the role would make "the page header" mean two things. */}
-        <div className="flex h-section-header items-center justify-between rounded-t-card border-b border-border-default bg-section-header px-4">
+        <div className="flex h-section-header items-center justify-between border-b border-border-default bg-section-header px-4">
           <h2 id="portal-settings-heading" className="text-base font-semibold">
             <FormattedMessage
               id="portal.settings.heading"

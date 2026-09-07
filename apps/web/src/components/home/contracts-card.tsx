@@ -17,7 +17,7 @@ export function HomeContractsCard({ section }: { section: ContractsHomeSection }
       headingId="home-contracts-heading"
       title={<FormattedMessage id="home.contracts.title" defaultMessage="Your contracts" />}
       total={section.total}
-      viewAllTo="/contracts"
+      viewAllTo="/contracts?owner=me"
     >
       {section.rows.map((row) => (
         <li key={row.id}>

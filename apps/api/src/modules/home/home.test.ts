@@ -329,6 +329,55 @@ describe("GET /api/v1/home", () => {
     expect(business.statusCode, business.body).toBe(403);
   });
 
+  it("guards the full Tasks list and validates its pagination", async () => {
+    const url = "/api/v1/home/tasks";
+    expect((await harness.app.inject({ method: "GET", url })).statusCode).toBe(401);
+    expect(
+      (await harness.app.inject({ method: "GET", url, cookies: as(BUSINESS) })).statusCode,
+    ).toBe(403);
+    for (const query of [
+      "limit=0",
+      "limit=101",
+      "cursor=invalid",
+      "cursor=2099-02-31:contract:01950000-0000-7000-8000-000000000000",
+    ]) {
+      expect(
+        (await harness.app.inject({ method: "GET", url: `${url}?${query}`, cookies: as(APPROVER) }))
+          .statusCode,
+      ).toBe(400);
+    }
+    const empty = await harness.app.inject({ method: "GET", url, cookies: as(CONTRIBUTOR) });
+    expect(empty.statusCode, empty.body).toBe(200);
+    expect(empty.json()).toEqual({ total: 0, rows: [], nextCursor: null });
+  });
+
+  it("guards the personal calendar and requires a bounded date window", async () => {
+    const url = "/api/v1/home/dates?from=2026-09-01&to=2026-09-30";
+    expect((await harness.app.inject({ method: "GET", url })).statusCode).toBe(401);
+    expect(
+      (await harness.app.inject({ method: "GET", url, cookies: as(BUSINESS) })).statusCode,
+    ).toBe(403);
+    for (const query of [
+      "",
+      "from=invalid&to=2026-09-30",
+      "from=2026-10-01&to=2026-09-01",
+      "from=2026-01-01&to=2026-12-31",
+    ]) {
+      expect(
+        (
+          await harness.app.inject({
+            method: "GET",
+            url: `/api/v1/home/dates?${query}`,
+            cookies: as(APPROVER),
+          })
+        ).statusCode,
+      ).toBe(400);
+    }
+    const empty = await harness.app.inject({ method: "GET", url, cookies: as(CONTRIBUTOR) });
+    expect(empty.statusCode, empty.body).toBe(200);
+    expect(empty.json()).toEqual({ total: 0, rows: [] });
+  });
+
   it("caps and totals the viewer's pending approvals, oldest first", async () => {
     const eligible: Array<{ contract: ContractRow; approvalId: string }> = [];
     for (const title of ["Oldest ask", "Second ask", "Third ask", "Newest ask"]) {
@@ -363,11 +412,12 @@ describe("GET /api/v1/home", () => {
     expect(result.sections).toHaveLength(1);
     const section = approvalsIn(result)!;
     expect(section).toMatchObject({ type: "approvals", total: 4 });
-    expect(section.rows).toHaveLength(3);
+    expect(section.rows).toHaveLength(4);
     expect(section.rows.map((row) => row.contract.title)).toEqual([
       "Oldest ask",
       "Second ask",
       "Third ask",
+      "Newest ask",
     ]);
     expect(section.rows[0]).toMatchObject({
       requestedBy: { id: idOf(REQUESTER), displayName: REQUESTER.displayName },
@@ -402,7 +452,7 @@ describe("GET /api/v1/home", () => {
 
     const section = approvalsIn(await home(APPROVER))!;
     expect(section.total).toBe(4);
-    expect(section.rows).toHaveLength(3);
+    expect(section.rows).toHaveLength(4);
     expect(section.rows.some((row) => row.contract.id === contract.id)).toBe(false);
   });
 
@@ -561,14 +611,20 @@ describe("GET /api/v1/home", () => {
     expect(result.sections.map((section) => section.type)).toEqual(["approvals", "tasks"]);
     const section = tasksIn(result);
     expect(section).toMatchObject({ type: "tasks", total: 4 });
-    expect(section!.rows).toHaveLength(3);
+    expect(section!.rows).toHaveLength(4);
     expect(section!.rows.map((row) => row.title)).toEqual([
       "Prepare financing signature pages",
       "Draft witness outline",
       "Review response exhibits",
+      "Confirm renewal owner",
     ]);
-    expect(section!.rows.map((row) => row.record.kind)).toEqual(["contract", "matter", "matter"]);
-    expect(section!.rows.map((row) => row.isOverdue)).toEqual([true, true, false]);
+    expect(section!.rows.map((row) => row.record.kind)).toEqual([
+      "contract",
+      "matter",
+      "matter",
+      "contract",
+    ]);
+    expect(section!.rows.map((row) => row.isOverdue)).toEqual([true, true, false, false]);
     expect(section!.rows[0]).toMatchObject({
       dueDate: "2000-01-01",
       record: {
@@ -579,6 +635,65 @@ describe("GET /api/v1/home", () => {
     });
     expect(section!.rows.some((row) => row.title === "This must leave no gap")).toBe(false);
     expect(tasksIn(await home(OTHER))).toBeUndefined();
+
+    const list = async (cursor?: string, limit = 2) => {
+      const query = new URLSearchParams({ limit: String(limit) });
+      if (cursor) query.set("cursor", cursor);
+      const response = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/home/tasks?${query.toString()}`,
+        cookies: as(APPROVER),
+      });
+      expect(response.statusCode, response.body).toBe(200);
+      return response.json() as {
+        total: number;
+        rows: TaskSection["rows"];
+        nextCursor: string | null;
+      };
+    };
+    const first = await list();
+    expect(first.total).toBe(4);
+    expect(first.rows).toEqual(section!.rows.slice(0, 2));
+    expect(first.nextCursor).toBeTruthy();
+    const second = await list(first.nextCursor!);
+    expect(second.total).toBe(4);
+    expect(second.rows.map((row) => row.title)).toEqual([
+      "Review response exhibits",
+      "Confirm renewal owner",
+    ]);
+    expect(second.rows[1]!.dueDate).toBeNull();
+    expect(second.nextCursor).toBeNull();
+    const last = second.rows[1]!;
+    expect(await list(`undated:${last.record.kind}:${last.id}`)).toEqual({
+      total: 4,
+      rows: [],
+      nextCursor: null,
+    });
+
+    // A completed cursor Task must not strand the remaining page.
+    await harness.db
+      .update(matterTasks)
+      .set({ isDone: true })
+      .where(eq(matterTasks.id, first.rows[1]!.id));
+    expect((await list(first.nextCursor!)).rows).toEqual(second.rows);
+    await harness.db
+      .update(matterTasks)
+      .set({ isDone: false, dueDate: "2000-01-01" })
+      .where(eq(matterTasks.id, first.rows[1]!.id));
+    // Tied dates across the two modules still produce each Task once.
+    const titles: string[] = [];
+    let cursor: string | undefined;
+    do {
+      const page = await list(cursor, 1);
+      titles.push(...page.rows.map((row) => row.title));
+      cursor = page.nextCursor ?? undefined;
+    } while (cursor && titles.length <= 4);
+    expect(titles).toEqual([
+      "Prepare financing signature pages",
+      "Draft witness outline",
+      "Review response exhibits",
+      "Confirm renewal owner",
+    ]);
   });
 
   it("unions the four approaching date kinds for the Manager and team, before its total and cap", async () => {
@@ -762,11 +877,12 @@ describe("GET /api/v1/home", () => {
     ]);
     const section = datesIn(result);
     expect(section).toMatchObject({ type: "dates", total: 4 });
-    expect(section!.rows).toHaveLength(3);
+    expect(section!.rows).toHaveLength(4);
     expect(section!.rows.map((row) => row.source)).toEqual([
       "notice_deadline",
       "key_date",
       "expiry",
+      "key_date",
     ]);
     expect(section!.rows[0]).toMatchObject({
       keyDateId: null,
@@ -790,6 +906,25 @@ describe("GET /api/v1/home", () => {
     expect(section!.rows[2]).toMatchObject({ source: "expiry", unverified: true });
     expect(section!.rows.every((row) => !row.record.title.includes("Walled"))).toBe(true);
     expect(section!.rows.every((row) => !row.record.title.includes("Legacy ended"))).toBe(true);
+
+    const calendar = async (from: string, to: string) => {
+      const response = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/home/dates?from=${from}&to=${to}`,
+        cookies: as(APPROVER),
+      });
+      expect(response.statusCode, response.body).toBe(200);
+      return response.json() as { total: number; rows: DatesSection["rows"] };
+    };
+    const all = await calendar(today, plusDays(today, 30));
+    expect(all.total).toBe(4);
+    expect(all.rows).toHaveLength(4);
+    expect(all.rows).toEqual(section!.rows);
+    expect(all.rows[3]!.label).toBe("Response filing deadline");
+    const later = await calendar(plusDays(today, 31), plusDays(today, 31));
+    expect(later.total).toBe(1);
+    expect(later.rows[0]!.label).toBe("Beyond Home's window");
+    expect(await calendar(plusDays(today, -1), today)).toEqual({ total: 0, rows: [] });
 
     await harness.db
       .update(contractKeyDates)
@@ -951,6 +1086,7 @@ describe("GET /api/v1/home", () => {
       "Annual return",
       "Licence renewal",
       "Registered agent renewal",
+      "Further filing",
     ]);
     expect(memberSection!.rows[0]).toMatchObject({ isOverdue: true, isUnassigned: false });
     expect(memberSection!.rows.slice(1).every((row) => !row.isOverdue)).toBe(true);
@@ -1039,6 +1175,7 @@ describe("GET /api/v1/home", () => {
         "Critical oldest",
         "Critical newer",
         "High oldest",
+        "Medium request",
       ]);
       expect(section!.rows[0]).toMatchObject({
         urgency: "critical",
@@ -1246,6 +1383,7 @@ describe("GET /api/v1/home", () => {
           nextDate: plusDays(today, 3),
           renewalPendingConfirmation: false,
         },
+        { title: "No upcoming Contract date", nextDate: null },
       ],
     });
     expect(mattersIn(managerOne)).toMatchObject({
@@ -1270,8 +1408,48 @@ describe("GET /api/v1/home", () => {
           title: "Third Matter deadline",
           nextDeadline: { date: plusDays(today, 3), label: "Third filing" },
         },
+        { title: "No Matter deadline", nextDeadline: null },
       ],
     });
+
+    for (const [module, property, section] of [
+      ["contracts", "owner", contractsIn(managerOne)!],
+      ["matters", "manager", mattersIn(managerOne)!],
+    ] as const) {
+      const response = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/${module}?${property}=me`,
+        cookies: as(MANAGER_ONE),
+      });
+      expect(response.statusCode, response.body).toBe(200);
+      const answer = response.json();
+      expect(answer.total).toBe(section.total);
+      expect(answer[module].map((row: { id: string }) => row.id).sort()).toEqual(
+        section.rows.map((row) => row.id).sort(),
+      );
+    }
+    const combined = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/contracts?owner=me,${idOf(MANAGER_TWO)}&expiryFrom=${today}&expiryTo=${plusDays(today, 2)}`,
+      cookies: as(MANAGER_ONE),
+    });
+    expect(combined.statusCode, combined.body).toBe(200);
+    expect(combined.json().contracts.map((row: { id: string }) => row.id)).toEqual([
+      expiryFirst.id,
+    ]);
+    expect(combined.json().total).toBe(1);
+    const emptyIntersection = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/contracts?owner=${idOf(MANAGER_TWO)}&expiryFrom=${today}&expiryTo=${plusDays(today, 2)}`,
+      cookies: as(MANAGER_ONE),
+    });
+    expect(emptyIntersection.json()).toMatchObject({ contracts: [], total: 0 });
+    const invalidRange = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/contracts?expiryFrom=2026-12-02&expiryTo=2026-12-01`,
+      cookies: as(MANAGER_ONE),
+    });
+    expect(invalidRange.statusCode).toBe(400);
 
     expect(contractsIn(await home(MANAGER_TWO))).toMatchObject({
       total: 1,

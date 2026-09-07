@@ -583,6 +583,20 @@ Generating it was declined for two concrete reasons rather than on taste. `@open
 
 The script reads the workspace members from `pnpm-workspace.yaml` rather than listing them, so a package added later is checked without anybody remembering to.
 
+### Addendum (2026-09-06) — pre-merge latency
+
+CI runs static checks and two shards of each API/web test suite on separate runners.
+The existing lint/typecheck/test status aggregates all of them. Every test still runs
+on every candidate, with its existing isolation; Compose E2E remains serial and uses
+the real deployment images. Build and static-check task results and Docker layers
+are cached, while test-result caching is disabled because external container inputs
+are not fully represented in the task graph. See `docs/CI.md` for reproduction and
+cache ownership.
+
+Before release tags exist, upgrade CI uses the PR's recorded base or the push's
+previous revision. Local/manual rehearsal falls back to dev, or its parent when dev
+is the candidate. Baseline and candidate must be distinct immutable commits.
+
 ## TECH-015: TypeScript 7 native compiler + TS 6 API shim for typescript-eslint
 
 - **Status:** Accepted — **temporary by design; see sunset trigger below**
@@ -1183,3 +1197,20 @@ The rule of this decision stands unchanged. When a third page needs a relations 
 | TECH-023 | Shared machinery grows named per-mount hooks — a third mount is configuration | Accepted               |
 | TECH-024 | Web data and state model — loaders read, screens own what they show           | Accepted               |
 | TECH-025 | A record applet's third web mount becomes configuration                       | Accepted               |
+
+### TECH-006 integration addendum: Home branch migration history (2026-09-07)
+
+The Home branch and dev independently used migration numbers 0090 and 0091.
+Dev's onboarding and account migrations retain their original files, hashes and
+timestamps. Request assignment now lands as 0092, with a snapshot generated from
+the combined schema. Existing assignments survive this migration.
+
+Some local installs already applied the Home branch's later UX migrations. The
+journal guard recognizes those exact content hashes and timestamps and applies
+only the missing dev onboarding and account migrations before normal migration
+processing. Each repair records the canonical hash and timestamp in the same
+transaction as its schema change. Unknown histories still refuse to start.
+
+The upgrade rehearsal covers current dev, the known Home branch history, repeat
+startup, and refusal of an unknown history. No existing database is changed as
+part of preparing this integration.

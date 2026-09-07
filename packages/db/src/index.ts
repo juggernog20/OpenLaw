@@ -405,9 +405,7 @@ export async function runMigrations(db: Db): Promise<void> {
     // so two replicas booting together must not interleave here (#330).
     const { repaired } = await guardMigrationJournal(db, migrationsFolder);
     for (const tag of repaired) {
-      console.warn(
-        `migrations: corrected the recorded stamp for ${tag}; migrations it was hiding will now apply`,
-      );
+      console.warn(`migrations: reconciled ${tag}; continuing with pending migrations`);
     }
     await migrate(db, { migrationsFolder });
   });

@@ -2,14 +2,16 @@
 
 /** The read-only portal view of one published Everyone Knowledge Item
  * (KNW-004): primary Document first, body last, no edit affordance. */
-import { Download, ChevronLeft, FileText } from "lucide-react";
+import { BookOpen, Download, FileText } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
-import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
+import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { api } from "../lib/api";
 import { currentUser, useSignOut } from "../lib/session";
 import { KnowledgeMarkdown } from "../components/knowledge/markdown";
 import { PageTitle } from "../components/page-title";
+import { PortalBackLink } from "../components/portal/back-link";
 import { PortalShell } from "../components/portal/portal-shell";
+import { Button } from "../components/ui/button";
 
 export async function portalKnowledgeLoader({ params }: LoaderFunctionArgs) {
   const user = await currentUser();
@@ -33,67 +35,78 @@ export function PortalKnowledgePage() {
   return (
     <PortalShell user={user} onSignOut={() => void signOut()}>
       <PageTitle title={item.title} />
-      <Link
-        to="/portal"
-        className="inline-flex items-center gap-1 text-sm text-link hover:underline"
-      >
-        <ChevronLeft size={16} aria-hidden="true" />
+      <PortalBackLink>
         <FormattedMessage id="portal.knowledge.back" defaultMessage="Your requests" />
-      </Link>
-      <div className="flex flex-col gap-1.5">
+      </PortalBackLink>
+      <div className="flex flex-col gap-2">
+        <p className="flex items-center gap-1.5 text-sm font-medium text-muted">
+          <BookOpen aria-hidden="true" className="size-4 shrink-0" />
+          <FormattedMessage id="portal.knowledge.kicker" defaultMessage="From Legal" />
+        </p>
         <h1 className="text-2xl font-semibold">{item.title}</h1>
       </div>
-      {item.documents.length > 0 ? (
-        <section
-          aria-labelledby="portal-knowledge-files"
-          className="overflow-hidden rounded-card border border-border-default bg-raised"
-        >
-          <header className="flex h-section-header items-center border-b border-border-default bg-section-header px-4">
-            <h2 id="portal-knowledge-files" className="text-base font-semibold">
-              <FormattedMessage id="portal.knowledge.files" defaultMessage="Documents" />
-            </h2>
-          </header>
-          <ul className="divide-y divide-border-muted">
-            {item.documents.map((document) => (
-              <li key={document.id} className="flex min-h-14 items-center gap-3 px-4 py-2.5">
-                <FileText size={16} aria-hidden="true" className="shrink-0 text-muted" />
-                <span className="min-w-0 flex-1 truncate text-sm font-medium">
-                  {document.currentVersion.originalFilename}
-                </span>
-                <a
-                  href={document.currentVersion.downloadUrl}
-                  className="inline-flex items-center gap-1.5 rounded-button px-2 py-1.5 text-sm font-medium text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
-                  aria-label={intl.formatMessage(
-                    {
-                      id: "portal.knowledge.downloadNamed",
-                      defaultMessage: "Download {filename}",
-                    },
-                    { filename: document.currentVersion.originalFilename },
-                  )}
-                >
-                  <Download size={16} aria-hidden="true" />
-                  <FormattedMessage id="portal.knowledge.download" defaultMessage="Download" />
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-      {item.body ? (
-        <section
-          aria-labelledby="portal-knowledge-guidance"
-          className="overflow-hidden rounded-card border border-border-default bg-raised"
-        >
-          <header className="flex h-section-header items-center border-b border-border-default bg-section-header px-4">
-            <h2 id="portal-knowledge-guidance" className="text-base font-semibold">
-              <FormattedMessage id="portal.knowledge.guidance" defaultMessage="Guidance" />
-            </h2>
-          </header>
-          <div className="p-4">
-            <KnowledgeMarkdown source={item.body} />
-          </div>
-        </section>
-      ) : null}
+      {/* A reading page, so the cards stop at the settings card's width
+          rather than running the whole portal column: guidance is prose,
+          and prose past 45rem is a line the eye loses on the way back. */}
+      <div className="flex w-full max-w-(--width-settings-card) flex-col gap-section-gap">
+        {item.documents.length > 0 ? (
+          <section
+            aria-labelledby="portal-knowledge-files"
+            className="overflow-hidden rounded-card border border-border-default bg-raised"
+          >
+            <header className="flex h-section-header items-center border-b border-border-default bg-section-header px-4">
+              <h2 id="portal-knowledge-files" className="text-base font-semibold">
+                <FormattedMessage id="portal.knowledge.files" defaultMessage="Documents" />
+              </h2>
+            </header>
+            <ul className="divide-y divide-border-muted">
+              {item.documents.map((document) => (
+                <li key={document.id} className="flex items-center gap-3 px-4 py-3">
+                  <span
+                    aria-hidden="true"
+                    className="flex size-8 shrink-0 items-center justify-center rounded-button bg-control text-muted"
+                  >
+                    <FileText size={16} />
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-base font-medium">
+                    {document.currentVersion.originalFilename}
+                  </span>
+                  <Button asChild variant="secondary" size="sm">
+                    <a
+                      href={document.currentVersion.downloadUrl}
+                      aria-label={intl.formatMessage(
+                        {
+                          id: "portal.knowledge.downloadNamed",
+                          defaultMessage: "Download {filename}",
+                        },
+                        { filename: document.currentVersion.originalFilename },
+                      )}
+                    >
+                      <Download size={16} aria-hidden="true" />
+                      <FormattedMessage id="portal.knowledge.download" defaultMessage="Download" />
+                    </a>
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+        {item.body ? (
+          <section
+            aria-labelledby="portal-knowledge-guidance"
+            className="overflow-hidden rounded-card border border-border-default bg-raised"
+          >
+            <header className="flex h-section-header items-center border-b border-border-default bg-section-header px-4">
+              <h2 id="portal-knowledge-guidance" className="text-base font-semibold">
+                <FormattedMessage id="portal.knowledge.guidance" defaultMessage="Guidance" />
+              </h2>
+            </header>
+            <div className="p-6 text-md">
+              <KnowledgeMarkdown source={item.body} />
+            </div>
+          </section>
+        ) : null}
+      </div>
     </PortalShell>
   );
 }

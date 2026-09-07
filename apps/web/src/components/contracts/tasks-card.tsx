@@ -11,8 +11,8 @@
  *
  * Adding and editing are dialogs. A task is a title and an optional
  * due date that commit together, the compound edit DES-017 carves out
- * of the inline rule. The assignee field exists on the model but this
- * dialog does not collect it yet. Toggling and removing are one click
+ * of the inline rule. Assignees can also be changed directly on a row.
+ * Toggling and removing are one click
  * each: toggling flips a boolean, and removing destroys nothing that
  * matters. The row goes, the activity entry keeps it (DD-017), and
  * adding it back is one dialog away.
@@ -26,6 +26,12 @@
  */
 
 import { useState } from "react";
+import {
+  TaskAssigneePicker,
+  taskAssignee,
+  type TaskAssigneePerson,
+  type TaskTeamExpansion,
+} from "../tasks/assignee-picker";
 import { useRecord } from "../record-context";
 import { FormattedMessage, useIntl } from "react-intl";
 import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
@@ -63,11 +69,15 @@ export function TasksCard({
   tasks,
   doneCount,
   totalCount,
+  assignees,
+  teamExpansion,
   onTasksChange,
 }: Readonly<{
   tasks: readonly ContractTask[];
   doneCount: number;
   totalCount: number;
+  assignees: readonly TaskAssigneePerson[];
+  teamExpansion?: TaskTeamExpansion;
   onTasksChange: (outcome: {
     tasks: ContractTask[];
     doneCount: number;
@@ -164,6 +174,20 @@ export function TasksCard({
             <TaskRow
               key={task.id}
               task={task}
+              assignees={assignees}
+              teamExpansion={teamExpansion}
+              onAssign={async (assigneeId, addToTeam) => {
+                const refusal = await run(
+                  () =>
+                    updateContractTask(task.id, {
+                      assigneeId,
+                      ...(addToTeam ? { addToTeam } : {}),
+                    }),
+                  true,
+                );
+                if (!refusal && addToTeam && assigneeId) teamExpansion?.onAdded(assigneeId);
+                return refusal;
+              }}
               intl={intl}
               busy={busy}
               frozen={frozen}
@@ -181,6 +205,8 @@ export function TasksCard({
       {editing && (
         <TaskDialog
           row={editing.row}
+          assignees={assignees}
+          teamExpansion={teamExpansion}
           busy={busy}
           onClose={() => setEditing(null)}
           onConfirm={async (input) => {
@@ -191,6 +217,8 @@ export function TasksCard({
                   : addContractTask(contractNumber, input),
               true,
             );
+            if (!refusal && input.addToTeam && input.assigneeId)
+              teamExpansion?.onAdded(input.assigneeId);
             if (refusal === null) setEditing(null);
             return refusal;
           }}
@@ -203,6 +231,9 @@ export function TasksCard({
 /** One task row in the checklist. */
 function TaskRow({
   task,
+  assignees,
+  teamExpansion,
+  onAssign,
   intl,
   busy,
   frozen,
@@ -213,6 +244,9 @@ function TaskRow({
   task: ContractTask;
   intl: ReturnType<typeof useIntl>;
   busy: boolean;
+  assignees: readonly TaskAssigneePerson[];
+  teamExpansion?: TaskTeamExpansion;
+  onAssign: (id: string | null, addToTeam?: boolean) => Promise<string | null>;
   frozen: boolean;
   onToggle: () => void;
   onEdit: () => void;
@@ -247,6 +281,15 @@ function TaskRow({
           </span>
         )}
       </div>
+      <TaskAssigneePicker
+        value={taskAssignee(task, assignees)}
+        people={assignees}
+        additionalPeople={teamExpansion?.people}
+        taskTitle={task.title}
+        disabled={busy}
+        readOnly={frozen}
+        onChange={onAssign}
+      />
       {!frozen && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -288,16 +331,22 @@ function TaskRow({
  */
 function TaskDialog({
   row,
+  assignees,
+  teamExpansion,
   busy,
   onClose,
   onConfirm,
 }: Readonly<{
   row: ContractTask | null;
+  assignees: readonly TaskAssigneePerson[];
+  teamExpansion?: TaskTeamExpansion;
   busy: boolean;
   onClose: () => void;
   onConfirm: (input: TaskInput) => Promise<string | null>;
 }>) {
   const intl = useIntl();
+  const [addToTeam, setAddToTeam] = useState(false);
+  const allPeople = [...assignees, ...(teamExpansion?.people ?? [])];
   const [draft, setDraft] = useState<DraftInput>({
     title: row?.title ?? "",
     assigneeId: row?.assigneeId ?? "",
@@ -319,7 +368,10 @@ function TaskDialog({
     }
     const refusal = await onConfirm({
       title: draft.title.trim(),
-      assigneeId: draft.assigneeId || null,
+      ...(row && draft.assigneeId === (row.assigneeId ?? "")
+        ? {}
+        : { assigneeId: draft.assigneeId || null }),
+      ...(addToTeam ? { assigneeId: draft.assigneeId, addToTeam: true } : {}),
       dueDate: draft.dueDate || null,
     });
     setError(refusal === null ? null : { field: null, message: refusal });
@@ -363,6 +415,39 @@ function TaskDialog({
               {...invalid("title")}
               onChange={(event) => change({ title: event.target.value })}
             />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="task-assignee">
+              <FormattedMessage id="tasks.field.assignee" defaultMessage="Assignee" />
+            </Label>
+            <TaskAssigneePicker
+              id="task-assignee"
+              label={intl.formatMessage({ id: "tasks.field.assignee", defaultMessage: "Assignee" })}
+              taskTitle={draft.title}
+              value={
+                draft.assigneeId
+                  ? (allPeople.find((person) => person.id === draft.assigneeId) ??
+                    (row ? taskAssignee(row, assignees) : null))
+                  : null
+              }
+              deferred
+              people={assignees}
+              additionalPeople={teamExpansion?.people}
+              disabled={busy}
+              onChange={async (id, adding) => {
+                setAddToTeam(adding ?? false);
+                change({ assigneeId: id ?? "" });
+                return null;
+              }}
+            />
+            {addToTeam && (
+              <p className="text-sm text-muted">
+                <FormattedMessage
+                  id="taskAssignee.deferred"
+                  defaultMessage="Team membership and assignment are saved when you save the task."
+                />
+              </p>
+            )}
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="task-due-date">

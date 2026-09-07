@@ -254,7 +254,7 @@ interface OverflowLine {
 }
 
 /** What a section's cap kept out, named so the mail never understates
- * the day. The Home section reads cut at their card's three rows but
+ * the day. The Home section reads cut at their card's preview limit but
  * carry the window total; the card wears "View all {total}", and this
  * line is the mail's version of it. */
 function moreOnHome(total: number, shown: number, baseUrl: string): OverflowLine | null {

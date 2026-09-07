@@ -64,11 +64,17 @@
  *    render as a two-column grid that collapses to stacked rows in a
  *    narrow container (DES-012), and grow with their value — a
  *    Description is a paragraph, not a strip.
+ * 5. I7 stacks the four blocks in one column. From @3xl of the page
+ *    container the "What you submitted" card moves into an aside
+ *    beside the banner and the thread (`grid-cols-portal-split`): the
+ *    conversation is the live half of the page and takes the width,
+ *    and what was typed at submission stays in view beside it rather
+ *    than under it. Below that width the mock's order holds.
  */
 
-import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
+import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { defineMessage, FormattedMessage, useIntl, type IntlShape } from "react-intl";
-import { ChevronLeft, CircleCheck, CircleX, FileText, Info, PackageCheck } from "lucide-react";
+import { CircleCheck, CircleX, FileText, Info, PackageCheck } from "lucide-react";
 import { api } from "../lib/api";
 import { severityLabel } from "../lib/contracts";
 import { isAnswered, type CustomFieldValue } from "../lib/custom-fields";
@@ -85,6 +91,7 @@ import {
 } from "../lib/requests";
 import { currentUser, useSignOut } from "../lib/session";
 import { PageTitle } from "../components/page-title";
+import { PortalBackLink } from "../components/portal/back-link";
 import { PortalShell } from "../components/portal/portal-shell";
 import { RequestThread } from "../components/portal/request-thread";
 
@@ -142,16 +149,12 @@ export function PortalRequestPage() {
           { reference, summary: request.summary },
         )}
       />
-      <Link
-        to="/portal"
-        className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-muted hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
-      >
-        <ChevronLeft aria-hidden="true" className="size-4 shrink-0" />
+      <PortalBackLink>
         <FormattedMessage id="portal.request.back" defaultMessage="Your requests" />
-      </Link>
-      <div className="flex flex-col gap-1.5">
-        <div className="flex flex-wrap items-center gap-2.5">
-          <h1 className="text-xl font-semibold">{request.summary}</h1>
+      </PortalBackLink>
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="min-w-0 text-2xl font-semibold break-words">{request.summary}</h1>
           <span
             className={`inline-flex shrink-0 rounded-pill px-2 py-0.5 text-xs font-medium ${REQUEST_STATUS_PILL[request.status]}`}
           >
@@ -172,59 +175,71 @@ export function PortalRequestPage() {
           />
         </p>
       </div>
-      <StatusBanner status={request.status} declinedReason={request.declinedReason} />
-      {/* I7 puts the conversation between the banner and the card, which
-          is where a requester looks first: what has been said since they
-          asked matters more than what they typed when they did. Keyed by
-          the Request, because the card seeds its state from the loader's
-          read: a navigation from one Request to another re-renders this
-          route in place, and without the key the card would keep the
-          previous Request's conversation. */}
-      <RequestThread key={request.id} requestId={request.id} viewerId={user.id} thread={thread} />
-      <section
-        aria-labelledby="portal-request-submitted-heading"
-        className="w-full overflow-hidden rounded-card border border-border-default bg-raised"
-      >
-        {/* A `div` rather than a `header`, the my-requests block's rule:
-            the portal draws one banner, and a card strip that also
-            claimed the role would make "the page header" mean two
-            things. */}
-        <div className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
-          <h2 id="portal-request-submitted-heading" className="text-base font-semibold">
-            <FormattedMessage
-              id="portal.request.submittedHeading"
-              defaultMessage="What you submitted"
-            />
-          </h2>
+      <div className="grid gap-section-gap @3xl/page:grid-cols-portal-split">
+        <div className="flex min-w-0 flex-col gap-4">
+          <StatusBanner status={request.status} declinedReason={request.declinedReason} />
+          {/* I7 puts the conversation between the banner and the card,
+              which is where a requester looks first: what has been said
+              since they asked matters more than what they typed when
+              they did. Keyed by the Request, because the card seeds its
+              state from the loader's read: a navigation from one Request
+              to another re-renders this route in place, and without the
+              key the card would keep the previous Request's
+              conversation. */}
+          <RequestThread
+            key={request.id}
+            requestId={request.id}
+            viewerId={user.id}
+            thread={thread}
+          />
         </div>
-        <dl className="flex flex-col">
-          {request.description !== null && request.description !== "" && (
-            <ValueRow label={intl.formatMessage(BASIC_LABELS.description)}>
-              {/* A requester's paragraphs are theirs: the line breaks
-                  they typed are part of what they said. */}
-              <span className="whitespace-pre-line">{request.description}</span>
-            </ValueRow>
-          )}
-          {attachments.length > 0 && (
-            <ValueRow label={intl.formatMessage(BASIC_LABELS.attachments)}>
-              <AttachmentList number={request.number} attachments={attachments} />
-            </ValueRow>
-          )}
-          <ValueRow label={intl.formatMessage(BASIC_LABELS.urgency)}>
-            {severityLabel(intl, request.urgency)}
-          </ValueRow>
-          {/* The type's own fields, in the order the form drew them.
-              Only the ones that were answered: this card says what was
-              submitted, and a row of dashes says what was not. */}
-          {fields
-            .filter((field) => isAnswered(request.customFields[field.slug]))
-            .map((field) => (
-              <ValueRow key={field.slug} label={field.displayName}>
-                {renderValue(intl, field, request.customFields[field.slug]!, customFieldRefs)}
+        <aside className="min-w-0 @3xl/page:self-start">
+          <section
+            aria-labelledby="portal-request-submitted-heading"
+            className="w-full overflow-hidden rounded-card border border-border-default bg-raised"
+          >
+            {/* A `div` rather than a `header`, the my-requests block's
+                rule: the portal draws one banner, and a card strip that
+                also claimed the role would make "the page header" mean
+                two things. */}
+            <div className="flex h-section-header items-center border-b border-border-default bg-section-header px-4">
+              <h2 id="portal-request-submitted-heading" className="text-base font-semibold">
+                <FormattedMessage
+                  id="portal.request.submittedHeading"
+                  defaultMessage="What you submitted"
+                />
+              </h2>
+            </div>
+            <dl className="flex flex-col">
+              {request.description !== null && request.description !== "" && (
+                <ValueRow label={intl.formatMessage(BASIC_LABELS.description)}>
+                  {/* A requester's paragraphs are theirs: the line breaks
+                      they typed are part of what they said. */}
+                  <span className="whitespace-pre-line">{request.description}</span>
+                </ValueRow>
+              )}
+              {attachments.length > 0 && (
+                <ValueRow label={intl.formatMessage(BASIC_LABELS.attachments)}>
+                  <AttachmentList number={request.number} attachments={attachments} />
+                </ValueRow>
+              )}
+              <ValueRow label={intl.formatMessage(BASIC_LABELS.urgency)}>
+                {severityLabel(intl, request.urgency)}
               </ValueRow>
-            ))}
-        </dl>
-      </section>
+              {/* The type's own fields, in the order the form drew them.
+                  Only the ones that were answered: this card says what
+                  was submitted, and a row of dashes says what was not. */}
+              {fields
+                .filter((field) => isAnswered(request.customFields[field.slug]))
+                .map((field) => (
+                  <ValueRow key={field.slug} label={field.displayName}>
+                    {renderValue(intl, field, request.customFields[field.slug]!, customFieldRefs)}
+                  </ValueRow>
+                ))}
+            </dl>
+          </section>
+        </aside>
+      </div>
     </PortalShell>
   );
 }
@@ -274,8 +289,8 @@ function AttachmentList({
  * list, because that is what a label-and-value pair is. */
 function ValueRow({ label, children }: Readonly<{ label: string; children: React.ReactNode }>) {
   return (
-    <div className="@container/row grid gap-x-4 gap-y-1 border-b border-border-muted px-4 py-2.5 last:border-b-0 @lg/row:grid-cols-value-row">
-      <dt className="text-sm text-muted">{label}</dt>
+    <div className="@container/row grid gap-x-4 gap-y-1 border-b border-border-muted px-4 py-3 last:border-b-0 @lg/row:grid-cols-value-row">
+      <dt className="text-xs font-medium text-muted">{label}</dt>
       <dd className="min-w-0 text-base break-words">{children}</dd>
     </div>
   );
@@ -301,8 +316,8 @@ function StatusBanner({
 }: Readonly<{ status: RequestStatus; declinedReason: string | null }>) {
   const { tone, Glyph } = BANNER_STYLE[status];
   return (
-    <p className={`flex items-start gap-2 rounded-card px-3 py-2.5 text-sm font-medium ${tone}`}>
-      <Glyph aria-hidden="true" className="mt-px size-4 shrink-0" />
+    <p className={`flex items-start gap-2.5 rounded-card px-4 py-3 text-base font-medium ${tone}`}>
+      <Glyph aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
       <span>
         <FormattedMessage {...BANNER_COPY[status]} />
         {status === "declined" && declinedReason !== null && (
