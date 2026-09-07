@@ -1,0 +1,304 @@
+{
+  "author": "Codex",
+  "independentReview": false,
+  "startedAt": "2026-09-07T03:46:31.553Z",
+  "finishedAt": "2026-09-07T03:46:37.675Z",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "frontend": "Vite preview of unchanged app source and working canonical Markdown",
+  "normalPublication": false,
+  "articleHashes": {
+    "staff-sign-in": "8ad02d5fc14664f6ba625ed31e65d93a4b6af5b79b63efc3c274e481d5e64a9b",
+    "portal-sign-in": "9d419eb6c397fcaca5aac93331cb5dd06905f8152446485705714e07995adf7d",
+    "find-your-work": "12c89ad41d38a35d2bdb8c7f64a262d216ccc6d6a1211af802fd9e3e2a2aea61",
+    "search-and-views": "e303479e3b19bde3f34d5131d4f5c59de37b6feab2ef9b50bacdb97cb5478b23",
+    "personal-settings": "155c97620d4f7999fa850eb2923f73ee797df09b2e62bf61cf0e5b292c16b2b8"
+  },
+  "results": [
+    {
+      "articleId": "staff-sign-in",
+      "entry": "/auth/login",
+      "audience": "signed-out",
+      "query": "backup codes",
+      "section": "Accept a password invitation",
+      "result": "pass",
+      "layouts": [
+        {
+          "theme": "light",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "light",
+          "width": 720,
+          "result": "pass"
+        },
+        {
+          "theme": "light",
+          "width": 320,
+          "result": "pass"
+        },
+        {
+          "theme": "dark",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "dark",
+          "width": 720,
+          "result": "pass"
+        },
+        {
+          "theme": "dark",
+          "width": 320,
+          "result": "pass"
+        },
+        {
+          "theme": "warm",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "warm",
+          "width": 720,
+          "result": "pass"
+        },
+        {
+          "theme": "warm",
+          "width": 320,
+          "result": "pass"
+        }
+      ],
+      "actual": "Page Help found the guide; local search found its title; article and section focus worked; reader fit all recorded themes and widths; formal guide opened."
+    },
+    {
+      "articleId": "portal-sign-in",
+      "entry": "/portal/enter",
+      "audience": "signed-out",
+      "query": "expired link",
+      "section": "Get a sign-in link",
+      "result": "pass",
+      "layouts": [
+        {
+          "theme": "light",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "light",
+          "width": 720,
+          "result": "pass"
+        },
+        {
+          "theme": "light",
+          "width": 320,
+          "result": "pass"
+        },
+        {
+          "theme": "dark",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "dark",
+          "width": 720,
+          "result": "pass"
+        },
+        {
+          "theme": "dark",
+          "width": 320,
+          "result": "pass"
+        },
+        {
+          "theme": "warm",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "warm",
+          "width": 720,
+          "result": "pass"
+        },
+        {
+          "theme": "warm",
+          "width": 320,
+          "result": "pass"
+        }
+      ],
+      "actual": "Page Help found the guide; local search found its title; article and section focus worked; reader fit all recorded themes and widths; formal guide opened."
+    },
+    {
+      "articleId": "find-your-work",
+      "entry": "/",
+      "audience": "legal_team_member",
+      "query": "your tasks",
+      "section": "Open work from Home",
+      "result": "pass",
+      "layouts": [
+        {
+          "theme": "light",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "light",
+          "width": 720,
+          "result": "pass"
+        },
+        {
+          "theme": "light",
+          "width": 320,
+          "result": "pass"
+        },
+        {
+          "theme": "dark",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "dark",
+          "width": 720,
+          "result": "pass"
+        },
+        {
+          "theme": "dark",
+          "width": 320,
+          "result": "pass"
+        },
+        {
+          "theme": "warm",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "warm",
+          "width": 720,
+          "result": "pass"
+        },
+        {
+          "theme": "warm",
+          "width": 320,
+          "result": "pass"
+        }
+      ],
+      "actual": "Page Help found the guide; local search found its title; article and section focus worked; reader fit all recorded themes and widths; formal guide opened."
+    },
+    {
+      "articleId": "search-and-views",
+      "entry": "/search",
+      "audience": "contributor",
+      "query": "save a view",
+      "section": "Search across your work",
+      "result": "pass",
+      "layouts": [
+        {
+          "theme": "light",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "light",
+          "width": 720,
+          "result": "pass"
+        },
+        {
+          "theme": "light",
+          "width": 320,
+          "result": "pass"
+        },
+        {
+          "theme": "dark",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "dark",
+          "width": 720,
+          "result": "pass"
+        },
+        {
+          "theme": "dark",
+          "width": 320,
+          "result": "pass"
+        },
+        {
+          "theme": "warm",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "warm",
+          "width": 720,
+          "result": "pass"
+        },
+        {
+          "theme": "warm",
+          "width": 320,
+          "result": "pass"
+        }
+      ],
+      "actual": "Page Help found the guide; local search found its title; article and section focus worked; reader fit all recorded themes and widths; formal guide opened."
+    },
+    {
+      "articleId": "personal-settings",
+      "entry": "/settings/profile",
+      "audience": "administrator",
+      "query": "timezone",
+      "section": "Update your profile",
+      "result": "pass",
+      "layouts": [
+        {
+          "theme": "light",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "light",
+          "width": 720,
+          "result": "pass"
+        },
+        {
+          "theme": "light",
+          "width": 320,
+          "result": "pass"
+        },
+        {
+          "theme": "dark",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "dark",
+          "width": 720,
+          "result": "pass"
+        },
+        {
+          "theme": "dark",
+          "width": 320,
+          "result": "pass"
+        },
+        {
+          "theme": "warm",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "warm",
+          "width": 720,
+          "result": "pass"
+        },
+        {
+          "theme": "warm",
+          "width": 320,
+          "result": "pass"
+        }
+      ],
+      "actual": "Page Help found the guide; local search found its title; article and section focus worked; reader fit all recorded themes and widths; formal guide opened."
+    }
+  ],
+  "limitations": [
+    "Widths are CSS pixel reflow checks, not a browser zoom or assistive technology study.",
+    "Notification guide is a known unpublished cross-link pending DOC-011."
+  ],
+  "environment": "openlaw-docs-b8e31260-pilot",
+  "buildId": "app sha256:69c7cd47338eff05c787e985743dd45b2229792827d82fd5f54a50a9c63d8757; engine sha256:1dce5b67898cc8ae720231fa66e049208ed207e69053a2cf4c1bd0e172cea401"
+}

@@ -7,7 +7,7 @@
       "coverage": ["C01"],
       "articles": ["staff-sign-in"],
       "roles": ["legal_team_member", "administrator", "contributor"],
-      "environment": "authoring",
+      "environment": "pilot",
       "prerequisites": [
         "Invited account, Mailpit activation message, and a separate authenticated session."
       ],
@@ -28,7 +28,7 @@
       "coverage": ["C02"],
       "articles": ["portal-sign-in"],
       "roles": ["business_user"],
-      "environment": "authoring",
+      "environment": "pilot",
       "prerequisites": [
         "Portal enabled for helix.example; Jonas and Amara use separate browser contexts."
       ],
@@ -49,7 +49,7 @@
       "coverage": ["C03"],
       "articles": ["find-your-work"],
       "roles": ["legal_team_member", "administrator", "contributor"],
-      "environment": "authoring",
+      "environment": "pilot",
       "prerequisites": ["Seeded Tasks, Key dates, and records reached by each role."],
       "actions": [
         "Use Home, all Tasks, record sections, and the keyboard-shortcuts sheet to find a named fixture."
@@ -68,7 +68,7 @@
       "coverage": ["C04"],
       "articles": ["search-and-views"],
       "roles": ["legal_team_member", "administrator", "contributor"],
-      "environment": "authoring",
+      "environment": "pilot",
       "prerequisites": [
         "Two visible records, a confidential record outside reach, and a Document with extracted unique text."
       ],
@@ -89,13 +89,13 @@
       "coverage": ["C05"],
       "articles": ["personal-settings"],
       "roles": ["legal_team_member", "administrator", "contributor"],
-      "environment": "authoring",
+      "environment": "pilot",
       "prerequisites": ["Separate personal accounts with known initial timezone and appearance."],
       "actions": [
-        "Change profile, timezone, and theme; switch to the portal and exercise personal session controls."
+        "Change profile, timezone, and theme; exercise personal session controls. Administrators and Legal Team Members open their own Portal view; Contributors confirm that the App view control is absent."
       ],
       "expectedResults": [
-        "Preferences persist for the intended user and the documented app-view path works on this baseline."
+        "Preferences persist for the intended user. App view is a card within Profile for Member+, with a working Return to legal view link. Contributors have personal settings without this card."
       ],
       "negativeChecks": [
         "Another account's preferences remain unchanged; no absent M33 App view route is claimed."

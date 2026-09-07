@@ -1,0 +1,55 @@
+{
+  "author": "Codex",
+  "independentReview": false,
+  "startedAt": "2026-09-07T03:46:08.857Z",
+  "finishedAt": "2026-09-07T03:46:20.135Z",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "phase": "contributor views",
+  "articleHashes": {
+    "find-your-work": "12c89ad41d38a35d2bdb8c7f64a262d216ccc6d6a1211af802fd9e3e2a2aea61",
+    "search-and-views": "e303479e3b19bde3f34d5131d4f5c59de37b6feab2ef9b50bacdb97cb5478b23"
+  },
+  "results": [
+    {
+      "id": "V-C03",
+      "role": "administrator",
+      "result": "pass",
+      "actual": "Opened all Tasks from Home and reached the owning Contract, Fields and Documents; Completed assigned Task and Undo reopened it; returned Home; Inbox and date calendar checked; ? sheet, Escape, / focus and literal characters inside a field worked."
+    },
+    {
+      "id": "V-C04",
+      "role": "administrator",
+      "result": "pass",
+      "viewName": "Docs Owner administrator 1788752771340",
+      "actual": "PDF-only text found and exact Version opened with find prefilled; confidential fixture visible to Administrator and absent for non-team Legal Team Member and Contributor; no-match answer and controlled failed search distinguished, reload recovered; kind filter worked; Owner filtered rows, Title sort and Back/Forward agreed; hidden column and saved view survived reload and another browser; discarded changes restored filters; duplicate view name refused; failed list read kept prior chips and rows; retry recovered; future date filter produced an empty result and Clear all recovered; the Administrator could read the Confidential fixture."
+    },
+    {
+      "id": "V-C03",
+      "role": "legal_team_member",
+      "result": "pass",
+      "actual": "Opened all Tasks from Home and reached the owning Contract, Fields and Documents; Completed assigned Task and Undo reopened it; returned Home; Inbox and date calendar checked; ? sheet, Escape, / focus and literal characters inside a field worked."
+    },
+    {
+      "id": "V-C04",
+      "role": "legal_team_member",
+      "result": "pass",
+      "viewName": "Docs Owner legal_team_member 1788752775272",
+      "actual": "PDF-only text found and exact Version opened with find prefilled; confidential fixture visible to Administrator and absent for non-team Legal Team Member and Contributor; no-match answer and controlled failed search distinguished, reload recovered; kind filter worked; Owner filtered rows, Title sort and Back/Forward agreed; hidden column and saved view survived reload and another browser; discarded changes restored filters; duplicate view name refused; failed list read kept prior chips and rows; retry recovered; future date filter produced an empty result and Clear all recovered; non-team direct confidential links were refused."
+    },
+    {
+      "id": "V-C03",
+      "role": "contributor",
+      "result": "pass",
+      "actual": "Opened all Tasks from Home and reached the owning Contract, Fields and Documents; Completion control was absent for the Contributor; returned Home; Inbox and Entity obligations sections were absent; ? sheet, Escape, / focus and literal characters inside a field worked."
+    },
+    {
+      "id": "V-C04",
+      "role": "contributor",
+      "result": "pass",
+      "viewName": "Docs Owner contributor 1788752778841",
+      "actual": "PDF-only text found and exact Version opened with find prefilled; confidential fixture visible to Administrator and absent for non-team Legal Team Member and Contributor; no-match answer and controlled failed search distinguished, reload recovered; kind filter worked; Owner filtered rows, Title sort and Back/Forward agreed; hidden column and saved view survived reload and another browser; discarded changes restored filters; duplicate view name refused; failed list read kept prior chips and rows; retry recovered; future date filter produced an empty result and Clear all recovered; non-team direct confidential links were refused."
+    }
+  ],
+  "environment": "openlaw-docs-b8e31260-pilot",
+  "buildId": "app sha256:69c7cd47338eff05c787e985743dd45b2229792827d82fd5f54a50a9c63d8757; engine sha256:1dce5b67898cc8ae720231fa66e049208ed207e69053a2cf4c1bd0e172cea401"
+}

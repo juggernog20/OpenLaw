@@ -1,0 +1,67 @@
+{
+  "articleId": "find-your-work",
+  "contentSha256": "6fa8eb3a4f1302279ec5419435fbeeb34596a17d1897bc90d62c52037f8ac8d0",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "buildId": "app sha256:69c7cd47338eff05c787e985743dd45b2229792827d82fd5f54a50a9c63d8757; engine sha256:1dce5b67898cc8ae720231fa66e049208ed207e69053a2cf4c1bd0e172cea401",
+  "environment": "openlaw-docs-b8e31260-pilot",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Fable review seat (agent source check against d1d098ba); the feature owner's human technical review is not recorded here",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-07T05:06:42.050Z",
+  "status": "pass",
+  "sources": [
+    "apps/web/src/routes/home.tsx",
+    "apps/web/src/routes/home-tasks.tsx",
+    "apps/web/src/components/home/tasks-card.tsx",
+    "apps/web/src/lib/keyboard.ts",
+    "apps/api/src/modules/home/routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C03",
+      "coverage": ["C03"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Links reach the intended records; Tasks remain distinct from deadline surfaces; ? opens shortcuts. Empty sections and unavailable records have useful outcomes; / and Escape retain their existing behavior.",
+      "actual": "Home showed Tasks assigned to you, Dates approaching, Entity obligations, Inbox and Your contracts. The fixture Task link opened /contracts/43/tasks with the C-43 title; Fields and Documents sections were reached and Documents listed navigation-search.pdf; Home returned. View all opened Your Tasks with the Task; Complete Task completed it (stored as done) and Undo reopened it; Back to Home returned. Dates approaching's View all opened Your dates and Escape closed it. ? opened Keyboard shortcuts and Escape closed it; / focused the header Search and a typed ? stayed in the field; Help opened /help. /contracts/45 showed Something went wrong. The page could not load. Reload to try again.; /contracts/99999 showed the same generic page. Follow-up tracked the 52 new pagination Tasks and the existing navigation Task (53 fixture Tasks): the first page listed 49 fixture rows and Load more Tasks added the remaining tracked fixture rows to 53 with no duplicates or loss among the tracked rows, after which the control disappeared.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-009/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-009/independent-discovery.json"
+      ]
+    },
+    {
+      "id": "V-C03",
+      "coverage": ["C03"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Links reach the intended records; Tasks remain distinct from deadline surfaces; ? opens shortcuts. Empty sections and unavailable records have useful outcomes; / and Escape retain their existing behavior.",
+      "actual": "Home showed Tasks assigned to you, Dates approaching, Entity obligations, Inbox, Your contracts and Your matters. The fixture Task link opened /contracts/43/tasks with the C-43 title; Fields and Documents sections were reached and Documents listed navigation-search.pdf; Home returned. View all opened Your Tasks with the Task; Complete Task completed it (stored as done) and Undo reopened it; Back to Home returned. Dates approaching's View all opened Your dates and Escape closed it. ? opened Keyboard shortcuts and Escape closed it; / focused the header Search and a typed ? stayed in the field; Help opened /help. C-45 opened with its Confidential contract banner; /contracts/99999 showed the same generic page. Follow-up tracked the 52 new pagination Tasks and the existing navigation Task (53 fixture Tasks): the first page listed 46 fixture rows and Load more Tasks added the remaining tracked fixture rows to 53 with no duplicates or loss among the tracked rows, after which the control disappeared.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-009/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-009/independent-discovery.json"
+      ]
+    },
+    {
+      "id": "V-C03",
+      "coverage": ["C03"],
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "expected": "Links reach the intended records; Tasks remain distinct from deadline surfaces; ? opens shortcuts. Empty sections and unavailable records have useful outcomes; / and Escape retain their existing behavior.",
+      "actual": "Home showed only Tasks assigned to you. The fixture Task link opened /contracts/43/tasks with the C-43 title; Fields and Documents sections were reached and Documents listed navigation-search.pdf; Home returned. View all opened Your Tasks with the Task; no completion control was offered; Back to Home returned. No Dates approaching section existed for this account. ? opened Keyboard shortcuts and Escape closed it; / focused the header Search and a typed ? stayed in the field; Help opened /help. /contracts/45 showed Something went wrong. The page could not load. Reload to try again.; /contracts/99999 showed the same generic page. A fresh Contributor account saw Welcome to OpenLaw and No open Tasks assigned to you. Follow-up tracked the 52 new pagination Tasks and the existing navigation Task (53 fixture Tasks): the first page listed 50 fixture rows and Load more Tasks added the remaining tracked fixture rows to 53 with no duplicates or loss among the tracked rows, after which the control disappeared.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-009/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-009/independent-discovery.json"
+      ]
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-009/README.md"],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

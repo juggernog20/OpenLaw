@@ -58,7 +58,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["auth"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "portal-sign-in",
@@ -71,7 +71,7 @@
       "destinations": ["portal-help", "formal"],
       "priority": "P0",
       "contexts": ["portal.entry"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "find-your-work",
@@ -84,7 +84,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["home"],
-      "status": "scoped"
+      "status": "verified"
     },
     {
       "id": "search-and-views",
@@ -97,7 +97,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["search", "lists"],
-      "status": "scoped"
+      "status": "verified"
     },
     {
       "id": "personal-settings",
@@ -110,7 +110,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["settings.personal"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "roles-and-access",

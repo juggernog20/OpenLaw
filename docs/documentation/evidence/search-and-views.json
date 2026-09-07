@@ -1,0 +1,69 @@
+{
+  "articleId": "search-and-views",
+  "contentSha256": "e303479e3b19bde3f34d5131d4f5c59de37b6feab2ef9b50bacdb97cb5478b23",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "buildId": "app sha256:69c7cd47338eff05c787e985743dd45b2229792827d82fd5f54a50a9c63d8757; engine sha256:1dce5b67898cc8ae720231fa66e049208ed207e69053a2cf4c1bd0e172cea401",
+  "environment": "openlaw-docs-b8e31260-pilot",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Fable review seat (agent source check against d1d098ba); the feature owner's human technical review is not recorded here",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-07T05:08:47.123Z",
+  "status": "pass",
+  "sources": [
+    "apps/web/src/routes/search.tsx",
+    "apps/web/src/components/shell/search-input.tsx",
+    "apps/web/src/components/search/search-result-row.tsx",
+    "apps/web/src/routes/contracts.tsx",
+    "apps/web/src/components/table/record-filter-definitions.ts",
+    "apps/web/src/components/table/views-menu.tsx",
+    "docs/decision-records/DECISIONS.md"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C04",
+      "coverage": ["C04"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Results respect reach and the saved view restores its configuration; URL, chips, and rows agree. The hidden record never appears; no-match search and failed reads preserve understandable state. Track rapid-click issue #751 separately.",
+      "actual": "/ then cobalt skylark listed v1 navigation-search.pdf owned by C-43; See all results opened /search?q=cobalt+skylark; the Document kind narrowed the answer; opening the result reached /contracts/43/documents with the matching Version and the find control prefilled with cobalt skylark. Docs navigation confidential returned No matches and /contracts/45 was refused; a nonsense query showed No matches; a blocked search read showed Search could not load. Try again. and a reload after unblocking listed the Document. On Contracts, Filter > Owner > Daniel Okafor > Apply showed the chip and only C-43 of the two shared fixtures; the Title heading sorted ascending then descending; Back and Forward restored the URL and sort marker; Columns hid Value; Save as… stored the view; a sort change showed Modified; Discard unsaved changes restored the stored layout; a duplicate name was refused; a second browser restored the chip, rows and hidden column from the saved view; Default view showed the built-in layout; Delete… asked Delete this view? and removed only the view. An Effective date filter in 2090 showed No contracts match these filters and Clear all recovered; a blocked list read after a filter change kept the prior rows with The contract list could not be read. Try again., and a reload recovered. Follow-up with 30 reachable cormorant Contracts: the results page listed 25, Show more added the remaining 5 with no duplicates and the first page kept, and the control disappeared; a blocked next-page read kept the 25 rows with \"The next results could not be read. Try again.\", and Show more after unblocking added the 5. On Contracts, Move Priority earlier twice reordered the columns and Save as… kept the order across a reload; Set as default reopened Contracts on that view after leaving through Home; Rename… persisted in a fresh browser; a Title sort marked the view Modified and Save replaced the stored layout, which a fresh browser then opened with the sort and column order; the original default My commercial desk was restored.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-009/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-009/independent-discovery.json"
+      ]
+    },
+    {
+      "id": "V-C04",
+      "coverage": ["C04"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Results respect reach and the saved view restores its configuration; URL, chips, and rows agree. The hidden record never appears; no-match search and failed reads preserve understandable state. Track rapid-click issue #751 separately.",
+      "actual": "/ then cobalt skylark listed v1 navigation-search.pdf owned by C-43; See all results opened /search?q=cobalt+skylark; the Document kind narrowed the answer; opening the result reached /contracts/43/documents with the matching Version and the find control prefilled with cobalt skylark. Docs navigation confidential returned C-45; a nonsense query showed No matches; a blocked search read showed Search could not load. Try again. and a reload after unblocking listed the Document. On Contracts, Filter > Owner > Daniel Okafor > Apply showed the chip and only C-43 of the two shared fixtures; the Title heading sorted ascending then descending; Back and Forward restored the URL and sort marker; Columns hid Value; Save as… stored the view; a sort change showed Modified; Discard unsaved changes restored the stored layout; a duplicate name was refused; a second browser restored the chip, rows and hidden column from the saved view; Default view showed the built-in layout; Delete… asked Delete this view? and removed only the view. An Effective date filter in 2090 showed No contracts match these filters and Clear all recovered; a blocked list read after a filter change kept the prior rows with The contract list could not be read. Try again., and a reload recovered. Follow-up with 30 reachable cormorant Contracts: the results page listed 25, Show more added the remaining 5 with no duplicates and the first page kept, and the control disappeared; a blocked next-page read kept the 25 rows with \"The next results could not be read. Try again.\", and Show more after unblocking added the 5. On Contracts, Move Owner earlier twice reordered the columns and Save as… kept the order across a reload; Set as default reopened Contracts on that view after leaving through Home; Rename… persisted in a fresh browser; a Title sort marked the view Modified and Save replaced the stored layout, which a fresh browser then opened with the sort and column order; deleting the temporary default returned the list to the built-in layout.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-009/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-009/independent-discovery.json"
+      ]
+    },
+    {
+      "id": "V-C04",
+      "coverage": ["C04"],
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "expected": "Results respect reach and the saved view restores its configuration; URL, chips, and rows agree. The hidden record never appears; no-match search and failed reads preserve understandable state. Track rapid-click issue #751 separately.",
+      "actual": "/ then cobalt skylark listed v1 navigation-search.pdf owned by C-43; See all results opened /search?q=cobalt+skylark; the Document kind narrowed the answer; opening the result reached /contracts/43/documents with the matching Version and the find control prefilled with cobalt skylark. Docs navigation confidential returned No matches and /contracts/45 was refused; a nonsense query showed No matches; a blocked search read showed Search could not load. Try again. and a reload after unblocking listed the Document. On Contracts, Filter > Owner > Daniel Okafor > Apply showed the chip and only C-43 of the two shared fixtures; the Title heading sorted ascending then descending; Back and Forward restored the URL and sort marker; Columns hid Value; Save as… stored the view; a sort change showed Modified; Discard unsaved changes restored the stored layout; a duplicate name was refused; a second browser restored the chip, rows and hidden column from the saved view; Default view showed the built-in layout; Delete… asked Delete this view? and removed only the view. An Effective date filter in 2090 showed No contracts match these filters and Clear all recovered; a blocked list read after a filter change kept the prior rows with The contract list could not be read. Try again., and a reload recovered. Follow-up with 30 reachable cormorant Contracts: the results page listed 25, Show more added the remaining 5 with no duplicates and the first page kept, and the control disappeared; a blocked next-page read kept the 25 rows with \"The next results could not be read. Try again.\", and Show more after unblocking added the 5. On Contracts, Move Owner earlier twice reordered the columns and Save as… kept the order across a reload; Set as default reopened Contracts on that view after leaving through Home; Rename… persisted in a fresh browser; a Title sort marked the view Modified and Save replaced the stored layout, which a fresh browser then opened with the sort and column order; deleting the temporary default returned the list to the built-in layout.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-009/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-009/independent-discovery.json"
+      ]
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-009/README.md"],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

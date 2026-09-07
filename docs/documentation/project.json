@@ -81,12 +81,13 @@
     {
       "id": "DOC-008",
       "issue": 728,
-      "status": "in-progress"
+      "status": "closed",
+      "pullRequest": 757
     },
     {
       "id": "DOC-009",
       "issue": 729,
-      "status": "open"
+      "status": "in-progress"
     },
     {
       "id": "DOC-010",

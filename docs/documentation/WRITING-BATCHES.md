@@ -9,10 +9,13 @@ needs its own technical review and walkthrough evidence before checking its box.
 
 ## DOC-009 [#729](https://github.com/juggernog20/OpenLaw/issues/729)
 
+See [the batch verification record](batches/DOC-009/README.md) for the tested build,
+author outcomes, independent review, and publication dependencies.
+
 - [ ] `staff-sign-in`: Set up your account and sign in (C01; P0).
 - [ ] `portal-sign-in`: Sign in to the Business Portal (C02; P0).
-- [ ] `find-your-work`: Find your work on Home (C03; P0).
-- [ ] `search-and-views`: Search, filter, and save views (C04; P0).
+- [x] `find-your-work`: Find your work on Home (C03; P0).
+- [x] `search-and-views`: Search, filter, and save views (C04; P0).
 - [ ] `personal-settings`: Manage your profile and preferences (C05; P1).
 
 ## DOC-010 [#730](https://github.com/juggernog20/OpenLaw/issues/730)
