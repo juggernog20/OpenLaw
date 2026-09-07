@@ -21,7 +21,7 @@
   "steps": [
     {
       "role": "contributor",
-      "method": "api-check",
+      "method": "automated-test",
       "action": "C32 an Officer user link does not grant Entity access",
       "actual": "Contributor remained unable to read the Entity; role boundary is not changed by an Officer user link",
       "result": "pass",

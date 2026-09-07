@@ -1,6 +1,6 @@
 {
   "articleId": "entity-records",
-  "contentSha256": "19db877e377abd54e296538831f9a87d8aceb1cac35d72ca8fdf27292c2ebb53",
+  "contentSha256": "9d8b0ae49f2d38291393c876d0851ec3811a5d6dd3d24add2631615ade6db0bc",
   "appCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
   "buildId": "app sha256:800689bba1e0bd183d33760b14e4775a593d23d1cf9ded4ad752e788e60bd818; engine sha256:b69fd318f42ddbb78e8531a4b7151bcd58d9788b367a26d528d41c5bebfa792f",
   "environment": "openlaw-docs-b8e31260-entities",
@@ -45,7 +45,8 @@
   "limitations": [
     "Author browser checks passed; independent technical review and required role walkthroughs are pending.",
     "Agent walkthroughs are not human user studies or feature-owner approval.",
-    "The types and Fields guide remains a publication dependency."
+    "The types and Fields guide remains a publication dependency.",
+    "Author runs retain their actual earlier hash; the added Officer role configuration link awaits independent review and fresh required walkthroughs."
   ],
   "previousEvidence": null,
   "copyOnlyReview": null

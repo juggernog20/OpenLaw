@@ -4,7 +4,7 @@ Keep the corporate facts and supporting Documents on the Entity they describe. H
 
 ## Before you start
 
-Sign in as a Legal Team Member or Administrator and open an Entity you can reach. Restore it before changing archived records. An Officer role must be available, and both Entities in a new Holding must be reachable and live. See [roles and access](roles-and-access.md) and [Entity structure and access](entity-structure-and-access.md).
+Sign in as a Legal Team Member or Administrator and open an Entity you can reach. Restore it before changing archived records. Both Entities in a new Holding must be reachable and live. An Officer role must be available; only an Administrator adds one, in [types, Statuses, and Fields](types-statuses-fields.md). See [roles and access](roles-and-access.md) and [Entity structure and access](entity-structure-and-access.md).
 
 ## Record Officers and resignations
 
