@@ -1,0 +1,103 @@
+{
+  "name": "morning",
+  "startedAt": "2026-09-07T07:48:30.046Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "notifications",
+      "contentSha256": "c94f9a85fad12d7fdf1856784fe2bf8e0e8bf541a1df7653b729c0c96cf4124e"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "saved timezone before 08:00 defers the morning briefing",
+      "actual": "Fresh account with eligible Task/date; profile America/Anguilla, local hour 3; actual lab morning round produced no briefing mail or daily summary",
+      "result": "pass",
+      "at": "2026-09-07T07:48:40.042Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "saved timezone before 08:00 defers the morning briefing",
+      "actual": "Fresh account with eligible Task/date; profile America/Anguilla, local hour 3; actual lab morning round produced no briefing mail or daily summary",
+      "result": "pass",
+      "at": "2026-09-07T07:48:40.053Z"
+    },
+    {
+      "role": "contributor",
+      "action": "saved timezone before 08:00 defers the morning briefing",
+      "actual": "Fresh account with eligible Task/date; profile America/Anguilla, local hour 3; actual lab morning round produced no briefing mail or daily summary",
+      "result": "pass",
+      "at": "2026-09-07T07:48:40.063Z"
+    },
+    {
+      "role": "administrator",
+      "action": "after 08:00 the briefing honors section choices and its bell returns to Home",
+      "actual": "Profile Africa/Addis_Ababa, local hour 10; real morning round delivered briefing with Tasks=true, Dates=false; Home-linked bell present despite one email section being off where applicable",
+      "result": "pass",
+      "at": "2026-09-07T07:48:44.958Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "after 08:00 the briefing honors section choices and its bell returns to Home",
+      "actual": "Profile Africa/Addis_Ababa, local hour 10; real morning round delivered briefing with Tasks=false, Dates=true; Home-linked bell present despite one email section being off where applicable",
+      "result": "pass",
+      "at": "2026-09-07T07:48:45.639Z"
+    },
+    {
+      "role": "contributor",
+      "action": "after 08:00 the briefing honors section choices and its bell returns to Home",
+      "actual": "Profile Africa/Addis_Ababa, local hour 10; real morning round delivered briefing with Tasks=true, Dates=true; Home-linked bell present despite one email section being off where applicable",
+      "result": "pass",
+      "at": "2026-09-07T07:48:46.304Z"
+    },
+    {
+      "role": "administrator",
+      "action": "another real round on the same local day sends no second briefing",
+      "actual": "Second completed morning round left the daily briefing mail count unchanged",
+      "result": "pass",
+      "at": "2026-09-07T07:48:47.974Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "another real round on the same local day sends no second briefing",
+      "actual": "Second completed morning round left the daily briefing mail count unchanged",
+      "result": "pass",
+      "at": "2026-09-07T07:48:47.979Z"
+    },
+    {
+      "role": "contributor",
+      "action": "another real round on the same local day sends no second briefing",
+      "actual": "Second completed morning round left the daily briefing mail count unchanged",
+      "result": "pass",
+      "at": "2026-09-07T07:48:47.983Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T07:48:47.983Z",
+  "author": "Codex documentation author",
+  "independentReview": false,
+  "operatorTrigger": "Queued notification.morning-round in the existing lab worker; no clock override or image/configuration changes",
+  "roundJobs": [
+    {
+      "id": "a698ba5b-24ce-41cf-9990-cdd14061231c",
+      "state": "completed",
+      "completedOn": "2026-09-07T07:48:39.891Z",
+      "output": null
+    },
+    {
+      "id": "d6809635-3c6e-4cf3-9775-fad0455316c3",
+      "state": "completed",
+      "completedOn": "2026-09-07T07:48:44.083Z",
+      "output": null
+    },
+    {
+      "id": "f84cddb7-aa49-431d-985c-9940cde85542",
+      "state": "completed",
+      "completedOn": "2026-09-07T07:48:47.890Z",
+      "output": null
+    }
+  ]
+}

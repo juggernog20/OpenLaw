@@ -3,6 +3,6 @@
   "id": "documentation-development",
   "channel": "development",
   "supportedAppVersion": "0.0.1",
-  "supportedAppCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "supportedAppCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
   "publicationTarget": "feature-review"
 }

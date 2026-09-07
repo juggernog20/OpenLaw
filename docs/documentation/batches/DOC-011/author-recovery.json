@@ -1,0 +1,107 @@
+{
+  "name": "recovery",
+  "startedAt": "2026-09-07T07:42:36.144Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "comments-and-activity",
+      "contentSha256": "1fdb1f7a545c7b5e2ffd2bd90bc832be95d5b26f87f1204324c5e6f6a19f536b"
+    },
+    {
+      "articleId": "notifications",
+      "contentSha256": "101fbc59c9d5f0fc3344f819aef96f6863d5be34c2851dbe37d196eb88fed54d"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "failed post preserves draft and chosen files; removing a file and retrying posts once",
+      "actual": "Six selected files capped at five, attach disabled at limit, removed one; failed POST retained draft and four files; real retry produced one post with four attachments",
+      "result": "pass",
+      "at": "2026-09-07T07:42:40.639Z"
+    },
+    {
+      "role": "administrator",
+      "action": "failed conversation read recovers using the guide instruction",
+      "actual": "Real network refusal displayed the recovery instruction; Portal reload or staff panel reopen fetched the conversation",
+      "result": "pass",
+      "at": "2026-09-07T07:42:41.596Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "failed post preserves draft and chosen files; removing a file and retrying posts once",
+      "actual": "Six selected files capped at five, attach disabled at limit, removed one; failed POST retained draft and four files; real retry produced one post with four attachments",
+      "result": "pass",
+      "at": "2026-09-07T07:42:42.623Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "failed conversation read recovers using the guide instruction",
+      "actual": "Real network refusal displayed the recovery instruction; Portal reload or staff panel reopen fetched the conversation",
+      "result": "pass",
+      "at": "2026-09-07T07:42:43.642Z"
+    },
+    {
+      "role": "contributor",
+      "action": "failed post preserves draft and chosen files; removing a file and retrying posts once",
+      "actual": "Six selected files capped at five, attach disabled at limit, removed one; failed POST retained draft and four files; real retry produced one post with four attachments",
+      "result": "pass",
+      "at": "2026-09-07T07:42:44.607Z"
+    },
+    {
+      "role": "contributor",
+      "action": "failed conversation read recovers using the guide instruction",
+      "actual": "Real network refusal displayed the recovery instruction; Portal reload or staff panel reopen fetched the conversation",
+      "result": "pass",
+      "at": "2026-09-07T07:42:45.595Z"
+    },
+    {
+      "role": "business_user",
+      "action": "failed post preserves draft and chosen files; removing a file and retrying posts once",
+      "actual": "Six selected files capped at five, attach disabled at limit, removed one; failed POST retained draft and four files; real retry produced one post with four attachments",
+      "result": "pass",
+      "at": "2026-09-07T07:42:46.432Z"
+    },
+    {
+      "role": "business_user",
+      "action": "failed conversation read recovers using the guide instruction",
+      "actual": "Real network refusal displayed the recovery instruction; Portal reload or staff panel reopen fetched the conversation",
+      "result": "pass",
+      "at": "2026-09-07T07:42:47.113Z"
+    },
+    {
+      "role": "administrator",
+      "action": "load earlier comments and recover an earlier-page failure",
+      "actual": "Known older post absent from first page; failed earlier read kept current conversation; retry retrieved the known older post",
+      "result": "pass",
+      "at": "2026-09-07T07:42:49.615Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "load earlier comments and recover an earlier-page failure",
+      "actual": "Known older post absent from first page; failed earlier read kept current conversation; retry retrieved the known older post",
+      "result": "pass",
+      "at": "2026-09-07T07:42:50.563Z"
+    },
+    {
+      "role": "contributor",
+      "action": "load earlier comments and recover an earlier-page failure",
+      "actual": "Known older post absent from first page; failed earlier read kept current conversation; retry retrieved the known older post",
+      "result": "pass",
+      "at": "2026-09-07T07:42:51.527Z"
+    },
+    {
+      "role": "business_user",
+      "action": "load earlier comments and recover an earlier-page failure",
+      "actual": "Known older post absent from first page; failed earlier read kept current conversation; retry retrieved the known older post",
+      "result": "pass",
+      "at": "2026-09-07T07:42:52.243Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T07:42:52.243Z",
+  "author": "Codex documentation author",
+  "independentReview": false
+}

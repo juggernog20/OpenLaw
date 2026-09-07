@@ -1,0 +1,86 @@
+{
+  "name": "bell-boundaries",
+  "startedAt": "2026-09-07T07:46:50.823Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "notifications",
+      "contentSha256": "101fbc59c9d5f0fc3344f819aef96f6863d5be34c2851dbe37d196eb88fed54d"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "bell marks its loaded page, Mark all read clears the remainder, Show older loads more",
+      "actual": {
+        "initialUnread": 64,
+        "firstPage": 25,
+        "afterOpen": 39,
+        "afterMarkAllRead": 0,
+        "olderFocus": "first added notification",
+        "rowsAfterClosingPanel": 0,
+        "earlierPageAssertion": "Link count greater than 25 before closing; first added link focused"
+      },
+      "result": "pass",
+      "at": "2026-09-07T07:46:56.065Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "bell marks its loaded page, Mark all read clears the remainder, Show older loads more",
+      "actual": {
+        "initialUnread": 103,
+        "firstPage": 25,
+        "afterOpen": 78,
+        "afterMarkAllRead": 0,
+        "olderFocus": "first added notification",
+        "rowsAfterClosingPanel": 0,
+        "earlierPageAssertion": "Link count greater than 25 before closing; first added link focused"
+      },
+      "result": "pass",
+      "at": "2026-09-07T07:46:57.046Z"
+    },
+    {
+      "role": "contributor",
+      "action": "bell marks its loaded page, Mark all read clears the remainder, Show older loads more",
+      "actual": {
+        "initialUnread": 93,
+        "firstPage": 25,
+        "afterOpen": 68,
+        "afterMarkAllRead": 0,
+        "olderFocus": "first added notification",
+        "rowsAfterClosingPanel": 0,
+        "earlierPageAssertion": "Link count greater than 25 before closing; first added link focused"
+      },
+      "result": "pass",
+      "at": "2026-09-07T07:46:57.993Z"
+    },
+    {
+      "role": "business_user",
+      "action": "bell marks its loaded page, Mark all read clears the remainder, Show older loads more",
+      "actual": {
+        "initialUnread": 81,
+        "firstPage": 25,
+        "afterOpen": 56,
+        "afterMarkAllRead": 0,
+        "olderFocus": "first added notification",
+        "rowsAfterClosingPanel": 0,
+        "earlierPageAssertion": "Link count greater than 25 before closing; first added link focused"
+      },
+      "result": "pass",
+      "at": "2026-09-07T07:46:58.931Z"
+    },
+    {
+      "role": "contributor",
+      "action": "notification history cannot preserve removed record access",
+      "actual": "Removed Contributor team entry; bell hid prior Contract items and old direct destination refused access",
+      "result": "pass",
+      "at": "2026-09-07T07:47:00.753Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T07:47:00.753Z",
+  "author": "Codex documentation author",
+  "independentReview": false
+}

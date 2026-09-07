@@ -136,7 +136,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P0",
       "contexts": ["comments", "activity"],
-      "status": "draft"
+      "status": "review"
     },
     {
       "id": "notifications",
@@ -149,7 +149,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P0",
       "contexts": ["notifications"],
-      "status": "draft"
+      "status": "review"
     },
     {
       "id": "submit-request",
