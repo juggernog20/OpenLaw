@@ -29,7 +29,7 @@ To add context, enter your message in the Request's **Conversation** and select 
 
 The confirmation appears as soon as the Request exists, before every attachment has finished. An attachment failure does not undo the Request. Check the named failure and quote the existing R- reference when contacting Legal; submitting the whole form again would create another Request.
 
-If Legal has already converted or resolved the Request, follow the offered thread link to provide further paper through a comment. If a form address takes you back to the Portal home, choose an available request type or ask your Administrator which form to use.
+If Legal has already converted or resolved the Request, select **Attach new files to a reply** in the status banner. It moves you to **Reply to Legal**, where you can attach further paper to a reply. If a form address takes you back to the Portal home, choose an available request type or ask your Administrator which form to use.
 
 ## Related guides
 

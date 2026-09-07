@@ -34,7 +34,7 @@ needs its own technical review and walkthrough evidence before checking its box.
 ## DOC-013 [#733](https://github.com/juggernog20/OpenLaw/issues/733)
 
 - [ ] `triage-requests`: Assign and triage Requests (C12; P0).
-- [ ] `convert-request`: Convert a Request to a Contract or Matter (C13; P0).
+- [ ] `convert-request`: Convert a Request to a Contract (C13; P0). Add the Matter path and restore the full title.
 
 ## DOC-014 [#734](https://github.com/juggernog20/OpenLaw/issues/734)
 

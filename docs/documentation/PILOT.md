@@ -70,6 +70,20 @@ must be recorded before this pilot task closes. Neither author replay above is
 independent acceptance. Keep the articles in draft/review until their full owning
 batch's scenarios pass, even after the pilot subset passes.
 
+### Review-seat label check
+
+On September 7, 2026 the Fable review seat checked every quoted control label and
+behavioral claim in the four drafts against the app source at commit
+`d1d098ba9f4ba6557a542857d530446b76b1847c` and its message catalog. Two steps named
+a control loosely. The triage guide now says select Comments and use the comment box.
+The submission guide now names the Attach new files to a reply link and the Reply to
+Legal composer. These are copy-only corrections. No action, prerequisite, result or
+meaning changed, so the author records above stand for the tested bytes. The current
+hashes are `b07b54ebcf02c265b3e11662087b46213351d64d1917cfc6908b1ae35a782336` for
+submit-request and `002460a02a699d9666f81d6ee74fc60b8aa961c4b28b6be157a4b03e642b6539`
+for triage-requests; request-forms and convert-request are unchanged. This check is
+not the feature owner's technical review and not the independent walkthrough.
+
 For the independent pilot, read the four canonical articles and follow their steps
 in separate role sessions, with a fresh uniquely named form and Request. Use the
 same committed lab or another lab at that commit. Find the articles through Help
@@ -78,8 +92,9 @@ discovery failures, rework, elapsed time, and limitations in a separate record h
 Distinguish an agent walkthrough from a human study. A replay of the author's script
 alone does not establish that an independent reader followed the prose.
 
-The draft preview is currently available at `http://127.0.0.1:43310`. It can be
-recreated from the repository root with Node and installed workspace dependencies:
+The author discovery checks used a draft preview at `http://127.0.0.1:43310`. It is
+not a durable service. Recreate it from the repository root with Node and installed
+workspace dependencies:
 
 ```sh
 node --input-type=module <<'JS'

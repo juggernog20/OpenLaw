@@ -110,13 +110,13 @@ This is a desk walkthrough of the proposed structure, not a browser usability st
 The checks below establish that the planned routes to answers exist in the catalogue.
 DOC-008 and DOC-025 must test real discovery after Help and articles exist.
 
-| Reader and question                                         | Proposed path                                                                         | Catalogue check                                                                           |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| Business User: how do I ask Legal to review a document?     | Portal Help → Submit a Request to Legal → full article                                | `submit-request` includes Business User, portal Help, formal docs, and C09                |
-| Contributor: why can I comment but not send for signature?  | Staff Help → Work on a shared Contract or Matter → Understand roles and record access | Both articles include Contributor and staff Help; signing stays a separate Legal workflow |
-| Legal Team Member: what happens when I convert a Request?   | Inbox conversion Help → Convert a Request to a Contract or Matter                     | `inbox.convert` maps to C13; requester follow-up links to C10                             |
-| Administrator: where do I change the request form?          | Administration → Configure request types and forms                                    | `request-forms` includes Administrator, Settings context, and C40                         |
-| Operator: how do I recover the database and uploaded files? | Deployment and operations → Back up and restore OpenLaw                               | `backup-and-restore` includes operator and formal docs, independent of staff Help         |
+| Reader and question                                         | Proposed path                                                                                    | Catalogue check                                                                           |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| Business User: how do I ask Legal to review a document?     | Portal Help → Submit a Request to Legal → full article                                           | `submit-request` includes Business User, portal Help, formal docs, and C09                |
+| Contributor: why can I comment but not send for signature?  | Staff Help → Work on a shared Contract or Matter → Understand roles and record access            | Both articles include Contributor and staff Help; signing stays a separate Legal workflow |
+| Legal Team Member: what happens when I convert a Request?   | Inbox conversion Help → Convert a Request to a Contract, with the Matter path pending in DOC-013 | `inbox.convert` maps to C13; requester follow-up links to C10                             |
+| Administrator: where do I change the request form?          | Administration → Configure request types and forms                                               | `request-forms` includes Administrator, Settings context, and C40                         |
+| Operator: how do I recover the database and uploaded files? | Deployment and operations → Back up and restore OpenLaw                                          | `backup-and-restore` includes operator and formal docs, independent of staff Help         |
 
 All five paths resolve in the proposed catalogue. Use the role name Contributor
 throughout and keep app Knowledge distinct from Help in editorial review. Search

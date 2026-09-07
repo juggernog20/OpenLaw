@@ -13,7 +13,7 @@ Review an undecided Request, identify who will triage it, and open the appropria
 2. Read its **Description**, **Form responses**, **Attachments**, and **Converts to** information. Check the Requester and Urgency as well.
 3. Select **Assign** to choose who is responsible for triage. Search for an active Legal Team Member or Administrator, choose the person, and select **Save assignment**.
 4. Check that the person's name or avatar replaces the unassigned control. Select it again to reassign the Request or choose **Unassigned**.
-5. If clarification is needed, open comments. Choose **Full thread** for a reply the Requester should read, enter the reply, and select **Comment**. **Legal only** is for the legal conversation the Requester cannot read.
+5. If clarification is needed, select **Comments**. Choose **Full thread** for a reply the Requester should read, enter the reply in the comment box, and select **Comment**. **Legal only** is for the legal conversation the Requester cannot read.
 6. When the Request is ready for Contract work, open **Triage** and select **Convert to contract**. Follow [Convert a Request to a Contract](convert-request.md) to complete the conversion.
 
 Assignment records triage responsibility. It leaves the Request in the Inbox, does not prevent another Legal Team Member from triaging it, and does not set the Owner of a later Contract. A reply also leaves the Request undecided.
