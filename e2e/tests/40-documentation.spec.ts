@@ -1,5 +1,50 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { expect, test } from "@playwright/test";
+import { ADMIN, signInAs, reportAxeViolations } from "./helpers.js";
+
+test("Help stays in the staff and portal shells and preserves keyboard shortcuts", async ({
+  page,
+}, testInfo) => {
+  await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+  await page.getByRole("banner").getByRole("link", { name: "Help", exact: true }).click();
+  await expect(page).toHaveURL(/\/help(?:\?|$)/);
+  await expect(page.getByRole("heading", { level: 1, name: "Help", exact: true })).toBeFocused();
+  await expect(page.getByRole("main")).toHaveCount(1);
+  await page.keyboard.press("?");
+  await expect(page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.getByRole("heading", { level: 1, name: "Help", exact: true }).focus();
+  await page.keyboard.press("/");
+  await expect(page.getByRole("combobox", { name: "Search", exact: true })).toBeFocused();
+  await page.goto("/portal/help");
+  await expect(page.getByRole("heading", { level: 1, name: "Help", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Legal request portal" })).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Search", exact: true })).toHaveCount(0);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  for (const path of ["/help", "/portal/help"]) {
+    await page.goto(path);
+    await expect(page.getByRole("heading", { level: 1, name: "Help", exact: true })).toBeVisible();
+    for (const theme of ["light", "dark", "warm"]) {
+      await page.evaluate((value) => {
+        document.documentElement.dataset.theme = value;
+      }, theme);
+      expect(
+        await reportAxeViolations(page, testInfo, `Help header ${path} ${theme}`, {
+          include: "header a[aria-label='Help']",
+        }),
+      ).toEqual([]);
+    }
+  }
+  await page.getByRole("link", { name: "All documentation", exact: true }).click();
+  await expect(page).toHaveURL(/\/documentation$/);
+});
+
+test("a signed-out Help deep link keeps its article and section", async ({ page, context }) => {
+  await context.clearCookies();
+  await page.goto("/portal/help/unavailable-fixture#before-you-start");
+  await expect(page).toHaveURL(/\/documentation\/unavailable-fixture#before-you-start$/);
+  await expect(page.getByRole("heading", { name: "Article unavailable" })).toBeVisible();
+});
 
 test("bundled documentation and its export are public without API reads", async ({
   page,

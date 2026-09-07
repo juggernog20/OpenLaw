@@ -57,6 +57,20 @@ describe("public documentation", () => {
     await act(() => router.navigate(-1));
     expect(router.state.location.pathname).toBe("/documentation/missing");
   });
+  it("moves focus again when the outline link names the section already in the address", async () => {
+    stubFetch(() => {
+      throw new Error("No API expected");
+    });
+    const user = userEvent.setup();
+    renderAt("/documentation/validation-procedure");
+    const title = await screen.findByRole("heading", { level: 1 });
+    const outline = within(screen.getByRole("navigation", { name: "On this page" }));
+    await user.click(outline.getByRole("link", { name: "Before you start" }));
+    expect(await screen.findByRole("heading", { name: "Before you start" })).toHaveFocus();
+    act(() => title.focus());
+    await user.click(outline.getByRole("link", { name: "Before you start" }));
+    expect(await screen.findByRole("heading", { name: "Before you start" })).toHaveFocus();
+  });
   it("uses registered topics, keeps a full index fallback, and filters reader paths", async () => {
     const user = userEvent.setup();
     renderAt("/documentation?topic=unknown-record-123");

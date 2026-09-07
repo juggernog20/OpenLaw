@@ -52,11 +52,15 @@ export interface DocumentationBundle {
     coverageVerified: number;
   };
 }
+export type HelpMetadata = Pick<DocumentationBundle, "contexts" | "bindings"> & {
+  articles: Pick<DocumentationArticle, "audiences" | "destinations" | "contexts">[];
+};
 export interface DocumentationSearch {
   query?: string;
   destination?: DocumentationDestination;
   audience?: string;
   topic?: string;
+  topics?: string[];
 }
 export function normalizeSearch(value: string): string;
 export function searchDocumentation(

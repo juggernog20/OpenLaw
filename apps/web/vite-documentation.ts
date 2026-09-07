@@ -16,6 +16,8 @@ import {
 
 const ID = "virtual:openlaw-documentation";
 const RESOLVED = `\0${ID}`;
+const HELP_ID = "virtual:openlaw-help-metadata";
+const HELP_RESOLVED = `\0${HELP_ID}`;
 const PREFIX = "/documentation-export/";
 
 export function documentation(): Plugin {
@@ -41,8 +43,10 @@ export function documentation(): Plugin {
     if (!source(path)) return;
     try {
       compile();
-      const module = server.moduleGraph.getModuleById(RESOLVED);
-      if (module) server.moduleGraph.invalidateModule(module);
+      for (const id of [RESOLVED, HELP_RESOLVED]) {
+        const module = server.moduleGraph.getModuleById(id);
+        if (module) server.moduleGraph.invalidateModule(module);
+      }
       server.ws.send({ type: "full-reload", path: "*" });
     } catch (error) {
       server.ws.send({ type: "error", err: { message: String(error), stack: "" } });
@@ -55,11 +59,25 @@ export function documentation(): Plugin {
     },
     resolveId(id) {
       if (id === ID) return RESOLVED;
+      if (id === HELP_ID) return HELP_RESOLVED;
     },
     load(id) {
-      if (id !== RESOLVED) return;
+      if (id !== RESOLVED && id !== HELP_RESOLVED) return;
       if (failure) throw failure;
-      return `export default ${JSON.stringify(compilation.bundle).replaceAll("<", "\\u003c")};`;
+      const bundle = compilation.bundle;
+      const value =
+        id === HELP_RESOLVED
+          ? {
+              contexts: bundle.contexts,
+              bindings: bundle.bindings,
+              articles: bundle.articles.map(({ audiences, destinations, contexts }) => ({
+                audiences,
+                destinations,
+                contexts,
+              })),
+            }
+          : bundle;
+      return `export default ${JSON.stringify(value).replaceAll("<", "\\u003c")};`;
     },
     configureServer(server) {
       server.watcher.add([

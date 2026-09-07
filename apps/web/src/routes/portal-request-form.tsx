@@ -77,6 +77,7 @@
  * yet; the honest answer is the fact and the reference to quote.
  */
 
+import { HelpLink } from "../components/documentation/help-link";
 import { useEffect, useRef, useState } from "react";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
@@ -314,6 +315,7 @@ export function PortalRequestFormPage() {
           <p className="max-w-prose text-md text-muted">{requestType.description}</p>
         )}
       </div>
+      <HelpLink surface="portal" contextual />
       <div className="grid gap-section-gap @3xl/page:grid-cols-portal-split">
         <div className="min-w-0">
           {submitted ? (

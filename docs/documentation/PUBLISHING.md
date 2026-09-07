@@ -2,7 +2,8 @@
 
 Task: [#724](https://github.com/juggernog20/OpenLaw/issues/724).
 Decisions: DD-020, DES-073, and TECH-026 in the existing decision records.
-Status: implementation specification for DOC-006/007, not a deployed service.
+Status: implemented by DOC-006/007 on the documentation feature branch. Production
+publication remains a separate release action.
 
 ## Delivery choice
 
@@ -47,8 +48,8 @@ Use these locations:
 | `docs/documentation/redirects.json`     | Deliberate aliases for retired article IDs or anchors           |
 | `scripts/documentation/`                | Compiler, validators, search preparation, and standalone export |
 
-Only `articles.json` and `help-contexts.json` exist today. DOC-006 and the content
-tasks create the other locations; their absence here is intentional. Planning files, templates,
+Use DOC-006's compiler and publication locations. Supply canonical articles and
+their evidence through the content tasks. Planning files, templates,
 source references, reviewer identities, and evidence logs do not enter the public
 bundle. Publish only the reader metadata needed to identify the edition and choose
 an article.
@@ -195,7 +196,9 @@ staff Inbox and Request detail. In DOC-007 these links may lead to a topic resul
 until their DOC-008 articles are verified; never link to a source-less article as
 if it exists.
 
-Use `?topic=<context-key>` for a topic result and `?q=<words>` for documentation
+Use `?topic=<context-key>` for a topic result. A general Help link can repeat the
+`topic` parameter to combine registered matches in route-specific order. Search
+requires every entered word within any selected topic. Use `?q=<words>` for documentation
 search. Carry only registered topic keys into Help, never record IDs or the raw
 originating URL. In the binding registry, `staff` and `portal` name Help surfaces,
 `both` includes both, and `formal` names public entry guidance. `*` is the shared

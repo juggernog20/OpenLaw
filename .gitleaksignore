@@ -17,3 +17,7 @@ fb3c9439823e9d0e824e596d393fb7e96d1e130b:apps/api/src/modules/auth/profile.test.
 # gitleaks:allow marker, because a .pen file is encrypted and is only
 # ever written by the editor.
 1978bbae1658790dd0ba67effc60a2782c083be4:designs/stage-component-design.pen:generic-api-key:16851
+
+# Public source commit for the documentation fixture API build, not an API key.
+# The metadata field is now backendSourceCommit to avoid the misleading key name.
+6d0f5bd4d412da406b6e39ea8ec8be5802250c85:docs/documentation/help-readiness.json:generic-api-key:7

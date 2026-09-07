@@ -4491,7 +4491,9 @@ An unavailable article is identified explicitly, with search and navigation.
 This extends the portal header in DES-072 without adding staff work navigation.
 The Knowledge destination and shortcut sheet retain their purposes. DOC-007
 implements and verifies these surfaces against
-[the publishing design](../documentation/PUBLISHING.md).
+[the publishing design](../documentation/PUBLISHING.md). General Help links may
+repeat the `topic` query parameter to combine matching registered topics. Specific
+route topics rank before shared fallbacks; no originating record address is carried.
 
 ## Index of decisions
 
