@@ -34,7 +34,7 @@ author outcomes, independent review, and publication handoff.
 ## DOC-012 [#732](https://github.com/juggernog20/OpenLaw/issues/732)
 
 See [the batch verification record](batches/DOC-012/README.md) for the tested build,
-author outcomes, and publication dependencies.
+author outcomes, independent review, and publication dependencies.
 
 - [ ] `submit-request`: Submit a Request to Legal (C09; P0).
 - [ ] `follow-request`: Follow a Request and reply to Legal (C10; P0).

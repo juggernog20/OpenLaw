@@ -2,8 +2,10 @@
 
 C09–C11 for [issue #732](https://github.com/juggernog20/OpenLaw/issues/732).
 This batch extends the submission pilot and adds Request follow-up and Portal
-Knowledge guides. The three articles are in review pending the independent
-walkthrough and publication dependencies. Agent checks are not a human user study.
+Knowledge guides. The author walkthroughs below passed, and the independent source
+review and browser walkthrough recorded at the end of this file passed all three
+scenarios. The articles stay in review only because linked guides are unpublished.
+Agent checks are not a human user study.
 
 ## Build and fixtures
 
@@ -95,4 +97,53 @@ what was actually tested.
 
 All 2,889 API tests and 1,702 web tests passed (all five test tasks), along with
 all 19 static tasks and 33 documentation/build-tool tests. Normal and preview
-documentation builds passed. The independent walkthrough is still pending.
+documentation builds passed.
+
+## Independent walkthrough
+
+A different agent, the Fable review seat, first checked the three guides against the
+committed app source and then followed them with its own Playwright scripts on
+September 7, 2026, against the committed conversations lab, Mailpit, and the preview
+reader. It reused the fixture identifiers, the sign-in helpers, and the lab connection
+details, not the author's steps or assertions. It created fresh fictional Requests
+R-46 to R-50 for the five outcomes and R-51 to R-58 through the form. The sanitized
+step records are in [independent-walkthrough.json](independent-walkthrough.json) and
+[independent-discovery.json](independent-discovery.json); the per-article evidence
+files under `docs/documentation/evidence/` cite them. All three scenarios passed
+against the final guide bytes. This is an agent walkthrough, not a human user study,
+and it does not stand in for the feature owner's approval.
+
+| Scenario | Role          | Result | Notes                                                                                                                                                                                                                                                                                                                                                        |
+| -------- | ------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| V-C09    | Business User | pass   | Type chosen from Before you submit; empty form refused with the questions named and no request sent; Medium default and the four urgencies; 21 files kept as 20 with Remove; complete submission with a PDF, confirmation, Open request, and the home list; aborted upload, decline during upload with the reply link, unknown form, and aborted submission. |
+| V-C10    | Business User | pass   | Open, Contract, Matter, Resolved, and Declined Requests: status, banner, reason, Full thread replies and paper only, original attachment bytes, Send needing a message, replies with paper read by Legal, the banner reply link, Amara and staff destinations refused, later Document Versions, Show earlier replies, and all three recovery paths.          |
+| V-C11    | Business User | pass   | Eligible guidance only on home and form; same-tab internal link; primary first with current-Version downloads; Guidance; broken external link in a new tab with the form kept; draft, restricted, archived, and unknown items and files refused alike; new Version, unpublish, republish; signed-out refusal.                                                |
+
+The walkthrough removed one sentence from the submission guide. The form's number
+question is a native number control that holds an empty value for letters, so the
+form reports a missing answer and the "enter this as a number" refusal cannot be
+produced by typing in Chromium. The submission and discovery walkthroughs were rerun
+in full against the corrected bytes; the records list both tested hashes.
+
+One step in the first follow-up run failed on a reviewer harness assertion: after 55
+extra Full thread markers, the newest page no longer carried the reply text the check
+looked for. The step is retained in the record, and the two recovery checks were rerun
+against unchanged guide bytes and passed. The Knowledge Documents check was rerun with
+a filename-keyed byte comparison after its first wording proved ambiguous.
+
+Two observations are recorded rather than guide faults. Deflection links show the
+Administrator's label, not the item title; the guide already tells the reader to check
+the title under From Legal. The fixture's unavailable external address is served by the
+lab app as a not-found route rather than failing at the network; the new-tab and
+retained-form checks hold either way. Help with this page on a Portal Request lists
+only the follow-up guide, while the Portal header Help combines topics.
+
+Discovery passed on the preview reader: Help with this page from the form and from a
+Request, the Portal header Help from the Knowledge and settings pages, search, title
+and section focus, the Notification preferences link landing on Change Portal
+preferences, anonymous formal reading of all three guides without API calls, and no
+horizontal overflow in light, warm, and dark at 320, 720, and 1440 CSS pixels. The
+committed lab's normal Help lists none of the review articles. Dispositions and
+Knowledge Version changes were applied through the API as staff; DOC-013 and the
+Knowledge batches own those controls. The Knowledge fixture's eligibility, filename,
+and body were restored afterwards.

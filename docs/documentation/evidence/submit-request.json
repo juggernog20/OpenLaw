@@ -1,0 +1,51 @@
+{
+  "articleId": "submit-request",
+  "contentSha256": "29e285e98a77548c08f8958fed91f0200db47c8188ef90619dab061925059f90",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-07T10:07:20.254Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-INTAKE.md",
+    "apps/web/src/routes/portal.tsx",
+    "apps/web/src/routes/portal-request-form.tsx",
+    "apps/web/src/components/portal/deflection-panel.tsx",
+    "apps/web/src/lib/requests.ts",
+    "apps/web/src/lib/custom-fields.ts",
+    "apps/api/src/modules/portal/routes.ts",
+    "apps/api/src/modules/requests/routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C09",
+      "coverage": ["C09"],
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "expected": "One Request has the supplied values and successful attachments and appears for its Requester. Missing required values prevent submission; attachment failure is reported without concealing a successfully created Request.",
+      "actual": "Jonas opened the Docs Portal contract request form from the Portal home after reading Before you submit. An empty Submit request named Summary, Description, and the required question with no request sent; the Summary label carried *; Urgency held Medium with Low, Medium, High, Critical. Twenty-one files listed 20 with 'A request carries at most 20 files.' and Remove dropped one. A complete form with one PDF confirmed R-56, cleared 'Attaching your files\u2026' with no failure, and Open request showed the description, High, the answer, and the PDF byte-for-byte, with R-56 under Your requests. An aborted upload confirmed R-57 with 'This file did not attach. Quote R-57 and send it to Legal another way.', the Request saved without the file, and the file went in a reply. A decline during upload confirmed R-58 with 'Add it to a reply on R-58', which landed on the composer of the Declined Request with the answers intact. An unknown form address returned to /portal. An aborted submission showed 'The request could not be submitted.' with the Summary kept and no new Request.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-012/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-012/independent-discovery.json"
+      ]
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-012/README.md"],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "No upload size limit was exercised; the file-size sentence stays conditional.",
+    "The number-refusal sentence was removed because the native number control cannot carry letters; the fixture type has no number question.",
+    "The onward guides (follow-request, portal-knowledge, notifications) are in review; the article stays in review until they pass."
+  ],
+  "publicationBlockers": [
+    "follow-request, portal-knowledge, and notifications (DOC-011, onward DOC-021) are unpublished."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

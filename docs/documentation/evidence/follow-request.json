@@ -1,0 +1,52 @@
+{
+  "articleId": "follow-request",
+  "contentSha256": "ca5dff1ef7d999e36d8655c3d00ffb6b5a2136427e86f2be168889ca417dbca3",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-07T10:07:20.254Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-INTAKE.md",
+    "docs/decision-records/DECISIONS-COMMENTS.md",
+    "apps/web/src/routes/portal-request.tsx",
+    "apps/web/src/components/portal/request-thread.tsx",
+    "apps/web/src/components/portal/my-requests.tsx",
+    "apps/web/src/lib/requests.ts",
+    "apps/web/src/lib/comments.ts",
+    "apps/api/src/modules/portal/routes.ts",
+    "apps/api/src/modules/comments/routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C10",
+      "coverage": ["C10"],
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "expected": "The Requester sees the supported progress and conversation for their own Request after disposition. A second Business User cannot open it; Legal-only conversation and internal work details remain unavailable.",
+      "actual": "Jonas opened R-46 (Open), R-47 (In progress, Contract), R-48 (In progress, Matter), R-49 (Resolved), and R-50 (Declined, reason shown) from Your requests; each page carried the summary, R- reference line, requester status pill, and banner text, and no C-37 or M-24 reference. Conversation showed Nadia's Full thread replies and paper before and after the disposition, with the resolution reply on R-49, and never the Legal only or Working team notes, radios, or an Audience control; the paper downloaded byte-for-byte. What you submitted showed the description, the original attachment with its original bytes, Urgency High, and the answer. Send stayed unavailable without a message, also with a file selected; each reply with paper appeared once under You and reloaded with the pill unchanged, and Nadia read it on the Inbox or record page. Attach new files to a reply reached #portal-request-composer on the four decided Requests and was absent on the Open one. Amara's browser returned to /portal and her API reads answered 404 for the Request and its file; Jonas's staff reads answered 403 and /contracts/37 and /matters/24 returned him to /portal. Later Document Versions on C-37 and M-24 left the original attachment bytes unchanged. Show earlier replies grew 50 rows to 61 with focus on the oldest loaded reply; a failed reply kept the text and file and the retry posted once; a failed read kept What you submitted and reload recovered; a failed earlier page kept the rows and the retry loaded.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-012/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-012/independent-discovery.json"
+      ]
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-012/README.md"],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "Dispositions were applied through the API as the Legal Team Member; DOC-013 owns those controls.",
+    "One first-run step failed on a reviewer harness assertion and is retained; the recovery checks were rerun on unchanged bytes.",
+    "The linked conversation guide (DOC-011) is in review and links onward to DOC-017; the notifications guide links onward to DOC-021; the article stays in review until they pass."
+  ],
+  "publicationBlockers": [
+    "comments-and-activity (DOC-011, onward DOC-017) and notifications (onward DOC-021) are unpublished."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}
