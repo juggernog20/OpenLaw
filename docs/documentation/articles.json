@@ -227,7 +227,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["contracts.list", "contracts.overview"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "contract-stages",
@@ -240,7 +240,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["contracts.progression"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "contract-approvals",
@@ -253,7 +253,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["contracts.approvals"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "manual-signing",
@@ -266,7 +266,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["contracts.signing"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "electronic-signing",
@@ -279,7 +279,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["contracts.signing"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "terms-and-renewals",
@@ -292,7 +292,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["contracts.term", "contracts.renewal"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "contract-tasks-and-dates",
@@ -305,7 +305,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["contracts.tasks", "contracts.dates"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "contract-relations-and-ending",
@@ -318,7 +318,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["contracts.relations", "contracts.actions"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "contract-analysis",

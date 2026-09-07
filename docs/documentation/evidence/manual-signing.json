@@ -1,0 +1,61 @@
+{
+  "articleId": "manual-signing",
+  "contentSha256": "03b260c04c972776c0e7ebc275c6fb6437f10a0ea6b78d5a06a211d1745b841f",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-07T13:44:06.138Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "apps/web/src/components/documents/documents-card.tsx",
+    "apps/web/src/components/stage-pipeline.tsx",
+    "apps/api/src/modules/documents/routes.ts",
+    "apps/api/src/modules/contracts/routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C17-manual",
+      "coverage": ["C17"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "The selected Document Version is explicitly pinned and the Contract reaches the chosen Stage without a connector. A Version kind alone does not set the Executed pin; unsupported users cannot perform the legal action.",
+      "actual": "Upload document filed the draft as the first Document (734-rev-draft-legal_team_member.pdf); Out for signature was chosen from the Stage control; the Approvals section offers no Send for signature and the record has no Envelope. Add version created Version 2 with kind executed on 734-rev-draft-legal_team_member.pdf; the downloaded Version 2 bytes equal the uploaded file; isExecuted is still false (kind alone does not designate); the page shows the Executed kind pill (1 cell) and no executed designation. Version 2 is the current Version, so its Mark as executed copy sits in the Document row's Actions menu (a separate version-level menu existed 0 times); designated, cleared with Unmark as executed copy, and designated again; the Status stayed Out for signature; 734-rev-draft-legal_team_member.pdf is the primary Document. Version 3 is current; Version 2 keeps the executed designation and downloads the original executed bytes; the earlier versions expand under the row; Status still Out for signature. Active chosen from the Stage control; History shows the status change; zero Envelopes on the record. Ravi Menon read the Document and downloaded Version 2 (200) but his row menu (absent) has no executed action and the API answered 403; the archived Contract showed no Document actions and refused the designation change with 409; after Restore Version 2 is still designated.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-014/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-014/independent-discovery.json"
+      ]
+    },
+    {
+      "id": "V-C17-manual",
+      "coverage": ["C17"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "The selected Document Version is explicitly pinned and the Contract reaches the chosen Stage without a connector. A Version kind alone does not set the Executed pin; unsupported users cannot perform the legal action.",
+      "actual": "Upload document filed the draft as the first Document (734-rev-draft-administrator.pdf); Out for signature was chosen from the Stage control; the Approvals section offers no Send for signature and the record has no Envelope. Add version created Version 2 with kind executed on 734-rev-draft-administrator.pdf; the downloaded Version 2 bytes equal the uploaded file; isExecuted is still false (kind alone does not designate); the page shows the Executed kind pill (1 cell) and no executed designation. Version 2 is the current Version, so its Mark as executed copy sits in the Document row's Actions menu (a separate version-level menu existed 0 times); designated, cleared with Unmark as executed copy, and designated again; the Status stayed Out for signature; 734-rev-draft-administrator.pdf is the primary Document. Version 3 is current; Version 2 keeps the executed designation and downloads the original executed bytes; the earlier versions expand under the row; Status still Out for signature. Active chosen from the Stage control; History shows the status change; zero Envelopes on the record. Ravi Menon read the Document and downloaded Version 2 (200) but his row menu (absent) has no executed action and the API answered 403; the archived Contract showed no Document actions and refused the designation change with 409; after Restore Version 2 is still designated.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-014/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-014/independent-discovery.json"
+      ]
+    }
+  ],
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-014/README.md",
+    "docs/documentation/batches/DOC-014/author-manual.json"
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "Browser contexts were 1280×1800 CSS px so the crowded Stage menu of the disposable labs stayed reachable (issue #768); the ordinary-height crowded menu is not claimed to pass."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null,
+  "publicationBlockers": [
+    "document-versions (DOC-017) does not exist yet; contract-approvals and electronic-signing are in review."
+  ]
+}

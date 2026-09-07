@@ -1,0 +1,64 @@
+{
+  "articleId": "contract-tasks-and-dates",
+  "contentSha256": "29654cec933cf7b62d1c87e2d75293f920de3f1f51b6859aae5a44e09356c43e",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-07T13:57:41.545Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "apps/web/src/components/contracts/tasks-card.tsx",
+    "apps/web/src/components/tasks/assignee-picker.tsx",
+    "apps/web/src/components/contracts/key-dates-card.tsx",
+    "apps/web/src/components/home/tasks-card.tsx",
+    "apps/web/src/components/home/dates-card.tsx",
+    "apps/api/src/modules/contract-tasks/routes.ts",
+    "apps/api/src/modules/contract-key-dates/routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C19",
+      "coverage": ["C19"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Task and Key date updates persist and affect their distinct supported surfaces. Read-only/archived restrictions and missing recipients do not produce misleading reminder promises. The current Contract Task screen exposes no reorder control; verify that limit rather than crediting an API reorder as a user workflow.",
+      "actual": "Blank Title was refused with \"Name what needs doing.\"; the assignee picker offered DO\nDaniel Okafor, NH\nNadia Haddad, RM\nRavi Menon (team and Owner Daniel Okafor; Priya Raman only via Add someone to the team…); after Use this person the form said membership is saved with the task; Cancel left no Task, Priya Raman off the team and refused (404). Two Tasks listed in append order (first assigned to Nadia Haddad, due Sep 8, 2026 typed into Due date (optional); second Unassigned); the checkbox completed the first (\"1 of 2 done\") and reopened it; no reorder, drag or move control on the screen; the Contract's expiry did not change. Row picker offered DO\nDaniel Okafor, NH\nNadia Haddad, RM\nRavi Menon (team members and Owner Daniel Okafor); Add to team and assign made Priya Raman a team member (Priya Raman:member) with access (200) and the assignee; Unassigned cleared the Task while she stayed on the team. Cancel kept \"Rev second task 20260907135717\"; Save renamed it; Remove task removed only it, leaving the first Task. Empty form refused with \"Pick a date.\"; two Key dates on Sep 9, 2026 listed with source Key date beside the two Derived rows (Oct 7 Renewal notice deadline — 10 days before exp | Oct 17 Current term expires Derived ) which have no actions; the Task due on Sep 8, 2026 is not in the list. Cancel kept \"Rev site visit 20260907135717\"; a controlled 503 on Save showed \"The change could not be saved. Try again.\" and left Sep 9, 2026; the retry moved it to Sep 10, 2026; Remove date deleted only that Key date, leaving \"Rev board update\". Home → Tasks assigned to you (the Home card) linked \"Rev first task\" to /contracts/241/tasks where its checkbox is shown; Dates approaching listed the Key date in the card. Ravi Menon saw the Task with a disabled checkbox and the Key date, with no Add task or Add date, and both writes answered 403; archived C-241 showed no Add task and answered 409 for a Task and a Key date; one Task and one Key date remain.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-014/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-014/independent-discovery.json"
+      ]
+    },
+    {
+      "id": "V-C19",
+      "coverage": ["C19"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Task and Key date updates persist and affect their distinct supported surfaces. Read-only/archived restrictions and missing recipients do not produce misleading reminder promises. The current Contract Task screen exposes no reorder control; verify that limit rather than crediting an API reorder as a user workflow.",
+      "actual": "Blank Title was refused with \"Name what needs doing.\"; the assignee picker offered DO\nDaniel Okafor, NH\nNadia Haddad, RM\nRavi Menon (team and Owner Nadia Haddad; Priya Raman only via Add someone to the team…); after Use this person the form said membership is saved with the task; Cancel left no Task, Priya Raman off the team and refused (404). Two Tasks listed in append order (first assigned to Daniel Okafor, due Sep 8, 2026 typed into Due date (optional); second Unassigned); the checkbox completed the first (\"1 of 2 done\") and reopened it; no reorder, drag or move control on the screen; the Contract's expiry did not change. Row picker offered DO\nDaniel Okafor, NH\nNadia Haddad, RM\nRavi Menon (team members and Owner Nadia Haddad); Add to team and assign made Priya Raman a team member (Priya Raman:member) with access (200) and the assignee; Unassigned cleared the Task while she stayed on the team. Cancel kept \"Rev second task 20260907135717\"; Save renamed it; Remove task removed only it, leaving the first Task. Empty form refused with \"Pick a date.\"; two Key dates on Sep 9, 2026 listed with source Key date beside the two Derived rows (Oct 7 Renewal notice deadline — 10 days before exp | Oct 17 Current term expires Derived ) which have no actions; the Task due on Sep 8, 2026 is not in the list. Cancel kept \"Rev site visit 20260907135717\"; a controlled 503 on Save showed \"The change could not be saved. Try again.\" and left Sep 9, 2026; the retry moved it to Sep 10, 2026; Remove date deleted only that Key date, leaving \"Rev board update\". Home → Tasks assigned to you (View all → /home/tasks) linked \"Rev first task\" to /contracts/240/tasks where its checkbox is shown; Dates approaching did not list it among its first rows; View all opened the \"Your dates\" calendar dialog, which listed it. Ravi Menon saw the Task with a disabled checkbox and the Key date, with no Add task or Add date, and both writes answered 403; archived C-240 showed no Add task and answered 409 for a Task and a Key date; one Task and one Key date remain.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-014/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-014/independent-discovery.json"
+      ]
+    }
+  ],
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-014/README.md",
+    "docs/documentation/batches/DOC-014/author-tasks.json"
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "Browser contexts were 1280×1800 CSS px so the crowded Stage menu of the disposable labs stayed reachable (issue #768); the ordinary-height crowded menu is not claimed to pass."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null,
+  "publicationBlockers": [
+    "notifications, roles-and-access and terms-and-renewals are in review; reminder delivery evidence belongs to the notifications guide."
+  ]
+}

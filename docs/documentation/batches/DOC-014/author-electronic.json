@@ -1,0 +1,129 @@
+{
+  "name": "electronic",
+  "startedAt": "2026-09-07T13:00:56.983Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-signing-workflow",
+  "articleHashes": [
+    {
+      "articleId": "electronic-signing",
+      "contentSha256": "22b416df0a54d3b1bb5b427fc11253a1404e828ab648530fe40c3862e7cd861d"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "configured connector with no primary Document offers no send; disabled configuration hides it after upload",
+      "actual": "C-37 no-paper and disabled connector hid Send; enabled with one primary and one supporting Document restored it",
+      "result": "pass",
+      "at": "2026-09-07T13:01:01.271Z"
+    },
+    {
+      "role": "administrator",
+      "action": "empty and duplicate Signers are refused, primary Version options are explicit, and Cancel sends nothing",
+      "actual": "Default current Version2; selector only two primary Document Versions; invalid Signers refused and Cancel caused no app/provider Envelope",
+      "result": "pass",
+      "at": "2026-09-07T13:01:01.640Z"
+    },
+    {
+      "role": "administrator",
+      "action": "provider outage shows send error and creates no live round; retry sends the selected earlier primary Version only",
+      "actual": "Controlled local-provider503 displayed error with zero Envelopes; reloaded retry sent exact primary Version1 PDF to two fictional Signers and retained Signature",
+      "result": "pass",
+      "at": "2026-09-07T13:01:02.356Z"
+    },
+    {
+      "role": "administrator",
+      "action": "second live Envelope is unavailable/refused; void requires Reason, Cancel retains live round and confirmed void retains history",
+      "actual": "Second send absent and API409; unrelated Legal reader no Void/API403, Owner gained Void menu; empty Reason refused, Cancel retained sent round, confirmed void preserved reason/history and Signature",
+      "result": "pass",
+      "at": "2026-09-07T13:01:03.494Z"
+    },
+    {
+      "role": "administrator",
+      "action": "new round can be declined by signed provider delivery without ending the Contract",
+      "actual": "HMAC-authenticated local-provider decline recorded reason, kept prior Voided row, created no executed file and left Signature",
+      "result": "pass",
+      "at": "2026-09-07T13:01:03.934Z"
+    },
+    {
+      "role": "administrator",
+      "action": "completion files and pins the returned PDF once and advances Signature to Active",
+      "actual": "Signed callback filed one distinct provider PDF as primary Version3, pinned it, advanced Signature→Active, download bytes matched provider output; duplicate callback made no Version/Envelope",
+      "result": "pass",
+      "at": "2026-09-07T13:01:04.561Z"
+    },
+    {
+      "role": "administrator",
+      "action": "completion after a deliberate move to Review preserves that Stage",
+      "actual": "New completed round filed/pinned Version4 while deliberate Review Status remained unchanged",
+      "result": "pass",
+      "at": "2026-09-07T13:01:05.055Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Contributor and archived Contract cannot send while recorded outcomes remain readable",
+      "actual": "Reached Contributor had no Send action and direct403; Archive kept four historical outcomes and removed Send",
+      "result": "pass",
+      "at": "2026-09-07T13:01:05.960Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "configured connector with no primary Document offers no send; disabled configuration hides it after upload",
+      "actual": "C-38 no-paper and disabled connector hid Send; enabled with one primary and one supporting Document restored it",
+      "result": "pass",
+      "at": "2026-09-07T13:01:07.877Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "empty and duplicate Signers are refused, primary Version options are explicit, and Cancel sends nothing",
+      "actual": "Default current Version2; selector only two primary Document Versions; invalid Signers refused and Cancel caused no app/provider Envelope",
+      "result": "pass",
+      "at": "2026-09-07T13:01:08.192Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "provider outage shows send error and creates no live round; retry sends the selected earlier primary Version only",
+      "actual": "Controlled local-provider503 displayed error with zero Envelopes; reloaded retry sent exact primary Version1 PDF to two fictional Signers and retained Signature",
+      "result": "pass",
+      "at": "2026-09-07T13:01:08.839Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "second live Envelope is unavailable/refused; void requires Reason, Cancel retains live round and confirmed void retains history",
+      "actual": "Second send absent and API409; unrelated Legal reader no Void/API403, Owner gained Void menu; empty Reason refused, Cancel retained sent round, confirmed void preserved reason/history and Signature",
+      "result": "pass",
+      "at": "2026-09-07T13:01:09.979Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "new round can be declined by signed provider delivery without ending the Contract",
+      "actual": "HMAC-authenticated local-provider decline recorded reason, kept prior Voided row, created no executed file and left Signature",
+      "result": "pass",
+      "at": "2026-09-07T13:01:10.365Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "completion files and pins the returned PDF once and advances Signature to Active",
+      "actual": "Signed callback filed one distinct provider PDF as primary Version3, pinned it, advanced Signature→Active, download bytes matched provider output; duplicate callback made no Version/Envelope",
+      "result": "pass",
+      "at": "2026-09-07T13:01:10.958Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "completion after a deliberate move to Review preserves that Stage",
+      "actual": "New completed round filed/pinned Version4 while deliberate Review Status remained unchanged",
+      "result": "pass",
+      "at": "2026-09-07T13:01:11.398Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Contributor and archived Contract cannot send while recorded outcomes remain readable",
+      "actual": "Reached Contributor had no Send action and direct403; Archive kept four historical outcomes and removed Send",
+      "result": "pass",
+      "at": "2026-09-07T13:01:12.344Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T13:01:12.345Z"
+}

@@ -1,0 +1,62 @@
+{
+  "articleId": "contract-approvals",
+  "contentSha256": "e3b7b6ee7e2b8b121c8be45203099d69331e09d5d55d374b577d5fe81bcf67f6",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-07T13:41:10.505Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "apps/web/src/components/approvals/approvals-signing-card.tsx",
+    "apps/api/src/modules/contract-approvals/routes.ts",
+    "apps/api/src/lib/approvers.ts",
+    "apps/api/src/lib/soft-gate.ts",
+    "apps/api/src/modules/approver-groups/routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C16",
+      "coverage": ["C16"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Approval requests remain independent; the confirmed override is recorded and the Stage move succeeds. A different user cannot answer someone else's request; unresolved approval is a warning, not an invented hard lock.",
+      "actual": "Approvers offered 19 people including Priya Raman and Daniel Okafor, not Ravi Menon (Contributor) or a Business User; two Pending rows appeared at once; reopening the picker no longer offered the two pending people; a direct duplicate ask answered 409 and a Contributor ask 422. Daniel Okafor saw no actions on Priya Raman's row and approved their own with the note; Priya Raman rejected hers; the requester's attempt to decide for Priya answered 403; a second decision on a decided row answered 409; the requester's view shows no actions on the decided rows. Priya Raman (named approver, not requester or Owner) got 403 on cancel; the requester's Cancel request removed the pending row; the Owner Daniel Okafor cancelled a request made by Nadia Haddad (200); Daniel Okafor as Administrator, neither requester nor Owner (Owner temporarily Priya Raman), cancelled another (200); the two decided rows stayed and a cancel on one answered 409; History records the cancellations. Dialog said \"Asks Nadia Haddad.\" and \"Skips 1 person who already has a request open.\"; applying asked Nadia Haddad (source Docs sign-off 1788782207651) beside the already pending Daniel Okafor; adding Priya Raman to the group afterwards changed no request (Daniel Okafor, Nadia Haddad still pending). Dialog listed the Rejected and the two Pending rows; Cancel kept Awaiting approval; Move anyway saved Out for signature and History reads \"overriding …\"; the two pending requests stayed pending. Confidential C-211: the picker offered BWBlair Wentworth, DODaniel Okafor, DADocs Morning administrator, DADocs Morning administrator, DADocs Morning administrator, DADocs Morning administrator, DADocs Morning administrator, IAInd Morning administrator, NHNadia Haddad (no Priya Raman); naming her answered 422 \"{\"type\":\"about:blank\",\"title\":\"Priya Raman can't see this contract, so they can't be asked to approve it.\",\"status\":422,\"detail\":\"Priya Raman can't see this contract, so they can't be asked to approve\"; the group Rev sign-off legal_team_member 20260907134045 (Asks Nadia Haddad and Priya Raman.) was refused with \"Priya Raman can't see this contract, so they can't be asked to approve it.\" and asked nobody (0 rows), so the group member without access must be given access or removed first; archived C-210 showed no Add approver or Apply group and a direct ask answered 409.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-014/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-014/independent-discovery.json"
+      ]
+    },
+    {
+      "id": "V-C16",
+      "coverage": ["C16"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Approval requests remain independent; the confirmed override is recorded and the Stage move succeeds. A different user cannot answer someone else's request; unresolved approval is a warning, not an invented hard lock.",
+      "actual": "Approvers offered 19 people including Priya Raman and Nadia Haddad, not Ravi Menon (Contributor) or a Business User; two Pending rows appeared at once; reopening the picker no longer offered the two pending people; a direct duplicate ask answered 409 and a Contributor ask 422. Nadia Haddad saw no actions on Priya Raman's row and approved their own with the note; Priya Raman rejected hers; the requester's attempt to decide for Priya answered 403; a second decision on a decided row answered 409; the requester's view shows no actions on the decided rows. Priya Raman (named approver, not requester or Owner) got 403 on cancel; the requester's Cancel request removed the pending row; the Owner Nadia Haddad cancelled a request made by Daniel Okafor (200); Daniel Okafor as Administrator, neither requester nor Owner (Owner temporarily Priya Raman), cancelled another (200); the two decided rows stayed and a cancel on one answered 409; History records the cancellations. Dialog said \"Asks Daniel Okafor.\" and \"Skips 1 person who already has a request open.\"; applying asked Daniel Okafor (source Docs sign-off 1788782207651) beside the already pending Nadia Haddad; adding Priya Raman to the group afterwards changed no request (Daniel Okafor, Nadia Haddad still pending). Dialog listed the Rejected and the two Pending rows; Cancel kept Awaiting approval; Move anyway saved Out for signature and History reads \"overriding …\"; the two pending requests stayed pending. Confidential C-209: the picker offered BWBlair Wentworth, DODaniel Okafor, DADocs Morning administrator, DADocs Morning administrator, DADocs Morning administrator, DADocs Morning administrator, DADocs Morning administrator, IAInd Morning administrator (no Priya Raman); naming her answered 422 \"{\"type\":\"about:blank\",\"title\":\"Priya Raman can't see this contract, so they can't be asked to approve it.\",\"status\":422,\"detail\":\"Priya Raman can't see this contract, so they can't be asked to approve\"; the group Rev sign-off administrator 20260907134045 (Asks Daniel Okafor and Priya Raman.) was refused with \"Priya Raman can't see this contract, so they can't be asked to approve it.\" and asked nobody (0 rows), so the group member without access must be given access or removed first; archived C-208 showed no Add approver or Apply group and a direct ask answered 409.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-014/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-014/independent-discovery.json"
+      ]
+    }
+  ],
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-014/README.md",
+    "docs/documentation/batches/DOC-014/author-approvals.json"
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "Browser contexts were 1280×1800 CSS px so the crowded Stage menu of the disposable labs stayed reachable (issue #768); the ordinary-height crowded menu is not claimed to pass."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null,
+  "publicationBlockers": [
+    "approver-groups (DOC-021) does not exist yet; notifications and contract-stages are in review."
+  ]
+}

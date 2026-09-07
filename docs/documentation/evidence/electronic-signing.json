@@ -1,0 +1,64 @@
+{
+  "articleId": "electronic-signing",
+  "contentSha256": "df172df43d2efc94cbd2daa7f03cc1161332885578c353e5137b1e0ffe4c90fc",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-signing-workflow",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-07T14:10:51.241Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "apps/web/src/components/approvals/approvals-signing-card.tsx",
+    "apps/web/src/routes/contract-record.tsx",
+    "apps/api/src/modules/contract-envelopes/routes.ts",
+    "apps/api/src/modules/signing-connector/routes.ts",
+    "apps/api/src/pipeline/executed-copy.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C17-electronic",
+      "coverage": ["C17"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "OpenLaw records the correct Envelope transitions and files/pins the returned executed paper once. Unavailable/disabled configuration, a second live Envelope, and provider failure have the documented outcomes. Local stand-ins do not satisfy C42 setup checks.",
+      "actual": "No Send for signature without paper; with a primary Document (2 Versions) and a supporting Document but the connector disabled by the Administrator it stayed absent; enabling the connector showed it. Version listed Version 2 — rev-primary-v2-legal_team_member.pdf (current) | Version 1 — rev-primary-legal_team_member.pdf with \"Version 2 — rev-primary-v2-legal_team_member.pdf (current)\" selected and no supporting Document; empty Signers refused with \"Give every signer a name and an email address.\"; a duplicate address refused with \"Each signer needs their own email address.\"; Cancel left zero Envelopes in the app and the provider count at 36. During the controlled outage the dialog said \"The provider could not be reached. It may still have taken the envelope — check at the provider before you send again.\" and no round existed; the retry sent Version 1 with a blank Subject; the row reads \"Rev Signer One rev.one@example.invalid Rev Signer Two rev.two@example.invalid rev-primary-legal_team_member.pdf Version \" and the header shows Envelope sent; the provider received one Envelope with subject \"C-43 Rev C17 electronic legal_team_member 20260907140953\", two fictional Signers, and bytes identical to Version 1; Status still Out for signature. Send for signature was absent and a direct second send answered 409; Priya Raman had no envelope actions and her void answered 403; the sender Nadia Haddad had the actions menu; the Owner Daniel Okafor opened Void envelope, an empty Reason was refused with \"Say why this envelope is being voided.\", Cancel kept the round sent, and confirming recorded Voided with the reason (provider status voided); Send for signature returned; Status still Out for signature. The provider's signed decline (webhook 204) produced a Declined row with \"Fictional signer declined 20260907140953\" beside the earlier Voided row and the header Envelope declined; no executed Version was filed; the Contract is still Out for signature and unarchived; Send for signature is offered again. The provider's signed completion (webhook 204) made the row \"Rev Signer One rev.one@example.invalid rev-primary-legal_team_member.pdf Version 2 Signed Sep 7 by N\" with an Executed copy link; the executed PDF was filed once as Version 3 (kind executed, current, designated) on the primary Document and its bytes equal the provider's output; the supporting Document is untouched; Status advanced to Active; a repeated completion (webhook 204) added no Version or Envelope. With the Contract moved to Internal review before completion, the executed paper was filed as Version 4 (designated, current) and the Status stayed Internal review. Ravi Menon read 4 recorded rounds with no Send for signature and got 403; the archived Contract kept 4 rounds readable with no Send; restored afterwards.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-014/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-014/independent-discovery.json"
+      ]
+    },
+    {
+      "id": "V-C17-electronic",
+      "coverage": ["C17"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "OpenLaw records the correct Envelope transitions and files/pins the returned executed paper once. Unavailable/disabled configuration, a second live Envelope, and provider failure have the documented outcomes. Local stand-ins do not satisfy C42 setup checks.",
+      "actual": "No Send for signature without paper; with a primary Document (2 Versions) and a supporting Document but the connector disabled by the Administrator it stayed absent; enabling the connector showed it. Version listed Version 2 — rev-primary-v2-administrator.pdf (current) | Version 1 — rev-primary-administrator.pdf with \"Version 2 — rev-primary-v2-administrator.pdf (current)\" selected and no supporting Document; empty Signers refused with \"Give every signer a name and an email address.\"; a duplicate address refused with \"Each signer needs their own email address.\"; Cancel left zero Envelopes in the app and the provider count at 32. During the controlled outage the dialog said \"The provider could not be reached. It may still have taken the envelope — check at the provider before you send again.\" and no round existed; the retry sent Version 1 with a blank Subject; the row reads \"Rev Signer One rev.one@example.invalid Rev Signer Two rev.two@example.invalid rev-primary-administrator.pdf Version 1 Ou\" and the header shows Envelope sent; the provider received one Envelope with subject \"C-42 Rev C17 electronic administrator 20260907140953\", two fictional Signers, and bytes identical to Version 1; Status still Out for signature. Send for signature was absent and a direct second send answered 409; Priya Raman had no envelope actions and her void answered 403; the sender Daniel Okafor had the actions menu; the Owner Nadia Haddad opened Void envelope, an empty Reason was refused with \"Say why this envelope is being voided.\", Cancel kept the round sent, and confirming recorded Voided with the reason (provider status voided); Send for signature returned; Status still Out for signature. The provider's signed decline (webhook 204) produced a Declined row with \"Fictional signer declined 20260907140953\" beside the earlier Voided row and the header Envelope declined; no executed Version was filed; the Contract is still Out for signature and unarchived; Send for signature is offered again. The provider's signed completion (webhook 204) made the row \"Rev Signer One rev.one@example.invalid rev-primary-administrator.pdf Version 2 Signed Sep 7 by Danie\" with an Executed copy link; the executed PDF was filed once as Version 3 (kind executed, current, designated) on the primary Document and its bytes equal the provider's output; the supporting Document is untouched; Status advanced to Active; a repeated completion (webhook 204) added no Version or Envelope. With the Contract moved to Internal review before completion, the executed paper was filed as Version 4 (designated, current) and the Status stayed Internal review. Ravi Menon read 4 recorded rounds with no Send for signature and got 403; the archived Contract kept 4 rounds readable with no Send; restored afterwards.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-014/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-014/independent-discovery.json"
+      ]
+    }
+  ],
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-014/README.md",
+    "docs/documentation/batches/DOC-014/author-electronic.json"
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "C17 uses a declared isolated local DocuSign protocol stand-in with fictional paper and Signers. It does not verify real provider setup or satisfy C42.",
+    "Browser contexts were 1280×1800 CSS px so the crowded Stage menu of the disposable labs stayed reachable (issue #768); the ordinary-height crowded menu is not claimed to pass.",
+    "The guide changed after the author walkthrough (author record hash 22b416df0a54d3b1bb5b427fc11253a1404e828ab648530fe40c3862e7cd861d): the blank-subject sentence names the C- reference and title, confirmed by the provider-side subject in both roles' sends."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null,
+  "publicationBlockers": [
+    "configure-signing (DOC-022) does not exist yet and C42 real-provider acceptance is pending; contract-approvals and manual-signing are in review."
+  ]
+}

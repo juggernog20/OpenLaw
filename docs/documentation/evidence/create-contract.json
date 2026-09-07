@@ -1,0 +1,66 @@
+{
+  "articleId": "create-contract",
+  "contentSha256": "63aaa9717afffaacbb0b91b64de6e741162912ea00fd3b945798dc746b6e1cac",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-07T14:11:42.202Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "apps/web/src/components/contracts/create-contract-dialog.tsx",
+    "apps/web/src/routes/contract-record.tsx",
+    "apps/web/src/routes/contracts.tsx",
+    "apps/web/src/components/contracts/team-applet.tsx",
+    "apps/web/src/components/counterparty-picker.tsx",
+    "apps/api/src/modules/contracts/routes.ts",
+    "apps/api/src/modules/counterparties/routes.ts",
+    "apps/api/src/lib/contract-access.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C14",
+      "coverage": ["C14"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "The Contract stores the intended parties, accountability, and values and is reached by the expected people. Required/invalid values and archived references are handled without creating an unintended Contract.",
+      "actual": "Blank submit said \"Name the contract.\"; without a type \"Pick a contract type.\"; the required type showed its required Field and refused \"Fill … this contract type requires it.\"; option lists omitted Docs Contract archived 1788782207651 and Docs Contract archived Entity 1788782207651; Cancel on a complete draft sent no POST and left no \"Rev C14 refusal\" Contract. C-333 created; the list row opened it; Status Draft, Owner select \"Unassigned\", Confidential true; linked Matter 45; Priya Raman (Legal, not on the team) got 404 on the Contract while the Matter answered 200; after a rename the reference C-333 stayed. Owner Nadia Haddad (after Unassigned cleared it), Our entity Docs Contract live Entity 1788782207651 (after Not known yet left it unset), Priority high, Risk low, Description saved; Value 12500 EUR annually (stored as 1250000 minor units) saved as one group on Enter; an emptied amount removed the value; manager=Nadia Haddad, priority=high, risk=low. Typing \"Rev Counterparty A 20260907141112\" offered \"Rev Counterparty A 20260907141112\"; the first linked party was primary; Make primary moved it to Alpine Ski House GmbH; taking Rev Counterparty A 20260907141112 off left one Counterparty on the Contract while the Counterparty record still exists. Priya Raman added as member and watcher; taking her off as Watcher left her \"member\" (the Member control stayed); panel shows Owner tag true and Creator tag true; Nadia Haddad is creator. Blur saved \"blur value 20260907141112\", Enter saved \"enter value 20260907141112\", Escape restored \"enter value 20260907141112\" without a save; legal-tagged Field saved; selecting Docs Contract retype 1788782207651 in the Overview Contract card opened Change contract type, refused a blank required number with \"Fill … — the new type requires it.\", Cancel kept Docs Contract required 1788782207651; 42 changed the type and the new Field shows 42; C-333 unchanged. Ravi Menon (Contributor on the team) saw the read-only notice, a disabled Owner select, no Create contract button, and 403 on create, Owner assignment, and a legal Field; Priya Raman read the Confidential record (200) while a Member and got 404 once taken off the team; her page read \"Something went wrong. The page could not load. Reload to try again. Reload\"; archived C-333 showed the archived notice, disabled Owner, and PATCH 409; Restore re-enabled editing.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-014/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-014/independent-discovery.json"
+      ]
+    },
+    {
+      "id": "V-C14",
+      "coverage": ["C14"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "The Contract stores the intended parties, accountability, and values and is reached by the expected people. Required/invalid values and archived references are handled without creating an unintended Contract.",
+      "actual": "Blank submit said \"Name the contract.\"; without a type \"Pick a contract type.\"; the required type showed its required Field and refused \"Fill … this contract type requires it.\"; option lists omitted Docs Contract archived 1788782207651 and Docs Contract archived Entity 1788782207651; Cancel on a complete draft sent no POST and left no \"Rev C14 refusal\" Contract. C-332 created; the list row opened it; Status Draft, Owner select \"Unassigned\", Confidential true; linked Matter 45; Priya Raman (Legal, not on the team) got 404 on the Contract while the Matter answered 200; after a rename the reference C-332 stayed. Owner Daniel Okafor (after Unassigned cleared it), Our entity Docs Contract live Entity 1788782207651 (after Not known yet left it unset), Priority high, Risk low, Description saved; Value 12500 EUR annually (stored as 1250000 minor units) saved as one group on Enter; an emptied amount removed the value; manager=Daniel Okafor, priority=high, risk=low. Typing \"Rev Counterparty A 20260907141112\" offered \"Create \"Rev Counterparty A 20260907141112\"\"; the first linked party was primary; Make primary moved it to Alpine Ski House GmbH; taking Rev Counterparty A 20260907141112 off left one Counterparty on the Contract while the Counterparty record still exists. Priya Raman added as member and watcher; taking her off as Watcher left her \"member\" (the Member control stayed); panel shows Owner tag true and Creator tag true; Daniel Okafor is creator. Blur saved \"blur value 20260907141112\", Enter saved \"enter value 20260907141112\", Escape restored \"enter value 20260907141112\" without a save; legal-tagged Field saved; selecting Docs Contract retype 1788782207651 in the Overview Contract card opened Change contract type, refused a blank required number with \"Fill … — the new type requires it.\", Cancel kept Docs Contract required 1788782207651; 42 changed the type and the new Field shows 42; C-332 unchanged. Ravi Menon (Contributor on the team) saw the read-only notice, a disabled Owner select, no Create contract button, and 403 on create, Owner assignment, and a legal Field; Priya Raman read the Confidential record (200) while a Member and got 404 once taken off the team; her page read \"Something went wrong. The page could not load. Reload to try again. Reload\"; archived C-332 showed the archived notice, disabled Owner, and PATCH 409; Restore re-enabled editing.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-014/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-014/independent-discovery.json"
+      ]
+    }
+  ],
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-014/README.md",
+    "docs/documentation/batches/DOC-014/author-create.json"
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "Browser contexts were 1280×1800 CSS px so the crowded Stage menu of the disposable labs stayed reachable (issue #768); the ordinary-height crowded menu is not claimed to pass.",
+    "The guide changed after the author walkthrough (author record hash 92e03bb50f11e209417fcd45471707c2221e3d2d3f137865e0c6135fb93dd36a): the Contract type control is now placed on Overview. The independent two-role walkthrough ran on the current bytes."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null,
+  "publicationBlockers": [
+    "document-versions (DOC-017) does not exist yet; convert-request, roles-and-access, notifications and the sibling Contract guides are in review."
+  ]
+}

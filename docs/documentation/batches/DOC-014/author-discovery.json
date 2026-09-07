@@ -1,0 +1,164 @@
+{
+  "name": "discovery",
+  "startedAt": "2026-09-07T13:01:38.235Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "create-contract",
+      "contentSha256": "92e03bb50f11e209417fcd45471707c2221e3d2d3f137865e0c6135fb93dd36a"
+    },
+    {
+      "articleId": "contract-stages",
+      "contentSha256": "8fec18cd5b3f50c0baadebd2b8fd68772cc118da4341915dec4674774a1a0553"
+    },
+    {
+      "articleId": "contract-approvals",
+      "contentSha256": "e3b7b6ee7e2b8b121c8be45203099d69331e09d5d55d374b577d5fe81bcf67f6"
+    },
+    {
+      "articleId": "manual-signing",
+      "contentSha256": "03b260c04c972776c0e7ebc275c6fb6437f10a0ea6b78d5a06a211d1745b841f"
+    },
+    {
+      "articleId": "electronic-signing",
+      "contentSha256": "22b416df0a54d3b1bb5b427fc11253a1404e828ab648530fe40c3862e7cd861d"
+    },
+    {
+      "articleId": "terms-and-renewals",
+      "contentSha256": "d5af58d3f6934b6b5730e8e100c31ffc21e08640347b82750c9b39c24b085c6e"
+    },
+    {
+      "articleId": "contract-tasks-and-dates",
+      "contentSha256": "29654cec933cf7b62d1c87e2d75293f920de3f1f51b6859aae5a44e09356c43e"
+    },
+    {
+      "articleId": "contract-relations-and-ending",
+      "contentSha256": "29377c21400749c9f3e4fcc59863b7ae77ec6d916dedcdcf198ff93726745a4c"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "create-contract contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T13:01:41.019Z"
+    },
+    {
+      "role": "administrator",
+      "action": "contract-stages contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T13:01:42.503Z"
+    },
+    {
+      "role": "administrator",
+      "action": "contract-approvals contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T13:01:44.001Z"
+    },
+    {
+      "role": "administrator",
+      "action": "manual-signing contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T13:01:45.410Z"
+    },
+    {
+      "role": "administrator",
+      "action": "electronic-signing contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T13:01:46.845Z"
+    },
+    {
+      "role": "administrator",
+      "action": "terms-and-renewals contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T13:01:48.333Z"
+    },
+    {
+      "role": "administrator",
+      "action": "contract-tasks-and-dates contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T13:01:49.784Z"
+    },
+    {
+      "role": "administrator",
+      "action": "contract-relations-and-ending contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T13:01:51.320Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "create-contract contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T13:01:53.847Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "contract-stages contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T13:01:55.361Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "contract-approvals contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T13:01:56.849Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "manual-signing contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T13:01:58.298Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "electronic-signing contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T13:01:59.726Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "terms-and-renewals contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T13:02:01.181Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "contract-tasks-and-dates contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T13:02:02.599Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "contract-relations-and-ending contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T13:02:03.999Z"
+    },
+    {
+      "role": "signed-out",
+      "action": "all eight Contract guides are discoverable in formal preview without application API calls",
+      "actual": "All eight formal guide titles discoverable anonymously; zero application API requests",
+      "result": "pass",
+      "at": "2026-09-07T13:02:04.990Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T13:02:04.990Z"
+}

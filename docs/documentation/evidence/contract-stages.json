@@ -1,0 +1,60 @@
+{
+  "articleId": "contract-stages",
+  "contentSha256": "8fec18cd5b3f50c0baadebd2b8fd68772cc118da4341915dec4674774a1a0553",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-07T13:32:50.763Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "apps/web/src/components/stage-pipeline.tsx",
+    "apps/web/src/routes/contract-record.tsx",
+    "apps/web/src/lib/activity.ts",
+    "apps/api/src/modules/contracts/routes.ts",
+    "apps/api/src/lib/soft-gate.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C15",
+      "coverage": ["C15"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Status labels use their configured Stage mapping and each successful move is visible. An archived/read-only record offers no unsupported mutation; renaming a Status does not change its Stage.",
+      "actual": "Menu label \"Move to\" listed each Status with its Stage (e.g. Out for signature · Signature); moves recorded Internal review→review, Awaiting approval→approval, Out for signature→signature, Active→active; the header Stage button read \"<Stage> — move contract\" and the Status name showed beside the reference after each; Out for signature created no Envelope and Active filed no Document; History showed 4 status changes. Active → Internal review accepted (Stage review); the Administrator's new Status renamed to \"Rev renamed review legal_team_member 20260907133231\" still listed and mapped as Review; Review → Active skipped Approval and Signature. Move past approval listed Priya Raman Pending; Cancel kept Awaiting approval; Move anyway saved Out for signature; History reads \"moved this contract past approval, overriding Priya Raman\"; the approval is still pending. Expired mapped to Ended and the Description still saved; archived record showed no Stage control and a direct status write answered 409; Restore left it Expired; the control then reopened it as Active. Ravi Menon (Contributor on the team) saw no Stage control and got 403; Priya Raman outside the Confidential team got 404; the Status stayed Active.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-014/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-014/independent-discovery.json"
+      ]
+    },
+    {
+      "id": "V-C15",
+      "coverage": ["C15"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Status labels use their configured Stage mapping and each successful move is visible. An archived/read-only record offers no unsupported mutation; renaming a Status does not change its Stage.",
+      "actual": "Menu label \"Move to\" listed each Status with its Stage (e.g. Out for signature · Signature); moves recorded Internal review→review, Awaiting approval→approval, Out for signature→signature, Active→active; the header Stage button read \"<Stage> — move contract\" and the Status name showed beside the reference after each; Out for signature created no Envelope and Active filed no Document; History showed 4 status changes. Active → Internal review accepted (Stage review); the Administrator's new Status renamed to \"Rev renamed review administrator 20260907133231\" still listed and mapped as Review; Review → Active skipped Approval and Signature. Move past approval listed Priya Raman Pending; Cancel kept Awaiting approval; Move anyway saved Out for signature; History reads \"moved this contract past approval, overriding Priya Raman\"; the approval is still pending. Expired mapped to Ended and the Description still saved; archived record showed no Stage control and a direct status write answered 409; Restore left it Expired; the control then reopened it as Active. Ravi Menon (Contributor on the team) saw no Stage control and got 403; Priya Raman outside the Confidential team got 404; the Status stayed Active.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-014/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-014/independent-discovery.json"
+      ]
+    }
+  ],
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-014/README.md",
+    "docs/documentation/batches/DOC-014/author-stages.json"
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "Browser contexts were 1280×1800 CSS px so the crowded Stage menu of the disposable labs stayed reachable (issue #768); the ordinary-height crowded menu is not claimed to pass."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null,
+  "publicationBlockers": ["The linked approval, signing and relations guides are in review."]
+}

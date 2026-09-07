@@ -1,0 +1,67 @@
+{
+  "articleId": "contract-relations-and-ending",
+  "contentSha256": "22e819b39d5dc754cde76f9704911e4684d27085db53a971e0472043a53b60fb",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-07T14:23:06.814Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "apps/web/src/components/contracts/related-contracts-card.tsx",
+    "apps/web/src/components/contracts/link-dialog.tsx",
+    "apps/web/src/components/contracts/contract-matter-link-dialog.tsx",
+    "apps/web/src/components/contracts/linked-matter-card.tsx",
+    "apps/web/src/components/contracts/record-actions-menu.tsx",
+    "apps/web/src/components/table/record-filter-bar.tsx",
+    "apps/web/src/routes/contracts.tsx",
+    "apps/api/src/modules/contract-relations/routes.ts",
+    "apps/api/src/modules/contracts/routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C20",
+      "coverage": ["C20"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Relations, lifecycle changes, and recorded history match the visible actions without granting reach. Cycles/invalid links are refused; a restricted target does not leak its details.",
+      "actual": "Cancel set no parent; Set parent placed C-361 under C-362; C-362's card lists C-361 under Children; choosing C-361 as C-362's parent was refused: That contract already sits under this one. Pick another parent.; a direct write answered 409. C-361 now shows C-363 under Related, Renews and Amends; C-363 shows C-361 under Related, Renewed by and Amended by; a second Renews link was refused with \"These two contracts are already linked that way.\"; the picker did not offer C-361 itself and a direct self-link answered 409. Remove link on the Related row left Renews and Amends in place; Remove parent cleared the parent; C-363 and C-362 still exist. From Confidential C-364 linking open C-365: prompt \"C-364 is confidential but C-365 is not. Flag C-365 as confidential too? No, leave it open Flag as confidential\" → Flag as confidential set C-365 Confidential. From open C-366 linking Confidential C-367: prompt named C-366 as the one that is not confidential and accepting set this record C-366 Confidential. From open C-368 linking Confidential C-369: No, leave it open kept C-368 open and C-369 Confidential; the link exists and Priya Raman still gets 404 on C-369. Priya Raman's view of C-368 shows \"Restricted contract\" under Related with no link to C-369; a direct read answers 404. The dialog warned \"These records have different Confidential flags. Linking will not change either one.\"; after Link the \"Confidentiality differs\" advice said it changes neither record and Leave them as they are kept C-364 Confidential and M-45 open; with a Matter linked the card offers Unlink instead of Link to Matter and a second link answered 409; after Unlink the Contract linked to M-46. Expired mapped to Ended and the Description still saved; the default list did not list C-361 through 12 pages; Filter → Show ended (the Filter button then read \"Filter 1\") listed it (after 5 Show more); Active reopened it and History keeps the Expired change. Archive kept the Status Expired and showed the Archived pill and notice; Show archived alone (\"Filter 1\") did not list the Ended record, Show archived plus Show ended (\"Filter 2\") did; the linked C-363 and M-46 were not archived; Restore from Contract actions re-enabled editing while the record stayed Expired and therefore still hidden from the default list; the known C-361 address also offered Restore. Ravi Menon read the Renews and Amends rows (as Restricted contract, since he is not on the related records) but had no Set parent, Add link, Link to Matter or Stage control, and Contract actions offered only Copy link; link, archive and end writes answered 403.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-014/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-014/independent-discovery.json"
+      ]
+    },
+    {
+      "id": "V-C20",
+      "coverage": ["C20"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Relations, lifecycle changes, and recorded history match the visible actions without granting reach. Cycles/invalid links are refused; a restricted target does not leak its details.",
+      "actual": "Cancel set no parent; Set parent placed C-352 under C-353; C-353's card lists C-352 under Children; choosing C-352 as C-353's parent was refused: That contract already sits under this one. Pick another parent.; a direct write answered 409. C-352 now shows C-354 under Related, Renews and Amends; C-354 shows C-352 under Related, Renewed by and Amended by; a second Renews link was refused with \"These two contracts are already linked that way.\"; the picker did not offer C-352 itself and a direct self-link answered 409. Remove link on the Related row left Renews and Amends in place; Remove parent cleared the parent; C-354 and C-353 still exist. From Confidential C-355 linking open C-356: prompt \"C-355 is confidential but C-356 is not. Flag C-356 as confidential too? No, leave it open Flag as confidential\" → Flag as confidential set C-356 Confidential. From open C-357 linking Confidential C-358: prompt named C-357 as the one that is not confidential and accepting set this record C-357 Confidential. From open C-359 linking Confidential C-360: No, leave it open kept C-359 open and C-360 Confidential; the link exists and Priya Raman still gets 404 on C-360. Priya Raman's view of C-359 shows \"Restricted contract\" under Related with no link to C-360; a direct read answers 404. The dialog warned \"These records have different Confidential flags. Linking will not change either one.\"; after Link the \"Confidentiality differs\" advice said it changes neither record and Leave them as they are kept C-355 Confidential and M-45 open; with a Matter linked the card offers Unlink instead of Link to Matter and a second link answered 409; after Unlink the Contract linked to M-46. Expired mapped to Ended and the Description still saved; the default list did not list C-352 through 12 pages; Filter → Show ended (the Filter button then read \"Filter 1\") listed it (after 0 Show more); Active reopened it and History keeps the Expired change. Archive kept the Status Expired and showed the Archived pill and notice; Show archived alone (\"Filter 1\") did not list the Ended record, Show archived plus Show ended (\"Filter 2\") did; the linked C-354 and M-46 were not archived; Restore from Contract actions re-enabled editing while the record stayed Expired and therefore still hidden from the default list; the known C-352 address also offered Restore. Ravi Menon read the Renews and Amends rows (as Restricted contract, since he is not on the related records) but had no Set parent, Add link, Link to Matter or Stage control, and Contract actions offered only Copy link; link, archive and end writes answered 403.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-014/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-014/independent-discovery.json"
+      ]
+    }
+  ],
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-014/README.md",
+    "docs/documentation/batches/DOC-014/author-relations.json"
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "Browser contexts were 1280×1800 CSS px so the crowded Stage menu of the disposable labs stayed reachable (issue #768); the ordinary-height crowded menu is not claimed to pass.",
+    "The guide changed after the author walkthrough (author record hash 29377c21400749c9f3e4fcc59863b7ae77ec6d916dedcdcf198ff93726745a4c): the Flag as confidential? paragraph now says the flagged Contract is whichever one is not yet Confidential, which can be this Contract.  The independent two-role walkthrough ran on the current bytes."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null,
+  "publicationBlockers": [
+    "create-matter (DOC-016) does not exist yet; create-contract, contract-stages and search-and-views are in review."
+  ]
+}

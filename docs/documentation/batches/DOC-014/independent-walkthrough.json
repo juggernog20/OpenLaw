@@ -1,0 +1,1392 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-014",
+  "issue": 734,
+  "independentReview": true,
+  "reviewerKind": "agent",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "author": "Codex documentation author",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "environments": {
+    "conversations": {
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0"
+    },
+    "signing-workflow": {
+      "environment": "openlaw-docs-b8e31260-signing-workflow",
+      "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0"
+    }
+  },
+  "method": "browser-walkthrough",
+  "startedAt": "2026-09-07T13:32:31.439Z",
+  "finishedAt": "2026-09-07T14:23:06.814Z",
+  "frontend": "Committed conversations lab at port 43302 for C14, C15, C16, C17 manual hand-off, C18, C19 and C20; the dedicated signing-workflow lab at port 43303 with its declared local DocuSign protocol stand-in (control at port 43313) for C17 electronic signing; separate browser sessions for the other staff role, Priya Raman and Ravi Menon; the lab APIs for prerequisite records, competing writes, byte comparison and state reads",
+  "browser": "Playwright 1.62.1 Chromium from the private documentation cache, headless, one isolated context per identity at 1280×1800 CSS px; scripts written by the reviewer from the guide text",
+  "articleHashesTested": [
+    {
+      "articleId": "create-contract",
+      "contentSha256": ["63aaa9717afffaacbb0b91b64de6e741162912ea00fd3b945798dc746b6e1cac"]
+    },
+    {
+      "articleId": "contract-stages",
+      "contentSha256": ["8fec18cd5b3f50c0baadebd2b8fd68772cc118da4341915dec4674774a1a0553"]
+    },
+    {
+      "articleId": "contract-approvals",
+      "contentSha256": ["e3b7b6ee7e2b8b121c8be45203099d69331e09d5d55d374b577d5fe81bcf67f6"]
+    },
+    {
+      "articleId": "manual-signing",
+      "contentSha256": ["03b260c04c972776c0e7ebc275c6fb6437f10a0ea6b78d5a06a211d1745b841f"]
+    },
+    {
+      "articleId": "electronic-signing",
+      "contentSha256": ["df172df43d2efc94cbd2daa7f03cc1161332885578c353e5137b1e0ffe4c90fc"]
+    },
+    {
+      "articleId": "terms-and-renewals",
+      "contentSha256": ["d5af58d3f6934b6b5730e8e100c31ffc21e08640347b82750c9b39c24b085c6e"]
+    },
+    {
+      "articleId": "contract-tasks-and-dates",
+      "contentSha256": ["29654cec933cf7b62d1c87e2d75293f920de3f1f51b6859aae5a44e09356c43e"]
+    },
+    {
+      "articleId": "contract-relations-and-ending",
+      "contentSha256": ["22e819b39d5dc754cde76f9704911e4684d27085db53a971e0472043a53b60fb"]
+    }
+  ],
+  "articleHashesCurrent": [
+    {
+      "articleId": "create-contract",
+      "contentSha256": "63aaa9717afffaacbb0b91b64de6e741162912ea00fd3b945798dc746b6e1cac"
+    },
+    {
+      "articleId": "contract-stages",
+      "contentSha256": "8fec18cd5b3f50c0baadebd2b8fd68772cc118da4341915dec4674774a1a0553"
+    },
+    {
+      "articleId": "contract-approvals",
+      "contentSha256": "e3b7b6ee7e2b8b121c8be45203099d69331e09d5d55d374b577d5fe81bcf67f6"
+    },
+    {
+      "articleId": "manual-signing",
+      "contentSha256": "03b260c04c972776c0e7ebc275c6fb6437f10a0ea6b78d5a06a211d1745b841f"
+    },
+    {
+      "articleId": "electronic-signing",
+      "contentSha256": "df172df43d2efc94cbd2daa7f03cc1161332885578c353e5137b1e0ffe4c90fc"
+    },
+    {
+      "articleId": "terms-and-renewals",
+      "contentSha256": "d5af58d3f6934b6b5730e8e100c31ffc21e08640347b82750c9b39c24b085c6e"
+    },
+    {
+      "articleId": "contract-tasks-and-dates",
+      "contentSha256": "29654cec933cf7b62d1c87e2d75293f920de3f1f51b6859aae5a44e09356c43e"
+    },
+    {
+      "articleId": "contract-relations-and-ending",
+      "contentSha256": "22e819b39d5dc754cde76f9704911e4684d27085db53a971e0472043a53b60fb"
+    }
+  ],
+  "authorHashesHistorical": [
+    {
+      "articleId": "create-contract",
+      "contentSha256": ["92e03bb50f11e209417fcd45471707c2221e3d2d3f137865e0c6135fb93dd36a"]
+    },
+    {
+      "articleId": "contract-stages",
+      "contentSha256": ["8fec18cd5b3f50c0baadebd2b8fd68772cc118da4341915dec4674774a1a0553"]
+    },
+    {
+      "articleId": "contract-approvals",
+      "contentSha256": ["e3b7b6ee7e2b8b121c8be45203099d69331e09d5d55d374b577d5fe81bcf67f6"]
+    },
+    {
+      "articleId": "manual-signing",
+      "contentSha256": ["03b260c04c972776c0e7ebc275c6fb6437f10a0ea6b78d5a06a211d1745b841f"]
+    },
+    {
+      "articleId": "electronic-signing",
+      "contentSha256": ["22b416df0a54d3b1bb5b427fc11253a1404e828ab648530fe40c3862e7cd861d"]
+    },
+    {
+      "articleId": "terms-and-renewals",
+      "contentSha256": ["d5af58d3f6934b6b5730e8e100c31ffc21e08640347b82750c9b39c24b085c6e"]
+    },
+    {
+      "articleId": "contract-tasks-and-dates",
+      "contentSha256": ["29654cec933cf7b62d1c87e2d75293f920de3f1f51b6859aae5a44e09356c43e"]
+    },
+    {
+      "articleId": "contract-relations-and-ending",
+      "contentSha256": ["29377c21400749c9f3e4fcc59863b7ae77ec6d916dedcdcf198ff93726745a4c"]
+    }
+  ],
+  "fixturePreparation": [
+    "Reused the author's Contract types, Fields, Entities, Matters and Approver group by identifier in the conversations lab, and the seeded NDA type, people and connector in the signing lab. Every walked record was created fresh by the reviewer through the acting role's API session with a 'Rev …' title and the run stamp; earlier records changed by the author or by the reviewer's own failed runs were not reused.",
+    "Created per role: a Confidential Contract with a Matter link (C14); a Contract for the six Stages with an Administrator-created Status renamed mid-run (C15); a Contract plus a Confidential Contract and a reviewer Approver group containing Priya Raman (C16); a Contract with draft, executed and later fictional PDFs (C17 manual); a Contract with two primary Versions and one supporting Document in the signing lab (C17 electronic); a Contract with a real calendar term, its child and its successor (C18); a Confidential Contract with Tasks and Key dates (C19); and nine Contracts for parent, typed links, both directions of the confidentiality prompt and the restricted reader (C20).",
+    "Competing and boundary actions came from separate sessions: the other staff role decided approvals, changed the expiry under an open Renew dialog and voided an Envelope as Owner; Priya Raman was the named approver, the unrelated Legal reader and the person without Confidential access; Ravi Menon was the Contributor on each team. One controlled browser response (a 503 on a Key date save) and the provider control's outage, decline and completion deliveries were the only injected faults.",
+    "Fictional records from the final runs, conversations lab: create-contract → C-332 (Administrator) and C-333 (Legal Team Member); contract-stages → C-193 (Administrator) and C-194 (Legal Team Member); contract-approvals → C-208 (Administrator) and C-210 (Legal Team Member); manual-signing → C-215 (Administrator) and C-216 (Legal Team Member); terms-and-renewals → C-227 (Administrator) and C-230 (Legal Team Member); contract-tasks-and-dates → C-240 (Administrator) and C-241 (Legal Team Member); contract-relations-and-ending → C-352 with C-353, C-354, C-355, C-356, C-357, C-358, C-359 and C-360 (Administrator) and C-361 with C-362, C-363, C-364, C-365, C-366, C-367, C-368 and C-369 (Legal Team Member). Signing lab: electronic-signing → C-42 (Administrator) and C-43 (Legal Team Member). The C18 runs also created child and successor Contracts, and C16 a Confidential Contract per role, named in the step records. Earlier reviewer runs left further Rev-prefixed Contracts, two live reviewer Statuses (Rev renamed review …) and one probe Status in these disposable labs."
+  ],
+  "corrections": [
+    "contract-relations-and-ending: the seat's own earlier sentence (commit b4c54fce) said Flag as confidential sets the other Contract's flag. The link dialog flags whichever side is not Confidential, which can be the current Contract. The guide now says the prompt names that Contract and that it can be this Contract or the one you linked; the walkthrough exercised both directions and the dismissal.",
+    "create-contract: the Contract type control lives on Overview, not in the Fields section the surrounding paragraph describes; the guide now says so. The C14 walkthrough for both roles ran on the corrected bytes.",
+    "Both changes were made before the final two-role runs of those guides; the author records keep the hashes they ran against."
+  ],
+  "observations": [
+    "Earlier reviewer runs failed on harness assumptions, not on app or guide behaviour: the Matter search renders buttons rather than options; Amount is a number input stored in minor units; Counterparties and team sit beside, not inside, the Contract object; a stale \"Saved\" note read before the PATCH landed; the Team removal control is named \"Take … off the team as …\"; the header Stage button is named by Stage, not Status; the Status pill sits outside the main landmark; picking the current Status again sends no PATCH; the Stage menu's last item sat outside a 720 px viewport; approval rows carry avatar initials and \"Requested by\"; a first PATCH refused by the Soft gate answers 409 before the override; the current Version's executed action is in the Document row menu; Document Versions expose versionNumber and isExecuted; the term dates are calendar pickers with month and year dropdowns while Task and Key date dialogs use plain date inputs; the Task assignee popover is the \"Assign task\" dialog; Home cards list a few rows before View all; the Link type is a select; relation subsection headings render uppercase; the Filter button's accessible name carries its active count (\"Filter 1\"). Each was corrected in the harness and the run repeated; the final records hold only the completed runs on the final bytes.",
+    "The Contract Status menu is crowded in these disposable labs: the seeded Statuses plus fixture Statuses from earlier batches and this review give about twenty live options. At an ordinary 1280×720 viewport the menu extends below the viewport with overflow hidden and its last option cannot be clicked; a separate read-only probe recorded this and it is tracked as issue #768. The walkthroughs used 1280×1800 contexts to reach every option; that is a harness workaround, not a claim that the ordinary-height menu passed.",
+    "A Contract's current Version is marked from the Document row's Actions menu; the version-level Actions menu appears only for earlier Versions under \"N earlier versions of …\". The manual-signing guide's \"that Document Version's actions\" holds for both, so no text change was made.",
+    "The blank-subject default was confirmed through the actual send: the provider received \"C-<number> <title>\" for both roles. The controlled outage message reads \"The provider could not be reached. It may still have taken the envelope — check at the provider before you send again.\"",
+    "On a Confidential Contract, naming a person without access answers 422 and applying a group with such a member is refused by name; neither asks anybody. The picker itself never offers the person.",
+    "Home lists a few assigned Tasks and approaching dates per card; the reviewer's Task and Key date were reached through View all (/home/tasks and the \"Your dates\" calendar dialog) when the card did not show them.",
+    "The Contracts list needed several Show more pages to reach the reviewer's Ended record after Show ended; the earlier list problem in issue #751 is not claimed fixed."
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "C17 electronic signing ran against the declared local DocuSign protocol stand-in with fictional Signers and generated keys; it verifies OpenLaw's workflow handling, not real provider configuration (C42), and no external signing transaction occurred.",
+    "Browser contexts were 1280×1800 CSS px so the crowded Stage menu of these disposable labs stayed reachable (issue #768); layout checks in the discovery record are CSS-pixel measurements, not browser zoom or assistive technology acceptance.",
+    "Competing writes and prerequisite records were applied through the lab APIs by the acting or second staff session; external email delivery and reminder timing were not claimed (the notifications guide owns them).",
+    "Linked guides remain unpublished: Document Versions (DOC-017), Contract analysis (DOC-015), Matter creation (DOC-016), Approver groups (DOC-021) and Signing connector setup (DOC-022); the shared access, conversation and notification guides carry their own dependencies. All eight articles stay in review."
+  ],
+  "steps": [
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Create contract refuses a missing Title, a missing Contract type, and blank required Fields; archived Contract type and archived Entity are not offered; Cancel creates nothing",
+      "result": "pass",
+      "actual": "Blank submit said \"Name the contract.\"; without a type \"Pick a contract type.\"; the required type showed its required Field and refused \"Fill … this contract type requires it.\"; option lists omitted Docs Contract archived 1788782207651 and Docs Contract archived Entity 1788782207651; Cancel on a complete draft sent no POST and left no \"Rev C14 refusal\" Contract",
+      "at": "2026-09-07T14:11:17.151Z",
+      "ms": 963
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "a Confidential Contract with an optional Matter link is created, opened from the list, starts in Draft with no Owner, keeps its C- reference, and the Matter link grants no access",
+      "result": "pass",
+      "actual": "C-332 created; the list row opened it; Status Draft, Owner select \"Unassigned\", Confidential true; linked Matter 45; Priya Raman (Legal, not on the team) got 404 on the Contract while the Matter answered 200; after a rename the reference C-332 stayed",
+      "at": "2026-09-07T14:11:19.136Z",
+      "ms": 1984
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Overview records Owner, Our entity, Priority, Risk, Description and the grouped Value; Unassigned and Not known yet clear the selects; emptying the amount removes the value",
+      "result": "pass",
+      "actual": "Owner Daniel Okafor (after Unassigned cleared it), Our entity Docs Contract live Entity 1788782207651 (after Not known yet left it unset), Priority high, Risk low, Description saved; Value 12500 EUR annually (stored as 1250000 minor units) saved as one group on Enter; an emptied amount removed the value; manager=Daniel Okafor, priority=high, risk=low",
+      "at": "2026-09-07T14:11:19.968Z",
+      "ms": 832
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Counterparties: an unknown name offers a create action, the first party is primary, Make primary moves the designation, and removing a link keeps the Counterparty record",
+      "result": "pass",
+      "actual": "Typing \"Rev Counterparty A 20260907141112\" offered \"Create \"Rev Counterparty A 20260907141112\"\"; the first linked party was primary; Make primary moved it to Alpine Ski House GmbH; taking Rev Counterparty A 20260907141112 off left one Counterparty on the Contract while the Counterparty record still exists",
+      "at": "2026-09-07T14:11:21.327Z",
+      "ms": 1358
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Team: Add team member adds a Person with a Role; removing one role leaves the other; Owner and Creator tags identify those responsibilities",
+      "result": "pass",
+      "actual": "Priya Raman added as member and watcher; taking her off as Watcher left her \"member\" (the Member control stayed); panel shows Owner tag true and Creator tag true; Daniel Okafor is creator",
+      "at": "2026-09-07T14:11:22.857Z",
+      "ms": 1530
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Fields: text saves on blur and on Enter, Escape abandons an unsaved edit, a bad number is refused, and changing the type opens Change contract type for its missing required Field",
+      "result": "pass",
+      "actual": "Blur saved \"blur value 20260907141112\", Enter saved \"enter value 20260907141112\", Escape restored \"enter value 20260907141112\" without a save; legal-tagged Field saved; selecting Docs Contract retype 1788782207651 in the Overview Contract card opened Change contract type, refused a blank required number with \"Fill … — the new type requires it.\", Cancel kept Docs Contract required 1788782207651; 42 changed the type and the new Field shows 42; C-332 unchanged",
+      "at": "2026-09-07T14:11:24.442Z",
+      "ms": 1585
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "refusals: a Contributor on the team sees legal details read-only, cannot create a Contract or assign its Owner; an archived Contract is read-only until restored; Priya Raman is refused once she is off the Confidential team",
+      "result": "pass",
+      "actual": "Ravi Menon (Contributor on the team) saw the read-only notice, a disabled Owner select, no Create contract button, and 403 on create, Owner assignment, and a legal Field; Priya Raman read the Confidential record (200) while a Member and got 404 once taken off the team; her page read \"Something went wrong. The page could not load. Reload to try again. Reload\"; archived C-332 showed the archived notice, disabled Owner, and PATCH 409; Restore re-enabled editing",
+      "at": "2026-09-07T14:11:27.587Z",
+      "ms": 3144
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Create contract refuses a missing Title, a missing Contract type, and blank required Fields; archived Contract type and archived Entity are not offered; Cancel creates nothing",
+      "result": "pass",
+      "actual": "Blank submit said \"Name the contract.\"; without a type \"Pick a contract type.\"; the required type showed its required Field and refused \"Fill … this contract type requires it.\"; option lists omitted Docs Contract archived 1788782207651 and Docs Contract archived Entity 1788782207651; Cancel on a complete draft sent no POST and left no \"Rev C14 refusal\" Contract",
+      "at": "2026-09-07T14:11:31.854Z",
+      "ms": 909
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "a Confidential Contract with an optional Matter link is created, opened from the list, starts in Draft with no Owner, keeps its C- reference, and the Matter link grants no access",
+      "result": "pass",
+      "actual": "C-333 created; the list row opened it; Status Draft, Owner select \"Unassigned\", Confidential true; linked Matter 45; Priya Raman (Legal, not on the team) got 404 on the Contract while the Matter answered 200; after a rename the reference C-333 stayed",
+      "at": "2026-09-07T14:11:33.770Z",
+      "ms": 1916
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Overview records Owner, Our entity, Priority, Risk, Description and the grouped Value; Unassigned and Not known yet clear the selects; emptying the amount removes the value",
+      "result": "pass",
+      "actual": "Owner Nadia Haddad (after Unassigned cleared it), Our entity Docs Contract live Entity 1788782207651 (after Not known yet left it unset), Priority high, Risk low, Description saved; Value 12500 EUR annually (stored as 1250000 minor units) saved as one group on Enter; an emptied amount removed the value; manager=Nadia Haddad, priority=high, risk=low",
+      "at": "2026-09-07T14:11:34.573Z",
+      "ms": 803
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Counterparties: an unknown name offers a create action, the first party is primary, Make primary moves the designation, and removing a link keeps the Counterparty record",
+      "result": "pass",
+      "actual": "Typing \"Rev Counterparty A 20260907141112\" offered \"Rev Counterparty A 20260907141112\"; the first linked party was primary; Make primary moved it to Alpine Ski House GmbH; taking Rev Counterparty A 20260907141112 off left one Counterparty on the Contract while the Counterparty record still exists",
+      "at": "2026-09-07T14:11:35.925Z",
+      "ms": 1352
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Team: Add team member adds a Person with a Role; removing one role leaves the other; Owner and Creator tags identify those responsibilities",
+      "result": "pass",
+      "actual": "Priya Raman added as member and watcher; taking her off as Watcher left her \"member\" (the Member control stayed); panel shows Owner tag true and Creator tag true; Nadia Haddad is creator",
+      "at": "2026-09-07T14:11:37.468Z",
+      "ms": 1543
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Fields: text saves on blur and on Enter, Escape abandons an unsaved edit, a bad number is refused, and changing the type opens Change contract type for its missing required Field",
+      "result": "pass",
+      "actual": "Blur saved \"blur value 20260907141112\", Enter saved \"enter value 20260907141112\", Escape restored \"enter value 20260907141112\" without a save; legal-tagged Field saved; selecting Docs Contract retype 1788782207651 in the Overview Contract card opened Change contract type, refused a blank required number with \"Fill … — the new type requires it.\", Cancel kept Docs Contract required 1788782207651; 42 changed the type and the new Field shows 42; C-333 unchanged",
+      "at": "2026-09-07T14:11:38.997Z",
+      "ms": 1528
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "refusals: a Contributor on the team sees legal details read-only, cannot create a Contract or assign its Owner; an archived Contract is read-only until restored; Priya Raman is refused once she is off the Confidential team",
+      "result": "pass",
+      "actual": "Ravi Menon (Contributor on the team) saw the read-only notice, a disabled Owner select, no Create contract button, and 403 on create, Owner assignment, and a legal Field; Priya Raman read the Confidential record (200) while a Member and got 404 once taken off the team; her page read \"Something went wrong. The page could not load. Reload to try again. Reload\"; archived C-333 showed the archived notice, disabled Owner, and PATCH 409; Restore re-enabled editing",
+      "at": "2026-09-07T14:11:42.190Z",
+      "ms": 3192
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "the header Stage control lists every Status with its Stage; moving through Draft, Internal review, Awaiting approval, Out for signature and Active changes the Status beside the C- reference and the Stage display, and History records each change",
+      "result": "pass",
+      "actual": "Menu label \"Move to\" listed each Status with its Stage (e.g. Out for signature · Signature); moves recorded Internal review→review, Awaiting approval→approval, Out for signature→signature, Active→active; the header Stage button read \"<Stage> — move contract\" and the Status name showed beside the reference after each; Out for signature created no Envelope and Active filed no Document; History showed 4 status changes",
+      "at": "2026-09-07T13:32:36.063Z",
+      "ms": 1226
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "a move back to Review and a skip over Stages are accepted; a Status renamed by the Administrator keeps its Stage",
+      "result": "pass",
+      "actual": "Active → Internal review accepted (Stage review); the Administrator's new Status renamed to \"Rev renamed review administrator 20260907133231\" still listed and mapped as Review; Review → Active skipped Approval and Signature",
+      "at": "2026-09-07T13:32:37.676Z",
+      "ms": 1612
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Move past approval names unresolved approvals; Cancel keeps the current Status, Move anyway saves it and History records the override; the approvals keep their own state",
+      "result": "pass",
+      "actual": "Move past approval listed Priya Raman Pending; Cancel kept Awaiting approval; Move anyway saved Out for signature; History reads \"moved this contract past approval, overriding Priya Raman\"; the approval is still pending",
+      "at": "2026-09-07T13:32:38.736Z",
+      "ms": 1060
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "an Ended Status keeps the record editable; Archive removes the Stage control and refuses a direct write; Restore keeps the Ended Status and the control works again",
+      "result": "pass",
+      "actual": "Expired mapped to Ended and the Description still saved; archived record showed no Stage control and a direct status write answered 409; Restore left it Expired; the control then reopened it as Active",
+      "at": "2026-09-07T13:32:40.910Z",
+      "ms": 2174
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "a Contributor on the team and a reader without access get no Stage control and are refused",
+      "result": "pass",
+      "actual": "Ravi Menon (Contributor on the team) saw no Stage control and got 403; Priya Raman outside the Confidential team got 404; the Status stayed Active",
+      "at": "2026-09-07T13:32:41.571Z",
+      "ms": 661
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "the header Stage control lists every Status with its Stage; moving through Draft, Internal review, Awaiting approval, Out for signature and Active changes the Status beside the C- reference and the Stage display, and History records each change",
+      "result": "pass",
+      "actual": "Menu label \"Move to\" listed each Status with its Stage (e.g. Out for signature · Signature); moves recorded Internal review→review, Awaiting approval→approval, Out for signature→signature, Active→active; the header Stage button read \"<Stage> — move contract\" and the Status name showed beside the reference after each; Out for signature created no Envelope and Active filed no Document; History showed 4 status changes",
+      "at": "2026-09-07T13:32:45.295Z",
+      "ms": 1229
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "a move back to Review and a skip over Stages are accepted; a Status renamed by the Administrator keeps its Stage",
+      "result": "pass",
+      "actual": "Active → Internal review accepted (Stage review); the Administrator's new Status renamed to \"Rev renamed review legal_team_member 20260907133231\" still listed and mapped as Review; Review → Active skipped Approval and Signature",
+      "at": "2026-09-07T13:32:46.915Z",
+      "ms": 1620
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Move past approval names unresolved approvals; Cancel keeps the current Status, Move anyway saves it and History records the override; the approvals keep their own state",
+      "result": "pass",
+      "actual": "Move past approval listed Priya Raman Pending; Cancel kept Awaiting approval; Move anyway saved Out for signature; History reads \"moved this contract past approval, overriding Priya Raman\"; the approval is still pending",
+      "at": "2026-09-07T13:32:47.983Z",
+      "ms": 1068
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "an Ended Status keeps the record editable; Archive removes the Stage control and refuses a direct write; Restore keeps the Ended Status and the control works again",
+      "result": "pass",
+      "actual": "Expired mapped to Ended and the Description still saved; archived record showed no Stage control and a direct status write answered 409; Restore left it Expired; the control then reopened it as Active",
+      "at": "2026-09-07T13:32:50.082Z",
+      "ms": 2099
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "a Contributor on the team and a reader without access get no Stage control and are refused",
+      "result": "pass",
+      "actual": "Ravi Menon (Contributor on the team) saw no Stage control and got 403; Priya Raman outside the Confidential team got 404; the Status stayed Active",
+      "at": "2026-09-07T13:32:50.752Z",
+      "ms": 669
+    },
+    {
+      "article": "contract-approvals",
+      "scenario": "V-C16",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Add approver asks the picked people at once and shows Pending rows; a person with a pending request is not offered again; the picker offers only Legal Team Members and Administrators",
+      "result": "pass",
+      "actual": "Approvers offered 19 people including Priya Raman and Nadia Haddad, not Ravi Menon (Contributor) or a Business User; two Pending rows appeared at once; reopening the picker no longer offered the two pending people; a direct duplicate ask answered 409 and a Contributor ask 422",
+      "at": "2026-09-07T13:40:50.926Z",
+      "ms": 1043
+    },
+    {
+      "article": "contract-approvals",
+      "scenario": "V-C16",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "only the named approver can decide: the other role approves with a Note, Priya Raman rejects, the requester cannot decide for them, and a decision is final",
+      "result": "pass",
+      "actual": "Nadia Haddad saw no actions on Priya Raman's row and approved their own with the note; Priya Raman rejected hers; the requester's attempt to decide for Priya answered 403; a second decision on a decided row answered 409; the requester's view shows no actions on the decided rows",
+      "at": "2026-09-07T13:40:53.380Z",
+      "ms": 2453
+    },
+    {
+      "article": "contract-approvals",
+      "scenario": "V-C16",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Cancel request removes a pending row for the requester, the Owner and an Administrator, is refused for another Legal Team Member, and does not erase a decided approval",
+      "result": "pass",
+      "actual": "Priya Raman (named approver, not requester or Owner) got 403 on cancel; the requester's Cancel request removed the pending row; the Owner Nadia Haddad cancelled a request made by Daniel Okafor (200); Daniel Okafor as Administrator, neither requester nor Owner (Owner temporarily Priya Raman), cancelled another (200); the two decided rows stayed and a cancel on one answered 409; History records the cancellations",
+      "at": "2026-09-07T13:40:54.421Z",
+      "ms": 1041
+    },
+    {
+      "article": "contract-approvals",
+      "scenario": "V-C16",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Apply group asks the current members, names skipped pending people, and later group edits do not rewrite existing requests",
+      "result": "pass",
+      "actual": "Dialog said \"Asks Daniel Okafor.\" and \"Skips 1 person who already has a request open.\"; applying asked Daniel Okafor (source Docs sign-off 1788782207651) beside the already pending Nadia Haddad; adding Priya Raman to the group afterwards changed no request (Daniel Okafor, Nadia Haddad still pending)",
+      "at": "2026-09-07T13:40:55.286Z",
+      "ms": 864
+    },
+    {
+      "article": "contract-approvals",
+      "scenario": "V-C16",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Move past approval lists pending and rejected rows; Cancel keeps the Status and Move anyway records an override without answering them",
+      "result": "pass",
+      "actual": "Dialog listed the Rejected and the two Pending rows; Cancel kept Awaiting approval; Move anyway saved Out for signature and History reads \"overriding …\"; the two pending requests stayed pending",
+      "at": "2026-09-07T13:40:56.284Z",
+      "ms": 997
+    },
+    {
+      "article": "contract-approvals",
+      "scenario": "V-C16",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "on a Confidential Contract a person without access cannot be named and a group apply is refused by name; an archived Contract offers no approval actions",
+      "result": "pass",
+      "actual": "Confidential C-209: the picker offered BWBlair Wentworth, DODaniel Okafor, DADocs Morning administrator, DADocs Morning administrator, DADocs Morning administrator, DADocs Morning administrator, DADocs Morning administrator, IAInd Morning administrator (no Priya Raman); naming her answered 422 \"{\"type\":\"about:blank\",\"title\":\"Priya Raman can't see this contract, so they can't be asked to approve it.\",\"status\":422,\"detail\":\"Priya Raman can't see this contract, so they can't be asked to approve\"; the group Rev sign-off administrator 20260907134045 (Asks Daniel Okafor and Priya Raman.) was refused with \"Priya Raman can't see this contract, so they can't be asked to approve it.\" and asked nobody (0 rows), so the group member without access must be given access or removed first; archived C-208 showed no Add approver or Apply group and a direct ask answered 409",
+      "at": "2026-09-07T13:40:58.591Z",
+      "ms": 2307
+    },
+    {
+      "article": "contract-approvals",
+      "scenario": "V-C16",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Add approver asks the picked people at once and shows Pending rows; a person with a pending request is not offered again; the picker offers only Legal Team Members and Administrators",
+      "result": "pass",
+      "actual": "Approvers offered 19 people including Priya Raman and Daniel Okafor, not Ravi Menon (Contributor) or a Business User; two Pending rows appeared at once; reopening the picker no longer offered the two pending people; a direct duplicate ask answered 409 and a Contributor ask 422",
+      "at": "2026-09-07T13:41:02.990Z",
+      "ms": 1108
+    },
+    {
+      "article": "contract-approvals",
+      "scenario": "V-C16",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "only the named approver can decide: the other role approves with a Note, Priya Raman rejects, the requester cannot decide for them, and a decision is final",
+      "result": "pass",
+      "actual": "Daniel Okafor saw no actions on Priya Raman's row and approved their own with the note; Priya Raman rejected hers; the requester's attempt to decide for Priya answered 403; a second decision on a decided row answered 409; the requester's view shows no actions on the decided rows",
+      "at": "2026-09-07T13:41:05.424Z",
+      "ms": 2434
+    },
+    {
+      "article": "contract-approvals",
+      "scenario": "V-C16",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Cancel request removes a pending row for the requester, the Owner and an Administrator, is refused for another Legal Team Member, and does not erase a decided approval",
+      "result": "pass",
+      "actual": "Priya Raman (named approver, not requester or Owner) got 403 on cancel; the requester's Cancel request removed the pending row; the Owner Daniel Okafor cancelled a request made by Nadia Haddad (200); Daniel Okafor as Administrator, neither requester nor Owner (Owner temporarily Priya Raman), cancelled another (200); the two decided rows stayed and a cancel on one answered 409; History records the cancellations",
+      "at": "2026-09-07T13:41:06.432Z",
+      "ms": 1007
+    },
+    {
+      "article": "contract-approvals",
+      "scenario": "V-C16",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Apply group asks the current members, names skipped pending people, and later group edits do not rewrite existing requests",
+      "result": "pass",
+      "actual": "Dialog said \"Asks Nadia Haddad.\" and \"Skips 1 person who already has a request open.\"; applying asked Nadia Haddad (source Docs sign-off 1788782207651) beside the already pending Daniel Okafor; adding Priya Raman to the group afterwards changed no request (Daniel Okafor, Nadia Haddad still pending)",
+      "at": "2026-09-07T13:41:07.296Z",
+      "ms": 864
+    },
+    {
+      "article": "contract-approvals",
+      "scenario": "V-C16",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Move past approval lists pending and rejected rows; Cancel keeps the Status and Move anyway records an override without answering them",
+      "result": "pass",
+      "actual": "Dialog listed the Rejected and the two Pending rows; Cancel kept Awaiting approval; Move anyway saved Out for signature and History reads \"overriding …\"; the two pending requests stayed pending",
+      "at": "2026-09-07T13:41:08.300Z",
+      "ms": 1004
+    },
+    {
+      "article": "contract-approvals",
+      "scenario": "V-C16",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "on a Confidential Contract a person without access cannot be named and a group apply is refused by name; an archived Contract offers no approval actions",
+      "result": "pass",
+      "actual": "Confidential C-211: the picker offered BWBlair Wentworth, DODaniel Okafor, DADocs Morning administrator, DADocs Morning administrator, DADocs Morning administrator, DADocs Morning administrator, DADocs Morning administrator, IAInd Morning administrator, NHNadia Haddad (no Priya Raman); naming her answered 422 \"{\"type\":\"about:blank\",\"title\":\"Priya Raman can't see this contract, so they can't be asked to approve it.\",\"status\":422,\"detail\":\"Priya Raman can't see this contract, so they can't be asked to approve\"; the group Rev sign-off legal_team_member 20260907134045 (Asks Nadia Haddad and Priya Raman.) was refused with \"Priya Raman can't see this contract, so they can't be asked to approve it.\" and asked nobody (0 rows), so the group member without access must be given access or removed first; archived C-210 showed no Add approver or Apply group and a direct ask answered 409",
+      "at": "2026-09-07T13:41:10.492Z",
+      "ms": 2192
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "the Stage control moves the Contract to Out for signature without a connector: no Send for signature control and no Envelope; a draft is uploaded as the first Document",
+      "result": "pass",
+      "actual": "Upload document filed the draft as the first Document (734-rev-draft-administrator.pdf); Out for signature was chosen from the Stage control; the Approvals section offers no Send for signature and the record has no Envelope",
+      "at": "2026-09-07T13:43:52.387Z",
+      "ms": 1058
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Add version files the executed paper on the same Document; choosing the Executed kind does not set the executed designation; the download matches the uploaded bytes",
+      "result": "pass",
+      "actual": "Add version created Version 2 with kind executed on 734-rev-draft-administrator.pdf; the downloaded Version 2 bytes equal the uploaded file; isExecuted is still false (kind alone does not designate); the page shows the Executed kind pill (1 cell) and no executed designation",
+      "at": "2026-09-07T13:43:53.290Z",
+      "ms": 903
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Mark as executed copy on Version 2 sets the designation; Unmark clears it and marking again restores it; the Contract Status does not change",
+      "result": "pass",
+      "actual": "Version 2 is the current Version, so its Mark as executed copy sits in the Document row's Actions menu (a separate version-level menu existed 0 times); designated, cleared with Unmark as executed copy, and designated again; the Status stayed Out for signature; 734-rev-draft-administrator.pdf is the primary Document",
+      "at": "2026-09-07T13:43:54.342Z",
+      "ms": 1051
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "a later Version becomes current while Version 2 keeps the executed designation and its original bytes; the executed designation does not move the Status",
+      "result": "pass",
+      "actual": "Version 3 is current; Version 2 keeps the executed designation and downloads the original executed bytes; the earlier versions expand under the row; Status still Out for signature",
+      "at": "2026-09-07T13:43:55.283Z",
+      "ms": 940
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "the Stage control moves the Contract to Active; History records the change; the manual flow created no Envelope",
+      "result": "pass",
+      "actual": "Active chosen from the Stage control; History shows the status change; zero Envelopes on the record",
+      "at": "2026-09-07T13:43:56.086Z",
+      "ms": 803
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "a Contributor on the team can read the paper but not designate the executed Version; an archived Contract offers no Document actions and refuses the designation",
+      "result": "pass",
+      "actual": "Ravi Menon read the Document and downloaded Version 2 (200) but his row menu (absent) has no executed action and the API answered 403; the archived Contract showed no Document actions and refused the designation change with 409; after Restore Version 2 is still designated",
+      "at": "2026-09-07T13:43:57.508Z",
+      "ms": 1422
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "the Stage control moves the Contract to Out for signature without a connector: no Send for signature control and no Envelope; a draft is uploaded as the first Document",
+      "result": "pass",
+      "actual": "Upload document filed the draft as the first Document (734-rev-draft-legal_team_member.pdf); Out for signature was chosen from the Stage control; the Approvals section offers no Send for signature and the record has no Envelope",
+      "at": "2026-09-07T13:44:01.029Z",
+      "ms": 1071
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Add version files the executed paper on the same Document; choosing the Executed kind does not set the executed designation; the download matches the uploaded bytes",
+      "result": "pass",
+      "actual": "Add version created Version 2 with kind executed on 734-rev-draft-legal_team_member.pdf; the downloaded Version 2 bytes equal the uploaded file; isExecuted is still false (kind alone does not designate); the page shows the Executed kind pill (1 cell) and no executed designation",
+      "at": "2026-09-07T13:44:01.945Z",
+      "ms": 916
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Mark as executed copy on Version 2 sets the designation; Unmark clears it and marking again restores it; the Contract Status does not change",
+      "result": "pass",
+      "actual": "Version 2 is the current Version, so its Mark as executed copy sits in the Document row's Actions menu (a separate version-level menu existed 0 times); designated, cleared with Unmark as executed copy, and designated again; the Status stayed Out for signature; 734-rev-draft-legal_team_member.pdf is the primary Document",
+      "at": "2026-09-07T13:44:02.976Z",
+      "ms": 1031
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "a later Version becomes current while Version 2 keeps the executed designation and its original bytes; the executed designation does not move the Status",
+      "result": "pass",
+      "actual": "Version 3 is current; Version 2 keeps the executed designation and downloads the original executed bytes; the earlier versions expand under the row; Status still Out for signature",
+      "at": "2026-09-07T13:44:03.948Z",
+      "ms": 971
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "the Stage control moves the Contract to Active; History records the change; the manual flow created no Envelope",
+      "result": "pass",
+      "actual": "Active chosen from the Stage control; History shows the status change; zero Envelopes on the record",
+      "at": "2026-09-07T13:44:04.730Z",
+      "ms": 782
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "a Contributor on the team can read the paper but not designate the executed Version; an archived Contract offers no Document actions and refuses the designation",
+      "result": "pass",
+      "actual": "Ravi Menon read the Document and downloaded Version 2 (200) but his row menu (absent) has no executed action and the API answered 403; the archived Contract showed no Document actions and refused the designation change with 409; after Restore Version 2 is still designated",
+      "at": "2026-09-07T13:44:06.131Z",
+      "ms": 1401
+    },
+    {
+      "article": "electronic-signing",
+      "scenario": "V-C17-electronic",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-signing-workflow",
+      "step": "Send for signature is absent without a primary Document and while the connector is disabled; it appears once the connector is enabled and a primary Document exists",
+      "result": "pass",
+      "actual": "No Send for signature without paper; with a primary Document (2 Versions) and a supporting Document but the connector disabled by the Administrator it stayed absent; enabling the connector showed it",
+      "at": "2026-09-07T14:10:02.101Z",
+      "ms": 3864
+    },
+    {
+      "article": "electronic-signing",
+      "scenario": "V-C17-electronic",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-signing-workflow",
+      "step": "the dialog offers only the primary Document's Versions with the current one selected, refuses empty or duplicate Signers, and Cancel sends nothing to the app or the provider",
+      "result": "pass",
+      "actual": "Version listed Version 2 — rev-primary-v2-administrator.pdf (current) | Version 1 — rev-primary-administrator.pdf with \"Version 2 — rev-primary-v2-administrator.pdf (current)\" selected and no supporting Document; empty Signers refused with \"Give every signer a name and an email address.\"; a duplicate address refused with \"Each signer needs their own email address.\"; Cancel left zero Envelopes in the app and the provider count at 32",
+      "at": "2026-09-07T14:10:03.102Z",
+      "ms": 1001
+    },
+    {
+      "article": "electronic-signing",
+      "scenario": "V-C17-electronic",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-signing-workflow",
+      "step": "a provider outage shows the send error and creates no round; the retry sends the earlier primary Version with a blank subject, and the provider receives exactly that PDF with the subject \"C-<number> <title>\"",
+      "result": "pass",
+      "actual": "During the controlled outage the dialog said \"The provider could not be reached. It may still have taken the envelope — check at the provider before you send again.\" and no round existed; the retry sent Version 1 with a blank Subject; the row reads \"Rev Signer One rev.one@example.invalid Rev Signer Two rev.two@example.invalid rev-primary-administrator.pdf Version 1 Ou\" and the header shows Envelope sent; the provider received one Envelope with subject \"C-42 Rev C17 electronic administrator 20260907140953\", two fictional Signers, and bytes identical to Version 1; Status still Out for signature",
+      "at": "2026-09-07T14:10:04.976Z",
+      "ms": 1873
+    },
+    {
+      "article": "electronic-signing",
+      "scenario": "V-C17-electronic",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-signing-workflow",
+      "step": "while a round is live a second send is unavailable; an unrelated Legal Team Member cannot void; the Owner can; Reason is required, Cancel keeps the round, and the void records the reason and frees a new send",
+      "result": "pass",
+      "actual": "Send for signature was absent and a direct second send answered 409; Priya Raman had no envelope actions and her void answered 403; the sender Daniel Okafor had the actions menu; the Owner Nadia Haddad opened Void envelope, an empty Reason was refused with \"Say why this envelope is being voided.\", Cancel kept the round sent, and confirming recorded Voided with the reason (provider status voided); Send for signature returned; Status still Out for signature",
+      "at": "2026-09-07T14:10:09.717Z",
+      "ms": 4741
+    },
+    {
+      "article": "electronic-signing",
+      "scenario": "V-C17-electronic",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-signing-workflow",
+      "step": "a new round declined by the provider records Declined with its reason, files nothing, keeps the Voided row, and does not end the Contract; another send is allowed",
+      "result": "pass",
+      "actual": "The provider's signed decline (webhook 204) produced a Declined row with \"Fictional signer declined 20260907140953\" beside the earlier Voided row and the header Envelope declined; no executed Version was filed; the Contract is still Out for signature and unarchived; Send for signature is offered again",
+      "at": "2026-09-07T14:10:12.042Z",
+      "ms": 2325
+    },
+    {
+      "article": "electronic-signing",
+      "scenario": "V-C17-electronic",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-signing-workflow",
+      "step": "completion files the returned PDF once as the pinned executed Version on the primary Document, shows Signed then Executed copy, and advances Out for signature to Active; a repeated completion changes nothing",
+      "result": "pass",
+      "actual": "The provider's signed completion (webhook 204) made the row \"Rev Signer One rev.one@example.invalid rev-primary-administrator.pdf Version 2 Signed Sep 7 by Danie\" with an Executed copy link; the executed PDF was filed once as Version 3 (kind executed, current, designated) on the primary Document and its bytes equal the provider's output; the supporting Document is untouched; Status advanced to Active; a repeated completion (webhook 204) added no Version or Envelope",
+      "at": "2026-09-07T14:10:19.126Z",
+      "ms": 7084
+    },
+    {
+      "article": "electronic-signing",
+      "scenario": "V-C17-electronic",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-signing-workflow",
+      "step": "a completion after the Contract was deliberately moved to Internal review files the paper but leaves that Stage alone",
+      "result": "pass",
+      "actual": "With the Contract moved to Internal review before completion, the executed paper was filed as Version 4 (designated, current) and the Status stayed Internal review",
+      "at": "2026-09-07T14:10:21.592Z",
+      "ms": 2465
+    },
+    {
+      "article": "electronic-signing",
+      "scenario": "V-C17-electronic",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-signing-workflow",
+      "step": "a Contributor on the team cannot send; an archived Contract offers no Send while its recorded rounds stay readable",
+      "result": "pass",
+      "actual": "Ravi Menon read 4 recorded rounds with no Send for signature and got 403; the archived Contract kept 4 rounds readable with no Send; restored afterwards",
+      "at": "2026-09-07T14:10:23.074Z",
+      "ms": 1481
+    },
+    {
+      "article": "electronic-signing",
+      "scenario": "V-C17-electronic",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-signing-workflow",
+      "step": "Send for signature is absent without a primary Document and while the connector is disabled; it appears once the connector is enabled and a primary Document exists",
+      "result": "pass",
+      "actual": "No Send for signature without paper; with a primary Document (2 Versions) and a supporting Document but the connector disabled by the Administrator it stayed absent; enabling the connector showed it",
+      "at": "2026-09-07T14:10:30.278Z",
+      "ms": 3879
+    },
+    {
+      "article": "electronic-signing",
+      "scenario": "V-C17-electronic",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-signing-workflow",
+      "step": "the dialog offers only the primary Document's Versions with the current one selected, refuses empty or duplicate Signers, and Cancel sends nothing to the app or the provider",
+      "result": "pass",
+      "actual": "Version listed Version 2 — rev-primary-v2-legal_team_member.pdf (current) | Version 1 — rev-primary-legal_team_member.pdf with \"Version 2 — rev-primary-v2-legal_team_member.pdf (current)\" selected and no supporting Document; empty Signers refused with \"Give every signer a name and an email address.\"; a duplicate address refused with \"Each signer needs their own email address.\"; Cancel left zero Envelopes in the app and the provider count at 36",
+      "at": "2026-09-07T14:10:31.232Z",
+      "ms": 954
+    },
+    {
+      "article": "electronic-signing",
+      "scenario": "V-C17-electronic",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-signing-workflow",
+      "step": "a provider outage shows the send error and creates no round; the retry sends the earlier primary Version with a blank subject, and the provider receives exactly that PDF with the subject \"C-<number> <title>\"",
+      "result": "pass",
+      "actual": "During the controlled outage the dialog said \"The provider could not be reached. It may still have taken the envelope — check at the provider before you send again.\" and no round existed; the retry sent Version 1 with a blank Subject; the row reads \"Rev Signer One rev.one@example.invalid Rev Signer Two rev.two@example.invalid rev-primary-legal_team_member.pdf Version \" and the header shows Envelope sent; the provider received one Envelope with subject \"C-43 Rev C17 electronic legal_team_member 20260907140953\", two fictional Signers, and bytes identical to Version 1; Status still Out for signature",
+      "at": "2026-09-07T14:10:33.043Z",
+      "ms": 1811
+    },
+    {
+      "article": "electronic-signing",
+      "scenario": "V-C17-electronic",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-signing-workflow",
+      "step": "while a round is live a second send is unavailable; an unrelated Legal Team Member cannot void; the Owner can; Reason is required, Cancel keeps the round, and the void records the reason and frees a new send",
+      "result": "pass",
+      "actual": "Send for signature was absent and a direct second send answered 409; Priya Raman had no envelope actions and her void answered 403; the sender Nadia Haddad had the actions menu; the Owner Daniel Okafor opened Void envelope, an empty Reason was refused with \"Say why this envelope is being voided.\", Cancel kept the round sent, and confirming recorded Voided with the reason (provider status voided); Send for signature returned; Status still Out for signature",
+      "at": "2026-09-07T14:10:37.850Z",
+      "ms": 4807
+    },
+    {
+      "article": "electronic-signing",
+      "scenario": "V-C17-electronic",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-signing-workflow",
+      "step": "a new round declined by the provider records Declined with its reason, files nothing, keeps the Voided row, and does not end the Contract; another send is allowed",
+      "result": "pass",
+      "actual": "The provider's signed decline (webhook 204) produced a Declined row with \"Fictional signer declined 20260907140953\" beside the earlier Voided row and the header Envelope declined; no executed Version was filed; the Contract is still Out for signature and unarchived; Send for signature is offered again",
+      "at": "2026-09-07T14:10:40.153Z",
+      "ms": 2302
+    },
+    {
+      "article": "electronic-signing",
+      "scenario": "V-C17-electronic",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-signing-workflow",
+      "step": "completion files the returned PDF once as the pinned executed Version on the primary Document, shows Signed then Executed copy, and advances Out for signature to Active; a repeated completion changes nothing",
+      "result": "pass",
+      "actual": "The provider's signed completion (webhook 204) made the row \"Rev Signer One rev.one@example.invalid rev-primary-legal_team_member.pdf Version 2 Signed Sep 7 by N\" with an Executed copy link; the executed PDF was filed once as Version 3 (kind executed, current, designated) on the primary Document and its bytes equal the provider's output; the supporting Document is untouched; Status advanced to Active; a repeated completion (webhook 204) added no Version or Envelope",
+      "at": "2026-09-07T14:10:47.280Z",
+      "ms": 7127
+    },
+    {
+      "article": "electronic-signing",
+      "scenario": "V-C17-electronic",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-signing-workflow",
+      "step": "a completion after the Contract was deliberately moved to Internal review files the paper but leaves that Stage alone",
+      "result": "pass",
+      "actual": "With the Contract moved to Internal review before completion, the executed paper was filed as Version 4 (designated, current) and the Status stayed Internal review",
+      "at": "2026-09-07T14:10:49.773Z",
+      "ms": 2493
+    },
+    {
+      "article": "electronic-signing",
+      "scenario": "V-C17-electronic",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-signing-workflow",
+      "step": "a Contributor on the team cannot send; an archived Contract offers no Send while its recorded rounds stay readable",
+      "result": "pass",
+      "actual": "Ravi Menon read 4 recorded rounds with no Send for signature and got 403; the archived Contract kept 4 rounds readable with no Send; restored afterwards",
+      "at": "2026-09-07T14:10:51.226Z",
+      "ms": 1453
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Term type, Effective date, Expiry date, Renewal period and Notice period save one at a time; Fixed term has no renewal period, Evergreen clears the expiry, and leaving Auto-renewing clears the renewal period",
+      "result": "pass",
+      "actual": "Fixed term showed no Renewal period control; effective February 1, 2026 and expiry January 31, 2027 picked from the calendar and notice 30 days typed, each saved on its own with the notice deadline derived as 2027-01-01; Auto-renewing accepted a 1-month renewal period; Evergreen cleared expiry and renewal period (expiry control count 0); Auto-renewing → Fixed term cleared the renewal period and kept the expiry; the Contract is Auto-renewing again with expiry 2027-01-31; Term timeline drawn",
+      "at": "2026-09-07T13:51:10.368Z",
+      "ms": 1305
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Key dates shows Current term expires and Renewal notice deadline as Derived rows without their own actions; the deadline is expiry minus the notice period",
+      "result": "pass",
+      "actual": "Derived rows: \"Jan 31, 2027 Current term expires Derived \" and \"Jan 1, 2027 Renewal notice deadline — 30 days before expiry Derived \" (30 days before expiry), with no row actions",
+      "at": "2026-09-07T13:51:11.077Z",
+      "ms": 708
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Renew → Confirm the roll proposes the next expiry, refuses a date not after the current expiry, Cancel records nothing, and confirmation records the roll once without changing the Status",
+      "result": "pass",
+      "actual": "Dialog said \"The term currently runs to Jan 31, 2027.\" and proposed 2027-02-28; 2027-01-31 was refused with \"A roll moves the term forward. Pick a date after the current expiry.\"; Cancel kept 2027-01-31; Confirm renewal moved expiry to 2027-02-28 and the notice deadline to 2027-01-29, added the Renewals row \"Term advanced to Feb 28, 2027 From Jan 31, 2027 DO Daniel Okafor Sep 7\", showed \"Last renewal Sep 7\" on Overview, and left the Status Draft",
+      "at": "2026-09-07T13:51:12.308Z",
+      "ms": 1231
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "a competing expiry change is refused: the dialog refreshes the current expiry and keeps the entered date; Cancel and reopen show a fresh proposal; no second roll is recorded",
+      "result": "pass",
+      "actual": "With the dialog open on the proposal 2027-03-28, Nadia Haddad moved the expiry to 2027-04-30 through the API; Confirm renewal was refused (\"This contract's expiry has already moved. Read the record again before confirming the roll.\"), the dialog now says the term runs to April 30, 2027 while keeping 2027-03-28; Cancel and reopen proposed 2027-05-30; one roll remains recorded",
+      "at": "2026-09-07T13:51:13.362Z",
+      "ms": 1054
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Paper as amendment is absent without a primary Document; with one it opens Add version with the Amendment kind; the upload does not designate itself executed or advance expiry, and marking it explicitly replaces the chain's designation",
+      "result": "pass",
+      "actual": "Without a primary Document the dialog had no Paper as amendment; after uploading one (Version 1 designated executed) and reloading, Paper as amendment → File the amendment opened Add version with Kind preset to Amendment; the upload became Version 2 (kind amendment, not designated, Version 1 still designated); Mark as executed copy on Version 2 moved the designation off Version 1; expiry stayed 2027-04-30 and no new Contract was made",
+      "at": "2026-09-07T13:51:15.251Z",
+      "ms": 1889
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Create child contract and New successor contract open prefilled create dialogs; the new Contract carries Entity, Counterparties, value and term but not Owner, team, Status, Priority, Risk or Confidential; the parent chain or Renews link is set and the predecessor expiry is unchanged",
+      "result": "pass",
+      "actual": "Child C-228 (dialog \"Prefilled from C-227 and born under it. The counterparties, …\", prefilled Title \"Rev C18 administrator 20260907135106\") and successor C-229 were created from the Renew dialog; both copied Docs Contract live Entity 1788782207651, 1 Counterparty, GBP 9900 annually and the Auto-renewing term to 2027-04-30, with no Owner, no Ravi Menon on the team, Status Draft, Priority medium, no Risk and Confidential off; the child sits under C-227 and the successor Renews it; C-227 still expires 2027-04-30",
+      "at": "2026-09-07T13:51:17.293Z",
+      "ms": 2042
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "a Contributor and an archived Contract cannot renew, while the saved term and the recorded roll remain",
+      "result": "pass",
+      "actual": "Ravi Menon saw no Renew and got 403; the archived record showed no Renew (its read-only Approvals section listed 0 Renewals table rows) and answered 409; after Restore one Renewals row and the 2027-04-30 expiry remain",
+      "at": "2026-09-07T13:51:19.383Z",
+      "ms": 2090
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Term type, Effective date, Expiry date, Renewal period and Notice period save one at a time; Fixed term has no renewal period, Evergreen clears the expiry, and leaving Auto-renewing clears the renewal period",
+      "result": "pass",
+      "actual": "Fixed term showed no Renewal period control; effective February 1, 2026 and expiry January 31, 2027 picked from the calendar and notice 30 days typed, each saved on its own with the notice deadline derived as 2027-01-01; Auto-renewing accepted a 1-month renewal period; Evergreen cleared expiry and renewal period (expiry control count 0); Auto-renewing → Fixed term cleared the renewal period and kept the expiry; the Contract is Auto-renewing again with expiry 2027-01-31; Term timeline drawn",
+      "at": "2026-09-07T13:51:23.203Z",
+      "ms": 1301
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Key dates shows Current term expires and Renewal notice deadline as Derived rows without their own actions; the deadline is expiry minus the notice period",
+      "result": "pass",
+      "actual": "Derived rows: \"Jan 31, 2027 Current term expires Derived \" and \"Jan 1, 2027 Renewal notice deadline — 30 days before expiry Derived \" (30 days before expiry), with no row actions",
+      "at": "2026-09-07T13:51:23.924Z",
+      "ms": 721
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Renew → Confirm the roll proposes the next expiry, refuses a date not after the current expiry, Cancel records nothing, and confirmation records the roll once without changing the Status",
+      "result": "pass",
+      "actual": "Dialog said \"The term currently runs to Jan 31, 2027.\" and proposed 2027-02-28; 2027-01-31 was refused with \"A roll moves the term forward. Pick a date after the current expiry.\"; Cancel kept 2027-01-31; Confirm renewal moved expiry to 2027-02-28 and the notice deadline to 2027-01-29, added the Renewals row \"Term advanced to Feb 28, 2027 From Jan 31, 2027 NH Nadia Haddad Sep 7\", showed \"Last renewal Sep 7\" on Overview, and left the Status Draft",
+      "at": "2026-09-07T13:51:25.123Z",
+      "ms": 1199
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "a competing expiry change is refused: the dialog refreshes the current expiry and keeps the entered date; Cancel and reopen show a fresh proposal; no second roll is recorded",
+      "result": "pass",
+      "actual": "With the dialog open on the proposal 2027-03-28, Daniel Okafor moved the expiry to 2027-04-30 through the API; Confirm renewal was refused (\"This contract's expiry has already moved. Read the record again before confirming the roll.\"), the dialog now says the term runs to April 30, 2027 while keeping 2027-03-28; Cancel and reopen proposed 2027-05-30; one roll remains recorded",
+      "at": "2026-09-07T13:51:26.212Z",
+      "ms": 1089
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Paper as amendment is absent without a primary Document; with one it opens Add version with the Amendment kind; the upload does not designate itself executed or advance expiry, and marking it explicitly replaces the chain's designation",
+      "result": "pass",
+      "actual": "Without a primary Document the dialog had no Paper as amendment; after uploading one (Version 1 designated executed) and reloading, Paper as amendment → File the amendment opened Add version with Kind preset to Amendment; the upload became Version 2 (kind amendment, not designated, Version 1 still designated); Mark as executed copy on Version 2 moved the designation off Version 1; expiry stayed 2027-04-30 and no new Contract was made",
+      "at": "2026-09-07T13:51:28.059Z",
+      "ms": 1847
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Create child contract and New successor contract open prefilled create dialogs; the new Contract carries Entity, Counterparties, value and term but not Owner, team, Status, Priority, Risk or Confidential; the parent chain or Renews link is set and the predecessor expiry is unchanged",
+      "result": "pass",
+      "actual": "Child C-231 (dialog \"Prefilled from C-230 and born under it. The counterparties, …\", prefilled Title \"Rev C18 legal_team_member 20260907135106\") and successor C-232 were created from the Renew dialog; both copied Docs Contract live Entity 1788782207651, 1 Counterparty, GBP 9900 annually and the Auto-renewing term to 2027-04-30, with no Owner, no Ravi Menon on the team, Status Draft, Priority medium, no Risk and Confidential off; the child sits under C-230 and the successor Renews it; C-230 still expires 2027-04-30",
+      "at": "2026-09-07T13:51:30.055Z",
+      "ms": 1996
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "a Contributor and an archived Contract cannot renew, while the saved term and the recorded roll remain",
+      "result": "pass",
+      "actual": "Ravi Menon saw no Renew and got 403; the archived record showed no Renew (its read-only Approvals section listed 0 Renewals table rows) and answered 409; after Restore one Renewals row and the 2027-04-30 expiry remain",
+      "at": "2026-09-07T13:51:32.107Z",
+      "ms": 2052
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Add task refuses a blank Title; a person staged with Add someone to the team… and Use this person is not added when the form is cancelled, so no Task and no Confidential access result",
+      "result": "pass",
+      "actual": "Blank Title was refused with \"Name what needs doing.\"; the assignee picker offered DO\nDaniel Okafor, NH\nNadia Haddad, RM\nRavi Menon (team and Owner Nadia Haddad; Priya Raman only via Add someone to the team…); after Use this person the form said membership is saved with the task; Cancel left no Task, Priya Raman off the team and refused (404)",
+      "at": "2026-09-07T13:57:21.338Z",
+      "ms": 1099
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "assigned and unassigned Tasks appear in the order added; the checkbox completes and reopens a Task and the done count follows; the screen has no reordering control",
+      "result": "pass",
+      "actual": "Two Tasks listed in append order (first assigned to Daniel Okafor, due Sep 8, 2026 typed into Due date (optional); second Unassigned); the checkbox completed the first (\"1 of 2 done\") and reopened it; no reorder, drag or move control on the screen; the Contract's expiry did not change",
+      "at": "2026-09-07T13:57:22.508Z",
+      "ms": 1170
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "the row assignee control offers the team and Owner; Add someone to the team… with Add to team and assign adds Priya Raman to the team; Unassigned clears the Task but keeps her membership",
+      "result": "pass",
+      "actual": "Row picker offered DO\nDaniel Okafor, NH\nNadia Haddad, RM\nRavi Menon (team members and Owner Nadia Haddad); Add to team and assign made Priya Raman a team member (Priya Raman:member) with access (200) and the assignee; Unassigned cleared the Task while she stayed on the team",
+      "at": "2026-09-07T13:57:23.528Z",
+      "ms": 1020
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Edit task changes the Title after a cancelled edit kept the old one; Remove task deletes only that row",
+      "result": "pass",
+      "actual": "Cancel kept \"Rev second task 20260907135717\"; Save renamed it; Remove task removed only it, leaving the first Task",
+      "at": "2026-09-07T13:57:24.640Z",
+      "ms": 1112
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Add date refuses missing inputs; two Key dates can share a day beside the Derived term rows, which have no actions; the Task due date is not a Contract deadline",
+      "result": "pass",
+      "actual": "Empty form refused with \"Pick a date.\"; two Key dates on Sep 9, 2026 listed with source Key date beside the two Derived rows (Oct 7 Renewal notice deadline — 10 days before exp | Oct 17 Current term expires Derived ) which have no actions; the Task due on Sep 8, 2026 is not in the list",
+      "at": "2026-09-07T13:57:25.605Z",
+      "ms": 965
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Edit date: Cancel keeps the Event, a failed save keeps the old date, the retry moves it, and Remove date deletes only that Key date",
+      "result": "pass",
+      "actual": "Cancel kept \"Rev site visit 20260907135717\"; a controlled 503 on Save showed \"The change could not be saved. Try again.\" and left Sep 9, 2026; the retry moved it to Sep 10, 2026; Remove date deleted only that Key date, leaving \"Rev board update\"",
+      "at": "2026-09-07T13:57:26.769Z",
+      "ms": 1164
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Home lists the assigned open Task under Tasks assigned to you with a link to the Contract Tasks section, and the Key date under Dates approaching",
+      "result": "pass",
+      "actual": "Home → Tasks assigned to you (View all → /home/tasks) linked \"Rev first task\" to /contracts/240/tasks where its checkbox is shown; Dates approaching did not list it among its first rows; View all opened the \"Your dates\" calendar dialog, which listed it",
+      "at": "2026-09-07T13:57:28.246Z",
+      "ms": 1477
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "a Contributor on the team reads Tasks and Key dates but cannot change them; an archived Contract is read-only for both",
+      "result": "pass",
+      "actual": "Ravi Menon saw the Task with a disabled checkbox and the Key date, with no Add task or Add date, and both writes answered 403; archived C-240 showed no Add task and answered 409 for a Task and a Key date; one Task and one Key date remain",
+      "at": "2026-09-07T13:57:29.744Z",
+      "ms": 1498
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Add task refuses a blank Title; a person staged with Add someone to the team… and Use this person is not added when the form is cancelled, so no Task and no Confidential access result",
+      "result": "pass",
+      "actual": "Blank Title was refused with \"Name what needs doing.\"; the assignee picker offered DO\nDaniel Okafor, NH\nNadia Haddad, RM\nRavi Menon (team and Owner Daniel Okafor; Priya Raman only via Add someone to the team…); after Use this person the form said membership is saved with the task; Cancel left no Task, Priya Raman off the team and refused (404)",
+      "at": "2026-09-07T13:57:33.288Z",
+      "ms": 1024
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "assigned and unassigned Tasks appear in the order added; the checkbox completes and reopens a Task and the done count follows; the screen has no reordering control",
+      "result": "pass",
+      "actual": "Two Tasks listed in append order (first assigned to Nadia Haddad, due Sep 8, 2026 typed into Due date (optional); second Unassigned); the checkbox completed the first (\"1 of 2 done\") and reopened it; no reorder, drag or move control on the screen; the Contract's expiry did not change",
+      "at": "2026-09-07T13:57:34.460Z",
+      "ms": 1172
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "the row assignee control offers the team and Owner; Add someone to the team… with Add to team and assign adds Priya Raman to the team; Unassigned clears the Task but keeps her membership",
+      "result": "pass",
+      "actual": "Row picker offered DO\nDaniel Okafor, NH\nNadia Haddad, RM\nRavi Menon (team members and Owner Daniel Okafor); Add to team and assign made Priya Raman a team member (Priya Raman:member) with access (200) and the assignee; Unassigned cleared the Task while she stayed on the team",
+      "at": "2026-09-07T13:57:35.475Z",
+      "ms": 1015
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Edit task changes the Title after a cancelled edit kept the old one; Remove task deletes only that row",
+      "result": "pass",
+      "actual": "Cancel kept \"Rev second task 20260907135717\"; Save renamed it; Remove task removed only it, leaving the first Task",
+      "at": "2026-09-07T13:57:36.533Z",
+      "ms": 1058
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Add date refuses missing inputs; two Key dates can share a day beside the Derived term rows, which have no actions; the Task due date is not a Contract deadline",
+      "result": "pass",
+      "actual": "Empty form refused with \"Pick a date.\"; two Key dates on Sep 9, 2026 listed with source Key date beside the two Derived rows (Oct 7 Renewal notice deadline — 10 days before exp | Oct 17 Current term expires Derived ) which have no actions; the Task due on Sep 8, 2026 is not in the list",
+      "at": "2026-09-07T13:57:37.536Z",
+      "ms": 1003
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Edit date: Cancel keeps the Event, a failed save keeps the old date, the retry moves it, and Remove date deletes only that Key date",
+      "result": "pass",
+      "actual": "Cancel kept \"Rev site visit 20260907135717\"; a controlled 503 on Save showed \"The change could not be saved. Try again.\" and left Sep 9, 2026; the retry moved it to Sep 10, 2026; Remove date deleted only that Key date, leaving \"Rev board update\"",
+      "at": "2026-09-07T13:57:38.720Z",
+      "ms": 1183
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Home lists the assigned open Task under Tasks assigned to you with a link to the Contract Tasks section, and the Key date under Dates approaching",
+      "result": "pass",
+      "actual": "Home → Tasks assigned to you (the Home card) linked \"Rev first task\" to /contracts/241/tasks where its checkbox is shown; Dates approaching listed the Key date in the card",
+      "at": "2026-09-07T13:57:40.040Z",
+      "ms": 1320
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "a Contributor on the team reads Tasks and Key dates but cannot change them; an archived Contract is read-only for both",
+      "result": "pass",
+      "actual": "Ravi Menon saw the Task with a disabled checkbox and the Key date, with no Add task or Add date, and both writes answered 403; archived C-241 showed no Add task and answered 409 for a Task and a Key date; one Task and one Key date remain",
+      "at": "2026-09-07T13:57:41.537Z",
+      "ms": 1497
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Set parent: Cancel leaves no parent; confirming places this Contract under the chosen one; the parent shows it as a child and refuses the reverse choice that would close a loop",
+      "result": "pass",
+      "actual": "Cancel set no parent; Set parent placed C-352 under C-353; C-353's card lists C-352 under Children; choosing C-352 as C-353's parent was refused: That contract already sits under this one. Pick another parent.; a direct write answered 409",
+      "at": "2026-09-07T14:22:11.018Z",
+      "ms": 3449
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Add link records Related, Renews and Amends with their direction; the other record reads Renewed by and Amended by; a duplicate typed link is refused and the picker never offers the Contract itself",
+      "result": "pass",
+      "actual": "C-352 now shows C-354 under Related, Renews and Amends; C-354 shows C-352 under Related, Renewed by and Amended by; a second Renews link was refused with \"These two contracts are already linked that way.\"; the picker did not offer C-352 itself and a direct self-link answered 409",
+      "at": "2026-09-07T14:22:20.735Z",
+      "ms": 9717
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Remove link removes only the chosen typed link and Remove parent only the parent; the other relationships and both records stay",
+      "result": "pass",
+      "actual": "Remove link on the Related row left Renews and Amends in place; Remove parent cleared the parent; C-354 and C-353 still exist",
+      "at": "2026-09-07T14:22:21.461Z",
+      "ms": 726
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Flag as confidential? names the Contract that is not Confidential, whichever side that is: accepting from the Confidential record flags the other one, accepting from the open record flags this record, and No, leave it open changes nothing",
+      "result": "pass",
+      "actual": "From Confidential C-355 linking open C-356: prompt \"C-355 is confidential but C-356 is not. Flag C-356 as confidential too? No, leave it open Flag as confidential\" → Flag as confidential set C-356 Confidential. From open C-357 linking Confidential C-358: prompt named C-357 as the one that is not confidential and accepting set this record C-357 Confidential. From open C-359 linking Confidential C-360: No, leave it open kept C-359 open and C-360 Confidential; the link exists and Priya Raman still gets 404 on C-360",
+      "at": "2026-09-07T14:22:24.688Z",
+      "ms": 3227
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "a reader who cannot reach a related Confidential Contract sees Restricted contract instead of its details",
+      "result": "pass",
+      "actual": "Priya Raman's view of C-359 shows \"Restricted contract\" under Related with no link to C-360; a direct read answers 404",
+      "at": "2026-09-07T14:22:25.326Z",
+      "ms": 638
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Link to Matter links one Matter; the confidentiality advice changes neither flag; Unlink frees the Contract to link another Matter",
+      "result": "pass",
+      "actual": "The dialog warned \"These records have different Confidential flags. Linking will not change either one.\"; after Link the \"Confidentiality differs\" advice said it changes neither record and Leave them as they are kept C-355 Confidential and M-45 open; with a Matter linked the card offers Unlink instead of Link to Matter and a second link answered 409; after Unlink the Contract linked to M-46",
+      "at": "2026-09-07T14:22:26.439Z",
+      "ms": 1113
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "an Ended Status keeps the Contract editable and hides it from the default Contracts list; Filter → Show ended reveals it; choosing a non-ended Status reopens it",
+      "result": "pass",
+      "actual": "Expired mapped to Ended and the Description still saved; the default list did not list C-352 through 12 pages; Filter → Show ended (the Filter button then read \"Filter 1\") listed it (after 0 Show more); Active reopened it and History keeps the Expired change",
+      "at": "2026-09-07T14:22:29.834Z",
+      "ms": 3395
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Archive from Contract actions shows the Archived marker and read-only notice without changing the Status; Show archived (and Show ended) reveal it; Restore from Contract actions or the known C- address re-enables editing; linked work is not archived",
+      "result": "pass",
+      "actual": "Archive kept the Status Expired and showed the Archived pill and notice; Show archived alone (\"Filter 1\") did not list the Ended record, Show archived plus Show ended (\"Filter 2\") did; the linked C-354 and M-46 were not archived; Restore from Contract actions re-enabled editing while the record stayed Expired and therefore still hidden from the default list; the known C-352 address also offered Restore",
+      "at": "2026-09-07T14:22:35.061Z",
+      "ms": 5226
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "a Contributor on the team reads relationships but cannot link, end or archive",
+      "result": "pass",
+      "actual": "Ravi Menon read the Renews and Amends rows (as Restricted contract, since he is not on the related records) but had no Set parent, Add link, Link to Matter or Stage control, and Contract actions offered only Copy link; link, archive and end writes answered 403",
+      "at": "2026-09-07T14:22:35.749Z",
+      "ms": 688
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Set parent: Cancel leaves no parent; confirming places this Contract under the chosen one; the parent shows it as a child and refuses the reverse choice that would close a loop",
+      "result": "pass",
+      "actual": "Cancel set no parent; Set parent placed C-361 under C-362; C-362's card lists C-361 under Children; choosing C-361 as C-362's parent was refused: That contract already sits under this one. Pick another parent.; a direct write answered 409",
+      "at": "2026-09-07T14:22:41.685Z",
+      "ms": 3454
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Add link records Related, Renews and Amends with their direction; the other record reads Renewed by and Amended by; a duplicate typed link is refused and the picker never offers the Contract itself",
+      "result": "pass",
+      "actual": "C-361 now shows C-363 under Related, Renews and Amends; C-363 shows C-361 under Related, Renewed by and Amended by; a second Renews link was refused with \"These two contracts are already linked that way.\"; the picker did not offer C-361 itself and a direct self-link answered 409",
+      "at": "2026-09-07T14:22:51.382Z",
+      "ms": 9697
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Remove link removes only the chosen typed link and Remove parent only the parent; the other relationships and both records stay",
+      "result": "pass",
+      "actual": "Remove link on the Related row left Renews and Amends in place; Remove parent cleared the parent; C-363 and C-362 still exist",
+      "at": "2026-09-07T14:22:52.108Z",
+      "ms": 726
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Flag as confidential? names the Contract that is not Confidential, whichever side that is: accepting from the Confidential record flags the other one, accepting from the open record flags this record, and No, leave it open changes nothing",
+      "result": "pass",
+      "actual": "From Confidential C-364 linking open C-365: prompt \"C-364 is confidential but C-365 is not. Flag C-365 as confidential too? No, leave it open Flag as confidential\" → Flag as confidential set C-365 Confidential. From open C-366 linking Confidential C-367: prompt named C-366 as the one that is not confidential and accepting set this record C-366 Confidential. From open C-368 linking Confidential C-369: No, leave it open kept C-368 open and C-369 Confidential; the link exists and Priya Raman still gets 404 on C-369",
+      "at": "2026-09-07T14:22:55.348Z",
+      "ms": 3240
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "a reader who cannot reach a related Confidential Contract sees Restricted contract instead of its details",
+      "result": "pass",
+      "actual": "Priya Raman's view of C-368 shows \"Restricted contract\" under Related with no link to C-369; a direct read answers 404",
+      "at": "2026-09-07T14:22:56.027Z",
+      "ms": 679
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Link to Matter links one Matter; the confidentiality advice changes neither flag; Unlink frees the Contract to link another Matter",
+      "result": "pass",
+      "actual": "The dialog warned \"These records have different Confidential flags. Linking will not change either one.\"; after Link the \"Confidentiality differs\" advice said it changes neither record and Leave them as they are kept C-364 Confidential and M-45 open; with a Matter linked the card offers Unlink instead of Link to Matter and a second link answered 409; after Unlink the Contract linked to M-46",
+      "at": "2026-09-07T14:22:57.137Z",
+      "ms": 1110
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "an Ended Status keeps the Contract editable and hides it from the default Contracts list; Filter → Show ended reveals it; choosing a non-ended Status reopens it",
+      "result": "pass",
+      "actual": "Expired mapped to Ended and the Description still saved; the default list did not list C-361 through 12 pages; Filter → Show ended (the Filter button then read \"Filter 1\") listed it (after 5 Show more); Active reopened it and History keeps the Expired change",
+      "at": "2026-09-07T14:23:00.839Z",
+      "ms": 3702
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Archive from Contract actions shows the Archived marker and read-only notice without changing the Status; Show archived (and Show ended) reveal it; Restore from Contract actions or the known C- address re-enables editing; linked work is not archived",
+      "result": "pass",
+      "actual": "Archive kept the Status Expired and showed the Archived pill and notice; Show archived alone (\"Filter 1\") did not list the Ended record, Show archived plus Show ended (\"Filter 2\") did; the linked C-363 and M-46 were not archived; Restore from Contract actions re-enabled editing while the record stayed Expired and therefore still hidden from the default list; the known C-361 address also offered Restore",
+      "at": "2026-09-07T14:23:06.068Z",
+      "ms": 5228
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "a Contributor on the team reads relationships but cannot link, end or archive",
+      "result": "pass",
+      "actual": "Ravi Menon read the Renews and Amends rows (as Restricted contract, since he is not on the related records) but had no Set parent, Add link, Link to Matter or Stage control, and Contract actions offered only Copy link; link, archive and end writes answered 403",
+      "at": "2026-09-07T14:23:06.807Z",
+      "ms": 739
+    }
+  ],
+  "passed": true
+}
