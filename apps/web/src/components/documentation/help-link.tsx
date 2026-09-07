@@ -4,6 +4,7 @@
 import { CircleHelp } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Link, useLocation } from "react-router";
+import { cn } from "../../lib/utils";
 import metadata from "virtual:openlaw-help-metadata";
 import { HELP_BASE, helpHref, topicsForRoute, type HelpSurface } from "../../lib/help-topics";
 import type { DocumentationAudience } from "../../../../../scripts/documentation/reader.mjs";
@@ -33,7 +34,10 @@ export function HelpLink({
       className={
         contextual
           ? "inline-flex w-fit items-center gap-1.5 rounded-button text-sm text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
-          : "inline-flex min-h-6 min-w-6 shrink-0 items-center justify-center gap-1.5 rounded-button text-sm hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+          : cn(
+              "inline-flex min-h-6 min-w-6 shrink-0 items-center justify-center gap-1.5 rounded-button text-sm hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current",
+              surface === "staff" ? "text-on-inverted" : "text-muted hover:text-primary",
+            )
       }
     >
       <CircleHelp size={20} aria-hidden="true" />

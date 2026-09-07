@@ -54,6 +54,11 @@ width; the Portal flex layout exposed a collapsed-width defect during inspection
 An external reference was blocked in a separate tab while each local Help reader
 remained usable.
 
+Help-link Axe checks pass in both shells across all three themes at 1440 and 320
+CSS pixels. The Help target meets the 24-pixel minimum. The checks exposed and
+fixed the header link's inherited body-link color. The existing Warm avatar-initial
+contrast finding is tracked separately in [#756](https://github.com/juggernog20/OpenLaw/issues/756).
+
 These are Help implementation checks, not article verification or a human user
 study. The validation procedure is fictional publishing material. DOC-008 and the
 later content batches must validate actual instructions against recorded builds.
