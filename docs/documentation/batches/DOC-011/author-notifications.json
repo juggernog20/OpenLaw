@@ -1,0 +1,187 @@
+{
+  "name": "notifications",
+  "startedAt": "2026-09-07T07:50:11.761Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "notifications",
+      "contentSha256": "c94f9a85fad12d7fdf1856784fe2bf8e0e8bf541a1df7653b729c0c96cf4124e"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "find and persist the appropriate notification preferences",
+      "actual": "Navigated from header; Email off persisted after reload; correct role-specific controls",
+      "result": "pass",
+      "at": "2026-09-07T07:50:16.286Z"
+    },
+    {
+      "role": "administrator",
+      "action": "email off retains a bell item and its usable destination",
+      "actual": "New event present, opening bell marked it read, destination opened; no new mail during bounded 2.5-second observation",
+      "result": "pass",
+      "at": "2026-09-07T07:50:19.555Z"
+    },
+    {
+      "role": "administrator",
+      "action": "email on delivers the same event channel through Mailpit",
+      "actual": "Mailpit received a new event email containing the expected record or Portal Request link",
+      "result": "pass",
+      "at": "2026-09-07T07:50:20.560Z"
+    },
+    {
+      "role": "administrator",
+      "action": "in-app off suppresses both new event channels",
+      "actual": "Email remained on but no new bell row or mail appeared during bounded 2.5-second observation",
+      "result": "pass",
+      "at": "2026-09-07T07:50:23.157Z"
+    },
+    {
+      "role": "administrator",
+      "action": "failed preference save rolls back and succeeds on retry",
+      "actual": "Injected failed PATCH rolled the switch back; retry saved the intended value",
+      "result": "pass",
+      "at": "2026-09-07T07:50:23.268Z"
+    },
+    {
+      "role": "administrator",
+      "action": "failed bell read recovers by closing and reopening",
+      "actual": "Injected network refusal displayed recovery message; reopening fetched real rows",
+      "result": "pass",
+      "at": "2026-09-07T07:50:24.091Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "find and persist the appropriate notification preferences",
+      "actual": "Navigated from header; Email off persisted after reload; correct role-specific controls",
+      "result": "pass",
+      "at": "2026-09-07T07:50:25.055Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "email off retains a bell item and its usable destination",
+      "actual": "New event present, opening bell marked it read, destination opened; no new mail during bounded 2.5-second observation",
+      "result": "pass",
+      "at": "2026-09-07T07:50:28.358Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "email on delivers the same event channel through Mailpit",
+      "actual": "Mailpit received a new event email containing the expected record or Portal Request link",
+      "result": "pass",
+      "at": "2026-09-07T07:50:29.354Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "in-app off suppresses both new event channels",
+      "actual": "Email remained on but no new bell row or mail appeared during bounded 2.5-second observation",
+      "result": "pass",
+      "at": "2026-09-07T07:50:31.952Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "failed preference save rolls back and succeeds on retry",
+      "actual": "Injected failed PATCH rolled the switch back; retry saved the intended value",
+      "result": "pass",
+      "at": "2026-09-07T07:50:32.065Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "failed bell read recovers by closing and reopening",
+      "actual": "Injected network refusal displayed recovery message; reopening fetched real rows",
+      "result": "pass",
+      "at": "2026-09-07T07:50:32.841Z"
+    },
+    {
+      "role": "contributor",
+      "action": "find and persist the appropriate notification preferences",
+      "actual": "Navigated from header; Email off persisted after reload; correct role-specific controls",
+      "result": "pass",
+      "at": "2026-09-07T07:50:33.809Z"
+    },
+    {
+      "role": "contributor",
+      "action": "email off retains a bell item and its usable destination",
+      "actual": "New event present, opening bell marked it read, destination opened; no new mail during bounded 2.5-second observation",
+      "result": "pass",
+      "at": "2026-09-07T07:50:37.065Z"
+    },
+    {
+      "role": "contributor",
+      "action": "email on delivers the same event channel through Mailpit",
+      "actual": "Mailpit received a new event email containing the expected record or Portal Request link",
+      "result": "pass",
+      "at": "2026-09-07T07:50:38.302Z"
+    },
+    {
+      "role": "contributor",
+      "action": "in-app off suppresses both new event channels",
+      "actual": "Email remained on but no new bell row or mail appeared during bounded 2.5-second observation",
+      "result": "pass",
+      "at": "2026-09-07T07:50:40.907Z"
+    },
+    {
+      "role": "contributor",
+      "action": "failed preference save rolls back and succeeds on retry",
+      "actual": "Injected failed PATCH rolled the switch back; retry saved the intended value",
+      "result": "pass",
+      "at": "2026-09-07T07:50:41.037Z"
+    },
+    {
+      "role": "contributor",
+      "action": "failed bell read recovers by closing and reopening",
+      "actual": "Injected network refusal displayed recovery message; reopening fetched real rows",
+      "result": "pass",
+      "at": "2026-09-07T07:50:41.931Z"
+    },
+    {
+      "role": "business_user",
+      "action": "find and persist the appropriate notification preferences",
+      "actual": "Navigated from header; Email off persisted after reload; correct role-specific controls",
+      "result": "pass",
+      "at": "2026-09-07T07:50:43.233Z"
+    },
+    {
+      "role": "business_user",
+      "action": "email off retains a bell item and its usable destination",
+      "actual": "New event present, opening bell marked it read, destination opened; no new mail during bounded 2.5-second observation",
+      "result": "pass",
+      "at": "2026-09-07T07:50:46.863Z"
+    },
+    {
+      "role": "business_user",
+      "action": "email on delivers the same event channel through Mailpit",
+      "actual": "Mailpit received a new event email containing the expected record or Portal Request link",
+      "result": "pass",
+      "at": "2026-09-07T07:50:47.853Z"
+    },
+    {
+      "role": "business_user",
+      "action": "in-app off suppresses both new event channels",
+      "actual": "Email remained on but no new bell row or mail appeared during bounded 2.5-second observation",
+      "result": "pass",
+      "at": "2026-09-07T07:50:50.544Z"
+    },
+    {
+      "role": "business_user",
+      "action": "failed preference save rolls back and succeeds on retry",
+      "actual": "Injected failed PATCH rolled the switch back; retry saved the intended value",
+      "result": "pass",
+      "at": "2026-09-07T07:50:50.696Z"
+    },
+    {
+      "role": "business_user",
+      "action": "failed bell read recovers by closing and reopening",
+      "actual": "Injected network refusal displayed recovery message; reopening fetched real rows",
+      "result": "pass",
+      "at": "2026-09-07T07:50:51.704Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T07:50:51.737Z",
+  "author": "Codex documentation author",
+  "independentReview": false
+}

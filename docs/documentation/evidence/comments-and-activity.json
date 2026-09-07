@@ -1,0 +1,91 @@
+{
+  "articleId": "comments-and-activity",
+  "contentSha256": "91b235629a33bd9e798fc887f6d92226d007ed7673ec767d55f65f04c85ab67f",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-07T08:53:41.841Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-COMMENTS.md",
+    "apps/web/src/components/comments/comment-applet.tsx",
+    "apps/web/src/components/comments/comment-attachments.tsx",
+    "apps/web/src/components/portal/request-thread.tsx",
+    "apps/web/src/components/activity/activity-applet.tsx",
+    "apps/web/src/lib/comments.ts",
+    "apps/web/src/lib/activity.ts",
+    "apps/web/src/routes/inbox-request.tsx",
+    "apps/api/src/modules/comments/routes.ts",
+    "apps/api/src/lib/notifications/notifier.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C07",
+      "coverage": ["C07"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Allowed recipients see the intended conversation and attachments; the activity records the action. Legal Only and Working Team content stay outside the Business User view; failed attachments do not falsely appear filed.",
+      "actual": "Nadia opened C-33 Comments on the newest page, used Show older, and read the audience descriptions for Legal only, Working team, and Full thread; she posted one comment per tier under her name with its tier label. @Dan listed Daniel Okafor under People you can mention, the Mentioned list offered Remove, and a Full thread mention posted without a widen prompt. Attach files listed two PDFs, Remove dropped one, the post carried the other and it downloaded with a Content-Disposition attachment; File was offered on the Contract attachment. Edit then Cancel left the text, Save showed edited, Delete asked Delete this comment? and left Comment deleted by its author.; her own menu had no Redact, another author's comment had no actions, and the edit form had no audience control. History listed 25 entries newest first and Show older brought 50. She saw Jonas Weber's Portal replies at Full thread on C-33 and in the R-16 Comments panel on the Inbox page, which has no History control.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-011/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-011/independent-discovery.json"
+      ]
+    },
+    {
+      "id": "V-C07",
+      "coverage": ["C07"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Allowed recipients see the intended conversation and attachments; the activity records the action. Legal Only and Working Team content stay outside the Business User view; failed attachments do not falsely appear filed.",
+      "actual": "Daniel's Legal only mention of Ravi Menon raised Widen the audience? naming the proposed Working team tier; Cancel kept the draft and a thread read confirmed nothing was posted; Widen and post published it at Working team. A Full thread post with paper on M-22 offered no File control, while a Working team post with paper on C-33 offered File, whose File attachment dialog listed New Document and New Version and closed on Cancel without a Filed to marker. On another author's comment his menu offered Redact alone; redacting Nadia's author-deleted comment and her comment with paper each asked Redact this comment? and left Comment removed by an Administrator., after which her attachment URL answered 404. His own Legal only post edited then deleted after the confirmation, and History listed deleted, changed, commented, and removed-from-the-record entries.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-011/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-011/independent-discovery.json"
+      ]
+    },
+    {
+      "id": "V-C07",
+      "coverage": ["C07"],
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "expected": "Allowed recipients see the intended conversation and attachments; the activity records the action. Legal Only and Working Team content stay outside the Business User view; failed attachments do not falsely appear filed.",
+      "actual": "Ravi's Audience offered working_team and full_thread only; Nadia's Legal only text was absent while her Working team comment, Daniel's widened comment, and the Comment removed by an Administrator. marker were present. His Working team post carried its PDF with no File control; @Nad listed Nadia Haddad and posted at Working team without a widen prompt; his own edit showed edited and his own delete was confirmed. History named actions without comment text, and his full activity read carried working_team/full_thread tiers while Nadia's also carried legal_only. Six selected files listed five, Remove then one more selection stayed at five; an aborted post showed The comment could not be posted. Try again. with text and paper retained, and the retry posted exactly once. A blocked read showed The conversation could not be read. Reopen the panel to try again. and reopening recovered; a blocked earlier page showed The earlier comments could not be read. Try again. with loaded rows kept and the retry loaded more.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-011/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-011/independent-discovery.json"
+      ]
+    },
+    {
+      "id": "V-C07",
+      "coverage": ["C07"],
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "expected": "Allowed recipients see the intended conversation and attachments; the activity records the action. Legal Only and Working Team content stay outside the Business User view; failed attachments do not falsely appear filed.",
+      "actual": "Jonas opened R-17 from Your requests; its Conversation held Nadia's Full thread comments and omitted the Legal only, Working team, and widened comments and the Contributor's paper. Reply to Legal with Attach files and Send showed the reply and its PDF under You; the page had no audience radios, Comment actions menus, or mention listbox on @. His reply on the unconverted R-16 showed under You and reached Legal on the Inbox page. An aborted send showed The reply could not be sent. Try again. with text and paper kept and the retry sent once; a blocked read showed the reload message and reload recovered; a blocked earlier page showed The earlier replies could not be read. Try again. and the retry loaded more. R-18 showed Daniel's Full thread Matter comment with its paper under Legal, with the Request status and no History control.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-011/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-011/independent-discovery.json"
+      ]
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-011/README.md"],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "Mail absence was observed for 3 seconds after each controlled event once the Mailpit queue had settled, paired with positive deliveries through the same worker; this bounds the lab, not an arbitrary relay.",
+    "Filing an attachment, the Administrator lead-time procedure, and Document Versions were not performed; their guides (DOC-017, DOC-021) are unpublished and both articles stay in review until they pass.",
+    "The morning rounds were queued by the reviewer rather than waiting for the hourly cron; the worker served them with its real clock and rules.",
+    "Filing an attachment links to the unpublished Document guide (DOC-017); the article stays in review until that target passes."
+  ],
+  "publicationBlockers": ["document-versions (DOC-017) is unpublished."],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

@@ -249,7 +249,10 @@ export function RequestThread({
         )}
         <Composer
           requestId={requestId}
-          onPosted={(comment) => setComments((current) => [...current, comment])}
+          onPosted={(comment) =>
+            // Keep the live read's row if it arrived before the posting response.
+            setComments((current) => mergeCommentWindow([comment], current))
+          }
         />
       </div>
     </section>

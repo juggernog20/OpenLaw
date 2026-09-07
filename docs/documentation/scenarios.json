@@ -129,7 +129,7 @@
       "coverage": ["C07"],
       "articles": ["comments-and-activity"],
       "roles": ["legal_team_member", "administrator", "contributor", "business_user"],
-      "environment": "authoring",
+      "environment": "conversations",
       "prerequisites": [
         "A reached Contract, Matter, and Request conversation, plus small fictional attachments."
       ],
@@ -150,7 +150,7 @@
       "coverage": ["C08"],
       "articles": ["notifications"],
       "roles": ["legal_team_member", "administrator", "contributor", "business_user"],
-      "environment": "authoring",
+      "environment": "conversations",
       "prerequisites": [
         "Separate role accounts, Mailpit, and a controlled event that produces a notification."
       ],
