@@ -45,4 +45,4 @@ Product Help and formal documentation explain controls for several roles. Readin
 
 ## Related tasks
 
-Contributors can follow [Work on a shared Contract or Matter](contributor-guide.md). If you are an Administrator, Legal Team Member, or Contributor, use [Search, filter, and save views](search-and-views.md) to find work they can reach.
+Contributors can follow [Work on a shared Contract or Matter](contributor-guide.md). If you are an Administrator, Legal Team Member, or Contributor, use [Search, filter, and save views](search-and-views.md) to find work you can reach.

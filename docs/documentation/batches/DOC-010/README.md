@@ -75,6 +75,11 @@ is unchanged. Because the application digest includes test source, `edition.json
 records a compatibility review of this test-only difference from the pilot build.
 The independent reviewer must inspect that review as part of this batch.
 
+Fable review changed one sentence in the roles guide after the author walkthroughs: the
+Related tasks paragraph said "work they can reach" and now says "work you can reach".
+The author records keep the hash of the bytes they tested. The evidence file carries the
+current hash, and the pending independent walkthrough follows the current bytes.
+
 CSS-width and overflow checks do not claim real browser zoom or assistive-technology
 acceptance. DOC-025 owns the shared acceptance checks. This batch does not claim that
 a confidentiality flag establishes a legal privilege or that a Portal Request grants
