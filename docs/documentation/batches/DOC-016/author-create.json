@@ -1,0 +1,115 @@
+{
+  "name": "create",
+  "startedAt": "2026-09-07T18:31:26.155Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "create-matter",
+      "contentSha256": "078e5ac72d41fa7ed55e02131b55dcdb86cb26d646485e64f5a494969e1aef73"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "required creation values and archived choices; cancel creates nothing",
+      "actual": "Missing title/type and required text/Entity refused; archived type/Entity and Contributor Manager absent; Cancel sent no create request.",
+      "result": "pass",
+      "at": "2026-09-07T18:31:28.770Z"
+    },
+    {
+      "role": "administrator",
+      "action": "direct Confidential Matter opens with required references, Manager and open defaults",
+      "actual": "M-80 opened directly, Medium/Not assessed/open Category, selected Manager and exact Entity/person values; reference to Priya did not grant Confidential Matter access.",
+      "result": "pass",
+      "at": "2026-09-07T18:31:29.615Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Overview saves values, refuses required clear, and retyping fills required new Field without losing detached answers",
+      "actual": "Priority/Risk and required-text save persisted; required clear refused; canceled retype preserved type, confirmed retype recorded 42, switching back hid but retained that answer.",
+      "result": "pass",
+      "at": "2026-09-07T18:31:30.233Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Matter team roles grant access explicitly; Confidential audience permissions remain separate",
+      "actual": "Explicit member addition granted Priya access; she edited Description but had Add team member disabled and direct audience write403. Added and removed her Contributor role; Member remained.",
+      "result": "pass",
+      "at": "2026-09-07T18:31:31.342Z"
+    },
+    {
+      "role": "administrator",
+      "action": "single template auto-selects, multiple templates require choice, and changing defaults preserves a typed title",
+      "actual": "One live template auto-selected; archived omitted; No template reset values; multiple live choices started empty, alpha/beta changed defaults and preserved typed title.",
+      "result": "pass",
+      "at": "2026-09-07T18:31:32.119Z"
+    },
+    {
+      "role": "administrator",
+      "action": "template creation resolves UTC offsets and Manager assignment; optional clear workaround and ordinary overrides persist",
+      "actual": "M-81 copied two Tasks and Key dates at UTC offsets0/3/7; Manager-target Task assigned Nadia. Nonempty override saved. Cleared optional default returned (#770), then Overview clear persisted. Later Manager change left Tasks/dates unchanged.",
+      "result": "pass",
+      "at": "2026-09-07T18:31:34.865Z"
+    },
+    {
+      "role": "administrator",
+      "action": "a template archived after dialog opened is refused; refreshing offers live choices; Contributor cannot create",
+      "actual": "Stale beta template selection refused without creating; fresh form excluded it, fixture template restored. Contributor had no New matter and create403.",
+      "result": "pass",
+      "at": "2026-09-07T18:31:36.994Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "required creation values and archived choices; cancel creates nothing",
+      "actual": "Missing title/type and required text/Entity refused; archived type/Entity and Contributor Manager absent; Cancel sent no create request.",
+      "result": "pass",
+      "at": "2026-09-07T18:31:37.864Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "direct Confidential Matter opens with required references, Manager and open defaults",
+      "actual": "M-82 opened directly, Medium/Not assessed/open Category, selected Manager and exact Entity/person values; reference to Priya did not grant Confidential Matter access.",
+      "result": "pass",
+      "at": "2026-09-07T18:31:38.747Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Overview saves values, refuses required clear, and retyping fills required new Field without losing detached answers",
+      "actual": "Priority/Risk and required-text save persisted; required clear refused; canceled retype preserved type, confirmed retype recorded 42, switching back hid but retained that answer.",
+      "result": "pass",
+      "at": "2026-09-07T18:31:39.428Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Matter team roles grant access explicitly; Confidential audience permissions remain separate",
+      "actual": "Explicit member addition granted Priya access; she edited Description but had Add team member disabled and direct audience write403. Added and removed her Contributor role; Member remained.",
+      "result": "pass",
+      "at": "2026-09-07T18:31:40.537Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "single template auto-selects, multiple templates require choice, and changing defaults preserves a typed title",
+      "actual": "One live template auto-selected; archived omitted; No template reset values; multiple live choices started empty, alpha/beta changed defaults and preserved typed title.",
+      "result": "pass",
+      "at": "2026-09-07T18:31:41.304Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "template creation resolves UTC offsets and Manager assignment; optional clear workaround and ordinary overrides persist",
+      "actual": "M-83 copied two Tasks and Key dates at UTC offsets0/3/7; Manager-target Task unassigned without Manager. Nonempty override saved. Cleared optional default returned (#770), then Overview clear persisted. Later Manager change left Tasks/dates unchanged.",
+      "result": "pass",
+      "at": "2026-09-07T18:31:44.192Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "a template archived after dialog opened is refused; refreshing offers live choices; Contributor cannot create",
+      "actual": "Stale beta template selection refused without creating; fresh form excluded it, fixture template restored. Contributor had no New matter and create403.",
+      "result": "pass",
+      "at": "2026-09-07T18:31:46.316Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T18:31:46.316Z"
+}

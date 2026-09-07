@@ -1,0 +1,53 @@
+{
+  "articleId": "create-matter",
+  "contentSha256": "078e5ac72d41fa7ed55e02131b55dcdb86cb26d646485e64f5a494969e1aef73",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "not-run",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-MATTERS.md",
+    "apps/web/src/components/matters/create-matter-dialog.tsx",
+    "apps/web/src/routes/matter-record.tsx",
+    "apps/web/src/components/matters/team-tray.tsx",
+    "apps/api/src/modules/matters/create.ts",
+    "apps/api/src/modules/matters/routes.ts",
+    "apps/api/src/modules/matter-templates/routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C22",
+      "coverage": ["C22"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "The Matter has its intended Manager, team, references, and template defaults. Missing required values and unavailable templates produce the supported validation or selection behavior.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C22",
+      "coverage": ["C22"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "The Matter has its intended Manager, team, references, and template defaults. Missing required values and unavailable templates produce the supported validation or selection behavior.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-016/README.md"],
+  "limitations": [
+    "Author walkthrough passed; independent source review and article walkthrough remain pending.",
+    "Agent walkthroughs are not a human user study or the feature owner's approval.",
+    "Optional template Field clear behavior is tracked in #770; the article documents the verified Overview workaround."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

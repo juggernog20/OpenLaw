@@ -460,9 +460,9 @@
       "coverage": ["C22"],
       "articles": ["create-matter"],
       "roles": ["legal_team_member", "administrator"],
-      "environment": "authoring",
+      "environment": "conversations",
       "prerequisites": [
-        "Matter type/template, Entity/Counterparty references, Matter Manager, and team."
+        "Matter type/template, Entity reference Field, a linked Contract with a Counterparty, Matter Manager, and team."
       ],
       "actions": [
         "Create a Matter directly and from a template, then edit its supported business Fields."
@@ -481,7 +481,7 @@
       "coverage": ["C23"],
       "articles": ["matter-status-and-archive"],
       "roles": ["legal_team_member", "administrator"],
-      "environment": "authoring",
+      "environment": "conversations",
       "prerequisites": [
         "Open and closed Matter Statuses and separate active/archived Matter fixtures."
       ],
@@ -500,7 +500,7 @@
       "coverage": ["C24"],
       "articles": ["matter-work"],
       "roles": ["legal_team_member", "administrator"],
-      "environment": "authoring",
+      "environment": "conversations",
       "prerequisites": ["Reached Matter with people, Tasks, Key dates, and related work."],
       "actions": ["Maintain Tasks/Key dates and add/remove permitted relationships."],
       "expectedResults": [

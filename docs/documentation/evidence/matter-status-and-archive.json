@@ -1,0 +1,50 @@
+{
+  "articleId": "matter-status-and-archive",
+  "contentSha256": "7b4f1d4b77f4979d273e68ffcefe9be849c7e371cd518b256e466a6ba2df60cf",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "not-run",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-MATTERS.md",
+    "apps/web/src/routes/matter-record.tsx",
+    "apps/web/src/routes/matters.tsx",
+    "apps/api/src/modules/matters/routes.ts",
+    "apps/api/src/modules/matter-key-dates/routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C23",
+      "coverage": ["C23"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "The selected Status retains its immutable open/closed Category and lifecycle changes persist. An archived Matter cannot be edited through ordinary controls; Contributor restrictions remain clear.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C23",
+      "coverage": ["C23"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "The selected Status retains its immutable open/closed Category and lifecycle changes persist. An archived Matter cannot be edited through ordinary controls; Contributor restrictions remain clear.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-016/README.md"],
+  "limitations": [
+    "Author walkthrough passed; independent source review and article walkthrough remain pending.",
+    "Agent walkthroughs are not a human user study or the feature owner's approval."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

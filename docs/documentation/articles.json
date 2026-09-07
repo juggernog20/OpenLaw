@@ -344,7 +344,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["matters.list", "matters.overview"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "matter-status-and-archive",
@@ -357,7 +357,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["matters.progression", "matters.actions"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "matter-work",
@@ -370,7 +370,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["matters.tasks", "matters.dates", "matters.relations"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "contributor-guide",
