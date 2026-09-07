@@ -25,7 +25,10 @@
       "expected": "Archive/restore preserves supported history; permanent deletion removes the documented Versions/files and references. Other roles cannot perform Administrator deletion; consequences and unavailable-file behavior match the guide.",
       "actual": "4 browser steps passed, following the article as legal team member: Archive takes the whole Document out of the ordinary list and Show archived finds it; Restore brings the Document and its designations back; restoring is refused while the owning record is archived, and a lost race is reported; this role is offered no Delete and the seam refuses one.",
       "result": "pass",
-      "evidence": ["docs/documentation/batches/DOC-017/independent-archive.json"],
+      "evidence": [
+        "docs/documentation/batches/DOC-017/independent-archive.json",
+        "docs/documentation/batches/DOC-017/independent-erasure.json"
+      ],
       "startedAt": "2026-09-07T21:30:05.008Z",
       "verifiedAt": "2026-09-07T21:30:08.447Z"
     },
@@ -35,9 +38,12 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "expected": "Archive/restore preserves supported history; permanent deletion removes the documented Versions/files and references. Other roles cannot perform Administrator deletion; consequences and unavailable-file behavior match the guide.",
-      "actual": "5 browser steps passed, following the article as administrator: Archive takes the whole Document out of the ordinary list and Show archived finds it; Restore brings the Document and its designations back; restoring is refused while the owning record is archived, and a lost race is reported; the typed confirmation gates deletion, Cancel preserves, and Delete removes the whole Document; the erasure is recorded and there is no way to delete a single Version.",
+      "actual": "5 browser steps passed, following the article as administrator: Archive takes the whole Document out of the ordinary list and Show archived finds it; Restore brings the Document and its designations back; restoring is refused while the owning record is archived, and a lost race is reported; the typed confirmation gates deletion, Cancel preserves, and Delete removes the whole Document; the erasure is recorded and there is no way to delete a single Version. A supplemental run (independent-erasure.json) repeated the erasure with the lab storage volume inspected directly before and after: the stored files under the Document key existed beforehand and none remained afterwards.",
       "result": "pass",
-      "evidence": ["docs/documentation/batches/DOC-017/independent-archive.json"],
+      "evidence": [
+        "docs/documentation/batches/DOC-017/independent-archive.json",
+        "docs/documentation/batches/DOC-017/independent-erasure.json"
+      ],
       "startedAt": "2026-09-07T21:29:59.942Z",
       "verifiedAt": "2026-09-07T21:30:04.158Z"
     },
@@ -47,9 +53,12 @@
       "role": "contributor",
       "method": "browser-walkthrough",
       "expected": "Archive/restore preserves supported history; permanent deletion removes the documented Versions/files and references. Other roles cannot perform Administrator deletion; consequences and unavailable-file behavior match the guide.",
-      "actual": "2 browser steps passed, following the article as contributor: a Contributor cannot archive, restore or delete; this role is offered no Delete and the seam refuses one.",
+      "actual": "2 browser steps passed, following the article as contributor: a Contributor cannot archive, restore or delete; this role is offered no Delete and the seam refuses one. A supplemental run (independent-erasure.json) recorded the exact row-menu contents for this role on a one-Version and a two-Version chain, and the archive, restore and delete refusals behind them.",
       "result": "pass",
-      "evidence": ["docs/documentation/batches/DOC-017/independent-archive.json"],
+      "evidence": [
+        "docs/documentation/batches/DOC-017/independent-archive.json",
+        "docs/documentation/batches/DOC-017/independent-erasure.json"
+      ],
       "startedAt": "2026-09-07T21:30:09.264Z",
       "verifiedAt": "2026-09-07T21:30:10.766Z"
     }
@@ -62,5 +71,9 @@
   ],
   "previousEvidence": null,
   "copyOnlyReview": null,
-  "publicationBlockers": ["The linked Document Versions and repository guides are in review."]
+  "publicationBlockers": ["The linked Document Versions and repository guides are in review."],
+  "supplementalEvidence": [
+    "docs/documentation/batches/DOC-017/independent-erasure.json",
+    "docs/documentation/batches/DOC-017/independent-help-presentation.json"
+  ]
 }

@@ -1,0 +1,135 @@
+{
+  "name": "help-presentation",
+  "reviewer": "Independent review seat (Opus 5 agent)",
+  "startedAt": "2026-09-07T22:01:48.341Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "document-versions",
+      "contentSha256": "e7d0286c6eefad20fd0e0a08df2dc6c530d5c3fa517e1b65e17e9f338e5f147d"
+    },
+    {
+      "articleId": "document-folders",
+      "contentSha256": "1844521ab7ef07fc40fe8e0c01aaeb7df5022acf1e8059b2b24716f809838fec"
+    },
+    {
+      "articleId": "document-previews",
+      "contentSha256": "12cf5181a1b0c37788c1cd3d07ce04d8ac6c41efc68fed4188d47074307bd24a"
+    },
+    {
+      "articleId": "document-repository",
+      "contentSha256": "59f88467c3a576764b212e36ebf5cb8bd49ff84a146a1ec3321d3d0a3da19969"
+    },
+    {
+      "articleId": "archive-and-delete-documents",
+      "contentSha256": "f00bcd882a961a9944be0aed0bc83a991a29870eb318dbdfe8ef66c52c2c4551"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Help pages: every DOC-017 Help article fits three themes at 320, 720 and 1440 CSS pixels",
+      "actual": "On the in-app Help article pages (/help/<article>), not the formal reader, all 5 guides for this role drew without horizontal overflow in the light, dark and warm themes at 320, 720 and 1440 CSS pixels: document-versions, document-folders, document-previews, document-repository, archive-and-delete-documents. That is 45 combinations",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:01:49.615Z",
+      "at": "2026-09-07T22:01:53.967Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Help pages: every DOC-017 Help article fits at an emulated 200% zoom",
+      "actual": "Zoom was emulated, not operated: Playwright has no zoom menu, so 200% is expressed through CDP as a 640 by 450 CSS-pixel viewport at device pixel ratio 2, the layout Chromium produces for a 1280 by 900 window at its 200% setting. At that layout every in-app Help article fitted without horizontal overflow and kept its search box; body/title sizes were document-versions 14px/32px, document-folders 14px/32px, document-previews 14px/32px, document-repository 14px/32px, archive-and-delete-documents 14px/32px",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:01:53.968Z",
+      "at": "2026-09-07T22:01:59.468Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Help pages: an article and its outline open by keyboard once Help is open",
+      "actual": "Help was opened with one pointer click on the page's banner Help link. From there the run was keyboard only: 11 Tab presses reached the \"Upload Documents and add Document Versions\" link (outline-style solid) and Enter opened /help/document-versions with the H1 focused, then 30 Tab presses reached the \"Upload a new Document\" outline link and Enter moved focus onto that heading",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:01:59.468Z",
+      "at": "2026-09-07T22:02:01.043Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Help pages: every DOC-017 Help article fits three themes at 320, 720 and 1440 CSS pixels",
+      "actual": "On the in-app Help article pages (/help/<article>), not the formal reader, all 5 guides for this role drew without horizontal overflow in the light, dark and warm themes at 320, 720 and 1440 CSS pixels: document-versions, document-folders, document-previews, document-repository, archive-and-delete-documents. That is 45 combinations",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:02:02.193Z",
+      "at": "2026-09-07T22:02:06.535Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Help pages: every DOC-017 Help article fits at an emulated 200% zoom",
+      "actual": "Zoom was emulated, not operated: Playwright has no zoom menu, so 200% is expressed through CDP as a 640 by 450 CSS-pixel viewport at device pixel ratio 2, the layout Chromium produces for a 1280 by 900 window at its 200% setting. At that layout every in-app Help article fitted without horizontal overflow and kept its search box; body/title sizes were document-versions 14px/32px, document-folders 14px/32px, document-previews 14px/32px, document-repository 14px/32px, archive-and-delete-documents 14px/32px",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:02:06.535Z",
+      "at": "2026-09-07T22:02:12.085Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Help pages: an article and its outline open by keyboard once Help is open",
+      "actual": "Help was opened with one pointer click on the page's banner Help link. From there the run was keyboard only: 11 Tab presses reached the \"Upload Documents and add Document Versions\" link (outline-style solid) and Enter opened /help/document-versions with the H1 focused, then 30 Tab presses reached the \"Upload a new Document\" outline link and Enter moved focus onto that heading",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:02:12.085Z",
+      "at": "2026-09-07T22:02:13.680Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "Help pages: every DOC-017 Help article fits three themes at 320, 720 and 1440 CSS pixels",
+      "actual": "On the in-app Help article pages (/help/<article>), not the formal reader, all 5 guides for this role drew without horizontal overflow in the light, dark and warm themes at 320, 720 and 1440 CSS pixels: document-versions, document-folders, document-previews, document-repository, archive-and-delete-documents. That is 45 combinations",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:02:14.855Z",
+      "at": "2026-09-07T22:02:19.121Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "Help pages: every DOC-017 Help article fits at an emulated 200% zoom",
+      "actual": "Zoom was emulated, not operated: Playwright has no zoom menu, so 200% is expressed through CDP as a 640 by 450 CSS-pixel viewport at device pixel ratio 2, the layout Chromium produces for a 1280 by 900 window at its 200% setting. At that layout every in-app Help article fitted without horizontal overflow and kept its search box; body/title sizes were document-versions 14px/32px, document-folders 14px/32px, document-previews 14px/32px, document-repository 14px/32px, archive-and-delete-documents 14px/32px",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:02:19.121Z",
+      "at": "2026-09-07T22:02:24.592Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "Help pages: an article and its outline open by keyboard once Help is open",
+      "actual": "Help was opened with one pointer click on the page's banner Help link. From there the run was keyboard only: 3 Tab presses reached the \"Upload Documents and add Document Versions\" link (outline-style solid) and Enter opened /help/document-versions with the H1 focused, then 27 Tab presses reached the \"Upload a new Document\" outline link and Enter moved focus onto that heading",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:02:24.592Z",
+      "at": "2026-09-07T22:02:26.126Z"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Portal Help: the reading guide and its outline open by keyboard once Help is open",
+      "actual": "Help was opened with one pointer click on the portal header's Help link. From there the run was keyboard only: 2 Tab presses reached the \"Read and download Documents\" link (outline-style solid) and Enter opened /portal/help/document-previews with the H1 focused, then 26 Tab presses reached the \"Read files in the Business Portal\" outline link and Enter moved focus onto that heading",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:02:27.490Z",
+      "at": "2026-09-07T22:02:28.839Z"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Portal Help: the reading guide fits at an emulated 200% zoom",
+      "actual": "Zoom was emulated, not operated: 200% is expressed through CDP as a 640 by 450 CSS-pixel viewport at device pixel ratio 2. At that layout the portal Help article fitted without horizontal overflow, kept its search box, and drew body text at 14px with a 32px title",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:02:28.839Z",
+      "at": "2026-09-07T22:02:29.954Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T22:02:29.957Z",
+  "reviewerKind": "agent",
+  "note": "Independent review seat. Fresh fictional \"Rev\" records and this seat's own steps and assertions; the author records are supporting evidence only. Each step's \"at\" is written when that awaited step settled, and \"startedAt\" when it began; these are automated browser checks against a local instance, not measured human task times."
+}

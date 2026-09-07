@@ -122,7 +122,7 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "action": "discovery: the guides open by keyboard alone, with focus landing where the reader is sent",
-      "actual": "Tab reached the \"Upload Documents and add Document Versions\" link (outline-style solid) and Enter opened it with the H1 focused; Tab then reached the \"Upload a new Document\" outline link and Enter moved focus onto that heading. No pointer was used",
+      "actual": "Tab reached the \"Upload Documents and add Document Versions\" link (outline-style solid) and Enter opened it with the H1 focused; Tab then reached the \"Upload a new Document\" outline link and Enter moved focus onto that heading. Help itself was opened with one pointer click on the page's banner Help link; every step after that was keyboard only",
       "result": "pass",
       "startedAt": "2026-09-07T21:37:56.151Z",
       "at": "2026-09-07T21:37:57.787Z"
@@ -230,7 +230,7 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "action": "discovery: the guides open by keyboard alone, with focus landing where the reader is sent",
-      "actual": "Tab reached the \"Upload Documents and add Document Versions\" link (outline-style solid) and Enter opened it with the H1 focused; Tab then reached the \"Upload a new Document\" outline link and Enter moved focus onto that heading. No pointer was used",
+      "actual": "Tab reached the \"Upload Documents and add Document Versions\" link (outline-style solid) and Enter opened it with the H1 focused; Tab then reached the \"Upload a new Document\" outline link and Enter moved focus onto that heading. Help itself was opened with one pointer click on the page's banner Help link; every step after that was keyboard only",
       "result": "pass",
       "startedAt": "2026-09-07T21:38:11.120Z",
       "at": "2026-09-07T21:38:12.795Z"
@@ -338,7 +338,7 @@
       "role": "contributor",
       "method": "browser-walkthrough",
       "action": "discovery: the guides open by keyboard alone, with focus landing where the reader is sent",
-      "actual": "Tab reached the \"Upload Documents and add Document Versions\" link (outline-style solid) and Enter opened it with the H1 focused; Tab then reached the \"Upload a new Document\" outline link and Enter moved focus onto that heading. No pointer was used",
+      "actual": "Tab reached the \"Upload Documents and add Document Versions\" link (outline-style solid) and Enter opened it with the H1 focused; Tab then reached the \"Upload a new Document\" outline link and Enter moved focus onto that heading. Help itself was opened with one pointer click on the page's banner Help link; every step after that was keyboard only",
       "result": "pass",
       "startedAt": "2026-09-07T21:38:25.504Z",
       "at": "2026-09-07T21:38:26.798Z"

@@ -43,7 +43,7 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "action": "C54 step 31-34: the typed confirmation gates deletion, Cancel preserves, and Delete removes the whole Document",
-      "actual": "Delete stayed disabled until the Document's displayed name was typed exactly; a wrong name kept it disabled and Cancel left all three Versions in place. Typing the real name enabled a button reading Delete, and confirming removed the row and answered 404 for every one of the three Version downloads, with no replacement primary chosen",
+      "actual": "Delete stayed disabled until the Document's displayed name was typed exactly; a wrong name kept it disabled and Cancel left all three Versions in place. Typing the real name enabled a button reading Delete, and confirming removed the row and answered 404 for every one of the three Version downloads, with no replacement primary chosen. The row, the downloads and the History entry are browser and API observations; that the stored files themselves are gone is verified by direct inspection of the lab volume in independent-erasure.json",
       "result": "pass",
       "startedAt": "2026-09-07T21:30:02.752Z",
       "at": "2026-09-07T21:30:04.034Z"
@@ -88,7 +88,7 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "action": "C54 step 29 negative: this role is offered no Delete and the seam refuses one",
-      "actual": "No Delete item appeared in the row menu for this role and the seam answered 403; both Versions and both stored files were still there afterwards, so a refusal removed nothing",
+      "actual": "No Delete item appeared in the row menu for this role and the seam answered 403; both Versions were still listed and both Version downloads still answered 200 afterwards, so the refusal removed nothing. These are browser and API observations; the stored files themselves are inspected in independent-erasure.json",
       "result": "pass",
       "startedAt": "2026-09-07T21:30:07.648Z",
       "at": "2026-09-07T21:30:08.447Z"
@@ -97,7 +97,7 @@
       "role": "contributor",
       "method": "browser-walkthrough",
       "action": "C54 step 7 negative: a Contributor cannot archive, restore or delete",
-      "actual": "The Contributor's row menu held Add version alone, the record carried no Show archived control, and archive and delete both answered 403 while the Document stayed live with both Versions",
+      "actual": "The Contributor's row menu held no Archive, Restore, Delete, Edit details, Move to folder or designation item; on this two-Version chain it held Compare with previous and Add version, both reads or supporting uploads. The record carried no Show archived control, and archive and delete both answered 403 while the Document stayed live with both Versions. independent-erasure.json records the exact menu contents for a one-Version and a two-Version chain",
       "result": "pass",
       "startedAt": "2026-09-07T21:30:09.264Z",
       "at": "2026-09-07T21:30:10.036Z"
@@ -106,7 +106,7 @@
       "role": "contributor",
       "method": "browser-walkthrough",
       "action": "C54 step 29 negative: this role is offered no Delete and the seam refuses one",
-      "actual": "No Delete item appeared in the row menu for this role and the seam answered 403; both Versions and both stored files were still there afterwards, so a refusal removed nothing",
+      "actual": "No Delete item appeared in the row menu for this role and the seam answered 403; both Versions were still listed and both Version downloads still answered 200 afterwards, so the refusal removed nothing. These are browser and API observations; the stored files themselves are inspected in independent-erasure.json",
       "result": "pass",
       "startedAt": "2026-09-07T21:30:10.036Z",
       "at": "2026-09-07T21:30:10.766Z"

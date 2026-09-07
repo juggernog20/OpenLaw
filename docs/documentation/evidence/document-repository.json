@@ -66,5 +66,6 @@
   "copyOnlyReview": null,
   "publicationBlockers": [
     "The linked Document Versions, archive and saved-views guides are in review."
-  ]
+  ],
+  "supplementalEvidence": ["docs/documentation/batches/DOC-017/independent-help-presentation.json"]
 }

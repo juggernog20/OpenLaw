@@ -21,7 +21,7 @@ Separate browser contexts represent fictional Daniel Okafor (Administrator), Nad
 | [discovery](author-discovery.json)               |     16 |
 | [portal-discovery](author-portal-discovery.json) |      1 |
 
-All 91 author checks passed against the current guide hashes. The independent review below must use fresh walkthroughs rather than reclassifying these author checks.
+All 91 author checks passed against the guide bytes each record names. Five of those records name bytes that later changed: see "Author record hashes after the corrections" below. The independent review used fresh walkthroughs rather than reclassifying these author checks.
 
 ## Findings and boundaries
 
@@ -45,13 +45,13 @@ The independent walkthrough below covers the 16 scenario/role combinations and t
 
 ## Repository validation
 
-Author static checks passed (19 tasks), along with 33 documentation/CI tooling tests and normal/preview documentation builds. The full workspace suite passed in 4 minutes 21 seconds: 176 API files / 2,889 tests, 97 web files / 1,702 tests, all five Turbo tasks successful. CodeRabbit completed once. Independent review and final commit CI remain pending. The repository walkthrough and staff Help discovery were rerun after the role-name capitalization correction; all author records match final guide bytes.
+Author static checks passed (19 tasks), along with 33 documentation/CI tooling tests and normal/preview documentation builds. The full workspace suite passed in 4 minutes 21 seconds: 176 API files / 2,889 tests, 97 web files / 1,702 tests, all five Turbo tasks successful. CodeRabbit completed once. The repository walkthrough and staff Help discovery were rerun after the role-name capitalization correction, so every author record matched the guide bytes as they stood when the author finished. Three later corrections changed two of those guides; the independent review below records which author records still match and which do not.
 
 ## CodeRabbit disposition
 
 The single CodeRabbit run raised thirteen findings. Three terminology suggestions are applied to this evidence record: Document Versions and conversation filing are named separately, supporting Documents and new Document Versions replace ambiguous references, and Legal-only names the tested Knowledge audience.
 
-The minor checklist and major whole-record imperative rewrites are declined. These files report completed and pending verification states; changing them to instructions would make those states less clear. User-facing procedures already use direct action language. No behavioral guide change was needed.
+The minor checklist and major whole-record imperative rewrites are declined. These files report verification states rather than telling a reader what to do; changing them to instructions would make those states less clear. User-facing procedures already use direct action language. No behavioral guide change was needed.
 
 The remaining suggestions were assessed against the source and browser results. The repository guide now capitalizes Legal Team Member consistently. The proposed Owner-to-Owning-record label change is declined: the actual filter is labeled Owner. References to Legal name the department and can include an Administrator, so replacing them with only Legal Team Member would narrow the recovery guidance. Expected-result strings retain the scenario registry wording; input files that fail an import are not yet logical Documents. Contributor root-only upload is already explicit in the folder guide and linked Version guidance. These suggestions do not justify inventing controls or changing the meaning of the required scenarios.
 
@@ -66,20 +66,24 @@ Playwright scripts on September 7, 2026. It created fresh fictional records unde
 `Rev` prefix and reused none of the author's records, steps or assertions. The author's
 91 checks are supporting evidence only.
 
-| Independent record                        | Steps |
-| ----------------------------------------- | ----: |
-| [versions](independent-versions.json)     |    27 |
-| [filing](independent-filing.json)         |     7 |
-| [folders](independent-folders.json)       |    16 |
-| [previews](independent-previews.json)     |    30 |
-| [portal](independent-portal.json)         |     4 |
-| [repository](independent-repository.json) |    25 |
-| [archive](independent-archive.json)       |    11 |
-| [discovery](independent-discovery.json)   |    38 |
+| Independent record                                        | Steps |
+| --------------------------------------------------------- | ----: |
+| [versions](independent-versions.json)                     |    27 |
+| [filing](independent-filing.json)                         |     7 |
+| [folders](independent-folders.json)                       |    16 |
+| [previews](independent-previews.json)                     |    30 |
+| [portal](independent-portal.json)                         |     4 |
+| [repository](independent-repository.json)                 |    25 |
+| [archive](independent-archive.json)                       |    11 |
+| [discovery](independent-discovery.json)                   |    38 |
+| [folders-supplement](independent-folders-supplement.json) |     3 |
+| [erasure](independent-erasure.json)                       |     2 |
+| [help-presentation](independent-help-presentation.json)   |    11 |
 
-All 158 steps passed against the final guide bytes. Each record names the acting role,
-the method, the action, what was actually observed, and the start and finish time of
-that step.
+All 174 steps passed. Each record names the acting role, the method, the action, what was
+actually observed, and the start and finish time of that step. The first eight records are
+the original walkthrough; the last three close gaps a later audit named and are described
+under "Supplemental checks" below.
 
 C26 ran as all three staff roles: one file created one Document at v1 named from its
 filename; picking two files replaced the composer with the Import dialog; Add version
@@ -116,7 +120,9 @@ was collected. **Cancel remaining** stopped a four-file queue part way, leaving 
 finished files on the record. The folder picker carried the top-level folder and its
 nested child with paths intact and dropped the empty directory. The Contributor imported
 two files at the record root as two separate v1 Documents, was offered no **New folder**
-button and no **Choose folder** control, and was answered 403 by the folder seam.
+button and no **Choose folder** control, and was answered 403 by the folder seam. A later
+supplement completed the two things this run left open: a folder **Move** for each legal
+role, and the partial-import failure and retry for the Contributor.
 
 C28 ran as all three staff roles and the Business User. Each staff role opened a PDF with
 the five reader controls the guide names, read converted Word and PowerPoint while the
@@ -167,8 +173,10 @@ Document's displayed name was typed exactly, saw a wrong name keep it disabled a
 all three Version downloads answer 404 with no replacement primary chosen; the record's
 History still named the erased Document afterwards, and asking the seam to remove a single
 Version was refused while that chain kept both rounds. Neither the Legal Team Member nor
-the Contributor was offered **Delete**, both were answered 403, and their Versions and
-stored files were untouched.
+the Contributor was offered **Delete**, both were answered 403, and their Versions stayed
+listed and downloadable. The row, the downloads and the History entry are browser and API
+observations. That an erasure removes the stored files themselves is checked directly in
+the supplement below.
 
 ## Independent discovery, keyboard and zoom
 
@@ -176,9 +184,12 @@ Each staff role entered Help from the record or repository surface each guide be
 found the guide by its exact title, opened it with the H1 focused, followed an outline
 link to a focused section heading, and reached the same article in the full documentation.
 Every guide fitted in the light, dark and warm themes at 320, 720 and 1440 CSS pixels with
-no horizontal overflow. Keyboard only, Tab reached the guide link and Enter opened it with
-the title focused, and Tab then reached an outline link whose Enter moved focus onto that
-heading; no pointer was used. Zoom was **emulated**, not operated: Playwright has no zoom
+no horizontal overflow. Those theme and zoom loops ran on the formal `/documentation`
+reader, which the reader reaches through the full-documentation link; the same checks on
+the in-app Help pages are in the supplement below. Help itself was opened with one pointer
+click on the page's banner Help link, and from there the run was keyboard only: Tab reached
+the guide link and Enter opened it with the title focused, and Tab then reached an outline
+link whose Enter moved focus onto that heading. Zoom was **emulated**, not operated: Playwright has no zoom
 menu, so 200% is expressed as a 640 by 450 CSS-pixel viewport at device pixel ratio 2,
 which is the layout Chromium produces for a 1280 by 900 window at its 200% setting. At that
 layout every guide fitted without horizontal overflow. The Business User reached the
@@ -192,7 +203,8 @@ that way.
 ## Corrections made during the independent review
 
 Two guide defects were found and fixed, and both were then walked again with the corrected
-bytes recorded:
+bytes recorded. A third correction, the terminology one, landed later and is a copy-only
+change; it has its own section below.
 
 - `document-folders` used the en-GB spelling "Organise" in its heading while its own body
   used en-US "organize". `EDITORIAL.md` requires en-US, so the heading, the catalogue
@@ -202,12 +214,106 @@ bytes recorded:
 - `document-versions` named the filing dialog's Confidential control as **Confidential**.
   The control's actual label is **Confidential — restrict to the contract team**, which is
   what the browser check reads, so the guide now quotes it in full.
+- `document-versions` also used non-glossary words for a Document Version and for the
+  Executed pin. See "Terminology disposition" below; that one is copy-only and retains its
+  walkthrough evidence.
 
-The eight author records are kept exactly as they were written. Five of them name the
-guide bytes as they stood before these two corrections; that is honest reporting of what
-the author actually tested, and the independent records above are the ones that name the
-final bytes. `author-portal-discovery`, `author-previews` and `author-repository` still
-match the current files.
+## Supplemental checks
+
+A later audit of the completed evidence named four gaps. Three needed browser work; all
+three are closed, and the records are listed in the table above.
+
+**V-C27 partial import as a Contributor, and a folder Move.**
+[independent-folders-supplement.json](independent-folders-supplement.json) closes both.
+The Contributor imported two files at the record root with one answered 503 once by a
+browser-network fixture. The dialog read "Imported 1 of 2 files", named the failed row
+with its reason and a per-row **Retry**, and said the other file was already on the
+Contract. The good file was a v1 Document at that moment and the failed one did not exist.
+The row **Retry** resent only the failed file, the dialog closed on "Imported 2 of 2
+files", and the good Document kept the same id and a single Version, so it was never
+uploaded twice. Separately, each legal role completed a folder **Move**: the folder was
+relocated under a destination folder, kept its own name, left the destination at the
+record root, and the Document filed inside it still named that folder and still held its
+single Version. On the record the moved folder reads at `destination/source` with its
+paper inside.
+
+**V-C54 evidence precision.**
+[independent-erasure.json](independent-erasure.json) replaces two claims that were looser
+than what had been observed. The Contributor's row menu was read fresh on a one-Version
+chain, where it held exactly `["Add version"]`, and on a two-Version chain, where it held
+exactly `["Compare with previous", "Add version"]`. Compare is a read, so it is offered;
+no kind editor and no **Show archived** control appeared, and archive, restore and delete
+each answered 403 with the Document left live and complete. The erasure was then repeated
+with the owned lab's storage volume inspected directly by a read-only listing: before the
+deletion, stored files existed under the Document's key, one for each of its three
+Versions; after the typed confirmation, none remained. The row, the Version downloads and
+the History entry stay what they always were, browser and API observations.
+
+**Help-page presentation.**
+[independent-help-presentation.json](independent-help-presentation.json) runs the theme,
+width and zoom checks on the authenticated in-app Help article pages at `/help/<article>`,
+which the earlier discovery record did not: it checked the formal `/documentation` reader
+after following the full-documentation link. Each staff role's applicable guides drew
+without horizontal overflow in the light, dark and warm themes at 320, 720 and 1440 CSS
+pixels, and each fitted at an emulated 200% zoom while keeping its search box. The record
+also adds keyboard operation and an emulated 200% zoom on the Business Portal Help article
+at `/portal/help/document-previews`. Zoom is **emulated, not operated**: Playwright cannot
+drive the browser's own zoom menu, so 200% is set through CDP as a 640 by 450 CSS-pixel
+viewport at device pixel ratio 2, the layout Chromium produces for a 1280 by 900 window at
+its 200% setting. Every keyboard run names the one pointer click that opens Help; the
+navigation after it is keyboard only.
+
+## Terminology disposition
+
+Two review findings against `document-versions.md` were checked against
+[CONTEXT.md](../../../CONTEXT.md) and are valid. The glossary defines a **Document
+Version** as the immutable file snapshot and the **Executed pin** as the explicit pin
+naming the signed copy.
+
+- Six passages called an immutable Version a "round". They now say Document Version or
+  Version.
+- Four passages said "executed-copy designation", "executed-copy pin" or
+  "primary/executed-copy controls". They now say Executed pin. The UI labels
+  **Mark as executed copy** and **Unmark as executed copy** are quoted unchanged, because
+  they are what the control says.
+
+Two H2 headings moved with those terms: "Add another round and read the history" became
+"Add another Version and read the history", and "Primary Document and executed copy"
+became "Primary Document and the Executed pin". Nothing links either anchor. No guide,
+evidence record or `redirects.json` entry references `document-versions.md` with a
+fragment, and the article is unpublished, so no stable link had to be preserved and no
+redirect was added.
+
+This is a **copy-only** change under EDITORIAL.md: no action, prerequisite, control name,
+result or meaning changed. The V-C26 walkthrough results are retained rather than re-run,
+and `evidence/document-versions.json` records the classification, the previous content
+hash, the new one, and why the prior walkthroughs still apply. No fresh V-C26 walkthrough
+is claimed for the new bytes. [independent-versions.json](independent-versions.json),
+[independent-filing.json](independent-filing.json) and
+[independent-discovery.json](independent-discovery.json) keep the previous hash, because
+that is the file each of them actually read. The two supplemental records above were run
+after the change and name the current bytes.
+
+## Author record hashes after the corrections
+
+The eight author records are kept exactly as they were written. Three guide corrections
+have landed since they were made, so five of them name bytes that have changed. That is
+honest reporting of what the author actually tested. It is not a defect in those records,
+and none of them was restamped.
+
+| Author record                                    | Checks | Named bytes                                            |
+| ------------------------------------------------ | -----: | ------------------------------------------------------ |
+| [boundaries](author-boundaries.json)             |      6 | pre-correction `document-versions`                     |
+| [discovery](author-discovery.json)               |     16 | pre-correction `document-versions`, `document-folders` |
+| [folders](author-folders.json)                   |     12 | pre-correction `document-folders`                      |
+| [portal-discovery](author-portal-discovery.json) |      1 | matches the current file                               |
+| [previews](author-previews.json)                 |     27 | matches the current file                               |
+| [repository](author-repository.json)             |      9 | matches the current file                               |
+| [supplement](author-supplement.json)             |      5 | pre-correction `document-versions`                     |
+| [versions](author-versions.json)                 |     15 | pre-correction `document-versions`                     |
+
+The records that name the current bytes for every guide they touch are the independent
+ones listed above, apart from the three noted under the terminology disposition below.
 
 ## On the step timestamps
 

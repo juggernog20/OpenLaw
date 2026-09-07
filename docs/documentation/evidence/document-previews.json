@@ -94,5 +94,6 @@
   "copyOnlyReview": null,
   "publicationBlockers": [
     "operator-troubleshooting (DOC-023) does not exist yet; the linked Comparison, search, Versions and portal Knowledge guides are in review."
-  ]
+  ],
+  "supplementalEvidence": ["docs/documentation/batches/DOC-017/independent-help-presentation.json"]
 }
