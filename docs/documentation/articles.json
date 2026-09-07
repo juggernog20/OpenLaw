@@ -162,7 +162,7 @@
       "destinations": ["portal-help", "formal"],
       "priority": "P0",
       "contexts": ["portal.home", "portal.form"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "follow-request",
@@ -201,11 +201,11 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["inbox"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "convert-request",
-      "title": "Convert a Request to a Contract or Matter",
+      "title": "Convert a Request to a Contract",
       "section": "working-with-legal",
       "kind": "how-to",
       "coverage": ["C13"],
@@ -214,7 +214,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["inbox.convert"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "create-contract",
@@ -578,7 +578,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["settings.intake"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "reminders-and-audit",

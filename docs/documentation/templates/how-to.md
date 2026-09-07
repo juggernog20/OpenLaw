@@ -5,16 +5,17 @@
 ## Before you start
 
 - [Required role and record access.]
-- [Required configuration, input, and starting page.]
+- [Required configuration, input, and complete entry path, including a menu that hides the starting page.]
 
 ## [Do the task]
 
 1. [Name the control and the action.]
 2. [Give the next action and any decision needed here.]
-3. [State how the reader confirms the result.]
+3. [Name the visible saved-state or completion check, including asynchronous work.]
 
 [Put a consequential effect next to the relevant step. Split role/configuration
-variants into named subsections when their steps differ.]
+variants into named subsections when their steps differ. Name the actor at a handoff;
+describe another role's outcome without asking this reader to impersonate that role.]
 
 ## Check the result
 

@@ -173,7 +173,7 @@
       "roles": ["business_user"],
       "environment": "authoring",
       "prerequisites": [
-        "A published request type with required Fields, deflection guidance, and a small PDF."
+        "An active request type with required Fields, deflection guidance, and a small PDF."
       ],
       "actions": [
         "Choose the type, complete the form, attach the PDF, submit, and open the new Request."
@@ -234,11 +234,13 @@
       "roles": ["legal_team_member", "administrator"],
       "environment": "authoring",
       "prerequisites": [
-        "Separate undecided Requests for Convert, Resolve, and Decline, plus two legal sessions."
+        "Separate undecided Requests for Convert and Resolve, a historical declined Request, and two legal sessions."
       ],
-      "actions": ["Review and assign Requests, record each disposition, and revisit the Inbox."],
+      "actions": [
+        "Review, assign and reassign Requests, record conversion and resolution, inspect a historical declined outcome, and revisit the Inbox."
+      ],
       "expectedResults": [
-        "Dispositioned Requests leave the undecided Inbox and retain their recorded outcome."
+        "Assignment persists without deciding the Request or reserving it. Dispositioned Requests leave the undecided Inbox and retain their outcome. Resolve requires an explanatory Full Thread note; Decline is absent from the current Triage menu."
       ],
       "negativeChecks": [
         "A concurrent disposition produces a clear lost-race result rather than a second outcome."

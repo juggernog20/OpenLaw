@@ -1,0 +1,152 @@
+{
+  "kind": "independent-pilot-walkthrough",
+  "independentReview": true,
+  "reviewerKind": "agent",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "technicalReviewer": "Fable review seat (agent source check); the feature owner's human technical review is not recorded here",
+  "author": "Codex",
+  "method": "browser-walkthrough",
+  "startedAt": "2026-09-07T02:47:31Z",
+  "finishedAt": "2026-09-07T02:57:44Z",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "buildId": "sha256:69c7cd47338eff05c787e985743dd45b2229792827d82fd5f54a50a9c63d8757",
+  "engineBuildId": "sha256:1dce5b67898cc8ae720231fa66e049208ed207e69053a2cf4c1bd0e172cea401",
+  "environment": "openlaw-docs-b8e31260-pilot",
+  "frontend": "Committed lab at port 43301 for the task walkthrough; Vite draft preview at port 43310 with unchanged app source for discovery",
+  "browser": "Playwright 1.62.1 Chromium from the e2e workspace, headless, one storage state per role, 1440x900",
+  "records": {
+    "typeId": "01a079c4-a18e-76a8-8292-922932d54fcf",
+    "slug": "docs_contract_review_r323911",
+    "requestNumber": 30,
+    "converted": {
+      "module": "contract",
+      "number": 42
+    }
+  },
+  "articleHashesTested": {
+    "request-forms": "3b674df25d4c3aa6a0b3feec3a6cd91f91725a7c289760639b166d0221ef3a6c",
+    "submit-request": "b07b54ebcf02c265b3e11662087b46213351d64d1917cfc6908b1ae35a782336",
+    "triage-requests": "002460a02a699d9666f81d6ee74fc60b8aa961c4b28b6be157a4b03e642b6539",
+    "convert-request": "393898f5eea37000401ad1b7c90e3a427955073a9c091e8cb46d35b1e412d54b"
+  },
+  "articleHashesCurrent": {
+    "request-forms": "3b674df25d4c3aa6a0b3feec3a6cd91f91725a7c289760639b166d0221ef3a6c",
+    "submit-request": "b07b54ebcf02c265b3e11662087b46213351d64d1917cfc6908b1ae35a782336",
+    "triage-requests": "002460a02a699d9666f81d6ee74fc60b8aa961c4b28b6be157a4b03e642b6539",
+    "convert-request": "9a3ddba7bb27bc555bf824cd2bfb79844e8781b41ec5e29165414c82d457b0c3"
+  },
+  "articleCorrections": [
+    "convert-request steps 2 and 3: the tested text said to edit Priority if needed and that a configured Contract type is already selected. The dialog shows Priority and the configured type as fixed text. The steps now say the dialog does not change Priority and that the configured type cannot be changed there. The walkthrough edited neither value, so no recorded outcome changes."
+  ],
+  "steps": [
+    {
+      "article": "request-forms",
+      "role": "administrator",
+      "actual": "Profile menu > Settings > Intake > Request types. Add request type, name, Enter; the row's Edit control opened the form configuration. Description saved on leaving the field. Target MSA showed the explanation that conversion creates a contract of the MSA type. Attach field added Owning department; Required reached the checked state after its save. After reload the description, MSA target and Required state were retained. The Portal home listed the type with its description.",
+      "result": "pass",
+      "elapsedSeconds": 48
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "actual": "A new magic link from Mailpit signed Jonas in. Portal home showed Before you submit guidance and Your requests. Submitting the empty form stayed on the form and named Summary, Description and Owning department as required. Filled Summary, Description, one PDF through the file input, High urgency and Procurement. Confirmation showed the R- reference with no attachment failure. Open request showed Procurement and the PDF with status Open. Your requests listed it. Reply to Legal and Send posted a reply under Conversation.",
+      "result": "pass",
+      "elapsedSeconds": 6
+    },
+    {
+      "article": "triage-requests",
+      "role": "legal_team_member",
+      "actual": "Inbox listed the Request. Its page showed Description, Form responses with Owning department Procurement, Attachments, Converts to Contract MSA, the Requester and High urgency. The attachment download matched the input PDF bytes. Assign, Search people, Nadia Haddad, Save assignment; the control then read Reassign with her name and persisted after reload. Comments opened with Working team as the default audience; Full thread, Working team and Legal only comments posted. The Request stayed in the Inbox.",
+      "result": "pass",
+      "elapsedSeconds": 68
+    },
+    {
+      "article": "triage-requests",
+      "role": "business_user",
+      "actual": "Before conversion the Portal Request showed the Full thread reply and neither the Working team nor the Legal only note, with status Open.",
+      "result": "pass",
+      "elapsedSeconds": 1
+    },
+    {
+      "article": "convert-request",
+      "role": "legal_team_member",
+      "actual": "Triage > Convert to contract. The dialog carried the Summary as Title, showed MSA as set by the request type, Priority High from the urgency, and Owning department Procurement under Carries into the contract; no required gaps. Convert to contract decided the Request; its page showed Outcome Converted with a C- link. The Contract showed the title, MSA, High priority, an empty Description and no Owner. Fields showed Owning department Procurement. Documents listed the PDF; the downloaded Version matched the input bytes. Comments held the Requester's reply and all three legal comments. The Request was absent from the undecided Inbox.",
+      "result": "pass",
+      "elapsedSeconds": 90
+    },
+    {
+      "article": "convert-request",
+      "role": "business_user",
+      "actual": "The same R- address showed In progress, the Full thread reply, the Attach new files to a reply link, and neither the Working team nor the Legal only note. The staff Contract address returned the Business User to the Portal.",
+      "result": "pass",
+      "elapsedSeconds": 2
+    }
+  ],
+  "paperSha256": {
+    "input": "94e74b73348aca987d1bb9bd15bbd5ffcdc3bc0ee88958afb784c23a9e5d8ede",
+    "requestDownload": "94e74b73348aca987d1bb9bd15bbd5ffcdc3bc0ee88958afb784c23a9e5d8ede",
+    "contractDownload": "94e74b73348aca987d1bb9bd15bbd5ffcdc3bc0ee88958afb784c23a9e5d8ede"
+  },
+  "discovery": {
+    "checkedAt": "2026-09-07T02:57:44Z",
+    "findings": [
+      {
+        "role": "administrator",
+        "entry": "/settings/intake/request-types",
+        "topicPath": "/help?topic=settings.intake",
+        "query": "form target",
+        "articleId": "request-forms",
+        "result": "pass"
+      },
+      {
+        "role": "legal_team_member",
+        "entry": "/inbox",
+        "topicPath": "/help?topic=inbox",
+        "query": "assign request",
+        "articleId": "triage-requests",
+        "result": "pass"
+      },
+      {
+        "role": "legal_team_member",
+        "entry": "/inbox/30",
+        "topicPath": "/help?topic=inbox.convert",
+        "query": "convert request",
+        "articleId": "convert-request",
+        "result": "pass"
+      },
+      {
+        "role": "business_user",
+        "entry": "/portal",
+        "topicPath": "/portal/help?topic=portal.home",
+        "query": "submit request",
+        "articleId": "submit-request",
+        "result": "pass"
+      }
+    ],
+    "actual": "For each case the header Help link opened the page's topic, which listed the article. The local search listed it; the only API request during search was the session check. The article opened in Help, the On this page link focused Check the result, and Read this article in the full documentation opened the same article and section in the formal reader with the development preview notice.",
+    "anonymousIndex": "Signed out, /documentation listed all four drafts with the preview notice and made no API request.",
+    "notChecked": "Themes and 320-pixel layouts were not repeated; the author discovery record covers them."
+  },
+  "timing": {
+    "walkthroughWindow": "02:47:31Z to 02:57:44Z, about 10 minutes, including reading the prose and writing the scripts",
+    "browserSeconds": 241,
+    "note": "About 180 of the browser seconds were selector timeouts in the reviewer's own script, listed under harnessRework. Article reading and evidence writing are not instrumented."
+  },
+  "harnessRework": [
+    "The row's Edit control is a button, not a link.",
+    "The Required checkbox saves asynchronously; a strict check must poll for the checked state.",
+    "The comment composer enables Comment only after typed input; a programmatic fill left it disabled.",
+    "After conversion the outcome link is on the Request page's Outcome region, not in the dialog."
+  ],
+  "guideRework": [
+    "convert-request: Priority and a configured Contract type are fixed text in the dialog.",
+    "triage-requests: the composer's default audience is Working team, which the Requester cannot read; the existing Full thread instruction and audience warning are necessary and were followed."
+  ],
+  "fullCoverageVerified": false,
+  "limitations": [
+    "Only the Contract pilot subset was exercised, not all C09/C12/C13/C40 scenarios.",
+    "This is an independent agent walkthrough by a different agent from the author, not a human user study and not the feature owner's approval.",
+    "The reviewer read the prose and wrote its own steps; browser timings are script time, not human task time.",
+    "Reorder controls, module-only targets, attachment failure, reassignment clearing, Resolve and lost-race cases were not exercised."
+  ]
+}
