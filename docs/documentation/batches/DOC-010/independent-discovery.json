@@ -1,0 +1,173 @@
+{
+  "kind": "independent-discovery",
+  "task": "DOC-010",
+  "issue": 730,
+  "independentReview": true,
+  "reviewerKind": "agent",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "startedAt": "2026-09-07T06:42:33.417Z",
+  "finishedAt": "2026-09-07T06:43:31.726Z",
+  "frontend": "Vite draft reader at port 43310, API proxied to the committed lab; the committed lab's own Help carries no verified articles yet",
+  "articleHashesCurrent": [
+    {
+      "articleId": "roles-and-access",
+      "contentSha256": "d3fcc8fc2ea63b5fb1b5b55e33cceb1c9b1cd8b0ce6d059b61accb6189998e91"
+    },
+    {
+      "articleId": "contributor-guide",
+      "contentSha256": "c3badc50235831daa34056e22dd2e260142e71f5020cd972b9bc868fbf339397"
+    }
+  ],
+  "themes": "data-theme light, dark, and warm changed the document background and text colours; widths are CSS pixels with a 900 pixel viewport height",
+  "limitations": [
+    "Layout checks measure document and main scrollWidth against innerWidth, not browser zoom or assistive-technology acceptance.",
+    "Agent walkthrough, not a human user study."
+  ],
+  "steps": [
+    {
+      "article": "roles-and-access",
+      "role": "administrator",
+      "step": "Help from the Contract page lists the roles guide; Contributor guide only for the Contributor",
+      "result": "pass",
+      "actual": "Help link from /contracts/76 → /help?topic=access; lists \"Understand roles and record access\"; \"Work on a shared Contract or Matter\" listed=false; Help index shows the same audience result",
+      "at": "2026-09-07T06:42:34.681Z",
+      "ms": 2176
+    },
+    {
+      "article": "roles-and-access",
+      "role": "administrator",
+      "step": "Help search finds the roles guide; the Contributor guide only for the Contributor",
+      "result": "pass",
+      "actual": "\"Confidential\" → roles guide listed; \"supporting Document\" → Contributor guide listed=false",
+      "at": "2026-09-07T06:42:36.857Z",
+      "ms": 2478
+    },
+    {
+      "article": "roles-and-access",
+      "role": "administrator",
+      "step": "open the roles guide: title focus, outline section focus, direct section link, full documentation link",
+      "result": "pass",
+      "actual": "title focused (h1#understand-roles-and-record-access:Un); outline link → #when-a-record-is-unavailable, section heading focused; direct section link focuses the section; full documentation link → /documentation/roles-and-access",
+      "at": "2026-09-07T06:42:39.335Z",
+      "ms": 2216
+    },
+    {
+      "article": "contributor-guide",
+      "role": "administrator",
+      "step": "the Contributor-only article is refused as a direct Help link for this role",
+      "result": "pass",
+      "actual": "direct /help/contributor-guide shows: Development preview: draft and validation content is unverified. Help Read this ",
+      "at": "2026-09-07T06:42:41.551Z",
+      "ms": 1060
+    },
+    {
+      "article": "roles-and-access",
+      "role": "legal_team_member",
+      "step": "Help from the Contract page lists the roles guide; Contributor guide only for the Contributor",
+      "result": "pass",
+      "actual": "Help link from /contracts/76 → /help?topic=access; lists \"Understand roles and record access\"; \"Work on a shared Contract or Matter\" listed=false; Help index shows the same audience result",
+      "at": "2026-09-07T06:42:43.824Z",
+      "ms": 2169
+    },
+    {
+      "article": "roles-and-access",
+      "role": "legal_team_member",
+      "step": "Help search finds the roles guide; the Contributor guide only for the Contributor",
+      "result": "pass",
+      "actual": "\"Confidential\" → roles guide listed; \"supporting Document\" → Contributor guide listed=false",
+      "at": "2026-09-07T06:42:45.994Z",
+      "ms": 2455
+    },
+    {
+      "article": "roles-and-access",
+      "role": "legal_team_member",
+      "step": "open the roles guide: title focus, outline section focus, direct section link, full documentation link",
+      "result": "pass",
+      "actual": "title focused (h1#understand-roles-and-record-access:Un); outline link → #when-a-record-is-unavailable, section heading focused; direct section link focuses the section; full documentation link → /documentation/roles-and-access",
+      "at": "2026-09-07T06:42:48.449Z",
+      "ms": 2218
+    },
+    {
+      "article": "contributor-guide",
+      "role": "legal_team_member",
+      "step": "the Contributor-only article is refused as a direct Help link for this role",
+      "result": "pass",
+      "actual": "direct /help/contributor-guide shows: Development preview: draft and validation content is unverified. Help Read this ",
+      "at": "2026-09-07T06:42:50.667Z",
+      "ms": 1074
+    },
+    {
+      "article": "roles-and-access",
+      "role": "contributor",
+      "step": "Help from the Contract page lists the roles guide; Contributor guide only for the Contributor",
+      "result": "pass",
+      "actual": "Help link from /contracts/76 → /help?topic=access&topic=contributor; lists \"Understand roles and record access\"; \"Work on a shared Contract or Matter\" listed=true; Help index shows the same audience result",
+      "at": "2026-09-07T06:42:52.839Z",
+      "ms": 2138
+    },
+    {
+      "article": "roles-and-access",
+      "role": "contributor",
+      "step": "Help search finds the roles guide; the Contributor guide only for the Contributor",
+      "result": "pass",
+      "actual": "\"Confidential\" → roles guide listed; \"supporting Document\" → Contributor guide listed=true",
+      "at": "2026-09-07T06:42:54.978Z",
+      "ms": 2436
+    },
+    {
+      "article": "roles-and-access",
+      "role": "contributor",
+      "step": "open the roles guide: title focus, outline section focus, direct section link, full documentation link",
+      "result": "pass",
+      "actual": "title focused (h1#understand-roles-and-record-access:Un); outline link → #when-a-record-is-unavailable, section heading focused; direct section link focuses the section; full documentation link → /documentation/roles-and-access",
+      "at": "2026-09-07T06:42:57.414Z",
+      "ms": 2219
+    },
+    {
+      "article": "contributor-guide",
+      "role": "contributor",
+      "step": "open the Contributor guide: title focus, outline section focus, direct section link, full documentation link",
+      "result": "pass",
+      "actual": "title focused (h1#work-on-a-shared-contract-or-matter:W); outline link → #supply-a-supporting-document, section heading focused; direct section link focuses the section; full documentation link → /documentation/contributor-guide; in-article link to the roles guide → /help/roles-and-access",
+      "at": "2026-09-07T06:42:59.633Z",
+      "ms": 3019
+    },
+    {
+      "article": "roles-and-access",
+      "role": "business_user",
+      "step": "Portal Help from a page is topic-scoped; the Help index lists the roles guide; Contributor guide absent",
+      "result": "pass",
+      "actual": "page Help → /portal/help?topic=portal.home (roles guide listed there=false); Help index lists the roles guide and not the Contributor guide; search \"Portal\" lists the roles guide",
+      "at": "2026-09-07T06:43:02.674Z",
+      "ms": 4274
+    },
+    {
+      "article": "roles-and-access",
+      "role": "business_user",
+      "step": "open the roles guide in Portal Help: title focus, section focus, full documentation link",
+      "result": "pass",
+      "actual": "title focused (h1#understand-roles-and-record-access:Un); outline link → #when-a-record-is-unavailable, section heading focused; direct section link focuses the section; full documentation link → /documentation/roles-and-access",
+      "at": "2026-09-07T06:43:06.949Z",
+      "ms": 2198
+    },
+    {
+      "article": "roles-and-access",
+      "role": "signed-out",
+      "step": "formal index lists both guides without API requests; formal search finds them",
+      "result": "pass",
+      "actual": "index lists both guides; non-session API requests so far: 0; \"Restricted contract\" → roles guide; \"Add version\" → Contributor guide; opening the Contributor guide focused h1#work-on-a-shared-contract-o",
+      "at": "2026-09-07T06:43:09.169Z",
+      "ms": 4928
+    },
+    {
+      "article": "roles-and-access",
+      "role": "signed-out",
+      "step": "layout: both articles fit 320, 720, and 1440 CSS pixels in light, dark, and warm without horizontal overflow",
+      "result": "pass",
+      "actual": "18 combinations measured (document and main scrollWidth <= innerWidth); theme backgrounds light=rgba(0, 0, 0, 0), dark=rgba(0, 0, 0, 0), warm=rgba(0, 0, 0, 0); CSS-pixel widths only, no browser zoom or assistive-technology check",
+      "at": "2026-09-07T06:43:14.097Z",
+      "ms": 17603
+    }
+  ]
+}

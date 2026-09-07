@@ -123,7 +123,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P0",
       "contexts": ["access"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "comments-and-activity",
@@ -383,7 +383,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["contributor"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "document-versions",

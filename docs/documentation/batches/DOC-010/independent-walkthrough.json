@@ -1,0 +1,442 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-010",
+  "issue": 730,
+  "independentReview": true,
+  "reviewerKind": "agent",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "technicalReviewer": "Fable review seat (agent source check against d1d098ba); the feature owner's human technical review is not recorded here",
+  "author": "Codex documentation author",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "buildId": "app sha256:69c7cd47338eff05c787e985743dd45b2229792827d82fd5f54a50a9c63d8757; engine sha256:1dce5b67898cc8ae720231fa66e049208ed207e69053a2cf4c1bd0e172cea401",
+  "environment": "openlaw-docs-b8e31260-pilot",
+  "method": "browser-walkthrough",
+  "startedAt": "2026-09-07T06:33:06.840Z",
+  "finishedAt": "2026-09-07T06:46:35.752Z",
+  "frontend": "Committed lab at port 43301 for the task walkthroughs; Vite draft reader at port 43310 with unchanged app source and the working canonical Markdown for discovery",
+  "browser": "Playwright 1.62.1 Chromium from the workspace, headless, one isolated context per role (Daniel Okafor, Nadia Haddad, Ravi Menon, Jonas Weber), 1440x900; scripts written by the reviewer from the guide prose, not the author's scripts",
+  "articleHashesTested": [
+    {
+      "articleId": "roles-and-access",
+      "contentSha256": ["d3fcc8fc2ea63b5fb1b5b55e33cceb1c9b1cd8b0ce6d059b61accb6189998e91"]
+    },
+    {
+      "articleId": "contributor-guide",
+      "contentSha256": [
+        "2df76fed1a4fcec4d5c7da49c77eb9c95fef3c35e161cd4d727223c57d07b51e",
+        "c3badc50235831daa34056e22dd2e260142e71f5020cd972b9bc868fbf339397"
+      ]
+    }
+  ],
+  "articleHashesCurrent": [
+    {
+      "articleId": "roles-and-access",
+      "contentSha256": "d3fcc8fc2ea63b5fb1b5b55e33cceb1c9b1cd8b0ce6d059b61accb6189998e91"
+    },
+    {
+      "articleId": "contributor-guide",
+      "contentSha256": "c3badc50235831daa34056e22dd2e260142e71f5020cd972b9bc868fbf339397"
+    }
+  ],
+  "authorHashesHistorical": [
+    {
+      "articleId": "roles-and-access",
+      "contentSha256": "71054f73ae3d6b6c25b537232243e2627b6936187bbb44f5700fa35406e15e94"
+    },
+    {
+      "articleId": "contributor-guide",
+      "contentSha256": "2df76fed1a4fcec4d5c7da49c77eb9c95fef3c35e161cd4d727223c57d07b51e"
+    }
+  ],
+  "fixturePreparation": [
+    "Administrator API: one Task assigned to Ravi Menon on C-76 and on M-21 for the Tasks check, deleted afterwards.",
+    "Administrator API: C-76 value, Effective date, business Field, M-21 Description and business Field returned to the fixture values after each Contributor run; Ravi's M-21 team entry re-added after an interrupted first attempt.",
+    "The C-77 to M-21 link, the Confidential flags, and the primary baseline Document were the author's fixture state and were not changed.",
+    "Team entries, Owner and Matter Manager assignments, the Entity Grant, the Confidential Document marks, and archiving were changed and restored through the browser as Daniel Okafor.",
+    "HTTP corroboration (record and Entity reads, make-primary refusal) is reported separately inside the step text and is not the walkthrough evidence."
+  ],
+  "corrections": [
+    "contributor-guide step 3 under On a Contract now states that Amount, Currency, and Cadence save together when focus leaves that group of controls; moving between them does not save. The Contract Overview scenario was rerun against the corrected bytes.",
+    "The blocked Amount save shows The change could not be saved. Try again. only after focus leaves the value group; the recovery scenario used the business Field and Description controls, which show it on leaving the field."
+  ],
+  "steps": [
+    {
+      "article": "roles-and-access",
+      "role": "administrator",
+      "step": "table: Administrator reaches all four records and the Confidential Entity with no Grant",
+      "result": "pass",
+      "actual": "opened /contracts/76 (Docs access contract shared 178875894741); opened /contracts/77 (Docs access contract confidential 178875); opened /matters/21 (Docs access matter shared 1788758947411); opened /matters/22 (Docs access matter confidential 17887589); opened /entities/01a07a57-78bb-7ba3-9530-2aa1a29ab760 (Docs access Entity 1788758947411)",
+      "at": "2026-09-07T06:33:09.481Z",
+      "ms": 3752
+    },
+    {
+      "article": "roles-and-access",
+      "role": "legal_team_member",
+      "step": "table: Legal Team Member reaches non-Confidential records without a team entry; Confidential children and Entity refused",
+      "result": "pass",
+      "actual": "opened /contracts/76 (Docs access contract shared 178875894741); opened /matters/21 (Docs access matter shared 1788758947411); /contracts/77: Something went wrong. with Reload; Reload kept Something went wrong.; /matters/22: Something went wrong. with Reload; /entities/01a07a57-78bb-7ba3-9530-2aa1a29ab760: Something went wrong. with Reload",
+      "at": "2026-09-07T06:33:13.234Z",
+      "ms": 4571
+    },
+    {
+      "article": "roles-and-access",
+      "role": "contributor",
+      "step": "table: Contributor reaches only the records whose teams include him; Entities module unavailable",
+      "result": "pass",
+      "actual": "opened /contracts/76 (Docs access contract shared 178875894741); opened /matters/21 (Docs access matter shared 1788758947411); /contracts/77: Something went wrong. with Reload; /matters/22: Something went wrong. with Reload; Entity link returned to Home (nav: Home,Matters,Contracts,Documents)",
+      "at": "2026-09-07T06:33:17.806Z",
+      "ms": 4408
+    },
+    {
+      "article": "roles-and-access",
+      "role": "legal_team_member",
+      "step": "unavailable: absent from lists and search",
+      "result": "pass",
+      "actual": "Nadia's search listed the shared Contract and Matter and omitted both Confidential children; Daniel's search listed the child",
+      "at": "2026-09-07T06:33:22.214Z",
+      "ms": 3259
+    },
+    {
+      "article": "roles-and-access",
+      "role": "legal_team_member",
+      "step": "unavailable: a missing number reads the same as an unreachable one",
+      "result": "pass",
+      "actual": "/contracts/987654: Something went wrong. with Reload; /contracts/77: Something went wrong. with Reload",
+      "at": "2026-09-07T06:33:25.474Z",
+      "ms": 1434
+    },
+    {
+      "article": "roles-and-access",
+      "role": "legal_team_member",
+      "step": "Confidential contract: team entry admits Nadia, removal refuses on the next read",
+      "result": "pass",
+      "actual": "Nadia Haddad added as Member; opened /contracts/77 (Docs access contract confidential 178875); while on the team: Confidential switch disabled=true, Add team member disabled=true; Nadia Haddad removed; /contracts/77: Something went wrong. with Reload",
+      "at": "2026-09-07T06:33:26.908Z",
+      "ms": 3134
+    },
+    {
+      "article": "roles-and-access",
+      "role": "legal_team_member",
+      "step": "Confidential contract: Owner reaches it without a team entry; returning it to Daniel removes that access",
+      "result": "pass",
+      "actual": "Owner is Nadia Haddad after reload; opened /contracts/77 (Docs access contract confidential 178875); Owner is Daniel Okafor after reload; /contracts/77: Something went wrong. with Reload",
+      "at": "2026-09-07T06:33:30.042Z",
+      "ms": 4711
+    },
+    {
+      "article": "roles-and-access",
+      "role": "contributor",
+      "step": "Confidential contract: Contributor needs a team entry; parent team does not carry over",
+      "result": "pass",
+      "actual": "/contracts/77: Something went wrong. with Reload; Ravi Menon added as Contributor; opened /contracts/77 (Docs access contract confidential 178875); role unchanged (read-only banner present=true); Ravi Menon removed; /contracts/77: Something went wrong. with Reload",
+      "at": "2026-09-07T06:33:34.753Z",
+      "ms": 3771
+    },
+    {
+      "article": "roles-and-access",
+      "role": "legal_team_member",
+      "step": "Confidential matter: team entry admits Nadia, removal refuses on the next read",
+      "result": "pass",
+      "actual": "Nadia Haddad added as Member; opened /matters/22 (Docs access matter confidential 17887589); while on the team: Confidential switch disabled=true, Add team member disabled=true; Nadia Haddad removed; /matters/22: Something went wrong. with Reload",
+      "at": "2026-09-07T06:33:38.524Z",
+      "ms": 2826
+    },
+    {
+      "article": "roles-and-access",
+      "role": "legal_team_member",
+      "step": "Confidential matter: Matter Manager reaches it without a team entry; returning it to Daniel removes that access",
+      "result": "pass",
+      "actual": "Matter Manager is Nadia Haddad after reload; opened /matters/22 (Docs access matter confidential 17887589); Matter Manager is Daniel Okafor after reload; /matters/22: Something went wrong. with Reload",
+      "at": "2026-09-07T06:33:41.351Z",
+      "ms": 4632
+    },
+    {
+      "article": "roles-and-access",
+      "role": "contributor",
+      "step": "Confidential matter: Contributor needs a team entry; parent team does not carry over",
+      "result": "pass",
+      "actual": "/matters/22: Something went wrong. with Reload; Ravi Menon added as Contributor; opened /matters/22 (Docs access matter confidential 17887589); role unchanged (read-only banner present=true); Ravi Menon removed; /matters/22: Something went wrong. with Reload",
+      "at": "2026-09-07T06:33:45.983Z",
+      "ms": 3483
+    },
+    {
+      "article": "roles-and-access",
+      "role": "contributor",
+      "step": "shared record: removing the last team entry stops access to non-Confidential work; a Legal Team Member adds the Contributor back",
+      "result": "pass",
+      "actual": "Ravi Menon removed; /contracts/76: Something went wrong. with Reload; Nadia: Ravi Menon added as Contributor; opened /contracts/76 (Docs access contract shared 178875894741); Ravi Menon removed; /matters/21: Something went wrong. with Reload; Nadia: Ravi Menon added as Contributor; opened /matters/21 (Docs access matter shared 1788758947411)",
+      "at": "2026-09-07T06:33:49.467Z",
+      "ms": 5821
+    },
+    {
+      "article": "roles-and-access",
+      "role": "legal_team_member",
+      "step": "shared record: removing a Legal Team Member from a non-Confidential team keeps her ordinary access",
+      "result": "pass",
+      "actual": "Nadia Haddad added as Member; opened /contracts/76 (Docs access contract shared 178875894741); Nadia Haddad removed; opened /contracts/76 (Docs access contract shared 178875894741); Nadia Haddad added as Member; opened /matters/21 (Docs access matter shared 1788758947411); Nadia Haddad removed; opened /matters/21 (Docs access matter shared 1788758947411)",
+      "at": "2026-09-07T06:33:55.289Z",
+      "ms": 5974
+    },
+    {
+      "article": "roles-and-access",
+      "role": "administrator",
+      "step": "Entity Grant: Manage access grants Nadia and removes her",
+      "result": "pass",
+      "actual": "granted; opened /entities/01a07a57-78bb-7ba3-9530-2aa1a29ab760 (Docs access Entity 1788758947411); Manage access controls for Nadia=0; API corroboration while granted 200; removed; /entities/01a07a57-78bb-7ba3-9530-2aa1a29ab760: Something went wrong. with Reload; API after removal 404; opened /entities/01a07a57-78bb-7ba3-9530-2aa1a29ab760 (Docs access Entity 1788758947411)",
+      "at": "2026-09-07T06:34:01.264Z",
+      "ms": 3606
+    },
+    {
+      "article": "roles-and-access",
+      "role": "contributor",
+      "step": "Entity boundary: Contract and Matter team entries give no Entity access",
+      "result": "pass",
+      "actual": "Contributor on both shared teams: Entity link returned to Home; API 403",
+      "at": "2026-09-07T06:34:04.871Z",
+      "ms": 751
+    },
+    {
+      "article": "roles-and-access",
+      "role": "legal_team_member",
+      "step": "relationship: shared parent shows the Confidential child only as Restricted, without a link",
+      "result": "pass",
+      "actual": "Nadia: Restricted contract and Restricted Matter labels without title or link; Ravi: Restricted contract and Restricted Matter labels without title or link; Daniel sees the titled child link (1)",
+      "at": "2026-09-07T06:34:05.622Z",
+      "ms": 3018
+    },
+    {
+      "article": "roles-and-access",
+      "role": "legal_team_member",
+      "step": "relationship: the Confidential Contract linked to the shared Matter (author fixture link) copies no access",
+      "result": "pass",
+      "actual": "Daniel Linked Contracts: Linked Contracts 1 Link Contract C-77 Docs access contract confidential 1788758947411 Draft Unlink Matter team DO Daniel Okafor Matter Manager Creator RM Ravi M; Nadia Linked Contracts: Linked Contracts 1 Link Contract Restricted contract Matter team DO Daniel Okafor Matter Manager Creator RM Ravi Menon Contributor; /contracts/77: Something went wrong. with Reload; Ravi Linked Contracts: Linked Contracts 1 Restricted contract Matter team DO Daniel Okafor Matter Manager Creator RM Ravi Menon Contributor; /contracts/77: Something went wrong. with Reload",
+      "at": "2026-09-07T06:34:08.640Z",
+      "ms": 4095
+    },
+    {
+      "article": "roles-and-access",
+      "role": "legal_team_member",
+      "step": "Confidential Document on the shared contract: omitted for Nadia, kept for Daniel and the named Contributor",
+      "result": "pass",
+      "actual": "Daniel row after marking: access-contract-baseline.pdf CONFI Primary Draft · ours Draft · theirs Redline ·; Nadia does not see access-contract-baseline.pdf on the reached record; Ravi sees access-contract-baseline.pdf on the reached record; mark cleared; Nadia sees it again",
+      "at": "2026-09-07T06:34:12.736Z",
+      "ms": 6183
+    },
+    {
+      "article": "roles-and-access",
+      "role": "legal_team_member",
+      "step": "Confidential Document on the shared matter: omitted for Nadia, kept for Daniel and the named Contributor",
+      "result": "pass",
+      "actual": "Daniel row after marking: access-matter-baseline.pdf CONFI Draft · ours Draft · theirs Redline · theirs Re; Nadia does not see access-matter-baseline.pdf on the reached record; Ravi sees access-matter-baseline.pdf on the reached record; mark cleared; Nadia sees it again",
+      "at": "2026-09-07T06:34:18.920Z",
+      "ms": 6064
+    },
+    {
+      "article": "roles-and-access",
+      "role": "contributor",
+      "step": "conversation on the shared contract: Legal only is absent for the Contributor and present for Legal",
+      "result": "pass",
+      "actual": "posted Legal only: Fable review Legal only contracts 1788762789481; Ravi's Audience offers Working team and Full thread and the thread omits the Legal only comment and tier; Nadia sees three tiers and the comment",
+      "at": "2026-09-07T06:34:24.984Z",
+      "ms": 3129
+    },
+    {
+      "article": "roles-and-access",
+      "role": "contributor",
+      "step": "conversation on the shared matter: Legal only is absent for the Contributor and present for Legal",
+      "result": "pass",
+      "actual": "posted Legal only: Fable review Legal only matters 1788762789481; Ravi's Audience offers Working team and Full thread and the thread omits the Legal only comment and tier; Nadia sees three tiers and the comment",
+      "at": "2026-09-07T06:34:28.113Z",
+      "ms": 3069
+    },
+    {
+      "article": "roles-and-access",
+      "role": "business_user",
+      "step": "Portal: Jonas signs in with a link and stays in the Portal",
+      "result": "pass",
+      "actual": "landed /portal; page mentions Requests=true",
+      "at": "2026-09-07T06:34:31.182Z",
+      "ms": 900
+    },
+    {
+      "article": "roles-and-access",
+      "role": "business_user",
+      "step": "Portal boundary: staff record links return to the Portal without record content",
+      "result": "pass",
+      "actual": "/contracts/76 -> /portal; /contracts/77 -> /portal; /matters/21 -> /portal; /entities/01a07a57-78bb-7ba3-9530-2aa1a29ab760 -> /portal; /contracts -> /portal; /search?q=Docs -> /portal; API corroboration: contract 403, matter 403, entity 403",
+      "at": "2026-09-07T06:34:32.083Z",
+      "ms": 4426
+    },
+    {
+      "article": "roles-and-access",
+      "role": "business_user",
+      "step": "Portal: own Request conversation is followed through the Portal",
+      "result": "pass",
+      "actual": "17 Request links on the Portal home; opened /portal/requests/30; conversation controls present=true",
+      "at": "2026-09-07T06:34:36.509Z",
+      "ms": 894
+    },
+    {
+      "article": "roles-and-access",
+      "role": "administrator",
+      "step": "restoration: teams, accountable people, Grants, links, and Document marks are back to the fixture state",
+      "result": "pass",
+      "actual": "contracts/76: Team DO Daniel Okafor Owner Creator RM Ravi Menon Contributor; Owner=Daniel Okafor; contracts/77: Team DO Daniel Okafor Owner Creator; Owner=Daniel Okafor; matters/21: Matter team DO Daniel Okafor Matter Manager Creator RM Ravi Menon Contributor; Matter Manager=Daniel Okafor; matters/22: Matter team DO Daniel Okafor Matter Manager Creator; Matter Manager=Daniel Okafor; grants=0; C-77 matterId=null; access-contract-baseline.pdf: confidential=false primary=true; access-matter-baseline.pdf: confidential=false primary=false",
+      "at": "2026-09-07T06:34:37.403Z",
+      "ms": 2455
+    },
+    {
+      "article": "contributor-guide",
+      "role": "contributor",
+      "step": "before you start: open Contracts and Matters from the app navigation and select the shared records",
+      "result": "pass",
+      "actual": "Contracts → banner Search → /contracts/76 shows C-76 and the title; Matters → banner Search → /matters/21 shows M-21 and the title",
+      "at": "2026-09-07T06:45:33.561Z",
+      "ms": 2147
+    },
+    {
+      "article": "contributor-guide",
+      "role": "contributor",
+      "step": "before you start: Contributor cannot create a Contract or Matter from the lists",
+      "result": "pass",
+      "actual": "no New contract/New matter control for Ravi (Daniel's Contracts list shows 0)",
+      "at": "2026-09-07T06:45:35.709Z",
+      "ms": 2241
+    },
+    {
+      "article": "contributor-guide",
+      "role": "contributor",
+      "step": "Contract Overview: change Amount, Currency, Cadence, and Effective date; reload shows the saved values",
+      "result": "pass",
+      "actual": "formatted value shown: no formatted value within 3s; after reload Amount=1375 Currency=EUR — Euro Cadence=One time (options One time/Monthly/Annually) Effective date=Sep 18, 2026; API corroboration value={\"amount\":137500,\"currency\":\"EUR\",\"cadence\":\"one_time\"} effectiveDate=2026-09-18",
+      "at": "2026-09-07T06:45:37.950Z",
+      "ms": 6368
+    },
+    {
+      "article": "contributor-guide",
+      "role": "contributor",
+      "step": "Contract Fields: edit the business Field, leave it, reload; legal Field and legal-managed controls are not offered",
+      "result": "pass",
+      "actual": "banner shown; business Field persisted (Fable review business note 1788763533544); legal Field textbox count=0; disabled: Title=true, Contract type=true, Owner=true, Priority=true, Risk=true, Description=true, Confidential=true; Status move control count=0; API customFields legal note kept=true",
+      "at": "2026-09-07T06:45:44.318Z",
+      "ms": 2780
+    },
+    {
+      "article": "contributor-guide",
+      "role": "contributor",
+      "step": "Matter Overview: edit Description and the business Custom field, leave, reload; legal-managed details are not controls",
+      "result": "pass",
+      "actual": "Description and business Custom field persisted; legal Field count=0; Matter Manager combobox=0, Priority combobox=0, Status combobox=0, Matter type combobox=0, Risk combobox=0; Title textbox=0; Close matter=0; Archive=0; Add team member disabled=true",
+      "at": "2026-09-07T06:45:47.098Z",
+      "ms": 2400
+    },
+    {
+      "article": "contributor-guide",
+      "role": "contributor",
+      "step": "contract Documents: Upload a supporting file with a Note, open it, then Add version",
+      "result": "pass",
+      "actual": "uploaded fable-review-contract-1788763533544.pdf (row: fable-review-contract-1788763533544.pdf Note: Fable review supporting paper Draft · ours v); opening it: page text names the file=true, url=/contracts/76/documents, viewer=no dialog; Add version dialog \"Add version\" → chain shows fable-review-contract-1788763533544.pdf Draft · ours v2 Sep 7 Uploaded; earlier version rows shown=1",
+      "at": "2026-09-07T06:45:49.499Z",
+      "ms": 3668
+    },
+    {
+      "article": "contributor-guide",
+      "role": "contributor",
+      "step": "contract Documents: reserved Document actions are not offered",
+      "result": "pass",
+      "actual": "own supporting Document menu: Compare with previous, Add version; Actions control on the primary Document=0; New folder=0; Show archived=0; separate API corroboration: make-primary 403",
+      "at": "2026-09-07T06:45:53.167Z",
+      "ms": 836
+    },
+    {
+      "article": "contributor-guide",
+      "role": "contributor",
+      "step": "matter Documents: Upload a supporting file with a Note, open it, then Add version",
+      "result": "pass",
+      "actual": "uploaded fable-review-matter-1788763533544.pdf (row: fable-review-matter-1788763533544.pdf Note: Fable review supporting paper Draft · ours v1 ); opening it: page text names the file=true, url=/matters/21/documents, viewer=no dialog; Add version dialog \"Add version\" → chain shows fable-review-matter-1788763533544.pdf Draft · ours v2 Sep 7 Uploaded b; earlier version rows shown=1",
+      "at": "2026-09-07T06:45:54.003Z",
+      "ms": 3597
+    },
+    {
+      "article": "contributor-guide",
+      "role": "contributor",
+      "step": "matter Documents: reserved Document actions are not offered",
+      "result": "pass",
+      "actual": "own supporting Document menu: Compare with previous, Add version; Actions control on the Administrator's baseline Document=1; New folder=0; Show archived=0; separate API corroboration: make-primary 403",
+      "at": "2026-09-07T06:45:57.600Z",
+      "ms": 814
+    },
+    {
+      "article": "contributor-guide",
+      "role": "contributor",
+      "step": "contract Comments: post at Working team and Full thread; Legal only is not offered",
+      "result": "pass",
+      "actual": "Audience offers Working team and Full thread; Working team (Visible to the legal team and Contributors on this record.) → \"RM Ravi Menon Working team this minute Fable review Working \"; Full thread (Visible to everyone on this record, including the requester.) → \"RM Ravi Menon Full thread this minute Fable review Full thre\"",
+      "at": "2026-09-07T06:45:58.415Z",
+      "ms": 1176
+    },
+    {
+      "article": "contributor-guide",
+      "role": "contributor",
+      "step": "matter Comments: post at Working team and Full thread; Legal only is not offered",
+      "result": "pass",
+      "actual": "Audience offers Working team and Full thread; Working team (Visible to the legal team and Contributors on this record.) → \"RM Ravi Menon Working team this minute Fable review Working \"; Full thread (Visible to everyone on this record, including the requester.) → \"RM Ravi Menon Full thread this minute Fable review Full thre\"",
+      "at": "2026-09-07T06:45:59.592Z",
+      "ms": 1104
+    },
+    {
+      "article": "contributor-guide",
+      "role": "contributor",
+      "step": "Tasks and Key dates are readable; an assigned Task offers no completion control; legal actions absent",
+      "result": "pass",
+      "actual": "prep (Administrator API): Task assigned to Ravi on C-76 and M-21; contracts: task listed; checkbox=1 (disabled=true), task action buttons=0; Key dates readable (\"Legal-managed details are read-only. You can edit the busine\"), add control=0; matters: task listed; checkbox=1 (disabled=true), task action buttons=0; Key dates readable (\"Key dates 0 No Key dates on this Matter yet.\"), add control=0; Contract actions menu for Ravi: Copy link; approval/signature controls=0; relationship controls=0; cleanup: tasks deleted 200/200",
+      "at": "2026-09-07T06:46:00.697Z",
+      "ms": 4565
+    },
+    {
+      "article": "contributor-guide",
+      "role": "contributor",
+      "step": "failed save recovery on the Contract and Matter: error shown, value kept, retry saves and survives reload",
+      "result": "pass",
+      "actual": "contracts Documentation business note 1788758947411: blocked save showed \"The change could not be saved. Try again.\" and kept the typed value; retry saved and reload shows it; matters Description: blocked save showed \"The change could not be saved. Try again.\" and kept the typed value; retry saved and reload shows it; observation: Amount saves when focus leaves the Value group (PATCH after Tab to Currency=0, after clicking outside=1); a blocked Amount save showed no message in the earlier probe",
+      "at": "2026-09-07T06:46:05.263Z",
+      "ms": 8795
+    },
+    {
+      "article": "contributor-guide",
+      "role": "contributor",
+      "step": "failed upload recovery on the Contract and Matter: dialog keeps the error, retry produces one Document",
+      "result": "pass",
+      "actual": "contracts: blocked upload kept the dialog with \"That file could not be uploaded. Try again.\"; retry created exactly one row; matters: blocked upload kept the dialog with \"That file could not be uploaded. Try again.\"; retry created exactly one row",
+      "at": "2026-09-07T06:46:14.059Z",
+      "ms": 6546
+    },
+    {
+      "article": "contributor-guide",
+      "role": "contributor",
+      "step": "record becomes unavailable when Legal removes the team entry; restored entry returns it",
+      "result": "pass",
+      "actual": "after Daniel removed Ravi's entry the Contract showed Something went wrong.; Reload kept it; after Daniel added Ravi back the Contract opened",
+      "at": "2026-09-07T06:46:20.605Z",
+      "ms": 3052
+    },
+    {
+      "article": "contributor-guide",
+      "role": "contributor",
+      "step": "archived records are read-only for the Contributor until Legal restores them",
+      "result": "pass",
+      "actual": "Contract archived: notice \"Archived\", Amount/Effective date/business Field disabled, Upload absent; after Restore the controls returned; Matter archived: notice \"Archived\", Description and business Field shown as text without a textbox, Upload absent; after Restore the controls returned",
+      "at": "2026-09-07T06:46:23.657Z",
+      "ms": 12069
+    },
+    {
+      "article": "contributor-guide",
+      "role": "administrator",
+      "step": "restoration: value, effective date, Description, business Fields, archive state, and team are back",
+      "result": "pass",
+      "actual": "contract value={\"amount\":125000,\"currency\":\"USD\",\"cadence\":\"annually\"} effectiveDate=2026-09-16 archived=null business=Recovered business note 1788760495403; matter description=\"Procurement will provide the business background.\" archived=null business=Recovered business note 1788760497191; supporting uploads and comments remain in the lab",
+      "at": "2026-09-07T06:46:35.726Z",
+      "ms": 26
+    }
+  ]
+}
