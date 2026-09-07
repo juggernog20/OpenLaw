@@ -1,0 +1,290 @@
+{
+  "name": "previews",
+  "reviewer": "Independent review seat (Opus 5 agent)",
+  "startedAt": "2026-09-07T21:36:37.793Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "document-previews",
+      "contentSha256": "12cf5181a1b0c37788c1cd3d07ce04d8ac6c41efc68fed4188d47074307bd24a"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C28 step 1-4: a PDF opens in the reader, its page controls work, and Download returns the uploaded bytes",
+      "actual": "The Document name opened the PDF reader showing the v… indicator and the five controls the guide names; Download returned bytes identical to the upload and reading added no Version",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:36:39.588Z",
+      "at": "2026-09-07T21:36:40.375Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C28 step 5: Word and PowerPoint read as a converted PDF while the download stays the original file",
+      "actual": "Both office formats reached a ready PDF rendition and drew pages in the reader; each Download still returned the uploaded DOCX/PPTX byte for byte, and the rendition never became a second Version",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:36:40.375Z",
+      "at": "2026-09-07T21:36:40.923Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C28 step 34: an image-only scan is OCR'd in the background for text search",
+      "actual": "The scan's extracted text arrived with source \"ocr\" and 107 characters while the reader still showed the original scanned pages and the download stayed the original scan",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:36:40.923Z",
+      "at": "2026-09-07T21:36:41.175Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C28 step 34: processed text is findable through the app's global search",
+      "actual": "A word that exists only inside the uploaded file's text was typed into the app's global search and returned this Document — the guide is right to send readers there for words inside processed paper",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:36:41.175Z",
+      "at": "2026-09-07T21:36:42.288Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C28: a raster image draws inline and downloads unchanged",
+      "actual": "The PNG drew as an inline image in the reader and its Download matched the uploaded bytes",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:36:42.288Z",
+      "at": "2026-09-07T21:36:42.476Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C28 step 28: an email shows headers, body and attachments; only PDF/image attachments preview",
+      "actual": "The email reader showed the subject, sender and a 2 attachments strip, fetched nothing from the remote image host, opened the PDF attachment in a preview and offered the Word attachment as a download; neither attachment became a managed Document",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:36:42.477Z",
+      "at": "2026-09-07T21:36:44.559Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C28 step 26: a download-only format downloads straight from the row",
+      "actual": "The CSV row was a download link rather than a reader button: selecting the name downloaded the original directly, with no preview opened",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:36:44.559Z",
+      "at": "2026-09-07T21:36:44.605Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C28 step 32: the reader shows the preparing card while a rendition is still pending",
+      "actual": "With the rendition read held at pending, the reader drew \"Preparing this document for reading…\" exactly as quoted; the stored original was downloadable throughout and the real rendition was already ready",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:36:44.605Z",
+      "at": "2026-09-07T21:36:44.737Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C28 step 36: an unreadable file shows the failure card and a corrected Version recovers it",
+      "actual": "The intentionally damaged DOCX reached a failed rendition and drew the guide’s exact recovery card while its original still downloaded unchanged; appending a readable file produced a v2 that rendered, and the failed v1 stayed in the chain",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:36:44.737Z",
+      "at": "2026-09-07T21:36:46.005Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C28 step 38: a download can fail on its own while previews keep working",
+      "actual": "After the Document was permanently removed, its Version download answered 404 and its row was gone, while a different Document still previewed and downloaded normally — the guide is right that a failed download is a separate outcome from a failed preview, and re-uploading would not bring the erased bytes back",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:36:46.005Z",
+      "at": "2026-09-07T21:36:48.209Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C28 step 1-4: a PDF opens in the reader, its page controls work, and Download returns the uploaded bytes",
+      "actual": "The Document name opened the PDF reader showing the v… indicator and the five controls the guide names; Download returned bytes identical to the upload and reading added no Version",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:36:49.800Z",
+      "at": "2026-09-07T21:36:50.911Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C28 step 5: Word and PowerPoint read as a converted PDF while the download stays the original file",
+      "actual": "Both office formats reached a ready PDF rendition and drew pages in the reader; each Download still returned the uploaded DOCX/PPTX byte for byte, and the rendition never became a second Version",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:36:50.911Z",
+      "at": "2026-09-07T21:36:51.452Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C28 step 34: an image-only scan is OCR'd in the background for text search",
+      "actual": "The scan's extracted text arrived with source \"ocr\" and 107 characters while the reader still showed the original scanned pages and the download stayed the original scan",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:36:51.452Z",
+      "at": "2026-09-07T21:36:51.697Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C28 step 34: processed text is findable through the app's global search",
+      "actual": "A word that exists only inside the uploaded file's text was typed into the app's global search and returned this Document — the guide is right to send readers there for words inside processed paper",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:36:51.698Z",
+      "at": "2026-09-07T21:36:52.707Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C28: a raster image draws inline and downloads unchanged",
+      "actual": "The PNG drew as an inline image in the reader and its Download matched the uploaded bytes",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:36:52.707Z",
+      "at": "2026-09-07T21:36:52.866Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C28 step 28: an email shows headers, body and attachments; only PDF/image attachments preview",
+      "actual": "The email reader showed the subject, sender and a 2 attachments strip, fetched nothing from the remote image host, opened the PDF attachment in a preview and offered the Word attachment as a download; neither attachment became a managed Document",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:36:52.866Z",
+      "at": "2026-09-07T21:36:55.231Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C28 step 26: a download-only format downloads straight from the row",
+      "actual": "The CSV row was a download link rather than a reader button: selecting the name downloaded the original directly, with no preview opened",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:36:55.231Z",
+      "at": "2026-09-07T21:36:55.268Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C28 step 32: the reader shows the preparing card while a rendition is still pending",
+      "actual": "With the rendition read held at pending, the reader drew \"Preparing this document for reading…\" exactly as quoted; the stored original was downloadable throughout and the real rendition was already ready",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:36:55.268Z",
+      "at": "2026-09-07T21:36:55.379Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C28 step 36: an unreadable file shows the failure card and a corrected Version recovers it",
+      "actual": "The intentionally damaged DOCX reached a failed rendition and drew the guide’s exact recovery card while its original still downloaded unchanged; appending a readable file produced a v2 that rendered, and the failed v1 stayed in the chain",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:36:55.379Z",
+      "at": "2026-09-07T21:36:56.630Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C28 step 38: a download can fail on its own while previews keep working",
+      "actual": "After the Document was permanently removed, its Version download answered 404 and its row was gone, while a different Document still previewed and downloaded normally — the guide is right that a failed download is a separate outcome from a failed preview, and re-uploading would not bring the erased bytes back",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:36:56.630Z",
+      "at": "2026-09-07T21:36:59.169Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C28 step 1-4: a PDF opens in the reader, its page controls work, and Download returns the uploaded bytes",
+      "actual": "The Document name opened the PDF reader showing the v… indicator and the five controls the guide names; Download returned bytes identical to the upload and reading added no Version",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:00.790Z",
+      "at": "2026-09-07T21:37:01.876Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C28 step 5: Word and PowerPoint read as a converted PDF while the download stays the original file",
+      "actual": "Both office formats reached a ready PDF rendition and drew pages in the reader; each Download still returned the uploaded DOCX/PPTX byte for byte, and the rendition never became a second Version",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:01.876Z",
+      "at": "2026-09-07T21:37:02.396Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C28 step 34: an image-only scan is OCR'd in the background for text search",
+      "actual": "The scan's extracted text arrived with source \"ocr\" and 107 characters while the reader still showed the original scanned pages and the download stayed the original scan",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:02.396Z",
+      "at": "2026-09-07T21:37:02.646Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C28 step 34: processed text is findable through the app's global search",
+      "actual": "A word that exists only inside the uploaded file's text was typed into the app's global search and returned this Document — the guide is right to send readers there for words inside processed paper",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:02.646Z",
+      "at": "2026-09-07T21:37:03.600Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C28: a raster image draws inline and downloads unchanged",
+      "actual": "The PNG drew as an inline image in the reader and its Download matched the uploaded bytes",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:03.600Z",
+      "at": "2026-09-07T21:37:03.748Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C28 step 28: an email shows headers, body and attachments; only PDF/image attachments preview",
+      "actual": "The email reader showed the subject, sender and a 2 attachments strip, fetched nothing from the remote image host, opened the PDF attachment in a preview and offered the Word attachment as a download; neither attachment became a managed Document",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:03.749Z",
+      "at": "2026-09-07T21:37:06.063Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C28 step 26: a download-only format downloads straight from the row",
+      "actual": "The CSV row was a download link rather than a reader button: selecting the name downloaded the original directly, with no preview opened",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:06.063Z",
+      "at": "2026-09-07T21:37:06.099Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C28 step 32: the reader shows the preparing card while a rendition is still pending",
+      "actual": "With the rendition read held at pending, the reader drew \"Preparing this document for reading…\" exactly as quoted; the stored original was downloadable throughout and the real rendition was already ready",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:06.100Z",
+      "at": "2026-09-07T21:37:06.213Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C28 step 36: an unreadable file shows the failure card and a corrected Version recovers it",
+      "actual": "The intentionally damaged DOCX reached a failed rendition and drew the guide’s exact recovery card while its original still downloaded unchanged; appending a readable file produced a v2 that rendered, and the failed v1 stayed in the chain",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:06.213Z",
+      "at": "2026-09-07T21:37:07.446Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C28 step 38: a download can fail on its own while previews keep working",
+      "actual": "After the Document was permanently removed, its Version download answered 404 and its row was gone, while a different Document still previewed and downloaded normally — the guide is right that a failed download is a separate outcome from a failed preview, and re-uploading would not bring the erased bytes back",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:07.446Z",
+      "at": "2026-09-07T21:37:09.916Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T21:37:09.920Z",
+  "reviewerKind": "agent",
+  "note": "Independent review seat. Fresh fictional \"Rev\" records and this seat's own steps and assertions; the author records are supporting evidence only. Each step's \"at\" is written when that awaited step settled, and \"startedAt\" when it began; these are automated browser checks against a local instance, not measured human task times."
+}

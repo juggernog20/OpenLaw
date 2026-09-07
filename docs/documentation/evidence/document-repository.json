@@ -5,11 +5,11 @@
   "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
   "environment": "openlaw-docs-b8e31260-conversations",
   "author": "Codex documentation author",
-  "technicalReviewer": null,
-  "walkthroughReviewer": null,
+  "technicalReviewer": "Independent review seat (Opus 5 agent) — guide claims checked against the committed app source at a28331f7",
+  "walkthroughReviewer": "Independent review seat (Opus 5 agent), separate from the documentation author",
   "reviewerKind": "agent",
-  "verifiedAt": null,
-  "status": "not-run",
+  "verifiedAt": "2026-09-07T21:28:12.634Z",
+  "status": "pass",
   "sources": [
     "CONTEXT.md",
     "docs/decision-records/DECISIONS-DOCUMENTS.md",
@@ -25,9 +25,11 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "expected": "The repository shows permitted Documents and links to the correct owners/Versions. Hidden owners do not leak through results or filters; archived/empty result behavior matches the guide.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "9 browser steps passed, following the article as legal team member: Documents opens the flat repository and Recent lists at most five newest current Versions; the Owner filter narrows to each owner kind this role may reach; Record narrows to one owning record and unlocks a Folder filter; a Knowledge owner is offered no Folder filter, and the seam refuses one; Format, Kind, Uploader, Counterparty and the two dates all have to match; Recent is hidden while filters are active and returns when they are cleared; opening a row lands on its owning record with the current Version selected; a record this reader cannot reach never appears, by filter or by direct link; Show archived reveals archived rows and Restore brings one back.",
+      "result": "pass",
+      "evidence": ["docs/documentation/batches/DOC-017/independent-repository.json"],
+      "startedAt": "2026-09-07T21:28:04.370Z",
+      "verifiedAt": "2026-09-07T21:28:08.479Z"
     },
     {
       "id": "V-C30",
@@ -35,9 +37,11 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "expected": "The repository shows permitted Documents and links to the correct owners/Versions. Hidden owners do not leak through results or filters; archived/empty result behavior matches the guide.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "9 browser steps passed, following the article as administrator: Documents opens the flat repository and Recent lists at most five newest current Versions; the Owner filter narrows to each owner kind this role may reach; Record narrows to one owning record and unlocks a Folder filter; a Knowledge owner is offered no Folder filter, and the seam refuses one; Format, Kind, Uploader, Counterparty and the two dates all have to match; Recent is hidden while filters are active and returns when they are cleared; opening a row lands on its owning record with the current Version selected; the repository answers this reader's own reach, which for an Administrator includes Confidential records; Show archived reveals archived rows and Restore brings one back.",
+      "result": "pass",
+      "evidence": ["docs/documentation/batches/DOC-017/independent-repository.json"],
+      "startedAt": "2026-09-07T21:27:59.235Z",
+      "verifiedAt": "2026-09-07T21:28:02.901Z"
     },
     {
       "id": "V-C30",
@@ -45,17 +49,22 @@
       "role": "contributor",
       "method": "browser-walkthrough",
       "expected": "The repository shows permitted Documents and links to the correct owners/Versions. Hidden owners do not leak through results or filters; archived/empty result behavior matches the guide.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "7 browser steps passed, following the article as contributor: Documents opens the flat repository and Recent lists at most five newest current Versions; the Owner filter narrows to each owner kind this role may reach; Record narrows to one owning record and unlocks a Folder filter; a Knowledge owner is offered no Folder filter, and the seam refuses one; opening a row lands on its owning record with the current Version selected; a record this reader cannot reach never appears, by filter or by direct link; a Contributor is offered no archived Document management.",
+      "result": "pass",
+      "evidence": ["docs/documentation/batches/DOC-017/independent-repository.json"],
+      "startedAt": "2026-09-07T21:28:09.881Z",
+      "verifiedAt": "2026-09-07T21:28:12.634Z"
     }
   ],
   "authorEvidence": ["docs/documentation/batches/DOC-017/README.md"],
   "limitations": [
-    "Author browser checks passed; independent technical review and required role walkthroughs are pending.",
-    "Agent walkthroughs are not human user studies or feature-owner approval.",
-    "Shared links to later Knowledge and operator guides remain publication dependencies."
+    "Independent agent walkthrough by a different seat from the author; not a human user study and not the feature owner's approval.",
+    "Deliberate API and browser-network fixtures are named step by step and are separated from the reader actions they set up.",
+    "Linked guides remain unpublished; the article stays in review."
   ],
   "previousEvidence": null,
-  "copyOnlyReview": null
+  "copyOnlyReview": null,
+  "publicationBlockers": [
+    "The linked Document Versions, archive and saved-views guides are in review."
+  ]
 }

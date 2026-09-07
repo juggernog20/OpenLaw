@@ -1,0 +1,378 @@
+{
+  "name": "discovery",
+  "reviewer": "Independent review seat (Opus 5 agent)",
+  "startedAt": "2026-09-07T21:37:46.290Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "document-versions",
+      "contentSha256": "6fc24d687bf1e36712a9721028436b974b2b71da17fe07dbf83363f013257a9c"
+    },
+    {
+      "articleId": "document-folders",
+      "contentSha256": "1844521ab7ef07fc40fe8e0c01aaeb7df5022acf1e8059b2b24716f809838fec"
+    },
+    {
+      "articleId": "document-previews",
+      "contentSha256": "12cf5181a1b0c37788c1cd3d07ce04d8ac6c41efc68fed4188d47074307bd24a"
+    },
+    {
+      "articleId": "document-repository",
+      "contentSha256": "59f88467c3a576764b212e36ebf5cb8bd49ff84a146a1ec3321d3d0a3da19969"
+    },
+    {
+      "articleId": "archive-and-delete-documents",
+      "contentSha256": "f00bcd882a961a9944be0aed0bc83a991a29870eb318dbdfe8ef66c52c2c4551"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "discovery: document-versions is reachable from page Help, by exact title, and in the full documentation",
+      "actual": "From the page's own Help this role found \"Upload Documents and add Document Versions\", searched its exact title, opened it with the H1 focused, jumped to \"Upload a new Document\" with that heading focused, and reached the same article in the full documentation",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:47.630Z",
+      "at": "2026-09-07T21:37:49.393Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "discovery: document-versions fits three themes at 320, 720 and 1440 CSS pixels",
+      "actual": "No horizontal overflow in any of the nine combinations checked (light@320, light@720, light@1440, dark@320, dark@720, dark@1440, warm@320, warm@720, warm@1440)",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:49.394Z",
+      "at": "2026-09-07T21:37:49.442Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "discovery: document-folders is reachable from page Help, by exact title, and in the full documentation",
+      "actual": "From the page's own Help this role found \"Organize folders and upload in bulk\", searched its exact title, opened it with the H1 focused, jumped to \"Create and maintain folders\" with that heading focused, and reached the same article in the full documentation",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:49.442Z",
+      "at": "2026-09-07T21:37:51.173Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "discovery: document-folders fits three themes at 320, 720 and 1440 CSS pixels",
+      "actual": "No horizontal overflow in any of the nine combinations checked (light@320, light@720, light@1440, dark@320, dark@720, dark@1440, warm@320, warm@720, warm@1440)",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:51.173Z",
+      "at": "2026-09-07T21:37:51.204Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "discovery: document-previews is reachable from page Help, by exact title, and in the full documentation",
+      "actual": "From the page's own Help this role found \"Read and download Documents\", searched its exact title, opened it with the H1 focused, jumped to \"Read a managed Document\" with that heading focused, and reached the same article in the full documentation",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:51.204Z",
+      "at": "2026-09-07T21:37:52.876Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "discovery: document-previews fits three themes at 320, 720 and 1440 CSS pixels",
+      "actual": "No horizontal overflow in any of the nine combinations checked (light@320, light@720, light@1440, dark@320, dark@720, dark@1440, warm@320, warm@720, warm@1440)",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:52.876Z",
+      "at": "2026-09-07T21:37:52.910Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "discovery: document-repository is reachable from page Help, by exact title, and in the full documentation",
+      "actual": "From the page's own Help this role found \"Find Documents in the repository\", searched its exact title, opened it with the H1 focused, jumped to \"Search and narrow the list\" with that heading focused, and reached the same article in the full documentation",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:52.911Z",
+      "at": "2026-09-07T21:37:54.376Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "discovery: document-repository fits three themes at 320, 720 and 1440 CSS pixels",
+      "actual": "No horizontal overflow in any of the nine combinations checked (light@320, light@720, light@1440, dark@320, dark@720, dark@1440, warm@320, warm@720, warm@1440)",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:54.377Z",
+      "at": "2026-09-07T21:37:54.412Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "discovery: archive-and-delete-documents is reachable from page Help, by exact title, and in the full documentation",
+      "actual": "From the page's own Help this role found \"Archive, restore, or permanently delete Documents\", searched its exact title, opened it with the H1 focused, jumped to \"Archive a Document\" with that heading focused, and reached the same article in the full documentation",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:54.412Z",
+      "at": "2026-09-07T21:37:56.120Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "discovery: archive-and-delete-documents fits three themes at 320, 720 and 1440 CSS pixels",
+      "actual": "No horizontal overflow in any of the nine combinations checked (light@320, light@720, light@1440, dark@320, dark@720, dark@1440, warm@320, warm@720, warm@1440)",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:56.120Z",
+      "at": "2026-09-07T21:37:56.151Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "discovery: the guides open by keyboard alone, with focus landing where the reader is sent",
+      "actual": "Tab reached the \"Upload Documents and add Document Versions\" link (outline-style solid) and Enter opened it with the H1 focused; Tab then reached the \"Upload a new Document\" outline link and Enter moved focus onto that heading. No pointer was used",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:56.151Z",
+      "at": "2026-09-07T21:37:57.787Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "discovery: every DOC-017 guide this role reads still fits at an emulated 200% zoom",
+      "actual": "At an emulated 200% zoom (640x450 CSS pixels, device pixel ratio 2 — the browser's own zoom menu was not operated) every guide fitted without horizontal overflow; body/title sizes were document-versions 16px/32px, document-folders 16px/32px, document-previews 16px/32px, document-repository 16px/32px, archive-and-delete-documents 16px/32px",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:57.788Z",
+      "at": "2026-09-07T21:38:01.833Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "discovery: document-versions is reachable from page Help, by exact title, and in the full documentation",
+      "actual": "From the page's own Help this role found \"Upload Documents and add Document Versions\", searched its exact title, opened it with the H1 focused, jumped to \"Upload a new Document\" with that heading focused, and reached the same article in the full documentation",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:38:03.022Z",
+      "at": "2026-09-07T21:38:04.553Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "discovery: document-versions fits three themes at 320, 720 and 1440 CSS pixels",
+      "actual": "No horizontal overflow in any of the nine combinations checked (light@320, light@720, light@1440, dark@320, dark@720, dark@1440, warm@320, warm@720, warm@1440)",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:38:04.553Z",
+      "at": "2026-09-07T21:38:04.588Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "discovery: document-folders is reachable from page Help, by exact title, and in the full documentation",
+      "actual": "From the page's own Help this role found \"Organize folders and upload in bulk\", searched its exact title, opened it with the H1 focused, jumped to \"Create and maintain folders\" with that heading focused, and reached the same article in the full documentation",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:38:04.588Z",
+      "at": "2026-09-07T21:38:06.277Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "discovery: document-folders fits three themes at 320, 720 and 1440 CSS pixels",
+      "actual": "No horizontal overflow in any of the nine combinations checked (light@320, light@720, light@1440, dark@320, dark@720, dark@1440, warm@320, warm@720, warm@1440)",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:38:06.277Z",
+      "at": "2026-09-07T21:38:06.312Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "discovery: document-previews is reachable from page Help, by exact title, and in the full documentation",
+      "actual": "From the page's own Help this role found \"Read and download Documents\", searched its exact title, opened it with the H1 focused, jumped to \"Read a managed Document\" with that heading focused, and reached the same article in the full documentation",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:38:06.313Z",
+      "at": "2026-09-07T21:38:07.904Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "discovery: document-previews fits three themes at 320, 720 and 1440 CSS pixels",
+      "actual": "No horizontal overflow in any of the nine combinations checked (light@320, light@720, light@1440, dark@320, dark@720, dark@1440, warm@320, warm@720, warm@1440)",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:38:07.904Z",
+      "at": "2026-09-07T21:38:07.935Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "discovery: document-repository is reachable from page Help, by exact title, and in the full documentation",
+      "actual": "From the page's own Help this role found \"Find Documents in the repository\", searched its exact title, opened it with the H1 focused, jumped to \"Search and narrow the list\" with that heading focused, and reached the same article in the full documentation",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:38:07.935Z",
+      "at": "2026-09-07T21:38:09.375Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "discovery: document-repository fits three themes at 320, 720 and 1440 CSS pixels",
+      "actual": "No horizontal overflow in any of the nine combinations checked (light@320, light@720, light@1440, dark@320, dark@720, dark@1440, warm@320, warm@720, warm@1440)",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:38:09.376Z",
+      "at": "2026-09-07T21:38:09.412Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "discovery: archive-and-delete-documents is reachable from page Help, by exact title, and in the full documentation",
+      "actual": "From the page's own Help this role found \"Archive, restore, or permanently delete Documents\", searched its exact title, opened it with the H1 focused, jumped to \"Archive a Document\" with that heading focused, and reached the same article in the full documentation",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:38:09.412Z",
+      "at": "2026-09-07T21:38:11.074Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "discovery: archive-and-delete-documents fits three themes at 320, 720 and 1440 CSS pixels",
+      "actual": "No horizontal overflow in any of the nine combinations checked (light@320, light@720, light@1440, dark@320, dark@720, dark@1440, warm@320, warm@720, warm@1440)",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:38:11.075Z",
+      "at": "2026-09-07T21:38:11.120Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "discovery: the guides open by keyboard alone, with focus landing where the reader is sent",
+      "actual": "Tab reached the \"Upload Documents and add Document Versions\" link (outline-style solid) and Enter opened it with the H1 focused; Tab then reached the \"Upload a new Document\" outline link and Enter moved focus onto that heading. No pointer was used",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:38:11.120Z",
+      "at": "2026-09-07T21:38:12.795Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "discovery: every DOC-017 guide this role reads still fits at an emulated 200% zoom",
+      "actual": "At an emulated 200% zoom (640x450 CSS pixels, device pixel ratio 2 — the browser's own zoom menu was not operated) every guide fitted without horizontal overflow; body/title sizes were document-versions 16px/32px, document-folders 16px/32px, document-previews 16px/32px, document-repository 16px/32px, archive-and-delete-documents 16px/32px",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:38:12.795Z",
+      "at": "2026-09-07T21:38:16.855Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "discovery: document-versions is reachable from page Help, by exact title, and in the full documentation",
+      "actual": "From the page's own Help this role found \"Upload Documents and add Document Versions\", searched its exact title, opened it with the H1 focused, jumped to \"Upload a new Document\" with that heading focused, and reached the same article in the full documentation",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:38:17.952Z",
+      "at": "2026-09-07T21:38:19.520Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "discovery: document-versions fits three themes at 320, 720 and 1440 CSS pixels",
+      "actual": "No horizontal overflow in any of the nine combinations checked (light@320, light@720, light@1440, dark@320, dark@720, dark@1440, warm@320, warm@720, warm@1440)",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:38:19.520Z",
+      "at": "2026-09-07T21:38:19.556Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "discovery: document-folders is reachable from page Help, by exact title, and in the full documentation",
+      "actual": "From the page's own Help this role found \"Organize folders and upload in bulk\", searched its exact title, opened it with the H1 focused, jumped to \"Create and maintain folders\" with that heading focused, and reached the same article in the full documentation",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:38:19.556Z",
+      "at": "2026-09-07T21:38:21.044Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "discovery: document-folders fits three themes at 320, 720 and 1440 CSS pixels",
+      "actual": "No horizontal overflow in any of the nine combinations checked (light@320, light@720, light@1440, dark@320, dark@720, dark@1440, warm@320, warm@720, warm@1440)",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:38:21.044Z",
+      "at": "2026-09-07T21:38:21.075Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "discovery: document-previews is reachable from page Help, by exact title, and in the full documentation",
+      "actual": "From the page's own Help this role found \"Read and download Documents\", searched its exact title, opened it with the H1 focused, jumped to \"Read a managed Document\" with that heading focused, and reached the same article in the full documentation",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:38:21.076Z",
+      "at": "2026-09-07T21:38:22.559Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "discovery: document-previews fits three themes at 320, 720 and 1440 CSS pixels",
+      "actual": "No horizontal overflow in any of the nine combinations checked (light@320, light@720, light@1440, dark@320, dark@720, dark@1440, warm@320, warm@720, warm@1440)",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:38:22.559Z",
+      "at": "2026-09-07T21:38:22.595Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "discovery: document-repository is reachable from page Help, by exact title, and in the full documentation",
+      "actual": "From the page's own Help this role found \"Find Documents in the repository\", searched its exact title, opened it with the H1 focused, jumped to \"Search and narrow the list\" with that heading focused, and reached the same article in the full documentation",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:38:22.595Z",
+      "at": "2026-09-07T21:38:24.009Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "discovery: document-repository fits three themes at 320, 720 and 1440 CSS pixels",
+      "actual": "No horizontal overflow in any of the nine combinations checked (light@320, light@720, light@1440, dark@320, dark@720, dark@1440, warm@320, warm@720, warm@1440)",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:38:24.009Z",
+      "at": "2026-09-07T21:38:24.040Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "discovery: archive-and-delete-documents is reachable from page Help, by exact title, and in the full documentation",
+      "actual": "From the page's own Help this role found \"Archive, restore, or permanently delete Documents\", searched its exact title, opened it with the H1 focused, jumped to \"Archive a Document\" with that heading focused, and reached the same article in the full documentation",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:38:24.041Z",
+      "at": "2026-09-07T21:38:25.473Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "discovery: archive-and-delete-documents fits three themes at 320, 720 and 1440 CSS pixels",
+      "actual": "No horizontal overflow in any of the nine combinations checked (light@320, light@720, light@1440, dark@320, dark@720, dark@1440, warm@320, warm@720, warm@1440)",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:38:25.473Z",
+      "at": "2026-09-07T21:38:25.503Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "discovery: the guides open by keyboard alone, with focus landing where the reader is sent",
+      "actual": "Tab reached the \"Upload Documents and add Document Versions\" link (outline-style solid) and Enter opened it with the H1 focused; Tab then reached the \"Upload a new Document\" outline link and Enter moved focus onto that heading. No pointer was used",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:38:25.504Z",
+      "at": "2026-09-07T21:38:26.798Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "discovery: every DOC-017 guide this role reads still fits at an emulated 200% zoom",
+      "actual": "At an emulated 200% zoom (640x450 CSS pixels, device pixel ratio 2 — the browser's own zoom menu was not operated) every guide fitted without horizontal overflow; body/title sizes were document-versions 16px/32px, document-folders 16px/32px, document-previews 16px/32px, document-repository 16px/32px, archive-and-delete-documents 16px/32px",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:38:26.798Z",
+      "at": "2026-09-07T21:38:30.883Z"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "discovery: the reading guide is reachable from a Request thread in the portal",
+      "actual": "From their own Request thread the Business User opened Help, searched the exact title, read the guide with the H1 focused, jumped to the portal section, saw it fit in three themes at three widths, and reached the full documentation; the four staff-only guides are not in this audience",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:38:30.886Z",
+      "at": "2026-09-07T21:38:33.759Z"
+    },
+    {
+      "role": "signed-out",
+      "method": "browser-walkthrough",
+      "action": "discovery: all five guides are listed in the formal documentation with no application API call",
+      "actual": "Signed out, the formal index listed all five titles including \"Organize folders and upload in bulk\", and searching it made no application API request",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:38:33.760Z",
+      "at": "2026-09-07T21:38:34.849Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T21:38:34.849Z",
+  "reviewerKind": "agent",
+  "note": "Independent review seat. Fresh fictional \"Rev\" records and this seat's own steps and assertions; the author records are supporting evidence only. Each step's \"at\" is written when that awaited step settled, and \"startedAt\" when it began; these are automated browser checks against a local instance, not measured human task times."
+}

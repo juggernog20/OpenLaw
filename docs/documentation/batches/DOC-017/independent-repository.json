@@ -1,0 +1,245 @@
+{
+  "name": "repository",
+  "reviewer": "Independent review seat (Opus 5 agent)",
+  "startedAt": "2026-09-07T21:27:56.613Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "document-repository",
+      "contentSha256": "59f88467c3a576764b212e36ebf5cb8bd49ff84a146a1ec3321d3d0a3da19969"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C30 step 1: Documents opens the flat repository and Recent lists at most five newest current Versions",
+      "actual": "Recent drew 5 rows in newest-current-Version-first order, matching the seam's own five-row answer; it is an upload order, not a reading history",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:27:59.235Z",
+      "at": "2026-09-07T21:27:59.305Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C30 step 2: the Owner filter narrows to each owner kind this role may reach",
+      "actual": "All four Owner arms returned reachable paper (Contracts 100, Matters 100, Entities 71, Knowledge 35); Clear all widened the list again",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:27:59.305Z",
+      "at": "2026-09-07T21:27:59.650Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C30 step 3: Record narrows to one owning record and unlocks a Folder filter",
+      "actual": "Typing C-408 into Record and choosing the match narrowed the list to that Contract and made Folder available; Record root returned only paper filed outside its folders",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:27:59.650Z",
+      "at": "2026-09-07T21:27:59.885Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C30: a Knowledge owner is offered no Folder filter, and the seam refuses one",
+      "actual": "With Knowledge chosen the Folder control was absent, and asking the seam for a Knowledge folder answered 400 — Knowledge Folders organize items, not Documents inside one, as the guide says",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:27:59.885Z",
+      "at": "2026-09-07T21:27:59.985Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C30 step 4: Format, Kind, Uploader, Counterparty and the two dates all have to match",
+      "actual": "A Format + Kind + Uploader + both-dates combination returned only rows matching every one of them and still held today's upload with an inclusive same-day window; changing one value dropped the row, and the Counterparty filter answered Contract-owned paper only",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:27:59.985Z",
+      "at": "2026-09-07T21:28:00.134Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C30 step 13/17: Recent is hidden while filters are active and returns when they are cleared",
+      "actual": "With an Owner filter active the Recent section disappeared and came back on Clear all, exactly as the guide notes",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:28:00.134Z",
+      "at": "2026-09-07T21:28:00.392Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C30 step 25: opening a row lands on its owning record with the current Version selected",
+      "actual": "Opening the repository row landed on C-408's Documents tab with the reader on version 2, the current round — the repository points at the owning record rather than reading paper itself",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:28:00.392Z",
+      "at": "2026-09-07T21:28:01.328Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C30: the repository answers this reader's own reach, which for an Administrator includes Confidential records",
+      "actual": "The Confidential Contract's paper was listed for the Administrator and correctly attributed to C-411; reach, not the filter, is what decides, and an Administrator's reach covers every Contract",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:28:01.329Z",
+      "at": "2026-09-07T21:28:01.968Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C30 step 29: Show archived reveals archived rows and Restore brings one back",
+      "actual": "Archiving took the row out of the ordinary list; Show archived brought it back with an Archived marker and the row Restore returned it live with its Version intact",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:28:01.968Z",
+      "at": "2026-09-07T21:28:02.901Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C30 step 1: Documents opens the flat repository and Recent lists at most five newest current Versions",
+      "actual": "Recent drew 5 rows in newest-current-Version-first order, matching the seam's own five-row answer; it is an upload order, not a reading history",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:28:04.370Z",
+      "at": "2026-09-07T21:28:04.428Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C30 step 2: the Owner filter narrows to each owner kind this role may reach",
+      "actual": "All four Owner arms returned reachable paper (Contracts 100, Matters 100, Entities 71, Knowledge 35); Clear all widened the list again",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:28:04.428Z",
+      "at": "2026-09-07T21:28:04.807Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C30 step 3: Record narrows to one owning record and unlocks a Folder filter",
+      "actual": "Typing C-409 into Record and choosing the match narrowed the list to that Contract and made Folder available; Record root returned only paper filed outside its folders",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:28:04.807Z",
+      "at": "2026-09-07T21:28:05.017Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C30: a Knowledge owner is offered no Folder filter, and the seam refuses one",
+      "actual": "With Knowledge chosen the Folder control was absent, and asking the seam for a Knowledge folder answered 400 — Knowledge Folders organize items, not Documents inside one, as the guide says",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:28:05.017Z",
+      "at": "2026-09-07T21:28:05.117Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C30 step 4: Format, Kind, Uploader, Counterparty and the two dates all have to match",
+      "actual": "A Format + Kind + Uploader + both-dates combination returned only rows matching every one of them and still held today's upload with an inclusive same-day window; changing one value dropped the row, and the Counterparty filter answered Contract-owned paper only",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:28:05.117Z",
+      "at": "2026-09-07T21:28:05.286Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C30 step 13/17: Recent is hidden while filters are active and returns when they are cleared",
+      "actual": "With an Owner filter active the Recent section disappeared and came back on Clear all, exactly as the guide notes",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:28:05.286Z",
+      "at": "2026-09-07T21:28:05.515Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C30 step 25: opening a row lands on its owning record with the current Version selected",
+      "actual": "Opening the repository row landed on C-409's Documents tab with the reader on version 2, the current round — the repository points at the owning record rather than reading paper itself",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:28:05.516Z",
+      "at": "2026-09-07T21:28:06.446Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C30 negative: a record this reader cannot reach never appears, by filter or by direct link",
+      "actual": "Paper on a Confidential Contract this reader is not on stayed out of the unfiltered list and out of a Record-filtered one, its direct download answered 404, and the record page showed nothing — no filter widened reach",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:28:06.447Z",
+      "at": "2026-09-07T21:28:07.648Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C30 step 29: Show archived reveals archived rows and Restore brings one back",
+      "actual": "Archiving took the row out of the ordinary list; Show archived brought it back with an Archived marker and the row Restore returned it live with its Version intact",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:28:07.648Z",
+      "at": "2026-09-07T21:28:08.479Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C30 step 1: Documents opens the flat repository and Recent lists at most five newest current Versions",
+      "actual": "Recent drew 5 rows in newest-current-Version-first order, matching the seam's own five-row answer; it is an upload order, not a reading history",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:28:09.881Z",
+      "at": "2026-09-07T21:28:09.941Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C30 step 2: the Owner filter narrows to each owner kind this role may reach",
+      "actual": "Owner offered all four arms, but the Contributor's Entities and Knowledge arms were empty and drew the no-match message, matching the guide's \"only permitted Contract and Matter paper\"",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:28:09.941Z",
+      "at": "2026-09-07T21:28:10.286Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C30 step 3: Record narrows to one owning record and unlocks a Folder filter",
+      "actual": "Typing C-410 into Record and choosing the match narrowed the list to that Contract and made Folder available; Record root returned only paper filed outside its folders",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:28:10.286Z",
+      "at": "2026-09-07T21:28:10.467Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C30: a Knowledge owner is offered no Folder filter, and the seam refuses one",
+      "actual": "With Knowledge chosen the Folder control was absent, and asking the seam for a Knowledge folder answered 400 — Knowledge Folders organize items, not Documents inside one, as the guide says",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:28:10.467Z",
+      "at": "2026-09-07T21:28:10.564Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C30 step 25: opening a row lands on its owning record with the current Version selected",
+      "actual": "Opening the repository row landed on C-410's Documents tab with the reader on version 2, the current round — the repository points at the owning record rather than reading paper itself",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:28:10.565Z",
+      "at": "2026-09-07T21:28:11.419Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C30 negative: a record this reader cannot reach never appears, by filter or by direct link",
+      "actual": "Paper on a Confidential Contract this reader is not on stayed out of the unfiltered list and out of a Record-filtered one, its direct download answered 404, and the record page showed nothing — no filter widened reach",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:28:11.419Z",
+      "at": "2026-09-07T21:28:12.600Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C30 step 31 negative: a Contributor is offered no archived Document management",
+      "actual": "The Contributor's repository carried no Show archived control and asking the seam for archived rows returned none, so archived Document management is not offered to this role",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:28:12.600Z",
+      "at": "2026-09-07T21:28:12.634Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T21:28:12.638Z",
+  "reviewerKind": "agent",
+  "note": "Independent review seat. Fresh fictional \"Rev\" records and this seat's own steps and assertions; the author records are supporting evidence only. Each step's \"at\" is written when that awaited step settled, and \"startedAt\" when it began; these are automated browser checks against a local instance, not measured human task times."
+}

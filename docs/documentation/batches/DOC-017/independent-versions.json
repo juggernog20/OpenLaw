@@ -1,0 +1,263 @@
+{
+  "name": "versions",
+  "reviewer": "Independent review seat (Opus 5 agent)",
+  "startedAt": "2026-09-07T21:37:16.591Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "document-versions",
+      "contentSha256": "6fc24d687bf1e36712a9721028436b974b2b71da17fe07dbf83363f013257a9c"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C26 step 2-4: Upload one file, read the v1 row and its filename-derived name",
+      "actual": "Guide step 2-4 followed in the browser: one file created one Document titled from its filename, showing v1, the chosen Draft · ours kind and the typed note",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:17.541Z",
+      "at": "2026-09-07T21:37:18.485Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C26 step 2 variant: choosing several files opens the bulk import dialog instead of the composer",
+      "actual": "Picking two files in the Upload composer replaced it with the Import 2 files dialog, exactly as the guide warns; Cancel created nothing",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:18.485Z",
+      "at": "2026-09-07T21:37:18.614Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C26 step 5-7: Add version appends v2 and the earlier round stays readable and unchanged",
+      "actual": "Add version raised the chain to v2; expanding the row opened v1 in its own reader with the earlier note, kind, filename and author intact",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:18.614Z",
+      "at": "2026-09-07T21:37:19.779Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C26: the same paper uploaded again is a separate chain, not a merge",
+      "actual": "Re-uploading identical bytes as a new Document produced a second one-round chain; OpenLaw merged nothing, as the guide states",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:19.779Z",
+      "at": "2026-09-07T21:37:19.954Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C26: Edit details renames the Document and adds a description without touching the chain",
+      "actual": "Actions > Edit details > Save changed the logical name and description; both immutable Versions and their original filenames survived",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:19.954Z",
+      "at": "2026-09-07T21:37:20.218Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C26: a hand-set kind can be corrected, Generated redline is not offered, and the pin is untouched",
+      "actual": "The Kind control offered the six hand-set kinds only; correcting v2 to Amendment left the Version id, bytes and executed pin exactly as they were",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:20.218Z",
+      "at": "2026-09-07T21:37:20.298Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C26: Mark as executed copy pins an earlier Version and a later upload does not move the pin",
+      "actual": "The pin was set on the older v1 from the expanded chain; a fresh v3 upload became current but left the executed-copy designation on v1, as the guide states",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:20.298Z",
+      "at": "2026-09-07T21:37:20.707Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C26: Make primary moves the designation between separate Documents",
+      "actual": "Make primary moved the single Primary mark to another Document; both chains kept every Version, matching the guide’s separate-designation wording",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:20.707Z",
+      "at": "2026-09-07T21:37:20.874Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C26: a Matter offers no primary or executed-copy control",
+      "actual": "On a Matter the row menu offered Add version, Edit details, Move to folder and Archive but neither designation item, as the guide says",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:20.875Z",
+      "at": "2026-09-07T21:37:21.769Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C26 negative: an archived owning record takes no new paper until it is restored",
+      "actual": "On the archived Contract the Documents tab offered no Upload control at all; restoring the record brought it straight back, matching the guide’s recovery advice",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:21.770Z",
+      "at": "2026-09-07T21:37:23.926Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C26 step 2-4: Upload one file, read the v1 row and its filename-derived name",
+      "actual": "Guide step 2-4 followed in the browser: one file created one Document titled from its filename, showing v1, the chosen Draft · ours kind and the typed note",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:24.746Z",
+      "at": "2026-09-07T21:37:25.605Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C26 step 2 variant: choosing several files opens the bulk import dialog instead of the composer",
+      "actual": "Picking two files in the Upload composer replaced it with the Import 2 files dialog, exactly as the guide warns; Cancel created nothing",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:25.605Z",
+      "at": "2026-09-07T21:37:25.740Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C26 step 5-7: Add version appends v2 and the earlier round stays readable and unchanged",
+      "actual": "Add version raised the chain to v2; expanding the row opened v1 in its own reader with the earlier note, kind, filename and author intact",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:25.740Z",
+      "at": "2026-09-07T21:37:26.789Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C26: the same paper uploaded again is a separate chain, not a merge",
+      "actual": "Re-uploading identical bytes as a new Document produced a second one-round chain; OpenLaw merged nothing, as the guide states",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:26.789Z",
+      "at": "2026-09-07T21:37:26.948Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C26: Edit details renames the Document and adds a description without touching the chain",
+      "actual": "Actions > Edit details > Save changed the logical name and description; both immutable Versions and their original filenames survived",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:26.948Z",
+      "at": "2026-09-07T21:37:27.177Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C26: a hand-set kind can be corrected, Generated redline is not offered, and the pin is untouched",
+      "actual": "The Kind control offered the six hand-set kinds only; correcting v2 to Amendment left the Version id, bytes and executed pin exactly as they were",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:27.177Z",
+      "at": "2026-09-07T21:37:27.256Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C26: Mark as executed copy pins an earlier Version and a later upload does not move the pin",
+      "actual": "The pin was set on the older v1 from the expanded chain; a fresh v3 upload became current but left the executed-copy designation on v1, as the guide states",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:27.256Z",
+      "at": "2026-09-07T21:37:27.542Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C26: Make primary moves the designation between separate Documents",
+      "actual": "Make primary moved the single Primary mark to another Document; both chains kept every Version, matching the guide’s separate-designation wording",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:27.542Z",
+      "at": "2026-09-07T21:37:27.704Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C26: a Matter offers no primary or executed-copy control",
+      "actual": "On a Matter the row menu offered Add version, Edit details, Move to folder and Archive but neither designation item, as the guide says",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:27.705Z",
+      "at": "2026-09-07T21:37:28.511Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C26 negative: an archived owning record takes no new paper until it is restored",
+      "actual": "On the archived Contract the Documents tab offered no Upload control at all; restoring the record brought it straight back, matching the guide’s recovery advice",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:28.512Z",
+      "at": "2026-09-07T21:37:30.618Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C26 step 2-4: Upload one file, read the v1 row and its filename-derived name",
+      "actual": "Guide step 2-4 followed in the browser: one file created one Document titled from its filename, showing v1, the chosen Draft · ours kind and the typed note",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:31.428Z",
+      "at": "2026-09-07T21:37:32.252Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C26 step 2 variant: choosing several files opens the bulk import dialog instead of the composer",
+      "actual": "Picking two files in the Upload composer replaced it with the Import 2 files dialog, exactly as the guide warns; Cancel created nothing",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:32.252Z",
+      "at": "2026-09-07T21:37:32.367Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C26 step 5-7: Add version appends v2 and the earlier round stays readable and unchanged",
+      "actual": "Add version raised the chain to v2; expanding the row opened v1 in its own reader with the earlier note, kind, filename and author intact",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:32.367Z",
+      "at": "2026-09-07T21:37:33.299Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C26: the same paper uploaded again is a separate chain, not a merge",
+      "actual": "Re-uploading identical bytes as a new Document produced a second one-round chain; OpenLaw merged nothing, as the guide states",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:33.299Z",
+      "at": "2026-09-07T21:37:33.502Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C26: a Contributor uploads supporting paper but is offered no designation or kind control",
+      "actual": "The Contributor created supporting paper at the record root; the row menu held Add version only, with no kind editor, folder picker or designation item",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:33.502Z",
+      "at": "2026-09-07T21:37:34.362Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C26 negative: the Contributor cannot append to the Contract primary Document",
+      "actual": "Appending to the primary Contract Document answered 403 and the chain stayed at 1 Version(s); the Contributor's row for it carried no Actions menu at all, so nothing about the Version or its provenance changed",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:34.362Z",
+      "at": "2026-09-07T21:37:35.874Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C26 negative: an archived owning record takes no new paper until it is restored",
+      "actual": "On the archived Contract the Documents tab offered no Upload control at all; restoring the record brought it straight back, matching the guide’s recovery advice",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:35.874Z",
+      "at": "2026-09-07T21:37:37.935Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T21:37:37.939Z",
+  "reviewerKind": "agent",
+  "note": "Independent review seat. Fresh fictional \"Rev\" records and this seat's own steps and assertions; the author records are supporting evidence only. Each step's \"at\" is written when that awaited step settled, and \"startedAt\" when it began; these are automated browser checks against a local instance, not measured human task times."
+}

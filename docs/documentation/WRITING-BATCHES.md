@@ -78,13 +78,13 @@ See the [batch verification record](batches/DOC-016/README.md) for the tested bu
 
 ## DOC-017 [#737](https://github.com/juggernog20/OpenLaw/issues/737)
 
-See the [author verification record](batches/DOC-017/README.md). Independent review and 16 scenario/role walkthroughs remain pending.
+See the [batch verification record](batches/DOC-017/README.md) for the tested build, author outcomes, the independent walkthrough of all 16 scenario/role combinations, and publication dependencies. Every per-article evidence record reads `pass`. The two unchecked boxes wait on guides in later batches that they link to, not on verification.
 
-- [ ] `document-versions`: Upload Documents and add Document Versions (C26; P0).
-- [ ] `document-folders`: Organise folders and upload in bulk (C27; P1).
-- [ ] `document-previews`: Read and download Documents (C28; P0).
-- [ ] `document-repository`: Find Documents in the repository (C30; P1).
-- [ ] `archive-and-delete-documents`: Archive, restore, or permanently delete Documents (C54; P0).
+- [ ] `document-versions`: Upload Documents and add Document Versions (C26; P0). Links `create-knowledge` (DOC-019).
+- [x] `document-folders`: Organize folders and upload in bulk (C27; P1).
+- [ ] `document-previews`: Read and download Documents (C28; P0). Links `operator-troubleshooting` (DOC-023).
+- [x] `document-repository`: Find Documents in the repository (C30; P1).
+- [x] `archive-and-delete-documents`: Archive, restore, or permanently delete Documents (C54; P0).
 
 ## DOC-018 [#738](https://github.com/juggernog20/OpenLaw/issues/738)
 
