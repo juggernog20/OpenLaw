@@ -175,7 +175,7 @@
       "destinations": ["portal-help", "formal"],
       "priority": "P0",
       "contexts": ["portal.request"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "portal-knowledge",
@@ -188,7 +188,7 @@
       "destinations": ["portal-help", "formal"],
       "priority": "P1",
       "contexts": ["portal.knowledge"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "triage-requests",

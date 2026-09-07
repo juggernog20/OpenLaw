@@ -1,0 +1,73 @@
+{
+  "name": "knowledge",
+  "startedAt": "2026-09-07T09:22:29.500Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "portal-knowledge",
+      "contentSha256": "f44331f28896c6fbdebed9d636bb937d06330e9a52e850bb0b755f987aacb559"
+    }
+  ],
+  "steps": [
+    {
+      "role": "business_user",
+      "action": "find eligible home and form guidance, excluding unavailable items",
+      "actual": "Eligible configured link on both placements; three ineligible links omitted; internal link opened same tab",
+      "result": "pass",
+      "at": "2026-09-07T09:22:32.643Z"
+    },
+    {
+      "role": "business_user",
+      "action": "read written guidance and download primary and supporting current Documents",
+      "actual": "Primary first despite uploaded second; both PDFs byte-for-byte; Guidance read; no editing or Version picker; Your requests returns home",
+      "result": "pass",
+      "at": "2026-09-07T09:22:32.746Z"
+    },
+    {
+      "role": "business_user",
+      "action": "draft Knowledge and direct document downloads refused",
+      "actual": "Unavailable item returns home; item API and both saved file addresses404",
+      "result": "pass",
+      "at": "2026-09-07T09:22:33.329Z"
+    },
+    {
+      "role": "business_user",
+      "action": "restricted Knowledge and direct document downloads refused",
+      "actual": "Unavailable item returns home; item API and both saved file addresses404",
+      "result": "pass",
+      "at": "2026-09-07T09:22:33.928Z"
+    },
+    {
+      "role": "business_user",
+      "action": "archived Knowledge and direct document downloads refused",
+      "actual": "Unavailable item returns home; item API and both saved file addresses404",
+      "result": "pass",
+      "at": "2026-09-07T09:22:34.517Z"
+    },
+    {
+      "role": "business_user",
+      "action": "saved download follows current Version and revoked publication",
+      "actual": "Reload and saved download supply new current Version; unpublishing revokes item and old download; publication and original fixture filename restored",
+      "result": "pass",
+      "at": "2026-09-07T09:22:35.801Z"
+    },
+    {
+      "role": "business_user",
+      "action": "broken external guidance opens separately and leaves form submittable",
+      "actual": "Unavailable local fixture address opened in separate tab; original answers persisted and submission confirmed",
+      "result": "pass",
+      "at": "2026-09-07T09:22:36.625Z"
+    },
+    {
+      "role": "signed-out",
+      "action": "Everyone still requires Portal sign-in",
+      "actual": "Anonymous page redirected to Portal entry; direct item and file require authentication",
+      "result": "pass",
+      "at": "2026-09-07T09:22:37.311Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T09:22:37.311Z"
+}

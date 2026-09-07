@@ -1,0 +1,59 @@
+{
+  "name": "submission",
+  "startedAt": "2026-09-07T09:37:54.848Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "submit-request",
+      "contentSha256": "fa5864c512a998a2f4f0b8e002174659513716f4234010b45ed70c598833029f"
+    }
+  ],
+  "steps": [
+    {
+      "role": "business_user",
+      "action": "choose active form and refuse missing required answers without creating a Request",
+      "actual": "Required Summary, Description and configured question named; zero submission calls; Medium default and eligible guidance visible",
+      "result": "pass",
+      "at": "2026-09-07T09:38:01.389Z"
+    },
+    {
+      "role": "business_user",
+      "action": "select at most 20 files and remove unwanted paper",
+      "actual": "First20 retained, extra file omitted, visible removal controls cleared all selected files",
+      "result": "pass",
+      "at": "2026-09-07T09:38:04.689Z"
+    },
+    {
+      "role": "business_user",
+      "action": "success submission preserves one Request and reports attachment outcome",
+      "actual": "R-38 saved once with answers; original file retrieved byte-for-byte",
+      "result": "pass",
+      "at": "2026-09-07T09:38:06.666Z"
+    },
+    {
+      "role": "business_user",
+      "action": "failed-file submission preserves one Request and reports attachment outcome",
+      "actual": "R-39 saved once with answers; failed original file absent, later paper successfully sent in same Request conversation",
+      "result": "pass",
+      "at": "2026-09-07T09:38:10.017Z"
+    },
+    {
+      "role": "business_user",
+      "action": "disposition-race submission preserves one Request and reports attachment outcome",
+      "actual": "R-40 saved once with answers; failed original file absent, later paper successfully sent in same Request conversation",
+      "result": "pass",
+      "at": "2026-09-07T09:38:13.805Z"
+    },
+    {
+      "role": "business_user",
+      "action": "unknown form returns to available forms",
+      "actual": "Unknown form returned to Portal home with active form available",
+      "result": "pass",
+      "at": "2026-09-07T09:38:14.939Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T09:38:14.944Z"
+}

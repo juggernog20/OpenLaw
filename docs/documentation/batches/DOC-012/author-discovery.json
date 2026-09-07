@@ -1,0 +1,60 @@
+{
+  "name": "discovery",
+  "startedAt": "2026-09-07T09:24:52.467Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "submit-request",
+      "contentSha256": "fa5864c512a998a2f4f0b8e002174659513716f4234010b45ed70c598833029f"
+    },
+    {
+      "articleId": "follow-request",
+      "contentSha256": "b77a14c08ea129691c6c1e9a237ed21ffa17a2a55acaac436cada24b6f648f00"
+    },
+    {
+      "articleId": "portal-knowledge",
+      "contentSha256": "f44331f28896c6fbdebed9d636bb937d06330e9a52e850bb0b755f987aacb559"
+    }
+  ],
+  "steps": [
+    {
+      "role": "business_user",
+      "action": "submit-request contextual discovery, search, article navigation and formal link",
+      "actual": "Page-specific Help, title search, focused title and section, formal link; no horizontal overflow in three themes at320/720/1440 CSSpixels",
+      "result": "pass",
+      "at": "2026-09-07T09:24:55.028Z"
+    },
+    {
+      "role": "business_user",
+      "action": "follow-request contextual discovery, search, article navigation and formal link",
+      "actual": "Page-specific Help, title search, focused title and section, formal link; no horizontal overflow in three themes at320/720/1440 CSSpixels",
+      "result": "pass",
+      "at": "2026-09-07T09:24:56.318Z"
+    },
+    {
+      "role": "business_user",
+      "action": "portal-knowledge contextual discovery, search, article navigation and formal link",
+      "actual": "Page-specific Help, title search, focused title and section, formal link; no horizontal overflow in three themes at320/720/1440 CSSpixels",
+      "result": "pass",
+      "at": "2026-09-07T09:24:57.518Z"
+    },
+    {
+      "role": "business_user",
+      "action": "Portal header Help and canonical notification settings path",
+      "actual": "Portal Help links into submission guide and canonical Portal preferences section; Business User opens own notification settings",
+      "result": "pass",
+      "at": "2026-09-07T09:24:59.487Z"
+    },
+    {
+      "role": "signed-out",
+      "action": "formal preview contains all three articles without app API calls",
+      "actual": "Anonymous formal index includes the three guides; no application API requests",
+      "result": "pass",
+      "at": "2026-09-07T09:25:00.455Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T09:25:00.455Z"
+}
