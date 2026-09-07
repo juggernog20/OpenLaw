@@ -17,14 +17,15 @@
  * anatomy DES-049 settled for the staff centre, backed by the portal's
  * own four routes; the gear beside it is the lightweight settings
  * surface NOT-001 promised, which is the group-5 toggles and nothing
- * else. They are the only two portal destinations there are, which is
- * why they are two glyphs rather than a nav.
+ * else. Product Help joins these controls under DES-073 and remains
+ * separate from organization Knowledge.
  *
  * The shell owns the scroll and gives it to `main` alone, as the staff
  * shell does (DES-030): the header keeps its height through a long
  * request thread rather than being pushed off the top of it.
  */
 
+import { HelpLink } from "../documentation/help-link";
 import { type ReactNode } from "react";
 import { Scale, Settings } from "lucide-react";
 import { Link } from "react-router";
@@ -95,6 +96,7 @@ export function PortalShell({
           </span>
         </Link>
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          <HelpLink surface="portal" audience="business_user" />
           <PortalThemeMenu initialTheme={user.theme} />
           <NotificationBell surface="portal" />
           {/* The same 24×24 target the bell takes (DES-011), so the two

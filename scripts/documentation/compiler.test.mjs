@@ -435,3 +435,21 @@ test("the application digest ignores generated test and build output", (t) => {
   writeFileSync(join(root, "apps/api/src/app.ts"), "export const app = 2;");
   assert.notEqual(applicationDigest(root), clean);
 });
+
+test("combined Help topics prefer specific matches and retain all-word audience filtering", (t) => {
+  const f = fixture(t);
+  const { bundle } = f.compile();
+  bundle.contexts.push("support");
+  bundle.articles.find((a) => a.id === "recover").contexts = ["support"];
+  const topics = ["unknown", "portal.submit", "support"];
+  assert.deepEqual(
+    searchDocumentation(bundle, { topics }).map((a) => a.id),
+    ["submit", "recover"],
+  );
+  assert.deepEqual(
+    searchDocumentation(bundle, { topics, query: "fictional paper" }).map((a) => a.id),
+    ["submit"],
+  );
+  assert.deepEqual(searchDocumentation(bundle, { topics, audience: "contributor" }), []);
+  assert.deepEqual(searchDocumentation(bundle, { topics, destination: "staff-help" }), []);
+});
