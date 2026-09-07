@@ -7,9 +7,9 @@
   "publicationTarget": "feature-review",
   "compatibilityReview": {
     "testedAppCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
-    "applicationSha256": "00a83d8635282fece830a98421093e6fdc777c0da916e08012accbd82c6f12a4",
+    "applicationSha256": "3ab0244460c900f0f251645661878c77a242be180c4296a7b7d1fba52445f7fd",
     "reviewer": "Fable review seat (agent)",
-    "reviewedAt": "2026-09-07T04:54:30Z",
-    "summary": "Application source digest computed on the docs/729-access-navigation branch matches the pilot lab source d1d098ba (no non-documentation changes between them). The Home guide (C03) and the search and views guide (C04) were walked through independently in the browser as Administrator, Legal Team Member, and Contributor against that build and its immutable images. Other articles remain in review because their linked canonical guides are unpublished."
+    "reviewedAt": "2026-09-07T06:48:21.793Z",
+    "summary": "Recomputed the application source digest on docs/730-roles-contributor and it equals the recorded value. Compared with the tested pilot commit d1d098ba9f4ba6557a542857d530446b76b1847c the only change under application paths is apps/web/src/routes/help.test.tsx, where existing focus assertions now wait for the focus effect. Runtime code and configuration are unchanged, so the pilot images built from d1d098ba remain the tested app for every walkthrough in this edition, including the DOC-010 independent walkthrough. The digest includes test bytes and therefore records the current test source, not a second app build."
   }
 }

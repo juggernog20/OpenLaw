@@ -20,8 +20,11 @@ author outcomes, independent review, and publication dependencies.
 
 ## DOC-010 [#730](https://github.com/juggernog20/OpenLaw/issues/730)
 
-- [ ] `roles-and-access`: Understand roles and record access (C06; P0).
-- [ ] `contributor-guide`: Work on a shared Contract or Matter (C25; P0).
+See [the batch verification record](batches/DOC-010/README.md) for the tested build,
+author outcomes, independent review, and publication handoff.
+
+- [x] `roles-and-access`: Understand roles and record access (C06; P0).
+- [x] `contributor-guide`: Work on a shared Contract or Matter (C25; P0).
 
 ## DOC-011 [#731](https://github.com/juggernog20/OpenLaw/issues/731)
 

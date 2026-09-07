@@ -1,0 +1,44 @@
+{
+  "articleId": "contributor-guide",
+  "contentSha256": "c3badc50235831daa34056e22dd2e260142e71f5020cd972b9bc868fbf339397",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "buildId": "app sha256:69c7cd47338eff05c787e985743dd45b2229792827d82fd5f54a50a9c63d8757; engine sha256:1dce5b67898cc8ae720231fa66e049208ed207e69053a2cf4c1bd0e172cea401",
+  "environment": "openlaw-docs-b8e31260-pilot",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Fable review seat (agent source check against d1d098ba); the feature owner's human technical review is not recorded here",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-07T06:43:31.726Z",
+  "status": "pass",
+  "sources": [
+    "apps/api/src/modules/contracts/routes.ts",
+    "apps/api/src/modules/matters/routes.ts",
+    "apps/api/src/modules/documents/contributor-documents.test.ts",
+    "apps/web/src/routes/contract-record.tsx",
+    "apps/web/src/routes/matter-record.tsx",
+    "apps/web/src/components/documents/documents-card.tsx",
+    "apps/web/src/components/comments/comment-applet.tsx"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C25",
+      "coverage": ["C25"],
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "expected": "Contributor actions succeed only on reached work and the guide identifies the actual legal-action limits. Stage/Status moves and other reserved legal actions remain unavailable; removing Ravi's reach stops access.",
+      "actual": "Ravi reached C-76 and M-21 from the Contracts and Matters navigation through the banner Search and checked C-76 and M-21 with their titles; no New contract or New matter control was offered. On the Contract Overview he changed Amount, Currency, Cadence, and the Effective date through the calendar, and a reload showed the saved values; the value controls saved together when focus left their group. On Fields the business Field persisted after leaving it and a reload, the legal Field was not offered, the read-only banner appeared, and Title, type, Owner, Priority, Risk, Description, and the Confidential switch were disabled with no Status move control. On M-21 the Description and business Custom field persisted, and Matter Manager, Priority, Status, Close matter, Archive, and Add team member were not offered or disabled. Upload with a Note created a supporting PDF on each record, and Add version appended a v2 in the same chain; a supplemental check opened each chain in the reader, which showed the title, the v2 marker, the selected Version's filename, its Download link answering a PDF, and the rendered page, then expanded that exact chain to its v2 and v1 rows and opened v1 in the reader with its own filename and Download link; his own Document menu offered only Compare with previous and Add version, the primary Contract Document had no Actions control, and New folder and Show archived were absent (make-primary answered 403). Audience offered Working team and Full thread only and each post appeared under Ravi Menon with its tier. An assigned Task listed with a disabled Complete checkbox, Key dates were readable, the Contract actions menu and approval, signature, and relationship controls offered no legal action. A blocked save showed The change could not be saved. Try again. and kept the typed value, and the retry survived a reload; a blocked upload kept the dialog with That file could not be uploaded. Try again. and the retry created one row. Removing his team entry showed Something went wrong. with Reload until Daniel added him back. Archiving C-76 and M-21 disabled the business controls and removed Upload until Restore returned them.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-010/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-010/independent-discovery.json"
+      ]
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-010/README.md"],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "Comment attachments and mentions were read as statements, not exercised as procedures."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

@@ -108,9 +108,9 @@
       "coverage": ["C06"],
       "articles": ["roles-and-access"],
       "roles": ["legal_team_member", "administrator", "contributor", "business_user"],
-      "environment": "authoring",
+      "environment": "pilot",
       "prerequisites": [
-        "Public and confidential Contracts/Matters, two teams, and a confidential Entity with explicit Grants."
+        "Non-Confidential and Confidential Contracts/Matters, separate named teams, and a Confidential Entity with explicit Grants."
       ],
       "actions": [
         "Compare the same record links as Administrator, Legal Team Member, Contributor, and Business User; add/remove permitted reach."
@@ -516,7 +516,7 @@
       "coverage": ["C25"],
       "articles": ["contributor-guide"],
       "roles": ["contributor"],
-      "environment": "authoring",
+      "environment": "pilot",
       "prerequisites": [
         "Ravi is on one Contract and Matter team and absent from comparable records."
       ],

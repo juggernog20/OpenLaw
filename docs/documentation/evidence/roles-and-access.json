@@ -1,0 +1,85 @@
+{
+  "articleId": "roles-and-access",
+  "contentSha256": "d3fcc8fc2ea63b5fb1b5b55e33cceb1c9b1cd8b0ce6d059b61accb6189998e91",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "buildId": "app sha256:69c7cd47338eff05c787e985743dd45b2229792827d82fd5f54a50a9c63d8757; engine sha256:1dce5b67898cc8ae720231fa66e049208ed207e69053a2cf4c1bd0e172cea401",
+  "environment": "openlaw-docs-b8e31260-pilot",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Fable review seat (agent source check against d1d098ba); the feature owner's human technical review is not recorded here",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-07T06:43:31.726Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS.md",
+    "apps/api/src/lib/contract-access.ts",
+    "apps/api/src/lib/matter-access.ts",
+    "apps/api/src/lib/entity-access.ts",
+    "apps/api/src/lib/document-access.ts",
+    "apps/api/src/modules/entities/grant-routes.ts",
+    "apps/api/src/modules/contracts/routes.ts",
+    "apps/api/src/modules/matters/routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C06",
+      "coverage": ["C06"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Each account sees only its permitted records/actions, including the Administrator exception. Removed membership/Grants cease granting access; parent or related-record links do not grant inherited reach.",
+      "actual": "Nadia opened C-76 and M-21 with no team entry and was refused C-77, M-22, and the Confidential Entity with Something went wrong. and Reload, which did not grant access; a missing number read the same way; search listed the shared records and omitted both Confidential children. A team entry added by Daniel admitted her to C-77 and M-22 with the Confidential switch and Add team member disabled, and removing it refused the next read. Owner and Matter Manager assignment admitted her without a team entry, and returning them to Daniel refused her again. Adding and removing her on the non-Confidential records kept her ordinary access. Manage access granted her the Entity, which then opened without a Manage access control, and removal refused it. C-76 and M-21 showed Restricted contract and Restricted Matter without a title or link, including the Confidential Contract linked to M-21. A Confidential baseline Document on C-76 and on M-21 was omitted for her and returned after the mark was cleared. Her comments panel offered three tiers and showed the Legal only comment.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-010/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-010/independent-discovery.json"
+      ]
+    },
+    {
+      "id": "V-C06",
+      "coverage": ["C06"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Each account sees only its permitted records/actions, including the Administrator exception. Removed membership/Grants cease granting access; parent or related-record links do not grant inherited reach.",
+      "actual": "Daniel opened all four records and the Confidential Entity without a Grant. Through the Team applet and the Matter team he added and removed Nadia and Ravi; the Owner and Matter Manager comboboxes reassigned Nadia and restored himself, with each state confirmed after a reload. Manage access granted and removed Nadia's Grant while his own access stayed. Actions for the baseline Documents marked and cleared the Confidential mark. He posted Legal only comments, saw the titled child links and the linked C-77, and his search listed the Confidential child. The final check found the fixture teams, accountable people, no Grants, the C-77 link, and the baseline Documents restored.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-010/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-010/independent-discovery.json"
+      ]
+    },
+    {
+      "id": "V-C06",
+      "coverage": ["C06"],
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "expected": "Each account sees only its permitted records/actions, including the Administrator exception. Removed membership/Grants cease granting access; parent or related-record links do not grant inherited reach.",
+      "actual": "Ravi opened C-76 and M-21 and was refused C-77 and M-22 with Something went wrong.; the Entity link returned him to Home, Entities is absent from his navigation, and the Entity read answered 403. A team entry on C-77 and on M-22 admitted him with the read-only banner still shown, and removal refused him again. Removing his last entry on the non-Confidential C-76 and M-21 refused him, and Nadia adding him back as Contributor through the Add team member dialog restored access. Restricted contract and Restricted Matter appeared without links. The Confidential Document stayed visible to him as a named team member. His Audience offered Working team and Full thread only, and Daniel's Legal only comment and tier were absent.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-010/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-010/independent-discovery.json"
+      ]
+    },
+    {
+      "id": "V-C06",
+      "coverage": ["C06"],
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "expected": "Each account sees only its permitted records/actions, including the Administrator exception. Removed membership/Grants cease granting access; parent or related-record links do not grant inherited reach.",
+      "actual": "Jonas signed in with a Portal link from Mailpit. /contracts/76, /contracts/77, /matters/21, the Entity, /contracts, and /search all returned to /portal without record content, and the same reads answered 403. The Portal home listed his 17 Requests and one opened at /portal/requests/30 with its conversation controls. Portal Help opened from the Portal home was scoped to portal.home; the Help index listed the roles guide, its search found it, and the Contributor guide was absent.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-010/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-010/independent-discovery.json"
+      ]
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-010/README.md"],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "Layout checks are CSS-pixel width and overflow measurements, not browser zoom or assistive-technology acceptance."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

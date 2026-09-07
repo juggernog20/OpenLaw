@@ -52,7 +52,9 @@ describe("Help in the app shells", () => {
     async (role) => {
       stubApi({ signedIn: person(role) });
       renderAt("/help");
-      expect(await screen.findByRole("heading", { level: 1, name: "Help" })).toHaveFocus();
+      await waitFor(() =>
+        expect(screen.getByRole("heading", { level: 1, name: "Help" })).toHaveFocus(),
+      );
       expect(screen.getAllByRole("main")).toHaveLength(1);
       expect(screen.getByRole("link", { name: "Try the documentation reader" })).toBeVisible();
       expect(screen.queryByRole("combobox", { name: "Audience" })).not.toBeInTheDocument();
@@ -70,7 +72,9 @@ describe("Help in the app shells", () => {
   it("keeps Business Users in Portal Help and applies the portal audience to visiting staff", async () => {
     stubApi({ signedIn: person("business_user") });
     const { router } = renderAt("/help/validation-procedure#before-you-start");
-    expect(await screen.findByRole("heading", { name: "Before you start" })).toHaveFocus();
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "Before you start" })).toHaveFocus(),
+    );
     expect(router.state.location.pathname).toBe("/portal/help/validation-procedure");
     expect(screen.getByRole("link", { name: "Legal request portal" })).toBeVisible();
     expect(screen.queryByRole("combobox", { name: "Search" })).not.toBeInTheDocument();
@@ -122,16 +126,20 @@ describe("Help in the app shells", () => {
     expect(await screen.findByRole("link", { name: "Try the documentation reader" })).toBeVisible();
     expect(calls.every((url) => !url.includes("fictional") && !url.includes("/search"))).toBe(true);
     await user.click(screen.getByRole("link", { name: "Try the documentation reader" }));
-    expect(
-      await screen.findByRole("heading", { level: 1, name: "Try the documentation reader" }),
-    ).toHaveFocus();
+    await waitFor(() =>
+      expect(
+        screen.getByRole("heading", { level: 1, name: "Try the documentation reader" }),
+      ).toHaveFocus(),
+    );
     await user.click(screen.getByRole("link", { name: "the recovery fixture" }));
-    expect(await screen.findByRole("heading", { name: "Retry" })).toHaveFocus();
+    await waitFor(() => expect(screen.getByRole("heading", { name: "Retry" })).toHaveFocus());
     expect(router.state.location.pathname).toBe("/help/validation-recovery");
     await act(() => router.navigate(-1));
-    expect(
-      await screen.findByRole("heading", { level: 1, name: "Try the documentation reader" }),
-    ).toHaveFocus();
+    await waitFor(() =>
+      expect(
+        screen.getByRole("heading", { level: 1, name: "Try the documentation reader" }),
+      ).toHaveFocus(),
+    );
     expect(
       within(screen.getByRole("navigation", { name: "Documentation" })).getByRole("link", {
         name: "Read this article in the full documentation",
@@ -158,10 +166,14 @@ describe("Help in the app shells", () => {
     stubFetch(() => json(503, {}));
     const user = userEvent.setup();
     const { router } = renderAt("/portal/help/validation-procedure#before-you-start");
-    expect(await screen.findByRole("heading", { name: "Help session unavailable" })).toHaveFocus();
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "Help session unavailable" })).toHaveFocus(),
+    );
     expect(document.title).toBe("Help session unavailable · OpenLaw");
     await user.click(screen.getByRole("link", { name: "All documentation" }));
-    expect(await screen.findByRole("heading", { name: "Before you start" })).toHaveFocus();
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "Before you start" })).toHaveFocus(),
+    );
     expect(router.state.location.pathname).toBe("/documentation/validation-procedure");
   });
 });
