@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "redirects": [
+    {
+      "from": "old-validation",
+      "to": "validation-procedure"
+    },
+    {
+      "from": "validation-procedure#old-steps",
+      "to": "validation-procedure#try-the-reader"
+    }
+  ]
+}

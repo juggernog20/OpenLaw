@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "documentation-development",
+  "channel": "development",
+  "supportedAppVersion": "0.0.1",
+  "supportedAppCommit": null,
+  "publicationTarget": "feature-review",
+  "compatibilityReview": null
+}

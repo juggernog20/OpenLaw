@@ -6,8 +6,23 @@
   // so a theme-token edit changes the web bundle. Turbo cannot see that
   // from the package's own inputs, and without this line a token edit
   // replays a stale build.
-  "globalDependencies": ["tsconfig.base.json", "eslint.config.js", "styles/**"],
+  "globalDependencies": [
+    "tsconfig.base.json",
+    "eslint.config.js",
+    "styles/**",
+    "docs/user-guides/**",
+    "docs/documentation/**",
+    "scripts/documentation/**"
+  ],
+  "globalEnv": [
+    "OPENLAW_BUILD_COMMIT",
+    "OPENLAW_BUILD_DIRTY",
+    "OPENLAW_DOCS_PREVIEW",
+    "OPENLAW_DOCS_FIXTURE"
+  ],
   "tasks": {
+    // The embedded edition records the current Git identity, including docs-only commits.
+    "@openlaw/web#build": { "dependsOn": ["^build"], "outputs": ["dist/**"], "cache": false },
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]

@@ -38,8 +38,13 @@
     "fix": "pnpm lint:fix && pnpm format && pnpm secretlint && turbo run typecheck --continue",
     "check": "pnpm check:static && pnpm test:ci-tools && turbo run test --continue",
     "check:security": "pnpm audit --audit-level=high && pnpm licenses list",
-    "check:static": "pnpm format:check && pnpm secretlint && pnpm lint:contrast && pnpm lint:migrations && pnpm lint:versions && turbo run lint typecheck --continue",
-    "test:ci-tools": "node --test e2e/scripts/upgrade-baseline.test.mjs"
+    "check:static": "pnpm format:check && pnpm secretlint && pnpm lint:contrast && pnpm lint:migrations && pnpm lint:versions && pnpm docs:lint && turbo run lint typecheck --continue",
+    "test:ci-tools": "node --test e2e/scripts/upgrade-baseline.test.mjs scripts/documentation/*.test.mjs",
+    "docs:lint": "eslint scripts/documentation",
+    "docs:check": "node scripts/documentation/build.mjs",
+    "docs:complete": "node scripts/documentation/build.mjs --complete",
+    "docs:export": "node scripts/documentation/build.mjs --export",
+    "docs:fixture": "node scripts/documentation/build.mjs --preview --fixture --export"
   },
   "pnpm": {
     "overrides": {
@@ -53,7 +58,9 @@
     "@typescript/native": "npm:typescript@^7.0.2",
     "eslint": "^10.9.1",
     "eslint-plugin-react-hooks": "^7.1.1",
+    "marked": "18.0.11",
     "prettier": "^3.9.6",
+    "sanitize-html": "2.17.7",
     "secretlint": "^13.0.5",
     "turbo": "^2.10.12",
     "typescript": "npm:@typescript/typescript6@^6.0.2",

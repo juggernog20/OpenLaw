@@ -160,6 +160,15 @@ function KeyedByParam({ name, children }: { name: string; children: ReactNode })
 
 export const routes: RouteObject[] = [
   {
+    // The compiled manual ships every article's HTML. Loading it on demand
+    // keeps that bundle out of the chunk every signed-in screen downloads.
+    path: "/documentation/*",
+    lazy: async () => ({
+      Component: (await import("./components/documentation/documentation-reader"))
+        .FormalDocumentationPage,
+    }),
+  },
+  {
     path: "/home/tasks",
     loader: homeTasksLoader,
     element: <HomeTasksPage />,

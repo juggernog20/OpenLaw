@@ -11,5 +11,5 @@
     // warning tolerated.
     "allowImportingTsExtensions": true
   },
-  "include": ["src", "vite.config.ts", "vite-pdfjs-assets.ts"]
+  "include": ["src", "vite.config.ts", "vite-pdfjs-assets.ts", "vite-documentation.ts"]
 }

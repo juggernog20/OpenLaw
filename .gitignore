@@ -27,3 +27,6 @@ playwright-report/
 
 # Disposable documentation environments and their generated secrets.
 .documentation-labs/
+
+# Generated standalone documentation exports.
+.documentation-output/

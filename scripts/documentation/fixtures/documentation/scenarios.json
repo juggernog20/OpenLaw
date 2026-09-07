@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "scenarios": [
+    {
+      "id": "fixture-validation-procedure",
+      "articles": ["validation-procedure"],
+      "coverage": ["C01"],
+      "roles": ["legal_team_member", "business_user"],
+      "requiredMethods": ["browser-walkthrough"]
+    },
+    {
+      "id": "fixture-validation-recovery",
+      "articles": ["validation-recovery"],
+      "coverage": ["C02"],
+      "roles": ["legal_team_member", "business_user"],
+      "requiredMethods": ["browser-walkthrough"]
+    }
+  ]
+}

@@ -25,6 +25,12 @@ MAILPIT_HOST_PORT="${MAILPIT_HOST_PORT:-8125}"
 # the suite cannot disagree about it.
 SIGNING_STUB_PORT="${SIGNING_STUB_PORT:-8129}"
 
+# The image excludes .git, so pass the checkout identity into its documentation build.
+OPENLAW_BUILD_COMMIT="$(git rev-parse HEAD)"
+export OPENLAW_BUILD_COMMIT
+export OPENLAW_BUILD_DIRTY=false
+if [[ -n "$(git status --porcelain)" ]]; then export OPENLAW_BUILD_DIRTY=true; fi
+
 # Rebuild every run — the gate is only honest if the images carry the
 # code being tested, not whatever was built last time.
 PORT="$APP_PORT" BASE_URL="http://localhost:$APP_PORT" MAILPIT_PORT="$MAILPIT_HOST_PORT" \

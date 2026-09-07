@@ -2282,6 +2282,129 @@
   "docpanel.find.previous": {
     "defaultMessage": "Previous match"
   },
+  "docs.all": {
+    "defaultMessage": "All documentation"
+  },
+  "docs.allReaders": {
+    "defaultMessage": "All readers"
+  },
+  "docs.audience": {
+    "defaultMessage": "Audience"
+  },
+  "docs.brand": {
+    "defaultMessage": "OpenLaw documentation"
+  },
+  "docs.channel.development": {
+    "defaultMessage": "Development"
+  },
+  "docs.channel.release": {
+    "defaultMessage": "Release"
+  },
+  "docs.digest": {
+    "defaultMessage": "Content digest"
+  },
+  "docs.dirty": {
+    "defaultMessage": "Working changes"
+  },
+  "docs.distribution": {
+    "defaultMessage": "Distribution commit"
+  },
+  "docs.distributionIdentity": {
+    "defaultMessage": "{commit} ({state})"
+  },
+  "docs.download": {
+    "defaultMessage": "Download standalone edition"
+  },
+  "docs.edition": {
+    "defaultMessage": "Edition details"
+  },
+  "docs.editionIdentity": {
+    "defaultMessage": "{id} ({channel})"
+  },
+  "docs.empty": {
+    "defaultMessage": "No verified articles are available in this edition yet."
+  },
+  "docs.formal": {
+    "defaultMessage": "Read this article in the full documentation"
+  },
+  "docs.help": {
+    "defaultMessage": "Help"
+  },
+  "docs.missingSection": {
+    "defaultMessage": "The requested section is unavailable. Use the page outline to find the current instructions."
+  },
+  "docs.noMatches": {
+    "defaultMessage": "No matching articles. Try another word or return to the full index."
+  },
+  "docs.notRecorded": {
+    "defaultMessage": "Not recorded"
+  },
+  "docs.notVerified": {
+    "defaultMessage": "Not yet verified"
+  },
+  "docs.notice": {
+    "defaultMessage": "Preview build notices"
+  },
+  "docs.outline": {
+    "defaultMessage": "On this page"
+  },
+  "docs.preview": {
+    "defaultMessage": "Development preview: draft and validation content is unverified."
+  },
+  "docs.retention": {
+    "defaultMessage": "Keep an extracted copy outside this instance to read it when the app is unavailable."
+  },
+  "docs.role.admin": {
+    "defaultMessage": "Administrator"
+  },
+  "docs.role.business": {
+    "defaultMessage": "Business User"
+  },
+  "docs.role.contributor": {
+    "defaultMessage": "Contributor"
+  },
+  "docs.role.member": {
+    "defaultMessage": "Legal Team Member"
+  },
+  "docs.role.operator": {
+    "defaultMessage": "Deployment operator"
+  },
+  "docs.search": {
+    "defaultMessage": "Search documentation"
+  },
+  "docs.searchButton": {
+    "defaultMessage": "Search"
+  },
+  "docs.skip": {
+    "defaultMessage": "Skip to content"
+  },
+  "docs.standalone": {
+    "defaultMessage": "Open standalone edition"
+  },
+  "docs.supported": {
+    "defaultMessage": "Supported app"
+  },
+  "docs.supportedIdentity": {
+    "defaultMessage": "{version} / {commit}"
+  },
+  "docs.target": {
+    "defaultMessage": "Publication target"
+  },
+  "docs.title": {
+    "defaultMessage": "Documentation"
+  },
+  "docs.unavailable": {
+    "defaultMessage": "Article unavailable"
+  },
+  "docs.unavailableBody": {
+    "defaultMessage": "This article is not available in the bundled edition. Search the available guides or return to the index."
+  },
+  "docs.unverified": {
+    "defaultMessage": "Unverified article"
+  },
+  "docs.wrongEdition": {
+    "defaultMessage": "The requested edition is not bundled with this instance. Open the current index or use your retained copy of that edition."
+  },
   "documentCompare.changeCount": {
     "defaultMessage": "{count, plural, one {# change} other {# changes}}"
   },

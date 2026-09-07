@@ -273,6 +273,10 @@ async function main() {
       await run("docker", [
         ...docker,
         "build",
+        "--build-arg",
+        `OPENLAW_BUILD_COMMIT=${lab.sourceCommit}`,
+        "--build-arg",
+        "OPENLAW_BUILD_DIRTY=false",
         "--tag",
         image,
         "--label",

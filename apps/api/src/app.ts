@@ -335,7 +335,8 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
       setHeaders: (reply, filePath) => {
         void reply.header(
           "cache-control",
-          filePath.includes(`${sep}assets${sep}`)
+          filePath.includes(`${sep}assets${sep}`) &&
+            !filePath.includes(`${sep}documentation-export${sep}`)
             ? "public, max-age=31536000, immutable"
             : "no-cache",
         );
@@ -351,6 +352,20 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
     // the shell owns it. API paths and writes stay JSON 404s. Match on
     // the pathname alone so a query string can't disguise an API path.
     const pathname = request.url.split("?", 1)[0] ?? request.url;
+    if (
+      deps.webDist &&
+      pathname.startsWith("/documentation-export/") &&
+      (request.method === "GET" || request.method === "HEAD")
+    ) {
+      void reply
+        .status(404)
+        .type("text/html; charset=utf-8")
+        .header("cache-control", "no-cache")
+        .send(
+          '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Documentation file unavailable</title><h1>Documentation file unavailable</h1><p><a href="/documentation">Open the documentation index</a>.</p></html>',
+        );
+      return;
+    }
     if (
       deps.webDist &&
       (request.method === "GET" || request.method === "HEAD") &&
