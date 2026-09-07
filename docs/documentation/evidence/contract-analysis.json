@@ -1,0 +1,52 @@
+{
+  "articleId": "contract-analysis",
+  "contentSha256": "24e4375567bdf273873018732f93743584b71b260a07890f4f4719f257050243",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-analysis-workflow",
+  "author": "Codex documentation author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "not-run",
+  "sources": [
+    "CONTEXT.md",
+    "apps/web/src/components/contracts/ai-analysis-card.tsx",
+    "apps/web/src/routes/contract-record.tsx",
+    "apps/api/src/modules/contract-analysis/routes.ts",
+    "apps/api/src/modules/contracts/routes.ts",
+    "apps/api/src/pipeline/contract-analysis.ts",
+    "apps/api/src/pipeline/automatic-contract-analysis.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C21",
+      "coverage": ["C21"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Evidence is tied to the chosen Document Version; confirming one value does not clear unrelated markers. Disabled connector, failed extraction, changed source, and stale evidence have the documented states. C43 separately verifies real provider setup.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C21",
+      "coverage": ["C21"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Evidence is tied to the chosen Document Version; confirming one value does not clear unrelated markers. Disabled connector, failed extraction, changed source, and stale evidence have the documented states. C43 separately verifies real provider setup.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-015/README.md"],
+  "limitations": [
+    "Author walkthrough passed; independent source review and article walkthrough remain pending.",
+    "Agent walkthroughs are not a human user study or the feature owner's approval.",
+    "C21 uses a declared isolated OpenAI-compatible local stand-in with known fictional paper and answers. It does not verify real provider setup or satisfy C43."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

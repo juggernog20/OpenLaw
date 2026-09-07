@@ -1,0 +1,117 @@
+# Analysis and Comparison guide verification
+
+C21 and C29 for [issue #735](https://github.com/juggernog20/OpenLaw/issues/735).
+Two guides cover Contract analysis and Document Version Comparisons. Author
+walkthroughs use the actual app UI, real processing, and fictional records.
+Independent technical review and five scenario/role walkthroughs remain pending.
+Agent walkthroughs are not a human user study or the feature owner's approval.
+
+## Build and fixture
+
+The separate `analysis-workflow` lab runs unchanged app source
+`a28331f779da3c8b9e9172dee3cc5b58c7170c7b`, with the application and engine image
+identities recorded in every walkthrough. It has its own database, storage,
+worker, mail catcher, and provider service. The app is at
+`http://127.0.0.1:43304`, Mailpit at `http://127.0.0.1:48429`, and the draft reader
+at `http://127.0.0.1:43316`. [Fixture provenance](analysis-fixture.json) records
+source and configuration digests. This batch changes no app runtime code.
+
+Analysis uses a deterministic local OpenAI-compatible protocol stand-in based on
+the pinned source's E2E provider seam. Known fictional paper and prompted Fields
+receive known answers. The real app and worker select the source Version, build
+the prompt, validate evidence, write values and markers, and record outcomes.
+Private loopback controls pause replies and return invalid JSON to exercise a
+terminal provider failure. Generated fixture credentials remain private. This
+satisfies the declared C21 workflow mode; it does not verify a real provider
+account or satisfy C43. Provider setup is prerequisite preparation, not an
+Administrator guide walkthrough.
+
+Comparisons use the real Document engine and worker, without a comparison stub.
+Only this lab's worker is briefly paused to observe **Preparing comparison**,
+then resumed. Word files contain known differences: thirty/monthly,
+sixty/quarterly, and ninety/annually. Supporting Documents use Word/Word,
+PDF/Word, unsupported TXT/PDF, and intentionally malformed PDF/PDF pairs.
+A download-only primary placeholder keeps these fixtures separate from automatic
+Contract analysis. Setup APIs create prerequisites and team memberships; browser
+sessions perform the documented Comparison actions.
+
+Daniel Okafor is Administrator, Nadia Haddad is Legal Team Member, Ravi Menon is
+Contributor, and unrelated Priya Raman is a Legal Team Member outside the
+Confidential fixtures. All people, records, paper, values, and addresses used
+here are fictional. Private helpers and raw downloads remain under
+`/tmp/openlaw-docs-run/735-*`; no session tokens or credentials are published.
+
+## Author walkthroughs
+
+| Evidence                                                   | Checks | Outcomes                                                                                                                                                                                                                                                                                                                                                                     |
+| ---------------------------------------------------------- | -----: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Analysis](author-analysis.json)                           |     18 | Both legal roles: prerequisites, automatic/manual triggers, pending updates, source Version/model/quotes, Written/Kept/Invalid/Unsupported/Unmatched, one confirmation, edits, executed pin, changed input, concurrent edits, provider failure/retry, cleared-value refill, supporting paper, operational dates/Value, role and archive restrictions.                        |
+| [Failed Analysis extraction](author-analysis-failure.json) |      2 | Both legal roles: an actual failed primary PDF extraction prevents Run analysis and queues no run.                                                                                                                                                                                                                                                                           |
+| [Comparisons](author-comparison.json)                      |     24 | All three roles: pending/ready Word comparison, operand selection, change navigation, Generated redline export and exact downloaded tracked changes, provenance/idempotence, excluded Generated redline operands, archive/restore, text mode, durable failed pairs, original downloads, corrected new pair, No changes for different bytes, and Confidential access refusal. |
+| [Help and formal discovery](author-discovery.json)         |      6 | All five article/role combinations through contextual Help, search, focused headings/sections, and formal links; three themes at 320/720/1440 CSS pixels; both titles available anonymously without app API calls.                                                                                                                                                           |
+
+Each record includes guide hashes, actual build, environment, date, roles,
+actions, and outcomes. API readback verifies persisted values, access refusals,
+Version counts, and processing states. Downloaded Generated redlines are independently
+opened as ZIP/XML to verify actual tracked insertions and deletions. Contributor
+export refusals are followed by Administrator prerequisite setup of a Generated redline
+Document Version, which the Contributor can then read and download; this is not credited
+as a Contributor export.
+
+## Corrections and limits
+
+Existing confirmed or human-edited values are kept during Analysis. Clearing an
+optional core value can allow a later run to fill it again; the guide and checks
+cover notice period refill. The latest returned **Kept** answer can differ from
+the saved value, so the guide tells readers to inspect the source and saved field.
+Confirmed expiry stayed October 17 while a newer result returned November 17;
+a concurrent human location edit survived completion. Unverified dates and Value
+already affect the saved record and derived Key dates before confirmation.
+Ended prevents another run but permits confirmation; archive prevents both.
+
+Unsupported TXT files supply no extracted text. A failed Comparison pair is
+durable: reopening does not retry processing. A corrected new Version/new pair
+is the tested recovery, including a Contributor asking a permitted uploader to
+prepare it. **No changes** describes text equality; the tested PDF originals have
+different hashes. An archived owner may leave the export control visible, but
+the real export refuses the write; restoring the owner allows a retry.
+
+Early author runs stopped on harness assumptions about native select accessible
+names, whitespace in selected-change text, and the host's group-switch command.
+A focused browser probe confirmed that operand selection immediately opens the
+new pair; no app selector defect was found. An overlapping API suite created transient Docker networks and interrupted early
+Help checks with Chromium ERR_NETWORK_CHANGED. Discovery was rerun after the
+suite ended. Final records contain only complete runs against the recorded guide bytes. Earlier fictional prerequisite records
+remain in this disposable lab.
+
+Both articles stay in review pending independent walkthroughs and linked guides,
+including Document Versions/processing (DOC-017) and Analysis connector setup
+(DOC-022). DOC-025 owns final acceptance on the supported publication build.
+
+## Repository validation
+
+The full workspace suite passed: 2,889 API tests across 176 files and 1,702 web
+tests across 97 files, with all five Turbo tasks successful.
+
+All 19 static tasks and all 33 documentation/tooling tests passed. Normal and
+preview documentation builds passed. Preview reports 14 links to unpublished
+targets owned by later writing batches.
+
+## CodeRabbit disposition
+
+CodeRabbit ran once and reported nine findings. The substantive fixture
+clarification was applied: C29 now names its PDF/Word pair and explicitly tests
+plain TXT as an unsupported extracted-text input. Evidence terminology was
+normalized to Generated redline and Document Version without changing recorded
+execution times, hashes, or outcomes.
+
+Seven minor suggestions were left unapplied. Four requested imperative rewrites
+of explanatory prose or verification status records; the procedures already use
+instructions where the reader acts, and the records report completed or pending
+work. Replacing **History** with **Audit log** would name the wrong visible
+control for the tested record activity. The suggested capitalized capability
+name “Contract Analysis” is not the glossary's “Analysis run”; the guide already
+distinguishes the capability and each run's input and outcome. The Comparison
+guide already introduces Document Versions and correctly uses singular Generated
+redline for the one file exported from a pair, so a blanket plural/title rewrite
+would not improve its accuracy.
