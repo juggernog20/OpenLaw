@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** SET-001 persists the portal theme immediately and restores it when saving fails. */
+
 import { useLayoutEffect, useRef, useState } from "react";
 import { Moon, Sun, Sunset } from "lucide-react";
 import { defineMessage, useIntl } from "react-intl";

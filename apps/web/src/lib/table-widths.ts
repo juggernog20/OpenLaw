@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** DES-046 fits and resizes data columns beside fixed row actions. */
+
 interface FittedColumn {
   key: string;
   width: number;

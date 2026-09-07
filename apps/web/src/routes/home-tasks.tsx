@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** DES-069 lists assigned Tasks. Local rows retain completed Tasks until refresh so the reader can undo. */
+
 import { useState } from "react";
 import { Link, redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** DES-069 shows personal dates in the selected calendar window. */
+
 import { useEffect, useState, type CSSProperties } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";

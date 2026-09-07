@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** DES-056 supplies the Inbox column catalogue and built-in layout. */
+
 import { FormattedMessage } from "react-intl";
 import { Link } from "react-router";
 import type { ColumnCatalogue, ColumnDef, Layout } from "../../lib/list-views";

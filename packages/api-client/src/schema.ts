@@ -1251,7 +1251,10 @@ export interface paths {
     /** List a reached Matter's lightweight checklist in stable display order. Contributors on the Matter can read it; Task due dates are internal and never enter deadline surfaces */
     get: operations["listMatterTasks"];
     put?: never;
-    /** Add a Task to a reached, non-archived Matter. Closing does not freeze the checklist */
+    /**
+     * Add a Task to a reached, non-archived Matter. Closing does not freeze the checklist
+     * @description Assignees must be active staff who manage the record or belong to its team. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.
+     */
     post: operations["addMatterTask"];
     delete?: never;
     options?: never;
@@ -1273,7 +1276,10 @@ export interface paths {
     delete: operations["removeMatterTask"];
     options?: never;
     head?: never;
-    /** Edit a Task's title, assignee, or internal due date on a reached Matter */
+    /**
+     * Edit a Task's title, assignee, or internal due date on a reached Matter
+     * @description Assignees must be active staff who manage the record or belong to its team. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.
+     */
     patch: operations["updateMatterTask"];
     trace?: never;
   };
@@ -2669,7 +2675,10 @@ export interface paths {
     /** One contract's task checklist (CTR-017): lightweight items with a done flag, an optional assignee, an optional due date, and a display order. Task due dates never appear in the deadline union or the next-deadline marker. Access is inherited from the contract: a Contributor on the team reads the checklist, and anyone who cannot reach the contract is answered 404 */
     get: operations["listContractTasks"];
     put?: never;
-    /** Add a task to a contract's checklist (CTR-017). A blank title is refused. The task starts not done, with the display order after the last existing task. Appends one task.added entry on the owning contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403. An archived contract takes no new task until it is restored */
+    /**
+     * Add a task to a contract's checklist (CTR-017). A blank title is refused. The task starts not done, with the display order after the last existing task. Appends one task.added entry on the owning contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403. An archived contract takes no new task until it is restored
+     * @description Assignees must be active staff who manage the record or belong to its team. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.
+     */
     post: operations["addContractTask"];
     delete?: never;
     options?: never;
@@ -2691,7 +2700,10 @@ export interface paths {
     delete: operations["removeContractTask"];
     options?: never;
     head?: never;
-    /** Edit a task's title, assignee, or due date (CTR-017). Every field is optional and only what is sent is read. A request that changes nothing writes nothing and narrates nothing. Appends one task.edited entry naming only what moved, at the working-team tier (DD-017). A task on a contract this viewer cannot reach answers 404; an archived contract takes no edit until it is restored */
+    /**
+     * Edit a task's title, assignee, or due date (CTR-017). Every field is optional and only what is sent is read. A request that changes nothing writes nothing and narrates nothing. Appends one task.edited entry naming only what moved, at the working-team tier (DD-017). A task on a contract this viewer cannot reach answers 404; an archived contract takes no edit until it is restored
+     * @description Assignees must be active staff who manage the record or belong to its team. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.
+     */
     patch: operations["updateContractTask"];
     trace?: never;
   };

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** DES-056 defines the Inbox filter choices carried in links and saved views. */
+
 import { useIntl } from "react-intl";
 import { MATTER_SEVERITIES, matterSeverityLabel } from "../../lib/matters";
 import { requestStatusLabel } from "../../lib/requests";
