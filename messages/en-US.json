@@ -330,7 +330,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -475,6 +475,9 @@
   },
   "activity.matter.updated": {
     "defaultMessage": "{actor} changed {count, plural, =0 {this matter} one {{field}} other {# fields}}"
+  },
+  "activity.matterStatus.groupChanged": {
+    "defaultMessage": "{actor} moved the matter status {name} from {previousGroup, select, open {Open} in_progress {In progress} waiting {Waiting} other {{previousGroup}}} to {group, select, open {Open} in_progress {In progress} waiting {Waiting} other {{group}}}"
   },
   "activity.notSet": {
     "defaultMessage": "Not set"
@@ -771,7 +774,7 @@
     "defaultMessage": "—"
   },
   "approvals.note": {
-    "defaultMessage": "Note (optional)"
+    "defaultMessage": "Note"
   },
   "approvals.pickGroup": {
     "defaultMessage": "Pick an approver group."
@@ -1292,6 +1295,9 @@
   "contractMatter.contracts.heading": {
     "defaultMessage": "Linked Contracts"
   },
+  "contractMatter.createOptions.error": {
+    "defaultMessage": "The contract form could not be loaded. Try New contract again."
+  },
   "contractMatter.link.error": {
     "defaultMessage": "The Contract could not be linked to the Matter."
   },
@@ -1316,17 +1322,23 @@
   "contractMatter.mismatch.title": {
     "defaultMessage": "Confidentiality differs"
   },
+  "contractMatter.newContract": {
+    "defaultMessage": "New contract"
+  },
   "contractMatter.noMatches": {
     "defaultMessage": "No eligible records found."
   },
   "contractMatter.refresh.error": {
     "defaultMessage": "The linked Contracts could not be refreshed."
   },
-  "contractMatter.search": {
-    "defaultMessage": "Search by number or title"
-  },
   "contractMatter.search.error": {
     "defaultMessage": "Eligible records could not be searched."
+  },
+  "contractMatter.searchContract": {
+    "defaultMessage": "Search by contract number or title"
+  },
+  "contractMatter.searchMatter": {
+    "defaultMessage": "Search by matter number or title"
   },
   "contractMatter.searching": {
     "defaultMessage": "Searching…"
@@ -1596,7 +1608,7 @@
     "defaultMessage": "Last renewal"
   },
   "contracts.form.matter": {
-    "defaultMessage": "Matter (optional)"
+    "defaultMessage": "Matter"
   },
   "contracts.form.matterHelp": {
     "defaultMessage": "Link only when this Contract is part of broader Matter work. Nothing else flows across the link."
@@ -1681,9 +1693,6 @@
   },
   "contracts.ownerUnassigned": {
     "defaultMessage": "Unassigned"
-  },
-  "contracts.record.actions": {
-    "defaultMessage": "Contract actions"
   },
   "contracts.record.archive": {
     "defaultMessage": "Archive"
@@ -2039,12 +2048,6 @@
   "convert.archivedReferenceNote": {
     "defaultMessage": "{value} is archived. Pick a live {fieldType, select, user {person} entity {entity} other {value}} to convert."
   },
-  "convert.carries": {
-    "defaultMessage": "Carries into the {module, select, matter {matter} other {contract}}"
-  },
-  "convert.carryNote": {
-    "defaultMessage": "Form responses carry into the {module, select, matter {matter} other {contract}} — nothing is re-keyed."
-  },
   "convert.failed": {
     "defaultMessage": "The request could not be converted. Try again."
   },
@@ -2053,9 +2056,6 @@
   },
   "convert.from": {
     "defaultMessage": "{requestType} · submitted by {requester}"
-  },
-  "convert.gapNote": {
-    "defaultMessage": "Required on this {module, select, matter {matter} other {contract}} type. The form did not collect it."
   },
   "convert.needTitle": {
     "defaultMessage": "Name the {module, select, matter {matter} other {contract}}."
@@ -2069,17 +2069,8 @@
   "convert.priority": {
     "defaultMessage": "Priority"
   },
-  "convert.priorityNote": {
-    "defaultMessage": "Taken from the urgency the requester gave. Risk stays yours to set on the record."
-  },
-  "convert.retarget": {
-    "defaultMessage": "This request type does not target a {module, select, matter {matter} other {contract}}. Converting it to one is a re-target, and the request itself is kept."
-  },
   "convert.staysBehind": {
     "defaultMessage": "Does not carry into the {module, select, matter {matter} other {contract}}"
-  },
-  "convert.staysBehindNote": {
-    "defaultMessage": "This {module, select, matter {matter} other {contract}} type has no field for these. Nothing is deleted, and they stay on the request where you can still read them."
   },
   "convert.submit": {
     "defaultMessage": "Convert to {module, select, matter {matter} other {contract}}"
@@ -2089,15 +2080,6 @@
   },
   "convert.titleField": {
     "defaultMessage": "Title"
-  },
-  "convert.titleNote": {
-    "defaultMessage": "Taken from the request's summary. Edit it before you convert."
-  },
-  "convert.typeConfirmed": {
-    "defaultMessage": "Set by the request type. Triage confirms the routing rather than choosing it."
-  },
-  "convert.typeDeferred": {
-    "defaultMessage": "This request type left the {module, select, matter {matter} other {contract}} type to conversion."
   },
   "convert.typeField": {
     "defaultMessage": "{module, select, matter {Matter} other {Contract}} type"
@@ -2116,6 +2098,39 @@
   },
   "counterparty.picker.searching": {
     "defaultMessage": "Searching…"
+  },
+  "createAttachments.choose": {
+    "defaultMessage": "Attach documents"
+  },
+  "createAttachments.continue": {
+    "defaultMessage": "Continue"
+  },
+  "createAttachments.drop": {
+    "defaultMessage": "or drag and drop files here"
+  },
+  "createAttachments.failed": {
+    "defaultMessage": "The file could not be uploaded."
+  },
+  "createAttachments.kind": {
+    "defaultMessage": "Document kind"
+  },
+  "createAttachments.label": {
+    "defaultMessage": "Documents"
+  },
+  "createAttachments.partial": {
+    "defaultMessage": "Record created. Some documents could not be uploaded."
+  },
+  "createAttachments.remove": {
+    "defaultMessage": "Remove {name}"
+  },
+  "createAttachments.retry": {
+    "defaultMessage": "Retry failed uploads"
+  },
+  "createAttachments.uploaded": {
+    "defaultMessage": "Uploaded"
+  },
+  "createAttachments.uploading": {
+    "defaultMessage": "Record created. Uploading documents…"
   },
   "datePicker.calendar": {
     "defaultMessage": "Choose a date"
@@ -2627,29 +2642,11 @@
   "documents.executed": {
     "defaultMessage": "Executed"
   },
-  "documents.filter.active": {
-    "defaultMessage": "Active filters"
-  },
-  "documents.filter.chip": {
-    "defaultMessage": "{name}: {value}"
-  },
-  "documents.filter.clearAll": {
-    "defaultMessage": "Clear all"
-  },
-  "documents.filter.clearAll.label": {
-    "defaultMessage": "Clear all filters"
-  },
   "documents.filter.counterparty": {
     "defaultMessage": "Counterparty"
   },
-  "documents.filter.counterparty.all": {
-    "defaultMessage": "All counterparties"
-  },
   "documents.filter.folder": {
     "defaultMessage": "Folder"
-  },
-  "documents.filter.folder.all": {
-    "defaultMessage": "All folders"
   },
   "documents.filter.folder.root": {
     "defaultMessage": "Record root"
@@ -2657,23 +2654,11 @@
   "documents.filter.format": {
     "defaultMessage": "Format"
   },
-  "documents.filter.format.all": {
-    "defaultMessage": "All formats"
-  },
   "documents.filter.kind": {
     "defaultMessage": "Kind"
   },
-  "documents.filter.kind.all": {
-    "defaultMessage": "All kinds"
-  },
-  "documents.filter.matchedNone": {
-    "defaultMessage": "The active filters matched no documents."
-  },
   "documents.filter.owner": {
     "defaultMessage": "Owner"
-  },
-  "documents.filter.owner.all": {
-    "defaultMessage": "All"
   },
   "documents.filter.owner.contracts": {
     "defaultMessage": "Contracts"
@@ -2690,29 +2675,11 @@
   "documents.filter.record": {
     "defaultMessage": "Record"
   },
-  "documents.filter.record.match": {
-    "defaultMessage": "{reference} · {title}"
-  },
-  "documents.filter.record.matches": {
-    "defaultMessage": "Record matches"
-  },
-  "documents.filter.record.placeholder": {
-    "defaultMessage": "Reference or title"
-  },
-  "documents.filter.remove": {
-    "defaultMessage": "Remove {name} filter"
-  },
-  "documents.filter.uploadedFrom": {
-    "defaultMessage": "Uploaded from"
-  },
-  "documents.filter.uploadedTo": {
-    "defaultMessage": "Uploaded to"
+  "documents.filter.uploaded": {
+    "defaultMessage": "Uploaded"
   },
   "documents.filter.uploader": {
     "defaultMessage": "Uploader"
-  },
-  "documents.filter.uploader.all": {
-    "defaultMessage": "All uploaders"
   },
   "documents.filter.uploader.archived": {
     "defaultMessage": "{name} (archived)"
@@ -2808,7 +2775,7 @@
     "defaultMessage": "Compares v{from} and v{to}"
   },
   "documents.kind": {
-    "defaultMessage": "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} redline_theirs {Redline · theirs} redline_ours {Redline · ours} executed {Executed} amendment {Amendment} generated_redline {Generated redline} other {Unknown}}"
+    "defaultMessage": "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} redline_theirs {Redline · theirs} redline_ours {Redline · ours} executed {Executed} amendment {Amendment} general {General} generated_redline {Generated redline} other {Unknown}}"
   },
   "documents.list.column.actions": {
     "defaultMessage": "Actions"
@@ -3897,7 +3864,7 @@
     "defaultMessage": "This form collected nothing beyond the basics."
   },
   "inbox.request.outcome": {
-    "defaultMessage": "Outcome"
+    "defaultMessage": "Status"
   },
   "inbox.request.overview": {
     "defaultMessage": "Overview"
@@ -3990,7 +3957,7 @@
     "defaultMessage": "Event"
   },
   "keyDates.field.note": {
-    "defaultMessage": "Note (optional)"
+    "defaultMessage": "Note"
   },
   "keyDates.needDate": {
     "defaultMessage": "Pick a date."
@@ -4409,14 +4376,8 @@
   "matterKeyDates.needLabel": {
     "defaultMessage": "Name what the date is."
   },
-  "matterKeyDates.next": {
-    "defaultMessage": "Next"
-  },
   "matterKeyDates.note": {
-    "defaultMessage": "Note (optional)"
-  },
-  "matterKeyDates.overdue": {
-    "defaultMessage": "Overdue"
+    "defaultMessage": "Note"
   },
   "matterKeyDates.remove": {
     "defaultMessage": "Remove date"
@@ -4427,14 +4388,8 @@
   "matterKeyDates.removeTitle": {
     "defaultMessage": "Remove Key date?"
   },
-  "matterKeyDates.state": {
-    "defaultMessage": "State"
-  },
   "matterKeyDates.tally": {
     "defaultMessage": "{upcoming} upcoming · {overdue} overdue"
-  },
-  "matterKeyDates.upcoming": {
-    "defaultMessage": "Upcoming"
   },
   "matterKeyDates.writeFailed": {
     "defaultMessage": "The change could not be saved. Try again."
@@ -4473,7 +4428,7 @@
     "defaultMessage": "Assignee"
   },
   "matterTasks.field.due": {
-    "defaultMessage": "Due date (optional)"
+    "defaultMessage": "Due date"
   },
   "matterTasks.field.title": {
     "defaultMessage": "Title"
@@ -4496,6 +4451,12 @@
   "matterTasks.writeFailed": {
     "defaultMessage": "The Task change could not be saved. Try again."
   },
+  "matters.applet.settings": {
+    "defaultMessage": "Matter settings"
+  },
+  "matters.applet.team": {
+    "defaultMessage": "Matter team"
+  },
   "matters.archive.description": {
     "defaultMessage": "The matter leaves the default list. Its history and M-number are kept."
   },
@@ -4505,17 +4466,14 @@
   "matters.archivedPill": {
     "defaultMessage": "Archived"
   },
-  "matters.close.description": {
-    "defaultMessage": "Closing is a signal, not a lock. The Matter leaves active surfaces but stays fully writable."
+  "matters.close.note": {
+    "defaultMessage": "Closing note"
   },
   "matters.close.openChildren": {
     "defaultMessage": "Open child Matters"
   },
   "matters.close.openChildrenDescription": {
     "defaultMessage": "These child Matters will stay open. Closing this parent changes none of them."
-  },
-  "matters.close.status": {
-    "defaultMessage": "Closed Status"
   },
   "matters.close.title": {
     "defaultMessage": "Close {title}?"
@@ -4635,7 +4593,7 @@
     "defaultMessage": "Status"
   },
   "matters.field.template": {
-    "defaultMessage": "Template (optional)"
+    "defaultMessage": "Matter template"
   },
   "matters.field.title": {
     "defaultMessage": "Title"
@@ -4673,6 +4631,9 @@
   "matters.notProvided": {
     "defaultMessage": "Not provided"
   },
+  "matters.progression.group": {
+    "defaultMessage": "{group, select, open {Open} in_progress {In progress} waiting {Waiting} other {Closed}}"
+  },
   "matters.record.archive": {
     "defaultMessage": "Archive"
   },
@@ -4685,11 +4646,17 @@
   "matters.record.pageTitle": {
     "defaultMessage": "{reference} · {title}"
   },
+  "matters.record.rename": {
+    "defaultMessage": "Rename matter"
+  },
   "matters.record.reopen": {
     "defaultMessage": "Reopen matter"
   },
   "matters.record.restore": {
     "defaultMessage": "Restore"
+  },
+  "matters.record.section": {
+    "defaultMessage": "Matter"
   },
   "matters.record.sections": {
     "defaultMessage": "Matter sections"
@@ -4764,7 +4731,7 @@
     "defaultMessage": "Add relation"
   },
   "matters.relations.searchLabel": {
-    "defaultMessage": "Search by M-number or title"
+    "defaultMessage": "Search by matter number or title"
   },
   "matters.relations.searching": {
     "defaultMessage": "Searching…"
@@ -4780,9 +4747,6 @@
   },
   "matters.reopen.description": {
     "defaultMessage": "The Matter returns to active surfaces. Its original opened date is preserved."
-  },
-  "matters.reopen.status": {
-    "defaultMessage": "Open Status"
   },
   "matters.reopen.title": {
     "defaultMessage": "Reopen {title}?"
@@ -4813,6 +4777,15 @@
   },
   "matters.showClosed": {
     "defaultMessage": "Show closed"
+  },
+  "matters.status.move": {
+    "defaultMessage": "{status} — move matter"
+  },
+  "matters.status.unavailable": {
+    "defaultMessage": "That status is no longer available. Choose another status."
+  },
+  "matters.stillOpen": {
+    "defaultMessage": "Still open"
   },
   "matters.team.add": {
     "defaultMessage": "Add team member"
@@ -4846,9 +4819,6 @@
   },
   "matters.team.roleLabel": {
     "defaultMessage": "Role"
-  },
-  "matters.team.title": {
-    "defaultMessage": "Matter team"
   },
   "matters.template.contentHint": {
     "defaultMessage": "Template adds {taskCount, plural, one {# task} other {# tasks}} and {keyDateCount, plural, one {# key date} other {# key dates}}."
@@ -5251,6 +5221,9 @@
   },
   "recordFilters.back": {
     "defaultMessage": "Back to filters"
+  },
+  "recordFilters.chooseOne": {
+    "defaultMessage": "Choose one value"
   },
   "recordFilters.clear": {
     "defaultMessage": "Clear all"
@@ -6761,6 +6734,9 @@
   "settings.matterStatuses.count": {
     "defaultMessage": "{count, plural, one {# status} other {# statuses}}"
   },
+  "settings.matterStatuses.groupFor": {
+    "defaultMessage": "Group for {name}"
+  },
   "settings.matterStatuses.help": {
     "defaultMessage": "Drag to reorder. Statuses map to a fixed category picked at creation; every category keeps at least one unarchived status."
   },
@@ -6772,6 +6748,9 @@
   },
   "settings.matterStatuses.moved": {
     "defaultMessage": "{name} moved to position {position} of {total}."
+  },
+  "settings.matterStatuses.newGroup": {
+    "defaultMessage": "New status group"
   },
   "settings.matterStatuses.noCandidates": {
     "defaultMessage": "Add or restore another status in this category first."
@@ -7337,9 +7316,6 @@
   "settings.officerRoles.title": {
     "defaultMessage": "Officer roles"
   },
-  "settings.profile.appView": {
-    "defaultMessage": "App view"
-  },
   "settings.profile.businessView.action": {
     "defaultMessage": "View as business user"
   },
@@ -7673,6 +7649,9 @@
   "settings.section.aiAnalysis": {
     "defaultMessage": "AI analysis"
   },
+  "settings.section.appView": {
+    "defaultMessage": "View Business Portal"
+  },
   "settings.section.appearance": {
     "defaultMessage": "Appearance"
   },
@@ -7944,7 +7923,7 @@
     "defaultMessage": "Signed, declined, and voided status arrives by webhook. The executed file auto-files and the stage advances to Active."
   },
   "signing.subject": {
-    "defaultMessage": "Subject (optional)"
+    "defaultMessage": "Subject"
   },
   "signing.subjectHelp": {
     "defaultMessage": "Signers see this on the invitation. Left blank, it names this contract."
@@ -8070,7 +8049,7 @@
     "defaultMessage": "Assignee"
   },
   "tasks.field.dueDate": {
-    "defaultMessage": "Due date (optional)"
+    "defaultMessage": "Due date"
   },
   "tasks.field.title": {
     "defaultMessage": "Title"

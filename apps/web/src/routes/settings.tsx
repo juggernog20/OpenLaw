@@ -9,7 +9,8 @@
  * log (#133), the AI analysis section (#675, SET-008), and the
  * Integrations section (#245, SET-007). The
  * Personal group carries Profile (#67), Appearance (#62), and
- * Notifications (#320 — the pane M5 deferred until the engine existed).
+ * Notifications (#320 — the pane M5 deferred until the engine existed), and View Business
+ * Portal at /settings/app-view, gated by canViewPortal (SET-006 UX addendum).
  * The Organization group has a Notifications section of its own (#322):
  * the NOT-004 reminder-offset list, which is org policy rather than
  * anybody's preference. Rail entries for unshipped panes are omitted,
@@ -35,6 +36,7 @@ import {
   Inbox,
   KeyRound,
   LibraryBig,
+  PanelsTopLeft,
   Landmark,
   Palette,
   Plug,
@@ -47,6 +49,7 @@ import {
 } from "lucide-react";
 import { NavLink, Outlet, redirect, useLoaderData, useLocation } from "react-router";
 import { FormattedMessage, useIntl, defineMessage, type MessageDescriptor } from "react-intl";
+import { isMemberPlus } from "../lib/roles";
 import { requireUser, useSignOut } from "../lib/session";
 import { cn } from "../lib/utils";
 import { AppShell } from "../components/shell/app-shell";
@@ -334,9 +337,32 @@ function RailSubgroup({ subgroup }: { subgroup: SettingsSubgroup }) {
  * horizontally scrollable row so panes stay reachable on a phone
  * (DES-012: query the container, never the viewport).
  */
-function SettingsRail({ isAdministrator }: { isAdministrator: boolean }) {
+function SettingsRail({
+  isAdministrator,
+  canViewPortal,
+}: {
+  isAdministrator: boolean;
+  canViewPortal: boolean;
+}) {
   const intl = useIntl();
-  const groups = isAdministrator ? [PERSONAL_GROUP, ORGANIZATION_GROUP] : [PERSONAL_GROUP];
+  const personal = canViewPortal
+    ? {
+        ...PERSONAL_GROUP,
+        entries: [
+          ...PERSONAL_GROUP.entries,
+          {
+            id: "app-view",
+            path: "/settings/app-view",
+            icon: PanelsTopLeft,
+            label: defineMessage({
+              id: "settings.section.appView",
+              defaultMessage: "View Business Portal",
+            }),
+          },
+        ],
+      }
+    : PERSONAL_GROUP;
+  const groups = isAdministrator ? [personal, ORGANIZATION_GROUP] : [personal];
   return (
     <nav
       aria-label={intl.formatMessage({
@@ -388,7 +414,10 @@ export function SettingsLayout() {
       }
     >
       <div className="flex min-h-0 w-full flex-1 flex-col @3xl/page:flex-row">
-        <SettingsRail isAdministrator={user.role === "administrator"} />
+        <SettingsRail
+          isAdministrator={user.role === "administrator"}
+          canViewPortal={isMemberPlus(user.role)}
+        />
         <div className="flex min-w-0 flex-1 flex-col gap-4 p-6">
           <Outlet />
         </div>

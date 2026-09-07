@@ -875,7 +875,7 @@ test.describe("M16 demo path", () => {
       const addDialog = memberPage.getByRole("dialog");
       await addDialog.getByLabel("Date").fill(keyDate);
       await addDialog.getByLabel("Event").fill(KEY_DATE_LABEL);
-      await addDialog.getByLabel("Note (optional)").fill(KEY_DATE_NOTE);
+      await addDialog.getByLabel("Note", { exact: true }).fill(KEY_DATE_NOTE);
       const added = memberPage.waitForResponse(
         (response) =>
           response.url().endsWith(`/api/v1/contracts/${number}/key-dates`) &&

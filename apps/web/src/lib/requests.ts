@@ -282,7 +282,8 @@ export async function convertRequest(
     contractTypeId?: string;
     matterTypeId?: string;
     templateId?: string;
-    customFields?: Record<string, CustomFieldValue>;
+    priority?: StaffRequest["urgency"];
+    customFields?: Record<string, CustomFieldValue | null>;
   },
 ): Promise<DispositionOutcome> {
   // Settled, never rejected — `declineRequest`'s rule.
@@ -291,6 +292,7 @@ export async function convertRequest(
       params: { path: { number } },
       body: {
         title: input.title,
+        ...(input.priority === undefined ? {} : { priority: input.priority }),
         ...(input.contractTypeId === undefined ? {} : { contractTypeId: input.contractTypeId }),
         ...(input.matterTypeId === undefined ? {} : { matterTypeId: input.matterTypeId }),
         ...(input.templateId === undefined ? {} : { templateId: input.templateId }),

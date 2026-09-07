@@ -136,6 +136,7 @@
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
+import { nextDeadline, NextDeadlineSchema } from "../../lib/next-deadline.js";
 import {
   FilterChoices,
   FilterOptionsSchema,
@@ -513,6 +514,7 @@ const ContractRowSchema = z.object({
    */
   proposedRenewalExpiry: z.iso.date().nullable(),
   description: z.string().nullable(),
+  nextDeadline: NextDeadlineSchema,
   /** CTR-016's custom fields, keyed by the catalog field's slug. Which
    * of these the record draws is the type's attachment join to say, not
    * this map's: a value under a slug the type no longer attaches is
@@ -742,6 +744,7 @@ interface RecordCounterparty extends JoinedCounterparty {
  * two display names, the derived stage, the Owner, the entity that
  * signs, and the party the other side is named by. */
 interface ContractContext {
+  nextDeadline?: z.infer<typeof NextDeadlineSchema>;
   row: Contract;
   contractTypeName: string;
   statusName: string;
@@ -844,6 +847,7 @@ function toRow(
     renewalPendingConfirmation: renewalPending(row),
     proposedRenewalExpiry: proposedRollExpiry(row),
     description: row.description,
+    nextDeadline: context.nextDeadline ?? null,
     customFields,
     aiUnverified: publicUnverified(row.aiUnverified),
     isConfidential: row.isConfidential,
@@ -868,6 +872,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     return db
       .select({
         row: contracts,
+        nextDeadline: nextDeadline("contract"),
         contractTypeName: contractTypes.displayName,
         statusName: contractStatuses.displayName,
         stage: contractStatuses.stage,
@@ -914,6 +919,11 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
    * the shared predicate, so the list, the record read, and the comment
    * routes all answer the same question the same way. */
   const teamScope = (user: AuthenticatedUser) => contractTeamScope(app.db, user);
+
+  async function readNextDeadline(db: Executor, user: AuthenticatedUser, id: string) {
+    const [fresh] = await selectContracts(db, user).where(eq(contracts.id, id)).limit(1);
+    return fresh?.nextDeadline ?? null;
+  }
 
   /**
    * What each sortable column orders on (DD-019 clause 2).
@@ -2739,6 +2749,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         return {
           row: row!,
+          nextDeadline: await readNextDeadline(tx, request.user, row!.id),
           contractTypeName,
           statusName,
           stage,
@@ -2899,7 +2910,11 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         });
 
         return {
-          contract: toRow({ ...current, row: updated! }),
+          contract: toRow({
+            ...current,
+            row: updated!,
+            nextDeadline: await readNextDeadline(tx, request.user, updated!.id),
+          }),
           renewals: await selectRenewals(tx, row.id),
         };
       });
@@ -3322,7 +3337,11 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           visibility: RECORD_ACTIVITY_TIER,
           payload: { number: row!.number, title: row!.title },
         });
-        return { ...current, row: row! };
+        return {
+          ...current,
+          row: row!,
+          nextDeadline: await readNextDeadline(tx, request.user, row!.id),
+        };
       });
       return { contract: toRow(archived) };
     },
@@ -3360,7 +3379,11 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           visibility: RECORD_ACTIVITY_TIER,
           payload: { number: row!.number, title: row!.title },
         });
-        return { ...current, row: row! };
+        return {
+          ...current,
+          row: row!,
+          nextDeadline: await readNextDeadline(tx, request.user, row!.id),
+        };
       });
       return { contract: toRow(restored) };
     },

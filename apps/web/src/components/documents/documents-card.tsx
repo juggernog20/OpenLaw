@@ -313,6 +313,7 @@ const FOLDER_SKELETON_ROWS = 3;
  * same fifteen through two call sites is how the two come to differ.
  */
 interface RowContext {
+  showKind: boolean;
   designations: boolean;
   executedDesignations: boolean;
   folders: boolean;
@@ -1354,6 +1355,7 @@ export function DocumentsCard({
   /** Everything a document row draws from, built once and handed to
    * every listing — the record root's and each open folder's. */
   const rowContext: RowContext = {
+    showKind: record.entityType !== "matter",
     designations: supportsDesignations(record.entityType),
     executedDesignations: record.entityType === "contract",
     folders: record.entityType !== "knowledge_item",
@@ -1512,9 +1514,11 @@ export function DocumentsCard({
                 <th scope="col" className="px-4 py-2 text-start font-medium">
                   <FormattedMessage id="documents.column.name" defaultMessage="Name" />
                 </th>
-                <th scope="col" className="w-32 px-4 py-2 text-start font-medium">
-                  <FormattedMessage id="documents.column.kind" defaultMessage="Kind" />
-                </th>
+                {record.entityType !== "matter" && (
+                  <th scope="col" className="w-32 px-4 py-2 text-start font-medium">
+                    <FormattedMessage id="documents.column.kind" defaultMessage="Kind" />
+                  </th>
+                )}
                 <th scope="col" className="w-24 px-4 py-2 text-start font-medium">
                   <FormattedMessage id="documents.column.version" defaultMessage="Version" />
                 </th>
@@ -1908,7 +1912,9 @@ function DocumentRows({
                   </span>
                 </span>
               </td>
-              <KindCell document={document} version={chain.current} rows={rows} />
+              {rows.showKind && (
+                <KindCell document={document} version={chain.current} rows={rows} />
+              )}
               <VersionCell version={chain.current} intl={rows.intl} />
               <ModifiedCell version={chain.current} />
               <UploaderCell version={chain.current} intl={rows.intl} />
@@ -2007,7 +2013,7 @@ function DocumentRows({
                       </span>
                     </span>
                   </td>
-                  <KindCell document={document} version={version} rows={rows} />
+                  {rows.showKind && <KindCell document={document} version={version} rows={rows} />}
                   <VersionCell version={version} intl={rows.intl} />
                   <ModifiedCell version={version} />
                   <UploaderCell version={version} intl={rows.intl} />
@@ -2213,7 +2219,7 @@ function FolderRows({
                 {/* A folder has no kind, no version and no modified
                     date, so those cells are empty rather than filled
                     with em dashes. */}
-                <td className="px-4 py-2.5" />
+                {rows.showKind && <td className="px-4 py-2.5" />}
                 <td className="px-4 py-2.5" />
                 <td className="px-4 py-2.5" />
                 <td className="px-4 py-2.5" />
@@ -2294,7 +2300,7 @@ function FolderListingFoot({
   onShowMore: (folderId: string, cursor: string) => void;
 }>) {
   /** Every column of the table, so a foot spans the row it sits in. */
-  const columns = rows.showActionColumn ? 6 : 5;
+  const columns = (rows.showActionColumn ? 6 : 5) - (rows.showKind ? 0 : 1);
   const loading = listing === undefined || listing.loading;
   if (!loading && listing.error === null && listing.nextCursor === null) return null;
 
@@ -3571,7 +3577,9 @@ function UploadDialog({
 }>) {
   const intl = useIntl();
   const [file, setFile] = useState<File | null>(null);
-  const [kind, setKind] = useState<HandSetDocumentVersionKind>(seedKind ?? "draft_ours");
+  const [kind, setKind] = useState<HandSetDocumentVersionKind>(
+    record.entityType === "matter" ? "general" : (seedKind ?? "draft_ours"),
+  );
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -3753,28 +3761,30 @@ function UploadDialog({
               </span>
             </span>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="document-kind">
-              <FormattedMessage id="documents.composer.kind" defaultMessage="Kind" />
-            </Label>
-            <select
-              id="document-kind"
-              value={kind}
-              className={CONTROL_CLASS}
-              onChange={(event) => {
-                const picked = DOCUMENT_VERSION_KINDS.find(
-                  (option) => option === event.target.value,
-                );
-                if (picked) setKind(picked);
-              }}
-            >
-              {DOCUMENT_VERSION_KINDS.map((option) => (
-                <option key={option} value={option}>
-                  {documentKindLabel(intl, option)}
-                </option>
-              ))}
-            </select>
-          </div>
+          {record.entityType !== "matter" && (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="document-kind">
+                <FormattedMessage id="documents.composer.kind" defaultMessage="Kind" />
+              </Label>
+              <select
+                id="document-kind"
+                value={kind}
+                className={CONTROL_CLASS}
+                onChange={(event) => {
+                  const picked = DOCUMENT_VERSION_KINDS.find(
+                    (option) => option === event.target.value,
+                  );
+                  if (picked) setKind(picked);
+                }}
+              >
+                {DOCUMENT_VERSION_KINDS.map((option) => (
+                  <option key={option} value={option}>
+                    {documentKindLabel(intl, option)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="document-note">
               <FormattedMessage id="documents.composer.note" defaultMessage="Note" />

@@ -550,7 +550,7 @@ function EntryRow({ entry }: Readonly<{ entry: AuditEntry }>) {
   // holds no one record's fields or people. Everything the narration
   // cannot name falls back to what the log stored, which is the honest
   // rendering here.
-  const { icon: Icon, sentence, changes } = narrateActivity(intl, entry);
+  const { icon: Icon, sentence, changes, closingNote } = narrateActivity(intl, entry);
   return (
     <tr className="border-b border-border-muted last:border-b-0">
       <td className="px-4 py-2.5">
@@ -574,6 +574,14 @@ function EntryRow({ entry }: Readonly<{ entry: AuditEntry }>) {
                 />
               </p>
             ))}
+            {closingNote && (
+              <div className="mt-1 text-sm text-primary">
+                <p className="font-medium">
+                  <FormattedMessage id="matters.close.note" defaultMessage="Closing note" />
+                </p>
+                <p className="break-words whitespace-pre-wrap">{closingNote}</p>
+              </div>
+            )}
           </div>
         </div>
       </td>

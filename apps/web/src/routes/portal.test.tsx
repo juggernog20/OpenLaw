@@ -205,7 +205,7 @@ describe("role-based landing", () => {
 
 describe("view as business user", () => {
   it.each(["legal_team_member", "administrator"])(
-    "lets a %s switch from Profile and return without changing their account",
+    "lets a %s switch from View Business Portal and return without changing their account",
     async (role) => {
       const user = userEvent.setup();
       const writes: StubCall[] = [];
@@ -220,6 +220,8 @@ describe("view as business user", () => {
       });
       renderAt("/settings/profile");
 
+      expect(screen.queryByRole("link", { name: "View as business user" })).toBeNull();
+      await user.click(await screen.findByRole("link", { name: "View Business Portal" }));
       await user.click(await screen.findByRole("link", { name: "View as business user" }));
       expect(await screen.findByRole("heading", { name: PORTAL_HOME })).toBeVisible();
       expect(screen.getByRole("heading", { name: "Your requests" })).toBeVisible();
@@ -229,6 +231,8 @@ describe("view as business user", () => {
       expect(screen.queryByRole("link", { name: "Matters" })).not.toBeInTheDocument();
 
       await user.click(screen.getByRole("link", { name: "Return to legal view" }));
+      expect(await screen.findByRole("heading", { name: "View Business Portal" })).toBeVisible();
+      await user.click(screen.getByRole("link", { name: "Profile" }));
       expect(await screen.findByLabelText("Full name")).toHaveValue(MEMBER.displayName);
       expect(
         screen.getByText(role === "administrator" ? "Administrator" : "Legal team member"),
@@ -249,7 +253,7 @@ describe("view as business user", () => {
     renderAt("/portal/settings");
 
     await user.click(await screen.findByRole("link", { name: "Return to legal view" }));
-    expect(await screen.findByLabelText("Full name")).toBeVisible();
+    expect(await screen.findByRole("heading", { name: "View Business Portal" })).toBeVisible();
   });
 
   it("does not offer the switch to a Contributor", async () => {
@@ -257,6 +261,7 @@ describe("view as business user", () => {
     renderAt("/settings/profile");
 
     await screen.findByLabelText("Full name");
+    expect(screen.queryByRole("link", { name: "View Business Portal" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "View as business user" })).not.toBeInTheDocument();
   });
 

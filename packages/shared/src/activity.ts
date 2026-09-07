@@ -182,7 +182,13 @@ type ContractStatusPayloads = {
 
 /** Configurable matter statuses over the fixed open/closed category. */
 type MatterStatusPayloads = {
-  "matter_status.created": { slug: string; displayName: string; category: string };
+  "matter_status.created": {
+    slug: string;
+    displayName: string;
+    category: string;
+    progressionGroup?: string;
+  };
+  "matter_status.progression_group_changed": { slug: string; from: string; to: string };
   "matter_status.renamed": { slug: string; from: string; to: string };
   "matter_status.reordered": { order: string[] };
   "matter_status.archived": {
@@ -827,6 +833,7 @@ type MatterPayloads = {
     to: string;
     fromCategory: "open" | "closed";
     toCategory: "open" | "closed";
+    closingNote?: string;
   };
   "matter.team_added": { number: number; title: string; member: string; role: string };
   "matter.team_removed": { number: number; title: string; member: string; role: string };

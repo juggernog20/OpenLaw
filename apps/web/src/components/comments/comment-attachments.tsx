@@ -252,7 +252,8 @@ function FilingDialog({
   const [documents, setDocuments] = useState(filing.documents);
   const [name, setName] = useState(attachment.filename);
   const [documentId, setDocumentId] = useState(filing.documents[0]?.id ?? "");
-  const [kind, setKind] = useState<HandSetDocumentVersionKind>("draft_ours");
+  const showKind = entityType !== "matter" && !filing.recordHref.startsWith("/matters/");
+  const [kind, setKind] = useState<HandSetDocumentVersionKind>(showKind ? "draft_ours" : "general");
   const [note, setNote] = useState("");
   // CMT-011: the room proposes the flag; it never mandates it.
   const [isConfidential, setConfidential] = useState(comment.visibility === "legal_only");
@@ -423,35 +424,37 @@ function FilingDialog({
               </div>
             </>
           )}
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="comment-filing-kind">
-              <FormattedMessage id="comments.filing.kind" defaultMessage="Kind" />
-            </Label>
-            <select
-              id="comment-filing-kind"
-              className={CONTROL_CLASS}
-              value={kind}
-              onChange={(event) => {
-                const picked = DOCUMENT_VERSION_KINDS.find(
-                  (option) => option === event.target.value,
-                );
-                if (picked) setKind(picked);
-              }}
-            >
-              {DOCUMENT_VERSION_KINDS.map((option) => (
-                <option key={option} value={option}>
-                  {intl.formatMessage(
-                    {
-                      id: "comments.filing.kindOption",
-                      defaultMessage:
-                        "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} redline_theirs {Redline · theirs} redline_ours {Redline · ours} amendment {Amendment} executed {Executed} other {{kind}}}",
-                    },
-                    { kind: option },
-                  )}
-                </option>
-              ))}
-            </select>
-          </div>
+          {showKind && (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="comment-filing-kind">
+                <FormattedMessage id="comments.filing.kind" defaultMessage="Kind" />
+              </Label>
+              <select
+                id="comment-filing-kind"
+                className={CONTROL_CLASS}
+                value={kind}
+                onChange={(event) => {
+                  const picked = DOCUMENT_VERSION_KINDS.find(
+                    (option) => option === event.target.value,
+                  );
+                  if (picked) setKind(picked);
+                }}
+              >
+                {DOCUMENT_VERSION_KINDS.map((option) => (
+                  <option key={option} value={option}>
+                    {intl.formatMessage(
+                      {
+                        id: "comments.filing.kindOption",
+                        defaultMessage:
+                          "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} redline_theirs {Redline · theirs} redline_ours {Redline · ours} amendment {Amendment} executed {Executed} other {{kind}}}",
+                      },
+                      { kind: option },
+                    )}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           {error && (
             <p role="alert" className="text-xs text-status-danger-fg">
               {error}

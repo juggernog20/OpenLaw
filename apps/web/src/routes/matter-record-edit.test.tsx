@@ -53,9 +53,21 @@ const TYPES = [
   { id: "t-acquisition", slug: "acquisition", displayName: "Acquisition", fields: [ENTITY_FIELD] },
 ];
 const STATUSES = [
-  { id: "s-open", slug: "open", displayName: "Open", category: "open" },
-  { id: "s-review", slug: "review", displayName: "Review", category: "open" },
-  { id: "s-closed", slug: "closed", displayName: "Closed", category: "closed" },
+  { id: "s-open", slug: "open", displayName: "Open", category: "open", progressionGroup: "open" },
+  {
+    id: "s-review",
+    slug: "review",
+    displayName: "Review",
+    category: "open",
+    progressionGroup: "in_progress",
+  },
+  {
+    id: "s-closed",
+    slug: "closed",
+    displayName: "Closed",
+    category: "closed",
+    progressionGroup: "in_progress",
+  },
 ];
 
 const SEARCH_LANDING_DOCUMENT = {
@@ -137,6 +149,32 @@ function options() {
 }
 
 describe("the editable matter record", () => {
+  it("uses the record actions menu to copy the Matter link and rename from another tab", async () => {
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET")
+          return json(200, record(row()));
+        if (call.url.pathname === "/api/v1/matters/options") return options();
+        return undefined;
+      },
+    });
+    const user = userEvent.setup();
+    renderAt("/matters/12/tasks");
+    const menu = await screen.findByRole("button", { name: "Matter actions" });
+    expect(screen.queryByRole("button", { name: "Close matter" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Archive" })).not.toBeInTheDocument();
+    await user.click(menu);
+    await user.click(screen.getByRole("menuitem", { name: "Copy link" }));
+    expect(await navigator.clipboard.readText()).toBe(`${window.location.origin}/matters/12`);
+    await user.click(screen.getByRole("menuitem", { name: "Rename matter" }));
+    const title = await screen.findByRole("textbox", { name: "Title" });
+    await waitFor(() => expect(title).toHaveFocus());
+    await user.clear(title);
+    await user.type(title, "Cancelled rename{Escape}");
+    expect(title).toHaveValue("Editable advice");
+  });
+
   it("uses the shared Restricted Entity cell for an Entity-valued custom Field", async () => {
     const saved = row({
       matterTypeId: "t-acquisition",
@@ -472,7 +510,7 @@ describe("the editable matter record", () => {
       await screen.findByRole("heading", { level: 1, name: "Editable advice" }),
     ).toBeInTheDocument();
     expect(screen.queryByLabelText("Title")).not.toBeInTheDocument();
-    expect(screen.queryByRole("combobox", { name: "Status" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /move matter$/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("combobox", { name: "Matter type" })).not.toBeInTheDocument();
 
     const description = screen.getByLabelText("Description");
@@ -494,7 +532,7 @@ describe("the editable matter record", () => {
     );
   });
 
-  it("commits inline fields independently and keeps inline Status changes within the Category", async () => {
+  it("commits inline fields independently and moves status from the progression menu", async () => {
     let saved = row();
     const patches: unknown[] = [];
     stubApi({
@@ -530,18 +568,18 @@ describe("the editable matter record", () => {
     await user.type(title, "Renamed advice{Enter}");
     await waitFor(() => expect(patches).toContainEqual({ title: "Renamed advice" }));
 
-    const status = screen.getByRole("combobox", { name: "Status" });
-    expect(
-      within(status)
-        .getAllByRole("option")
-        .map((option) => option.textContent),
-    ).toEqual(["Open", "Review"]);
-    await user.selectOptions(status, "s-review");
+    expect(screen.getByText("Still open")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Open — move matter" }));
+    expect(screen.getAllByRole("menuitemradio")).toHaveLength(1);
+    await user.click(screen.getByRole("menuitemradio", { name: /^Open/ }));
+    expect(patches).not.toContainEqual({ statusId: "s-open" });
+    await user.click(screen.getByRole("button", { name: "In progress — move matter" }));
+    await user.click(screen.getByRole("menuitemradio", { name: /^Review/ }));
     await waitFor(() => expect(patches).toContainEqual({ statusId: "s-review" }));
-    await waitFor(() => expect(status).toHaveValue("s-review"));
+    expect(await screen.findByRole("button", { name: "In progress — move matter" })).toBeVisible();
   });
 
-  it("closes and reopens deliberately with no Resolution or closing-note datum", async () => {
+  it("closes with the selected status and a note, then reopens without selecting twice", async () => {
     let saved = row();
     const patches: unknown[] = [];
     stubApi({
@@ -592,24 +630,48 @@ describe("the editable matter record", () => {
     renderAt("/matters/12");
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole("button", { name: "Close matter" }));
-    const close = await screen.findByRole("dialog", { name: "Close Editable advice?" });
-    expect(within(close).getByLabelText("Closed Status")).toHaveValue("s-closed");
+    await user.click(await screen.findByRole("button", { name: "Closed — move matter" }));
+    await user.click(screen.getByRole("menuitemradio", { name: /^Closed/ }));
+    expect(patches).toEqual([]);
+    let close = await screen.findByRole("dialog", { name: "Close Editable advice?" });
+    await user.type(
+      within(close).getByRole("textbox", { name: "Closing note" }),
+      "Discard this draft",
+    );
+    await user.click(within(close).getByRole("button", { name: "Cancel" }));
+    expect(patches).toEqual([]);
+    await user.click(screen.getByRole("button", { name: "Closed — move matter" }));
+    await user.click(screen.getByRole("menuitemradio", { name: /^Closed/ }));
+    close = await screen.findByRole("dialog", { name: "Close Editable advice?" });
+    expect(within(close).getByRole("textbox", { name: "Closing note" })).toHaveValue("");
+    expect(within(close).queryByRole("combobox")).not.toBeInTheDocument();
     expect(within(close).getByText(/M-13 Local proceeding/)).toBeInTheDocument();
     expect(within(close).getByText("Restricted Matter")).toBeInTheDocument();
     expect(within(close).queryByLabelText(/Resolution/i)).not.toBeInTheDocument();
-    expect(within(close).queryByLabelText(/note/i)).not.toBeInTheDocument();
+    expect(within(close).getByRole("button", { name: "Close matter" })).toBeDisabled();
+    await user.type(
+      within(close).getByRole("textbox", { name: "Closing note" }),
+      "Advice delivered; work complete.",
+    );
     await user.click(within(close).getByRole("button", { name: "Close matter" }));
-    await waitFor(() => expect(patches).toEqual([{ statusId: "s-closed" }]));
+    await waitFor(() =>
+      expect(patches).toEqual([
+        { statusId: "s-closed", closingNote: "Advice delivered; work complete." },
+      ]),
+    );
     expect(screen.getByRole("textbox", { name: "Title" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Archive" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Matter actions" })).toBeEnabled();
 
-    await user.click(await screen.findByRole("button", { name: "Reopen matter" }));
+    await user.click(await screen.findByRole("button", { name: "In progress — move matter" }));
+    await user.click(screen.getByRole("menuitemradio", { name: /^Review/ }));
     const reopen = await screen.findByRole("dialog", { name: "Reopen Editable advice?" });
-    await user.selectOptions(within(reopen).getByLabelText("Open Status"), "s-review");
+    expect(within(reopen).queryByRole("combobox")).not.toBeInTheDocument();
     await user.click(within(reopen).getByRole("button", { name: "Reopen matter" }));
     await waitFor(() =>
-      expect(patches).toEqual([{ statusId: "s-closed" }, { statusId: "s-review" }]),
+      expect(patches).toEqual([
+        { statusId: "s-closed", closingNote: "Advice delivered; work complete." },
+        { statusId: "s-review", confirmReopen: true },
+      ]),
     );
   });
 
@@ -641,16 +703,25 @@ describe("the editable matter record", () => {
     renderAt("/matters/12");
     const user = userEvent.setup();
 
-    const trigger = await screen.findByRole("button", { name: "Close matter" });
+    const trigger = await screen.findByRole("button", { name: "Closed — move matter" });
     await user.click(trigger);
+    await user.click(screen.getByRole("menuitemradio", { name: /^Closed/ }));
     expect(await screen.findByText("Restore this Matter first.")).toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
     await user.click(trigger);
+    await user.click(screen.getByRole("menuitemradio", { name: /^Closed/ }));
     const dialog = await screen.findByRole("dialog", { name: "Close Editable advice?" });
+    await user.type(
+      within(dialog).getByRole("textbox", { name: "Closing note" }),
+      "Advice delivered; work complete.",
+    );
     await user.click(within(dialog).getByRole("button", { name: "Close matter" }));
     expect(await within(dialog).findByText("That closed Status is no longer live.")).toBeVisible();
     expect(dialog).toBeInTheDocument();
+    expect(within(dialog).getByRole("textbox", { name: "Closing note" })).toHaveValue(
+      "Advice delivered; work complete.",
+    );
     expect(within(dialog).getByRole("button", { name: "Close matter" })).toBeEnabled();
   });
 
@@ -765,7 +836,7 @@ describe("the editable matter record", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("works the team tray, draws the confidential banner, and confirms archive and restore", async () => {
+  it("works the Team applet, draws the confidential banner, and confirms archive and restore", async () => {
     const creator = {
       id: ADMIN.id,
       displayName: ADMIN.displayName,
@@ -816,9 +887,10 @@ describe("the editable matter record", () => {
         "Confidential matter — the matter team, the Matter Manager, and Administrators see it.",
       ),
     ).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Add team member" }));
+    await user.click(screen.getByRole("link", { name: "Manage team" }));
+    await user.click(await screen.findByRole("button", { name: "Add team member" }));
     const add = await screen.findByRole("dialog", { name: "Add team member" });
-    await user.selectOptions(within(add).getByLabelText("Person"), MEMBER.id);
+    await user.selectOptions(within(add).getByLabelText(/^Person\*?$/), MEMBER.id);
     await user.selectOptions(within(add).getByLabelText("Role"), "watcher");
     await user.click(within(add).getByRole("button", { name: "Add to team" }));
     expect(
@@ -833,11 +905,13 @@ describe("the editable matter record", () => {
       ).toBe(true),
     );
 
-    await user.click(screen.getByRole("button", { name: "Archive" }));
+    await user.click(screen.getByRole("button", { name: "Matter actions" }));
+    await user.click(screen.getByRole("menuitem", { name: "Archive" }));
     const archive = await screen.findByRole("dialog", { name: "Archive Editable advice?" });
     await user.click(within(archive).getByRole("button", { name: "Archive" }));
     expect(await screen.findByText("Archived")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Restore" }));
+    await user.click(screen.getByRole("button", { name: "Matter actions" }));
+    await user.click(screen.getByRole("menuitem", { name: "Restore" }));
     const restore = await screen.findByRole("dialog", { name: "Restore Editable advice?" });
     await user.click(within(restore).getByRole("button", { name: "Restore" }));
     await waitFor(() =>
@@ -846,4 +920,106 @@ describe("the editable matter record", () => {
       ),
     );
   });
+});
+
+it("requires confirmation when the server says a Matter was closed after this page loaded", async () => {
+  const patches: unknown[] = [];
+  stubApi({
+    signedIn: ADMIN,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET")
+        return json(200, record(row()));
+      if (call.url.pathname === "/api/v1/matters/options" && call.method === "GET")
+        return options();
+      if (call.url.pathname === "/api/v1/matters/12/lifecycle" && call.method === "GET")
+        return json(200, {
+          action: "reopen",
+          targetCategory: "open",
+          statuses: [
+            { id: "s-open", displayName: "Open" },
+            { id: "s-review", displayName: "Review" },
+          ],
+          openChildren: [],
+        });
+      if (call.url.pathname === "/api/v1/matters/12" && call.method === "PATCH") {
+        patches.push(call.body);
+        if (!(call.body as { confirmReopen?: boolean }).confirmReopen)
+          return json(409, {
+            type: "urn:openlaw:problem:matter-reopen-confirmation",
+            status: 409,
+            detail: "Confirm before reopening this Matter.",
+          });
+        return json(200, record(row({ statusId: "s-review", statusName: "Review" })));
+      }
+      return undefined;
+    },
+  });
+  renderAt("/matters/12");
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole("button", { name: "In progress — move matter" }));
+  await user.click(screen.getByRole("menuitemradio", { name: "Review" }));
+  const dialog = await screen.findByRole("dialog", { name: "Reopen Editable advice?" });
+  expect(patches).toEqual([{ statusId: "s-review" }]);
+  await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  expect(patches).toHaveLength(1);
+  await user.click(screen.getByRole("button", { name: "In progress — move matter" }));
+  await user.click(screen.getByRole("menuitemradio", { name: "Review" }));
+  const confirm = await screen.findByRole("dialog", { name: "Reopen Editable advice?" });
+  await user.click(within(confirm).getByRole("button", { name: "Reopen matter" }));
+  await waitFor(() =>
+    expect(patches.at(-1)).toEqual({ statusId: "s-review", confirmReopen: true }),
+  );
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+});
+
+it("saves a budget currency independently of the existing amount", async () => {
+  const currency = {
+    ...FIELD,
+    fieldId: "f-currency",
+    slug: "budget_currency",
+    displayName: "Budget currency",
+    fieldType: "single_select",
+    options: ["USD", "AED", "EUR"],
+    isRequired: false,
+  };
+  const budget = {
+    ...FIELD,
+    fieldId: "f-budget",
+    slug: "budget_approved",
+    displayName: "Budget approved",
+    fieldType: "number",
+    isRequired: false,
+  };
+  let saved = row({ customFields: { budget_approved: 12345.67 } });
+  const patches: unknown[] = [];
+  const response = () => ({ ...record(saved), fields: [budget, currency] });
+  stubApi({
+    signedIn: ADMIN,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET")
+        return json(200, response());
+      if (call.url.pathname === "/api/v1/matters/options" && call.method === "GET")
+        return options();
+      if (call.url.pathname === "/api/v1/matters/12" && call.method === "PATCH") {
+        patches.push(call.body);
+        saved = row({
+          ...saved,
+          customFields: {
+            ...saved.customFields,
+            ...(call.body as { customFields: Record<string, unknown> }).customFields,
+          },
+        });
+        return json(200, response());
+      }
+      return undefined;
+    },
+  });
+  renderAt("/matters/12");
+  const user = userEvent.setup();
+  const picker = await screen.findByRole("combobox", { name: "Budget currency" });
+  expect(screen.getByRole("textbox", { name: "Budget approved" })).toHaveValue("12,345.67");
+  await user.selectOptions(picker, "AED");
+  await waitFor(() => expect(patches).toEqual([{ customFields: { budget_currency: "AED" } }]));
+  expect(picker).toHaveValue("AED");
+  expect(screen.getByRole("textbox", { name: "Budget approved" })).toHaveValue("12,345.67");
 });

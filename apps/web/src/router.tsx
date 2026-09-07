@@ -39,6 +39,7 @@ import { PortalSettingsPage, portalSettingsLoader } from "./routes/portal-settin
 import { SetPasswordPage } from "./routes/set-password";
 import { SearchPage, searchLoader } from "./routes/search";
 import { SettingsLayout, settingsIndexLoader, settingsLoader } from "./routes/settings";
+import { SettingsAppViewPage, settingsAppViewLoader } from "./routes/settings-app-view";
 import { SettingsAppearancePage } from "./routes/settings-appearance";
 import {
   SettingsNotificationsPage,
@@ -335,6 +336,7 @@ export const routes: RouteObject[] = [
       { index: true, loader: settingsIndexLoader, element: <></> },
       { path: "profile", loader: settingsProfileLoader, element: <SettingsProfilePage /> },
       { path: "appearance", element: <SettingsAppearancePage /> },
+      { path: "app-view", loader: settingsAppViewLoader, element: <SettingsAppViewPage /> },
       {
         // #320: the ST3 pane, every signed-in person's own. No role
         // gate — a preference is addressed to one person, and the

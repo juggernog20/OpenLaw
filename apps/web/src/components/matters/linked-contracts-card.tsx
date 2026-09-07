@@ -5,7 +5,11 @@ import { useState } from "react";
 import { useRecord } from "../record-context";
 import { Link } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
-import { contractReference, STAGE_PILL } from "../../lib/contracts";
+import { contractReference, STAGE_PILL, type ContractTypeOption } from "../../lib/contracts";
+import { api } from "../../lib/api";
+import { readRegistry } from "../../lib/entities";
+import type { FieldReference } from "../custom-field-control";
+import { CreateContractDialog } from "../contracts/create-contract-dialog";
 import {
   readMatterContracts,
   unlinkContractMatter,
@@ -18,9 +22,11 @@ import { ContractMatterLinkDialog } from "../contracts/contract-matter-link-dial
 export function LinkedContractsCard({
   contracts,
   onContracts,
+  matterTitle,
 }: Readonly<{
   contracts: LinkedContract[];
   onContracts: (contracts: LinkedContract[]) => void;
+  matterTitle: string;
 }>) {
   const { record, confidential: matterIsConfidential, frozen } = useRecord();
   const matterNumber = record.number;
@@ -29,6 +35,44 @@ export function LinkedContractsCard({
   const [linking, setLinking] = useState(false);
   const [busyNumber, setBusyNumber] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loadingCreate, setLoadingCreate] = useState(false);
+  const [createOptions, setCreateOptions] = useState<{
+    contractTypes: ContractTypeOption[];
+    people: FieldReference[];
+    entities: FieldReference[];
+  } | null>(null);
+
+  async function openCreate() {
+    if (loadingCreate) return;
+    setLoadingCreate(true);
+    setError(null);
+    const [options, registry] = await Promise.all([
+      api.GET("/api/v1/contracts/options").catch(() => undefined),
+      readRegistry().catch(() => undefined),
+    ]);
+    if (options?.data && registry?.data) {
+      setCreateOptions({
+        contractTypes: options.data.contractTypes,
+        people: options.data.users.map((person) => ({
+          id: person.id,
+          label: person.displayName,
+          archived: person.archived,
+        })),
+        entities: registry.data.entities.map((entity) => ({
+          id: entity.id,
+          label: entity.legalName,
+        })),
+      });
+    } else {
+      setError(
+        intl.formatMessage({
+          id: "contractMatter.createOptions.error",
+          defaultMessage: "The contract form could not be loaded. Try New contract again.",
+        }),
+      );
+    }
+    setLoadingCreate(false);
+  }
 
   async function refresh() {
     const result = await readMatterContracts(matterNumber);
@@ -76,12 +120,17 @@ export function LinkedContractsCard({
           </span>
         </div>
         {editable && (
-          <Button variant="secondary" onClick={() => setLinking(true)}>
-            <FormattedMessage id="contractMatter.linkContract" defaultMessage="Link Contract" />
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" disabled={loadingCreate} onClick={() => void openCreate()}>
+              <FormattedMessage id="contractMatter.newContract" defaultMessage="New contract" />
+            </Button>
+            <Button variant="secondary" onClick={() => setLinking(true)}>
+              <FormattedMessage id="contractMatter.linkContract" defaultMessage="Link Contract" />
+            </Button>
+          </div>
         )}
       </header>
-      <div className="p-4">
+      <div className={contracts.length === 0 ? "p-4" : "px-4"}>
         {contracts.length === 0 ? (
           <p className="text-sm text-muted">
             <FormattedMessage
@@ -96,7 +145,7 @@ export function LinkedContractsCard({
                 <RestrictedRecordCell
                   key={`restricted-${index}`}
                   as="li"
-                  className="py-3"
+                  className="py-2"
                   label={{
                     id: "contractMatter.restrictedContract",
                     defaultMessage: "Restricted contract",
@@ -105,7 +154,7 @@ export function LinkedContractsCard({
               ) : (
                 <li
                   key={contract.number}
-                  className="flex min-w-0 flex-col gap-2 py-3 @sm/record:flex-row @sm/record:items-center"
+                  className="flex min-w-0 flex-col gap-2 py-2 @sm/record:flex-row @sm/record:items-center"
                 >
                   <Link
                     to={`/contracts/${contract.number}`}
@@ -134,7 +183,7 @@ export function LinkedContractsCard({
           </ul>
         )}
         {error && (
-          <p role="alert" className="mt-2 text-xs text-status-danger-fg">
+          <p role="alert" className="my-2 text-xs text-status-danger-fg">
             {error}
           </p>
         )}
@@ -146,6 +195,23 @@ export function LinkedContractsCard({
           anchorIsConfidential={matterIsConfidential}
           onClose={() => setLinking(false)}
           onLinked={() => void refresh()}
+        />
+      )}
+      {createOptions && editable && (
+        <CreateContractDialog
+          {...createOptions}
+          initialMatter={{
+            number: matterNumber,
+            title: matterTitle,
+            isConfidential: matterIsConfidential,
+          }}
+          onOpenChange={(open) => {
+            if (!open) setCreateOptions(null);
+          }}
+          onCreated={() => {
+            setCreateOptions(null);
+            void refresh();
+          }}
         />
       )}
     </section>

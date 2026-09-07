@@ -368,6 +368,31 @@ describe("the fixed Document repository filters", () => {
     expect(titles(await list({ uploadedTo: "2026-06-20" }))).toEqual(["Beta Word", "Alpha PDF"]);
   });
 
+  it("combines multiple values with OR within each filter and AND across filters", async () => {
+    const query = {
+      format: "pdf,word",
+      kind: "executed,draft_ours",
+      counterparty: `${counterpartyAId},${counterpartyBId}`,
+      uploader: `${memberId},${otherUploaderId}`,
+      uploadedTo: "2026-07-31",
+    };
+    expect(titles(await list(query))).toEqual(["Beta Word", "Alpha PDF"]);
+    expect(titles(await list({ ...query, counterparty: counterpartyAId }))).toEqual(["Alpha PDF"]);
+    expect(titles(await list({ ...query, uploader: otherUploaderId }))).toEqual(["Beta Word"]);
+    expect(titles(await list({ ...query, kind: "draft_ours,amendment" }))).toEqual(["Beta Word"]);
+    expect(titles(await list({ ...query, format: "pdf,image" }))).toEqual(["Alpha PDF"]);
+    const first = await list({ ...query, limit: "1" });
+    const second = await list({ ...query, limit: "1", cursor: first.nextCursor! });
+    expect([...titles(first), ...titles(second)]).toEqual(["Beta Word", "Alpha PDF"]);
+    expect(second.nextCursor).toBeNull();
+    expect(titles(await list({ format: "pdf,word", kind: "executed,draft_ours" }))).not.toContain(
+      "Archived document only",
+    );
+    expect(titles(await list({ format: "pdf,word", includeArchived: "true" }))).not.toContain(
+      "Archived owner only",
+    );
+  });
+
   it("composes filters with AND", async () => {
     expect(
       titles(
@@ -496,6 +521,11 @@ describe("the fixed Document repository filters", () => {
       { record: "M-abc" },
       { record: "C-99999999999" },
       { format: "spreadsheet" },
+      { format: "pdf,spreadsheet" },
+      { kind: "executed,final" },
+      { uploader: "u1,,u2" },
+      { counterparty: Array.from({ length: 51 }, (_, i) => `id${i}`).join(",") },
+      { uploadedFrom: "2026-07-02", uploadedTo: "2026-07-01" },
       { kind: "final" },
       { sort: "versions" },
       { sort: "title", dir: "sideways" },

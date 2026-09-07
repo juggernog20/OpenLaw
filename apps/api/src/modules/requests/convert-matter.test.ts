@@ -420,10 +420,11 @@ describe("the matter target", () => {
     const matter = await matterNumbered(res.json().request.convertedRecord.number as number);
     expect(matter).toMatchObject({
       title: "Meridian injunction threat",
+      description: "Please open this as legal work.",
       matterTypeId: ordinaryMatterTypeId,
       priority: "critical",
       risk: null,
-      managerId: null,
+      managerId: memberId,
       isConfidential: false,
       createdBy: memberId,
     });
@@ -446,6 +447,42 @@ describe("the matter target", () => {
     expect(
       await harness.db.select().from(matterKeyDates).where(eq(matterKeyDates.matterId, matter.id)),
     ).toEqual([]);
+  });
+
+  it("makes the converting person Matter Manager even when someone else was assigned to triage", async () => {
+    const request = await submit("Another person completes triage");
+    const assigned = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/requests/${request.number}/assignee`,
+      cookies: memberCookies,
+      payload: { assigneeId: memberId },
+    });
+    expect(assigned.statusCode, assigned.body).toBe(200);
+    const result = await convert(
+      request.number,
+      { title: "Converted by another person" },
+      otherMemberCookies,
+    );
+    expect(result.statusCode, result.body).toBe(200);
+    const matter = await matterNumbered(result.json().request.convertedRecord.number as number);
+    expect(matter.managerId).toBe(matter.createdBy);
+    expect(matter.managerId).not.toBe(memberId);
+    expect(matter.managerId).not.toBeNull();
+  });
+
+  it("clears a carried optional Field without restoring its template default", async () => {
+    const request = await submit("Clear the inherited value", boundRequestTypeId, {
+      [carrySlug]: "Original party",
+    });
+    const result = await convert(request.number, {
+      title: "New matter",
+      templateId,
+      customFields: { [carrySlug]: null },
+    });
+    expect(result.statusCode, result.body).toBe(200);
+    const matter = await matterNumbered(result.json().request.convertedRecord.number as number);
+    expect(matter.customFields).not.toHaveProperty(carrySlug);
+    expect((await cast.stored(request.id)).customFields[carrySlug]).toBe("Original party");
   });
 
   it("applies a template through ordinary creation with carried and triager values on top", async () => {
@@ -485,7 +522,7 @@ describe("the matter target", () => {
       {
         title: "Preserve evidence",
         dueDate: shiftDays(bornOn, 2),
-        assigneeId: null,
+        assigneeId: memberId,
         displayOrder: 0,
       },
       {
@@ -568,16 +605,23 @@ describe("the matter target", () => {
     }
   });
 
-  it("refuses a contradicted bound type and a body naming both modules", async () => {
-    const contradicted = await submit("The bound type wins");
+  it("accepts an edited matter type and priority but refuses a body naming both modules", async () => {
+    const original = await submit("Change the default type");
+    const result = await convert(original.number, {
+      title: "Revised matter",
+      matterTypeId: requiredMatterTypeId,
+      priority: "low",
+      customFields: { [requiredSlug]: "England" },
+    });
+    expect(result.statusCode, result.body).toBe(200);
     expect(
-      (
-        await convert(contradicted.number, {
-          title: "Wrong type",
-          matterTypeId: requiredMatterTypeId,
-        })
-      ).statusCode,
-    ).toBe(400);
+      await matterNumbered(result.json().request.convertedRecord.number as number),
+    ).toMatchObject({
+      title: "Revised matter",
+      matterTypeId: requiredMatterTypeId,
+      priority: "low",
+      customFields: { [requiredSlug]: "England" },
+    });
     const both = await submit("One module only");
     const before = await matterCount();
     const res = await convert(both.number, {
@@ -783,6 +827,7 @@ describe("paper follows onto the matter (INT-002, DOC-008)", () => {
       expect(document.isPrimary).toBe(false);
       expect(document.versions).toHaveLength(1);
       expect(document.versions[0]).toMatchObject({
+        kind: "general",
         versionNumber: 1,
         originalFilename: file.filename,
         byteSize: file.content.byteLength,

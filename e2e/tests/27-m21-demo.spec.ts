@@ -561,20 +561,20 @@ test.describe.serial("M21 demo path", () => {
       const dialog = page.getByRole("dialog", { name: `Convert ${reference} to a contract` });
       await expect(dialog).toBeVisible();
 
-      // I3's prefill, whole (INT-002, MTR-012): the summary as the
-      // title, the routing stated rather than offered, the urgency
-      // mapped 1:1 to priority with no risk beside it, and the collected
-      // value named as carrying.
+      // INT-002's UX addendum: routing and carried values are editable,
+      // with the Request's defaults populated before conversion.
       await expect(dialog.getByLabel(/^Title/)).toHaveValue(SUMMARY);
       await expect(dialog.getByText(`${REQUEST_TYPE_NAME} · submitted by`)).toBeVisible();
-      await expect(dialog.getByText(CONTRACT_TYPE_NAME, { exact: true })).toBeVisible();
-      await expect(
-        dialog.getByText("Set by the request type. Triage confirms the routing rather than"),
-      ).toBeVisible();
-      await expect(dialog.getByText("Carries into the contract")).toBeVisible();
-      await expect(dialog.getByText(FIELD_NAME, { exact: true })).toBeVisible();
-      await expect(dialog.getByText(FIELD_ANSWER)).toBeVisible();
-      await expect(dialog.getByText(/Risk stays yours to set on the record/)).toBeVisible();
+      const targetType = dialog.getByRole("combobox", { name: "Contract type", exact: true });
+      await expect(targetType).toHaveValue(targetTypeId);
+      await expect(targetType).toBeEnabled();
+      await expect(dialog.getByRole("combobox", { name: "Priority", exact: true })).toHaveValue(
+        "high",
+      );
+      const carriedField = dialog.getByRole("textbox", { name: FIELD_NAME, exact: true });
+      await expect(carriedField).toHaveValue(FIELD_ANSWER);
+      await expect(carriedField).toBeEditable();
+      await expect(dialog.getByRole("combobox", { name: "Risk", exact: true })).toHaveCount(0);
 
       const converted = page.waitForResponse(
         (response) =>
@@ -587,12 +587,12 @@ test.describe.serial("M21 demo path", () => {
 
       // The Request now states what became of it, and the reference is
       // one click from the ask (INT-007).
-      const outcome = page.getByRole("region", { name: "Outcome" });
+      const outcome = page.getByRole("region", { name: "Status", exact: true });
       await expect(outcome.getByText("Converted")).toBeVisible();
       const contractLink = outcome.getByRole("link", { name: /^C-\d+$/ });
       await expect(contractLink).toBeVisible();
       const became = /C-(\d+)/.exec((await contractLink.textContent()) ?? "");
-      expect(became, "the Outcome card names no C-###").not.toBeNull();
+      expect(became, "the Status card names no C-###").not.toBeNull();
       const contractNumber = Number(became![1]);
       // A decided Request no longer offers the Triage menu.
       await expect(page.getByRole("button", { name: "Triage", exact: true })).toHaveCount(0);

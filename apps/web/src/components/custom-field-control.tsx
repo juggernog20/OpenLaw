@@ -22,6 +22,7 @@ import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
 import type { AttachedField, CustomFieldDraft } from "../lib/custom-fields";
 import { Checkbox } from "./ui/checkbox";
 import { Input } from "./ui/input";
+import { NumberInput } from "./number-input";
 import { Switch } from "./ui/switch";
 import { RestrictedRecordCell } from "./restricted-record-cell";
 
@@ -96,12 +97,10 @@ export function CustomFieldControl({
       );
     case "number":
       return (
-        <Input
+        <NumberInput
           {...shared}
-          type="number"
-          inputMode="decimal"
           value={text}
-          onChange={(event) => onDraft(event.target.value)}
+          onValueChange={onDraft}
           onBlur={onBlur}
           onKeyDown={onKeyDown}
         />

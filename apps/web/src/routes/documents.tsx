@@ -17,8 +17,6 @@ import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
 import { problem } from "../lib/problem";
 import {
-  DOCUMENT_REPOSITORY_FORMATS,
-  DOCUMENT_REPOSITORY_KINDS,
   DOCUMENT_REPOSITORY_SORT_KEYS,
   documentLandingPath,
   documentOwnerReference,
@@ -26,7 +24,6 @@ import {
   documentRepositoryFilters,
   readDocumentOptions,
   restoreDocument,
-  type DocumentRepositoryFilters,
   type RepositoryDocument,
 } from "../lib/documents";
 import {
@@ -154,12 +151,12 @@ function layoutFromSearch(base: Layout, search: string): { layout: Layout; fromU
     const folder = params.get("folder");
     if (folder) filters.folder = folder;
   }
-  const format = params.get("format");
-  if (DOCUMENT_REPOSITORY_FORMATS.some((candidate) => candidate === format)) {
-    filters.format = format!;
-  }
-  const kind = params.get("kind");
-  if (DOCUMENT_REPOSITORY_KINDS.some((candidate) => candidate === kind)) filters.kind = kind!;
+  const choices = documentRepositoryFilters({
+    format: params.get("format") ?? "",
+    kind: params.get("kind") ?? "",
+  });
+  if (choices.format) filters.format = choices.format;
+  if (choices.kind) filters.kind = choices.kind;
   const counterparty = params.get("counterparty");
   if (counterparty) filters.counterparty = counterparty;
   const uploader = params.get("uploader");
@@ -315,19 +312,26 @@ function DocumentsPageState() {
     mirrorSearch(navigate, querySearch(allowed));
   }
 
-  function setFilter<K extends keyof DocumentRepositoryFilters>(
-    key: K,
-    value: DocumentRepositoryFilters[K],
-  ) {
-    const next = { ...layout.filters, [key]: value };
-    if (key === "record") next.folder = "";
-    if (key === "owner" && value) {
-      const record = documentRecordReference(filters.record, filters.owner || undefined);
-      if (record && record.entityType !== value) {
-        next.record = "";
-        next.folder = "";
-      }
+  function setFilters(values: Layout["filters"]) {
+    const next = { ...values };
+    if (next.record !== filters.record) delete next.folder;
+    const selectedRecord = loaded.options.records.find(
+      (record) => record.reference === next.record,
+    );
+    const recordOwner =
+      selectedRecord?.kind ??
+      documentRecordReference(String(next.record ?? ""), filters.owner || undefined)?.entityType;
+    if (
+      (next.owner && recordOwner && next.owner !== recordOwner) ||
+      (!next.owner && filters.owner === "knowledge_item" && recordOwner === "knowledge_item")
+    ) {
+      delete next.record;
+      delete next.folder;
+    } else if (recordOwner === "knowledge_item") {
+      next.owner = "knowledge_item";
+      delete next.folder;
     }
+    if (!next.record) delete next.folder;
     void commit({ ...layout, filters: next });
   }
 
@@ -449,11 +453,9 @@ function DocumentsPageState() {
               filters={filters}
               options={loaded.options}
               busy={busy}
-              empty={rows.length === 0}
               error={listError}
               canManage={loaded.canManage}
-              onFilter={setFilter}
-              onClear={clearFilters}
+              onChange={setFilters}
             />
           }
         />

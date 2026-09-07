@@ -109,7 +109,10 @@ function customFieldsFor(plan, fields, attached, random) {
       ? random.pick(["Meyer and Roth LLP", "Ashworth Bell Solicitors", "Whitcombe Employment Law"])
       : null,
   );
-  if (random.chance(0.4)) set("Budget approved", random.int(5, 180) * 1000);
+  if (random.chance(0.4)) {
+    set("Budget approved", random.int(5, 180) * 1000);
+    set("Budget currency", "USD");
+  }
   // Required on regulatory matters, so it always has to be answered there.
   if (["regulatory", "privacy"].includes(plan.kind.typeSlug)) {
     set(
@@ -153,7 +156,15 @@ export async function seedMatters(admin, context, log) {
     const matter = made.matter;
     const at = `/api/v1/matters/${matter.number}`;
 
-    await author.patch(at, { statusId: statusFor(plan.category, taxonomy, random).id });
+    await author.patch(at, {
+      statusId: statusFor(plan.category, taxonomy, random).id,
+      ...(plan.category === "closed"
+        ? {
+            closingNote:
+              "Work completed and advice delivered to the business. No further action required.",
+          }
+        : {}),
+    });
 
     // A task can only be assigned to somebody on the Matter (MTR-005), so
     // the team is remembered as it is built and the assignees come from it.

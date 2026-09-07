@@ -946,6 +946,23 @@ export interface paths {
     patch: operations["renameMatterStatus"];
     trace?: never;
   };
+  "/api/v1/matter-statuses/{id}/progression-group": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Set the progression group for an open matter status */
+    put: operations["setMatterStatusProgressionGroup"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/matter-statuses/order": {
     parameters: {
       query?: never;
@@ -1947,7 +1964,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage confirms a live bound type, supplies a type for a module-only or archived target, or explicitly Re-targets by naming the other module's type. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request summary, urgency carried to priority, risk unset, no manager, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. Matter conversions may apply a live template for the confirmed type; carried values and triager answers override its defaults. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Request remains the Requester's window. Member+ only */
+    /** Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage may override the configured type or Re-target to the other module. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request summary, urgency defaulting priority unless overridden, the Request description, risk unset, the converting person as Matter Manager, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. Matter conversions may apply a live template for the confirmed type; carried values and triager answers override its defaults. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Request remains the Requester's window. Member+ only */
     post: operations["convertRequest"];
     delete?: never;
     options?: never;
@@ -8160,6 +8177,8 @@ export interface operations {
               displayName: string;
               /** @enum {string} */
               category: "open" | "closed";
+              /** @enum {string} */
+              progressionGroup: "open" | "in_progress" | "waiting";
               displayOrder: number;
               isSystemDefault: boolean;
               archivedAt: string | null;
@@ -8192,6 +8211,11 @@ export interface operations {
           displayName: string;
           /** @enum {string} */
           category: "open" | "closed";
+          /**
+           * @default in_progress
+           * @enum {string}
+           */
+          progressionGroup?: "open" | "in_progress" | "waiting";
         };
       };
     };
@@ -8209,6 +8233,8 @@ export interface operations {
               displayName: string;
               /** @enum {string} */
               category: "open" | "closed";
+              /** @enum {string} */
+              progressionGroup: "open" | "in_progress" | "waiting";
               displayOrder: number;
               isSystemDefault: boolean;
               archivedAt: string | null;
@@ -8287,6 +8313,60 @@ export interface operations {
               displayName: string;
               /** @enum {string} */
               category: "open" | "closed";
+              /** @enum {string} */
+              progressionGroup: "open" | "in_progress" | "waiting";
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  setMatterStatusProgressionGroup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          progressionGroup: "open" | "in_progress" | "waiting";
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterStatus: {
+              id: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              category: "open" | "closed";
+              /** @enum {string} */
+              progressionGroup: "open" | "in_progress" | "waiting";
               displayOrder: number;
               isSystemDefault: boolean;
               archivedAt: string | null;
@@ -8334,6 +8414,8 @@ export interface operations {
               displayName: string;
               /** @enum {string} */
               category: "open" | "closed";
+              /** @enum {string} */
+              progressionGroup: "open" | "in_progress" | "waiting";
               displayOrder: number;
               isSystemDefault: boolean;
               archivedAt: string | null;
@@ -8383,6 +8465,8 @@ export interface operations {
               displayName: string;
               /** @enum {string} */
               category: "open" | "closed";
+              /** @enum {string} */
+              progressionGroup: "open" | "in_progress" | "waiting";
               displayOrder: number;
               isSystemDefault: boolean;
               archivedAt: string | null;
@@ -8426,6 +8510,8 @@ export interface operations {
               displayName: string;
               /** @enum {string} */
               category: "open" | "closed";
+              /** @enum {string} */
+              progressionGroup: "open" | "in_progress" | "waiting";
               displayOrder: number;
               isSystemDefault: boolean;
               archivedAt: string | null;
@@ -8490,6 +8576,8 @@ export interface operations {
               statusName: string;
               /** @enum {string} */
               statusCategory: "open" | "closed";
+              /** @enum {string} */
+              statusProgressionGroup: "open" | "in_progress" | "waiting";
               manager: {
                 id: string;
                 displayName: string;
@@ -8515,6 +8603,9 @@ export interface operations {
                 /** Format: date */
                 date: string;
                 label: string;
+                /** @enum {string} */
+                source: "task" | "key_date";
+                unverified?: boolean;
               } | null;
             }[];
             total: number;
@@ -8582,6 +8673,8 @@ export interface operations {
               statusName: string;
               /** @enum {string} */
               statusCategory: "open" | "closed";
+              /** @enum {string} */
+              statusProgressionGroup: "open" | "in_progress" | "waiting";
               manager: {
                 id: string;
                 displayName: string;
@@ -8607,6 +8700,9 @@ export interface operations {
                 /** Format: date */
                 date: string;
                 label: string;
+                /** @enum {string} */
+                source: "task" | "key_date";
+                unverified?: boolean;
               } | null;
             };
           };
@@ -8727,6 +8823,8 @@ export interface operations {
               displayName: string;
               /** @enum {string} */
               category: "open" | "closed";
+              /** @enum {string} */
+              progressionGroup: "open" | "in_progress" | "waiting";
             }[];
             users: {
               id: string;
@@ -8779,6 +8877,8 @@ export interface operations {
               statusName: string;
               /** @enum {string} */
               statusCategory: "open" | "closed";
+              /** @enum {string} */
+              statusProgressionGroup: "open" | "in_progress" | "waiting";
               manager: {
                 id: string;
                 displayName: string;
@@ -8804,6 +8904,9 @@ export interface operations {
                 /** Format: date */
                 date: string;
                 label: string;
+                /** @enum {string} */
+                source: "task" | "key_date";
+                unverified?: boolean;
               } | null;
             };
             fields: {
@@ -8894,6 +8997,9 @@ export interface operations {
             [key: string]: (string | number | boolean | string[]) | null;
           };
           statusId?: string;
+          closingNote?: string;
+          /** @enum {boolean} */
+          confirmReopen?: true;
           isConfidential?: boolean;
         };
       };
@@ -8917,6 +9023,8 @@ export interface operations {
               statusName: string;
               /** @enum {string} */
               statusCategory: "open" | "closed";
+              /** @enum {string} */
+              statusProgressionGroup: "open" | "in_progress" | "waiting";
               manager: {
                 id: string;
                 displayName: string;
@@ -8942,6 +9050,9 @@ export interface operations {
                 /** Format: date */
                 date: string;
                 label: string;
+                /** @enum {string} */
+                source: "task" | "key_date";
+                unverified?: boolean;
               } | null;
             };
             fields: {
@@ -8994,6 +9105,29 @@ export interface operations {
               archived: boolean;
               /** @enum {string} */
               role: "member" | "watcher" | "creator" | "contributor";
+            }[];
+          };
+        };
+      };
+      /** @description Reopening requires explicit confirmation */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type: "urn:openlaw:problem:matter-reopen-confirmation" | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
             }[];
           };
         };
@@ -9180,6 +9314,8 @@ export interface operations {
               statusName: string;
               /** @enum {string} */
               statusCategory: "open" | "closed";
+              /** @enum {string} */
+              statusProgressionGroup: "open" | "in_progress" | "waiting";
               manager: {
                 id: string;
                 displayName: string;
@@ -9205,6 +9341,9 @@ export interface operations {
                 /** Format: date */
                 date: string;
                 label: string;
+                /** @enum {string} */
+                source: "task" | "key_date";
+                unverified?: boolean;
               } | null;
             };
           };
@@ -9250,6 +9389,8 @@ export interface operations {
               statusName: string;
               /** @enum {string} */
               statusCategory: "open" | "closed";
+              /** @enum {string} */
+              statusProgressionGroup: "open" | "in_progress" | "waiting";
               manager: {
                 id: string;
                 displayName: string;
@@ -9275,6 +9416,9 @@ export interface operations {
                 /** Format: date */
                 date: string;
                 label: string;
+                /** @enum {string} */
+                source: "task" | "key_date";
+                unverified?: boolean;
               } | null;
             };
           };
@@ -13024,6 +13168,8 @@ export interface operations {
           customFields?: {
             [key: string]: (string | number | boolean | string[]) | null;
           };
+          /** @enum {string} */
+          priority?: "low" | "medium" | "high" | "critical";
         };
       };
     };
@@ -13088,7 +13234,7 @@ export interface operations {
           };
         };
       };
-      /** @description The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again; and, where that decision was a conversion this caller may reach, `convertedRecord`: the module and permanent number it became. There is no unnamed 409 on this route — an archived Request answers 404, and a missing title, a contradicted target, or an unfilled hard-required field answers 400. */
+      /** @description The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again; and, where that decision was a conversion this caller may reach, `convertedRecord`: the module and permanent number it became. There is no unnamed 409 on this route — an archived Request answers 404, and a missing title, an invalid target, or an unfilled hard-required field answers 400. */
       409: {
         headers: {
           [name: string]: unknown;
@@ -13828,6 +13974,14 @@ export interface operations {
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
               description: string | null;
+              nextDeadline: {
+                /** Format: date */
+                date: string;
+                label: string;
+                /** @enum {string} */
+                source: "task" | "key_date";
+                unverified?: boolean;
+              } | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -13949,6 +14103,14 @@ export interface operations {
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
               description: string | null;
+              nextDeadline: {
+                /** Format: date */
+                date: string;
+                label: string;
+                /** @enum {string} */
+                source: "task" | "key_date";
+                unverified?: boolean;
+              } | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -14199,6 +14361,14 @@ export interface operations {
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
               description: string | null;
+              nextDeadline: {
+                /** Format: date */
+                date: string;
+                label: string;
+                /** @enum {string} */
+                source: "task" | "key_date";
+                unverified?: boolean;
+              } | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -14448,6 +14618,14 @@ export interface operations {
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
               description: string | null;
+              nextDeadline: {
+                /** Format: date */
+                date: string;
+                label: string;
+                /** @enum {string} */
+                source: "task" | "key_date";
+                unverified?: boolean;
+              } | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -14650,6 +14828,14 @@ export interface operations {
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
               description: string | null;
+              nextDeadline: {
+                /** Format: date */
+                date: string;
+                label: string;
+                /** @enum {string} */
+                source: "task" | "key_date";
+                unverified?: boolean;
+              } | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -14754,6 +14940,14 @@ export interface operations {
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
               description: string | null;
+              nextDeadline: {
+                /** Format: date */
+                date: string;
+                label: string;
+                /** @enum {string} */
+                source: "task" | "key_date";
+                unverified?: boolean;
+              } | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -14867,6 +15061,14 @@ export interface operations {
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
               description: string | null;
+              nextDeadline: {
+                /** Format: date */
+                date: string;
+                label: string;
+                /** @enum {string} */
+                source: "task" | "key_date";
+                unverified?: boolean;
+              } | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -15106,6 +15308,14 @@ export interface operations {
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
               description: string | null;
+              nextDeadline: {
+                /** Format: date */
+                date: string;
+                label: string;
+                /** @enum {string} */
+                source: "task" | "key_date";
+                unverified?: boolean;
+              } | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -15217,6 +15427,14 @@ export interface operations {
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
               description: string | null;
+              nextDeadline: {
+                /** Format: date */
+                date: string;
+                label: string;
+                /** @enum {string} */
+                source: "task" | "key_date";
+                unverified?: boolean;
+              } | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -15328,6 +15546,14 @@ export interface operations {
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
               description: string | null;
+              nextDeadline: {
+                /** Format: date */
+                date: string;
+                label: string;
+                /** @enum {string} */
+                source: "task" | "key_date";
+                unverified?: boolean;
+              } | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -15438,6 +15664,14 @@ export interface operations {
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
               description: string | null;
+              nextDeadline: {
+                /** Format: date */
+                date: string;
+                label: string;
+                /** @enum {string} */
+                source: "task" | "key_date";
+                unverified?: boolean;
+              } | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -15542,6 +15776,14 @@ export interface operations {
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
               description: string | null;
+              nextDeadline: {
+                /** Format: date */
+                date: string;
+                label: string;
+                /** @enum {string} */
+                source: "task" | "key_date";
+                unverified?: boolean;
+              } | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -17660,15 +17902,8 @@ export interface operations {
         folder?: string;
         counterparty?: string;
         uploader?: string;
-        format?: "pdf" | "word" | "powerpoint" | "image" | "email" | "other";
-        kind?:
-          | "draft_ours"
-          | "draft_theirs"
-          | "redline_theirs"
-          | "redline_ours"
-          | "executed"
-          | "amendment"
-          | "generated_redline";
+        format?: string;
+        kind?: string;
         uploadedFrom?: string;
         uploadedTo?: string;
         includeArchived?: "true" | "false";
@@ -17713,6 +17948,7 @@ export interface operations {
                 versionNumber: number;
                 /** @enum {string} */
                 kind:
+                  | "general"
                   | "draft_ours"
                   | "draft_theirs"
                   | "redline_theirs"
@@ -17823,6 +18059,7 @@ export interface operations {
                 versionNumber: number;
                 /** @enum {string} */
                 kind:
+                  | "general"
                   | "draft_ours"
                   | "draft_theirs"
                   | "redline_theirs"
@@ -17899,10 +18136,11 @@ export interface operations {
            */
           file: string;
           /**
-           * @description What this version is in the negotiation (CTR-014). Defaults to `draft_ours`. Must be sent before the file part.
+           * @description What this version is in the negotiation (CTR-014), or `general` for Matter documents. Defaults to `general` on Matters and `draft_ours` otherwise. Must be sent before the file part.
            * @enum {string}
            */
           kind?:
+            | "general"
             | "draft_ours"
             | "draft_theirs"
             | "redline_theirs"
@@ -17932,6 +18170,7 @@ export interface operations {
                 versionNumber: number;
                 /** @enum {string} */
                 kind:
+                  | "general"
                   | "draft_ours"
                   | "draft_theirs"
                   | "redline_theirs"
@@ -18021,6 +18260,7 @@ export interface operations {
                 versionNumber: number;
                 /** @enum {string} */
                 kind:
+                  | "general"
                   | "draft_ours"
                   | "draft_theirs"
                   | "redline_theirs"
@@ -18097,10 +18337,11 @@ export interface operations {
            */
           file: string;
           /**
-           * @description What this version is in the negotiation (CTR-014). Defaults to `draft_ours`. Must be sent before the file part.
+           * @description What this version is in the negotiation (CTR-014), or `general` for Matter documents. Defaults to `general` on Matters and `draft_ours` otherwise. Must be sent before the file part.
            * @enum {string}
            */
           kind?:
+            | "general"
             | "draft_ours"
             | "draft_theirs"
             | "redline_theirs"
@@ -18134,6 +18375,7 @@ export interface operations {
                 versionNumber: number;
                 /** @enum {string} */
                 kind:
+                  | "general"
                   | "draft_ours"
                   | "draft_theirs"
                   | "redline_theirs"
@@ -18223,6 +18465,7 @@ export interface operations {
                 versionNumber: number;
                 /** @enum {string} */
                 kind:
+                  | "general"
                   | "draft_ours"
                   | "draft_theirs"
                   | "redline_theirs"
@@ -18299,10 +18542,11 @@ export interface operations {
            */
           file: string;
           /**
-           * @description What this version is in the negotiation (CTR-014). Defaults to `draft_ours`. Must be sent before the file part.
+           * @description What this version is in the negotiation (CTR-014), or `general` for Matter documents. Defaults to `general` on Matters and `draft_ours` otherwise. Must be sent before the file part.
            * @enum {string}
            */
           kind?:
+            | "general"
             | "draft_ours"
             | "draft_theirs"
             | "redline_theirs"
@@ -18336,6 +18580,7 @@ export interface operations {
                 versionNumber: number;
                 /** @enum {string} */
                 kind:
+                  | "general"
                   | "draft_ours"
                   | "draft_theirs"
                   | "redline_theirs"
@@ -18425,6 +18670,7 @@ export interface operations {
                 versionNumber: number;
                 /** @enum {string} */
                 kind:
+                  | "general"
                   | "draft_ours"
                   | "draft_theirs"
                   | "redline_theirs"
@@ -18501,10 +18747,11 @@ export interface operations {
            */
           file: string;
           /**
-           * @description What this version is in the negotiation (CTR-014). Defaults to `draft_ours`. Must be sent before the file part.
+           * @description What this version is in the negotiation (CTR-014), or `general` for Matter documents. Defaults to `general` on Matters and `draft_ours` otherwise. Must be sent before the file part.
            * @enum {string}
            */
           kind?:
+            | "general"
             | "draft_ours"
             | "draft_theirs"
             | "redline_theirs"
@@ -18538,6 +18785,7 @@ export interface operations {
                 versionNumber: number;
                 /** @enum {string} */
                 kind:
+                  | "general"
                   | "draft_ours"
                   | "draft_theirs"
                   | "redline_theirs"
@@ -18613,10 +18861,11 @@ export interface operations {
            */
           file: string;
           /**
-           * @description What this version is in the negotiation (CTR-014). Defaults to `draft_ours`. Must be sent before the file part.
+           * @description What this version is in the negotiation (CTR-014), or `general` for Matter documents. Defaults to `general` on Matters and `draft_ours` otherwise. Must be sent before the file part.
            * @enum {string}
            */
           kind?:
+            | "general"
             | "draft_ours"
             | "draft_theirs"
             | "redline_theirs"
@@ -18646,6 +18895,7 @@ export interface operations {
                 versionNumber: number;
                 /** @enum {string} */
                 kind:
+                  | "general"
                   | "draft_ours"
                   | "draft_theirs"
                   | "redline_theirs"
@@ -18718,6 +18968,7 @@ export interface operations {
         "application/json": {
           /** @enum {string} */
           kind:
+            | "general"
             | "draft_ours"
             | "draft_theirs"
             | "redline_theirs"
@@ -18745,6 +18996,7 @@ export interface operations {
                 versionNumber: number;
                 /** @enum {string} */
                 kind:
+                  | "general"
                   | "draft_ours"
                   | "draft_theirs"
                   | "redline_theirs"
@@ -18836,6 +19088,7 @@ export interface operations {
                 versionNumber: number;
                 /** @enum {string} */
                 kind:
+                  | "general"
                   | "draft_ours"
                   | "draft_theirs"
                   | "redline_theirs"
@@ -18931,6 +19184,7 @@ export interface operations {
                 versionNumber: number;
                 /** @enum {string} */
                 kind:
+                  | "general"
                   | "draft_ours"
                   | "draft_theirs"
                   | "redline_theirs"
@@ -19021,6 +19275,7 @@ export interface operations {
                 versionNumber: number;
                 /** @enum {string} */
                 kind:
+                  | "general"
                   | "draft_ours"
                   | "draft_theirs"
                   | "redline_theirs"
@@ -19055,6 +19310,7 @@ export interface operations {
                 versionNumber: number;
                 /** @enum {string} */
                 kind:
+                  | "general"
                   | "draft_ours"
                   | "draft_theirs"
                   | "redline_theirs"
@@ -19125,6 +19381,7 @@ export interface operations {
                   versionNumber: number;
                   /** @enum {string} */
                   kind:
+                    | "general"
                     | "draft_ours"
                     | "draft_theirs"
                     | "redline_theirs"
@@ -19211,6 +19468,7 @@ export interface operations {
                 versionNumber: number;
                 /** @enum {string} */
                 kind:
+                  | "general"
                   | "draft_ours"
                   | "draft_theirs"
                   | "redline_theirs"
@@ -19245,6 +19503,7 @@ export interface operations {
                 versionNumber: number;
                 /** @enum {string} */
                 kind:
+                  | "general"
                   | "draft_ours"
                   | "draft_theirs"
                   | "redline_theirs"
@@ -19315,6 +19574,7 @@ export interface operations {
                   versionNumber: number;
                   /** @enum {string} */
                   kind:
+                    | "general"
                     | "draft_ours"
                     | "draft_theirs"
                     | "redline_theirs"
@@ -19372,6 +19632,7 @@ export interface operations {
                 versionNumber: number;
                 /** @enum {string} */
                 kind:
+                  | "general"
                   | "draft_ours"
                   | "draft_theirs"
                   | "redline_theirs"
@@ -19406,6 +19667,7 @@ export interface operations {
                 versionNumber: number;
                 /** @enum {string} */
                 kind:
+                  | "general"
                   | "draft_ours"
                   | "draft_theirs"
                   | "redline_theirs"
@@ -19476,6 +19738,7 @@ export interface operations {
                   versionNumber: number;
                   /** @enum {string} */
                   kind:
+                    | "general"
                     | "draft_ours"
                     | "draft_theirs"
                     | "redline_theirs"
@@ -19556,6 +19819,7 @@ export interface operations {
                 versionNumber: number;
                 /** @enum {string} */
                 kind:
+                  | "general"
                   | "draft_ours"
                   | "draft_theirs"
                   | "redline_theirs"
@@ -19590,6 +19854,7 @@ export interface operations {
                 versionNumber: number;
                 /** @enum {string} */
                 kind:
+                  | "general"
                   | "draft_ours"
                   | "draft_theirs"
                   | "redline_theirs"
@@ -19660,6 +19925,7 @@ export interface operations {
                   versionNumber: number;
                   /** @enum {string} */
                   kind:
+                    | "general"
                     | "draft_ours"
                     | "draft_theirs"
                     | "redline_theirs"
@@ -19733,6 +19999,7 @@ export interface operations {
               versionNumber: number;
               /** @enum {string} */
               kind:
+                | "general"
                 | "draft_ours"
                 | "draft_theirs"
                 | "redline_theirs"
@@ -19777,6 +20044,7 @@ export interface operations {
               versionNumber: number;
               /** @enum {string} */
               kind:
+                | "general"
                 | "draft_ours"
                 | "draft_theirs"
                 | "redline_theirs"
@@ -19848,6 +20116,7 @@ export interface operations {
                 versionNumber: number;
                 /** @enum {string} */
                 kind:
+                  | "general"
                   | "draft_ours"
                   | "draft_theirs"
                   | "redline_theirs"
@@ -19940,6 +20209,7 @@ export interface operations {
                 versionNumber: number;
                 /** @enum {string} */
                 kind:
+                  | "general"
                   | "draft_ours"
                   | "draft_theirs"
                   | "redline_theirs"
@@ -20025,6 +20295,7 @@ export interface operations {
                 versionNumber: number;
                 /** @enum {string} */
                 kind:
+                  | "general"
                   | "draft_ours"
                   | "draft_theirs"
                   | "redline_theirs"
@@ -20110,6 +20381,7 @@ export interface operations {
                 versionNumber: number;
                 /** @enum {string} */
                 kind:
+                  | "general"
                   | "draft_ours"
                   | "draft_theirs"
                   | "redline_theirs"
@@ -20195,6 +20467,7 @@ export interface operations {
                 versionNumber: number;
                 /** @enum {string} */
                 kind:
+                  | "general"
                   | "draft_ours"
                   | "draft_theirs"
                   | "redline_theirs"
@@ -21194,6 +21467,7 @@ export interface operations {
               destination: "new_document";
               /** @enum {string} */
               kind:
+                | "general"
                 | "draft_ours"
                 | "draft_theirs"
                 | "redline_theirs"
@@ -21209,6 +21483,7 @@ export interface operations {
               documentId: string;
               /** @enum {string} */
               kind:
+                | "general"
                 | "draft_ours"
                 | "draft_theirs"
                 | "redline_theirs"
@@ -26383,6 +26658,9 @@ export interface operations {
                       /** Format: date */
                       date: string;
                       label: string;
+                      /** @enum {string} */
+                      source: "task" | "key_date";
+                      unverified?: boolean;
                     } | null;
                   }[];
                 }

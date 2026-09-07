@@ -263,7 +263,7 @@ describe("the record's Tasks section (CTR-017)", () => {
     const user = userEvent.setup();
     await user.click((await section()).getByRole("button", { name: "Add task" }));
     const form = within(screen.getByRole("dialog", { name: "Add a task" }));
-    await user.type(form.getByLabelText("Title"), "Draft strategy");
+    await user.type(form.getByLabelText(/^Title\*?$/), "Draft strategy");
     await user.click(form.getByLabelText("Assignee"));
     await user.click(
       within(screen.getByRole("dialog", { name: "Assign task" })).getByRole("button", {
@@ -326,7 +326,7 @@ describe("the record's Tasks section (CTR-017)", () => {
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: "Add task" }));
 
-    await user.type(screen.getByLabelText("Title"), "Draft the brief");
+    await user.type(screen.getByLabelText(/^Title\*?$/), "Draft the brief");
     await user.click(screen.getByRole("button", { name: "Add task", hidden: false }));
 
     await waitFor(() => expect(api.writes).toHaveLength(1));
@@ -350,7 +350,7 @@ describe("the record's Tasks section (CTR-017)", () => {
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent("Name what needs doing.");
     expect(api.writes).toHaveLength(0);
-    const title = screen.getByLabelText("Title");
+    const title = screen.getByLabelText(/^Title\*?$/);
     expect(title).toHaveAttribute("aria-invalid", "true");
     expect(title).toHaveAttribute("aria-describedby", alert.id);
   });
@@ -363,7 +363,7 @@ describe("the record's Tasks section (CTR-017)", () => {
 
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: "Add task" }));
-    await user.type(screen.getByLabelText("Title"), "Draft the brief");
+    await user.type(screen.getByLabelText(/^Title\*?$/), "Draft the brief");
     await user.click(screen.getByRole("button", { name: "Add task", hidden: false }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -382,10 +382,10 @@ describe("the record's Tasks section (CTR-017)", () => {
     await user.click(card.getByRole("button", { name: "Actions for Draft the NDA" }));
     await user.click(await screen.findByRole("menuitem", { name: "Edit task" }));
 
-    expect(screen.getByLabelText("Title")).toHaveValue("Draft the NDA");
+    expect(screen.getByLabelText(/^Title\*?$/)).toHaveValue("Draft the NDA");
 
-    await user.clear(screen.getByLabelText("Title"));
-    await user.type(screen.getByLabelText("Title"), "Draft the brief");
+    await user.clear(screen.getByLabelText(/^Title\*?$/));
+    await user.type(screen.getByLabelText(/^Title\*?$/), "Draft the brief");
     await user.click(screen.getByRole("button", { name: "Save" }));
 
     await waitFor(() => expect(api.writes).toHaveLength(1));
@@ -513,7 +513,7 @@ it("stages new team membership until Save and discards it on Cancel", async () =
   const card = await section();
   await user.click(card.getByRole("button", { name: "Add task" }));
   const form = within(screen.getByRole("dialog", { name: "Add a task" }));
-  await user.type(form.getByLabelText("Title"), "Draft strategy");
+  await user.type(form.getByLabelText(/^Title\*?$/), "Draft strategy");
   await user.click(form.getByLabelText("Assignee"));
   const picker = within(screen.getByRole("dialog", { name: "Assign task" }));
   await user.click(picker.getByRole("button", { name: "Add someone to the team…" }));

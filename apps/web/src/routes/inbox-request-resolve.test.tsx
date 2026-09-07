@@ -66,13 +66,13 @@ describe("the disposition surface (INT-007, DES-058)", () => {
   });
 
   it("offers nothing once the Request has been decided", async () => {
-    // A decided Request has nothing left to decide, and the Outcome card
+    // A decided Request has nothing left to decide, and the Status card
     // is what says what was decided.
     stubApi({ signedIn: MEMBER, extra: requestApi(request({ status: "resolved" })).handler });
     renderAt("/inbox/45");
 
     expect(within(await subbar()).queryByRole("button", { name: "Triage" })).toBeNull();
-    const outcome = await screen.findByRole("region", { name: "Outcome" });
+    const outcome = await screen.findByRole("region", { name: "Status" });
     expect(within(outcome).getByText("Resolved")).toBeInTheDocument();
   });
 
@@ -125,7 +125,7 @@ describe("the closing reply (INT-006)", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     expect(api.resolutions).toEqual([{ reply: "Use the short-form NDA in the templates folder." }]);
 
-    // The page re-reads, so the pill, the actions, and the Outcome card
+    // The page re-reads, so the pill, the actions, and the Status card
     // all state the decision rather than the state the page opened on.
     await waitFor(() => expect(api.reads).toBeGreaterThan(1));
     const bar = await subbar();
@@ -271,7 +271,7 @@ describe("the lost race (INT-007, TECH-020)", () => {
     await within(dialog).findByText("Somebody else already declined this request.");
     await user.click(within(dialog).getByRole("button", { name: "Close" }));
 
-    const outcome = await screen.findByRole("region", { name: "Outcome" });
+    const outcome = await screen.findByRole("region", { name: "Status" });
     expect(within(outcome).getByText("Priya said no.")).toBeInTheDocument();
   });
 });

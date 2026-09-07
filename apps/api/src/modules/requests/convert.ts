@@ -5,29 +5,9 @@
  * that turns an ask into work, with everything the requester typed
  * carried straight through.
  *
- * **Triage confirms the routing; it never classifies it** (DD-018 rule
- * 2). The Administrator bound the target when they configured the
- * request type, so this route reads it rather than taking it: a request
- * type naming a live type converts onto that type, and a body naming a
- * different type in the same module is refused by name. The **one** choice a
- * triager genuinely makes is the one the form honestly deferred — a
- * module-only target ("Contract review") names no type, so the body
- * must, and the same is true of a target type the taxonomy has since
- * archived, which reads as no type at all (the INT-002 M19/4 addendum).
- *
- * **Re-target is the deliberate exception, and it is the only one**
- * (DD-018 rule 5, INT-006). Either configured module can be switched to
- * the other by naming that module's type, because a mis-routed ask
- * should cost nothing. The Request survives as the portal shell.
- *
- * **The prefill is the point of the whole milestone** (INT-002). The
- * dialog seeds the title from the summary and sends whatever is in the
- * box at the press; the requester's urgency becomes the record's
- * priority 1:1 (MTR-012 — `risk` is legal's and is never born); and
- * every collected value whose slug the target type also attaches lands
- * in that field. Nothing is re-keyed, and the server
- * lands the values rather than trusting a client to send them back:
- * carry-through is a rule, and a rule a browser holds is not a rule.
+ * The configured module and type are defaults. Legal Team Members can
+ * override the type, title, priority and attached Fields at conversion.
+ * Omitted values carry from the Request; explicit Field edits win.
  *
  * **Values are copied, never moved** (the INT-002 M19/7 addendum's
  * bill, paid here). A collected value whose slug the target type does
@@ -37,10 +17,9 @@
  * names the values that will not carry, before anybody presses.
  *
  * **The record is born ordinary** through its module's create callable:
- * its own sequence, default open state, no manager, no team beyond the
+ * its own sequence, default open state, no team beyond the
  * creator row, and no Confidential flag inherited from anywhere. The one thing it
- * carries that an ordinary create does not is the priority, because
- * that is a fact somebody stated rather than an assessment nobody made.
+ * defaults from the Request is its urgency as priority.
  *
  * **Both records narrate it** (DD-017). `request.converted` on the ask
  * names the permanent reference it became; the module's
@@ -88,6 +67,7 @@ import {
   matterTypeFields,
   matterTypes,
   requestTypes,
+  SEVERITY_LEVELS,
   requests,
   type CustomFieldValue,
 } from "@openlaw/db";
@@ -121,12 +101,11 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
           "(INT-002, DD-018, M22/9). The Request row is locked so racing " +
           "triagers produce one record; the loser receives 409 with the " +
           "reachable converted record's module and permanent number. Triage " +
-          "confirms a live bound type, supplies a type for a module-only or " +
-          "archived target, or explicitly Re-targets by naming the other " +
-          "module's type. A body may name a contract type or a matter type, " +
+          "may override the configured type or Re-target to the other module. A body may name a contract type or a matter type, " +
           "never both. The record is born through its ordinary create callable " +
-          "with the title seeded from the Request summary, urgency carried to " +
-          "priority, risk unset, no manager, one creator row, and no confidential " +
+          "with the title seeded from the Request summary, urgency defaulting " +
+          "priority unless overridden, the Request description, risk unset, the converting " +
+          "person as Matter Manager, one creator row, and no confidential " +
           "flag. Matching collected values carry server-side; values with no " +
           "field remain on the Request; missing required fields and dead " +
           "references are refused by name and can be answered in customFields. " +
@@ -145,13 +124,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
              * and editable there. Its target-aware bound is checked after
              * the locked Request has resolved the conversion module. */
             title: z.string(),
-            /** The one choice a triager makes, and only where the request
-             * type honestly deferred it or points nowhere.
-             *
-             * Absent or a real id, never the empty string: a blank choice
-             * is no choice, and letting one through would have the route
-             * refuse it as a *different* type from the bound one, telling
-             * the caller they classified when they picked nothing. */
+            /** Overrides the configured target type. */
             contractTypeId: z.string().min(1).optional(),
             /** The matter sibling of contractTypeId. Supplying this on a
              * contract target is the explicit Re-target direction. */
@@ -165,6 +138,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
              * carried values are the server's to land and need not be
              * here; a slug the target type does not attach is refused. */
             customFields: CustomFieldsInput.optional(),
+            priority: z.enum(SEVERITY_LEVELS).optional(),
           })
           .refine((body) => !(body.contractTypeId && body.matterTypeId), {
             message: "Name either a contract type or a matter type, never both.",
@@ -173,7 +147,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
           200: z.object({ request: StaffRequestSchema }),
           409: dispositionedResponse(
             "There is no unnamed 409 on this route — an archived Request answers 404, " +
-              "and a missing title, a contradicted target, or an unfilled hard-required " +
+              "and a missing title, an invalid target, or an unfilled hard-required " +
               "field answers 400.",
           ),
           default: problemResponse,
@@ -215,6 +189,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
             const [row] = await tx
               .select({
                 urgency: requests.urgency,
+                description: requests.description,
                 customFields: requests.customFields,
                 targetModule: requestTypes.targetModule,
                 targetContractTypeId: contractTypes.id,
@@ -286,8 +261,9 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                     actorId: request.user.id,
                     title,
                     contractTypeId: target.typeId,
+                    description: row.description,
                     customFields,
-                    priority: row.urgency,
+                    priority: request.body.priority ?? row.urgency,
                   })
                 : await createMatter(tx, {
                     actorId: request.user.id,
@@ -297,11 +273,12 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                     // contract and the I8 matter modal.
                     title,
                     matterTypeId: target.typeId,
+                    description: row.description,
                     ...(chosenTemplateId === undefined ? {} : { templateId: chosenTemplateId }),
                     customFields,
-                    priority: row.urgency,
+                    priority: request.body.priority ?? row.urgency,
                     risk: null,
-                    managerId: null,
+                    managerId: request.user.id,
                     isConfidential: false,
                   });
             const record = {
@@ -405,26 +382,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
   );
 };
 
-/**
- * DD-018 rule 2 as one function: the target the Administrator bound
- * wins, and the triager only chooses where there is nothing to confirm.
- *
- * `bound` is the request type's target contract type **read live**, so
- * an archived one arrives here as `null` and the triager is asked for a
- * live one — INT-002's rule that conversion never writes a type the
- * taxonomy has retired. `null` also covers the module-only target, the
- * Matter target, and no target at all; the last two are Re-target, and
- * they are refused only when nothing was chosen.
- *
- * A body that repeats the bound type is accepted, because a client
- * echoing what it was shown has agreed rather than classified. A body
- * that names a different one is refused, because that is the act DD-018
- * takes away from triage.
- *
- * The empty string never reaches here: the schema requires at least one
- * character, so a blank choice is refused as a malformed body rather
- * than read as a type that differs from the bound one.
- */
+/** Explicit choices override the Request type; omitted choices use its live default. */
 type ConversionTarget =
   { module: "contract"; typeId: string } | { module: "matter"; typeId: string };
 
@@ -437,31 +395,9 @@ function confirmedTarget(
   chosen: { contractTypeId?: string; matterTypeId?: string },
 ): ConversionTarget {
   if (chosen.contractTypeId !== undefined) {
-    if (
-      bound.module === "contract" &&
-      bound.contractTypeId !== null &&
-      chosen.contractTypeId !== bound.contractTypeId
-    ) {
-      throw httpError(
-        400,
-        "This request type already targets a contract type. Triage confirms the routing " +
-          "the Administrator bound; it does not choose it.",
-      );
-    }
     return { module: "contract", typeId: chosen.contractTypeId };
   }
   if (chosen.matterTypeId !== undefined) {
-    if (
-      bound.module === "matter" &&
-      bound.matterTypeId !== null &&
-      chosen.matterTypeId !== bound.matterTypeId
-    ) {
-      throw httpError(
-        400,
-        "This request type already targets a matter type. Triage confirms the routing " +
-          "the Administrator bound; it does not choose it.",
-      );
-    }
     return { module: "matter", typeId: chosen.matterTypeId };
   }
   if (bound.module === "contract" && bound.contractTypeId !== null) {

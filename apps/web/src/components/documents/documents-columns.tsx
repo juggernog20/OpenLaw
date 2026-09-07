@@ -77,13 +77,16 @@ const COLUMNS: ColumnDef<RepositoryDocument>[] = [
     minWidth: 96,
     clip: true,
     sortKey: "kind",
-    render: (row, intl) => (
-      <span
-        className={`inline-flex w-max rounded-pill px-2 py-0.5 text-xs font-medium ${DOCUMENT_KIND_PILL[row.currentVersion.kind]}`}
-      >
-        {documentKindLabel(intl, row.currentVersion.kind)}
-      </span>
-    ),
+    render: (row, intl) =>
+      row.owner.kind === "matter" ? (
+        <span className="text-muted">—</span>
+      ) : (
+        <span
+          className={`inline-flex w-max rounded-pill px-2 py-0.5 text-xs font-medium ${DOCUMENT_KIND_PILL[row.currentVersion.kind]}`}
+        >
+          {documentKindLabel(intl, row.currentVersion.kind)}
+        </span>
+      ),
   },
   {
     key: "format",

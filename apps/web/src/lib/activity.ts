@@ -163,6 +163,7 @@ export interface Narration {
   sentence: string;
   /** The old→new pairs this action carries, if any. */
   changes: readonly NarratedChange[];
+  closingNote?: string;
 }
 
 /** One custom field, as much of it as the narration needs. */
@@ -351,7 +352,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "{key, select, title {Title} description {Description} owner {Owner} " +
         "entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} " +
         "contractType {Contract type} value {Value} status {Status} " +
-        "termType {Term type} effectiveDate {Effective date} " +
+        "dueDate {Due date} termType {Term type} effectiveDate {Effective date} " +
         "expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} " +
         "noticePeriodDays {Notice period (days)} " +
         "date {Date} label {Event} note {Note} kind {Kind} " +
@@ -2606,6 +2607,19 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     "restored",
     "deleted",
   ]),
+  "matter_status.progression_group_changed": {
+    icon: GitCommitHorizontal,
+    message: defineMessage({
+      id: "activity.matterStatus.groupChanged",
+      defaultMessage:
+        "{actor} moved the matter status {name} from {previousGroup, select, open {Open} in_progress {In progress} waiting {Waiting} other {{previousGroup}}} to {group, select, open {Open} in_progress {In progress} waiting {Waiting} other {{group}}}",
+    }),
+    values: (intl, p) => ({
+      name: thingName(intl, p),
+      previousGroup: text(p, "from") ?? "unknown",
+      group: text(p, "to") ?? "unknown",
+    }),
+  },
   ...taxonomyArms("matter_status", GitCommitHorizontal, [
     "created",
     "renamed",
@@ -3141,6 +3155,8 @@ export function narrateActivity(
     };
   }
   const changes = arm.changes?.(intl, entry.payload, context) ?? [];
+  const closingNote =
+    entry.action === "matter.status_changed" ? text(entry.payload, "closingNote") : null;
   return {
     icon: arm.icon,
     sentence: intl.formatMessage(arm.message, {
@@ -3149,5 +3165,6 @@ export function narrateActivity(
       ...arm.values?.(intl, entry.payload, changes, context),
     }),
     changes,
+    ...(closingNote ? { closingNote } : {}),
   };
 }

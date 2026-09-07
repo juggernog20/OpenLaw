@@ -192,7 +192,9 @@ test.describe.serial("M22 demo path", () => {
       const convert = page.getByRole("dialog", {
         name: `Convert R-${String(submittedBody.request.number)} to a matter`,
       });
-      await expect(convert.getByText("Advisory", { exact: true })).toBeVisible();
+      await expect(convert.getByRole("combobox", { name: "Matter type", exact: true })).toHaveValue(
+        matterType!.id,
+      );
       const converted = page.waitForResponse(
         (response) =>
           response

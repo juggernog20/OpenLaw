@@ -345,10 +345,10 @@ describe("the Matters destination", () => {
       "Description",
       "Confidential — restrict to the matter team",
     ]) {
-      expect(within(dialog).getByLabelText(label)).toBeInTheDocument();
+      expect(within(dialog).getByLabelText(new RegExp(`^${label}\\*?$`))).toBeInTheDocument();
     }
     expect(within(dialog).queryByLabelText("Template")).not.toBeInTheDocument();
-    await user.selectOptions(within(dialog).getByLabelText("Matter type"), TYPE.id);
+    await user.selectOptions(within(dialog).getByLabelText(/^Matter type\*?$/), TYPE.id);
     expect(within(dialog).getByLabelText(/Business unit/)).toBeInTheDocument();
     await user.click(within(dialog).getByRole("button", { name: "Create" }));
     const refusal = await within(dialog).findByRole("alert");
@@ -377,10 +377,10 @@ describe("the Matters destination", () => {
     await screen.findByRole("heading", { name: "No matters yet" });
     await user.click(screen.getAllByRole("button", { name: "New matter" })[0]!);
     const dialog = await screen.findByRole("dialog");
-    await user.type(within(dialog).getByLabelText("Title"), "New advice");
-    await user.selectOptions(within(dialog).getByLabelText("Matter type"), TYPE.id);
+    await user.type(within(dialog).getByLabelText(/^Title\*?$/), "New advice");
+    await user.selectOptions(within(dialog).getByLabelText(/^Matter type\*?$/), TYPE.id);
     await user.selectOptions(within(dialog).getByLabelText("Matter Manager"), MEMBER.id);
-    await user.selectOptions(within(dialog).getByLabelText("Priority"), "high");
+    await user.selectOptions(within(dialog).getByLabelText(/^Priority\*?$/), "high");
     await user.selectOptions(within(dialog).getByLabelText("Risk"), "low");
     await user.type(within(dialog).getByLabelText(/Business unit/), "Operations");
     await user.type(within(dialog).getByLabelText("Description"), "Review the transfer.");
@@ -399,7 +399,87 @@ describe("the Matters destination", () => {
     });
   });
 
-  it("auto-selects one type template, seeds overridable values, and stays clearable", async () => {
+  it("stages documents without writes, removes a selection, and discards them on cancel", async () => {
+    let writes = 0;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.method === "POST") writes++;
+        return matterApi()(call);
+      },
+    });
+    renderAt("/matters");
+    const user = userEvent.setup();
+    await screen.findByRole("heading", { name: "No matters yet" });
+    await user.click(screen.getAllByRole("button", { name: "New matter" })[0]!);
+    const dialog = await screen.findByRole("dialog");
+    await user.upload(within(dialog).getByLabelText("Attach documents"), [
+      new File(["advice"], "advice.txt", { type: "text/plain" }),
+      new File(["notes"], "notes.txt", { type: "text/plain" }),
+    ]);
+    await user.click(within(dialog).getByRole("button", { name: "Remove notes.txt" }));
+    expect(within(dialog).queryByText("notes.txt")).not.toBeInTheDocument();
+    expect(within(dialog).getByText("advice.txt")).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    expect(writes).toBe(0);
+    await user.click(screen.getAllByRole("button", { name: "New matter" })[0]!);
+    expect(screen.queryByText("advice.txt")).not.toBeInTheDocument();
+  });
+
+  it("uploads after creation and retries only failed files without creating another Matter", async () => {
+    let creates = 0;
+    const uploads: string[] = [];
+    let release: ((response: Response) => void) | undefined;
+    const base = matterApi(() => {
+      creates++;
+      return json(201, { matter: matter({ number: 8 }) });
+    });
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/8/documents" && call.method === "POST") {
+          expect(creates).toBe(1);
+          const form = call.body as FormData;
+          expect(form.get("kind")).toBe("general");
+          const name = (form.get("file") as File).name;
+          uploads.push(name);
+          if (uploads.length === 1)
+            return new Promise<Response>((resolve) => {
+              release = resolve;
+            });
+          if (uploads.length === 2) return json(500, { detail: "Upload temporarily unavailable." });
+          return json(201, { document: { id: name } });
+        }
+        return base(call);
+      },
+    });
+    renderAt("/matters");
+    const user = userEvent.setup();
+    await screen.findByRole("heading", { name: "No matters yet" });
+    await user.click(screen.getAllByRole("button", { name: "New matter" })[0]!);
+    const dialog = await screen.findByRole("dialog");
+    await user.type(within(dialog).getByLabelText(/^Title\*?$/), "New advice");
+    await user.selectOptions(within(dialog).getByLabelText(/^Matter type\*?$/), TYPE.id);
+    await user.type(within(dialog).getByLabelText(/Business unit/), "People");
+    await user.upload(within(dialog).getByLabelText("Attach documents"), [
+      new File(["advice"], "advice.txt", { type: "text/plain" }),
+      new File(["notes"], "notes.txt", { type: "text/plain" }),
+    ]);
+    expect(within(dialog).queryByLabelText("Document kind")).not.toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "Create" }));
+    await screen.findByText("Record created. Uploading documents…");
+    await user.keyboard("{Escape}");
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Create" })).not.toBeInTheDocument();
+    release!(json(201, { document: { id: "advice" } }));
+    await screen.findByText("Upload temporarily unavailable.");
+    await user.click(screen.getByRole("button", { name: "Retry failed uploads" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(creates).toBe(1);
+    expect(uploads).toEqual(["advice.txt", "notes.txt", "notes.txt"]);
+  });
+
+  it("defaults type changes to no template and applies template values only when selected", async () => {
     let posted: unknown;
     const templatedType = { ...TYPE, templates: [TEMPLATE] };
     const otherType = {
@@ -446,34 +526,46 @@ describe("the Matters destination", () => {
     await screen.findByRole("heading", { name: "No matters yet" });
     await user.click(screen.getAllByRole("button", { name: "New matter" })[0]!);
     const dialog = await screen.findByRole("dialog");
-    await user.selectOptions(within(dialog).getByLabelText("Matter type"), templatedType.id);
+    await user.selectOptions(within(dialog).getByLabelText(/^Matter type\*?$/), templatedType.id);
 
-    const picker = within(dialog).getByLabelText("Template (optional)");
+    const picker = within(dialog).getByLabelText("Matter template");
+    expect(picker).toHaveValue("");
+    expect(within(dialog).getByLabelText(/^Title\*?$/)).toHaveValue("");
+    expect(within(dialog).getByLabelText(/^Priority\*?$/)).toHaveValue("medium");
+    expect(within(dialog).getByLabelText(/Business unit/)).toHaveValue("");
+    await user.selectOptions(picker, TEMPLATE.id);
+    await user.selectOptions(within(dialog).getByLabelText(/^Matter type\*?$/), otherType.id);
+    expect(picker).toHaveValue("");
+    expect(within(dialog).getByLabelText(/^Title\*?$/)).toHaveValue("");
+    expect(within(dialog).getByLabelText(/^Priority\*?$/)).toHaveValue("medium");
+    await user.selectOptions(within(dialog).getByLabelText(/^Matter type\*?$/), templatedType.id);
+    expect(picker).toHaveValue("");
+    await user.selectOptions(picker, TEMPLATE.id);
     expect(picker).toHaveValue(TEMPLATE.id);
     expect(within(picker).getByRole("option", { name: TEMPLATE.name })).toBeInTheDocument();
     expect(
       within(picker).queryByRole("option", { name: "Claim standard" }),
     ).not.toBeInTheDocument();
-    expect(within(dialog).getByLabelText("Title")).toHaveValue("EMP —");
-    expect(within(dialog).getByLabelText("Priority")).toHaveValue("high");
+    expect(within(dialog).getByLabelText(/^Title\*?$/)).toHaveValue("EMP —");
+    expect(within(dialog).getByLabelText(/^Priority\*?$/)).toHaveValue("high");
     expect(within(dialog).getByLabelText("Risk")).toHaveValue("low");
     expect(within(dialog).getByLabelText(/Business unit/)).toHaveValue("Finance");
     expect(within(dialog).getByText("Template adds 4 tasks and 2 key dates.")).toBeInTheDocument();
 
     await user.selectOptions(picker, "");
-    expect(within(dialog).getByLabelText("Title")).toHaveValue("");
-    expect(within(dialog).getByLabelText("Priority")).toHaveValue("medium");
+    expect(within(dialog).getByLabelText(/^Title\*?$/)).toHaveValue("");
+    expect(within(dialog).getByLabelText(/^Priority\*?$/)).toHaveValue("medium");
     expect(within(dialog).getByLabelText("Risk")).toHaveValue("");
     expect(within(dialog).getByLabelText(/Business unit/)).toHaveValue("");
 
     await user.selectOptions(picker, TEMPLATE.id);
-    await user.type(within(dialog).getByLabelText("Title"), " Transfer");
+    await user.type(within(dialog).getByLabelText(/^Title\*?$/), " Transfer");
     await user.selectOptions(picker, "");
-    expect(within(dialog).getByLabelText("Title")).toHaveValue("EMP — Transfer");
+    expect(within(dialog).getByLabelText(/^Title\*?$/)).toHaveValue("EMP — Transfer");
     await user.selectOptions(picker, TEMPLATE.id);
-    expect(within(dialog).getByLabelText("Title")).toHaveValue("EMP — Transfer");
-    expect(within(dialog).getByLabelText("Priority")).toHaveValue("high");
-    await user.selectOptions(within(dialog).getByLabelText("Priority"), "critical");
+    expect(within(dialog).getByLabelText(/^Title\*?$/)).toHaveValue("EMP — Transfer");
+    expect(within(dialog).getByLabelText(/^Priority\*?$/)).toHaveValue("high");
+    await user.selectOptions(within(dialog).getByLabelText(/^Priority\*?$/), "critical");
     await user.selectOptions(within(dialog).getByLabelText("Risk"), "critical");
     const unit = within(dialog).getByLabelText(/Business unit/);
     await user.clear(unit);
@@ -509,8 +601,8 @@ describe("the Matters destination", () => {
     await screen.findByRole("heading", { name: "No matters yet" });
     await user.click(screen.getAllByRole("button", { name: "New matter" })[0]!);
     const dialog = await screen.findByRole("dialog");
-    await user.type(within(dialog).getByLabelText("Title"), "New advice");
-    await user.selectOptions(within(dialog).getByLabelText("Matter type"), TYPE.id);
+    await user.type(within(dialog).getByLabelText(/^Title\*?$/), "New advice");
+    await user.selectOptions(within(dialog).getByLabelText(/^Matter type\*?$/), TYPE.id);
     await user.type(within(dialog).getByLabelText(/Business unit/), "Operations");
     const create = within(dialog).getByRole("button", { name: "Create" });
     await user.click(create);
@@ -556,3 +648,27 @@ describe("the matter hero", () => {
     expect(screen.queryByText("Sam Sponsor")).not.toBeInTheDocument();
   });
 });
+
+it.each(["task", "key_date"] as const)(
+  "opens a Matter Next deadline in its %s source tab",
+  async (source) => {
+    const fallback = matterApi();
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters" && call.method === "GET")
+          return json(200, {
+            matters: [
+              matter({ nextDeadline: { date: "2026-09-30", label: "Business response", source } }),
+            ],
+            nextCursor: null,
+            counts: { open: 1, onHold: 0 },
+          });
+        return fallback(call);
+      },
+    });
+    renderAt("/matters");
+    const link = await screen.findByRole("link", { name: /Business response/ });
+    expect(link).toHaveAttribute("href", `/matters/7/${source === "task" ? "tasks" : "key-dates"}`);
+  },
+);

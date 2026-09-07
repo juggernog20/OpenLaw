@@ -432,6 +432,7 @@ describe("the Matters list", () => {
     expect(deadlineOf(active, visibleIds[0]!)).toEqual({
       date: today,
       label: "Today deadline",
+      source: "key_date",
     });
     const bounded = await list(contributorCookies, { deadlineFrom: today, deadlineTo: today });
     expect(bounded.matters.map((row) => row.id)).toEqual([visibleIds[0]]);
@@ -454,6 +455,7 @@ describe("the Matters list", () => {
     expect(deadlineOf(await list(contributorCookies), visibleIds[0]!)).toEqual({
       date: today,
       label: "Today deadline",
+      source: "key_date",
     });
   });
 });

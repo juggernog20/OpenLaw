@@ -782,7 +782,7 @@ test.describe.serial("M14 demo path", () => {
       await expect(decisionDialog.getByText("Approve this contract")).toBeVisible();
       // A decision is final, and the dialog says so before it is taken.
       await expect(decisionDialog).toContainText("A decision is final.");
-      await decisionDialog.getByLabel("Note (optional)").fill(DECISION_NOTE);
+      await decisionDialog.getByLabel("Note", { exact: true }).fill(DECISION_NOTE);
       await decisionDialog.getByRole("button", { name: "Approve" }).click();
       await expect(decisionDialog).toBeHidden();
 

@@ -215,7 +215,7 @@ async function closeMenu(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe("the contracts list's columns", () => {
-  it("draws the seven default columns and offers the rest of the catalogue", async () => {
+  it("draws the eight default columns and offers the rest of the catalogue", async () => {
     const user = userEvent.setup();
     stubApi({ signedIn: MEMBER, extra: api().handler });
     renderAt("/contracts");
@@ -229,6 +229,7 @@ describe("the contracts list's columns", () => {
       "Status",
       "Value",
       "Owner",
+      "Next deadline",
     ]);
 
     // Every column carries a real width except the one absorbing the
@@ -242,11 +243,12 @@ describe("the contracts list's columns", () => {
       "140px",
       "130px",
       "160px",
+      "220px",
       "0px",
     ]);
 
     const menu = await openColumnMenu(user);
-    expect(within(menu).getAllByRole("menuitemcheckbox")).toHaveLength(17);
+    expect(within(menu).getAllByRole("menuitemcheckbox")).toHaveLength(18);
     expect(within(menu).getByRole("menuitemcheckbox", { name: /Expires/ })).toHaveAttribute(
       "aria-checked",
       "false",

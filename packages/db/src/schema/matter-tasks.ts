@@ -26,7 +26,7 @@ export const matterTasks = pgTable(
     title: text("title").notNull(),
     isDone: boolean("is_done").notNull().default(false),
     assigneeId: text("assignee_id").references(() => users.id, { onDelete: "set null" }),
-    /** An internal target only: it never joins Matter Key dates or deadline surfaces. */
+    /** A Task target, included in Next deadline while the Task is unfinished. */
     dueDate: date("due_date"),
     displayOrder: integer("display_order").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

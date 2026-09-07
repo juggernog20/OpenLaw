@@ -39,6 +39,12 @@ _Queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/precedents routed
 - **Addendum (2026-08-19, [#326](https://github.com/juggernog20/OpenLaw/issues/326))** — CTR-014 added the hand-set `draft_theirs` kind for a negotiation that opens on the counterparty's paper. It is an ordinary uploaded version kind; the chain and generated-redline provenance rules above are unchanged.
 - **Addendum (2026-08-22, M21A, [#438](https://github.com/juggernog20/OpenLaw/issues/438))** — CTR-014 made one part of a Version correctable: a Member+ may change a hand-set `kind`, and only that judgement. The bytes, order, note, author, and provenance remain immutable; `generated_redline` is refused as both source and target, and every correction is narrated.
 
+### Addendum (2026-09-06, UX review) — Matter documents have no negotiation Kind
+
+Matter uploads do not ask for a contract negotiation Kind. This applies to single files, new versions, batch imports, creation attachments, and comment-attachment filing. Matter document rows omit the Kind column; the global repository leaves that cell blank for Matter-owned documents. Contract negotiation labels remain available on Contracts.
+
+New Matter uploads and versions use the neutral stored `general` kind. Existing classifications and generated-redline provenance remain intact; this change does not rewrite earlier versions or add a Matter document taxonomy. Migration 0093 extends the allowed stored values without changing document contents.
+
 ## DOC-002 — Module identity: the legal file layer, made browsable
 
 - **Status** — Accepted
@@ -168,6 +174,10 @@ Knowledge Items own Documents, but their Documents do not gain a fourth folder m
 
 M26 ships filters for owning module, one reached owning record, Counterparty, format family, current Version kind, inclusive upload date range, uploader, and record-scoped folder. They compose with `AND`, live in the URL, and ride saved views. The row carries title, owner, current Version filename and kind, format, size, Version count, uploader, and upload time. No Document Field scope or tag table was added.
 
+### Addendum (2026-09-06, UX review): shared filter controls
+
+The Documents destination uses the same Filter menu, searchable choices, editable chips, and inclusive date-range editor as Contracts and Matters. Format, kind, Counterparty, and uploader accept multiple values: values within a property compose with `OR`, and different properties compose with `AND`. Owning module, record, and folder remain single choices; changing the record clears its folder, and changing the module clears an incompatible record. Filters continue to travel in links and saved views. Archive and confidentiality rules still apply before paging.
+
 ## DOC-008 — No standalone documents: every document has an owning record; access is inherited
 
 - **Status** — Accepted
@@ -253,6 +263,12 @@ Adding a stored generated column computes it for every existing row, so the M25 
 - **Rationale** — Legacy books arrive as folder trees on someone's drive; structure-retaining drop is the lowest-friction migration path — no mapping file, no per-file ceremony.
 - **Alternatives considered** — Drag-drop only (no structure): flattens legacy organization. CSV-mapped migration flow (recommended, not requested): can layer later if metadata-rich migration demand appears.
 - **Consequences** — `document_folders.parent_id` added in SCHEMA.md; DOC-006 annotated. Upload pipeline handles directory traversal + batch job queuing (background pipeline per DOC-005/009).
+
+### Addendum (2026-09-06, UX review) — attach documents during record creation
+
+Matter and sub-Matter creation, Contract creation (including child/successor renewals), Entity registration, Knowledge item creation, and intake conversion offer an optional Documents area. People can choose or drop several files and remove staged files. Matter and sub-Matter uploads use General without a kind picker; Contract uploads retain their kind choices. Cancelling before creation writes nothing.
+
+After the record is created, the selected files upload through its ordinary document API. The dialog shows each file's result and retains failed files for retry without recreating the record or uploading successful files again. People can continue with the created record if an upload cannot be completed. Request submission and Knowledge's existing Create from files flow retain their attachment support.
 
 ## DOC-012 — Storage adapter: three operations, and `file_ref` = `<driver>:<key>`
 

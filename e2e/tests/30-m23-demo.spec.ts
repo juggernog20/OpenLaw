@@ -161,7 +161,7 @@ test.describe.serial("M23 deployer journey", () => {
 
       await main.getByRole("button", { name: "Link Contract" }).click();
       const link = page.getByRole("dialog", { name: "Link Contract" });
-      await link.getByLabel("Search by number or title").fill(CONTRACT_TITLE);
+      await link.getByLabel("Search by contract number or title").fill(CONTRACT_TITLE);
       await link.getByRole("button", { name: new RegExp(CONTRACT_TITLE) }).click();
       const linked = page.waitForResponse(
         (response) =>
@@ -217,12 +217,17 @@ test.describe.serial("M23 deployer journey", () => {
       const counsel = await onboardActivatedMember(page.request, browser, COUNSEL);
       counselContext = counsel.context;
       await page.goto(`/matters/${matter.number}`);
-      await main.getByRole("button", { name: "Add team member" }).click();
+      await page
+        .getByRole("toolbar", { name: "Applets" })
+        .getByRole("button", { name: "Matter team", exact: true })
+        .click();
+      const teamPanel = page.getByRole("complementary", { name: "Matter team" });
+      await teamPanel.getByRole("button", { name: "Add team member" }).click();
       const team = page.getByRole("dialog", { name: "Add team member" });
       await team.getByLabel("Person").selectOption({ label: COUNSEL.displayName });
       await team.getByLabel("Role").selectOption("contributor");
       await team.getByRole("button", { name: "Add to team" }).click();
-      await expect(main.getByText(COUNSEL.displayName)).toBeVisible();
+      await expect(teamPanel.getByText(COUNSEL.displayName)).toBeVisible();
 
       const contributor = counsel.page;
       await contributor.goto(`/matters/${matter.number}`);
@@ -274,10 +279,8 @@ test.describe.serial("M23 deployer journey", () => {
       expect(forbiddenClose.status(), await forbiddenClose.text()).toBe(403);
 
       await page.goto(`/matters/${matter.number}`);
-      await page
-        .getByRole("region", { name: MATTER_TITLE })
-        .getByRole("button", { name: "Close matter" })
-        .click();
+      await page.getByRole("button", { name: "Closed — move matter" }).click();
+      await page.getByRole("menuitemradio", { name: "Closed", exact: true }).click();
       const close = page.getByRole("dialog", { name: `Close ${MATTER_TITLE}?` });
       await expect(close.getByText(`M-${childNumber} ${CHILD_TITLE}`)).toBeVisible();
       await expect(close.getByLabel(/Resolution/i)).toHaveCount(0);
@@ -286,13 +289,15 @@ test.describe.serial("M23 deployer journey", () => {
           response.url().endsWith(`/api/v1/matters/${matter.number}`) &&
           response.request().method() === "PATCH",
       );
+      await expect(close.getByRole("combobox")).toHaveCount(0);
+      await close
+        .getByRole("textbox", { name: "Closing note" })
+        .fill("Advice delivered; work complete.");
       await close.getByRole("button", { name: "Close matter" }).click();
       expect((await closed).status()).toBe(200);
       await expect(
-        page.getByRole("region", { name: MATTER_TITLE }).getByRole("button", {
-          name: "Reopen matter",
-        }),
-      ).toBeVisible();
+        page.getByRole("list", { name: "Status" }).locator('[aria-current="step"]'),
+      ).toHaveText(/Closed/);
 
       const comments = await openComments(page);
       await comments.getByLabel("New comment").fill(POST_CLOSE_COMMENT);

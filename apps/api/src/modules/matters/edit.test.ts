@@ -364,7 +364,10 @@ describe("per-field matter PATCH", () => {
     expect(openToOpen.statusCode, openToOpen.body).toBe(200);
     expect(openToOpen.json().matter).toMatchObject({ openedAt, closedAt: null });
 
-    const closed = await patchMatter(matter.number, { statusId: secondClosedId });
+    const closed = await patchMatter(matter.number, {
+      statusId: secondClosedId,
+      closingNote: "Advice delivered; work complete.",
+    });
     expect(closed.statusCode, closed.body).toBe(200);
     expect(closed.json().matter.openedAt).toBe(openedAt);
     expect(closed.json().matter.closedAt).toEqual(expect.any(String));
@@ -376,7 +379,10 @@ describe("per-field matter PATCH", () => {
     const writable = await patchMatter(matter.number, { title: "Closed but editable" });
     expect(writable.statusCode, writable.body).toBe(200);
 
-    const reopened = await patchMatter(matter.number, { statusId: secondOpenId });
+    const reopened = await patchMatter(matter.number, {
+      statusId: secondOpenId,
+      confirmReopen: true,
+    });
     expect(reopened.statusCode, reopened.body).toBe(200);
     expect(reopened.json().matter).toMatchObject({ openedAt, closedAt: null });
   });
@@ -442,7 +448,10 @@ describe("matter team, confidentiality, and recovery", () => {
       matterTypeId: requiredTypeId,
       customFields: { [requiredSlug]: "Ops" },
     });
-    await patchMatter(matter.number, { statusId: secondClosedId });
+    await patchMatter(matter.number, {
+      statusId: secondClosedId,
+      closingNote: "Advice delivered; work complete.",
+    });
     await patchMatter(matter.number, { isConfidential: true });
     await patchMatter(matter.number, { isConfidential: false });
     const add = await harness.app.inject({

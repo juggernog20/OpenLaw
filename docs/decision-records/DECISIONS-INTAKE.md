@@ -654,3 +654,34 @@ Before you submit panel. On narrow screens the order remains picker, guidance, r
 The portal header offers Light, Warm and Dark to every signed-in requester, including
 Business Users. Theme changes apply immediately and save through the existing personal
 preference endpoint. A failed save restores the previous theme and reports the failure.
+
+### INT-002 UX review addendum — editable conversion (2026-09-06)
+
+The conversion form prefills the title, Type, priority and attached Fields, and allows
+the Legal Team Member to edit them before creating a Contract or Matter. This supersedes
+DD-018's fixed target Type rule and the conversion dialog's read-only carried values.
+Request urgency supplies the default priority; an explicit conversion priority wins.
+Changing Type updates its Fields and eligible Matter templates. Field edits survive
+switching Types, but only Fields attached to the selected Type are submitted.
+The template starts at **No template**, including when only one is available. Changing
+Matter Type resets the template to **No template**; applying one is always an explicit choice.
+
+Explicit Field edits override both Request values and template defaults. Clearing an
+optional Field sends null so neither source restores it; required Fields still need
+answers. Original Request responses remain unchanged. Conversion continues through the
+ordinary create validation and transaction, including live Types and valid references.
+
+Remove the carry-through callout and explanatory notes about title provenance, routing,
+priority provenance, template task/date counts and retained responses. Fields that have
+no destination remain named without the explanatory paragraph.
+
+### INT-002 UX review addendum — conversion context and Matter Manager (2026-09-06)
+
+Conversion copies the Request description into the new Matter or Contract. The server
+reads it with the locked Request and includes it in ordinary record creation, preserving
+the original response on the Request.
+
+The person who completes Matter conversion becomes its Matter Manager as well as its
+Creator. This supersedes the earlier no-manager-at-conversion default. The triage assignee
+does not determine the Matter Manager when someone else completes conversion. Template
+Tasks assigned to the Matter Manager use that person at creation.

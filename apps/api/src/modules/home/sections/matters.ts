@@ -2,17 +2,8 @@
 
 /** DES-069's Matter portfolio, keyed on the viewer as MTR-003 Matter Manager. */
 import { z } from "zod";
-import {
-  and,
-  desc,
-  eq,
-  isNull,
-  matters,
-  matterKeyDates,
-  matterStatuses,
-  sql,
-  type Executor,
-} from "@openlaw/db";
+import { nextDeadline, NextDeadlineSchema } from "../../../lib/next-deadline.js";
+import { and, desc, eq, isNull, matters, matterStatuses, sql, type Executor } from "@openlaw/db";
 import type { AuthenticatedUser } from "../../../auth/user.js";
 import { matterTeamScope } from "../../../lib/matter-access.js";
 import { HOME_SECTION_LIMIT } from "./approvals.js";
@@ -23,7 +14,7 @@ export const MatterHomeRowSchema = z.object({
   title: z.string(),
   isConfidential: z.boolean(),
   status: z.object({ id: z.string(), displayName: z.string() }),
-  nextDeadline: z.object({ date: z.iso.date(), label: z.string() }).nullable(),
+  nextDeadline: NextDeadlineSchema,
 });
 
 export const MattersHomeSectionSchema = z.object({
@@ -39,15 +30,7 @@ export async function readMattersHomeSection(
   db: Executor,
   user: AuthenticatedUser,
 ): Promise<MattersHomeSection | null> {
-  const nextDeadline = db
-    .select({ date: matterKeyDates.date, label: matterKeyDates.label })
-    .from(matterKeyDates)
-    .where(
-      and(eq(matterKeyDates.matterId, matters.id), sql`${matterKeyDates.date} >= current_date`),
-    )
-    .orderBy(matterKeyDates.date, matterKeyDates.id)
-    .limit(1)
-    .as("home_matter_next_deadline");
+  const deadline = nextDeadline("matter");
 
   const rows = await db
     .select({
@@ -57,13 +40,11 @@ export async function readMattersHomeSection(
       isConfidential: matters.isConfidential,
       statusId: matterStatuses.id,
       statusDisplayName: matterStatuses.displayName,
-      nextDeadlineDate: nextDeadline.date,
-      nextDeadlineLabel: nextDeadline.label,
+      nextDeadline: deadline,
       total: sql<number>`count(*) over()::integer`,
     })
     .from(matters)
     .innerJoin(matterStatuses, eq(matters.statusId, matterStatuses.id))
-    .leftJoinLateral(nextDeadline, sql`true`)
     .where(
       and(
         eq(matters.managerId, user.id),
@@ -72,7 +53,7 @@ export async function readMattersHomeSection(
         matterTeamScope(db, user),
       ),
     )
-    .orderBy(sql`${nextDeadline.date} asc nulls last`, desc(matters.number))
+    .orderBy(sql`(${deadline} ->> 'date')::date asc nulls last`, desc(matters.number))
     .limit(HOME_SECTION_LIMIT);
 
   const first = rows[0];
@@ -86,10 +67,7 @@ export async function readMattersHomeSection(
       title: row.title,
       isConfidential: row.isConfidential,
       status: { id: row.statusId, displayName: row.statusDisplayName },
-      nextDeadline:
-        row.nextDeadlineDate === null || row.nextDeadlineLabel === null
-          ? null
-          : { date: row.nextDeadlineDate, label: row.nextDeadlineLabel },
+      nextDeadline: row.nextDeadline,
     })),
   };
 }

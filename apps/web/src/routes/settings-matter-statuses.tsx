@@ -19,6 +19,11 @@ import type { paths } from "@openlaw/api-client";
 import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { History, TriangleAlert } from "lucide-react";
+import {
+  MATTER_PROGRESSION_GROUPS,
+  matterGroupLabel,
+  type MatterProgressionGroup,
+} from "../lib/matters";
 import { api } from "../lib/api";
 import { problem as readProblem } from "../lib/problem";
 import { requireUser } from "../lib/session";
@@ -255,9 +260,14 @@ export function SettingsMatterStatusesPage() {
   const [orderStatus, setOrderStatus] = useState<FieldStatus>("idle");
   const [orderError, setOrderError] = useState<string | undefined>(undefined);
   const [adding, setAdding] = useState(false);
-  const [addDraft, setAddDraft] = useState<{ name: string; category: Category | "" }>({
+  const [addDraft, setAddDraft] = useState<{
+    name: string;
+    category: Category | "";
+    progressionGroup: Exclude<MatterProgressionGroup, "closed">;
+  }>({
     name: "",
     category: "",
+    progressionGroup: "in_progress",
   });
   const [addStatus, setAddStatus] = useState<FieldStatus>("idle");
   const [addError, setAddError] = useState<string | undefined>(undefined);
@@ -299,6 +309,20 @@ export function SettingsMatterStatusesPage() {
     }
   }
 
+  async function regroup(row: StatusRow, progressionGroup: StatusRow["progressionGroup"]) {
+    noteRow(row.id, "saving");
+    const result = await api
+      .PUT("/api/v1/matter-statuses/{id}/progression-group", {
+        params: { path: { id: row.id } },
+        body: { progressionGroup },
+      })
+      .catch(() => undefined);
+    if (result?.data) {
+      replaceRow(result.data.matterStatus);
+      noteRow(row.id, "saved");
+    } else noteRow(row.id, "error", (await readProblem(result)).detail);
+  }
+
   async function create() {
     // Enter can land while a create is already posting. A ref, set
     // synchronously, keeps a double-tap from posting the draft twice.
@@ -326,14 +350,18 @@ export function SettingsMatterStatusesPage() {
     try {
       const result = await api
         .POST("/api/v1/matter-statuses", {
-          body: { displayName, category: addDraft.category },
+          body: {
+            displayName,
+            category: addDraft.category,
+            progressionGroup: addDraft.progressionGroup,
+          },
         })
         .catch(() => undefined);
       const { data } = result ?? {};
       if (data) {
         setRows((current) => [...current, data.matterStatus]);
         setAdding(false);
-        setAddDraft({ name: "", category: "" });
+        setAddDraft({ name: "", category: "", progressionGroup: "in_progress" });
         setAddStatus("saved");
       } else {
         // Keep the draft row open so the name is not lost to a refusal.
@@ -401,10 +429,29 @@ export function SettingsMatterStatusesPage() {
     }
   }
 
-  /** The ST10 category badge, in DES-020's qualifier-pill slot. The
-   * sr-only prefix keeps a row like Draft/Draft unambiguous to a
-   * reader: the name is the label, the badge is "Category: Draft". */
-  function categoryBadge(row: StatusRow) {
+  /** Open rows offer their progression group; closed rows show the category (MTR-002). */
+  function categoryDetails(row: StatusRow) {
+    if (row.category === "open")
+      return (
+        <select
+          value={row.progressionGroup}
+          disabled={rowStatus[row.id] === "saving"}
+          aria-label={intl.formatMessage(
+            { id: "settings.matterStatuses.groupFor", defaultMessage: "Group for {name}" },
+            { name: row.displayName },
+          )}
+          className="h-7 rounded-button border border-border-default bg-raised px-2 text-sm text-primary focus-visible:outline-2 focus-visible:outline-link"
+          onChange={(event) =>
+            void regroup(row, event.target.value as StatusRow["progressionGroup"])
+          }
+        >
+          {MATTER_PROGRESSION_GROUPS.filter((group) => group !== "closed").map((group) => (
+            <option key={group} value={group}>
+              {matterGroupLabel(intl, group)}
+            </option>
+          ))}
+        </select>
+      );
     return (
       <span className="inline-flex rounded-chip bg-control px-1.5 py-0.5 text-xs font-medium whitespace-nowrap text-muted">
         <span className="sr-only">
@@ -446,7 +493,7 @@ export function SettingsMatterStatusesPage() {
           }
           onAdd={() => {
             setAdding(true);
-            setAddDraft({ name: "", category: "" });
+            setAddDraft({ name: "", category: "", progressionGroup: "in_progress" });
             setAddStatus("idle");
             setAddError(undefined);
           }}
@@ -468,7 +515,7 @@ export function SettingsMatterStatusesPage() {
             )
           }
           onRename={(row, displayName) => void rename(row, displayName)}
-          rowDetails={categoryBadge}
+          rowDetails={categoryDetails}
           rowMeta={(row) => (
             <FormattedMessage
               id="settings.matterStatuses.inUse"
@@ -571,6 +618,28 @@ export function SettingsMatterStatusesPage() {
                   </option>
                 ))}
               </select>
+              {addDraft.category === "open" && (
+                <select
+                  value={addDraft.progressionGroup}
+                  aria-label={intl.formatMessage({
+                    id: "settings.matterStatuses.newGroup",
+                    defaultMessage: "New status group",
+                  })}
+                  className="h-7 rounded-button border border-border-default bg-raised px-2 text-sm text-primary focus-visible:outline-2 focus-visible:outline-link"
+                  onChange={(event) =>
+                    setAddDraft((current) => ({
+                      ...current,
+                      progressionGroup: event.target.value as StatusRow["progressionGroup"],
+                    }))
+                  }
+                >
+                  {MATTER_PROGRESSION_GROUPS.filter((group) => group !== "closed").map((group) => (
+                    <option key={group} value={group}>
+                      {matterGroupLabel(intl, group)}
+                    </option>
+                  ))}
+                </select>
+              )}
               <span className="ps-1">
                 <StatusNote status={addStatus} detail={addError} />
               </span>

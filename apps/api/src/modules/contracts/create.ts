@@ -115,6 +115,7 @@ export interface CreateContractInput {
    * entry this write narrates. */
   actorId: string;
   title: string;
+  description?: string | null;
   contractTypeId: string;
   /** The type's fields, keyed by slug. Only the hard-required ones have
    * to be here — the rest are set on the record — and a slug the type
@@ -275,6 +276,7 @@ export async function createContract(
     .insert(contracts)
     .values({
       title: title.trim(),
+      description: input.description?.trim() || null,
       contractTypeId: contractType.id,
       statusId: draft.id,
       customFields,

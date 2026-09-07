@@ -54,6 +54,7 @@ export interface CreatedMatter {
   matterTypeName: string;
   statusName: string;
   statusCategory: "open" | "closed";
+  statusProgressionGroup: "open" | "in_progress" | "waiting";
   manager: {
     id: string;
     displayName: string;
@@ -116,6 +117,7 @@ export async function createMatter(
       id: matterStatuses.id,
       displayName: matterStatuses.displayName,
       category: matterStatuses.category,
+      progressionGroup: matterStatuses.progressionGroup,
     })
     .from(matterStatuses)
     .where(and(eq(matterStatuses.category, "open"), isNull(matterStatuses.archivedAt)))
@@ -250,6 +252,7 @@ export async function createMatter(
     matterTypeName: matterType.displayName,
     statusName: status.displayName,
     statusCategory: status.category,
+    statusProgressionGroup: status.progressionGroup,
     manager,
   };
 }

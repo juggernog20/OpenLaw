@@ -2243,7 +2243,7 @@ describe("the /contracts/:number record page", () => {
         /Governing office|Special terms|Notice period|Signed on|Auto renews|Paper|Regions|Reviewer|Booking entity/,
       ),
     ).toHaveLength(9);
-    expect(card.getByLabelText("Notice period")).toHaveAttribute("type", "number");
+    expect(card.getByLabelText("Notice period")).toHaveAttribute("inputmode", "decimal");
     expect(card.getByLabelText("Signed on")).toHaveAttribute("type", "date");
     // The two that name a row reuse the record's own pickers: the
     // people the Owner select offers and the M7 registry.
@@ -2283,7 +2283,7 @@ describe("the /contracts/:number record page", () => {
     const user = userEvent.setup();
 
     const notice = await screen.findByLabelText("Notice period");
-    expect(notice).toHaveValue(30);
+    expect(notice).toHaveValue("30");
     await user.clear(notice);
     await user.type(notice, "45");
     await user.tab();
@@ -2542,7 +2542,7 @@ describe("the contract record's broader Matter context (M23/6)", () => {
     const user = userEvent.setup();
 
     await user.click(await screen.findByRole("button", { name: "Link to Matter" }));
-    await user.type(screen.getByLabelText("Search by number or title"), "Regulatory");
+    await user.type(screen.getByLabelText("Search by matter number or title"), "Regulatory");
     await user.click(await screen.findByRole("button", { name: /Regulatory programme/ }));
     await user.click(screen.getByRole("button", { name: "Link" }));
 

@@ -121,7 +121,7 @@ export function MatterRelationDialog({
           <Label htmlFor="matter-relation-search">
             <FormattedMessage
               id="matters.relations.searchLabel"
-              defaultMessage="Search by M-number or title"
+              defaultMessage="Search by matter number or title"
             />
           </Label>
           <Input

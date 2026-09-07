@@ -673,7 +673,7 @@ async function sendForSignature(page: Page, number: number, currentOption: strin
   await dialog.getByRole("button", { name: "Add signer" }).click();
   await dialog.getByLabel("Signer 2 name").fill(SIGNERS[1].name);
   await dialog.getByLabel("Signer 2 email").fill(SIGNERS[1].email);
-  await dialog.getByLabel("Subject (optional)").fill(SUBJECT);
+  await dialog.getByLabel("Subject", { exact: true }).fill(SUBJECT);
   const sent = page.waitForResponse(
     (response) =>
       response.url().endsWith(`/api/v1/contracts/${number}/envelopes`) &&

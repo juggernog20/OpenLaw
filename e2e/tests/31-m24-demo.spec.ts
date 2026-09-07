@@ -157,7 +157,10 @@ test.describe.serial("M24 deployer journey", () => {
       const create = page.getByRole("dialog", { name: "Create matter" });
       await create.getByLabel("Matter type").selectOption(matterTypeId);
 
-      await expect(create.getByLabel("Template (optional)")).toHaveValue(templateId);
+      const template = create.getByLabel("Matter template", { exact: true });
+      await expect(template).toHaveValue("");
+      await template.selectOption(templateId);
+      await expect(template).toHaveValue(templateId);
       await expect(create.getByText("Template adds 2 tasks and 1 key date.")).toBeVisible();
       await expect(create.getByLabel("Title")).toHaveValue(TITLE_PREFIX);
       await expect(create.getByLabel("Priority")).toHaveValue("high");

@@ -11,6 +11,7 @@ import {
   inArray,
   isNull,
   MATTER_STATUS_CATEGORIES,
+  MATTER_PROGRESSION_GROUPS,
   matters,
   matterStatuses,
   type Executor,
@@ -24,6 +25,7 @@ import { freeSlug } from "../../lib/slug.js";
 import { recordNounPhrase } from "../../lib/taxonomy-routes.js";
 
 const CategorySchema = z.enum(MATTER_STATUS_CATEGORIES);
+const ProgressionGroupSchema = z.enum(MATTER_PROGRESSION_GROUPS);
 const DisplayNameSchema = z.string().trim().min(1).max(100);
 const PROTECTED_SLUGS = new Set(["open", "closed"]);
 
@@ -32,6 +34,7 @@ const MatterStatusSchema = z.object({
   slug: z.string(),
   displayName: z.string(),
   category: CategorySchema,
+  progressionGroup: ProgressionGroupSchema,
   displayOrder: z.number().int(),
   isSystemDefault: z.boolean(),
   archivedAt: z.iso.datetime().nullable(),
@@ -47,6 +50,7 @@ function toRow(row: MatterStatus, counts: Map<string, number>) {
     slug: row.slug,
     displayName: row.displayName,
     category: row.category,
+    progressionGroup: row.progressionGroup,
     displayOrder: row.displayOrder,
     isSystemDefault: row.isSystemDefault,
     archivedAt: row.archivedAt?.toISOString() ?? null,
@@ -125,13 +129,17 @@ export const matterStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "createMatterStatus",
         summary: "Add a matter status with an immutable open or closed category",
         tags: ["matter-statuses"],
-        body: z.object({ displayName: DisplayNameSchema, category: CategorySchema }),
+        body: z.object({
+          displayName: DisplayNameSchema,
+          category: CategorySchema,
+          progressionGroup: ProgressionGroupSchema.default("in_progress"),
+        }),
         response: { 201: MatterStatusEnvelope, default: problemResponse },
       },
     },
     async (request, reply) => {
       const displayName = request.body.displayName.trim();
-      const { category } = request.body;
+      const { category, progressionGroup } = request.body;
       const row = await app.db.transaction(async (tx) => {
         const existing = await tx
           .select({ slug: matterStatuses.slug, displayOrder: matterStatuses.displayOrder })
@@ -143,14 +151,14 @@ export const matterStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
           existing.reduce((top, candidate) => Math.max(top, candidate.displayOrder), 0) + 1;
         const [created] = await tx
           .insert(matterStatuses)
-          .values({ slug, displayName, category, displayOrder })
+          .values({ slug, displayName, category, progressionGroup, displayOrder })
           .returning();
         await recordActivity(tx, {
           entityType: "system",
           actorId: request.user.id,
           action: "matter_status.created",
           visibility: "admin_only",
-          payload: { slug, displayName, category },
+          payload: { slug, displayName, category, progressionGroup },
         });
         return created!;
       });
@@ -187,6 +195,44 @@ export const matterStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
           action: "matter_status.renamed",
           visibility: "admin_only",
           payload: { slug: target.slug, from: target.displayName, to: displayName },
+        });
+        return updated!;
+      });
+      return { matterStatus: await rowJson(row) };
+    },
+  );
+
+  app.put(
+    "/matter-statuses/:id/progression-group",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "setMatterStatusProgressionGroup",
+        summary: "Set the progression group for an open matter status",
+        tags: ["matter-statuses"],
+        params: z.object({ id: z.string() }),
+        body: z.strictObject({ progressionGroup: ProgressionGroupSchema }),
+        response: { 200: MatterStatusEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const row = await app.db.transaction(async (tx) => {
+        const target = await lockedStatus(tx, request.params.id);
+        if (target.category !== "open")
+          throw httpError(400, "Closed statuses belong to the Closed group.");
+        const { progressionGroup } = request.body;
+        if (target.progressionGroup === progressionGroup) return target;
+        const [updated] = await tx
+          .update(matterStatuses)
+          .set({ progressionGroup })
+          .where(eq(matterStatuses.id, target.id))
+          .returning();
+        await recordActivity(tx, {
+          entityType: "system",
+          actorId: request.user.id,
+          action: "matter_status.progression_group_changed",
+          visibility: "admin_only",
+          payload: { slug: target.slug, from: target.progressionGroup, to: progressionGroup },
         });
         return updated!;
       });

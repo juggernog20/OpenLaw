@@ -448,17 +448,17 @@ function HeaderCell<Row>({
       // `relative`, because the resize handle sits on this cell's own
       // trailing edge rather than between two cells — a table has no gap
       // between columns to put it in.
-      className={`relative px-4 py-2 font-medium ${def.align === "end" ? "text-end" : "text-start"}`}
+      className={`relative py-2 ps-4 font-medium ${onSort ? (resize.flush ? "pe-8" : "pe-7") : resize.flush ? "pe-3" : "pe-2"} ${def.align === "end" ? "text-end" : "text-start"}`}
       aria-sort={sort === null ? undefined : sort === "asc" ? "ascending" : "descending"}
     >
       {onSort ? (
         <button
           type="button"
           onClick={onSort}
-          className="group flex w-full items-center gap-1 truncate rounded-chip text-start font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+          className="group relative block w-full rounded-chip text-start font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
         >
           <span
-            className="truncate"
+            className="block truncate"
             // The floors sit under the headings on purpose, so a narrow
             // column truncates its own name (see the contracts catalogue).
             // The heading is the one text in the table with a plain-string
@@ -469,18 +469,27 @@ function HeaderCell<Row>({
           >
             {def.header}
           </span>
+          {/* Keep the sort icon in the trailing padding, clear of the resize handle. */}
           {sort === null ? (
             // Only on hover or focus: an unsorted column advertising that
             // it could be sorted on every row of the strip is noise.
             <ChevronsUpDown
               size={16}
               aria-hidden="true"
-              className="shrink-0 text-subtle opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100"
+              className="absolute -end-5 top-1/2 -translate-y-1/2 text-subtle opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100"
             />
           ) : sort === "asc" ? (
-            <ArrowUp size={16} aria-hidden="true" className="shrink-0" />
+            <ArrowUp
+              size={16}
+              aria-hidden="true"
+              className="absolute -end-5 top-1/2 -translate-y-1/2"
+            />
           ) : (
-            <ArrowDown size={16} aria-hidden="true" className="shrink-0" />
+            <ArrowDown
+              size={16}
+              aria-hidden="true"
+              className="absolute -end-5 top-1/2 -translate-y-1/2"
+            />
           )}
         </button>
       ) : (

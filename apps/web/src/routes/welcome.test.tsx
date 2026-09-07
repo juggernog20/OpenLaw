@@ -1093,7 +1093,9 @@ const TYPE_ROW = {
 } satisfies ReviewResponse<"/api/v1/matter-types">["matterTypes"][number];
 const REVIEW_RESPONSES = {
   "/api/v1/matter-types": { matterTypes: [TYPE_ROW] },
-  "/api/v1/matter-statuses": { matterStatuses: [{ ...TYPE_ROW, category: "open" }] },
+  "/api/v1/matter-statuses": {
+    matterStatuses: [{ ...TYPE_ROW, category: "open", progressionGroup: "open" }],
+  },
   "/api/v1/contract-types": { contractTypes: [TYPE_ROW] },
   "/api/v1/contract-statuses": { contractStatuses: [{ ...TYPE_ROW, stage: "draft" }] },
   "/api/v1/entity-types": { entityTypes: [TYPE_ROW] },

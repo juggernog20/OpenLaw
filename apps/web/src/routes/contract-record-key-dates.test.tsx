@@ -298,9 +298,9 @@ describe("the record's Key dates section (CTR-009)", () => {
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: "Add date" }));
 
-    await user.type(screen.getByLabelText("Date"), "2027-05-04");
-    await user.type(screen.getByLabelText("Event"), "Insurance certificate renewal");
-    await user.type(screen.getByLabelText("Note (optional)"), "Broker confirms annually.");
+    await user.type(screen.getByLabelText(/^Date\*?$/), "2027-05-04");
+    await user.type(screen.getByLabelText(/^Event\*?$/), "Insurance certificate renewal");
+    await user.type(screen.getByLabelText("Note"), "Broker confirms annually.");
     await user.click(screen.getByRole("button", { name: "Add date", hidden: false }));
 
     await waitFor(() => expect(api.writes).toHaveLength(1));
@@ -323,7 +323,7 @@ describe("the record's Key dates section (CTR-009)", () => {
 
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: "Add date" }));
-    await user.type(screen.getByLabelText("Date"), "2027-05-04");
+    await user.type(screen.getByLabelText(/^Date\*?$/), "2027-05-04");
     await user.click(screen.getByRole("button", { name: "Add date", hidden: false }));
 
     const alert = await screen.findByRole("alert");
@@ -332,10 +332,10 @@ describe("the record's Key dates section (CTR-009)", () => {
     // The message names the box it is about, so a screen reader reads
     // the two together rather than announcing a complaint about nothing
     // in particular (DES-011).
-    const label = screen.getByLabelText("Event");
+    const label = screen.getByLabelText(/^Event\*?$/);
     expect(label).toHaveAttribute("aria-invalid", "true");
     expect(label).toHaveAttribute("aria-describedby", alert.id);
-    expect(screen.getByLabelText("Date")).not.toHaveAttribute("aria-invalid");
+    expect(screen.getByLabelText(/^Date\*?$/)).not.toHaveAttribute("aria-invalid");
   });
 
   it("prints the seam's refusal in the dialog and keeps it open", async () => {
@@ -346,8 +346,8 @@ describe("the record's Key dates section (CTR-009)", () => {
 
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: "Add date" }));
-    await user.type(screen.getByLabelText("Date"), "2027-05-04");
-    await user.type(screen.getByLabelText("Event"), "Insurance renewal");
+    await user.type(screen.getByLabelText(/^Date\*?$/), "2027-05-04");
+    await user.type(screen.getByLabelText(/^Event\*?$/), "Insurance renewal");
     await user.click(screen.getByRole("button", { name: "Add date", hidden: false }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -366,11 +366,11 @@ describe("the record's Key dates section (CTR-009)", () => {
     await user.click(card.getByRole("button", { name: "Actions for Price review window opens" }));
     await user.click(await screen.findByRole("menuitem", { name: "Edit date" }));
 
-    expect(screen.getByLabelText("Date")).toHaveValue("2027-03-01");
-    expect(screen.getByLabelText("Event")).toHaveValue("Price review window opens");
+    expect(screen.getByLabelText(/^Date\*?$/)).toHaveValue("2027-03-01");
+    expect(screen.getByLabelText(/^Event\*?$/)).toHaveValue("Price review window opens");
 
-    await user.clear(screen.getByLabelText("Event"));
-    await user.type(screen.getByLabelText("Event"), "Price review window closes");
+    await user.clear(screen.getByLabelText(/^Event\*?$/));
+    await user.type(screen.getByLabelText(/^Event\*?$/), "Price review window closes");
     await user.click(screen.getByRole("button", { name: "Save" }));
 
     await waitFor(() => expect(api.writes).toHaveLength(1));

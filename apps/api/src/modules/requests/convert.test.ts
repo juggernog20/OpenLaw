@@ -361,18 +361,31 @@ describe("the target is confirmed, never classified (DD-018, INT-002)", () => {
     expect(await contractCount()).toBe(before);
   });
 
-  it("refuses a body that names a different type from the one bound", async () => {
-    // The act DD-018 takes away from triage: the Administrator decided
-    // "NDA request" makes NDAs, and a triager does not re-decide it.
-    const request = await submit("Classification is not triage's");
-    const before = await contractCount();
+  it("saves a changed type, priority and carried Field while preserving the Request", async () => {
+    const slug = fieldSlugs.get("Counterparty")!;
+    const request = await submit("Original request", {
+      urgency: "critical",
+      customFields: { [slug]: "Original party" },
+    });
     const res = await convert(request.number, {
       title: "Actually an MSA",
       contractTypeId: contractTypeIds.get("msa"),
+      priority: "low",
+      customFields: { [slug]: "Revised party", [fieldSlugs.get("Governing law")!]: "England" },
     });
-    expect(res.statusCode, res.body).toBe(400);
-    expect((await stored(request.id)).status).toBe("new");
-    expect(await contractCount()).toBe(before);
+    expect(res.statusCode, res.body).toBe(200);
+    const contract = await contractNumbered(res.json().request.convertedContract.number as number);
+    expect(contract).toMatchObject({
+      title: "Actually an MSA",
+      contractTypeId: contractTypeIds.get("msa"),
+      priority: "low",
+      customFields: { [slug]: "Revised party" },
+    });
+    expect(await stored(request.id)).toMatchObject({
+      summary: "Original request",
+      urgency: "critical",
+      customFields: { [slug]: "Original party" },
+    });
   });
 
   it("asks a module-only target for the type the form deferred", async () => {
@@ -470,6 +483,7 @@ describe("what the record is born with (INT-002, MTR-012, CTR-016)", () => {
     const number = res.json().request.convertedContract.number as number;
     const contract = await contractNumbered(number);
     expect(contract.title).toBe("Northwind Labs — mutual NDA");
+    expect(contract.description).toBe("For the pilot kicking off next month.");
     // MTR-012's 1:1 map. Urgency is what the requester claimed; priority
     // is what legal now holds, and they start equal.
     expect(contract.priority).toBe("critical");

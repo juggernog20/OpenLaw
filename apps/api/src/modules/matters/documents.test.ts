@@ -93,12 +93,15 @@ function uploadBody(
   filename: string,
   content: Buffer,
   folderPath?: string,
+  kind?: string,
 ): { payload: Buffer; headers: Record<string, string> } {
-  const chunks: Buffer[] = [
-    Buffer.from(
-      `--${BOUNDARY}\r\ncontent-disposition: form-data; name="kind"\r\n\r\ndraft_ours\r\n`,
-    ),
-  ];
+  const chunks: Buffer[] = [];
+  if (kind)
+    chunks.push(
+      Buffer.from(
+        `--${BOUNDARY}\r\ncontent-disposition: form-data; name="kind"\r\n\r\n${kind}\r\n`,
+      ),
+    );
   if (folderPath) {
     chunks.push(
       Buffer.from(
@@ -136,18 +139,46 @@ async function upload(number: number, filename: string, path?: string) {
     document: response.json().document as {
       id: string;
       isPrimary: boolean;
-      versions: { id: string; isExecuted: boolean }[];
+      versions: { id: string; kind: string; isExecuted: boolean }[];
     },
   };
 }
 
 describe("matter documents", () => {
+  it("stores neutral kinds for Matter uploads and new versions", async () => {
+    const matter = await newMatter("Neutral document classification");
+    const created = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/matters/${matter.number}/documents`,
+      cookies: memberCookies,
+      ...uploadBody("advice.pdf", Buffer.from("%PDF-1.7 advice"), undefined, "executed"),
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const document = created.json().document;
+    expect(document.versions.map((version: { kind: string }) => version.kind)).toEqual(["general"]);
+    for (const kind of [undefined, "general", "executed"]) {
+      const result = await harness.app.inject({
+        method: "POST",
+        url: `/api/v1/documents/${document.id}/versions`,
+        cookies: memberCookies,
+        ...uploadBody("advice.pdf", Buffer.from("%PDF-1.7 updated advice"), undefined, kind),
+      });
+      expect(result.statusCode, result.body).toBe(201);
+      expect(
+        result
+          .json()
+          .document.versions.every((version: { kind: string }) => version.kind === "general"),
+      ).toBe(true);
+    }
+  });
+
   it("uploads, lists, downloads, previews, extracts text, and recreates a dropped folder path", async () => {
     const matter = await newMatter("Paper trail");
     const { bytes, document } = await upload(matter.number, "advice.pdf", "Disclosure/Expert");
     const [version] = document.versions;
     expect(document.isPrimary).toBe(false);
     expect(version!.isExecuted).toBe(false);
+    expect(version!.kind).toBe("general");
 
     const listed = await harness.app.inject({
       method: "GET",

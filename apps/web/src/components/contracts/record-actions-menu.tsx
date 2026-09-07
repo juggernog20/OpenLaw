@@ -42,14 +42,16 @@ const COPIED_MS = 2000;
 
 export function RecordActionsMenu({
   number,
+  recordKind = "contract",
   archived,
   busy,
   onRename,
   onRunAnalysis,
   onArchive,
 }: Readonly<{
-  /** The contract number, which is the link this copies. */
+  /** The record number used by the copied link. */
   number: number;
+  recordKind?: "contract" | "matter";
   archived: boolean;
   /** An archive or restore is out; the trigger is inert until it lands. */
   busy: boolean;
@@ -77,7 +79,10 @@ export function RecordActionsMenu({
     if (copiedTimer.current) clearTimeout(copiedTimer.current);
     try {
       await navigator.clipboard.writeText(
-        new URL(`/contracts/${number}`, window.location.origin).toString(),
+        new URL(
+          `/${recordKind === "matter" ? "matters" : "contracts"}/${number}`,
+          window.location.origin,
+        ).toString(),
       );
       setCopied(true);
       copiedTimer.current = setTimeout(() => setCopied(false), COPIED_MS);
@@ -96,10 +101,17 @@ export function RecordActionsMenu({
           variant="ghost"
           size="icon"
           disabled={busy}
-          aria-label={intl.formatMessage({
-            id: "contracts.record.actions",
-            defaultMessage: "Contract actions",
-          })}
+          aria-label={intl.formatMessage(
+            recordKind === "matter"
+              ? {
+                  id: "matters.record.actions",
+                  defaultMessage: "Matter actions",
+                }
+              : {
+                  id: "contracts.record.actions",
+                  defaultMessage: "Contract actions",
+                },
+          )}
         >
           <MoreHorizontal size={16} aria-hidden="true" />
         </Button>
@@ -147,7 +159,11 @@ export function RecordActionsMenu({
         {onRename && (
           <DropdownMenuItem onSelect={() => (renameWanted.current = true)}>
             <Pencil size={16} aria-hidden="true" />
-            <FormattedMessage id="contracts.record.rename" defaultMessage="Rename contract" />
+            {recordKind === "matter" ? (
+              <FormattedMessage id="matters.record.rename" defaultMessage="Rename matter" />
+            ) : (
+              <FormattedMessage id="contracts.record.rename" defaultMessage="Rename contract" />
+            )}
           </DropdownMenuItem>
         )}
         {onRunAnalysis && (

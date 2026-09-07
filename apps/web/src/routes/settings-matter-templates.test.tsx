@@ -609,7 +609,7 @@ describe("the core template editor", () => {
     const user = userEvent.setup();
 
     expect(await screen.findByRole("combobox", { name: "Business unit" })).toHaveValue("Finance");
-    expect(screen.getByRole("spinbutton", { name: "Budget" })).toHaveValue(5000);
+    expect(screen.getByRole("textbox", { name: "Budget" })).toHaveValue("5,000");
     expect(
       screen.getByText(
         "Old region is no longer attached to this Matter type. Its saved value (MEA) is retained.",
@@ -617,7 +617,7 @@ describe("the core template editor", () => {
     ).toBeInTheDocument();
 
     await user.selectOptions(screen.getByRole("combobox", { name: "Business unit" }), "People");
-    const budget = screen.getByRole("spinbutton", { name: "Budget" });
+    const budget = screen.getByRole("textbox", { name: "Budget" });
     await user.clear(budget);
     await user.type(budget, "7500");
     await user.click(screen.getByRole("button", { name: "Save template" }));

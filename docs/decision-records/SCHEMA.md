@@ -547,16 +547,17 @@ Source: **MTR-002**
 
 Configurable lifecycle status labels, each mapped to a fixed system category. Application code branches only on `category`; labels are presentation/workflow metadata. Same machinery as `matter_types`.
 
-| Column                     | Type        | Notes                                                 |
-| -------------------------- | ----------- | ----------------------------------------------------- |
-| `id`                       | UUID        | PK                                                    |
-| `slug`                     | text        | unique, not null, immutable after creation            |
-| `display_name`             | text        | not null, user-editable                               |
-| `category`                 | text (enum) | `open` \| `closed`; **immutable after creation**      |
-| `display_order`            | integer     | not null; controls picker order                       |
-| `is_system_default`        | boolean     | not null, default `false`; `true` for the 4 seed rows |
-| `archived_at`              | timestamptz | nullable; soft-delete affordance                      |
-| `created_at`, `updated_at` | timestamptz |                                                       |
+| Column                     | Type        | Notes                                                                                                       |
+| -------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                                          |
+| `slug`                     | text        | unique, not null, immutable after creation                                                                  |
+| `display_name`             | text        | not null, user-editable                                                                                     |
+| `category`                 | text (enum) | `open` \| `closed`; **immutable after creation**                                                            |
+| `progression_group`        | text (enum) | `open` \| `in_progress` \| `waiting`; default `in_progress`, editable; ignored for closed-category statuses |
+| `display_order`            | integer     | not null; controls picker order                                                                             |
+| `is_system_default`        | boolean     | not null, default `false`; `true` for the 4 seed rows                                                       |
+| `archived_at`              | timestamptz | nullable; soft-delete affordance                                                                            |
+| `created_at`, `updated_at` | timestamptz |                                                                                                             |
 
 **Seed rows** (install-time migration): `open` (open), `in_progress` (open), `on_hold` (open), `closed` (closed).
 
@@ -985,7 +986,7 @@ File-immutable snapshots, strictly linear per document (`version_number` 1..n). 
 | `document_id`              | UUID        | FK → `documents.id`, not null                                                                                                                                                                                                                                                                              |
 | `version_number`           | integer     | not null; unique per document, 1..n                                                                                                                                                                                                                                                                        |
 | `file_ref`                 | text        | not null; storage reference, `<driver>:<key>` per DOC-012 (e.g. `local:…`). A version row with no blob describes no bytes, so the constraint is part of the immutability claim above                                                                                                                       |
-| `kind`                     | text (enum) | `draft_ours` \| `draft_theirs` \| `redline_theirs` \| `redline_ours` \| `executed` \| `amendment` \| `generated_redline` (**CTR-014** kinds + generated); the only correctable column, except that `generated_redline` is neither a source nor target                                                      |
+| `kind`                     | text (enum) | `general` (neutral Matter document) \| `draft_ours` \| `draft_theirs` \| `redline_theirs` \| `redline_ours` \| `executed` \| `amendment` \| `generated_redline` (**CTR-014** kinds + generated); the only correctable column, except that `generated_redline` is neither a source nor target               |
 | `source`                   | text (enum) | `uploaded` \| `generated`; not null, default `uploaded`. Landed in M32/4, migration `0088_document-version-provenance`, with no backfill. A check pairs all three provenance columns: `generated` with both operands set exactly when the kind is `generated_redline`, `uploaded` with both NULL otherwise |
 | `compared_from_version_id` | UUID        | FK → `document_versions.id`, nullable; generated redlines: the older comparison operand                                                                                                                                                                                                                    |
 | `compared_to_version_id`   | UUID        | FK → `document_versions.id`, nullable; generated redlines: the newer comparison operand — both operands stored per **DOC-001**/**DOC-003** so the original comparison is reconstructable after the result is appended                                                                                      |
@@ -1284,3 +1285,12 @@ Tracked here so they're not forgotten when the relevant grill begins.
 - ~~**Full-text search column placement** — per-table generated `tsvector` columns vs separate index store.~~ Resolved by **DOC-009** M25/2 and **TECH-014**: stored generated columns on each searchable table, with GIN indexes; no separate store or indexing queue.
 - **Authentication-related columns on `users`** — resolved per **TECH-008**: credential material lives in `accounts`/`verifications`, not on `users`; see the `users`, `sessions`, `accounts`, and `verifications` sections.
 - **Tags table(s)** — resolved: deferred out of v1 per **MTR-010**; see `FUTURE-FEATURES.md`.
+
+### Next deadline — 2026-09-07 UX addendum
+
+Matters and Contracts have no record-level `due_date`. The temporary columns on the
+former local UX branch were removed before integration; the canonical migration path
+does not create them. Next deadline is computed from upcoming Key dates and
+unfinished dated Tasks, including overdue Tasks; Contracts also consider expiry and notice
+dates. Its response includes `date`, `label`, and `source` (`task` or `key_date`).
+Closed/ended or archived records return null. See MTR-016 and CTR-005 UX addenda.

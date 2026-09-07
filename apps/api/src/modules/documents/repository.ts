@@ -19,6 +19,7 @@ import {
   eq,
   entities,
   gte,
+  inArray,
   isNotNull,
   isNull,
   knowledgeItems,
@@ -40,6 +41,7 @@ import {
 } from "@openlaw/shared";
 import { documentRepositoryScope, requireDocumentReader } from "../../lib/document-access.js";
 import { problemResponse } from "../../lib/problem.js";
+import { FilterChoices, validDateRanges } from "../../lib/record-filters.js";
 import { renderFamilySql } from "../../lib/render-family.js";
 import {
   documentOwnerCase,
@@ -90,10 +92,18 @@ const RepositoryQuerySchema = z
     owner: z.enum(DOCUMENT_OWNER_KINDS).optional(),
     record: RecordReferenceSchema.optional(),
     folder: z.string().min(1).max(64).optional(),
-    counterparty: z.string().min(1).max(64).optional(),
-    uploader: z.string().min(1).max(64).optional(),
-    format: z.enum(DOCUMENT_FORMATS).optional(),
-    kind: z.enum(DOCUMENT_VERSION_KINDS).optional(),
+    counterparty: FilterChoices.optional(),
+    uploader: FilterChoices.optional(),
+    format: FilterChoices.refine(
+      (value) =>
+        value.split(",").every((item) => DOCUMENT_FORMATS.some((format) => format === item)),
+      "Unknown format",
+    ).optional(),
+    kind: FilterChoices.refine(
+      (value) =>
+        value.split(",").every((item) => DOCUMENT_VERSION_KINDS.some((kind) => kind === item)),
+      "Unknown kind",
+    ).optional(),
     uploadedFrom: z.iso.date().optional(),
     uploadedTo: z.iso.date().optional(),
     includeArchived: z.enum(["true", "false"]).optional(),
@@ -103,6 +113,12 @@ const RepositoryQuerySchema = z
     limit: z.coerce.number().int().min(1).max(MAX_LIMIT).optional(),
   })
   .superRefine((query, context) => {
+    if (!validDateRanges(query))
+      context.addIssue({
+        code: "custom",
+        path: ["uploadedTo"],
+        message: "End date must be on or after start date.",
+      });
     if (query.folder !== undefined && query.record === undefined) {
       context.addIssue({
         code: "custom",
@@ -263,7 +279,7 @@ function counterpartyPredicate(counterpartyId: string | undefined): SQL | undefi
     select 1
     from ${contractCounterparties}
     where ${contractCounterparties.contractId} = ${documents.contractId}
-      and ${contractCounterparties.counterpartyId} = ${counterpartyId}
+      and ${inArray(contractCounterparties.counterpartyId, counterpartyId.split(","))}
   )`;
 }
 
@@ -530,15 +546,24 @@ export const documentRepositoryRoutes: FastifyPluginAsyncZod = async (app) => {
             recordPredicate(request.query.record, request.query.owner),
             counterpartyPredicate(request.query.counterparty),
             request.query.uploader
-              ? eq(documentVersions.createdBy, request.query.uploader)
+              ? inArray(documentVersions.createdBy, request.query.uploader.split(","))
               : undefined,
             request.query.folder === "root"
               ? isNull(documents.folderId)
               : request.query.folder
                 ? eq(documents.folderId, request.query.folder)
                 : undefined,
-            request.query.format ? eq(repositoryFormat, request.query.format) : undefined,
-            request.query.kind ? eq(documentVersions.kind, request.query.kind) : undefined,
+            request.query.format
+              ? inArray(repositoryFormat, request.query.format.split(","))
+              : undefined,
+            request.query.kind
+              ? inArray(
+                  documentVersions.kind,
+                  DOCUMENT_VERSION_KINDS.filter((kind) =>
+                    request.query.kind?.split(",").includes(kind),
+                  ),
+                )
+              : undefined,
             request.query.uploadedFrom
               ? gte(documentVersions.createdAt, sql`${request.query.uploadedFrom}::date`)
               : undefined,

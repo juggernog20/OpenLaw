@@ -283,12 +283,13 @@ describe("Matter Key dates", () => {
       method: "PATCH",
       url: `/api/v1/matters/${matter.number}`,
       cookies: memberCookies,
-      payload: { statusId: openStatusId },
+      payload: { statusId: openStatusId, confirmReopen: true },
     });
     expect(reopen.statusCode, reopen.body).toBe(200);
     expect(reopen.json().matter.nextDeadline).toEqual({
       date: "2099-09-01",
       label: "Still retained",
+      source: "key_date",
     });
     expect((await list(matter.number))[0]).toMatchObject({ label: "Still retained", isNext: true });
 
@@ -296,7 +297,7 @@ describe("Matter Key dates", () => {
       method: "PATCH",
       url: `/api/v1/matters/${matter.number}`,
       cookies: memberCookies,
-      payload: { statusId: closedStatusId },
+      payload: { statusId: closedStatusId, closingNote: "Advice delivered; work complete." },
     });
     expect(close.statusCode, close.body).toBe(200);
     expect(close.json().matter.nextDeadline).toBeNull();
@@ -305,12 +306,13 @@ describe("Matter Key dates", () => {
       method: "PATCH",
       url: `/api/v1/matters/${matter.number}`,
       cookies: memberCookies,
-      payload: { statusId: openStatusId },
+      payload: { statusId: openStatusId, confirmReopen: true },
     });
     expect(reopenAgain.statusCode, reopenAgain.body).toBe(200);
     expect(reopenAgain.json().matter.nextDeadline).toEqual({
       date: "2099-09-01",
       label: "Still retained",
+      source: "key_date",
     });
 
     const archive = await harness.app.inject({
@@ -334,6 +336,7 @@ describe("Matter Key dates", () => {
     expect(restore.json().matter.nextDeadline).toEqual({
       date: "2099-09-01",
       label: "Still retained",
+      source: "key_date",
     });
 
     const archiveAgain = await harness.app.inject({

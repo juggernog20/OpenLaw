@@ -3,6 +3,7 @@
 /** The first matter surface: list, create, options, and record read. */
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
+import { nextDeadline, NextDeadlineSchema } from "../../lib/next-deadline.js";
 import {
   FilterChoices,
   FilterOptionsSchema,
@@ -20,11 +21,11 @@ import {
   isNull,
   matters,
   matterStatuses,
+  MATTER_PROGRESSION_GROUPS,
   matterTeam,
   matterTypeFields,
   matterTypes,
   MATTER_TEAM_ROLES,
-  matterKeyDates,
   matterTemplateKeyDates,
   matterTemplateTasks,
   matterTemplates,
@@ -45,6 +46,7 @@ import {
   SORT_DIRECTIONS,
   type MatterSortKey,
   type SortDirection,
+  MATTER_REOPEN_CONFIRMATION_PROBLEM_TYPE,
 } from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
@@ -70,7 +72,7 @@ import {
   NO_MATTER,
   reachedMatter,
 } from "../../lib/matter-access.js";
-import { httpError, problemResponse } from "../../lib/problem.js";
+import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import { setMatterParent } from "../../lib/matter-relations.js";
 import { resolveStaffRefs, StaffRequestCustomFieldRefsSchema } from "../requests/projection.js";
 import { createMatter } from "./create.js";
@@ -111,6 +113,7 @@ const MatterRowSchema = z.object({
   statusId: z.string(),
   statusName: z.string(),
   statusCategory: z.enum(["open", "closed"]),
+  statusProgressionGroup: z.enum(MATTER_PROGRESSION_GROUPS),
   manager: PersonSchema.nullable(),
   priority: SeveritySchema,
   risk: SeveritySchema.nullable(),
@@ -121,7 +124,7 @@ const MatterRowSchema = z.object({
   archivedAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
-  nextDeadline: z.object({ date: z.iso.date(), label: z.string() }).nullable(),
+  nextDeadline: NextDeadlineSchema,
 });
 
 const MatterEnvelope = z.object({ matter: MatterRowSchema });
@@ -161,13 +164,14 @@ interface MatterContext {
   matterTypeName: string;
   statusName: string;
   statusCategory: "open" | "closed";
+  statusProgressionGroup: (typeof MATTER_PROGRESSION_GROUPS)[number];
   manager: {
     id: string;
     displayName: string;
     image: string | null;
     archivedAt: Date | null;
   } | null;
-  nextDeadline?: { date: string; label: string } | null;
+  nextDeadline?: z.infer<typeof NextDeadlineSchema>;
 }
 
 function toRow(
@@ -185,6 +189,7 @@ function toRow(
     statusId: row.statusId,
     statusName: context.statusName,
     statusCategory: context.statusCategory,
+    statusProgressionGroup: context.statusProgressionGroup,
     manager: context.manager
       ? {
           id: context.manager.id,
@@ -214,23 +219,14 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         matterTypeName: matterTypes.displayName,
         statusName: matterStatuses.displayName,
         statusCategory: matterStatuses.category,
+        statusProgressionGroup: matterStatuses.progressionGroup,
         manager: {
           id: users.id,
           displayName: users.displayName,
           image: users.image,
           archivedAt: users.archivedAt,
         },
-        nextDeadline: sql<{ date: string; label: string } | null>`case
-          when ${matterStatuses.category} = 'open' and ${matters.archivedAt} is null then (
-            select json_build_object('date', ${matterKeyDates.date}, 'label', ${matterKeyDates.label})
-            from ${matterKeyDates}
-            where ${matterKeyDates.matterId} = ${matters.id}
-              and ${matterKeyDates.date} >= ${today}
-            order by ${matterKeyDates.date}, ${matterKeyDates.id}
-            limit 1
-          )
-          else null
-        end`,
+        nextDeadline: nextDeadline("matter", today),
       })
       .from(matters)
       .innerJoin(matterTypes, eq(matters.matterTypeId, matterTypes.id))
@@ -451,8 +447,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           request.query.openedTo,
         ),
         dateFilter(
-          sql`case when ${matterStatuses.category} = 'open' and ${matters.archivedAt} is null then
-              (select min(${matterKeyDates.date}) from ${matterKeyDates} where ${matterKeyDates.matterId} = ${matters.id} and ${matterKeyDates.date} >= ${today}) end`,
+          sql`((${nextDeadline("matter", today)}) ->> 'date')::date`,
           request.query.deadlineFrom,
           request.query.deadlineTo,
         ),
@@ -595,6 +590,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
                 slug: z.string(),
                 displayName: z.string(),
                 category: z.enum(["open", "closed"]),
+                progressionGroup: z.enum(MATTER_PROGRESSION_GROUPS),
               }),
             ),
             users: z.array(PersonSchema.extend({ role: z.enum(USER_ROLES) })),
@@ -620,6 +616,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
             slug: matterStatuses.slug,
             displayName: matterStatuses.displayName,
             category: matterStatuses.category,
+            progressionGroup: matterStatuses.progressionGroup,
           })
           .from(matterStatuses)
           .where(isNull(matterStatuses.archivedAt))
@@ -898,9 +895,17 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           risk: SeveritySchema.nullable().optional(),
           customFields: CustomFieldsInput.optional(),
           statusId: z.string().optional(),
+          closingNote: z.string().trim().min(1).max(2000).optional(),
+          confirmReopen: z.literal(true).optional(),
           isConfidential: z.boolean().optional(),
         }),
-        response: { 200: MatterRecordEnvelope, default: problemResponse },
+        response: {
+          200: MatterRecordEnvelope,
+          409: problemTypeResponse("Reopening requires explicit confirmation", [
+            MATTER_REOPEN_CONFIRMATION_PROBLEM_TYPE,
+          ]),
+          default: problemResponse,
+        },
       },
     },
     async (request) => {
@@ -1034,6 +1039,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
               id: matterStatuses.id,
               displayName: matterStatuses.displayName,
               category: matterStatuses.category,
+              progressionGroup: matterStatuses.progressionGroup,
               archivedAt: matterStatuses.archivedAt,
             })
             .from(matterStatuses)
@@ -1053,10 +1059,23 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           statusName = status.displayName;
           statusCategory = status.category;
           if (current.statusCategory === "open" && status.category === "closed") {
+            if (!body.closingNote)
+              throw httpError(400, "Enter a closing note before closing this Matter.");
             patch.closedAt = new Date();
           } else if (current.statusCategory === "closed" && status.category === "open") {
+            if (!body.confirmReopen)
+              throw httpError(409, "Confirm before reopening this Matter.", {
+                type: MATTER_REOPEN_CONFIRMATION_PROBLEM_TYPE,
+              });
             patch.closedAt = null;
           }
+        }
+
+        if (
+          body.closingNote !== undefined &&
+          !(statusChange?.fromCategory === "open" && statusChange.toCategory === "closed")
+        ) {
+          throw httpError(400, "A closing note can only accompany closing an open Matter.");
         }
 
         let confidentialityChange: boolean | undefined;
@@ -1111,7 +1130,12 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
             actorId: request.user.id,
             action: "matter.status_changed",
             visibility: RECORD_ACTIVITY_TIER,
-            payload: { number: row.number, title: row.title, ...statusChange },
+            payload: {
+              number: row.number,
+              title: row.title,
+              ...statusChange,
+              ...(body.closingNote ? { closingNote: body.closingNote } : {}),
+            },
           });
         }
         if (confidentialityChange !== undefined) {
