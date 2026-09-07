@@ -1,0 +1,101 @@
+{
+  "name": "lifecycle",
+  "startedAt": "2026-09-07T18:20:36.540Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "matter-status-and-archive",
+      "contentSha256": "7b4f1d4b77f4979d273e68ffcefe9be849c7e371cd518b256e466a6ba2df60cf"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "Status dropdown offers same Category only; changing labels preserves lifecycle meaning",
+      "actual": "M-54 dropdown excluded closed Statuses. Renamed open Status to Resolved still offered Close matter; same-Category move preserved Opened and null Closed.",
+      "result": "pass",
+      "at": "2026-09-07T18:20:38.638Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Close dialog shows open children without cascading; Cancel keeps open and confirm records Closed",
+      "actual": "Close Cancel preserved open; confirmation set chosen closed Status and timestamp. Administrator saw both child identities. Children stayed open, Contract stayed Draft, Task stayed incomplete, retained Key date lost Next marker.",
+      "result": "pass",
+      "at": "2026-09-07T18:20:38.923Z"
+    },
+    {
+      "role": "administrator",
+      "action": "closed Matter remains writable, including Documents; same-Category move preserves dates",
+      "actual": "Closed-to-closed Status move retained timestamps; Description save, new Task, and fictional PDF upload all succeeded while closed.",
+      "result": "pass",
+      "at": "2026-09-07T18:20:40.692Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Show closed finds completed work; Reopen preserves Opened and restores future deadline eligibility",
+      "actual": "Default list omitted closed Matter; Filter → Show closed revealed it. Reopen Cancel preserved state; confirmation cleared Closed, preserved Opened and reactivated future Next date.",
+      "result": "pass",
+      "at": "2026-09-07T18:20:41.791Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Archive confirmation freezes without cascading; both filters find closed archived work; Restore keeps closed",
+      "actual": "Archive Cancel unchanged; confirm froze Description/Task writes409 while child and linked Contract stayed unarchived. Show archived alone omitted closed record; both flags exposed it. Restore Cancel unchanged; confirm made editable while retaining closed Category and inactive deadline.",
+      "result": "pass",
+      "at": "2026-09-07T18:20:43.335Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Contributor reads lifecycle without actions and receives refusal; History retains transitions",
+      "actual": "Contributor read reached closed Matter but had no lifecycle actions and Status/archive/restore403. History retained lifecycle activity and the post-Closing Description.",
+      "result": "pass",
+      "at": "2026-09-07T18:20:43.998Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Status dropdown offers same Category only; changing labels preserves lifecycle meaning",
+      "actual": "M-57 dropdown excluded closed Statuses. Renamed open Status to Resolved still offered Close matter; same-Category move preserved Opened and null Closed.",
+      "result": "pass",
+      "at": "2026-09-07T18:20:45.066Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Close dialog shows open children without cascading; Cancel keeps open and confirm records Closed",
+      "actual": "Close Cancel preserved open; confirmation set chosen closed Status and timestamp. Legal saw Restricted Matter for private child. Children stayed open, Contract stayed Draft, Task stayed incomplete, retained Key date lost Next marker.",
+      "result": "pass",
+      "at": "2026-09-07T18:20:45.337Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "closed Matter remains writable, including Documents; same-Category move preserves dates",
+      "actual": "Closed-to-closed Status move retained timestamps; Description save, new Task, and fictional PDF upload all succeeded while closed.",
+      "result": "pass",
+      "at": "2026-09-07T18:20:47.083Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Show closed finds completed work; Reopen preserves Opened and restores future deadline eligibility",
+      "actual": "Default list omitted closed Matter; Filter → Show closed revealed it. Reopen Cancel preserved state; confirmation cleared Closed, preserved Opened and reactivated future Next date.",
+      "result": "pass",
+      "at": "2026-09-07T18:20:48.206Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Archive confirmation freezes without cascading; both filters find closed archived work; Restore keeps closed",
+      "actual": "Archive Cancel unchanged; confirm froze Description/Task writes409 while child and linked Contract stayed unarchived. Show archived alone omitted closed record; both flags exposed it. Restore Cancel unchanged; confirm made editable while retaining closed Category and inactive deadline.",
+      "result": "pass",
+      "at": "2026-09-07T18:20:49.739Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Contributor reads lifecycle without actions and receives refusal; History retains transitions",
+      "actual": "Contributor read reached closed Matter but had no lifecycle actions and Status/archive/restore403. History retained lifecycle activity and the post-Closing Description.",
+      "result": "pass",
+      "at": "2026-09-07T18:20:50.397Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T18:20:50.397Z"
+}

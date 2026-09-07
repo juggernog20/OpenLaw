@@ -1,0 +1,143 @@
+{
+  "name": "work",
+  "startedAt": "2026-09-07T18:25:09.143Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "matter-work",
+      "contentSha256": "621ed4366708c7b55defb625733358b565eef3a0bd443e500a1f24352e875ffd"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "blank Task refused; staged team expansion canceled without membership; saved expansion commits both",
+      "actual": "M-70 blank Task refused; staged Priya canceled with no Task/team change; second staged selection saved Task due tomorrow and Priya membership together.",
+      "result": "pass",
+      "at": "2026-09-07T18:25:11.451Z"
+    },
+    {
+      "role": "administrator",
+      "action": "row assignment explicitly adds team member; clearing retains membership; completion and ordering are independent",
+      "actual": "Row added Ravi and assigned him; clearing retained team membership. Assigned acting Manager, added second Task, complete/reopen changed counts; Move up/down changed persisted order without completion changes.",
+      "result": "pass",
+      "at": "2026-09-07T18:25:12.421Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Task edit Cancel/Save and immediate Remove affect only chosen Task",
+      "actual": "Cancel kept original title; Save renamed second Task; Remove Task deleted it immediately without confirmation and retained first Task.",
+      "result": "pass",
+      "at": "2026-09-07T18:25:12.804Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Key dates validate, mark Overdue and Next, and remain separate from Task due date",
+      "actual": "Missing Key date values refused; saved three dates with notes, past marked Overdue and day4 Next; Task due day1 absent from deadlines and no per-date Assignee/reminder control.",
+      "result": "pass",
+      "at": "2026-09-07T18:25:13.878Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Key date edits and confirmed removal; Closing keeps dates writable while disabling active Next marker",
+      "actual": "Date/note edit persisted; Remove Cancel kept all three, confirmation removed only Later. Closed Matter retained two dates and allowed Event edit with no Next; reopened future date regained Next.",
+      "result": "pass",
+      "at": "2026-09-07T18:25:14.602Z"
+    },
+    {
+      "role": "administrator",
+      "action": "parent and flat Matter links are independent; cycles refused and removal retains target",
+      "actual": "Parent Cancel changed nothing; Set parent saved; reverse loop refused in dialog. Flat relation appeared both ways; Remove detached only link, preserving target and independent Manager.",
+      "result": "pass",
+      "at": "2026-09-07T18:25:18.197Z"
+    },
+    {
+      "role": "administrator",
+      "action": "New sub-Matter creates independent child; inaccessible related Matter exposes no identity",
+      "actual": "New sub-Matter M-74 received parent link but no Manager, Confidential flag, Tasks or dates. Administrator linked private target; Legal saw only Restricted Matter and direct404.",
+      "result": "pass",
+      "at": "2026-09-07T18:25:18.991Z"
+    },
+    {
+      "role": "administrator",
+      "action": "linked Contract keeps Counterparty and flags; explicit Unlink is required before moving; Contributor sees restricted Contract",
+      "actual": "Contract C-373 linked to Confidential Matter; Confidentiality differs named both records and was dismissed. Counterparty stayed on Contract and flags independent; second link409 until UI Unlink, then moved to another Matter. Contributor team access showed Restricted contract.",
+      "result": "pass",
+      "at": "2026-09-07T18:25:22.385Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Contributor read-only Tasks/dates/relations and archived freeze are enforced; Restore retains rows and History",
+      "actual": "Contributor read rows but had no add controls, disabled completion, all three writes403; archived Matter hid edits and Key date write409. Restore retained one Task, two dates and History.",
+      "result": "pass",
+      "at": "2026-09-07T18:25:25.424Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "blank Task refused; staged team expansion canceled without membership; saved expansion commits both",
+      "actual": "M-75 blank Task refused; staged Priya canceled with no Task/team change; second staged selection saved Task due tomorrow and Priya membership together.",
+      "result": "pass",
+      "at": "2026-09-07T18:25:26.582Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "row assignment explicitly adds team member; clearing retains membership; completion and ordering are independent",
+      "actual": "Row added Ravi and assigned him; clearing retained team membership. Assigned acting Manager, added second Task, complete/reopen changed counts; Move up/down changed persisted order without completion changes.",
+      "result": "pass",
+      "at": "2026-09-07T18:25:27.430Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Task edit Cancel/Save and immediate Remove affect only chosen Task",
+      "actual": "Cancel kept original title; Save renamed second Task; Remove Task deleted it immediately without confirmation and retained first Task.",
+      "result": "pass",
+      "at": "2026-09-07T18:25:27.874Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Key dates validate, mark Overdue and Next, and remain separate from Task due date",
+      "actual": "Missing Key date values refused; saved three dates with notes, past marked Overdue and day4 Next; Task due day1 absent from deadlines and no per-date Assignee/reminder control.",
+      "result": "pass",
+      "at": "2026-09-07T18:25:28.914Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Key date edits and confirmed removal; Closing keeps dates writable while disabling active Next marker",
+      "actual": "Date/note edit persisted; Remove Cancel kept all three, confirmation removed only Later. Closed Matter retained two dates and allowed Event edit with no Next; reopened future date regained Next.",
+      "result": "pass",
+      "at": "2026-09-07T18:25:29.651Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "parent and flat Matter links are independent; cycles refused and removal retains target",
+      "actual": "Parent Cancel changed nothing; Set parent saved; reverse loop refused in dialog. Flat relation appeared both ways; Remove detached only link, preserving target and independent Manager.",
+      "result": "pass",
+      "at": "2026-09-07T18:25:33.250Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "New sub-Matter creates independent child; inaccessible related Matter exposes no identity",
+      "actual": "New sub-Matter M-79 received parent link but no Manager, Confidential flag, Tasks or dates. Administrator linked private target; Legal saw only Restricted Matter and direct404.",
+      "result": "pass",
+      "at": "2026-09-07T18:25:34.033Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "linked Contract keeps Counterparty and flags; explicit Unlink is required before moving; Contributor sees restricted Contract",
+      "actual": "Contract C-374 linked to Confidential Matter; Confidentiality differs named both records and was dismissed. Counterparty stayed on Contract and flags independent; second link409 until UI Unlink, then moved to another Matter. Contributor team access showed Restricted contract.",
+      "result": "pass",
+      "at": "2026-09-07T18:25:37.418Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Contributor read-only Tasks/dates/relations and archived freeze are enforced; Restore retains rows and History",
+      "actual": "Contributor read rows but had no add controls, disabled completion, all three writes403; archived Matter hid edits and Key date write409. Restore retained one Task, two dates and History.",
+      "result": "pass",
+      "at": "2026-09-07T18:25:40.545Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T18:25:40.545Z"
+}

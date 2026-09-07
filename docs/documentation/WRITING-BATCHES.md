@@ -70,6 +70,8 @@ See the [batch verification record](batches/DOC-015/README.md) for the tested bu
 
 ## DOC-016 [#736](https://github.com/juggernog20/OpenLaw/issues/736)
 
+See the [batch verification record](batches/DOC-016/README.md) for the tested build, author outcomes, the independent walkthrough of all six scenario/role combinations, and publication dependencies.
+
 - [ ] `create-matter`: Create a Matter and use a template (C22; P0).
 - [ ] `matter-status-and-archive`: Change a Matter Status or archive it (C23; P0).
 - [ ] `matter-work`: Manage Matter Tasks, Key dates, and relationships (C24; P1).

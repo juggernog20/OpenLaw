@@ -1,0 +1,61 @@
+{
+  "articleId": "matter-status-and-archive",
+  "contentSha256": "7b4f1d4b77f4979d273e68ffcefe9be849c7e371cd518b256e466a6ba2df60cf",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-07T19:22:19.461Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-MATTERS.md",
+    "apps/web/src/routes/matter-record.tsx",
+    "apps/web/src/routes/matters.tsx",
+    "apps/api/src/modules/matters/routes.ts",
+    "apps/api/src/modules/matter-key-dates/routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C23",
+      "coverage": ["C23"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "The selected Status retains its immutable open/closed Category and lifecycle changes persist. An archived Matter cannot be edited through ordinary controls; Contributor restrictions remain clear.",
+      "actual": "Status offered Open, In progress, On hold, Awaiting the business, With external counsel, Docs Matter open 1788804353434, Resolved 1788807554914 (no closed labels); choosing \"Resolved 1788807554914\" (an open Status renamed by the Administrator for this check) saved as open Category, Opened unchanged, Closed still null; Close matter still offered. Close dialog listed \"Rev open child legal_team_member 1788807554914\" and \"Restricted Matter\" for the Confidential child (These child Matters will stay open.); Cancel left it open; confirming with \"Docs Matter closed 1788804353434\" set Closed 2026-09-07T18:59:50.407Z with Opened unchanged; children still open, Contract still draft, Task not done, Key date no longer Next; default list includes it=false; Overview shows Closed=true. Status offered Closed, Docs Matter closed 1788804353434, Docs Matter otherClosed 1788804353434; moving to \"Docs Matter otherClosed 1788804353434\" kept Opened and Closed; Description saved and a second Task was added while closed. Default Matters list omitted \"Rev lifecycle legal_team_member 1788807554914\"; Filter → Show closed listed it; Reopen dialog (\"The Matter returns to active surfaces. Its original opened date is preserved.\") Cancel kept it closed; confirming with Open cleared Closed, kept Opened 2026-09-07T18:59:47.285Z, and the Key dates tab marks the future date Next again. Archive dialog (\"The matter leaves the default list. Its history and M-number are kept.\") Cancel changed nothing; confirming set archived while the child and the linked Contract stayed unarchived; Description was not editable and direct Description/Task writes answered 409/409; Show archived alone did not list the closed archived Matter, Show archived plus Show closed did; Restore dialog (\"Restore Rev lifecycle legal_team_member 1788807554914? The matter returns to the\") Cancel kept it archived; confirming restored it still closed with no Next date, and a Description write then answered 200. Ravi Menon (Contributor on the team) read \"Rev lifecycle legal_team_member 1788807554914\" with Status \"Docs Matter closed 1788804353434\" shown and none of Status/Close matter/Reopen matter/Archive/Restore rendered; his direct Status, archive and restore writes answered 403/403/403; the History applet text names Resolved 1788807554914, Docs Matter closed 1788804353434, Docs Matter otherClosed 1788804353434, Open.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-016/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-016/independent-discovery.json",
+        "docs/documentation/batches/DOC-016/independent-accessibility.json"
+      ]
+    },
+    {
+      "id": "V-C23",
+      "coverage": ["C23"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "The selected Status retains its immutable open/closed Category and lifecycle changes persist. An archived Matter cannot be edited through ordinary controls; Contributor restrictions remain clear.",
+      "actual": "Status offered Open, In progress, On hold, Awaiting the business, With external counsel, Docs Matter open 1788804353434, Resolved 1788807554914 (no closed labels); choosing \"Resolved 1788807554914\" (an open Status renamed by the Administrator for this check) saved as open Category, Opened unchanged, Closed still null; Close matter still offered. Close dialog listed \"Rev open child administrator 1788807554914\" and \"Rev private child administrator 1788807554914\" (These child Matters will stay open.); Cancel left it open; confirming with \"Docs Matter closed 1788804353434\" set Closed 2026-09-07T18:59:19.409Z with Opened unchanged; children still open, Contract still draft, Task not done, Key date no longer Next; default list includes it=false; Overview shows Closed=true. Status offered Closed, Docs Matter closed 1788804353434, Docs Matter otherClosed 1788804353434; moving to \"Docs Matter otherClosed 1788804353434\" kept Opened and Closed; Description saved and a second Task was added while closed. Default Matters list omitted \"Rev lifecycle administrator 1788807554914\"; Filter → Show closed listed it; Reopen dialog (\"The Matter returns to active surfaces. Its original opened date is preserved.\") Cancel kept it closed; confirming with Open cleared Closed, kept Opened 2026-09-07T18:59:16.264Z, and the Key dates tab marks the future date Next again. Archive dialog (\"The matter leaves the default list. Its history and M-number are kept.\") Cancel changed nothing; confirming set archived while the child and the linked Contract stayed unarchived; Description was not editable and direct Description/Task writes answered 409/409; Show archived alone did not list the closed archived Matter, Show archived plus Show closed did; Restore dialog (\"Restore Rev lifecycle administrator 1788807554914? The matter returns to the def\") Cancel kept it archived; confirming restored it still closed with no Next date, and a Description write then answered 200. Ravi Menon (Contributor on the team) read \"Rev lifecycle administrator 1788807554914\" with Status \"Docs Matter closed 1788804353434\" shown and none of Status/Close matter/Reopen matter/Archive/Restore rendered; his direct Status, archive and restore writes answered 403/403/403; the History applet text names Resolved 1788807554914, Docs Matter closed 1788804353434, Docs Matter otherClosed 1788804353434, Open.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-016/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-016/independent-discovery.json",
+        "docs/documentation/batches/DOC-016/independent-accessibility.json"
+      ]
+    }
+  ],
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-016/README.md",
+    "docs/documentation/batches/DOC-016/author-lifecycle.json"
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "Linked guides remain unpublished; the article stays in review."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

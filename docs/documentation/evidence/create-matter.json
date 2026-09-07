@@ -1,0 +1,66 @@
+{
+  "articleId": "create-matter",
+  "contentSha256": "078e5ac72d41fa7ed55e02131b55dcdb86cb26d646485e64f5a494969e1aef73",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-07T19:22:19.461Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-MATTERS.md",
+    "apps/web/src/components/matters/create-matter-dialog.tsx",
+    "apps/web/src/routes/matter-record.tsx",
+    "apps/web/src/components/matters/team-tray.tsx",
+    "apps/api/src/modules/matters/create.ts",
+    "apps/api/src/modules/matters/routes.ts",
+    "apps/api/src/modules/matter-templates/routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C22",
+      "coverage": ["C22"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "The Matter has its intended Manager, team, references, and template defaults. Missing required values and unavailable templates produce the supported validation or selection behavior.",
+      "actual": "Create with an empty Title and then with the required text Field empty kept the dialog open (message: \"Fill Docs Matter required 1788804353434, Docs Matter entity 1788804353434.\"); Manager list excludes Contributors and Business Users; Cancel closed the dialog; highest M-number stayed 92. M-93 opened after Create: Status Open (open Category), Priority Medium, Risk Not assessed, Manager Priya Raman, team roster shows Priya as Matter Manager and Nadia Haddad as Creator; saved required text, Entity \"Docs Matter live Entity 1788804353434\" and person Ravi Menon; Ravi's direct read answered 404; renaming kept M-93. Priority High and Risk Medium saved; clearing the required text was refused (\"Fill Docs Matter required 1788804353434 first — the type requires it.\") and the value stayed; choosing \"Docs Matter retype 1788804353434\" opened \"Change matter type\" (Change matter type to Docs Matter retype 1788804353434 Complete the new type's required fi…), Cancel kept the type, Change type saved it with {\"docs_matter_extra_1788804353434\":42,\"docs_matter_entity_1788804353434\":\"01a07d0c-5382-7025-baa9-afe41b6c8d92\",\"docs_matter_person_1788804353434\":\"01a07ac6-5983-71e0-bd2e-7e29e6163e60\",\"docs_matter_required_1788804353434\":\"Rev fictional scope\"}; switching back to \"Docs Matter required 1788804353434\" kept the extra value in the record but Overview no longer shows it. As Manager of M-93 Priya could already read it (200); on the new Confidential M-94 her read answered 404 until Nadia Haddad added her as Member and Watcher; she then read it, edited the Description, had Add team member disabled/absent and her direct team write answered 403; removing her Watcher role left Member; making her Manager did not change her team roles. \"Docs Matter single 1788804353434\" auto-selected its only live template (title \"Fictional single review\", Priority High, Risk Critical, legal Field \"Legal single default\", \"Template adds 2 tasks and 2 key dates.\"); No template cleared them to Medium/Not assessed; \"Docs Matter multi 1788804353434\" offered No template, Docs Matter alpha playbook 1788804353434, Docs Matter beta playbook 1788804353434 with No template selected; alpha set \"Fictional alpha review\", and after typing a title beta kept it while switching Priority/Risk to Low/Low. M-95 created 2026-09-07T18:52:30.859Z (UTC date 2026-09-07): Tasks \"Review single evidence\" due 2026-09-10 (+3) unassigned because no Manager was chosen and \"Arrange single discussion\" without a date; Key dates 2026-09-07 (+0) and 2026-09-14 (+7); Status Open; legal Field kept the typed \"Rev override\"; the optional Field cleared in the dialog came back as \"Optional single default\" (issue #770) and Overview showed \"Optional single default\"; clearing it on Overview persisted; a template description edit and a Manager change to Priya left the copied rows unchanged. Create with the beta template archived after the form opened was refused (\"The template must be live and belong to the selected matter type.\") and the highest M-number stayed 95; a fresh form listed No template, Docs Matter alpha playbook 1788804353434; Ravi Menon saw no New matter button and his direct create answered 403.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-016/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-016/independent-discovery.json",
+        "docs/documentation/batches/DOC-016/independent-accessibility.json",
+        "docs/documentation/batches/DOC-016/independent-template-content.json"
+      ]
+    },
+    {
+      "id": "V-C22",
+      "coverage": ["C22"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "The Matter has its intended Manager, team, references, and template defaults. Missing required values and unavailable templates produce the supported validation or selection behavior.",
+      "actual": "Create with an empty Title and then with the required text Field empty kept the dialog open (message: \"Fill Docs Matter required 1788804353434, Docs Matter entity 1788804353434.\"); Manager list excludes Contributors and Business Users; Cancel closed the dialog; highest M-number stayed 89. M-90 opened after Create: Status Open (open Category), Priority Medium, Risk Not assessed, Manager Priya Raman, team roster shows Priya as Matter Manager and Daniel Okafor as Creator; saved required text, Entity \"Docs Matter live Entity 1788804353434\" and person Ravi Menon; Ravi's direct read answered 404; renaming kept M-90. Priority High and Risk Medium saved; clearing the required text was refused (\"Fill Docs Matter required 1788804353434 first — the type requires it.\") and the value stayed; choosing \"Docs Matter retype 1788804353434\" opened \"Change matter type\" (Change matter type to Docs Matter retype 1788804353434 Complete the new type's required fi…), Cancel kept the type, Change type saved it with {\"docs_matter_extra_1788804353434\":42,\"docs_matter_entity_1788804353434\":\"01a07d0c-5382-7025-baa9-afe41b6c8d92\",\"docs_matter_person_1788804353434\":\"01a07ac6-5983-71e0-bd2e-7e29e6163e60\",\"docs_matter_required_1788804353434\":\"Rev fictional scope\"}; switching back to \"Docs Matter required 1788804353434\" kept the extra value in the record but Overview no longer shows it. As Manager of M-90 Priya could already read it (200); on the new Confidential M-91 her read answered 404 until Daniel Okafor added her as Member and Watcher; she then read it, edited the Description, had Add team member disabled/absent and her direct team write answered 403; removing her Watcher role left Member; making her Manager did not change her team roles. \"Docs Matter single 1788804353434\" auto-selected its only live template (title \"Fictional single review\", Priority High, Risk Critical, legal Field \"Legal single default\", \"Template adds 2 tasks and 2 key dates.\"); No template cleared them to Medium/Not assessed; \"Docs Matter multi 1788804353434\" offered No template, Docs Matter alpha playbook 1788804353434, Docs Matter beta playbook 1788804353434 with No template selected; alpha set \"Fictional alpha review\", and after typing a title beta kept it while switching Priority/Risk to Low/Low. M-92 created 2026-09-07T18:51:50.894Z (UTC date 2026-09-07): Tasks \"Review single evidence\" due 2026-09-10 (+3) assigned to Daniel Okafor and \"Arrange single discussion\" without a date; Key dates 2026-09-07 (+0) and 2026-09-14 (+7); Status Open; legal Field kept the typed \"Rev override\"; the optional Field cleared in the dialog came back as \"Optional single default\" (issue #770) and Overview showed \"Optional single default\"; clearing it on Overview persisted; a template description edit and a Manager change to Priya left the copied rows unchanged. Create with the beta template archived after the form opened was refused (\"The template must be live and belong to the selected matter type.\") and the highest M-number stayed 92; a fresh form listed No template, Docs Matter alpha playbook 1788804353434; Ravi Menon saw no New matter button and his direct create answered 403.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-016/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-016/independent-discovery.json",
+        "docs/documentation/batches/DOC-016/independent-accessibility.json",
+        "docs/documentation/batches/DOC-016/independent-template-content.json"
+      ]
+    }
+  ],
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-016/README.md",
+    "docs/documentation/batches/DOC-016/author-create.json"
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "Optional template Field clear behavior is tracked in #770; the walkthrough reproduced it in both roles and verified the Overview workaround the article documents.",
+    "Linked guides remain unpublished; the article stays in review."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}
