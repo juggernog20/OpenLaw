@@ -33,7 +33,7 @@ export function HelpLink({
       className={
         contextual
           ? "inline-flex w-fit items-center gap-1.5 rounded-button text-sm text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
-          : "inline-flex min-h-6 shrink-0 items-center justify-center gap-1.5 rounded-button text-sm hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+          : "inline-flex min-h-6 min-w-6 shrink-0 items-center justify-center gap-1.5 rounded-button text-sm hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
       }
     >
       <CircleHelp size={20} aria-hidden="true" />
