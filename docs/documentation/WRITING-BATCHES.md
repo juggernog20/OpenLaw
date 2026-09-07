@@ -88,6 +88,8 @@ See the [batch verification record](batches/DOC-017/README.md) for the tested bu
 
 ## DOC-018 [#738](https://github.com/juggernog20/OpenLaw/issues/738)
 
+See the [author verification record](batches/DOC-018/README.md). Independent review and eight scenario/role walkthroughs remain pending.
+
 - [ ] `entities-and-counterparties`: Maintain Entities and Counterparties (C31; P1).
 - [ ] `entity-records`: Manage Holdings, Officers, and Registrations (C32; P1).
 - [ ] `entity-obligations`: Track and file Entity obligations (C52; P0).

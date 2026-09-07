@@ -461,7 +461,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["entities.list", "entities.overview", "counterparties"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "entity-records",
@@ -474,7 +474,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["entities.holdings", "entities.officers", "entities.registrations"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "create-knowledge",
@@ -746,7 +746,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["entities.obligations", "home.obligations"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "entity-structure-and-access",
@@ -759,7 +759,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["entities.capital", "entities.chart", "entities.links", "entities.access"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "archive-and-delete-documents",

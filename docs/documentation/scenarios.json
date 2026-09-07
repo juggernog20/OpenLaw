@@ -639,7 +639,7 @@
       "coverage": ["C31"],
       "articles": ["entities-and-counterparties"],
       "roles": ["legal_team_member", "administrator"],
-      "environment": "authoring",
+      "environment": "entities",
       "prerequisites": ["Editable Entity types and a separate external Counterparty fixture."],
       "actions": ["Create/update an Entity and select each party kind in a work record."],
       "expectedResults": [
@@ -656,7 +656,7 @@
       "coverage": ["C32"],
       "articles": ["entity-records"],
       "roles": ["legal_team_member", "administrator"],
-      "environment": "authoring",
+      "environment": "entities",
       "prerequisites": [
         "Two Entities, an Officer, a Registration, and fictional corporate Documents."
       ],
@@ -1064,7 +1064,7 @@
       "coverage": ["C52"],
       "articles": ["entity-obligations"],
       "roles": ["legal_team_member", "administrator"],
-      "environment": "authoring",
+      "environment": "entities",
       "prerequisites": [
         "Entity with recurring and one-off Obligations and a controlled calendar anchor."
       ],
@@ -1085,7 +1085,7 @@
       "coverage": ["C53"],
       "articles": ["entity-structure-and-access"],
       "roles": ["legal_team_member", "administrator"],
-      "environment": "authoring",
+      "environment": "entities",
       "prerequisites": [
         "Ownership graph, share capital, linked work, confidential Entity, and allowed/denied readers."
       ],

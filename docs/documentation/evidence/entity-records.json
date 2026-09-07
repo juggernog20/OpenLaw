@@ -1,0 +1,52 @@
+{
+  "articleId": "entity-records",
+  "contentSha256": "19db877e377abd54e296538831f9a87d8aceb1cac35d72ca8fdf27292c2ebb53",
+  "appCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
+  "buildId": "app sha256:800689bba1e0bd183d33760b14e4775a593d23d1cf9ded4ad752e788e60bd818; engine sha256:b69fd318f42ddbb78e8531a4b7151bcd58d9788b367a26d528d41c5bebfa792f",
+  "environment": "openlaw-docs-b8e31260-entities",
+  "author": "Codex documentation author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "not-run",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-ENTITIES.md",
+    "apps/web/src/components/entities/officers-card.tsx",
+    "apps/web/src/components/entities/registrations-card.tsx",
+    "apps/web/src/components/entities/ownership-card.tsx",
+    "apps/api/src/modules/entities/record-routes.ts",
+    "apps/api/src/modules/entities/holding-routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C32",
+      "coverage": ["C32"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "The entered corporate facts and files persist with their supported dates and relationships. Invalid ownership/date values and archived/read-only restrictions are handled without changing unrelated facts.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C32",
+      "coverage": ["C32"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "The entered corporate facts and files persist with their supported dates and relationships. Invalid ownership/date values and archived/read-only restrictions are handled without changing unrelated facts.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-018/README.md"],
+  "limitations": [
+    "Author browser checks passed; independent technical review and required role walkthroughs are pending.",
+    "Agent walkthroughs are not human user studies or feature-owner approval.",
+    "The types and Fields guide remains a publication dependency."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

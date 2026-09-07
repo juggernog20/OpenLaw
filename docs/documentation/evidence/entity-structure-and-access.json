@@ -1,0 +1,54 @@
+{
+  "articleId": "entity-structure-and-access",
+  "contentSha256": "95e5fbe88de8dcba1a417dada7ce078459a39aa633fa3f8e72d1ccc3a7295953",
+  "appCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
+  "buildId": "app sha256:800689bba1e0bd183d33760b14e4775a593d23d1cf9ded4ad752e788e60bd818; engine sha256:b69fd318f42ddbb78e8531a4b7151bcd58d9788b367a26d528d41c5bebfa792f",
+  "environment": "openlaw-docs-b8e31260-entities",
+  "author": "Codex documentation author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "not-run",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-ENTITIES.md",
+    "apps/web/src/components/entities/share-capital-card.tsx",
+    "apps/web/src/components/entities/entity-grants-dialog.tsx",
+    "apps/web/src/routes/entity-record.tsx",
+    "apps/web/src/routes/entities.tsx",
+    "apps/api/src/modules/entities/grant-routes.ts",
+    "apps/api/src/modules/entities/holding-routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C53",
+      "coverage": ["C53"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Corporate facts and graph edges are accurate and explicit Grants control the intended reach. Restricted linked records remain protected; a Holding or chart relationship does not grant access.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C53",
+      "coverage": ["C53"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Corporate facts and graph edges are accurate and explicit Grants control the intended reach. Restricted linked records remain protected; a Holding or chart relationship does not grant access.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-018/README.md"],
+  "limitations": [
+    "Author browser checks passed; independent technical review and required role walkthroughs are pending.",
+    "Agent walkthroughs are not human user studies or feature-owner approval.",
+    "The types and Fields guide remains a publication dependency.",
+    "Author runs retain their actual earlier hashes; subsequent terminology and dynamic-label copy corrections await independent review and fresh required walkthroughs."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

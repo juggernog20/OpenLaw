@@ -1,0 +1,51 @@
+{
+  "articleId": "entities-and-counterparties",
+  "contentSha256": "7313af8226fa554a32c4e86919d581a972fd574654e4b8559ccd8df591fe177e",
+  "appCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
+  "buildId": "app sha256:800689bba1e0bd183d33760b14e4775a593d23d1cf9ded4ad752e788e60bd818; engine sha256:b69fd318f42ddbb78e8531a4b7151bcd58d9788b367a26d528d41c5bebfa792f",
+  "environment": "openlaw-docs-b8e31260-entities",
+  "author": "Codex documentation author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "not-run",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-ENTITIES.md",
+    "apps/web/src/routes/entities.tsx",
+    "apps/web/src/routes/entity-record.tsx",
+    "apps/web/src/routes/contract-record.tsx",
+    "apps/api/src/modules/entities/routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C31",
+      "coverage": ["C31"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Our Entity and external Counterparty retain their distinct roles and labels. A Contributor cannot use the Member+ Entity destination; duplicate/invalid input has a clear outcome.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C31",
+      "coverage": ["C31"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Our Entity and external Counterparty retain their distinct roles and labels. A Contributor cannot use the Member+ Entity destination; duplicate/invalid input has a clear outcome.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-018/README.md"],
+  "limitations": [
+    "Author browser checks passed; independent technical review and required role walkthroughs are pending.",
+    "Agent walkthroughs are not human user studies or feature-owner approval.",
+    "The types and Fields guide remains a publication dependency."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

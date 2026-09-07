@@ -1,0 +1,125 @@
+{
+  "name": "corporate",
+  "startedAt": "2026-09-07T22:47:16.548Z",
+  "appCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
+  "buildId": "app sha256:800689bba1e0bd183d33760b14e4775a593d23d1cf9ded4ad752e788e60bd818; engine sha256:b69fd318f42ddbb78e8531a4b7151bcd58d9788b367a26d528d41c5bebfa792f",
+  "environment": "openlaw-docs-b8e31260-entities",
+  "articleHashes": [
+    {
+      "articleId": "entity-records",
+      "contentSha256": "19db877e377abd54e296538831f9a87d8aceb1cac35d72ca8fdf27292c2ebb53"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32 add Officer, reject an earlier resignation, retain a valid resignation in Show former",
+      "actual": "Officer name, role, appointment and optional user link saved; earlier resignation was visibly refused and saved date unchanged; valid resignation hid the current row and Show former recovered the retained appointment",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:47:18.052Z",
+      "at": "2026-09-07T22:47:18.508Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32 create and edit Registration without changing the formation jurisdiction",
+      "actual": "Additional Delaware Registration saved number and agent; Lapsed selection persisted while formation jurisdiction remained England and Wales",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:47:18.508Z",
+      "at": "2026-09-07T22:47:18.844Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32 Holding directions, percentage edit and over-100 aggregate warning preserve both Entities",
+      "actual": "Owner direction appeared reciprocally on both Entity records; percentage edit saved 85; adding a second 30 percent owner warned at 115 percent while retaining both Holdings and all Entities",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:47:18.844Z",
+      "at": "2026-09-07T22:47:19.850Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32 ownership loops, duplicate Holdings, self ownership and invalid percentages are refused",
+      "actual": "A separate API fixture supplied an indirect ownership path; the browser refused the resulting loop with its message. Direct duplicate Holding returned 409; self-ownership and out-of-range percentage returned 400; the two existing Holdings remained unchanged",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:47:19.850Z",
+      "at": "2026-09-07T22:47:20.646Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32 upload an Entity-owned Document with no seeded folder and download its original bytes",
+      "actual": "Fresh Entity had no folders; shared Upload created its owned v1 Document; reader opened and browser original download matched uploaded PDF bytes",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:47:20.646Z",
+      "at": "2026-09-07T22:47:21.525Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32 archive a populated Entity, verify child edits refused, and restore the preserved corporate facts",
+      "actual": "Archive hid child-create controls and refused Registration edit; restoration retained Officer resignation, both Holdings, Registration and uploaded Document and returned controls",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:47:21.525Z",
+      "at": "2026-09-07T22:47:22.266Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32 add Officer, reject an earlier resignation, retain a valid resignation in Show former",
+      "actual": "Officer name, role, appointment and optional user link saved; earlier resignation was visibly refused and saved date unchanged; valid resignation hid the current row and Show former recovered the retained appointment",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:47:23.741Z",
+      "at": "2026-09-07T22:47:24.172Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32 create and edit Registration without changing the formation jurisdiction",
+      "actual": "Additional Delaware Registration saved number and agent; Lapsed selection persisted while formation jurisdiction remained England and Wales",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:47:24.172Z",
+      "at": "2026-09-07T22:47:24.505Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32 Holding directions, percentage edit and over-100 aggregate warning preserve both Entities",
+      "actual": "Owner direction appeared reciprocally on both Entity records; percentage edit saved 85; adding a second 30 percent owner warned at 115 percent while retaining both Holdings and all Entities",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:47:24.505Z",
+      "at": "2026-09-07T22:47:25.511Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32 ownership loops, duplicate Holdings, self ownership and invalid percentages are refused",
+      "actual": "A separate API fixture supplied an indirect ownership path; the browser refused the resulting loop with its message. Direct duplicate Holding returned 409; self-ownership and out-of-range percentage returned 400; the two existing Holdings remained unchanged",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:47:25.511Z",
+      "at": "2026-09-07T22:47:26.300Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32 upload an Entity-owned Document with no seeded folder and download its original bytes",
+      "actual": "Fresh Entity had no folders; shared Upload created its owned v1 Document; reader opened and browser original download matched uploaded PDF bytes",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:47:26.300Z",
+      "at": "2026-09-07T22:47:27.192Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32 archive a populated Entity, verify child edits refused, and restore the preserved corporate facts",
+      "actual": "Archive hid child-create controls and refused Registration edit; restoration retained Officer resignation, both Holdings, Registration and uploaded Document and returned controls",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:47:27.192Z",
+      "at": "2026-09-07T22:47:27.960Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T22:47:27.964Z"
+}

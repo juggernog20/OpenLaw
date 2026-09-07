@@ -1,0 +1,52 @@
+{
+  "articleId": "entity-obligations",
+  "contentSha256": "b4a8ade34e728a7cb4de68a659779fe45d68781028d899b97c580771c1d0f604",
+  "appCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
+  "buildId": "app sha256:800689bba1e0bd183d33760b14e4775a593d23d1cf9ded4ad752e788e60bd818; engine sha256:b69fd318f42ddbb78e8531a4b7151bcd58d9788b367a26d528d41c5bebfa792f",
+  "environment": "openlaw-docs-b8e31260-entities",
+  "author": "Codex documentation author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "not-run",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-ENTITIES.md",
+    "apps/web/src/components/entities/obligations-panel.tsx",
+    "apps/web/src/routes/entities.tsx",
+    "apps/web/src/routes/home.tsx",
+    "apps/api/src/modules/entities/obligation-routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C52",
+      "coverage": ["C52"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Filing history and the next cycle follow the confirmed action and supported recurrence rule. Past-due items do not silently count as filed; invalid dates and unauthorized changes have a clear outcome.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C52",
+      "coverage": ["C52"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Filing history and the next cycle follow the confirmed action and supported recurrence rule. Past-due items do not silently count as filed; invalid dates and unauthorized changes have a clear outcome.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-018/README.md"],
+  "limitations": [
+    "Author browser checks passed; independent technical review and required role walkthroughs are pending.",
+    "Agent walkthroughs are not human user studies or feature-owner approval.",
+    "The types and Fields guide remains a publication dependency.",
+    "Author runs retain their actual earlier hashes; subsequent terminology and dynamic-label copy corrections await independent review and fresh required walkthroughs."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}
