@@ -134,6 +134,19 @@ Supporting uploads, comments, and the walkthrough's own fictional PDFs remain in
 HTTP refusals quoted in the step text corroborate the browser results and are not the
 walkthrough evidence.
 
+A supplemental run on September 7, 2026, 06:54 UTC, closed a gap in the Document
+steps: the main run had only checked that the page named the uploaded file after clicking
+it. As Ravi in the committed pilot, the reviewer opened the two-Version supporting
+Document on C-76 and on M-21 through its filename control. The reader is an aside named
+with the title and Version; it showed the title, the **v2** marker, the selected
+Version's filename, a **Download** link that answered that Version as a PDF, and the
+rendered page. **Close the document** removed it. Expanding that exact chain showed
+its two rows, v2 and v1 with the upload Note, and opening v1 from its own row switched
+the reader to version 1 with v1's filename and Download link. The record is under
+`supplementalRuns` in the walkthrough file against the current Contributor guide hash.
+The v1 page text is checked as a prefix only, because the reviewer's fixture PDF
+truncates its own text; that is the fixture, not the app.
+
 ## Review and publication handoff
 
 `roles-and-access` and `contributor-guide` are `verified` in the catalog. Both link only

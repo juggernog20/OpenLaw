@@ -438,5 +438,44 @@
       "at": "2026-09-07T06:46:35.726Z",
       "ms": 26
     }
+  ],
+  "supplementalRuns": [
+    {
+      "kind": "independent-article-walkthrough-supplement",
+      "articleId": "contributor-guide",
+      "contentSha256": "c3badc50235831daa34056e22dd2e260142e71f5020cd972b9bc868fbf339397",
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "startedAt": "2026-09-07T06:54:54.719Z",
+      "finishedAt": "2026-09-07T06:54:57.953Z",
+      "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+      "buildId": "app sha256:69c7cd47338eff05c787e985743dd45b2229792827d82fd5f54a50a9c63d8757; engine sha256:1dce5b67898cc8ae720231fa66e049208ed207e69053a2cf4c1bd0e172cea401",
+      "environment": "openlaw-docs-b8e31260-pilot",
+      "reason": "The main run only checked that the page text named the uploaded file after clicking it, recorded the reader as absent, did not assert the earlier-Version rows, and expanded the first matching chain rather than the new Document's own one.",
+      "reader": "The reader is an aside landmark named \"{title}, version {n}\" with the title heading, the v{n} marker, the selected Version's filename, its Download link, page controls, and the rendered page.",
+      "limitations": [
+        "The v1 rendered text is the visible prefix only, because the reviewer's fixture PDF declares a 60-byte content stream that truncates its own text; this is the fixture, not the app."
+      ],
+      "steps": [
+        {
+          "article": "contributor-guide",
+          "role": "contributor",
+          "step": "contract Documents: open the supporting Document in the reader, check filename and Version, expand its chain, open the earlier Version",
+          "result": "pass",
+          "actual": "reader \"fable-review-contract-1788763267426.pdf, version 2\": heading=title, v2 marker, filename fable-review-contract-v2-1788763267426.pdf, page 1 of 1 rendered with the fictional text \"Fable review fictional fable-review-contract-v2\", Zoom in control=1, Download → …/versions/df5b25/download answered 200 application/pdf (438 bytes); the contract Actions menu's Compare with previous is offered in the reader as Compare with the previous version; Close the document removed the reader; expanding that chain showed exactly its two rows, v2 (current) and v1 with the upload Note (3 rows on the page name this run's stamp); reader \"fable-review-contract-1788763267426.pdf, version 1\": heading=title, v1 marker, filename fable-review-contract-1788763267426.pdf, page 1 of 1 rendered with the fictional text \"Fable review fictional fable-review-contract-1\", Zoom in control=1, Download → …/versions/cd4839/download answered 200 application/pdf (435 bytes) (the fixture PDF's own 60-byte content stream truncates its text; the visible prefix differs from v2's)",
+          "at": "2026-09-07T06:54:55.627Z",
+          "ms": 1178
+        },
+        {
+          "article": "contributor-guide",
+          "role": "contributor",
+          "step": "matter Documents: open the supporting Document in the reader, check filename and Version, expand its chain, open the earlier Version",
+          "result": "pass",
+          "actual": "reader \"fable-review-matter-1788763267426.pdf, version 2\": heading=title, v2 marker, filename fable-review-matter-v2-1788763267426.pdf, page 1 of 1 rendered with the fictional text \"Fable review fictional fable-review-matter-v2\", Zoom in control=1, Download → …/versions/4e0a6b/download answered 200 application/pdf (436 bytes); the matter Actions menu's Compare with previous is offered in the reader as Compare with the previous version; Close the document removed the reader; expanding that chain showed exactly its two rows, v2 (current) and v1 with the upload Note (3 rows on the page name this run's stamp); reader \"fable-review-matter-1788763267426.pdf, version 1\": heading=title, v1 marker, filename fable-review-matter-1788763267426.pdf, page 1 of 1 rendered with the fictional text \"Fable review fictional fable-review-matter-1\", Zoom in control=1, Download → …/versions/cff790/download answered 200 application/pdf (433 bytes) (the fixture PDF's own 60-byte content stream truncates its text; the visible prefix differs from v2's)",
+          "at": "2026-09-07T06:54:56.805Z",
+          "ms": 1148
+        }
+      ]
+    }
   ]
 }
