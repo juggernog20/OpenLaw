@@ -2324,11 +2324,17 @@
   "docs.empty": {
     "defaultMessage": "No verified articles are available in this edition yet."
   },
+  "docs.forAudience": {
+    "defaultMessage": "Guides for {audience}"
+  },
   "docs.formal": {
     "defaultMessage": "Read this article in the full documentation"
   },
   "docs.help": {
     "defaultMessage": "Help"
+  },
+  "docs.helpWithPage": {
+    "defaultMessage": "Help with this page"
   },
   "docs.missingSection": {
     "defaultMessage": "The requested section is unavailable. Use the page outline to find the current instructions."
@@ -2347,6 +2353,9 @@
   },
   "docs.outline": {
     "defaultMessage": "On this page"
+  },
+  "docs.outsideAudience": {
+    "defaultMessage": "This article is available in the full documentation. Check its audience and prerequisites before following the instructions."
   },
   "docs.preview": {
     "defaultMessage": "Development preview: draft and validation content is unverified."
@@ -2374,6 +2383,12 @@
   },
   "docs.searchButton": {
     "defaultMessage": "Search"
+  },
+  "docs.sessionUnavailable": {
+    "defaultMessage": "Help session unavailable"
+  },
+  "docs.sessionUnavailableBody": {
+    "defaultMessage": "The app could not check your session. You can read the full documentation without signing in."
   },
   "docs.skip": {
     "defaultMessage": "Skip to content"

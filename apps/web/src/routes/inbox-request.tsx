@@ -85,6 +85,7 @@
  * on the contract land in the same thread.
  */
 
+import { HelpLink } from "../components/documentation/help-link";
 import { useState } from "react";
 import {
   redirect,
@@ -286,6 +287,7 @@ export function InboxRequestPage() {
               {requestStatusLabel(intl, request.status)}
             </span>
           </div>
+          <HelpLink surface="staff" contextual />
           {/* INT-007's disposition surface, and the whole triage
               surface: acting on a Request means choosing its outcome
               then and there. Drawn only while the Request is `new` —

@@ -10,6 +10,7 @@
  * never shows again.
  */
 
+import { HelpLink } from "../components/documentation/help-link";
 import { useState, type ReactNode, type SubmitEvent as FormSubmitEvent } from "react";
 import { redirect, useLoaderData, useNavigate } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -440,6 +441,9 @@ export function WelcomePage() {
               values={{ current: stepIndex + 1, total: STEPS.length }}
             />
           </p>
+          <div className="mb-4 flex justify-center">
+            <HelpLink surface="formal" contextual />
+          </div>
           <Card>
             <CardHeader>
               <CardTitle>{stepTitles[step]}</CardTitle>

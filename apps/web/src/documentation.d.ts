@@ -9,3 +9,8 @@ declare module "virtual:openlaw-documentation" {
   const bundle: import("../../../scripts/documentation/reader.mjs").DocumentationBundle;
   export default bundle;
 }
+
+declare module "virtual:openlaw-help-metadata" {
+  const metadata: import("../../../scripts/documentation/reader.mjs").HelpMetadata;
+  export default metadata;
+}

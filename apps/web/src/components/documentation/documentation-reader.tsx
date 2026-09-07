@@ -4,9 +4,9 @@
  * Reads one compiled edition through public documentation or a Help shell.
  * DD-020 makes the formal manual public; TECH-026 supplies sanitized content.
  */
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type MouseEvent } from "react";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
-import { Form, Link, Navigate, useLocation, useParams } from "react-router";
+import { Form, Link, Navigate, useLocation, useNavigate, useParams } from "react-router";
 import generated from "virtual:openlaw-documentation";
 import {
   searchDocumentation,
@@ -32,6 +32,12 @@ const M = defineMessages({
   allReaders: { id: "docs.allReaders", defaultMessage: "All readers" },
   all: { id: "docs.all", defaultMessage: "All documentation" },
   help: { id: "docs.help", defaultMessage: "Help" },
+  forAudience: { id: "docs.forAudience", defaultMessage: "Guides for {audience}" },
+  outsideAudience: {
+    id: "docs.outsideAudience",
+    defaultMessage:
+      "This article is available in the full documentation. Check its audience and prerequisites before following the instructions.",
+  },
   outline: { id: "docs.outline", defaultMessage: "On this page" },
   edition: { id: "docs.edition", defaultMessage: "Edition details" },
   unavailable: { id: "docs.unavailable", defaultMessage: "Article unavailable" },
@@ -107,6 +113,8 @@ export function DocumentationReader({
     location = useLocation(),
     params = useParams();
   const main = useRef<HTMLElement>(null);
+  const navigate = useNavigate();
+  const Container = destination === "formal" ? "main" : "section";
   const id = params.articleId ?? params["*"] ?? "";
   const base = BASE[destination];
   const query = new URLSearchParams(location.search);
@@ -114,7 +122,7 @@ export function DocumentationReader({
   const requestedAudience = query.get("audience") ?? "";
   const selectedAudience =
     audience ?? (Object.hasOwn(ROLES, requestedAudience) ? requestedAudience : "");
-  const topic = bundle.contexts.includes(query.get("topic") ?? "") ? query.get("topic")! : "";
+  const topics = [...new Set(query.getAll("topic").filter((key) => bundle.contexts.includes(key)))];
   let hash = location.hash;
   try {
     hash = decodeURIComponent(hash);
@@ -137,7 +145,7 @@ export function DocumentationReader({
     query: q,
     destination,
     audience: selectedAudience,
-    topic,
+    topics,
   });
   const title = wrongEdition
     ? intl.formatMessage(M.unavailable)
@@ -160,6 +168,24 @@ export function DocumentationReader({
       />
     );
   }
+  function followArticleLink(event: MouseEvent<HTMLElement>) {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    )
+      return;
+    const link = event.target instanceof Element ? event.target.closest("a") : null;
+    const href = link?.getAttribute("href");
+    if (!href || link?.hasAttribute("download") || link?.getAttribute("target")) return;
+    if (!href.startsWith("#") && !/^\/(documentation|help|portal\/help)([/?#]|$)/.test(href))
+      return;
+    event.preventDefault();
+    void navigate(href.startsWith("#") ? `${location.pathname}${location.search}${href}` : href);
+  }
   const sectionTitle = (section: string) =>
     bundle.sections.find((s) => s.id === section)?.title ?? section;
   const resultList = (items: typeof results) => (
@@ -177,7 +203,7 @@ export function DocumentationReader({
     </div>
   );
   return (
-    <main ref={main} id="docs-main" tabIndex={-1} className="docs-reader">
+    <Container ref={main} id="docs-main" tabIndex={-1} className="docs-reader">
       <PageTitle title={title} />
       {bundle.preview && (
         <p className="docs-notice" role="status">
@@ -191,12 +217,19 @@ export function DocumentationReader({
           </li>
           {destination !== "formal" && (
             <li>
-              <Link to="/documentation">{intl.formatMessage(M.all)}</Link>
+              <Link to={article ? `/documentation/${article.id}${hash}` : "/documentation"}>
+                {intl.formatMessage(article ? M.formal : M.all)}
+              </Link>
             </li>
           )}
         </ul>
       </nav>
-      <Form method="get" action={base} role="search" key={`${q}:${selectedAudience}:${topic}`}>
+      <Form
+        method="get"
+        action={base}
+        role="search"
+        key={`${q}:${selectedAudience}:${topics.join(",")}`}
+      >
         <div className="docs-search-field">
           <label htmlFor="docs-query">{intl.formatMessage(M.search)}</label>
           <input id="docs-query" name="q" type="search" defaultValue={q} />
@@ -214,7 +247,9 @@ export function DocumentationReader({
             </select>
           </div>
         )}
-        {topic && <input type="hidden" name="topic" value={topic} />}
+        {topics.map((topic) => (
+          <input key={topic} type="hidden" name="topic" value={topic} />
+        ))}
         <button type="submit">{intl.formatMessage(M.searchButton)}</button>
       </Form>
       {wrongEdition || (id && !article) ? (
@@ -226,6 +261,7 @@ export function DocumentationReader({
         !permitted ? (
           <>
             <h1 tabIndex={-1}>{article.title}</h1>
+            <p>{intl.formatMessage(M.outsideAudience)}</p>
             <Link to={`/documentation/${article.id}${hash}`}>{intl.formatMessage(M.formal)}</Link>
           </>
         ) : (
@@ -246,23 +282,31 @@ export function DocumentationReader({
                     .filter((h) => h.depth > 1)
                     .map((h) => (
                       <li key={h.id}>
-                        <a href={`#${h.id}`}>{h.text}</a>
+                        <Link to={`${location.pathname}${location.search}#${h.id}`}>{h.text}</Link>
                       </li>
                     ))}
                 </ul>
               </nav>
-              <article dangerouslySetInnerHTML={{ __html: article.html[destination] }} />
+              <article
+                onClick={followArticleLink}
+                dangerouslySetInnerHTML={{ __html: article.html[destination] }}
+              />
             </div>
           </>
         )
       ) : (
         <>
           <h1 tabIndex={-1}>{intl.formatMessage(destination === "formal" ? M.title : M.help)}</h1>
+          {audience && (
+            <p>
+              {intl.formatMessage(M.forAudience, { audience: intl.formatMessage(ROLES[audience]) })}
+            </p>
+          )}
           {results.length === 0 ? (
             <p role="status">
               {intl.formatMessage(bundle.articles.length ? M.noMatches : M.empty)}
             </p>
-          ) : q || selectedAudience || topic ? (
+          ) : q || (!audience && selectedAudience) || topics.length ? (
             resultList(results)
           ) : (
             bundle.sections.map((section) => {
@@ -338,7 +382,7 @@ export function DocumentationReader({
         </ul>
         <p>{intl.formatMessage(M.retention)}</p>
       </details>
-    </main>
+    </Container>
   );
 }
 

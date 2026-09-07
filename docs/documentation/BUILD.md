@@ -26,9 +26,10 @@ sanitized HTML and plain search text. Both Help variants and the standalone edit
 come from those same article bytes. Planning prose, reviewer identities, and evidence
 locations are absent from the reader bundle.
 
-The public React reader is `/documentation` with articles at `/documentation/<id>`.
-It has no session/setup loader and makes no API request. Help shell routes are the
-next task; their HTML variants and shared reader are available here. An explicit
+Open `/documentation` for the public reader or `/documentation/<id>` for an article.
+Read it without a session, completed setup, or API request. Open `/help` or
+`/portal/help` for authenticated Help. Header links use a small
+compiled topic registry; article bodies load when a reader opens Help. An explicit
 `?edition=<id>` mismatch reports that the requested edition is not bundled rather
 than switching to a mutable latest edition.
 
@@ -164,7 +165,8 @@ scripted alias handling and explicit links when JavaScript is disabled.
 
 ## Checks
 
-`pnpm test:ci-tools` includes compiler tests. Web route tests cover public reading,
+Run `pnpm test:ci-tools` for the compiler tests. Web route tests cover both Help shells, signed-out and failed-session recovery,
+role discovery, preserved shortcuts, public reading,
 search/Back, missing states, aliases, and safe rendering. API serving tests cover
 public static files, stable-asset caching, and missing-export responses. The built
 Compose E2E suite checks the actual reader and downloadable archive without cookies

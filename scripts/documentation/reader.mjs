@@ -12,16 +12,18 @@ export function normalizeSearch(value) {
 /** Shared by the app and the standalone script; it performs no I/O. */
 export function searchDocumentation(
   bundle,
-  { query = "", destination = "formal", audience = "", topic = "" } = {},
+  { query = "", destination = "formal", audience = "", topic = "", topics = [] } = {},
 ) {
   const words = [...new Set(normalizeSearch(query).split(" ").filter(Boolean))];
-  const registered = bundle.contexts.includes(topic) ? topic : "";
+  const registered = [
+    ...new Set([topic, ...topics].filter((key) => bundle.contexts.includes(key))),
+  ];
   return bundle.articles
     .filter(
       (a) =>
         a.destinations.includes(destination) &&
         (!audience || a.audiences.includes(audience)) &&
-        (!registered || a.contexts.includes(registered)),
+        (!registered.length || registered.some((key) => a.contexts.includes(key))),
     )
     .map((article) => {
       const title = normalizeSearch(article.title),
@@ -31,13 +33,21 @@ export function searchDocumentation(
       );
       return {
         article,
+        topicRank: registered.length
+          ? registered.findIndex((key) => article.contexts.includes(key))
+          : 0,
         score: words.every((w) => all.includes(w))
           ? words.reduce((n, w) => n + (title.includes(w) ? 10 : headings.includes(w) ? 5 : 1), 0)
           : -1,
       };
     })
     .filter((hit) => hit.score >= 0)
-    .sort((a, b) => b.score - a.score || a.article.title.localeCompare(b.article.title, "en-US"))
+    .sort(
+      (a, b) =>
+        b.score - a.score ||
+        a.topicRank - b.topicRank ||
+        a.article.title.localeCompare(b.article.title, "en-US"),
+    )
     .map((hit) => hit.article);
 }
 

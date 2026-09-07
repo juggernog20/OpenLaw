@@ -2,6 +2,76 @@
   "schemaVersion": 1,
   "bindings": [
     {
+      "routes": [
+        "/auth/login",
+        "/auth/two-factor",
+        "/auth/two-factor/enroll",
+        "/auth/set-password",
+        "/auth/link-expired"
+      ],
+      "contexts": ["auth"],
+      "surface": "formal",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/auth/setup", "/welcome"],
+      "contexts": ["setup", "welcome"],
+      "surface": "formal",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/portal/enter"],
+      "contexts": ["portal.entry"],
+      "surface": "formal",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/portal"],
+      "contexts": ["portal.home"],
+      "surface": "portal",
+      "pilotEntry": true
+    },
+    {
+      "routes": ["/portal/new/:slug"],
+      "contexts": ["portal.form"],
+      "surface": "portal",
+      "pilotEntry": true
+    },
+    {
+      "routes": ["/portal/requests/:number"],
+      "contexts": ["portal.request", "portal.files"],
+      "surface": "portal",
+      "pilotEntry": true
+    },
+    {
+      "routes": ["/inbox"],
+      "contexts": ["inbox"],
+      "surface": "staff",
+      "pilotEntry": true
+    },
+    {
+      "routes": ["/inbox/:number"],
+      "contexts": ["inbox.convert"],
+      "surface": "staff",
+      "pilotEntry": true
+    },
+    {
+      "routes": [
+        "/settings/intake/request-types",
+        "/settings/intake/request-types/:typeId",
+        "/settings/intake/links"
+      ],
+      "contexts": ["settings.intake"],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["*"],
+      "contexts": ["support"],
+      "surface": "both",
+      "pilotEntry": false
+    },
+    {
       "routes": ["*"],
       "contexts": ["validation.reader"],
       "surface": "both",

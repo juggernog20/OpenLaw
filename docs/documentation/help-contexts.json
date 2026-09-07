@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "specified",
+  "status": "implemented",
   "bindings": [
     {
       "routes": ["/", "/home/tasks"],
