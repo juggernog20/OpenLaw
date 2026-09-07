@@ -161,7 +161,7 @@ test.describe.serial("M23 deployer journey", () => {
 
       await main.getByRole("button", { name: "Link Contract" }).click();
       const link = page.getByRole("dialog", { name: "Link Contract" });
-      await link.getByLabel("Search by number or title").fill(CONTRACT_TITLE);
+      await link.getByLabel("Search by contract number or title").fill(CONTRACT_TITLE);
       await link.getByRole("button", { name: new RegExp(CONTRACT_TITLE) }).click();
       const linked = page.waitForResponse(
         (response) =>
@@ -217,12 +217,17 @@ test.describe.serial("M23 deployer journey", () => {
       const counsel = await onboardActivatedMember(page.request, browser, COUNSEL);
       counselContext = counsel.context;
       await page.goto(`/matters/${matter.number}`);
-      await main.getByRole("button", { name: "Add team member" }).click();
+      await page
+        .getByRole("toolbar", { name: "Applets" })
+        .getByRole("button", { name: "Matter team", exact: true })
+        .click();
+      const teamPanel = page.getByRole("complementary", { name: "Matter team" });
+      await teamPanel.getByRole("button", { name: "Add team member" }).click();
       const team = page.getByRole("dialog", { name: "Add team member" });
       await team.getByLabel("Person").selectOption({ label: COUNSEL.displayName });
       await team.getByLabel("Role").selectOption("contributor");
       await team.getByRole("button", { name: "Add to team" }).click();
-      await expect(main.getByText(COUNSEL.displayName)).toBeVisible();
+      await expect(teamPanel.getByText(COUNSEL.displayName)).toBeVisible();
 
       const contributor = counsel.page;
       await contributor.goto(`/matters/${matter.number}`);

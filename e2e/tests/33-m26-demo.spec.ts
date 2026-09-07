@@ -119,7 +119,8 @@ async function uploadPdf(
   await dialog.getByRole("button", { name: "File Choose file" }).click();
   await (await chooser).setFiles({ name: filename, mimeType: "application/pdf", buffer: PDF });
   await expect(dialog.getByText(filename)).toBeVisible();
-  await dialog.getByLabel("Kind").selectOption("draft_ours");
+  if (owner.kind === "contracts") await dialog.getByLabel("Kind").selectOption("draft_ours");
+  else await expect(dialog.getByLabel("Kind")).toHaveCount(0);
 
   const uploaded = page.waitForResponse(
     (response) =>
@@ -191,10 +192,17 @@ test.describe.serial("M26 deployer journey", () => {
         .click();
       await expect(page).toHaveURL(/\/documents$/);
 
-      await page
-        .getByRole("combobox", { name: "Counterparty" })
-        .selectOption({ label: COUNTERPARTY_NAME });
-      await page.getByRole("combobox", { name: "Format" }).selectOption("pdf");
+      for (const [name, choice] of [
+        ["Counterparty", COUNTERPARTY_NAME],
+        ["Format", "PDF"],
+      ]) {
+        await page.getByRole("button", { name: /^Filter/ }).click();
+        const filter = page.getByRole("dialog", { name: "Filter", exact: true });
+        await filter.getByRole("button", { name, exact: true }).click();
+        await filter.getByRole("checkbox", { name: choice, exact: true }).click();
+        await filter.getByRole("button", { name: "Apply", exact: true }).click();
+        await expect(filter).toBeHidden();
+      }
       await expect(page).toHaveURL(/counterparty=/);
       await expect(page).toHaveURL(/format=pdf/);
 
