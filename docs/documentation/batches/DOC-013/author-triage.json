@@ -1,0 +1,150 @@
+{
+  "name": "triage",
+  "startedAt": "2026-09-07T11:03:54.790Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "triage-requests",
+      "contentSha256": "b28fe6456b9259168173d057309994db811044beac40c09dcafd96ea7da36eea"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "open New Inbox and review submitted details and paper",
+      "actual": "New filter, Request envelope and three review sections; original PDF downloaded byte-for-byte",
+      "result": "pass",
+      "at": "2026-09-07T11:03:57.523Z"
+    },
+    {
+      "role": "administrator",
+      "action": "assign, reassign, cancel and clear without deciding or reserving the Request",
+      "actual": "Saved assignments survive reload, Cancel preserved prior, clearing restored Unassigned, other Legal session retained Triage throughout",
+      "result": "pass",
+      "at": "2026-09-07T11:03:58.787Z"
+    },
+    {
+      "role": "administrator",
+      "action": "assignment failure and people-load retry follow the displayed recovery",
+      "actual": "Load error+Retry recovered eligible people only; failed save kept prior assignment; retry saved selected person",
+      "result": "pass",
+      "at": "2026-09-07T11:03:59.088Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Full thread clarification reaches Requester and leaves Request New",
+      "actual": "Requester reads exact clarification, status remains New",
+      "result": "pass",
+      "at": "2026-09-07T11:03:59.823Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Triage offers both conversions and Resolve but no Decline",
+      "actual": "Three current actions, no Decline entry",
+      "result": "pass",
+      "at": "2026-09-07T11:04:00.504Z"
+    },
+    {
+      "role": "administrator",
+      "action": "resolution requires a note and Cancel changes nothing",
+      "actual": "Blank note refused; Cancel retained New and posted no resolution",
+      "result": "pass",
+      "at": "2026-09-07T11:04:01.227Z"
+    },
+    {
+      "role": "administrator",
+      "action": "resolve with explanation and retain outcome, assignee and Requester reply",
+      "actual": "Resolved without new work; explanatory Full thread read by Requester; historical assignee retained read-only; later reply does not reopen",
+      "result": "pass",
+      "at": "2026-09-07T11:04:02.181Z"
+    },
+    {
+      "role": "administrator",
+      "action": "remove New filter to find decided outcomes and historical decline reason",
+      "actual": "New excludes resolved Request; Status removed then Declined filter applied; historical Declined reason remains readable",
+      "result": "pass",
+      "at": "2026-09-07T11:04:03.169Z"
+    },
+    {
+      "role": "administrator",
+      "action": "concurrent resolution records only winner and clearly refuses losing note",
+      "actual": "Second real session resolved before pending write; losing dialog states outcome; exactly winner note appears to Requester",
+      "result": "pass",
+      "at": "2026-09-07T11:04:04.523Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "open New Inbox and review submitted details and paper",
+      "actual": "New filter, Request envelope and three review sections; original PDF downloaded byte-for-byte",
+      "result": "pass",
+      "at": "2026-09-07T11:04:05.282Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "assign, reassign, cancel and clear without deciding or reserving the Request",
+      "actual": "Saved assignments survive reload, Cancel preserved prior, clearing restored Unassigned, other Legal session retained Triage throughout",
+      "result": "pass",
+      "at": "2026-09-07T11:04:06.606Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "assignment failure and people-load retry follow the displayed recovery",
+      "actual": "Load error+Retry recovered eligible people only; failed save kept prior assignment; retry saved selected person",
+      "result": "pass",
+      "at": "2026-09-07T11:04:06.929Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Full thread clarification reaches Requester and leaves Request New",
+      "actual": "Requester reads exact clarification, status remains New",
+      "result": "pass",
+      "at": "2026-09-07T11:04:07.674Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Triage offers both conversions and Resolve but no Decline",
+      "actual": "Three current actions, no Decline entry",
+      "result": "pass",
+      "at": "2026-09-07T11:04:08.364Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "resolution requires a note and Cancel changes nothing",
+      "actual": "Blank note refused; Cancel retained New and posted no resolution",
+      "result": "pass",
+      "at": "2026-09-07T11:04:09.125Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "resolve with explanation and retain outcome, assignee and Requester reply",
+      "actual": "Resolved without new work; explanatory Full thread read by Requester; historical assignee retained read-only; later reply does not reopen",
+      "result": "pass",
+      "at": "2026-09-07T11:04:10.098Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "remove New filter to find decided outcomes and historical decline reason",
+      "actual": "New excludes resolved Request; Status removed then Declined filter applied; historical Declined reason remains readable",
+      "result": "pass",
+      "at": "2026-09-07T11:04:11.108Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "concurrent resolution records only winner and clearly refuses losing note",
+      "actual": "Second real session resolved before pending write; losing dialog states outcome; exactly winner note appears to Requester",
+      "result": "pass",
+      "at": "2026-09-07T11:04:12.526Z"
+    },
+    {
+      "role": "contributor",
+      "action": "Inbox unavailable to Contributor and Business User",
+      "actual": "Both ineligible roles redirected and staff Inbox API403",
+      "result": "pass",
+      "at": "2026-09-07T11:04:14.554Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T11:04:14.554Z"
+}

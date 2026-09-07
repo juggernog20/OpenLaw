@@ -232,7 +232,7 @@
       "coverage": ["C12"],
       "articles": ["triage-requests"],
       "roles": ["legal_team_member", "administrator"],
-      "environment": "authoring",
+      "environment": "conversations",
       "prerequisites": [
         "Separate undecided Requests for Convert and Resolve, a historical declined Request, and two legal sessions."
       ],
@@ -253,7 +253,7 @@
       "coverage": ["C13"],
       "articles": ["convert-request"],
       "roles": ["legal_team_member", "administrator"],
-      "environment": "authoring",
+      "environment": "conversations",
       "prerequisites": [
         "Contract-targeting and Matter-targeting Request types with Fields, attachments, and comments."
       ],

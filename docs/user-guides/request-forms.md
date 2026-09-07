@@ -43,4 +43,4 @@ If an answer appears under **Does not carry into the contract** during conversio
 ## Related guides
 
 - [Submit a Request to Legal](submit-request.md).
-- [Convert a Request to a Contract](convert-request.md).
+- [Convert a Request to a Contract or Matter](convert-request.md).
