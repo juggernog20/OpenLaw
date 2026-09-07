@@ -11,8 +11,8 @@ Create a Contract from a Request and check the information, paper, and conversat
 ## Convert the Request
 
 1. Open the Request from **Inbox**. Open **Triage** and select **Convert to contract**.
-2. Check **Title**, which starts with the Request's Summary, and **Priority**, which starts with the Requester's Urgency. Edit them if needed.
-3. Check **Contract type**. A live type configured on the request form is already selected. If the form left the type open, choose a live type now.
+2. Check **Title**, which starts with the Request's Summary, and edit it if needed. Check **Priority**, which the dialog takes from the Requester's Urgency. The dialog does not change Priority; you can change it on the Contract after conversion.
+3. Check **Contract type**. A live type configured on the request form is shown as set by the request type and cannot be changed here. If the form left the type open, choose a live type now.
 4. Review **Carries into the contract** and **Does not carry into the contract**. Answers carry only where the destination type has the corresponding Fields. Other answers remain readable on the Request.
 5. Complete any required Fields the form did not collect. If a carried reference is marked archived, choose a live replacement where the dialog asks for one.
 6. Select **Convert to contract**. This decides the Request and creates the Contract. Use **Cancel** before confirming if you are not ready.

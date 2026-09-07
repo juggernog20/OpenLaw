@@ -65,12 +65,11 @@ the complete shared V-HELP acceptance suite.
 
 ## Review and independent walkthrough
 
-The independent walkthrough is pending. Technical review and independent acceptance
-must be recorded before this pilot task closes. Neither author replay above is
-independent acceptance. Keep the articles in draft/review until their full owning
-batch's scenarios pass, even after the pilot subset passes.
+Both review seats have run for the bounded pilot. The feature owner's human technical
+review is still pending, and the full owning-batch scenarios remain unverified. Keep
+the articles in review until those pass, even though the pilot subset passes.
 
-### Review-seat label check
+### Agent technical verification
 
 On September 7, 2026 the Fable review seat checked every quoted control label and
 behavioral claim in the four drafts against the app source at commit
@@ -78,19 +77,30 @@ behavioral claim in the four drafts against the app source at commit
 a control loosely. The triage guide now says select Comments and use the comment box.
 The submission guide now names the Attach new files to a reply link and the Reply to
 Legal composer. These are copy-only corrections. No action, prerequisite, result or
-meaning changed, so the author records above stand for the tested bytes. The current
-hashes are `b07b54ebcf02c265b3e11662087b46213351d64d1917cfc6908b1ae35a782336` for
-submit-request and `002460a02a699d9666f81d6ee74fc60b8aa961c4b28b6be157a4b03e642b6539`
-for triage-requests; request-forms and convert-request are unchanged. This check is
-not the feature owner's technical review and not the independent walkthrough.
+meaning changed, so the author records above stand for the tested bytes. This check
+is an agent source check, not the feature owner's technical review.
 
-For the independent pilot, read the four canonical articles and follow their steps
-in separate role sessions, with a fresh uniquely named form and Request. Use the
-same committed lab or another lab at that commit. Find the articles through Help
-and formal documentation. Record the actual actor, article hash, build, outcome,
-discovery failures, rework, elapsed time, and limitations in a separate record here.
-Distinguish an agent walkthrough from a human study. A replay of the author's script
-alone does not establish that an independent reader followed the prose.
+### Independent agent walkthrough
+
+[Independent walkthrough](pilot/independent-walkthrough.json) records the Fable
+review seat's own run on September 7, 2026, from 02:47 to 02:58 UTC. It is a
+different agent from the author. It read the four guides and wrote its own browser
+steps against the same committed lab, with a fresh uniquely named form and Request
+and separate Administrator, Business User and Legal Team Member contexts. Every
+pilot outcome passed: the saved form configuration, the required-field refusal, the
+PDF attachment, assignment, the three comment tiers, the carried Field, the retained
+Request Description, the byte-identical promoted Document Version, the Contract
+comments, the Inbox removal, the Portal continuation at the same R- address, and the
+staff-access refusal. Discovery through the header Help topics, local search, section
+focus and the formal reader passed for all four articles, and the signed-out formal
+index listed all four with no API request.
+
+The walkthrough found one prose error. The conversion guide told the reader to edit
+Priority in the dialog and said a configured Contract type is already selected. The
+dialog shows both as fixed text. The guide now says the dialog does not change
+Priority and that a configured type cannot be changed there. The record holds the
+tested and the corrected convert-request hashes. It is an agent walkthrough, not a
+human user study, and it does not stand in for the feature owner's approval.
 
 The author discovery checks used a draft preview at `http://127.0.0.1:43310`. It is
 not a durable service. Recreate it from the repository root with Node and installed
@@ -135,6 +145,10 @@ deployment configuration to inject draft guides.
 - Carried answers are in the Contract's Fields section, and its paper is in Documents.
 - A Legal Team Member should not be instructed to become the Requester to complete
   their procedure. Describe the other role's outcome, or name a separate actor.
+- The conversion dialog shows Priority and a configured Contract type as fixed text.
+  A guide must not tell the reader to edit a value the dialog only states.
+- The comment composer opens with Working team selected. The triage guide's explicit
+  Full thread instruction and audience warning are necessary, not optional.
 
 The how-to template now asks for the complete entry path, exact saved-state check,
 and named actor for a role handoff. Harness repairs for asynchronous saves, router
@@ -152,7 +166,12 @@ ran from 01:59 to 02:22 UTC on September 7, about 23 minutes. Those activities
 overlapped; separate productive-time totals were not instrumented. The successful
 automated walkthrough and query timings are in the records. They exclude reading,
 writing and review, so they are not estimates of human task time or writing throughput.
-Independent review and integration timings will be recorded after they finish.
+The review seat's measured effort follows. The agent source check and its copy
+corrections ran from the pilot commit at 02:31 UTC to the fix commit at 02:43 UTC,
+about 12 minutes. The independent walkthrough ran from 02:47 to 02:58 UTC, about 10
+minutes, of which the browser stages used about four minutes; three of those minutes
+were selector timeouts in the reviewer's own script. Evidence writing and this
+update were not instrumented. Integration timing is recorded when the task merges.
 
 There are 52 untouched articles, four draft expansions, and 16 remaining writing
 batches (DOC-009–024). The unchanged full registry has 58 scenarios and 131
