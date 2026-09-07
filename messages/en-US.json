@@ -4643,6 +4643,9 @@
   "matters.field.type": {
     "defaultMessage": "Matter type"
   },
+  "matters.filter.incomplete": {
+    "defaultMessage": "Incomplete"
+  },
   "matters.filteredCount": {
     "defaultMessage": "{shown} of {total, plural, one {# matter} other {# matters}}"
   },
