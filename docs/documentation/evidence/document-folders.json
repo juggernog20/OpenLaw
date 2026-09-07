@@ -1,0 +1,83 @@
+{
+  "articleId": "document-folders",
+  "contentSha256": "1844521ab7ef07fc40fe8e0c01aaeb7df5022acf1e8059b2b24716f809838fec",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Independent review seat (Opus 5 agent); guide claims checked against the committed app source at a28331f7",
+  "walkthroughReviewer": "Independent review seat (Opus 5 agent), separate from the documentation author",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-07T21:17:26.874Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-DOCUMENTS.md",
+    "apps/web/src/components/documents/documents-card.tsx",
+    "apps/web/src/components/documents/batch-dialog.tsx",
+    "apps/web/src/lib/batch-upload.ts",
+    "apps/api/src/modules/documents/folders.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C27",
+      "coverage": ["C27"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Successful files remain available and the failed item is identified separately. Unsupported folder actions or uploads are refused for the relevant role without claiming the whole batch succeeded.",
+      "actual": "7 browser steps passed, following the article as legal team member: New folder, a folder inside it, Rename, and the refusals the guide lists; Move refuses a folder into itself or its own descendant; Move to folder files a Document, then moves it back out to the record; Delete dissolves the folder and its contents move up, with nothing deleted; a two-file import with one induced failure keeps the good file and retries only the bad one; Cancel remaining stops queued work and the finished files stay; Choose folder imports the tree, keeps nested paths, and drops empty folders. A supplemental run (independent-folders-supplement.json) then completed a folder Move: the folder was relocated under another folder, kept its name, and the Document filed inside it stayed in that folder with its Version intact.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-017/independent-folders.json",
+        "docs/documentation/batches/DOC-017/independent-folders-supplement.json"
+      ],
+      "startedAt": "2026-09-07T21:17:17.869Z",
+      "verifiedAt": "2026-09-07T21:17:25.179Z"
+    },
+    {
+      "id": "V-C27",
+      "coverage": ["C27"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Successful files remain available and the failed item is identified separately. Unsupported folder actions or uploads are refused for the relevant role without claiming the whole batch succeeded.",
+      "actual": "7 browser steps passed, following the article as administrator: New folder, a folder inside it, Rename, and the refusals the guide lists; Move refuses a folder into itself or its own descendant; Move to folder files a Document, then moves it back out to the record; Delete dissolves the folder and its contents move up, with nothing deleted; a two-file import with one induced failure keeps the good file and retries only the bad one; Cancel remaining stops queued work and the finished files stay; Choose folder imports the tree, keeps nested paths, and drops empty folders. A supplemental run (independent-folders-supplement.json) then completed a folder Move: the folder was relocated under another folder, kept its name, and the Document filed inside it stayed in that folder with its Version intact.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-017/independent-folders.json",
+        "docs/documentation/batches/DOC-017/independent-folders-supplement.json"
+      ],
+      "startedAt": "2026-09-07T21:17:08.672Z",
+      "verifiedAt": "2026-09-07T21:17:16.346Z"
+    },
+    {
+      "id": "V-C27",
+      "coverage": ["C27"],
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "expected": "Successful files remain available and the failed item is identified separately. Unsupported folder actions or uploads are refused for the relevant role without claiming the whole batch succeeded.",
+      "actual": "2 browser steps passed, following the article as contributor: a Contributor imports several files at the record root and gets no folder controls; a Contributor cannot create a folder or move a Document through the seam either. A supplemental run (independent-folders-supplement.json) then exercised the partial-import path for this role: one of two root-imported files was answered 503 once, the dialog named the failed row with a per-row Retry while the good file was already a v1 Document, and the row Retry resent only the failed file, leaving the good Document with the same id and a single Version.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-017/independent-folders.json",
+        "docs/documentation/batches/DOC-017/independent-folders-supplement.json"
+      ],
+      "startedAt": "2026-09-07T21:17:26.598Z",
+      "verifiedAt": "2026-09-07T21:17:26.874Z"
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-017/README.md"],
+  "limitations": [
+    "Independent agent walkthrough by a different seat from the author; not a human user study and not the feature owner's approval.",
+    "Deliberate API and browser-network fixtures are named step by step and are separated from the reader actions they set up.",
+    "Linked guides remain unpublished; the article stays in review."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null,
+  "publicationBlockers": [
+    "The linked Document Versions, reading and archive guides are in review."
+  ],
+  "supplementalEvidence": [
+    "docs/documentation/batches/DOC-017/independent-folders-supplement.json",
+    "docs/documentation/batches/DOC-017/independent-help-presentation.json"
+  ]
+}

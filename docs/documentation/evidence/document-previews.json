@@ -1,0 +1,99 @@
+{
+  "articleId": "document-previews",
+  "contentSha256": "12cf5181a1b0c37788c1cd3d07ce04d8ac6c41efc68fed4188d47074307bd24a",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Independent review seat (Opus 5 agent); guide claims checked against the committed app source at a28331f7",
+  "walkthroughReviewer": "Independent review seat (Opus 5 agent), separate from the documentation author",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-07T21:37:09.916Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-DOCUMENTS.md",
+    "apps/web/src/components/documents/doc-panel.tsx",
+    "apps/web/src/components/documents/email-preview.tsx",
+    "apps/web/src/components/documents/pdf-preview.tsx",
+    "apps/web/src/routes/portal-knowledge.tsx",
+    "apps/web/src/routes/portal-request.tsx",
+    "apps/api/src/lib/render-family.ts",
+    "apps/api/src/pipeline/display-conversion.ts",
+    "apps/api/src/pipeline/text-extraction.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C28",
+      "coverage": ["C28"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Supported renditions/text become available and downloads preserve the original bytes. Failure/unsupported states offer the documented download or recovery path; portal file reach is checked separately.",
+      "actual": "10 browser steps passed, following the article as legal team member: a PDF opens in the reader, its page controls work, and Download returns the uploaded bytes; Word and PowerPoint read as a converted PDF while the download stays the original file; an image-only scan is OCR'd in the background for text search; processed text is findable through the app's global search; a raster image draws inline and downloads unchanged; an email shows headers, body and attachments; only PDF/image attachments preview; a download-only format downloads straight from the row; the reader shows the preparing card while a rendition is still pending; an unreadable file shows the failure card and a corrected Version recovers it; a download can fail on its own while previews keep working.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-017/independent-previews.json",
+        "docs/documentation/batches/DOC-017/independent-portal.json"
+      ],
+      "startedAt": "2026-09-07T21:36:49.800Z",
+      "verifiedAt": "2026-09-07T21:36:59.169Z"
+    },
+    {
+      "id": "V-C28",
+      "coverage": ["C28"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Supported renditions/text become available and downloads preserve the original bytes. Failure/unsupported states offer the documented download or recovery path; portal file reach is checked separately.",
+      "actual": "10 browser steps passed, following the article as administrator: a PDF opens in the reader, its page controls work, and Download returns the uploaded bytes; Word and PowerPoint read as a converted PDF while the download stays the original file; an image-only scan is OCR'd in the background for text search; processed text is findable through the app's global search; a raster image draws inline and downloads unchanged; an email shows headers, body and attachments; only PDF/image attachments preview; a download-only format downloads straight from the row; the reader shows the preparing card while a rendition is still pending; an unreadable file shows the failure card and a corrected Version recovers it; a download can fail on its own while previews keep working.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-017/independent-previews.json",
+        "docs/documentation/batches/DOC-017/independent-portal.json"
+      ],
+      "startedAt": "2026-09-07T21:36:39.588Z",
+      "verifiedAt": "2026-09-07T21:36:48.209Z"
+    },
+    {
+      "id": "V-C28",
+      "coverage": ["C28"],
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "expected": "Supported renditions/text become available and downloads preserve the original bytes. Failure/unsupported states offer the documented download or recovery path; portal file reach is checked separately.",
+      "actual": "10 browser steps passed, following the article as contributor: a PDF opens in the reader, its page controls work, and Download returns the uploaded bytes; Word and PowerPoint read as a converted PDF while the download stays the original file; an image-only scan is OCR'd in the background for text search; processed text is findable through the app's global search; a raster image draws inline and downloads unchanged; an email shows headers, body and attachments; only PDF/image attachments preview; a download-only format downloads straight from the row; the reader shows the preparing card while a rendition is still pending; an unreadable file shows the failure card and a corrected Version recovers it; a download can fail on its own while previews keep working.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-017/independent-previews.json",
+        "docs/documentation/batches/DOC-017/independent-portal.json"
+      ],
+      "startedAt": "2026-09-07T21:37:00.790Z",
+      "verifiedAt": "2026-09-07T21:37:09.916Z"
+    },
+    {
+      "id": "V-C28",
+      "coverage": ["C28"],
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "expected": "Supported renditions/text become available and downloads preserve the original bytes. Failure/unsupported states offer the documented download or recovery path; portal file reach is checked separately.",
+      "actual": "4 browser steps passed, following the article as business user: a thread attachment downloads and offers no Version history; the portal grants no staff Documents repository or record reach; published Knowledge lists its primary Document first and downloads it; an archived Knowledge Item is no longer available in the portal.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-017/independent-previews.json",
+        "docs/documentation/batches/DOC-017/independent-portal.json"
+      ],
+      "startedAt": "2026-09-07T21:24:14.236Z",
+      "verifiedAt": "2026-09-07T21:24:18.302Z"
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-017/README.md"],
+  "limitations": [
+    "Independent agent walkthrough by a different seat from the author; not a human user study and not the feature owner's approval.",
+    "Deliberate API and browser-network fixtures are named step by step and are separated from the reader actions they set up.",
+    "Linked guides remain unpublished; the article stays in review."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null,
+  "publicationBlockers": [
+    "operator-troubleshooting (DOC-023) does not exist yet; the linked Comparison, search, Versions and portal Knowledge guides are in review."
+  ],
+  "supplementalEvidence": ["docs/documentation/batches/DOC-017/independent-help-presentation.json"]
+}

@@ -1,0 +1,79 @@
+{
+  "articleId": "archive-and-delete-documents",
+  "contentSha256": "f00bcd882a961a9944be0aed0bc83a991a29870eb318dbdfe8ef66c52c2c4551",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Independent review seat (Opus 5 agent); guide claims checked against the committed app source at a28331f7",
+  "walkthroughReviewer": "Independent review seat (Opus 5 agent), separate from the documentation author",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-07T21:30:10.766Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-DOCUMENTS.md",
+    "apps/web/src/components/documents/documents-card.tsx",
+    "apps/api/src/modules/documents/routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C54",
+      "coverage": ["C54"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Archive/restore preserves supported history; permanent deletion removes the documented Versions/files and references. Other roles cannot perform Administrator deletion; consequences and unavailable-file behavior match the guide.",
+      "actual": "4 browser steps passed, following the article as legal team member: Archive takes the whole Document out of the ordinary list and Show archived finds it; Restore brings the Document and its designations back; restoring is refused while the owning record is archived, and a lost race is reported; this role is offered no Delete and the seam refuses one.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-017/independent-archive.json",
+        "docs/documentation/batches/DOC-017/independent-erasure.json"
+      ],
+      "startedAt": "2026-09-07T21:30:05.008Z",
+      "verifiedAt": "2026-09-07T21:30:08.447Z"
+    },
+    {
+      "id": "V-C54",
+      "coverage": ["C54"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Archive/restore preserves supported history; permanent deletion removes the documented Versions/files and references. Other roles cannot perform Administrator deletion; consequences and unavailable-file behavior match the guide.",
+      "actual": "5 browser steps passed, following the article as administrator: Archive takes the whole Document out of the ordinary list and Show archived finds it; Restore brings the Document and its designations back; restoring is refused while the owning record is archived, and a lost race is reported; the typed confirmation gates deletion, Cancel preserves, and Delete removes the whole Document; the erasure is recorded and there is no way to delete a single Version. A supplemental run (independent-erasure.json) repeated the erasure with the lab storage volume inspected directly before and after: the stored files under the Document key existed beforehand and none remained afterwards.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-017/independent-archive.json",
+        "docs/documentation/batches/DOC-017/independent-erasure.json"
+      ],
+      "startedAt": "2026-09-07T21:29:59.942Z",
+      "verifiedAt": "2026-09-07T21:30:04.158Z"
+    },
+    {
+      "id": "V-C54",
+      "coverage": ["C54"],
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "expected": "Archive/restore preserves supported history; permanent deletion removes the documented Versions/files and references. Other roles cannot perform Administrator deletion; consequences and unavailable-file behavior match the guide.",
+      "actual": "2 browser steps passed, following the article as contributor: a Contributor cannot archive, restore or delete; this role is offered no Delete and the seam refuses one. A supplemental run (independent-erasure.json) recorded the exact row-menu contents for this role on a one-Version and a two-Version chain, and the archive, restore and delete refusals behind them.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-017/independent-archive.json",
+        "docs/documentation/batches/DOC-017/independent-erasure.json"
+      ],
+      "startedAt": "2026-09-07T21:30:09.264Z",
+      "verifiedAt": "2026-09-07T21:30:10.766Z"
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-017/README.md"],
+  "limitations": [
+    "Independent agent walkthrough by a different seat from the author; not a human user study and not the feature owner's approval.",
+    "Deliberate API and browser-network fixtures are named step by step and are separated from the reader actions they set up.",
+    "Linked guides remain unpublished; the article stays in review."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null,
+  "publicationBlockers": ["The linked Document Versions and repository guides are in review."],
+  "supplementalEvidence": [
+    "docs/documentation/batches/DOC-017/independent-erasure.json",
+    "docs/documentation/batches/DOC-017/independent-help-presentation.json"
+  ]
+}

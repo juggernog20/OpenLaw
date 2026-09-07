@@ -1,0 +1,63 @@
+{
+  "name": "boundaries",
+  "startedAt": "2026-09-07T20:32:48.589Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "document-versions",
+      "contentSha256": "b39e52e71277824890a02ec9d8432bbb57dc4da4a974c085a5d727035ba20699"
+    },
+    {
+      "articleId": "archive-and-delete-documents",
+      "contentSha256": "f00bcd882a961a9944be0aed0bc83a991a29870eb318dbdfe8ef66c52c2c4551"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "C26 move Primary between Documents while keeping separate Version chains",
+      "actual": "Make primary moved the mark to the chosen Document; both chains remained distinct",
+      "result": "pass",
+      "at": "2026-09-07T20:32:51.474Z"
+    },
+    {
+      "role": "administrator",
+      "action": "C26/C54 archived owning record freezes upload and normal Document management",
+      "actual": "Archived Contract had no upload controls; Administrator fixture restored parent and upload returned",
+      "result": "pass",
+      "at": "2026-09-07T20:32:52.749Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "C26 move Primary between Documents while keeping separate Version chains",
+      "actual": "Make primary moved the mark to the chosen Document; both chains remained distinct",
+      "result": "pass",
+      "at": "2026-09-07T20:32:54.771Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "C26/C54 archived owning record freezes upload and normal Document management",
+      "actual": "Archived Contract had no upload controls; Administrator fixture restored parent and upload returned",
+      "result": "pass",
+      "at": "2026-09-07T20:32:56.025Z"
+    },
+    {
+      "role": "contributor",
+      "action": "C26 Contributor reads primary paper but cannot append or administer it",
+      "actual": "Administrator fixture set primary; Contributor could preview it but had no Actions/Add version; append API403",
+      "result": "pass",
+      "at": "2026-09-07T20:32:58.177Z"
+    },
+    {
+      "role": "contributor",
+      "action": "C26/C54 archived owning record freezes upload and normal Document management",
+      "actual": "Archived Contract had no upload controls; Administrator fixture restored parent and upload returned",
+      "result": "pass",
+      "at": "2026-09-07T20:32:59.400Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T20:32:59.405Z"
+}

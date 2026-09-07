@@ -1,0 +1,24 @@
+{
+  "name": "portal-discovery",
+  "startedAt": "2026-09-07T20:38:21.377Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "document-previews",
+      "contentSha256": "12cf5181a1b0c37788c1cd3d07ce04d8ac6c41efc68fed4188d47074307bd24a"
+    }
+  ],
+  "steps": [
+    {
+      "role": "business_user",
+      "action": "C28 portal Help discovery, focused heading, outline and formal link",
+      "actual": "Portal Help search exposed role-relevant article; title and outline heading focus correct, three themes by three widths fit, formal link worked",
+      "result": "pass",
+      "at": "2026-09-07T20:38:24.055Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T20:38:24.055Z"
+}

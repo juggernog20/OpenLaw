@@ -1,0 +1,119 @@
+{
+  "name": "archive",
+  "reviewer": "Independent review seat (Opus 5 agent)",
+  "startedAt": "2026-09-07T21:29:58.978Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "archive-and-delete-documents",
+      "contentSha256": "f00bcd882a961a9944be0aed0bc83a991a29870eb318dbdfe8ef66c52c2c4551"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C54 step 12-15: Archive takes the whole Document out of the ordinary list and Show archived finds it",
+      "actual": "Archive removed the row from the ordinary list in one action; Show archived brought it back marked Archived with all three Versions, the executed pin on v2 and every stored file still downloadable. Archiving destroys nothing",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:29:59.942Z",
+      "at": "2026-09-07T21:30:00.989Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C54 step 19-23: Restore brings the Document and its designations back",
+      "actual": "Restore returned the Document to the ordinary list with its three Versions and the executed-copy designation exactly as before",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:30:00.990Z",
+      "at": "2026-09-07T21:30:01.135Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C54 step 25 negative: restoring is refused while the owning record is archived, and a lost race is reported",
+      "actual": "While the owning Contract was archived the restore answered 409 and the record offered no Document controls at all; after the record was restored the Document restored normally, and a second restore of the same Document from another session answered 409, which is the stale state the guide tells the reader to reload on",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:30:01.135Z",
+      "at": "2026-09-07T21:30:02.752Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C54 step 31-34: the typed confirmation gates deletion, Cancel preserves, and Delete removes the whole Document",
+      "actual": "Delete stayed disabled until the Document's displayed name was typed exactly; a wrong name kept it disabled and Cancel left all three Versions in place. Typing the real name enabled a button reading Delete, and confirming removed the row and answered 404 for every one of the three Version downloads, with no replacement primary chosen. The row, the downloads and the History entry are browser and API observations; that the stored files themselves are gone is verified by direct inspection of the lab volume in independent-erasure.json",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:30:02.752Z",
+      "at": "2026-09-07T21:30:04.034Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C54 step 36: the erasure is recorded and there is no way to delete a single Version",
+      "actual": "The record's History still named the erased Document after its rows and files were gone, and asking the seam to remove one Version answered 404 while that chain kept both rounds. Deletion is whole-Document only, as the guide states",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:30:04.034Z",
+      "at": "2026-09-07T21:30:04.158Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C54 step 12-15: Archive takes the whole Document out of the ordinary list and Show archived finds it",
+      "actual": "Archive removed the row from the ordinary list in one action; Show archived brought it back marked Archived with all three Versions, the executed pin on v2 and every stored file still downloadable. Archiving destroys nothing",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:30:05.008Z",
+      "at": "2026-09-07T21:30:05.918Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C54 step 19-23: Restore brings the Document and its designations back",
+      "actual": "Restore returned the Document to the ordinary list with its three Versions and the executed-copy designation exactly as before",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:30:05.918Z",
+      "at": "2026-09-07T21:30:06.048Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C54 step 25 negative: restoring is refused while the owning record is archived, and a lost race is reported",
+      "actual": "While the owning Contract was archived the restore answered 409 and the record offered no Document controls at all; after the record was restored the Document restored normally, and a second restore of the same Document from another session answered 409, which is the stale state the guide tells the reader to reload on",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:30:06.049Z",
+      "at": "2026-09-07T21:30:07.648Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C54 step 29 negative: this role is offered no Delete and the seam refuses one",
+      "actual": "No Delete item appeared in the row menu for this role and the seam answered 403; both Versions were still listed and both Version downloads still answered 200 afterwards, so the refusal removed nothing. These are browser and API observations; the stored files themselves are inspected in independent-erasure.json",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:30:07.648Z",
+      "at": "2026-09-07T21:30:08.447Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C54 step 7 negative: a Contributor cannot archive, restore or delete",
+      "actual": "The Contributor's row menu held no Archive, Restore, Delete, Edit details, Move to folder or designation item; on this two-Version chain it held Compare with previous and Add version, both reads or supporting uploads. The record carried no Show archived control, and archive and delete both answered 403 while the Document stayed live with both Versions. independent-erasure.json records the exact menu contents for a one-Version and a two-Version chain",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:30:09.264Z",
+      "at": "2026-09-07T21:30:10.036Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C54 step 29 negative: this role is offered no Delete and the seam refuses one",
+      "actual": "No Delete item appeared in the row menu for this role and the seam answered 403; both Versions were still listed and both Version downloads still answered 200 afterwards, so the refusal removed nothing. These are browser and API observations; the stored files themselves are inspected in independent-erasure.json",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:30:10.036Z",
+      "at": "2026-09-07T21:30:10.766Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T21:30:10.769Z",
+  "reviewerKind": "agent",
+  "note": "Independent review seat. Fresh fictional \"Rev\" records and this seat's own steps and assertions; the author records are supporting evidence only. Each step's \"at\" is written when that awaited step settled, and \"startedAt\" when it began; these are automated browser checks against a local instance, not measured human task times."
+}

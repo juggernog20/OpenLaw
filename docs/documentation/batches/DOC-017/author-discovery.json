@@ -1,0 +1,145 @@
+{
+  "name": "discovery",
+  "startedAt": "2026-09-07T20:44:36.341Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "document-versions",
+      "contentSha256": "b39e52e71277824890a02ec9d8432bbb57dc4da4a974c085a5d727035ba20699"
+    },
+    {
+      "articleId": "document-folders",
+      "contentSha256": "31d4331ec433ff13df120a9c3f9dd61098fef0d3cf594d0aad1cc1541214aa03"
+    },
+    {
+      "articleId": "document-previews",
+      "contentSha256": "12cf5181a1b0c37788c1cd3d07ce04d8ac6c41efc68fed4188d47074307bd24a"
+    },
+    {
+      "articleId": "document-repository",
+      "contentSha256": "59f88467c3a576764b212e36ebf5cb8bd49ff84a146a1ec3321d3d0a3da19969"
+    },
+    {
+      "articleId": "archive-and-delete-documents",
+      "contentSha256": "f00bcd882a961a9944be0aed0bc83a991a29870eb318dbdfe8ef66c52c2c4551"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "document-versions contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T20:44:39.293Z"
+    },
+    {
+      "role": "administrator",
+      "action": "document-folders contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T20:44:41.118Z"
+    },
+    {
+      "role": "administrator",
+      "action": "document-previews contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T20:44:42.798Z"
+    },
+    {
+      "role": "administrator",
+      "action": "document-repository contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T20:44:44.213Z"
+    },
+    {
+      "role": "administrator",
+      "action": "archive-and-delete-documents contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T20:44:45.963Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "document-versions contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T20:44:48.532Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "document-folders contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T20:44:50.069Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "document-previews contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T20:44:51.728Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "document-repository contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T20:44:53.203Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "archive-and-delete-documents contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T20:44:54.829Z"
+    },
+    {
+      "role": "contributor",
+      "action": "document-versions contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T20:44:57.304Z"
+    },
+    {
+      "role": "contributor",
+      "action": "document-folders contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T20:44:58.681Z"
+    },
+    {
+      "role": "contributor",
+      "action": "document-previews contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T20:45:00.131Z"
+    },
+    {
+      "role": "contributor",
+      "action": "document-repository contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T20:45:01.568Z"
+    },
+    {
+      "role": "contributor",
+      "action": "archive-and-delete-documents contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T20:45:02.963Z"
+    },
+    {
+      "role": "signed-out",
+      "action": "all five guides are discoverable in formal preview without application API calls",
+      "actual": "All five formal guide titles discoverable anonymously; zero application API requests",
+      "result": "pass",
+      "at": "2026-09-07T20:45:04.003Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T20:45:04.004Z"
+}
