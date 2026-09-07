@@ -84,6 +84,13 @@ Help checks with Chromium ERR_NETWORK_CHANGED. Discovery was rerun after the
 suite ended. Final records contain only complete runs against the recorded guide bytes. Earlier fictional prerequisite records
 remain in this disposable lab.
 
+The Comparison guide changed once after its author walkthrough, during the Fable
+review: the archive sentence now says "a person who can read the Document" instead
+of "a reached reader". The behaviour it describes is unchanged. The article
+evidence record carries the new hash and names the edit; the author records keep
+the hash they ran against. The pending independent walkthrough covers the current
+bytes.
+
 Both articles stay in review pending independent walkthroughs and linked guides,
 including Document Versions/processing (DOC-017) and Analysis connector setup
 (DOC-022). DOC-025 owns final acceptance on the supported publication build.

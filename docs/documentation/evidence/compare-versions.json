@@ -1,6 +1,6 @@
 {
   "articleId": "compare-versions",
-  "contentSha256": "0199b96fd4cfc7b542b3c225280c53851b8d8576b39be403ac84ab8732ae169c",
+  "contentSha256": "2bfbd81cb149cd8bed215e1ada5736bf85fe9e4445241fea4307f2c36dae09df",
   "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
   "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
   "environment": "openlaw-docs-b8e31260-analysis-workflow",
@@ -53,7 +53,8 @@
   "authorEvidence": ["docs/documentation/batches/DOC-015/README.md"],
   "limitations": [
     "Author walkthrough passed; independent source review and article walkthrough remain pending.",
-    "Agent walkthroughs are not a human user study or the feature owner's approval."
+    "Agent walkthroughs are not a human user study or the feature owner's approval.",
+    "The guide changed after the author walkthrough (author record hash 0199b96fd4cfc7b542b3c225280c53851b8d8576b39be403ac84ab8732ae169c): the archive sentence now says a person who can read the Document instead of a reached reader. The wording change describes the same tested behaviour; the pending independent walkthrough runs on the current bytes."
   ],
   "previousEvidence": null,
   "copyOnlyReview": null

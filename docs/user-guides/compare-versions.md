@@ -28,7 +28,7 @@ An Administrator or Legal Team Member can select **Export track changes** on a r
 
 The export appends a new Version with the **Generated redline** kind and records the two Versions used to make it. Open or download that Version and check its tracked changes. The original Versions and the Comparison remain available. Exporting the same pair again opens the existing Generated redline rather than appending another one.
 
-Contributors can read Comparisons but cannot export a Generated redline. A text Comparison cannot be exported as tracked changes; Legal Team Members and Administrators see **Export needs two Word files.** Archiving does not prevent a reached reader from comparing existing Versions, but it prevents writing a new Generated redline until the Document and owning record are restored.
+Contributors can read Comparisons but cannot export a Generated redline. A text Comparison cannot be exported as tracked changes; Legal Team Members and Administrators see **Export needs two Word files.** Archiving does not stop a person who can read the Document from comparing existing Versions, but it prevents writing a new Generated redline until the Document and owning record are restored.
 
 ## If the Comparison fails
 
