@@ -137,6 +137,7 @@ async function configureConnector(page: Page, stub: OpenAiStub, testInfo: TestIn
   await page.getByLabel("Protocol").selectOption({ label: "OpenAI-compatible chat completions" });
   await page.getByLabel("Base URL").fill(stub.baseUrl);
   await page.getByLabel("API key").fill(API_KEY);
+  await page.getByRole("button", { name: "Enter model ID manually" }).click();
   await page.getByLabel("Model").fill(MODEL);
 
   const saving = page.waitForResponse(

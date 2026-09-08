@@ -240,7 +240,16 @@ docker compose up -d --scale worker=2
 
 Configure AI analysis in **Settings → Organization → AI analysis**. The connector stores the preset or custom protocol, base URL, model, and API key as organization data. There is no AI provider environment variable: changing the connector applies to the next call without restarting either process.
 
-The **worker makes the provider calls for Contract extraction**. The **API makes only the Test connection call** when an Administrator presses that button. In a restricted deployment, allow outbound HTTPS and provider DNS from the worker for ordinary runs and from the app for the test. A custom connector may point at another reachable HTTP endpoint, including a model server on your own network.
+Enter the provider key and any required endpoint, then select **Load models**. Search the list
+and select a model. OpenLaw stores its exact ID. **Refresh models** updates the list without
+changing the selected model. Loading does not save the connector, send Contract data or download
+model weights. Ollama lists its installed models. Use **Enter model ID manually** if discovery is
+unavailable or the model is missing. Azure uses the deployment name from your Azure resource.
+Save the connector and use **Test connection** to check the choice; listing alone does not prove
+that a model supports Contract analysis. A changed provider or endpoint requires a newly entered
+API key. A blank key preserves the saved key only at the same destination.
+
+The **worker makes the provider calls for Contract extraction**. The **API loads model lists and makes the Test connection call** when an Administrator presses the corresponding button. In a restricted deployment, allow outbound HTTPS and provider DNS from the worker for ordinary runs and from the app for model discovery and the test. A custom connector may point at another reachable HTTP endpoint, including a model server on your own network.
 
 The API key is write-only after save and encrypted at rest under `OPENLAW_SECRET_KEY`. The app and worker must therefore receive the same key, just as they do for the signing connector. Losing it does not damage Contracts or Analysis runs, but the stored provider key cannot be read until the old encryption key is restored or an Administrator replaces that provider key.
 

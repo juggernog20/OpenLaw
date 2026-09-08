@@ -522,6 +522,34 @@ The connector is a sealed singleton in `ai_connector`. The API resolves it for T
 
 The protocol adapter only parses the provider's reply. The writer then requires an exact evidence quote in the analyzed text, coerces each answer through the target's stored type, keeps human-set or confirmed values, applies CTR-006's term rules, and treats Contract value as one amount-currency-cadence write. For a Counterparty, exactly one live case-insensitive name match may be linked, and only when the Contract has no Counterparty. Zero matches, several matches, or an existing Contract link produce an `unmatched` result. No analysis run creates or replaces a Counterparty.
 
+### Addendum, 2026-09-08, provider model selection, #791
+
+Settings loads model IDs and display names from the provider when an Administrator selects
+**Load models**. The list can be searched and refreshed. The stored selection remains available
+if a later list omits it. **Enter model ID manually** supports private models and providers whose
+listing endpoint is unavailable. Azure's full deployment endpoint keeps manual deployment-name
+entry because a base-model catalog is not a list of the install's deployments.
+
+The API lists models before any connector save. It sends no Contract data and makes no inference
+call. Anthropic and Gemini pagination shares a 30-second deadline, at most ten pages, 5 MB per page,
+and 5,000 model options. A partial list is marked. Gemini lists only `generateContent` models;
+OpenRouter excludes models whose metadata rules out text input or output. Other providers do not
+supply reliable chat capability metadata, so Test connection remains required to check the choice.
+Ollama lists installed models through its compatible `/v1/models` endpoint and never pulls weights.
+
+Discovery refuses redirects and never treats pagination values as destination URLs. Provider
+refusals expose the HTTP status, not response text that could echo a key. A stored key is reused
+only for the same preset, protocol and normalized endpoint, for discovery and for a save. Changing
+that destination requires a new key. Moving to keyless Ollama clears the old provider key. Loading
+models does not write connector settings or Activity. Changing the pending provider, protocol,
+endpoint or key discards pending list results.
+
+Protocol references: [Anthropic models](https://platform.claude.com/docs/en/api/models/list),
+[OpenAI models](https://developers.openai.com/api/reference/resources/models/methods/list),
+[Gemini models](https://ai.google.dev/api/models),
+[OpenRouter models](https://openrouter.ai/docs/api/api-reference/models/list-all-models-and-their-properties),
+and [Ollama compatibility](https://docs.ollama.com/api/openai-compatibility).
+
 ## TECH-013: DocuSign auth — JWT grant (service integration)
 
 - **Status:** Accepted

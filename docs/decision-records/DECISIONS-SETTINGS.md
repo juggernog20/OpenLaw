@@ -169,6 +169,15 @@ Every authenticated portal page shows Member+ staff a **Viewing as business user
 - **Alternatives considered** — Keep the Integrations tab and add a rail deep-link (declined: two addresses for one pane). Split the pane, credentials under Integrations and prompts under Contracts (declined: the prompts are useless without the AI connector, and CTR-008 already keeps catalog Field prompts under Contracts → Fields; a third home would scatter one feature across three sections). A redirect from the old address (declined: nothing shipped to anyone at the old address, and the rail is the only door).
 - **Consequences** — The Organization rail gains an **AI analysis** entry. Every Organization pane rule applies unchanged: Administrator-only (SET-002), immediate apply (SET-003), activity-logged at `admin_only`. The old address `/settings/integrations/ai-analysis` no longer resolves. `CONTEXT.md`, `DEPLOYMENT.md`, `SCHEMA.md`, CTR-008, TECH-024, and DES-070 are amended in place. The ST7 redraw already owed by `SETTINGS-INVENTORY.md` now also owes the new rail entry and a frame of its own for the pane.
 
+### Addendum, 2026-09-08, #791
+
+The Provider card uses a searchable model list with **Load models** and **Refresh models**.
+The Administrator can load choices before saving. An explicit manual entry control supports
+private model IDs and failed discovery. Azure keeps deployment-name entry. The selected model
+survives refresh, including when it is missing from the returned list. A changed provider or
+endpoint requires a new API key. Loading models makes no settings change; saving the selected
+model uses the existing connector save and Activity path.
+
 ## SET-009: select the Signing connector's update mode
 
 - **Status:** Accepted

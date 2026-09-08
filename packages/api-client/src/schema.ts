@@ -525,6 +525,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/ai-connector/models": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** List models for pending connector settings without saving them */
+    post: operations["listAiConnectorModels"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/ai-connector/test": {
     parameters: {
       query?: never;
@@ -6462,6 +6479,53 @@ export interface operations {
               requiresApiKey: boolean;
               requiresBaseUrl: boolean;
             }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listAiConnectorModels: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          preset:
+            "anthropic" | "openai" | "azure_openai" | "gemini" | "openrouter" | "ollama" | "custom";
+          /** @enum {string} */
+          protocol?: "anthropic_messages" | "openai_chat_completions" | "gemini";
+          baseUrl?: string;
+          apiKey?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            models: {
+              id: string;
+              label: string;
+            }[];
+            truncated: boolean;
           };
         };
       };
