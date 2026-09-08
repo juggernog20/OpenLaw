@@ -1,0 +1,58 @@
+{
+  "startedAt": "2026-09-08T10:52:08.273Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "preview": "http://127.0.0.1:43333",
+  "articleHashes": [
+    {
+      "articleId": "troubleshooting",
+      "contentSha256": "0b5c8a359c24faa4a2c97d557b23a4ad4c37939a8cb919e0b63d2130c628779b"
+    },
+    {
+      "articleId": "reference",
+      "contentSha256": "9ec760d76d77a25e047c71f896e0961e1a7afcf6fab06e3e8c942c7770bdf7c0"
+    },
+    {
+      "articleId": "versions-and-support",
+      "contentSha256": "157906267e63b29066d1835dcda7de6c69d8c83338da745d340a8ded3e06ed0b"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Header Help reaches all three reference articles",
+      "actual": "Header Help exposes troubleshooting, reference, and support for this authenticated role.",
+      "startedAt": "2026-09-08T10:52:09.218Z",
+      "at": "2026-09-08T10:52:10.552Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "troubleshooting search, reading, edition and formal link",
+      "actual": "Representative query found article; focused title, edition metadata, full-guide navigation and narrow layouts in three themes passed.",
+      "startedAt": "2026-09-08T10:52:10.553Z",
+      "at": "2026-09-08T10:52:11.764Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "reference search, reading, edition and formal link",
+      "actual": "Representative query found article; focused title, edition metadata, full-guide navigation and narrow layouts in three themes passed.",
+      "startedAt": "2026-09-08T10:52:11.764Z",
+      "at": "2026-09-08T10:52:13.164Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "versions-and-support search, reading, edition and formal link",
+      "startedAt": "2026-09-08T10:52:13.164Z",
+      "at": "2026-09-08T10:52:14.411Z",
+      "result": "fail",
+      "error": "expect(locator).toBeVisible() failed\n\nLocator: getByText('Supported app', { exact: true })\nExpected: visible\nError: strict mode violation: getByText('Supported app', { exact: true }) resolved to 3 elements:\n    1) <strong>Supported app</strong> aka locator('ol').getByText('Supported app')\n    2) <strong>Supported app</strong> aka getByText('Supported app').nth(1)\n    3) <dt>Supported app</dt> aka locator('#edition').getByText('Supported app')\n\nCall log:\n  - Expect \"to.be.visible\" with timeout 5000ms\n  - waiting for getByText('Supported app', { exact: true })\n"
+    }
+  ]
+}

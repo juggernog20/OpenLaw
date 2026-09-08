@@ -1,0 +1,97 @@
+{
+  "articleId": "versions-and-support",
+  "contentSha256": "dee7dab08d34a3a1f7c6828ca2a2a240fd8f2fdba13e710587d52265d7e94ae7",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "author": "Codex documentation author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "not-run",
+  "sources": [
+    "CONTEXT.md",
+    "docs/documentation/PUBLISHING.md",
+    "docs/documentation/edition.json",
+    "apps/web/src/components/documentation/documentation-reader.tsx",
+    "apps/api/src/lib/uploads.ts",
+    "apps/api/src/lib/render-family.ts",
+    "apps/api/src/modules/contracts/routes.ts",
+    "apps/web/src/components/approvals/approvals-signing-card.tsx"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C51",
+      "coverage": ["C51"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Edition and support paths are discoverable on both surfaces, older or missing destinations fail honestly and retained reading works offline.",
+      "actual": "Author observations are recorded separately; independent walkthrough pending.",
+      "result": "not-run",
+      "evidence": ["docs/documentation/batches/DOC-024/README.md"]
+    },
+    {
+      "id": "V-C51",
+      "coverage": ["C51"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Edition and support paths are discoverable on both surfaces, older or missing destinations fail honestly and retained reading works offline.",
+      "actual": "Author observations are recorded separately; independent walkthrough pending.",
+      "result": "not-run",
+      "evidence": ["docs/documentation/batches/DOC-024/README.md"]
+    },
+    {
+      "id": "V-C51",
+      "coverage": ["C51"],
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "expected": "Edition and support paths are discoverable on both surfaces, older or missing destinations fail honestly and retained reading works offline.",
+      "actual": "Author observations are recorded separately; independent walkthrough pending.",
+      "result": "not-run",
+      "evidence": ["docs/documentation/batches/DOC-024/README.md"]
+    },
+    {
+      "id": "V-C51",
+      "coverage": ["C51"],
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "expected": "Edition and support paths are discoverable on both surfaces, older or missing destinations fail honestly and retained reading works offline.",
+      "actual": "Author observations are recorded separately; independent walkthrough pending.",
+      "result": "not-run",
+      "evidence": ["docs/documentation/batches/DOC-024/README.md"]
+    },
+    {
+      "id": "V-C51",
+      "coverage": ["C51"],
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "expected": "Edition and support paths are discoverable on both surfaces, older or missing destinations fail honestly and retained reading works offline.",
+      "actual": "Author observations are recorded separately; independent walkthrough pending.",
+      "result": "not-run",
+      "evidence": ["docs/documentation/batches/DOC-024/README.md"]
+    }
+  ],
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-024/README.md",
+    "docs/documentation/batches/DOC-024/author-approval-first.json",
+    "docs/documentation/batches/DOC-024/author-approval.json",
+    "docs/documentation/batches/DOC-024/author-discovery-first.json",
+    "docs/documentation/batches/DOC-024/author-discovery.json",
+    "docs/documentation/batches/DOC-024/author-discovery-second.json",
+    "docs/documentation/batches/DOC-024/author-files.json",
+    "docs/documentation/batches/DOC-024/author-files-retry.json",
+    "docs/documentation/batches/DOC-024/author-offline.json",
+    "docs/documentation/batches/DOC-024/author-recovery.json",
+    "docs/documentation/batches/DOC-024/author-reference-first.json",
+    "docs/documentation/batches/DOC-024/author-reference.json",
+    "docs/documentation/batches/DOC-024/author-symptoms.json"
+  ],
+  "limitations": [
+    "The Help/formal preview serves working article bytes over the immutable configuration backend; development notices remain visible.",
+    "Real provider configuration C42/C43 remains blocked under #742. Unconfigured controls are not proof of live provider success/failure.",
+    "Full-suite compatibility and publication acceptance remain DOC-025/027 work.",
+    "The user will proofread the assembled full suite; no human feature-owner sign-off is claimed."
+  ],
+  "authorCopyUpdate": "After author walkthroughs, copy-only review clarified target Document/source Document Version, assigned person and internal record-sharing wording. Historical records retain the bytes observed; current independent acceptance remains pending."
+}
