@@ -149,11 +149,10 @@
       "apps/api/src/lib/render-family.ts for the stored-type and preview families, including SVG as download-only",
       "apps/api/src/lib/notifications/notifier.ts and catalog.ts for the in-app and email rule",
       "apps/api/src/modules/contract-analysis/routes.ts and contract-envelopes/routes.ts for the Analysis target and the single live Envelope",
-      "packages/db/src/schema/auth.ts for the account-role enum",
       "CONTEXT.md and the canonical guides for the glossary, permission and Document rows",
       "every internal link and heading anchor in the three articles"
     ],
     "outcome": "One correction was needed and applied: the reference article's title read \"file behaviour\", against the en-US rule in EDITORIAL.md and against the article's own \"File behavior and limits\" heading. Every other claim checked held. The same commit linked the batch record from WRITING-BATCHES.md and noted the aborted-run record shape.",
-    "note": "This source review is separate from the browser walkthroughs recorded in the scenarios below. Its completion time is the commit time of 2570232a converted to UTC; no finer time is claimed."
+    "note": "This source review is separate from the browser walkthroughs recorded in the scenarios below. Its completion time is the commit time of 2570232a converted to UTC, and that commit is the identity of this review's own correction. It does not cover any source read later in the session; those are recorded in sourceReviewAddendum or in the independent records that carry them, and none of them is backdated into this object."
   }
 }
