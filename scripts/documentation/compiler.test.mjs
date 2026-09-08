@@ -279,6 +279,28 @@ test("rejects stale, incomplete, and non-independent verification", (t) => {
   );
 });
 
+test("verification timestamps reject impossible calendar dates", (t) => {
+  const f = fixture(t);
+  for (const reviewedAt of [
+    "2026-02-30T00:00:00Z",
+    "2025-02-29T12:00:00+04:00",
+    "2026-04-31T00:00:00Z",
+  ]) {
+    f.json("edition.json", {
+      ...f.edition,
+      compatibilityReview: { ...f.edition.compatibilityReview, reviewedAt },
+    });
+    assert.throws(() => f.compile(), /compatibility/, reviewedAt);
+  }
+  for (const reviewedAt of ["2024-02-29T23:00:00-04:00", "2026-09-06T00:00:00.123456Z"]) {
+    f.json("edition.json", {
+      ...f.edition,
+      compatibilityReview: { ...f.edition.compatibilityReview, reviewedAt },
+    });
+    assert.doesNotThrow(() => f.compile(), reviewedAt);
+  }
+});
+
 test("historical walkthroughs require a current, hash-bound compatibility review", (t) => {
   const f = fixture(t);
   const e = f.evidence("submit");

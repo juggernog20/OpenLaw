@@ -73,7 +73,7 @@ function strings(value, message, allowed) {
   );
   unique(value, message);
 }
-function readOwned(root, name) {
+export function readOwned(root, name) {
   const path = resolve(root, name),
     parent = resolve(root);
   requireThat(path.startsWith(parent + sep), `path outside source tree: ${name}`);
@@ -110,10 +110,18 @@ function anchor(text) {
     .replace(/^-|-$/g, "");
 }
 function validDate(value) {
-  return nonempty(value) && Number.isFinite(Date.parse(value)) && Date.parse(value) <= Date.now();
+  if (!nonempty(value)) return false;
+  const parts =
+    /^(\d{4})-(\d{2})-(\d{2})(?:T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2}))?$/.exec(value);
+  if (!parts) return false;
+  const [, year, month, day] = parts.map(Number);
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (month < 1 || month > 12 || day < 1 || day > days[month - 1]) return false;
+  return Number.isFinite(Date.parse(value)) && Date.parse(value) <= Date.now();
 }
 
-function validateCatalog(catalog, scenarios, bindings) {
+export function validateCatalog(catalog, scenarios, bindings) {
   requireThat(catalog.schemaVersion === 1, "unsupported catalog schema");
   array(catalog.sections, "sections required");
   array(catalog.articles, "articles required");
@@ -209,7 +217,21 @@ function validateCatalog(catalog, scenarios, bindings) {
   return contexts;
 }
 
-function verifyEvidence(a, source, metadataRoot, edition, scenarios) {
+export function verifyApplicationCompatibility(edition, build) {
+  const c = edition.compatibilityReview;
+  requireThat(SHA.test(build.commit), "verified content needs a recorded app build");
+  requireThat(
+    c &&
+      c.testedAppCommit === edition.supportedAppCommit &&
+      c.applicationSha256 === build.applicationSha256 &&
+      nonempty(c.reviewer) &&
+      validDate(c.reviewedAt) &&
+      nonempty(c.summary),
+    "application compatibility review is missing or stale",
+  );
+}
+
+export function verifyArticleEvidence(a, source, metadataRoot, edition, scenarios) {
   const e = json(metadataRoot, `evidence/${a.id}.json`);
   requireThat(
     e.articleId === a.id && e.contentSha256 === sha256(source),
@@ -406,25 +428,13 @@ export function compileDocumentation({
       (preview && ["draft", "review"].includes(a.status)),
   );
   const verified = eligible.filter((a) => ["verified", "published"].includes(a.status));
-  if (verified.length) {
-    const c = edition.compatibilityReview;
-    requireThat(SHA.test(build.commit), "verified content needs a recorded app build");
-    requireThat(
-      c &&
-        c.testedAppCommit === edition.supportedAppCommit &&
-        c.applicationSha256 === build.applicationSha256 &&
-        nonempty(c.reviewer) &&
-        validDate(c.reviewedAt) &&
-        nonempty(c.summary),
-      "application compatibility review is missing or stale",
-    );
-  }
+  if (verified.length) verifyApplicationCompatibility(edition, build);
   const parser = new Marked({ gfm: true });
   for (const a of eligible) {
     const bytes = readOwned(contentRoot, `${a.id}.md`),
       source = bytes.toString("utf8");
     const unverified = !["verified", "published"].includes(a.status);
-    if (!unverified) verifyEvidence(a, bytes, metadataRoot, edition, scenarios);
+    if (!unverified) verifyArticleEvidence(a, bytes, metadataRoot, edition, scenarios);
     const tokens = parser.lexer(source),
       outline = [],
       assets = [];

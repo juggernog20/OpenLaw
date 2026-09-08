@@ -3,15 +3,20 @@
 Planning baseline: 2026-09-06. See the [project plan](PLAN.md) for scope, gates, and
 verification rules and the [backlog](BACKLOG.md) for task definitions.
 
-All rows have content status **Scoped** and walkthrough status **Not performed**.
+This matrix retains the initial scope and source inventory. Its initial state was
+**Scoped**, with walkthroughs **Not performed**. For current states and evidence, use
+[articles.json](articles.json), [scenarios.json](scenarios.json), the
+[G3](batches/DOC-025/G3.md) and [G4](batches/DOC-025/G4.md) reports, and the
+[local coverage report](MAINTENANCE.md#review-coverage-locally).
 An implementation evidence entry means source was located; it does not assert that
 the behaviour shipped or passed a walkthrough. The initial inventory included uncommitted changes. The release audit now records
 the selected committed baseline and the differences to apply before authoring.
 Existing deployment prose is marked for reuse and validation rather than new writing.
 
 Audience: **L** Legal Team Member; **A** Administrator; **C** Contributor;
-**B** Business User; **O** deployment operator. `L/A` does not grant access to
-confidential records automatically; verify the relevant reach rules. Audience lists
+**B** Business User; **O** deployment operator. Audience codes do not change access
+rules. Legal Team Members need the relevant reach; Administrators retain access to
+Confidential records. Audience lists
 identify intended readers, not an exhaustive permission specification.
 
 Destination: **S** staff Help; **P** portal Help; **F** formal documentation.

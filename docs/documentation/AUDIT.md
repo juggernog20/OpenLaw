@@ -54,6 +54,11 @@ explicit requirements. Simulated providers and code review alone cannot satisfy 
 
 ## Responsibility assignments
 
+This table records the initial execution assignments. Use Opus 5 for remaining
+project reviews under the user's subsequent instruction. Preserve the actual
+reviewer in earlier evidence. See [MAINTENANCE.md](MAINTENANCE.md) for the ongoing
+accountable maintainer and review cadence after the writing batches.
+
 | Work                                      | Execution owner                        | Reviewer / decision owner                                                             |
 | ----------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------- |
 | Inventory, article map, standards, guides | Codex                                  | Fable reviews each task; Blair owns product scope                                     |
