@@ -14,11 +14,16 @@ import {
   type Matter,
   type Transaction,
 } from "@openlaw/db";
-import { MAX_TASK_TITLE_LENGTH, type ChangedFields } from "@openlaw/shared";
+import {
+  MAX_TASK_DESCRIPTION_LENGTH,
+  MAX_TASK_TITLE_LENGTH,
+  type ChangedFields,
+} from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import { matterTeamScope, NO_MATTER, reachedMatter } from "../../lib/matter-access.js";
 import { prepareTaskAssignee } from "../../lib/task-assignment.js";
+import { removeTaskThread } from "../comments/audience.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { assertValidMatterTaskAssignee, createMatterTask } from "./create.js";
 
@@ -33,6 +38,7 @@ const FROZEN = "This matter is archived. Restore it before changing its Tasks.";
 const TaskSchema = z.object({
   id: z.string(),
   title: z.string(),
+  description: z.string().nullable(),
   isDone: z.boolean(),
   assigneeId: z.string().nullable(),
   assigneeName: z.string().nullable(),
@@ -41,6 +47,7 @@ const TaskSchema = z.object({
   displayOrder: z.int(),
 });
 const TasksEnvelope = z.object({
+  createdTaskId: z.string().optional(),
   tasks: z.array(TaskSchema),
   doneCount: z.int(),
   totalCount: z.int(),
@@ -49,6 +56,7 @@ const TasksEnvelope = z.object({
 interface ReachedTask {
   id: string;
   title: string;
+  description: string | null;
   isDone: boolean;
   assigneeId: string | null;
   dueDate: string | null;
@@ -62,6 +70,7 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
       .select({
         id: matterTasks.id,
         title: matterTasks.title,
+        description: matterTasks.description,
         isDone: matterTasks.isDone,
         assigneeId: matterTasks.assigneeId,
         assigneeName: users.displayName,
@@ -72,7 +81,7 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
       .from(matterTasks)
       .leftJoin(users, eq(matterTasks.assigneeId, users.id))
       .where(eq(matterTasks.matterId, matterId))
-      .orderBy(asc(matterTasks.displayOrder), asc(matterTasks.id));
+      .orderBy(asc(matterTasks.dueDate), asc(matterTasks.displayOrder), asc(matterTasks.id));
     return {
       tasks,
       doneCount: tasks.filter((task) => task.isDone).length,
@@ -89,6 +98,7 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
       .select({
         id: matterTasks.id,
         title: matterTasks.title,
+        description: matterTasks.description,
         isDone: matterTasks.isDone,
         assigneeId: matterTasks.assigneeId,
         dueDate: matterTasks.dueDate,
@@ -120,7 +130,7 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "listMatterTasks",
         summary:
-          "List a reached Matter's lightweight checklist in stable display order. Contributors on the Matter can read it; Task due dates are internal and never enter deadline surfaces",
+          "List a reached Matter's lightweight checklist by due date, with undated Tasks last and display order breaking ties. Contributors on the Matter can read it; Task due dates are internal and never enter deadline surfaces",
         tags: ["matter-tasks"],
         params: NumberParams,
         response: { 200: TasksEnvelope, default: problemResponse },
@@ -147,6 +157,7 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         params: NumberParams,
         body: z.strictObject({
           title: TitleSchema,
+          description: z.string().trim().max(MAX_TASK_DESCRIPTION_LENGTH).nullable().optional(),
           assigneeId: z.string().nullable().optional(),
           addToTeam: z.boolean().optional(),
           dueDate: z.iso.date().nullable().optional(),
@@ -170,6 +181,7 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         const created = await createMatterTask(tx, {
           matter,
           title: request.body.title,
+          description: request.body.description,
           assigneeId,
           dueDate: request.body.dueDate ?? null,
           actorId: request.user.id,
@@ -186,7 +198,7 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
             assigneeId,
           });
         }
-        return checklistOf(tx, matter.id);
+        return { ...(await checklistOf(tx, matter.id)), createdTaskId: created.id };
       });
       return reply.status(201).send(answer);
     },
@@ -206,13 +218,14 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         body: z
           .strictObject({
             title: TitleSchema.optional(),
+            description: z.string().trim().max(MAX_TASK_DESCRIPTION_LENGTH).nullable().optional(),
             assigneeId: z.string().nullable().optional(),
             addToTeam: z.boolean().optional(),
             dueDate: z.iso.date().nullable().optional(),
           })
           .meta({ minProperties: 1 })
           .refine((body) => Object.keys(body).length > 0, {
-            message: "Send at least one of title, assigneeId, or dueDate.",
+            message: "Send at least one of title, description, assigneeId, or dueDate.",
           }),
         response: { 200: TasksEnvelope, default: problemResponse },
       },
@@ -236,10 +249,16 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         const wanted = {
           title: request.body.title ?? task.title,
+          description:
+            request.body.description === undefined
+              ? task.description
+              : request.body.description || null,
           assigneeId,
           dueDate: request.body.dueDate === undefined ? task.dueDate : request.body.dueDate,
         };
         const changed: ChangedFields = {};
+        if (wanted.description !== task.description)
+          changed.description = { from: task.description, to: wanted.description };
         if (wanted.title !== task.title) changed.title = { from: task.title, to: wanted.title };
         if (wanted.assigneeId !== task.assigneeId) {
           changed.assigneeId = { from: task.assigneeId, to: wanted.assigneeId };
@@ -310,7 +329,8 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireMember,
       schema: {
         operationId: "reorderMatterTasks",
-        summary: "Replace a reached Matter checklist's complete display order",
+        summary:
+          "Replace a reached Matter checklist's complete display order. The list reads by due date first, so stored display order only breaks ties between Tasks sharing a date and orders the undated ones",
         tags: ["matter-tasks"],
         params: NumberParams,
         body: z.strictObject({ taskIds: z.array(z.string().min(1)).min(1) }),
@@ -358,7 +378,8 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireMember,
       schema: {
         operationId: "removeMatterTask",
-        summary: "Remove one Task from a reached, non-archived Matter",
+        summary:
+          "Remove one Task from a reached, non-archived Matter. A Task carrying any comment, deleted and redacted ones included, answers 409 and is marked done instead of removed",
         tags: ["matter-tasks"],
         params: TaskParams,
         response: { 200: TasksEnvelope, default: problemResponse },
@@ -368,6 +389,17 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
       app.db.transaction(async (tx) => {
         const task = await reachedTask(tx, request.user, request.params.taskId);
         assertTaskWritable(task);
+        // The Task's own row, held while its thread is counted: a post
+        // resolving this Task waits here, so the count and the delete
+        // are one decision (CMT-006).
+        await tx
+          .select({ id: matterTasks.id })
+          .from(matterTasks)
+          .where(eq(matterTasks.id, task.id))
+          .limit(1)
+          .for("update");
+        await removeTaskThread(tx, "matter_task", task.id);
+
         await tx.delete(matterTasks).where(eq(matterTasks.id, task.id));
         await recordActivity(tx, {
           entityType: "matter",

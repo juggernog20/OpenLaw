@@ -40,7 +40,11 @@ import {
   type Executor,
   type Transaction,
 } from "@openlaw/db";
-import { MAX_TASK_TITLE_LENGTH, type ChangedFields } from "@openlaw/shared";
+import {
+  MAX_TASK_DESCRIPTION_LENGTH,
+  MAX_TASK_TITLE_LENGTH,
+  type ChangedFields,
+} from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import {
@@ -50,6 +54,7 @@ import {
   type ReachedContract,
 } from "../../lib/contract-access.js";
 import { prepareTaskAssignee } from "../../lib/task-assignment.js";
+import { removeTaskThread } from "../comments/audience.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
 /** The contract read floor (CTR-021): a Contributor on the team reads the
@@ -74,6 +79,7 @@ const TaskParams = z.object({ taskId: RecordIdSchema });
 const TaskSchema = z.object({
   id: z.string(),
   title: z.string(),
+  description: z.string().nullable(),
   isDone: z.boolean(),
   assigneeId: z.string().nullable(),
   assigneeName: z.string().nullable(),
@@ -83,6 +89,7 @@ const TaskSchema = z.object({
 });
 
 const TasksEnvelope = z.object({
+  createdTaskId: z.string().optional(),
   tasks: z.array(TaskSchema),
   doneCount: z.int(),
   totalCount: z.int(),
@@ -93,6 +100,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
   interface ReachedTask {
     id: string;
     title: string;
+    description: string | null;
     isDone: boolean;
     assigneeId: string | null;
     dueDate: string | null;
@@ -116,6 +124,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
       .select({
         id: contractTasks.id,
         title: contractTasks.title,
+        description: contractTasks.description,
         isDone: contractTasks.isDone,
         assigneeId: contractTasks.assigneeId,
         dueDate: contractTasks.dueDate,
@@ -148,6 +157,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
       .select({
         id: contractTasks.id,
         title: contractTasks.title,
+        description: contractTasks.description,
         isDone: contractTasks.isDone,
         assigneeId: contractTasks.assigneeId,
         assigneeName: users.displayName,
@@ -235,6 +245,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         params: NumberParams,
         body: z.strictObject({
           title: TitleSchema,
+          description: z.string().trim().max(MAX_TASK_DESCRIPTION_LENGTH).nullable().optional(),
           assigneeId: z.string().nullable().optional(),
           addToTeam: z.boolean().optional(),
           dueDate: z.iso.date().nullable().optional(),
@@ -272,6 +283,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
           .values({
             contractId: contract.id,
             title,
+            description: request.body.description || null,
             isDone: false,
             assigneeId,
             dueDate,
@@ -305,7 +317,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
           });
         }
 
-        return checklistOf(tx, contract.id);
+        return { ...(await checklistOf(tx, contract.id)), createdTaskId: created!.id };
       });
       return reply.status(201).send(answer);
     },
@@ -322,7 +334,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         description:
           "Assignees must be active staff who manage the record or belong to its team. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.",
         summary:
-          "Edit a task's title, assignee, or due date (CTR-017). " +
+          "Edit a task's title, description, assignee, or due date (CTR-017). " +
           "Every field is optional and only what is sent is read. A " +
           "request that changes nothing writes nothing and narrates " +
           "nothing. Appends one task.edited entry naming only what " +
@@ -334,12 +346,13 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         body: z
           .strictObject({
             title: TitleSchema.optional(),
+            description: z.string().trim().max(MAX_TASK_DESCRIPTION_LENGTH).nullable().optional(),
             assigneeId: z.string().nullable().optional(),
             addToTeam: z.boolean().optional(),
             dueDate: z.iso.date().nullable().optional(),
           })
           .refine((body) => Object.keys(body).length > 0, {
-            message: "Send at least one of title, assigneeId, or dueDate.",
+            message: "Send at least one of title, description, assigneeId, or dueDate.",
           }),
         response: { 200: TasksEnvelope, default: problemResponse },
       },
@@ -365,10 +378,16 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
 
         const wanted = {
           title: request.body.title ?? task.title,
+          description:
+            request.body.description === undefined
+              ? task.description
+              : request.body.description || null,
           assigneeId: wantedAssignee,
           dueDate: request.body.dueDate === undefined ? task.dueDate : request.body.dueDate,
         };
         const changed: ChangedFields = {};
+        if (wanted.description !== task.description)
+          changed.description = { from: task.description, to: wanted.description };
         if (wanted.title !== task.title) changed.title = { from: task.title, to: wanted.title };
         if (wanted.assigneeId !== task.assigneeId) {
           changed.assigneeId = { from: task.assigneeId, to: wanted.assigneeId };
@@ -531,7 +550,9 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
           "Take a task off a contract's checklist (CTR-017). The row " +
           "is deleted and the task.removed activity entry is the " +
           "durable record of it, which is why that entry carries the " +
-          "title. A task on a contract this viewer cannot reach " +
+          "title. A task carrying any comment, deleted and redacted " +
+          "ones included, answers 409 and is marked done instead of " +
+          "removed. A task on a contract this viewer cannot reach " +
           "answers 404; an archived contract takes no removal until " +
           "it is restored",
         tags: ["tasks"],
@@ -544,6 +565,17 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         const task = await reachedTask(tx, request.user, request.params.taskId);
         if (!task) throw httpError(404, NO_TASK);
         if (task.contract.archivedAt) throw httpError(409, FROZEN);
+
+        // The Task's own row, held while its thread is counted: a post
+        // resolving this Task waits here, so the count and the delete
+        // are one decision (CMT-006).
+        await tx
+          .select({ id: contractTasks.id })
+          .from(contractTasks)
+          .where(eq(contractTasks.id, task.id))
+          .limit(1)
+          .for("update");
+        await removeTaskThread(tx, "contract_task", task.id);
 
         await tx.delete(contractTasks).where(eq(contractTasks.id, task.id));
 

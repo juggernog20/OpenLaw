@@ -26,6 +26,7 @@ const INVALID_ASSIGNEE =
 export interface CreateMatterTaskInput {
   matter: Pick<Matter, "id" | "managerId">;
   title: string;
+  description?: string | null;
   assigneeId: string | null;
   dueDate: string | null;
   actorId: string;
@@ -71,6 +72,7 @@ export async function createMatterTask(
     .values({
       matterId: input.matter.id,
       title: input.title,
+      description: input.description || null,
       assigneeId: input.assigneeId,
       dueDate: input.dueDate,
       displayOrder: await nextDisplayOrder(tx, input.matter.id),

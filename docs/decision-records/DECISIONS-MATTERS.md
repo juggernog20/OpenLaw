@@ -916,3 +916,34 @@ Lists link each deadline to its source tab. Matter Home cards and the Matter dea
 filter use the same derivation. This supersedes the earlier exclusion of Task dates from
 Next deadline; Tasks still have their own tab and reminder behavior. No date is copied
 from Tasks into the Key dates table.
+
+### MTR-005 UX review addendum — chronological Task list (2026-09-07)
+
+The Matter Tasks list sorts by due date ascending, with undated Tasks last. Equal dates
+retain their existing relative order. Adding or changing a due date returns the checklist
+in that order. The row menu offers Edit and Remove; Move up and Move down are removed.
+Stored display order remains a tie-breaker for existing records and legacy API callers.
+
+### MTR-005 UX review addendum — Task detail modal (2026-09-07)
+
+Task titles open a shared detail modal with a description, assignee, due date, and a
+separate comments/attachments panel. Add Task can include an initial note and files.
+Descriptions are optional plain text, limited to 10,000 characters, and expand with their
+content. This supersedes the earlier exclusion of Task descriptions and conversations.
+
+Each Task has its own thread, using the existing comments, mentions, attachments, and
+correction machinery. The parent record controls access. Task audiences are Legal only
+and Working team; Task comments never become replies to the originating Requester.
+Comment notifications link to the Task modal, and activity is logged against the parent
+record. Task comments do not appear in the parent record's comment thread.
+
+Creating the Task and posting initial files are separate API operations. If posting fails,
+the modal retains the created Task id and the pending note/files; Retry cannot create a
+second Task. Closing before creation discards staged files. Existing Task details and
+comments save independently.
+
+### MTR-007 UX review addendum — archived linked Contracts (2026-09-08)
+
+The Matter's Linked Contracts list excludes archived Contracts, including restricted
+placeholders for archived records. Archiving preserves the Contract's Matter link;
+restoring the Contract makes it visible in the list again under the usual access rules.

@@ -35,7 +35,14 @@ import { uuidPk } from "./helpers.js";
  * is its own list (`COMMENT_ENTITY_TYPES` in
  * `apps/api/src/modules/comments/audience.ts`): `contract` and
  * `request`. */
-export const COMMENT_ENTITY_TYPES = ["matter", "contract", "document", "request"] as const;
+export const COMMENT_ENTITY_TYPES = [
+  "matter",
+  "contract",
+  "document",
+  "request",
+  "matter_task",
+  "contract_task",
+] as const;
 export type CommentEntityType = (typeof COMMENT_ENTITY_TYPES)[number];
 
 /**
@@ -100,7 +107,7 @@ export const comments = pgTable(
     index("comments_entity_idx").on(table.entityType, table.entityId, table.createdAt, table.id),
     check(
       "comments_entity_type_check",
-      sql`${table.entityType} in ('matter', 'contract', 'document', 'request')`,
+      sql`${table.entityType} in ('matter', 'contract', 'document', 'request', 'matter_task', 'contract_task')`,
     ),
     check(
       "comments_visibility_check",
@@ -230,7 +237,7 @@ export const commentLastRead = pgTable(
     }),
     check(
       "comment_last_read_entity_type_check",
-      sql`${table.entityType} in ('matter', 'contract', 'document', 'request')`,
+      sql`${table.entityType} in ('matter', 'contract', 'document', 'request', 'matter_task', 'contract_task')`,
     ),
   ],
 );

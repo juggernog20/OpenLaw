@@ -590,6 +590,59 @@ describe("the notification centre", () => {
     expect(link).toHaveAttribute("href", "/inbox/42");
   });
 
+  it("deep-links a Task comment to its Task rather than the record's own thread", async () => {
+    // A Task keeps its own conversation under the parent record's
+    // access (CTR-017/MTR-005 Task detail addenda). The item is written
+    // against the record, so the payload's `taskId` is the only thing
+    // that says which Task to open — without it the reader lands on a
+    // thread the comment is not in.
+    const user = userEvent.setup();
+    bellApi({
+      unread: 2,
+      pages: {
+        first: {
+          notifications: [
+            item(1, {
+              eventType: "comment.posted",
+              entityType: "matter",
+              entityId: "m1",
+              payload: {
+                matterNumber: 12,
+                matterTitle: "Northwind supply",
+                commentId: "cm1",
+                taskId: "task 1",
+                actorName: "Omar Dib",
+              },
+            }),
+            item(2, {
+              eventType: "comment.mentioned",
+              payload: {
+                contractNumber: 41,
+                contractTitle: "Acme MSA",
+                commentId: "cm2",
+                taskId: "task-2",
+                actorName: "Omar Dib",
+              },
+            }),
+          ],
+          nextCursor: null,
+        },
+      },
+    });
+    renderAt("/");
+
+    await user.click(await bell("2 unread"));
+    const centre = await screen.findByRole("dialog", { name: "Notifications" });
+    // The id rides the query string, so one that needs escaping is
+    // escaped rather than trusted.
+    expect(
+      within(centre).getByRole("link", { name: /Omar Dib commented on Northwind supply/ }),
+    ).toHaveAttribute("href", "/matters/12/tasks?task=task%201");
+    expect(
+      within(centre).getByRole("link", { name: /Omar Dib mentioned you on Acme MSA/ }),
+    ).toHaveAttribute("href", "/contracts/41/tasks?task=task-2");
+  });
+
   it("draws the empty state and no paging foot when the bell is empty", async () => {
     const user = userEvent.setup();
     bellApi({ unread: 0 });

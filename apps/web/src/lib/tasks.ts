@@ -26,6 +26,7 @@ export type ContractTask = ListResponse["tasks"][number];
 /** What one task carries when it is written. */
 export interface TaskInput {
   title: string;
+  description?: string | null;
   assigneeId?: string | null;
   addToTeam?: boolean;
   dueDate?: string | null;
@@ -33,7 +34,16 @@ export interface TaskInput {
 
 /** What a read or a write over the checklist answers. */
 export type TasksOutcome =
-  | { ok: true; tasks: ContractTask[]; doneCount: number; totalCount: number }
+  | {
+      ok: true;
+      /** The Task the add route just made. Only an add answers with one;
+       * the detail dialog needs it to post the initial note against the
+       * Task it created rather than making a second one. */
+      createdTaskId?: string;
+      tasks: ContractTask[];
+      doneCount: number;
+      totalCount: number;
+    }
   | ({ ok: false } & Problem);
 
 /** Reads one contract's task checklist, whole. */
@@ -67,6 +77,7 @@ export async function addContractTask(
   return result?.data
     ? {
         ok: true,
+        createdTaskId: result.data.createdTaskId,
         tasks: result.data.tasks,
         doneCount: result.data.doneCount,
         totalCount: result.data.totalCount,
@@ -74,7 +85,7 @@ export async function addContractTask(
     : { ok: false, ...(await problem(result)) };
 }
 
-/** Edits a task's title, assignee, or due date. */
+/** Edits a task's title, description, assignee, or due date. */
 export async function updateContractTask(
   taskId: string,
   input: Partial<TaskInput>,

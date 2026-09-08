@@ -53,6 +53,7 @@ export const contractTasks = pgTable(
     /** What needs doing. Not null, because a task nobody named is a
      * task nobody can act on. */
     title: text("title").notNull(),
+    description: text("description"),
     /** Whether the task is complete. The only status a checklist item
      * carries — done or not done, nothing in between. */
     isDone: boolean("is_done").notNull().default(false),

@@ -35,32 +35,26 @@ import {
 import { useRecord } from "../record-context";
 import { FormattedMessage, useIntl } from "react-intl";
 import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
-import { MAX_TASK_TITLE_LENGTH } from "@openlaw/shared";
+import { TaskDialog } from "../tasks/task-dialog";
+import { useSearchParams } from "react-router";
 import {
   addContractTask,
   removeContractTask,
   toggleContractTask,
   updateContractTask,
   type ContractTask,
-  type TaskInput,
   type TasksOutcome,
 } from "../../lib/tasks";
 import { formatShortDate } from "../../lib/format";
 import { StatusNote, type FieldStatus } from "../status-note";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
-import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-
-/** One task as the dialog collects it. */
-type DraftInput = { title: string; assigneeId: string; dueDate: string };
 
 /** What the add and edit dialogs are opened for. */
 type Editing = { row: null } | { row: ContractTask };
@@ -89,7 +83,23 @@ export function TasksCard({
   const intl = useIntl();
   const [status, setStatus] = useState<FieldStatus>("idle");
   const [detail, setDetail] = useState<string | null>(null);
-  const [editing, setEditing] = useState<Editing | null>(null);
+  const [manualEditing, setEditing] = useState<Editing | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const linkedTask = tasks.find((task) => task.id === searchParams.get("task"));
+  const editing = manualEditing ?? (linkedTask ? { row: linkedTask } : null);
+  function closeEditing() {
+    setEditing(null);
+    if (searchParams.has("task")) {
+      setSearchParams(
+        (current) => {
+          const next = new URLSearchParams(current);
+          next.delete("task");
+          return next;
+        },
+        { replace: true },
+      );
+    }
+  }
   const busy = status === "saving";
 
   async function run(
@@ -204,23 +214,36 @@ export function TasksCard({
       )}
       {editing && (
         <TaskDialog
+          key={editing.row?.id ?? "new"}
           row={editing.row}
           assignees={assignees}
           teamExpansion={teamExpansion}
-          busy={busy}
-          onClose={() => setEditing(null)}
-          onConfirm={async (input) => {
-            const refusal = await run(
-              () =>
-                editing.row
-                  ? updateContractTask(editing.row.id, input)
-                  : addContractTask(contractNumber, input),
-              true,
-            );
-            if (!refusal && input.addToTeam && input.assigneeId)
-              teamExpansion?.onAdded(input.assigneeId);
-            if (refusal === null) setEditing(null);
-            return refusal;
+          onClose={closeEditing}
+          onSave={async (input, taskId) => {
+            const result = taskId
+              ? await updateContractTask(taskId, input)
+              : await addContractTask(contractNumber, input);
+            if (!result.ok)
+              return {
+                error:
+                  result.detail ??
+                  intl.formatMessage({
+                    id: "tasks.writeFailed",
+                    defaultMessage: "The Task change could not be saved. Try again.",
+                  }),
+              };
+            onTasksChange(result);
+            const saved =
+              result.tasks.find((task) => task.id === (taskId ?? result.createdTaskId)) ??
+              result.tasks.find((task) => !tasks.some((previous) => previous.id === task.id));
+            if (!saved)
+              return {
+                error: intl.formatMessage({
+                  id: "taskDetails.missing",
+                  defaultMessage: "The saved task could not be loaded. Close and reopen it.",
+                }),
+              };
+            return { task: saved };
           }}
         />
       )}
@@ -268,9 +291,13 @@ function TaskRow({
         )}
       />
       <div className="flex min-w-0 flex-1 flex-col">
-        <span className={`text-base ${task.isDone ? "text-muted line-through" : "text-primary"}`}>
+        <button
+          type="button"
+          onClick={onEdit}
+          className={`w-fit max-w-full rounded-button text-left text-base hover:text-link hover:underline focus-visible:outline-2 focus-visible:outline-link ${task.isDone ? "text-muted line-through" : "text-primary"}`}
+        >
           {task.title}
-        </span>
+        </button>
         {task.dueDate !== null && (
           <span className="text-xs text-muted">
             <FormattedMessage
@@ -329,157 +356,3 @@ function TaskRow({
  * component for one different title would be a second place for the
  * bounds to drift.
  */
-function TaskDialog({
-  row,
-  assignees,
-  teamExpansion,
-  busy,
-  onClose,
-  onConfirm,
-}: Readonly<{
-  row: ContractTask | null;
-  assignees: readonly TaskAssigneePerson[];
-  teamExpansion?: TaskTeamExpansion;
-  busy: boolean;
-  onClose: () => void;
-  onConfirm: (input: TaskInput) => Promise<string | null>;
-}>) {
-  const intl = useIntl();
-  const [addToTeam, setAddToTeam] = useState(false);
-  const allPeople = [...assignees, ...(teamExpansion?.people ?? [])];
-  const [draft, setDraft] = useState<DraftInput>({
-    title: row?.title ?? "",
-    assigneeId: row?.assigneeId ?? "",
-    dueDate: row?.dueDate ?? "",
-  });
-  const [error, setError] = useState<{ field: "title" | null; message: string } | null>(null);
-
-  async function submit() {
-    if (busy) return;
-    if (draft.title.trim() === "") {
-      setError({
-        field: "title",
-        message: intl.formatMessage({
-          id: "tasks.needTitle",
-          defaultMessage: "Name what needs doing.",
-        }),
-      });
-      return;
-    }
-    const refusal = await onConfirm({
-      title: draft.title.trim(),
-      ...(row && draft.assigneeId === (row.assigneeId ?? "")
-        ? {}
-        : { assigneeId: draft.assigneeId || null }),
-      ...(addToTeam ? { assigneeId: draft.assigneeId, addToTeam: true } : {}),
-      dueDate: draft.dueDate || null,
-    });
-    setError(refusal === null ? null : { field: null, message: refusal });
-  }
-
-  const change = (next: Partial<DraftInput>) => {
-    setDraft((current) => ({ ...current, ...next }));
-    setError(null);
-  };
-
-  const ERROR_ID = "task-error";
-  const invalid = (field: "title") =>
-    error?.field === field ? ({ "aria-invalid": true, "aria-describedby": ERROR_ID } as const) : {};
-
-  return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent aria-describedby={undefined}>
-        <DialogTitle>
-          {row ? (
-            <FormattedMessage id="tasks.editTitle" defaultMessage="Edit task" />
-          ) : (
-            <FormattedMessage id="tasks.addTitle" defaultMessage="Add a task" />
-          )}
-        </DialogTitle>
-        <form
-          className="mt-4 flex flex-col gap-4"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void submit();
-          }}
-        >
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="task-title" required>
-              <FormattedMessage id="tasks.field.title" defaultMessage="Title" />
-            </Label>
-            <Input
-              id="task-title"
-              aria-required="true"
-              value={draft.title}
-              maxLength={MAX_TASK_TITLE_LENGTH}
-              autoFocus
-              {...invalid("title")}
-              onChange={(event) => change({ title: event.target.value })}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="task-assignee">
-              <FormattedMessage id="tasks.field.assignee" defaultMessage="Assignee" />
-            </Label>
-            <TaskAssigneePicker
-              id="task-assignee"
-              label={intl.formatMessage({ id: "tasks.field.assignee", defaultMessage: "Assignee" })}
-              taskTitle={draft.title}
-              value={
-                draft.assigneeId
-                  ? (allPeople.find((person) => person.id === draft.assigneeId) ??
-                    (row ? taskAssignee(row, assignees) : null))
-                  : null
-              }
-              deferred
-              people={assignees}
-              additionalPeople={teamExpansion?.people}
-              disabled={busy}
-              onChange={async (id, adding) => {
-                setAddToTeam(adding ?? false);
-                change({ assigneeId: id ?? "" });
-                return null;
-              }}
-            />
-            {addToTeam && (
-              <p className="text-sm text-muted">
-                <FormattedMessage
-                  id="taskAssignee.deferred"
-                  defaultMessage="Team membership and assignment are saved when you save the task."
-                />
-              </p>
-            )}
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="task-due-date">
-              <FormattedMessage id="tasks.field.dueDate" defaultMessage="Due date" />
-            </Label>
-            <Input
-              id="task-due-date"
-              type="date"
-              value={draft.dueDate}
-              onChange={(event) => change({ dueDate: event.target.value })}
-            />
-          </div>
-          {error && (
-            <p id={ERROR_ID} role="alert" className="text-xs text-status-danger-fg">
-              {error.message}
-            </p>
-          )}
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="secondary" onClick={onClose}>
-              <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
-            </Button>
-            <Button type="submit" disabled={busy}>
-              {row ? (
-                <FormattedMessage id="action.save" defaultMessage="Save" />
-              ) : (
-                <FormattedMessage id="tasks.add" defaultMessage="Add task" />
-              )}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}

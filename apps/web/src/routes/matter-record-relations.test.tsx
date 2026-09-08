@@ -307,7 +307,46 @@ describe("the Matter record's linked Contracts (M23/6)", () => {
     mountApi(MEMBER, { parent: null, children: [], related: [] }, (call) => {
       if (call.url.pathname === "/api/v1/contracts/options")
         return json(200, {
-          contractTypes: [{ id: "ct-nda", slug: "nda", displayName: "NDA", fields: [] }],
+          contractTypes: [
+            { id: "ct-nda", slug: "nda", displayName: "NDA", fields: [] },
+            {
+              id: "ct-employment",
+              slug: "employment",
+              displayName: "Employment",
+              fields: [
+                {
+                  fieldId: "f-employee",
+                  slug: "employee",
+                  displayName: "Employee",
+                  description: null,
+                  fieldType: "text",
+                  options: null,
+                  displayOrder: 0,
+                  isRequired: true,
+                },
+                {
+                  fieldId: "f-probation",
+                  slug: "probation",
+                  displayName: "Probation months",
+                  description: null,
+                  fieldType: "number",
+                  options: null,
+                  displayOrder: 1,
+                  isRequired: false,
+                },
+                {
+                  fieldId: "f-notes",
+                  slug: "notes",
+                  displayName: "Notes",
+                  description: null,
+                  fieldType: "text",
+                  options: null,
+                  displayOrder: 2,
+                  isRequired: false,
+                },
+              ],
+            },
+          ],
           users: [],
           contractStatuses: [],
           approverGroups: [],
@@ -331,7 +370,18 @@ describe("the Matter record's linked Contracts (M23/6)", () => {
     await user.click(screen.getByRole("button", { name: "New contract" }));
     dialog = await screen.findByRole("dialog");
     await user.type(within(dialog).getByLabelText(/^Title\*?$/), linkedContract.title);
-    await user.selectOptions(within(dialog).getByLabelText(/^Contract type\*?$/), "ct-nda");
+    const type = within(dialog).getByLabelText(/^Contract type\*?$/);
+    await user.selectOptions(type, "ct-employment");
+    await user.click(within(dialog).getByRole("button", { name: "Create" }));
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent("Fill Employee");
+    expect(writes).toEqual([]);
+    await user.type(within(dialog).getByLabelText(/^Employee\*$/), "Alex Example");
+    await user.type(within(dialog).getByLabelText("Probation months"), "6");
+    expect(within(dialog).getByLabelText("Notes")).toHaveValue("");
+    await user.selectOptions(type, "ct-nda");
+    expect(within(dialog).queryByLabelText("Probation months")).not.toBeInTheDocument();
+    await user.selectOptions(type, "ct-employment");
+    expect(within(dialog).getByLabelText("Probation months")).toHaveValue("6");
     await user.click(within(dialog).getByRole("button", { name: "Create" }));
     expect(
       await screen.findByRole("link", { name: "C-42 Programme services agreement" }),
@@ -339,8 +389,8 @@ describe("the Matter record's linked Contracts (M23/6)", () => {
     expect(writes).toEqual([
       {
         title: linkedContract.title,
-        contractTypeId: "ct-nda",
-        customFields: {},
+        contractTypeId: "ct-employment",
+        customFields: { employee: "Alex Example", probation: 6 },
         isConfidential: false,
         matterNumber: 12,
       },
@@ -379,7 +429,7 @@ describe("the Matter record's linked Contracts (M23/6)", () => {
     const user = userEvent.setup();
 
     await user.click(await screen.findByRole("button", { name: "Link Contract" }));
-    await user.type(screen.getByLabelText("Search by contract number or title"), "Programme");
+    await user.type(screen.getByLabelText("Search by Contract number or title"), "Programme");
     await user.click(await screen.findByRole("button", { name: /Programme services agreement/ }));
     await user.click(screen.getByRole("button", { name: "Link" }));
 

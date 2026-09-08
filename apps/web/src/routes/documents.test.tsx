@@ -2,7 +2,7 @@
 
 /** The M26 Documents destination through the real router and fetch stub. */
 import { describe, expect, it } from "vitest";
-import { screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { json, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
@@ -294,4 +294,61 @@ describe("the /documents destination", () => {
     expect(await screen.findByText("No documents yet")).toBeVisible();
     expect(screen.getByText("Upload to a record and it appears here.")).toBeVisible();
   });
+});
+
+describe("moving repository documents by drag", () => {
+  it.each([false, true])(
+    "offers owning folders and reports the move result (rejected: %s)",
+    async (rejected) => {
+      let moved = false;
+      const writes: unknown[] = [];
+      const api = repositoryApi([[documentRow()], []]);
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call) => {
+          if (call.url.pathname === "/api/v1/contracts/42/folders")
+            return json(200, { folders: [{ id: "folder-1", name: "Executed", parentId: null }] });
+          if (call.method === "PATCH" && call.url.pathname === "/api/v1/documents/document-1") {
+            moved = true;
+            writes.push(call.body);
+            return rejected
+              ? json(403, { title: "Forbidden", detail: "This Document cannot be moved." })
+              : json(200, { document: {} });
+          }
+          return api.handler(call);
+        },
+      });
+      renderAt("/documents?owner=contract&record=C-42&folder=folder-1");
+      await screen.findByRole("link", {
+        name: "Master services agreement",
+      });
+      const row = screen.getByRole("row", { name: /Master services agreement/ });
+      const transfer = {
+        types: ["application/x-openlaw-document"],
+        setData: () => {},
+        getData: () => "document-1",
+      };
+      fireEvent.dragStart(row, { dataTransfer: transfer });
+      const targets = await screen.findByRole("complementary", { name: "Move to folder" });
+      const root = await within(targets).findByText("None");
+      fireEvent.dragOver(root, { dataTransfer: transfer });
+      fireEvent.drop(root, { dataTransfer: transfer });
+      await waitFor(() => expect(moved).toBe(true));
+      expect(writes).toEqual([{ folderId: null }]);
+      if (rejected) {
+        expect(await screen.findByRole("alert")).toHaveTextContent(
+          "This Document cannot be moved.",
+        );
+        expect(screen.queryByText("Moved Master services agreement.")).not.toBeInTheDocument();
+      } else {
+        expect(await screen.findByText("Moved Master services agreement.")).toBeVisible();
+        await waitFor(() => expect(api.reads()).toBeGreaterThan(1));
+        await waitFor(() =>
+          expect(
+            screen.queryByRole("row", { name: /Master services agreement/ }),
+          ).not.toBeInTheDocument(),
+        );
+      }
+    },
+  );
 });

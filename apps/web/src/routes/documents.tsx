@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** M26's URL-backed flat Documents destination and DES-046 managed table. */
+import { useDocumentDrag } from "../components/documents/use-document-drag";
+import { DocumentDropFolders } from "../components/documents/document-drop-folders";
+import { updateDocument } from "../lib/documents";
 import { useEffect, useState } from "react";
 import {
   redirect,
@@ -245,6 +248,8 @@ function DocumentsPageState() {
   const intl = useIntl();
   const navigate = useNavigate();
   const signOut = useSignOut("/auth/login");
+  const documentDrag = useDocumentDrag<RepositoryDocument>();
+  const [moveNotice, setMoveNotice] = useState<string | null>(null);
   const [rows, setRows] = useState<RepositoryDocument[]>(loaded.documents);
   const [recent, setRecent] = useState<RepositoryDocument[]>(loaded.recent);
   const [cursor, setCursor] = useState<string | null>(loaded.nextCursor);
@@ -272,9 +277,9 @@ function DocumentsPageState() {
     if (search) mirrorSearch(navigate, search);
   }, [loaded.fromUrl, loaded.layout, navigate]);
 
-  async function commit(next: Layout, nextActiveId: string | null = activeViewId) {
+  async function commit(next: Layout, nextActiveId: string | null = activeViewId, refresh = false) {
     const allowed = layoutForViewer(next, loaded.canManage);
-    if (sameQuery(layout, allowed)) {
+    if (!refresh && sameQuery(layout, allowed)) {
       setLayout(allowed);
       setActiveViewId(nextActiveId);
       return;
@@ -309,7 +314,7 @@ function DocumentsPageState() {
     setPageError(false);
     setLayout(allowed);
     setActiveViewId(nextActiveId);
-    mirrorSearch(navigate, querySearch(allowed));
+    if (!refresh) mirrorSearch(navigate, querySearch(allowed));
   }
 
   function setFilters(values: Layout["filters"]) {
@@ -382,6 +387,40 @@ function DocumentsPageState() {
         candidate.id === row.id ? { ...candidate, archivedAt: null } : candidate,
       ),
     );
+  }
+
+  async function dropDocument(transfer: DataTransfer, folderId: string | null) {
+    const document = documentDrag.take(transfer);
+    if (
+      !document ||
+      busy ||
+      !loaded.canManage ||
+      document.archivedAt ||
+      (document.folder?.id ?? null) === folderId
+    )
+      return;
+    setBusy(true);
+    setListError(null);
+    setMoveNotice(null);
+    const result = await updateDocument(document.id, { folderId });
+    setBusy(false);
+    if (!result.ok) {
+      setListError(
+        result.detail ??
+          intl.formatMessage({
+            id: "documents.move.error",
+            defaultMessage: "That document could not be moved. Try again.",
+          }),
+      );
+      return;
+    }
+    setMoveNotice(
+      intl.formatMessage(
+        { id: "documents.drag.moved", defaultMessage: "Moved {title}." },
+        { title: document.title },
+      ),
+    );
+    await commit(layout, activeViewId, true);
   }
 
   function adopt(next: SavedView[], activeId: string | null) {
@@ -462,7 +501,20 @@ function DocumentsPageState() {
       }
     >
       <PageTitle title={intl.formatMessage({ id: "nav.documents", defaultMessage: "Documents" })} />
+      {documentDrag.source && (
+        <DocumentDropFolders
+          key={documentDrag.source.id}
+          document={documentDrag.source}
+          accepts={documentDrag.accepts}
+          onDrop={(transfer, folderId) => void dropDocument(transfer, folderId)}
+        />
+      )}
       <div className="flex flex-col gap-4">
+        {moveNotice && (
+          <p role="status" className="text-sm text-muted">
+            {moveNotice}
+          </p>
+        )}
         {!narrowed && recent.length > 0 && <RecentDocuments documents={recent} />}
         {rows.length === 0 ? (
           <div className="flex flex-col items-center gap-4 rounded-card border border-border-default bg-raised px-6 py-16 text-center">
@@ -510,9 +562,22 @@ function DocumentsPageState() {
             layout={layout}
             rows={rows}
             rowKey={(row) => row.id}
+            rowDrag={{
+              enabled: (row) =>
+                loaded.canManage &&
+                !busy &&
+                row.archivedAt === null &&
+                row.owner.kind !== "knowledge_item",
+              onStart: documentDrag.start,
+              onEnd: documentDrag.clear,
+            }}
             onLayoutChange={(next) => void commit(next)}
             onRowActivate={(row) => void navigate(documentLandingPath(row))}
-            rowClassName={(row) => (row.archivedAt === null ? undefined : "opacity-60")}
+            rowClassName={(row) =>
+              row.archivedAt !== null || documentDrag.source?.id === row.id
+                ? "opacity-60"
+                : undefined
+            }
             focusRowKey={appended?.from}
             actionsColumn={
               hasArchivedRow && loaded.canManage

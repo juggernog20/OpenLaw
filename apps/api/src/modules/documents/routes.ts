@@ -834,7 +834,7 @@ const UPLOAD_FIELDS = {
     enum: [...HAND_SET_DOCUMENT_VERSION_KINDS],
     description:
       "What this version is in the negotiation (CTR-014), or `general` for Matter documents. " +
-      "Defaults to `general` on Matters and `draft_ours` otherwise. Must be sent before the file part.",
+      "Matter uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part.",
   },
   note: {
     type: "string",

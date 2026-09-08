@@ -485,11 +485,15 @@ function hrefFor(item: BellItem, arm: Arm | undefined): string | null {
   if (item.entityType === "matter") {
     const number = wholeNumber(item.payload, "matterNumber");
     if (number === null) return null;
+    if (item.eventType.startsWith("comment.") && typeof item.payload.taskId === "string")
+      return `/matters/${number}/tasks?task=${encodeURIComponent(item.payload.taskId)}`;
     return arm?.section ? `/matters/${number}/${arm.section}` : `/matters/${number}`;
   }
   if (item.entityType !== "contract") return null;
   const number = wholeNumber(item.payload, "contractNumber");
   if (number === null) return null;
+  if (item.eventType.startsWith("comment.") && typeof item.payload.taskId === "string")
+    return `/contracts/${number}/tasks?task=${encodeURIComponent(item.payload.taskId)}`;
   return arm?.section ? `/contracts/${number}/${arm.section}` : `/contracts/${number}`;
 }
 

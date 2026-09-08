@@ -52,7 +52,11 @@
 import {
   and,
   asc,
+  commentLastRead,
+  comments,
   contracts,
+  contractTasks,
+  matterTasks,
   eq,
   inArray,
   isNull,
@@ -86,7 +90,13 @@ import { httpError } from "../../lib/problem.js";
  * and one arm together, and the route schemas are built from it, so a
  * type with no arm cannot be asked for.
  */
-export const COMMENT_ENTITY_TYPES = ["matter", "contract", "request"] as const;
+export const COMMENT_ENTITY_TYPES = [
+  "matter",
+  "contract",
+  "request",
+  "matter_task",
+  "contract_task",
+] as const;
 
 export type CommentEntityType = (typeof COMMENT_ENTITY_TYPES)[number];
 
@@ -120,6 +130,7 @@ export interface PostedComment {
   audience: CommentAudience;
   actorId: string;
   actorName: string;
+  taskId?: string;
   commentId: string;
   /** The comment's own tier. Every event it raises rides it, so a Legal
    * Only comment never reaches somebody outside that room. */
@@ -234,6 +245,7 @@ const contractArm: CommentEntityArm = {
           actorId: posted.actorId,
           actorName: posted.actorName,
           commentId: posted.commentId,
+          ...(posted.taskId ? { taskId: posted.taskId } : {}),
           visibility: posted.visibility,
         });
       }
@@ -251,6 +263,7 @@ const contractArm: CommentEntityArm = {
       actorId: posted.actorId,
       actorName: posted.actorName,
       commentId: posted.commentId,
+      ...(posted.taskId ? { taskId: posted.taskId } : {}),
       visibility: posted.visibility,
       mentioned: [...posted.mentioned],
     });
@@ -287,6 +300,7 @@ const matterArm: CommentEntityArm = {
         actorId: posted.actorId,
         actorName: posted.actorName,
         commentId: posted.commentId,
+        ...(posted.taskId ? { taskId: posted.taskId } : {}),
         visibility: posted.visibility,
       });
     }
@@ -296,6 +310,7 @@ const matterArm: CommentEntityArm = {
       actorId: posted.actorId,
       actorName: posted.actorName,
       commentId: posted.commentId,
+      ...(posted.taskId ? { taskId: posted.taskId } : {}),
       visibility: posted.visibility,
       mentioned: [...posted.mentioned],
     });
@@ -523,6 +538,7 @@ const requestArm: CommentEntityArm = {
         actorId: posted.actorId,
         actorName: posted.actorName,
         commentId: posted.commentId,
+        ...(posted.taskId ? { taskId: posted.taskId } : {}),
         visibility: posted.visibility,
       });
     }
@@ -556,10 +572,119 @@ const requestArm: CommentEntityArm = {
       actorId: posted.actorId,
       actorName: posted.actorName,
       commentId: posted.commentId,
+      ...(posted.taskId ? { taskId: posted.taskId } : {}),
       visibility: posted.visibility,
     });
   },
 };
+
+/** Task conversations inherit record access without joining the record's thread. */
+async function taskParent(db: Executor, module: "matter" | "contract", id: string) {
+  const table = module === "matter" ? matterTasks : contractTasks;
+  const owner = module === "matter" ? matterTasks.matterId : contractTasks.contractId;
+  const [task] = await db
+    .select({ id: table.id, parentId: owner })
+    .from(table)
+    .where(eq(table.id, id))
+    .limit(1)
+    // Held in share mode, for the same reason the `request` arm holds
+    // its row: removing a Task takes this row FOR UPDATE while it
+    // checks the thread is empty. Without a lock here a post could
+    // resolve the Task just before the removal commits and insert just
+    // after it, leaving words and files on an id nothing answers for.
+    // Under this lock the post either commits first, and the removal is
+    // refused for the comment it now finds, or it waits and is told the
+    // Task is gone. A plain read takes the lock for one statement and
+    // gives it straight back.
+    .for("share");
+  return task;
+}
+
+/** What a Task whose thread has something in it is told (CMT-006). */
+export const TASK_HOLDS_A_CONVERSATION =
+  "This Task has a conversation on it, so it cannot be removed. Mark it done instead.";
+
+/**
+ * Clears what a Task's empty thread left behind, or refuses to let the
+ * Task go.
+ *
+ * A Task row is deleted outright, unlike every other thing a comment
+ * hangs off. CMT-006 says a comment leaves a tombstone rather than a
+ * hole, and nobody may erase words that are not theirs — so a Task
+ * carrying any comment, tombstones included, is kept and marked done
+ * instead. That leaves only the read watermarks of a thread nobody ever
+ * said anything on, and those go with the Task.
+ *
+ * The caller holds the Task row FOR UPDATE before asking. That is what
+ * makes the count and the delete one decision rather than two.
+ */
+export async function removeTaskThread(
+  tx: Executor,
+  entityType: "matter_task" | "contract_task",
+  taskId: string,
+): Promise<void> {
+  const [held] = await tx
+    .select({ id: comments.id })
+    .from(comments)
+    .where(and(eq(comments.entityType, entityType), eq(comments.entityId, taskId)))
+    .limit(1);
+  if (held) throw httpError(409, TASK_HOLDS_A_CONVERSATION);
+  await tx
+    .delete(commentLastRead)
+    .where(and(eq(commentLastRead.entityType, entityType), eq(commentLastRead.entityId, taskId)));
+}
+
+export async function commentActivityRef(
+  db: Executor,
+  ref: EntityRef,
+): Promise<{ entityType: "matter" | "contract" | "request"; entityId: string }> {
+  if (ref.entityType === "matter_task" || ref.entityType === "contract_task") {
+    const module = ref.entityType === "matter_task" ? "matter" : "contract";
+    const task = await taskParent(db, module, ref.entityId);
+    if (!task) throw httpError(404, "This Task no longer exists.");
+    return { entityType: module, entityId: task.parentId };
+  }
+  return { entityType: ref.entityType, entityId: ref.entityId };
+}
+
+function taskArm(module: "matter" | "contract"): CommentEntityArm {
+  const parent = module === "matter" ? matterArm : contractArm;
+  return {
+    readerRoles: parent.readerRoles,
+    async resolve(db, user, id) {
+      const task = await taskParent(db, module, id);
+      if (!task) return null;
+      const audience = await parent.resolve(db, user, task.parentId);
+      if (!audience) return null;
+      const tiers = audience.tiers.filter((tier) => tier !== "full_thread");
+      if (tiers.length === 0) return null;
+      return {
+        ...audience,
+        entityType: module === "matter" ? "matter_task" : "contract_task",
+        entityId: task.id,
+        tiers,
+      };
+    },
+    async mentionCandidates(db, audience, only) {
+      const ref = await commentActivityRef(db, audience);
+      const candidates = await parent.mentionCandidates(db, { ...audience, ...ref }, only);
+      return candidates
+        .map((candidate) => ({
+          ...candidate,
+          tiers: candidate.tiers.filter((tier) => tier !== "full_thread"),
+        }))
+        .filter((candidate) => candidate.tiers.length > 0);
+    },
+    async notifyPosted(tx, notifier, posted) {
+      const ref = await commentActivityRef(tx, posted.audience);
+      await parent.notifyPosted(tx, notifier, {
+        ...posted,
+        taskId: posted.audience.entityId,
+        audience: { ...posted.audience, ...ref },
+      });
+    },
+  };
+}
 
 /** Every arm, by the type it answers for. The mapped type is exhaustive,
  * so a name added to {@link COMMENT_ENTITY_TYPES} with no arm fails the
@@ -568,6 +693,8 @@ const ARMS: { readonly [T in CommentEntityType]: CommentEntityArm } = {
   matter: matterArm,
   contract: contractArm,
   request: requestArm,
+  matter_task: taskArm("matter"),
+  contract_task: taskArm("contract"),
 };
 
 /**

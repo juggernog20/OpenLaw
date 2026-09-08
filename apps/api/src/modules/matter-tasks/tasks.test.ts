@@ -222,8 +222,8 @@ describe("Matter Tasks", () => {
     const reordered = await reorderRaw(matter.number, [second.id, first.id]);
     expect(reordered.statusCode, reordered.body).toBe(200);
     expect(reordered.json().tasks.map((row: TaskRow) => row.title)).toEqual([
-      "Second",
       "First edited",
+      "Second",
     ]);
     expect((await removeRaw(second.id)).statusCode).toBe(200);
 
@@ -522,4 +522,34 @@ describe("explicit team expansion during assignment", () => {
       spy.mockRestore();
     }
   });
+});
+
+it("orders Tasks by due date, moves edited dates, and leaves undated Tasks last", async () => {
+  const matter = await newMatter("Chronological tasks");
+  const undated = await add(matter.number, { title: "Undated" });
+  const later = await add(matter.number, { title: "Later", dueDate: "2030-09-10" });
+  const earlier = await add(matter.number, { title: "Earlier", dueDate: "2030-09-01" });
+  const tied = await add(matter.number, { title: "Same date", dueDate: "2030-09-01" });
+  expect((await list(matter.number)).map((row) => row.id)).toEqual([
+    earlier.id,
+    tied.id,
+    later.id,
+    undated.id,
+  ]);
+  const moved = await editRaw(later.id, { dueDate: "2030-08-20" });
+  expect(moved.statusCode, moved.body).toBe(200);
+  expect(moved.json().tasks.map((row: TaskRow) => row.id)).toEqual([
+    later.id,
+    earlier.id,
+    tied.id,
+    undated.id,
+  ]);
+  const cleared = await editRaw(later.id, { dueDate: null });
+  expect(cleared.statusCode, cleared.body).toBe(200);
+  expect(cleared.json().tasks.map((row: TaskRow) => row.id)).toEqual([
+    earlier.id,
+    tied.id,
+    undated.id,
+    later.id,
+  ]);
 });

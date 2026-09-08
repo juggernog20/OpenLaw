@@ -279,3 +279,26 @@ CMT-010 said the resolved audience carries `entityType`, `entityId`, and the tie
 | CMT-009 | The unread count: a watermark per reader per record, and what it excludes      | Accepted (amended by CMT-010)                                                                                                                                                                                                                                                                                                                                                                                     |
 | CMT-010 | Audience resolution takes one arm per entity type; downstream takes the answer | Accepted; the `request` arm added by the M20/7 addendum; its mention candidates, its silent mentions, and its author corrections recorded by the M20/10 addendum; the erasure invariant recorded by the #390 addendum; the silent mention overturned by the M21/5 addendum; an arm answering for another record recorded by the M21/11 addendum; the M21/5 addendum's tier-gate reason corrected at the M21 close |
 | CMT-011 | Paper arrives with the form or with a comment; a Member+ files it              | Accepted                                                                                                                                                                                                                                                                                                                                                                                                          |
+
+### CMT-001 UX review addendum — Task conversations (2026-09-07)
+
+`matter_task` and `contract_task` are comment targets. Their audience is inherited from
+the owning record, limited to Legal only and Working team. Threads, read watermarks,
+and attachment access remain keyed to the Task id. Parent record comments remain
+separate. Task notifications carry `taskId` and open the Tasks tab with that modal selected;
+originating Requesters receive no Task comment events. Corrections and attachment
+downloads re-check Task and parent access.
+
+A Task carrying any comment cannot be removed. A Task row is deleted outright, and its
+comments hang off its id with no foreign key to follow them, so removal would erase words
+their authors never took back. CMT-005 and CMT-006 keep both tombstones readable, and
+nobody but the author or an Administrator may take text away, so a Task with a live
+comment, a deleted one, or a redacted one answers 409 and is marked done instead. The
+refusal names that way out. A Task nobody has spoken on is still removed, and the read
+watermarks of its empty thread go with it.
+
+Removal and posting serialize on the Task row. The removal holds it `FOR UPDATE` while it
+counts the thread; audience resolution holds it `FOR SHARE`, as the `request` arm already
+does for conversion. A post therefore either commits first and the removal is refused for
+the comment it now finds, or it waits and is told the Task is gone. No comment, mention,
+attachment, or watermark can be stranded on an id nothing answers for.

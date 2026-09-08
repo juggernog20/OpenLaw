@@ -1265,7 +1265,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** List a reached Matter's lightweight checklist in stable display order. Contributors on the Matter can read it; Task due dates are internal and never enter deadline surfaces */
+    /** List a reached Matter's lightweight checklist by due date, with undated Tasks last and display order breaking ties. Contributors on the Matter can read it; Task due dates are internal and never enter deadline surfaces */
     get: operations["listMatterTasks"];
     put?: never;
     /**
@@ -1289,7 +1289,7 @@ export interface paths {
     get?: never;
     put?: never;
     post?: never;
-    /** Remove one Task from a reached, non-archived Matter */
+    /** Remove one Task from a reached, non-archived Matter. A Task carrying any comment, deleted and redacted ones included, answers 409 and is marked done instead of removed */
     delete: operations["removeMatterTask"];
     options?: never;
     head?: never;
@@ -1325,7 +1325,7 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    /** Replace a reached Matter checklist's complete display order */
+    /** Replace a reached Matter checklist's complete display order. The list reads by due date first, so stored display order only breaks ties between Tasks sharing a date and orders the undated ones */
     put: operations["reorderMatterTasks"];
     post?: never;
     delete?: never;
@@ -2584,7 +2584,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Contracts whose one canonical matter_id names this Matter. Any Contract the viewer cannot independently reach is { restricted: true } with no number or title. */
+    /** Non-archived Contracts whose one canonical matter_id names this Matter. Any Contract the viewer cannot independently reach is { restricted: true } with no number or title. */
     get: operations["listMatterContracts"];
     put?: never;
     post?: never;
@@ -2713,12 +2713,12 @@ export interface paths {
     get?: never;
     put?: never;
     post?: never;
-    /** Take a task off a contract's checklist (CTR-017). The row is deleted and the task.removed activity entry is the durable record of it, which is why that entry carries the title. A task on a contract this viewer cannot reach answers 404; an archived contract takes no removal until it is restored */
+    /** Take a task off a contract's checklist (CTR-017). The row is deleted and the task.removed activity entry is the durable record of it, which is why that entry carries the title. A task carrying any comment, deleted and redacted ones included, answers 409 and is marked done instead of removed. A task on a contract this viewer cannot reach answers 404; an archived contract takes no removal until it is restored */
     delete: operations["removeContractTask"];
     options?: never;
     head?: never;
     /**
-     * Edit a task's title, assignee, or due date (CTR-017). Every field is optional and only what is sent is read. A request that changes nothing writes nothing and narrates nothing. Appends one task.edited entry naming only what moved, at the working-team tier (DD-017). A task on a contract this viewer cannot reach answers 404; an archived contract takes no edit until it is restored
+     * Edit a task's title, description, assignee, or due date (CTR-017). Every field is optional and only what is sent is read. A request that changes nothing writes nothing and narrates nothing. Appends one task.edited entry naming only what moved, at the working-team tier (DD-017). A task on a contract this viewer cannot reach answers 404; an archived contract takes no edit until it is restored
      * @description Assignees must be active staff who manage the record or belong to its team. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.
      */
     patch: operations["updateContractTask"];
@@ -10143,9 +10143,11 @@ export interface operations {
         };
         content: {
           "application/json": {
+            createdTaskId?: string;
             tasks: {
               id: string;
               title: string;
+              description: string | null;
               isDone: boolean;
               assigneeId: string | null;
               assigneeName: string | null;
@@ -10182,6 +10184,7 @@ export interface operations {
       content: {
         "application/json": {
           title: string;
+          description?: string | null;
           assigneeId?: string | null;
           addToTeam?: boolean;
           dueDate?: string | null;
@@ -10196,9 +10199,11 @@ export interface operations {
         };
         content: {
           "application/json": {
+            createdTaskId?: string;
             tasks: {
               id: string;
               title: string;
+              description: string | null;
               isDone: boolean;
               assigneeId: string | null;
               assigneeName: string | null;
@@ -10240,9 +10245,11 @@ export interface operations {
         };
         content: {
           "application/json": {
+            createdTaskId?: string;
             tasks: {
               id: string;
               title: string;
+              description: string | null;
               isDone: boolean;
               assigneeId: string | null;
               assigneeName: string | null;
@@ -10279,6 +10286,7 @@ export interface operations {
       content: {
         "application/json": {
           title?: string;
+          description?: string | null;
           assigneeId?: string | null;
           addToTeam?: boolean;
           dueDate?: string | null;
@@ -10293,9 +10301,11 @@ export interface operations {
         };
         content: {
           "application/json": {
+            createdTaskId?: string;
             tasks: {
               id: string;
               title: string;
+              description: string | null;
               isDone: boolean;
               assigneeId: string | null;
               assigneeName: string | null;
@@ -10337,9 +10347,11 @@ export interface operations {
         };
         content: {
           "application/json": {
+            createdTaskId?: string;
             tasks: {
               id: string;
               title: string;
+              description: string | null;
               isDone: boolean;
               assigneeId: string | null;
               assigneeName: string | null;
@@ -10387,9 +10399,11 @@ export interface operations {
         };
         content: {
           "application/json": {
+            createdTaskId?: string;
             tasks: {
               id: string;
               title: string;
+              description: string | null;
               isDone: boolean;
               assigneeId: string | null;
               assigneeName: string | null;
@@ -17540,9 +17554,11 @@ export interface operations {
         };
         content: {
           "application/json": {
+            createdTaskId?: string;
             tasks: {
               id: string;
               title: string;
+              description: string | null;
               isDone: boolean;
               assigneeId: string | null;
               assigneeName: string | null;
@@ -17579,6 +17595,7 @@ export interface operations {
       content: {
         "application/json": {
           title: string;
+          description?: string | null;
           assigneeId?: string | null;
           addToTeam?: boolean;
           dueDate?: string | null;
@@ -17593,9 +17610,11 @@ export interface operations {
         };
         content: {
           "application/json": {
+            createdTaskId?: string;
             tasks: {
               id: string;
               title: string;
+              description: string | null;
               isDone: boolean;
               assigneeId: string | null;
               assigneeName: string | null;
@@ -17637,9 +17656,11 @@ export interface operations {
         };
         content: {
           "application/json": {
+            createdTaskId?: string;
             tasks: {
               id: string;
               title: string;
+              description: string | null;
               isDone: boolean;
               assigneeId: string | null;
               assigneeName: string | null;
@@ -17676,6 +17697,7 @@ export interface operations {
       content: {
         "application/json": {
           title?: string;
+          description?: string | null;
           assigneeId?: string | null;
           addToTeam?: boolean;
           dueDate?: string | null;
@@ -17690,9 +17712,11 @@ export interface operations {
         };
         content: {
           "application/json": {
+            createdTaskId?: string;
             tasks: {
               id: string;
               title: string;
+              description: string | null;
               isDone: boolean;
               assigneeId: string | null;
               assigneeName: string | null;
@@ -17734,9 +17758,11 @@ export interface operations {
         };
         content: {
           "application/json": {
+            createdTaskId?: string;
             tasks: {
               id: string;
               title: string;
+              description: string | null;
               isDone: boolean;
               assigneeId: string | null;
               assigneeName: string | null;
@@ -17784,9 +17810,11 @@ export interface operations {
         };
         content: {
           "application/json": {
+            createdTaskId?: string;
             tasks: {
               id: string;
               title: string;
+              description: string | null;
               isDone: boolean;
               assigneeId: string | null;
               assigneeName: string | null;
@@ -18136,7 +18164,7 @@ export interface operations {
            */
           file: string;
           /**
-           * @description What this version is in the negotiation (CTR-014), or `general` for Matter documents. Defaults to `general` on Matters and `draft_ours` otherwise. Must be sent before the file part.
+           * @description What this version is in the negotiation (CTR-014), or `general` for Matter documents. Matter uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part.
            * @enum {string}
            */
           kind?:
@@ -18337,7 +18365,7 @@ export interface operations {
            */
           file: string;
           /**
-           * @description What this version is in the negotiation (CTR-014), or `general` for Matter documents. Defaults to `general` on Matters and `draft_ours` otherwise. Must be sent before the file part.
+           * @description What this version is in the negotiation (CTR-014), or `general` for Matter documents. Matter uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part.
            * @enum {string}
            */
           kind?:
@@ -18542,7 +18570,7 @@ export interface operations {
            */
           file: string;
           /**
-           * @description What this version is in the negotiation (CTR-014), or `general` for Matter documents. Defaults to `general` on Matters and `draft_ours` otherwise. Must be sent before the file part.
+           * @description What this version is in the negotiation (CTR-014), or `general` for Matter documents. Matter uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part.
            * @enum {string}
            */
           kind?:
@@ -18747,7 +18775,7 @@ export interface operations {
            */
           file: string;
           /**
-           * @description What this version is in the negotiation (CTR-014), or `general` for Matter documents. Defaults to `general` on Matters and `draft_ours` otherwise. Must be sent before the file part.
+           * @description What this version is in the negotiation (CTR-014), or `general` for Matter documents. Matter uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part.
            * @enum {string}
            */
           kind?:
@@ -18861,7 +18889,7 @@ export interface operations {
            */
           file: string;
           /**
-           * @description What this version is in the negotiation (CTR-014), or `general` for Matter documents. Defaults to `general` on Matters and `draft_ours` otherwise. Must be sent before the file part.
+           * @description What this version is in the negotiation (CTR-014), or `general` for Matter documents. Matter uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part.
            * @enum {string}
            */
           kind?:
@@ -21179,7 +21207,7 @@ export interface operations {
   listComments: {
     parameters: {
       query: {
-        entityType: "matter" | "contract" | "request";
+        entityType: "matter" | "contract" | "request" | "matter_task" | "contract_task";
         entityId: string;
         cursor?: string;
       };
@@ -21199,7 +21227,7 @@ export interface operations {
             comments: {
               id: string;
               /** @enum {string} */
-              entityType: "matter" | "contract" | "request";
+              entityType: "matter" | "contract" | "request" | "matter_task" | "contract_task";
               entityId: string;
               author: {
                 id: string;
@@ -21256,7 +21284,7 @@ export interface operations {
       content: {
         "application/json": {
           /** @enum {string} */
-          entityType: "matter" | "contract" | "request";
+          entityType: "matter" | "contract" | "request" | "matter_task" | "contract_task";
           entityId: string;
           body: string;
           /** @enum {string} */
@@ -21267,7 +21295,7 @@ export interface operations {
         };
         "multipart/form-data": {
           /** @enum {string} */
-          entityType: "matter" | "contract" | "request";
+          entityType: "matter" | "contract" | "request" | "matter_task" | "contract_task";
           entityId: string;
           body: string;
           /** @enum {string} */
@@ -21289,7 +21317,7 @@ export interface operations {
             comment: {
               id: string;
               /** @enum {string} */
-              entityType: "matter" | "contract" | "request";
+              entityType: "matter" | "contract" | "request" | "matter_task" | "contract_task";
               entityId: string;
               author: {
                 id: string;
@@ -21337,7 +21365,7 @@ export interface operations {
   listMentionCandidates: {
     parameters: {
       query: {
-        entityType: "matter" | "contract" | "request";
+        entityType: "matter" | "contract" | "request" | "matter_task" | "contract_task";
         entityId: string;
       };
       header?: never;
@@ -21376,7 +21404,7 @@ export interface operations {
   readUnreadComments: {
     parameters: {
       query: {
-        entityType: "matter" | "contract" | "request";
+        entityType: "matter" | "contract" | "request" | "matter_task" | "contract_task";
         entityId: string;
       };
       header?: never;
@@ -21418,7 +21446,7 @@ export interface operations {
       content: {
         "application/json": {
           /** @enum {string} */
-          entityType: "matter" | "contract" | "request";
+          entityType: "matter" | "contract" | "request" | "matter_task" | "contract_task";
           entityId: string;
         };
       };
@@ -21449,7 +21477,7 @@ export interface operations {
   fileCommentAttachment: {
     parameters: {
       query: {
-        entityType: "matter" | "contract" | "request";
+        entityType: "matter" | "contract" | "request" | "matter_task" | "contract_task";
         entityId: string;
       };
       header?: never;
@@ -21505,7 +21533,7 @@ export interface operations {
             comment: {
               id: string;
               /** @enum {string} */
-              entityType: "matter" | "contract" | "request";
+              entityType: "matter" | "contract" | "request" | "matter_task" | "contract_task";
               entityId: string;
               author: {
                 id: string;
@@ -21578,7 +21606,7 @@ export interface operations {
   downloadCommentAttachment: {
     parameters: {
       query: {
-        entityType: "matter" | "contract" | "request";
+        entityType: "matter" | "contract" | "request" | "matter_task" | "contract_task";
         entityId: string;
       };
       header?: never;
@@ -21631,7 +21659,7 @@ export interface operations {
             comment: {
               id: string;
               /** @enum {string} */
-              entityType: "matter" | "contract" | "request";
+              entityType: "matter" | "contract" | "request" | "matter_task" | "contract_task";
               entityId: string;
               author: {
                 id: string;
@@ -21703,7 +21731,7 @@ export interface operations {
             comment: {
               id: string;
               /** @enum {string} */
-              entityType: "matter" | "contract" | "request";
+              entityType: "matter" | "contract" | "request" | "matter_task" | "contract_task";
               entityId: string;
               author: {
                 id: string;
@@ -21769,7 +21797,7 @@ export interface operations {
             comment: {
               id: string;
               /** @enum {string} */
-              entityType: "matter" | "contract" | "request";
+              entityType: "matter" | "contract" | "request" | "matter_task" | "contract_task";
               entityId: string;
               author: {
                 id: string;

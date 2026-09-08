@@ -533,8 +533,14 @@ async function seed() {
     (row) => row.category === "closed" && row.archivedAt === null,
   );
   check(closedStatus !== undefined, "the M22 baseline has no live closed Matter Status");
+  // Closing an open Matter takes a note with it (MTR-008). The rule is
+  // the baseline's, not this change's, so the seed sends one: a PATCH
+  // carrying only the status is refused before any row moves.
   const closedMatter = (
-    await patch(`/api/v1/matters/${matter.number}`, { statusId: closedStatus.id })
+    await patch(`/api/v1/matters/${matter.number}`, {
+      statusId: closedStatus.id,
+      closingNote: "Closed while seeding the upgrade rehearsal.",
+    })
   ).matter;
 
   const archivedMatter = (

@@ -31,7 +31,7 @@ import { MAX_COMMENT_BODY_LENGTH } from "@openlaw/shared";
 import type { AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import type { Notifier, NotifyingTransaction } from "../../lib/notifications/notifier.js";
-import { notifyCommentPosted, type CommentAudience } from "./audience.js";
+import { notifyCommentPosted, commentActivityRef, type CommentAudience } from "./audience.js";
 
 /** Plain text, capped where every other free-text field is capped.
  * Rich text and reactions are deliberately out; CMT-011 paper travels
@@ -116,8 +116,7 @@ export async function postComment(
     await tx.insert(commentMentions).values(mentioned.map((userId) => ({ commentId, userId })));
   }
   await recordActivity(tx, {
-    entityType: audience.entityType,
-    entityId: audience.entityId,
+    ...(await commentActivityRef(tx, audience)),
     actorId: author.id,
     action: "comment.posted",
     visibility,

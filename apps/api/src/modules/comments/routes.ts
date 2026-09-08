@@ -140,6 +140,7 @@ import {
 import {
   commentAudience,
   commentEntityType,
+  commentActivityRef,
   mentionCandidates,
   reachedThread,
   COMMENT_ENTITY_TYPES,
@@ -1584,8 +1585,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           .set({ body: request.body.body, editedAt: new Date() })
           .where(eq(comments.id, held.id));
         await recordActivity(tx, {
-          entityType: held.entityType,
-          entityId: held.entityId,
+          ...(await commentActivityRef(tx, held)),
           actorId: request.user.id,
           action: "comment.edited",
           visibility: held.visibility,
@@ -1637,8 +1637,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           .set({ body: "", deletedAt: new Date() })
           .where(eq(comments.id, held.id));
         await recordActivity(tx, {
-          entityType: held.entityType,
-          entityId: held.entityId,
+          ...(await commentActivityRef(tx, held)),
           actorId: request.user.id,
           action: "comment.deleted",
           visibility: held.visibility,
@@ -1696,8 +1695,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           .set({ body: "", redactedAt: new Date() })
           .where(eq(comments.id, held.id));
         await recordActivity(tx, {
-          entityType: held.entityType,
-          entityId: held.entityId,
+          ...(await commentActivityRef(tx, held)),
           actorId: request.user.id,
           action: "comment.redacted",
           visibility: held.visibility,

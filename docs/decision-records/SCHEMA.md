@@ -1294,3 +1294,14 @@ does not create them. Next deadline is computed from upcoming Key dates and
 unfinished dated Tasks, including overdue Tasks; Contracts also consider expiry and notice
 dates. Its response includes `date`, `label`, and `source` (`task` or `key_date`).
 Closed/ended or archived records return null. See MTR-016 and CTR-005 UX addenda.
+
+### Task detail storage — 2026-09-07 UX addendum
+
+`matter_tasks.description` and `contract_tasks.description` are nullable text.
+`comments` and `comment_last_read` accept `matter_task` and `contract_task` targets;
+`entity_id` is the Task id. Existing `comment_attachments` and `comment_revisions` store
+Task files and corrected notes. Parent record reach is checked on every operation.
+Migration 0094 adds the descriptions and extends the two comment target constraints.
+`entity_id` carries no foreign key, so a Task with any comment on it is refused removal
+rather than leaving those rows behind; the two sides serialize on the Task row. See the
+CMT-001 Task conversations addendum.

@@ -11,12 +11,13 @@ type ListResponse =
 export type MatterTask = ListResponse["tasks"][number];
 export interface MatterTaskInput {
   title: string;
+  description?: string | null;
   assigneeId?: string | null;
   addToTeam?: boolean;
   dueDate?: string | null;
 }
 export type MatterTasksOutcome =
-  | { ok: true; tasks: MatterTask[]; doneCount: number; totalCount: number }
+  | { ok: true; createdTaskId?: string; tasks: MatterTask[]; doneCount: number; totalCount: number }
   | ({ ok: false } & Problem);
 
 async function outcome(
@@ -49,7 +50,10 @@ export async function addMatterTask(
       body: input,
     })
     .catch(() => undefined);
-  return outcome(result);
+  const parsed = await outcome(result);
+  return parsed.ok && result?.data
+    ? { ...parsed, createdTaskId: result.data.createdTaskId }
+    : parsed;
 }
 
 export async function updateMatterTask(
@@ -68,19 +72,6 @@ export async function updateMatterTask(
 export async function toggleMatterTask(taskId: string): Promise<MatterTasksOutcome> {
   const result = await api
     .POST("/api/v1/matter-tasks/{taskId}/toggle", { params: { path: { taskId } } })
-    .catch(() => undefined);
-  return outcome(result);
-}
-
-export async function reorderMatterTasks(
-  number: number,
-  taskIds: string[],
-): Promise<MatterTasksOutcome> {
-  const result = await api
-    .PUT("/api/v1/matters/{number}/tasks/reorder", {
-      params: { path: { number } },
-      body: { taskIds },
-    })
     .catch(() => undefined);
   return outcome(result);
 }
