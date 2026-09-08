@@ -12894,7 +12894,7 @@
     "/api/v1/matters/{number}/tasks/reorder": {
       "put": {
         "operationId": "reorderMatterTasks",
-        "summary": "Replace a reached Matter checklist's complete display order",
+        "summary": "Replace a reached Matter checklist's complete display order. The list reads by due date first, so stored display order only breaks ties between Tasks sharing a date and orders the undated ones",
         "tags": ["matter-tasks"],
         "requestBody": {
           "required": true,

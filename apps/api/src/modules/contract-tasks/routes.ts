@@ -40,7 +40,11 @@ import {
   type Executor,
   type Transaction,
 } from "@openlaw/db";
-import { MAX_TASK_TITLE_LENGTH, type ChangedFields } from "@openlaw/shared";
+import {
+  MAX_TASK_DESCRIPTION_LENGTH,
+  MAX_TASK_TITLE_LENGTH,
+  type ChangedFields,
+} from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import {
@@ -240,7 +244,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         params: NumberParams,
         body: z.strictObject({
           title: TitleSchema,
-          description: z.string().trim().max(10000).nullable().optional(),
+          description: z.string().trim().max(MAX_TASK_DESCRIPTION_LENGTH).nullable().optional(),
           assigneeId: z.string().nullable().optional(),
           addToTeam: z.boolean().optional(),
           dueDate: z.iso.date().nullable().optional(),
@@ -341,7 +345,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         body: z
           .strictObject({
             title: TitleSchema.optional(),
-            description: z.string().trim().max(10000).nullable().optional(),
+            description: z.string().trim().max(MAX_TASK_DESCRIPTION_LENGTH).nullable().optional(),
             assigneeId: z.string().nullable().optional(),
             addToTeam: z.boolean().optional(),
             dueDate: z.iso.date().nullable().optional(),

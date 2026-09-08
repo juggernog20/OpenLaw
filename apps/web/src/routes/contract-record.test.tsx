@@ -2542,7 +2542,7 @@ describe("the contract record's broader Matter context (M23/6)", () => {
     const user = userEvent.setup();
 
     await user.click(await screen.findByRole("button", { name: "Link to Matter" }));
-    await user.type(screen.getByLabelText("Search by matter number or title"), "Regulatory");
+    await user.type(screen.getByLabelText("Search by Matter number or title"), "Regulatory");
     await user.click(await screen.findByRole("button", { name: /Regulatory programme/ }));
     await user.click(screen.getByRole("button", { name: "Link" }));
 

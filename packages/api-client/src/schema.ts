@@ -1325,7 +1325,7 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    /** Replace a reached Matter checklist's complete display order */
+    /** Replace a reached Matter checklist's complete display order. The list reads by due date first, so stored display order only breaks ties between Tasks sharing a date and orders the undated ones */
     put: operations["reorderMatterTasks"];
     post?: never;
     delete?: never;

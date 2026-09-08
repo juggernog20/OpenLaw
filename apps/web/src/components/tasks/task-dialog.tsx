@@ -4,7 +4,11 @@
 import { useEffect, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { MessageSquare, X } from "lucide-react";
-import { MAX_TASK_TITLE_LENGTH } from "@openlaw/shared";
+import {
+  MAX_COMMENT_BODY_LENGTH,
+  MAX_TASK_DESCRIPTION_LENGTH,
+  MAX_TASK_TITLE_LENGTH,
+} from "@openlaw/shared";
 import { sendComment } from "../../lib/comments";
 import { problem } from "../../lib/problem";
 import { AutoResizeTextarea } from "../auto-resize-textarea";
@@ -207,7 +211,7 @@ export function TaskDialog({
               <AutoResizeTextarea
                 id="task-detail-description"
                 rows={4}
-                maxLength={10000}
+                maxLength={MAX_TASK_DESCRIPTION_LENGTH}
                 value={description}
                 disabled={frozen || busy || attachmentRetry}
                 onChange={(event) => setDescription(event.target.value)}
@@ -284,7 +288,7 @@ export function TaskDialog({
                 <AutoResizeTextarea
                   id="task-initial-note"
                   rows={4}
-                  maxLength={10000}
+                  maxLength={MAX_COMMENT_BODY_LENGTH}
                   value={note}
                   disabled={busy || frozen}
                   onChange={(event) => setNote(event.target.value)}

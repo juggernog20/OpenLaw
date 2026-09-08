@@ -289,6 +289,13 @@ export const MAX_KEY_DATE_NOTE_LENGTH = 2000;
 export const MAX_TASK_TITLE_LENGTH = 200;
 
 /**
+ * How long a Task description may be (CTR-017, MTR-005 Task detail
+ * addenda). Both task routes and the detail dialog's textarea read this
+ * one number, so the box stops where the route refuses.
+ */
+export const MAX_TASK_DESCRIPTION_LENGTH = 10_000;
+
+/**
  * How long a contract's title may be (CTR-003).
  *
  * Shared for `MAX_TASK_TITLE_LENGTH`'s reason: the create callable

@@ -161,7 +161,7 @@ test.describe.serial("M23 deployer journey", () => {
 
       await main.getByRole("button", { name: "Link Contract" }).click();
       const link = page.getByRole("dialog", { name: "Link Contract" });
-      await link.getByLabel("Search by contract number or title").fill(CONTRACT_TITLE);
+      await link.getByLabel("Search by Contract number or title").fill(CONTRACT_TITLE);
       await link.getByRole("button", { name: new RegExp(CONTRACT_TITLE) }).click();
       const linked = page.waitForResponse(
         (response) =>

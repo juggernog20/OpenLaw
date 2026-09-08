@@ -36,6 +36,9 @@ export interface TaskInput {
 export type TasksOutcome =
   | {
       ok: true;
+      /** The Task the add route just made. Only an add answers with one;
+       * the detail dialog needs it to post the initial note against the
+       * Task it created rather than making a second one. */
       createdTaskId?: string;
       tasks: ContractTask[];
       doneCount: number;
@@ -53,9 +56,6 @@ export async function readContractTasks(contractNumber: number): Promise<TasksOu
   return result?.data
     ? {
         ok: true,
-        ...("createdTaskId" in result.data && typeof result.data.createdTaskId === "string"
-          ? { createdTaskId: result.data.createdTaskId }
-          : {}),
         tasks: result.data.tasks,
         doneCount: result.data.doneCount,
         totalCount: result.data.totalCount,
@@ -77,9 +77,7 @@ export async function addContractTask(
   return result?.data
     ? {
         ok: true,
-        ...("createdTaskId" in result.data && typeof result.data.createdTaskId === "string"
-          ? { createdTaskId: result.data.createdTaskId }
-          : {}),
+        createdTaskId: result.data.createdTaskId,
         tasks: result.data.tasks,
         doneCount: result.data.doneCount,
         totalCount: result.data.totalCount,
@@ -87,7 +85,7 @@ export async function addContractTask(
     : { ok: false, ...(await problem(result)) };
 }
 
-/** Edits a task's title, assignee, or due date. */
+/** Edits a task's title, description, assignee, or due date. */
 export async function updateContractTask(
   taskId: string,
   input: Partial<TaskInput>,
@@ -101,9 +99,6 @@ export async function updateContractTask(
   return result?.data
     ? {
         ok: true,
-        ...("createdTaskId" in result.data && typeof result.data.createdTaskId === "string"
-          ? { createdTaskId: result.data.createdTaskId }
-          : {}),
         tasks: result.data.tasks,
         doneCount: result.data.doneCount,
         totalCount: result.data.totalCount,
@@ -121,9 +116,6 @@ export async function toggleContractTask(taskId: string): Promise<TasksOutcome> 
   return result?.data
     ? {
         ok: true,
-        ...("createdTaskId" in result.data && typeof result.data.createdTaskId === "string"
-          ? { createdTaskId: result.data.createdTaskId }
-          : {}),
         tasks: result.data.tasks,
         doneCount: result.data.doneCount,
         totalCount: result.data.totalCount,
@@ -141,9 +133,6 @@ export async function removeContractTask(taskId: string): Promise<TasksOutcome> 
   return result?.data
     ? {
         ok: true,
-        ...("createdTaskId" in result.data && typeof result.data.createdTaskId === "string"
-          ? { createdTaskId: result.data.createdTaskId }
-          : {}),
         tasks: result.data.tasks,
         doneCount: result.data.doneCount,
         totalCount: result.data.totalCount,

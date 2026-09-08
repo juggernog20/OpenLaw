@@ -1,6 +1,31 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** Shared Contract creation form for standalone, Matter-linked, and renewal flows. */
+/**
+ * The create-contract dialog (M8), drawn from `S10 Overlay` in the C10
+ * frame of `designs/contracts.pen`.
+ *
+ * **One form for every way a Contract is born**: the Contracts list,
+ * the Matter's Linked Contracts, and a routed renewal all open this
+ * dialog. Routing a renewal makes an ordinary Contract, and a create
+ * form that behaved differently for renewals would be a second set of
+ * rules to keep in step with this one.
+ *
+ * **The picked Contract Type brings all its Fields** (CTR-016 UX
+ * addendum, 2026-09-08). Every attached Field is drawn as soon as a
+ * Type is picked; only the required ones carry a star and block
+ * creation when unanswered. Drafts survive switching Type and back, and
+ * only the picked Type's Fields are submitted.
+ *
+ * **Two things are prefilled here and the rest are prefilled at the
+ * seam.** This dialog draws the title and the type, so those two are
+ * seeded from the record the renewal was routed from and stay editable
+ * until the button is pressed — whatever is in the boxes is what the
+ * record is born with. The business facts this dialog does not draw —
+ * our entity, the value, the term shape, the counterparties — are copied
+ * by the create seam, because it is the one place that can copy them and
+ * the one place worth asserting them at. The team, the status, and the
+ * Confidential flag are never copied at all (CTR-015).
+ */
 
 import { CreateAttachments, useCreateAttachments } from "../documents/create-attachments";
 import { useEffect, useState } from "react";

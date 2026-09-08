@@ -14,7 +14,11 @@ import {
   type Matter,
   type Transaction,
 } from "@openlaw/db";
-import { MAX_TASK_TITLE_LENGTH, type ChangedFields } from "@openlaw/shared";
+import {
+  MAX_TASK_DESCRIPTION_LENGTH,
+  MAX_TASK_TITLE_LENGTH,
+  type ChangedFields,
+} from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import { matterTeamScope, NO_MATTER, reachedMatter } from "../../lib/matter-access.js";
@@ -152,7 +156,7 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         params: NumberParams,
         body: z.strictObject({
           title: TitleSchema,
-          description: z.string().trim().max(10000).nullable().optional(),
+          description: z.string().trim().max(MAX_TASK_DESCRIPTION_LENGTH).nullable().optional(),
           assigneeId: z.string().nullable().optional(),
           addToTeam: z.boolean().optional(),
           dueDate: z.iso.date().nullable().optional(),
@@ -213,7 +217,7 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         body: z
           .strictObject({
             title: TitleSchema.optional(),
-            description: z.string().trim().max(10000).nullable().optional(),
+            description: z.string().trim().max(MAX_TASK_DESCRIPTION_LENGTH).nullable().optional(),
             assigneeId: z.string().nullable().optional(),
             addToTeam: z.boolean().optional(),
             dueDate: z.iso.date().nullable().optional(),
@@ -324,7 +328,8 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireMember,
       schema: {
         operationId: "reorderMatterTasks",
-        summary: "Replace a reached Matter checklist's complete display order",
+        summary:
+          "Replace a reached Matter checklist's complete display order. The list reads by due date first, so stored display order only breaks ties between Tasks sharing a date and orders the undated ones",
         tags: ["matter-tasks"],
         params: NumberParams,
         body: z.strictObject({ taskIds: z.array(z.string().min(1)).min(1) }),

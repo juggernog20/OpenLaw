@@ -429,7 +429,7 @@ describe("the Matter record's linked Contracts (M23/6)", () => {
     const user = userEvent.setup();
 
     await user.click(await screen.findByRole("button", { name: "Link Contract" }));
-    await user.type(screen.getByLabelText("Search by contract number or title"), "Programme");
+    await user.type(screen.getByLabelText("Search by Contract number or title"), "Programme");
     await user.click(await screen.findByRole("button", { name: /Programme services agreement/ }));
     await user.click(screen.getByRole("button", { name: "Link" }));
 
