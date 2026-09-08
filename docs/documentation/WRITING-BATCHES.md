@@ -97,7 +97,7 @@ See the [batch verification record](batches/DOC-018/README.md) for the tested bu
 
 ## DOC-019 [#739](https://github.com/juggernog20/OpenLaw/issues/739)
 
-- [ ] `create-knowledge`: Create and organize Knowledge Items (C33; P1).
+- [ ] `create-knowledge`: Create and organize Knowledge Items (C33; P1). Links `types-statuses-fields` (DOC-021).
 - [ ] `publish-knowledge`: Publish Knowledge for the right audience (C34; P0).
 
 ## DOC-020 [#740](https://github.com/juggernog20/OpenLaw/issues/740)
