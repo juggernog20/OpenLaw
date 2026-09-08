@@ -1,0 +1,232 @@
+{
+  "record": "review-oidc",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-admin-review",
+  "fixture": {
+    "appUrl": "http://127.0.0.1:43328",
+    "mailUrl": "http://127.0.0.1:48435",
+    "draftPreview": "http://127.0.0.1:43331",
+    "providerMode": "dedicated local OpenID Connect fixture; full browser authorization and callback; no external identity-provider account",
+    "frozenConfigurationHashes": {
+      "source/.env": "47286908f614d1cd4cf769b7fe4168dac3db2d536faebfe4a4481312ad7868e2",
+      "overlay.json": "a37da4d9df42ec8c176757e063e8fc33f0cd5addfac8c774396f2140c91425cd",
+      "fixture/server.mjs": "b91a17c780f3f816a2eb4a5968a43fba405085743f9b174cbc7cf69528738363"
+    }
+  },
+  "successfulChecks": 12,
+  "failedAttempts": 4,
+  "runs": [
+    {
+      "run": "oidc",
+      "startedAt": "2026-09-08T03:52:29.112Z",
+      "completedAt": "2026-09-08T03:52:35.397Z",
+      "articleHashes": [
+        {
+          "articleId": "authentication-and-email",
+          "contentSha256": "f272a2d7fa11a4088bb528d1642a40060ce7170aeff94234cb2a1e347d18f225"
+        }
+      ],
+      "steps": [
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "An unreachable issuer fails discovery and registers no provider",
+          "actual": "Registering an issuer on a port with no OpenID configuration was refused. The pane reported \"The change could not be saved. Try again.\" beside the control, no provider was recorded, and the mode stayed built_in. The guide instruction to correct the issuer URL or its reachability and retry matches what the pane does, though the message itself does not name discovery as the cause.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:52:29.157Z",
+          "at": "2026-09-08T03:52:30.351Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "A valid provider registers, shows its callback URL, and completes the switch to OIDC",
+          "result": "fail",
+          "startedAt": "2026-09-08T03:52:30.352Z",
+          "error": "expect(locator).toBeVisible() failed\n\nLocator: getByText('Identity provider helix-idp is registered.')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.be.visible\" with timeout 5000ms\n  - waiting for getByText('Identity provider helix-idp is registered.')\n",
+          "at": "2026-09-08T03:52:35.396Z"
+        }
+      ]
+    },
+    {
+      "run": "oidc2",
+      "startedAt": "2026-09-08T03:54:09.826Z",
+      "completedAt": "2026-09-08T03:54:34.995Z",
+      "articleHashes": [
+        {
+          "articleId": "authentication-and-email",
+          "contentSha256": "f272a2d7fa11a4088bb528d1642a40060ce7170aeff94234cb2a1e347d18f225"
+        }
+      ],
+      "steps": [
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Registration completed the switch and fixed the Provider ID",
+          "actual": "Successful registration completed the pending switch: the mode is oidc with provider helix-idp. The pane now offers Save provider instead of Register provider and no longer exposes a Provider ID field, so the guide statement that the Provider ID is fixed after registration holds. The client secret hint reads \"Leave blank to keep the current secret.\"",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:54:09.860Z",
+          "at": "2026-09-08T03:54:10.935Z"
+        },
+        {
+          "role": "contributor",
+          "method": "browser-walkthrough",
+          "action": "An invited colleague signs in through the identity provider and keeps the invited role",
+          "actual": "Tomas Novak, invited as Contributor and never activated by password, pressed Continue with single sign-on, completed the identity provider authorization and returned through the OpenLaw callback, landing at http://127.0.0.1:43328/. His account kept role contributor and became Active. The identity provider established identity while OpenLaw kept the role it already held, which is what the guide claims.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:54:10.935Z",
+          "at": "2026-09-08T03:54:12.354Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "An Administrator keeps password sign-in while OIDC is selected",
+          "actual": "With the mode set to OIDC, Administrator sign-in on the sign-in page opened the password form and the first-run password worked. This is the break-glass route the guide tells an Administrator to keep available while testing single sign-on, and the recovery path back to Built-in.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:54:12.354Z",
+          "at": "2026-09-08T03:54:13.309Z"
+        },
+        {
+          "role": "contributor",
+          "method": "browser-walkthrough",
+          "action": "A non-Administrator cannot use password sign-in while single sign-on is required",
+          "actual": "A Contributor using the same Administrator password form while single sign-on is required was refused with \"Password sign-in is disabled while single sign-on is required.\" and stayed on the auth pages. Only the Administrator keeps password sign-in in OIDC mode.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:54:13.309Z",
+          "at": "2026-09-08T03:54:14.107Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Saving with a blank client secret keeps the existing secret and re-shows the callback URL",
+          "result": "fail",
+          "startedAt": "2026-09-08T03:54:14.107Z",
+          "error": "expect(locator).toBeVisible() failed\n\nLocator: locator('code').filter({ hasText: '/sso/callback' }).first()\nExpected: visible\nTimeout: 20000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.be.visible\" with timeout 20000ms\n  - waiting for locator('code').filter({ hasText: '/sso/callback' }).first()\n",
+          "at": "2026-09-08T03:54:34.995Z"
+        }
+      ]
+    },
+    {
+      "run": "oidc3",
+      "startedAt": "2026-09-08T03:56:36.501Z",
+      "completedAt": "2026-09-08T03:56:42.692Z",
+      "articleHashes": [
+        {
+          "articleId": "authentication-and-email",
+          "contentSha256": "f272a2d7fa11a4088bb528d1642a40060ce7170aeff94234cb2a1e347d18f225"
+        }
+      ],
+      "steps": [
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Saving a changed field with a blank client secret keeps the stored secret",
+          "actual": "Changing Client ID while leaving Client secret blank saved successfully, and the pane displayed the callback URL http://127.0.0.1:43328/api/auth/sso/callback again, ending in /api/auth/sso/callback on the instance address. A complete single sign-on round trip still reached http://127.0.0.1:43328/ afterwards, so the blank field kept the stored secret rather than clearing it, exactly as the guide says. Note that Save provider with nothing changed is a silent no-op that sends no request.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:56:36.541Z",
+          "at": "2026-09-08T03:56:38.496Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Supplying a replacement secret rotates it and sign-in still completes",
+          "actual": "Pasting a replacement Client secret and saving succeeded, the field cleared itself again afterwards so the secret is never shown back, and a further complete single sign-on round trip reached http://127.0.0.1:43328/. This is the rotation the guide describes. The local fixture accepts the client secret without enforcing a real provider policy, so this verifies OpenLaw's own handling only.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:56:38.496Z",
+          "at": "2026-09-08T03:56:40.176Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "A failed issuer update leaves the previous provider configuration usable",
+          "actual": "Saving an unreachable issuer was refused with the field error, the stored provider still carried the working issuer http://docs-idp:43329, and a complete single sign-on round trip still reached http://127.0.0.1:43328/. The guide hedge that a failed update should leave the previous provider configuration available is what actually happened.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:56:40.176Z",
+          "at": "2026-09-08T03:56:41.846Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Restore the working client identifier for the remaining checks",
+          "result": "fail",
+          "startedAt": "2026-09-08T03:56:41.846Z",
+          "error": "Cannot read properties of undefined (reading 'clientId')",
+          "at": "2026-09-08T03:56:42.691Z"
+        }
+      ]
+    },
+    {
+      "run": "oidc4",
+      "startedAt": "2026-09-08T03:57:26.463Z",
+      "completedAt": "2026-09-08T03:57:34.926Z",
+      "articleHashes": [
+        {
+          "articleId": "authentication-and-email",
+          "contentSha256": "f272a2d7fa11a4088bb528d1642a40060ce7170aeff94234cb2a1e347d18f225"
+        }
+      ],
+      "steps": [
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "In OIDC mode the magic-link switch is editable and can be turned off",
+          "actual": "Unlike built-in mode the switch was enabled in OIDC mode, with the hint \"Turn off to require SSO for everyone.\" Turning it off saved: the resolved magicLinkEnabled became false. The corrected guide describes exactly this contrast between the two modes.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:57:26.492Z",
+          "at": "2026-09-08T03:57:27.563Z"
+        },
+        {
+          "role": "business user",
+          "method": "browser-walkthrough",
+          "action": "With magic links off the Portal offers single sign-on instead of an emailed link",
+          "actual": "With magic links off the Portal entry page no longer offered Send link. It read: \"OpenLaw Legal request portal Sign-in links are switched off. Use your organization's sign-in to reach the portal. Sign in Help with this page\". Requesters must use the organisation identity provider, which is why the guide warns they then need suitable identity-provider accounts.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:57:27.564Z",
+          "at": "2026-09-08T03:57:28.252Z"
+        },
+        {
+          "role": "business user",
+          "method": "browser-walkthrough",
+          "action": "An existing Business User still enters the Portal through single sign-on",
+          "result": "fail",
+          "startedAt": "2026-09-08T03:57:28.252Z",
+          "error": "expect(locator).toBeVisible() failed\n\nLocator: getByRole('button', { name: /single sign-on/i }).or(getByRole('link', { name: /single sign-on/i })).first()\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.be.visible\" with timeout 5000ms\n  - waiting for getByRole('button', { name: /single sign-on/i }).or(getByRole('link', { name: /single sign-on/i })).first()\n",
+          "at": "2026-09-08T03:57:34.926Z"
+        }
+      ]
+    },
+    {
+      "run": "oidc5",
+      "startedAt": "2026-09-08T03:57:51.903Z",
+      "completedAt": "2026-09-08T03:57:57.249Z",
+      "articleHashes": [
+        {
+          "articleId": "authentication-and-email",
+          "contentSha256": "f272a2d7fa11a4088bb528d1642a40060ce7170aeff94234cb2a1e347d18f225"
+        }
+      ],
+      "steps": [
+        {
+          "role": "business user",
+          "method": "browser-walkthrough",
+          "action": "An existing Business User still enters the Portal through single sign-on",
+          "actual": "With magic links off, the Portal entry page read \"Sign-in links are switched off\" and offered Sign in, which led to Continue with single sign-on. An existing Business User completed the identity provider round trip and reached http://127.0.0.1:43328/portal. Turning magic links off does not disable OIDC Portal entry, which is what the guide states.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:57:51.935Z",
+          "at": "2026-09-08T03:57:54.434Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Recovery: an Administrator returns the instance to built-in sign-in",
+          "actual": "Selecting Built-in returned the mode immediately. Magic links were switched back on and the switch became disabled again, so the built-in floor reasserts itself rather than leaving the previous OIDC choice in place. The Portal entry page offered Send link once more and a real sign-in link was delivered. This is the recovery route the guide gives an Administrator who needs to undo a single sign-on change.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:57:54.434Z",
+          "at": "2026-09-08T03:57:57.249Z"
+        }
+      ]
+    }
+  ]
+}

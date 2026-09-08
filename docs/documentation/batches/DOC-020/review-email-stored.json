@@ -1,0 +1,67 @@
+{
+  "record": "review-email-stored",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-admin-review",
+  "fixture": {
+    "appUrl": "http://127.0.0.1:43328",
+    "mailUrl": "http://127.0.0.1:48435",
+    "draftPreview": "http://127.0.0.1:43331",
+    "providerMode": "dedicated local OpenID Connect fixture; full browser authorization and callback; no external identity-provider account",
+    "frozenConfigurationHashes": {
+      "source/.env": "47286908f614d1cd4cf769b7fe4168dac3db2d536faebfe4a4481312ad7868e2",
+      "overlay.json": "a37da4d9df42ec8c176757e063e8fc33f0cd5addfac8c774396f2140c91425cd",
+      "fixture/server.mjs": "b91a17c780f3f816a2eb4a5968a43fba405085743f9b174cbc7cf69528738363"
+    }
+  },
+  "successfulChecks": 2,
+  "failedAttempts": 0,
+  "runs": [
+    {
+      "run": "email-stored",
+      "startedAt": "2026-09-08T03:35:13.708Z",
+      "completedAt": "2026-09-08T03:35:22.316Z",
+      "articleHashes": [
+        {
+          "articleId": "first-run",
+          "contentSha256": "0f87bd0fce3032d84fbfe3a4c8056826879effd86102e19f8c61efa0f62e3b59"
+        },
+        {
+          "articleId": "authentication-and-email",
+          "contentSha256": "f272a2d7fa11a4088bb528d1642a40060ce7170aeff94234cb2a1e347d18f225"
+        }
+      ],
+      "steps": [
+        {
+          "role": "administrator / operator responsibility",
+          "method": "browser-walkthrough",
+          "action": "Removing the environment override and recreating app and worker restores the stored relay",
+          "actual": "After removing the phase overlay and recreating only app and worker (2026-09-08T03:35:05.426555+00:00), the pane returned to \"Outbound email is set in the app.\" with legal@helix.example, and Replace relay and Clear relay became available again. A fresh test email was delivered from legal@helix.example, so recovery to the stored sender works exactly as the guide describes.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:35:13.760Z",
+          "at": "2026-09-08T03:35:15.029Z"
+        },
+        {
+          "role": "administrator / operator responsibility",
+          "method": "browser-walkthrough",
+          "action": "Clear relay stops delivery when no environment override remains, and a replacement restores it",
+          "actual": "Clear relay moved the resolved source to unset and an invitation sent in that state produced no Mailpit message after 7 seconds. Saving a valid replacement relay returned the source to app, matching the guide instruction to save a replacement before depending on invitations, magic links or password reset email.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:35:15.029Z",
+          "at": "2026-09-08T03:35:22.315Z"
+        }
+      ]
+    }
+  ],
+  "deploymentPhase": {
+    "phase": "stored",
+    "appliedAt": "2026-09-08T03:35:05.426555+00:00",
+    "recreatedServices": ["app", "worker"],
+    "configurationHashes": {
+      ".env": "47286908f614d1cd4cf769b7fe4168dac3db2d536faebfe4a4481312ad7868e2",
+      "overlay.json": "a37da4d9df42ec8c176757e063e8fc33f0cd5addfac8c774396f2140c91425cd"
+    }
+  }
+}

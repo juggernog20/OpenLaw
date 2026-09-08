@@ -1,0 +1,71 @@
+{
+  "name": "author-users",
+  "startedAt": "2026-09-08T03:01:36.230Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-admin-onboarding",
+  "articleHashes": [
+    {
+      "articleId": "organisation-and-users",
+      "contentSha256": "2ad9e6a441a5dca6419032c24d0586a338b29fc7cdb15a7346a2956a8f57af98"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Organization name, logo, locale and timezone save and survive reload",
+      "actual": "Name saved on Enter, Escape reverted unsaved text, uploaded SVG persisted, Asia/Dubai saved, and locale offered only en-US.",
+      "result": "pass",
+      "startedAt": "2026-09-08T03:01:36.231Z",
+      "at": "2026-09-08T03:01:37.232Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Last Administrator demotion is refused and own archive action is absent",
+      "actual": "Own row had no archive action; choosing Contributor displayed last-Administrator refusal and retained Administrator.",
+      "result": "pass",
+      "startedAt": "2026-09-08T03:01:37.232Z",
+      "at": "2026-09-08T03:01:37.896Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Invalid invitation is blocked; pending invitation can be resent and revoked",
+      "actual": "Malformed email failed browser validation; Contributor invite was delivered, resent with a new message, then revoked and removed from Users.",
+      "result": "pass",
+      "startedAt": "2026-09-08T03:01:37.897Z",
+      "at": "2026-09-08T03:01:38.390Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Activate the welcome invitation and deny organization administration to its Legal Team Member",
+      "actual": "Emailed activation set the password; Rowan signed in as Legal Team Member, Users redirected to Profile, and direct user administration returned 403.",
+      "result": "pass",
+      "startedAt": "2026-09-08T03:01:38.390Z",
+      "at": "2026-09-08T03:01:39.414Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Changing a role changes live account access and revoking sessions requires sign-in again",
+      "actual": "Rowan’s current account read became Contributor; revocation invalidated the existing session, and the still-active account could sign in again.",
+      "result": "pass",
+      "startedAt": "2026-09-08T03:01:39.414Z",
+      "at": "2026-09-08T03:01:40.374Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Archival blocks old sessions and new sign-in; restore permits fresh sign-in only",
+      "actual": "Archived Rowan disappeared until Show archived, lost the old session and could not sign in; Restore preserved revocation and allowed a new Contributor session.",
+      "result": "pass",
+      "startedAt": "2026-09-08T03:01:40.374Z",
+      "at": "2026-09-08T03:01:41.289Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T03:01:41.289Z"
+}

@@ -1,0 +1,72 @@
+{
+  "record": "review-authentication",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-admin-review",
+  "fixture": {
+    "appUrl": "http://127.0.0.1:43328",
+    "mailUrl": "http://127.0.0.1:48435",
+    "draftPreview": "http://127.0.0.1:43331",
+    "providerMode": "dedicated local OpenID Connect fixture; full browser authorization and callback; no external identity-provider account",
+    "frozenConfigurationHashes": {
+      "source/.env": "47286908f614d1cd4cf769b7fe4168dac3db2d536faebfe4a4481312ad7868e2",
+      "overlay.json": "a37da4d9df42ec8c176757e063e8fc33f0cd5addfac8c774396f2140c91425cd",
+      "fixture/server.mjs": "b91a17c780f3f816a2eb4a5968a43fba405085743f9b174cbc7cf69528738363"
+    }
+  },
+  "successfulChecks": 4,
+  "failedAttempts": 0,
+  "runs": [
+    {
+      "run": "auth",
+      "startedAt": "2026-09-08T03:49:52.882Z",
+      "completedAt": "2026-09-08T03:50:17.247Z",
+      "articleHashes": [
+        {
+          "articleId": "authentication-and-email",
+          "contentSha256": "f272a2d7fa11a4088bb528d1642a40060ce7170aeff94234cb2a1e347d18f225"
+        }
+      ],
+      "steps": [
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "In built-in mode the magic-link switch is locked on with an explanation",
+          "actual": "With Built-in selected, the Magic-link sign-in switch was present, checked and disabled, and the pane explained that magic links are the only portal sign-in method in built-in mode. The guide statement that the switch cannot turn them off in that mode holds.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:49:52.912Z",
+          "at": "2026-09-08T03:49:53.976Z"
+        },
+        {
+          "role": "business user",
+          "method": "browser-walkthrough",
+          "action": "An existing Business User keeps a live session but cannot get a new link once the domain is removed",
+          "actual": "Hannah Blum already had an account and a live Portal session at http://127.0.0.1:43328/portal. After northwind.example was removed from Allowed email domains her existing session still reached the Portal, but a fresh Send link request returned the same neutral \"Check your email\" screen and delivered no message within 8 seconds. Removing a domain therefore stops an existing Business User from obtaining a new sign-in link, which is the correction this review made to both guides. It does not end the session she already holds.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:49:53.976Z",
+          "at": "2026-09-08T03:50:05.744Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Restoring the domain lets the same Business User obtain a link again",
+          "actual": "Adding northwind.example back restored delivery: the same address received a new sign-in link. The allowlist is read at each request rather than only when an account is first created.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:50:05.744Z",
+          "at": "2026-09-08T03:50:07.446Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "An empty allowed-domain list closes the Portal to an existing Business User too",
+          "actual": "With every entry removed the pane read \"No domains allowed yet\" and an existing Business User, not merely a new one, could no longer obtain a sign-in link. This is the corrected guide sentence that an empty list admits nobody, verified against an account that already existed. Both domains were added back afterwards.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:50:07.446Z",
+          "at": "2026-09-08T03:50:17.246Z"
+        }
+      ]
+    }
+  ]
+}

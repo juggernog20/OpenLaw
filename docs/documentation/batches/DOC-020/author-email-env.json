@@ -1,0 +1,35 @@
+{
+  "name": "author-email-env",
+  "startedAt": "2026-09-08T03:07:30.532Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-admin-email",
+  "articleHashes": [
+    {
+      "articleId": "authentication-and-email",
+      "contentSha256": "bbb092098d1b8932cfdc35d741042f9cfdbec82935fc9f30902c5caf88d25df9"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Verify env SMTP source and actual delivery through the welcome email pane",
+      "actual": "Wizard showed environment source read-only; invitation was delivered by SMTP with deployment@helix.example, overriding stored@helix.example.",
+      "result": "pass",
+      "startedAt": "2026-09-08T03:07:30.533Z",
+      "at": "2026-09-08T03:07:31.071Z"
+    }
+  ],
+  "passed": true,
+  "configuration": {
+    "phase": "env",
+    "appliedAt": "2026-09-08T03:07:15.407576+00:00",
+    "configurationHashes": {
+      ".env": "833d024c801916b9d4752e45aa75ffb8e438428bc92157627cc4c908a60a4213",
+      "overlay.json": "d8183ce3d848ab9d91375e9292c05dffd0bca88a88cb180a974634601df93c87",
+      "phase-env.json": "27043ff9204ecf1236b522d57d035ba9a16fbce22ae5c567857cdb43a30cec0b"
+    }
+  },
+  "completedAt": "2026-09-08T03:07:31.071Z"
+}

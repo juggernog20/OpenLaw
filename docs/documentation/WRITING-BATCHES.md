@@ -104,9 +104,11 @@ See the [batch verification record](batches/DOC-019/README.md) for the tested bu
 
 ## DOC-020 [#740](https://github.com/juggernog20/OpenLaw/issues/740)
 
-- [ ] `first-run`: Set up a new OpenLaw instance (C35; P0).
-- [ ] `organisation-and-users`: Manage your organisation and users (C36; P0).
-- [ ] `authentication-and-email`: Configure sign-in, portal access, and email (C37; P0).
+See the [batch verification record](batches/DOC-020/README.md) for the tested build and independent results. Author and independent walkthroughs are complete; the catalog stays in feature review for DOC-025 acceptance.
+
+- [x] `first-run`: Set up a new OpenLaw instance (C35; P0).
+- [x] `organisation-and-users`: Manage your organization and users (C36; P0).
+- [x] `authentication-and-email`: Configure sign-in, portal access, and email (C37; P0).
 
 ## DOC-021 [#741](https://github.com/juggernog20/OpenLaw/issues/741)
 

@@ -1,0 +1,187 @@
+{
+  "record": "review-offboarding",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-admin-review",
+  "fixture": {
+    "appUrl": "http://127.0.0.1:43328",
+    "mailUrl": "http://127.0.0.1:48435",
+    "draftPreview": "http://127.0.0.1:43331",
+    "providerMode": "dedicated local OpenID Connect fixture; full browser authorization and callback; no external identity-provider account",
+    "frozenConfigurationHashes": {
+      "source/.env": "47286908f614d1cd4cf769b7fe4168dac3db2d536faebfe4a4481312ad7868e2",
+      "overlay.json": "a37da4d9df42ec8c176757e063e8fc33f0cd5addfac8c774396f2140c91425cd",
+      "fixture/server.mjs": "b91a17c780f3f816a2eb4a5968a43fba405085743f9b174cbc7cf69528738363"
+    }
+  },
+  "successfulChecks": 7,
+  "failedAttempts": 4,
+  "runs": [
+    {
+      "run": "offboard",
+      "startedAt": "2026-09-08T03:45:36.890Z",
+      "completedAt": "2026-09-08T03:45:40.359Z",
+      "articleHashes": [
+        {
+          "articleId": "organisation-and-users",
+          "contentSha256": "db8e042580c8e4ce397c96a91f8d468f4741d0db77c21e3cbae16ebb54fa3c1b"
+        }
+      ],
+      "steps": [
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Revoking all sessions ends access without archiving the account",
+          "actual": "With Priya Raman signed in, Revoke all sessions pushed her live session to the sign-in page on its next request. Her row stayed Active and she signed in again with the same password, so the action ends sessions without disabling the account, exactly as the guide separates the two.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:45:36.937Z",
+          "at": "2026-09-08T03:45:40.327Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Records keep their assigned person when that person is archived",
+          "result": "fail",
+          "startedAt": "2026-09-08T03:45:40.327Z",
+          "error": "post /contracts expected 201 got 400 {\"type\":\"about:blank\",\"title\":\"Request validation failed\",\"status\":400,\"detail\":\"One or more request fields are invalid.\",\"instance\":\"/api/v1/contracts\",\"errors\":[{\"path\":\"\",\"message\":\"Unrecognized key: \\\"ownerId\\\"\"}]}",
+          "at": "2026-09-08T03:45:40.359Z"
+        }
+      ]
+    },
+    {
+      "run": "offboard2",
+      "startedAt": "2026-09-08T03:47:07.096Z",
+      "completedAt": "2026-09-08T03:47:10.227Z",
+      "articleHashes": [
+        {
+          "articleId": "organisation-and-users",
+          "contentSha256": "db8e042580c8e4ce397c96a91f8d468f4741d0db77c21e3cbae16ebb54fa3c1b"
+        }
+      ],
+      "steps": [
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "A Contract keeps its Owner when that person is archived",
+          "result": "fail",
+          "startedAt": "2026-09-08T03:47:07.136Z",
+          "error": "Cannot read properties of undefined (reading 'id')",
+          "at": "2026-09-08T03:47:10.227Z"
+        }
+      ]
+    },
+    {
+      "run": "offboard3",
+      "startedAt": "2026-09-08T03:48:05.930Z",
+      "completedAt": "2026-09-08T03:48:12.012Z",
+      "articleHashes": [
+        {
+          "articleId": "organisation-and-users",
+          "contentSha256": "db8e042580c8e4ce397c96a91f8d468f4741d0db77c21e3cbae16ebb54fa3c1b"
+        }
+      ],
+      "steps": [
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Restore returns an archived account to the ordinary list",
+          "result": "fail",
+          "startedAt": "2026-09-08T03:48:05.970Z",
+          "error": "expect(locator).toHaveCount(expected) failed\n\nLocator:  getByRole('row', { name: /priya.raman@helix.example/ })\nExpected: 0\nReceived: 1\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.have.count\" with timeout 5000ms\n  - waiting for getByRole('row', { name: /priya.raman@helix.example/ })\n    14 \u00d7 locator resolved to 1 element\n       - unexpected value \"1\"\n",
+          "at": "2026-09-08T03:48:12.012Z"
+        }
+      ]
+    },
+    {
+      "run": "offboard4",
+      "startedAt": "2026-09-08T03:48:31.240Z",
+      "completedAt": "2026-09-08T03:48:39.446Z",
+      "articleHashes": [
+        {
+          "articleId": "organisation-and-users",
+          "contentSha256": "db8e042580c8e4ce397c96a91f8d468f4741d0db77c21e3cbae16ebb54fa3c1b"
+        }
+      ],
+      "steps": [
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "A Contract keeps its Owner when that person is archived",
+          "actual": "The Contract \"Northwind supply terms (review fixture)\" was given Owner Priya Raman through the record Owner control, which reported Saved and survived a reload. Archiving Priya from Settings then Users left the Contract Owner still pointing at her. Archival does not reassign records, which is exactly why the guide tells an Administrator to reassign explicitly first.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:48:31.276Z",
+          "at": "2026-09-08T03:48:34.396Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Archiving blocks sign-in; Show archived finds the row and Restore returns the account",
+          "actual": "The archived row left the ordinary list and her password sign-in was refused with an alert on the sign-in page. Show archived revealed the row as Archived, Restore returned it to Active, and she then signed in again. Restoration brings back the account, not any previously revoked browser session.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:48:34.396Z",
+          "at": "2026-09-08T03:48:36.451Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "An Administrator has no self-archive control and cannot demote the last Administrator",
+          "actual": "The signed-in Administrator row offered no Archive control and no Revoke all sessions control at all, so self-archive is absent rather than refused after the fact. Demoting the only Administrator was refused in the row with \"You cannot demote the last Administrator.\" and the role stayed Administrator.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:48:36.452Z",
+          "at": "2026-09-08T03:48:37.421Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Establishing a second Administrator lifts the demotion restriction",
+          "result": "fail",
+          "startedAt": "2026-09-08T03:48:37.421Z",
+          "error": "get /users expected 200 got 403 {\"type\":\"about:blank\",\"title\":\"You do not have permission to perform this action.\",\"status\":403,\"detail\":\"You do not have permission to perform this action.\",\"instance\":\"/api/v1/users\"}",
+          "at": "2026-09-08T03:48:39.446Z"
+        }
+      ]
+    },
+    {
+      "run": "offboard5",
+      "startedAt": "2026-09-08T03:49:12.842Z",
+      "completedAt": "2026-09-08T03:49:19.758Z",
+      "articleHashes": [
+        {
+          "articleId": "organisation-and-users",
+          "contentSha256": "db8e042580c8e4ce397c96a91f8d468f4741d0db77c21e3cbae16ebb54fa3c1b"
+        }
+      ],
+      "steps": [
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "A second Administrator lifts the restriction and the demotion applies at once",
+          "actual": "After Marisol Vega was invited as Administrator and activated, the demotion of Devon Ashcroft that had been refused as the last-Administrator case succeeded. Devon then held Legal team member and his still-signed-in session lost the Invite user control and received 403 from the users endpoint on its very next request, with no sign-out in between. That is the guide statement that a role change applies on the person next action.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:49:13.737Z",
+          "at": "2026-09-08T03:49:14.874Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "The second Administrator restores the first, showing the safeguard is about the count",
+          "actual": "Marisol returned Devon to Administrator from her own session. His existing session regained the Invite user control on its next page load. The last-Administrator rule therefore counts active Administrators rather than freezing a particular account, which is what the guide tells a reader to arrange before reducing the remaining Administrator role.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:49:14.875Z",
+          "at": "2026-09-08T03:49:16.708Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Explicit reassignment moves the Contract before access is withdrawn",
+          "actual": "The Contract still showed Priya Raman as Owner. Choosing Marisol Vega in the record Owner control reported Saved and held through a reload. Archiving Priya afterwards left the Contract with Marisol. Reassigning first is what actually moves the work, and archiving alone never did, which is the offboarding order the guide sets out.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:49:16.709Z",
+          "at": "2026-09-08T03:49:19.755Z"
+        }
+      ]
+    }
+  ]
+}
