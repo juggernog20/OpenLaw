@@ -1,0 +1,64 @@
+{
+  "articleId": "request-forms",
+  "contentSha256": "92cb436459e7ee7d48b47904796fb1912aa6c56d34e75ddc5061e0426a761337",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "author": "Codex documentation author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "not-run",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-SETTINGS.md",
+    "apps/web/src/routes/settings-contract-fields.tsx",
+    "apps/web/src/routes/settings-matter-template-editor.tsx",
+    "apps/web/src/routes/settings-request-type-editor.tsx",
+    "apps/web/src/routes/settings-reminders.tsx",
+    "apps/web/src/routes/settings-audit-log.tsx",
+    "apps/web/src/routes/settings-approver-groups.tsx",
+    "apps/api/src/modules/fields/routes.ts",
+    "apps/api/src/modules/matters/create.ts",
+    "apps/api/src/modules/requests/convert.ts",
+    "apps/api/src/pipeline/morning-round.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C40",
+      "coverage": ["C40"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Each form collects the intended values and conversion follows the configured target. Invalid/missing required Fields and archived targets do not silently route work to a different module.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    }
+  ],
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-021/README.md",
+    "docs/documentation/batches/DOC-021/author-discovery.json",
+    "docs/documentation/batches/DOC-021/author-forms.json",
+    "docs/documentation/batches/DOC-021/author-forms-retry.json",
+    "docs/documentation/batches/DOC-021/author-forms-retry2.json",
+    "docs/documentation/batches/DOC-021/author-forms-retry3.json",
+    "docs/documentation/batches/DOC-021/author-supplement.json"
+  ],
+  "limitations": [
+    "Independent agent walkthrough pending; user proofreading waits for the full suite.",
+    "Evidence uses immutable source 6a8873db; final candidate compatibility belongs to DOC-025.",
+    "Known #774 blank Matter Entity-valued Field picker and #770 template-default clear behavior are documented, not claimed fixed."
+  ],
+  "previousEvidence": {
+    "contentSha256": "e4295dbf1b38bd9895262e46302486926fe21aa51651ddf8438b27c219a218ea",
+    "evidence": [
+      "docs/documentation/PILOT.md",
+      "docs/documentation/pilot/author-walkthrough.json",
+      "docs/documentation/pilot/independent-walkthrough.json",
+      "docs/documentation/pilot/author-discovery.json"
+    ],
+    "scope": "Historical Contract pilot evidence retained unchanged; DOC-021 extends the canonical guide."
+  },
+  "copyOnlyReview": null
+}

@@ -1,0 +1,39 @@
+{
+  "name": "forms-retry3",
+  "startedAt": "2026-09-08T04:45:26.331Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "request-forms",
+      "contentSha256": "92cb436459e7ee7d48b47904796fb1912aa6c56d34e75ddc5061e0426a761337"
+    },
+    {
+      "articleId": "matter-templates",
+      "contentSha256": "43244bfcd552adb7dcfc68e1ee456a1cbabfb12833bd8f923b5d13dc3aad73d2"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Business User tests contract form requiredness and submits; Administrator converts with carried values",
+      "actual": "R-16 submitted after required North selection; converted to contract 39 with answers. Fixed Contract routing retained.",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:45:28.152Z",
+      "at": "2026-09-08T04:45:29.823Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Business User tests matter form requiredness and submits; Administrator converts with carried values",
+      "actual": "R-17 submitted after required North selection; converted to matter 22 with answers. Template applied revised Task+2 and Key date+5 from UTC Matter creation; Request Summary/High urgency overrode prefix/Priority, Risk and Manager unset, Tasks unassigned.",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:45:29.823Z",
+      "at": "2026-09-08T04:45:32.545Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T04:45:32.545Z"
+}

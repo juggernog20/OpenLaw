@@ -1,0 +1,26 @@
+{
+  "name": "taxonomies-retry4",
+  "startedAt": "2026-09-08T04:37:53.628Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "types-statuses-fields",
+      "contentSha256": "7da7433f34e03c926021864f3cc53d35fccbb62a9aa86e8fde9abbe4d6f59b3c"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "archive in-use Matter type requires replacement; restore does not reverse reassignment",
+      "actual": "Archive without replacement refused; replacement selected; M-19 reassigned, Field answers retained, restore did not move it back; Other protected.",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:37:54.520Z",
+      "at": "2026-09-08T04:37:55.365Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T04:37:55.365Z"
+}

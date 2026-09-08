@@ -1,0 +1,48 @@
+{
+  "name": "supplement",
+  "startedAt": "2026-09-08T04:48:50.944Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "request-forms",
+      "contentSha256": "92cb436459e7ee7d48b47904796fb1912aa6c56d34e75ddc5061e0426a761337"
+    },
+    {
+      "articleId": "matter-templates",
+      "contentSha256": "e63689f132c4bdb41a1a44a9b9073f20b566f2584c321d1527f406d5fa47fcef"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "form-only answer remains on Request and is named as not carrying at conversion",
+      "actual": "Form-only Needed by answer shown under non-carried section; R-18 retained date while created Contract omitted it.",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:48:52.757Z",
+      "at": "2026-09-08T04:48:54.944Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "archived configured Contract target stays explicit and requires live conversion choice",
+      "actual": "Archived target labelled in Settings; Portal still submitted a Request, conversion required explicit live Contract type and created only that module; Administrator repaired target through Settings.",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:48:54.944Z",
+      "at": "2026-09-08T04:48:57.736Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "failed later template section leaves earlier save; reload and retry recovers",
+      "actual": "Browser-only503 injected at Task write after real earlier saves; Description persisted. Reload showed saved description/original Tasks; restored network and final Key dates write200 completed retry.",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:48:57.736Z",
+      "at": "2026-09-08T04:48:58.613Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T04:48:58.613Z"
+}

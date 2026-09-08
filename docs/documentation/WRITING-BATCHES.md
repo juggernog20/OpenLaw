@@ -112,6 +112,8 @@ See the [batch verification record](batches/DOC-020/README.md) for the tested bu
 
 ## DOC-021 [#741](https://github.com/juggernog20/OpenLaw/issues/741)
 
+See the [author verification record](batches/DOC-021/README.md). Five Administrator scenarios await independent review.
+
 - [ ] `types-statuses-fields`: Configure types, Statuses, and Fields (C38; P1).
 - [ ] `matter-templates`: Configure Matter templates (C39; P1).
 - [ ] `request-forms`: Configure request types and forms (C40; P0).
