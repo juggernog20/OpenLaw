@@ -1,0 +1,26 @@
+{
+  "name": "external-db",
+  "author": "Codex documentation author",
+  "startedAt": "2026-09-08T08:51:34.589Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-ops-upgrade",
+  "articleHashes": [
+    {
+      "articleId": "deployment-configuration",
+      "contentSha256": "448fe4bb036badf05c60f89cfff4e000852e79ec397ca0d39c11b3c6cbbf2c97"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "DATABASE_URL selects a separate database and supports migrated record writes",
+      "actual": "Changing DATABASE_URL to separate local Postgres16 service produced empty first-run state; migrations, Administrator setup and real Contract create/read succeeded. Bundled original database remains intact; this does not move its records.",
+      "result": "pass",
+      "startedAt": "2026-09-08T08:51:34.658Z",
+      "at": "2026-09-08T08:51:34.790Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T08:51:34.790Z"
+}

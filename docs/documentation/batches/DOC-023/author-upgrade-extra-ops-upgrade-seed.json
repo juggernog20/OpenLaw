@@ -1,0 +1,29 @@
+{
+  "name": "upgrade-extra-ops-upgrade-seed",
+  "author": "Codex documentation author",
+  "startedAt": "2026-09-08T08:38:00.944Z",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "environment": "openlaw-docs-b8e31260-ops-upgrade",
+  "articleHashes": [
+    {
+      "articleId": "upgrade",
+      "contentSha256": "96cc17166c77af291161ea34540f2c1c9683d2736cd903c42e2692ba9fe8e94d"
+    },
+    {
+      "articleId": "backup-and-restore",
+      "contentSha256": "80aea7b8f2ac34dc4892eba848103f283d8424742fa77be34018672618a045a2"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Real account reach and encrypted SMTP seed",
+      "result": "fail",
+      "startedAt": "2026-09-08T08:38:01.314Z",
+      "error": "expect(received).toBe(expected) // Object.is equality\n\nExpected: 200\nReceived: 404",
+      "at": "2026-09-08T08:38:02.107Z"
+    }
+  ],
+  "passed": false
+}

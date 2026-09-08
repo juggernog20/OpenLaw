@@ -1,0 +1,47 @@
+{
+  "articleId": "deployment-configuration",
+  "contentSha256": "603a23e72dd6295c416484945a2f07dfae53de6cc761d111e2683ae304b2ae9e",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:2851d6acd05418a0ddc57750ac75908892643af481f2755cb13a46f946d073b6; engine sha256:d0997fb7187067bc03f82e04ad45365ca5e3132b872e0b73c3934ceb2d67457a",
+  "environment": "openlaw-docs-b8e31260-ops-author; ops-upgrade; ops-restore",
+  "author": "Codex documentation author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "not-run",
+  "sources": [
+    "compose.yml",
+    "Dockerfile",
+    "docs/DEPLOYMENT.md",
+    "packages/db/src/migration-journal.ts",
+    "apps/api/src/lib/storage/config.ts",
+    "apps/api/src/modules/email-settings/routes.ts",
+    "apps/api/src/pipeline/pg-boss.ts",
+    "apps/api/src/pipeline/text-extraction.ts",
+    "e2e/scripts/upgrade-fidelity.mjs"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C45",
+      "coverage": ["C45"],
+      "role": "operator",
+      "method": "container-operation",
+      "expected": "Each claimed configuration path is demonstrated with actual requests/files and recorded effective values excluding secrets. Wrong origin, limits, unavailable storage/engine, and mismatched encryption keys fail as documented and recover after correction.",
+      "actual": "Independent operator walkthrough pending. Author operations are supporting evidence only.",
+      "result": "not-run",
+      "evidence": []
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-023/README.md"],
+  "limitations": [
+    "Independent technical review and actual operator walkthrough remain pending. Author operations do not satisfy the independent gate.",
+    "Author fresh build used a committed git archive, not the installation article clone procedure; no independent under-an-hour claim.",
+    "Local TLS uses an isolated Caddy internal CA and does not certify public DNS or certificate issuance.",
+    "S3 and Azure operations use owned local compatible services and explicit disposable keys; no cloud identity credential-chain claim.",
+    "Provider guides remain on unmerged PR #783; real provider checks C42/C43 are still blocked and are not waived.",
+    "The user will proofread the assembled complete suite; no human proofreading or feature-owner sign-off is recorded."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

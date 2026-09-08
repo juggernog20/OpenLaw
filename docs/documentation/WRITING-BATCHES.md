@@ -127,6 +127,8 @@ See the [batch verification record](batches/DOC-021/README.md) for the tested bu
 
 ## DOC-023 [#743](https://github.com/juggernog20/OpenLaw/issues/743)
 
+Continue this independent operator batch while DOC-022 waits for disposable provider access. Keep the reviewed provider drafts in PR #783 and C42/C43 open as release requirements. Retain that blocker for final acceptance and publication.
+
 - [ ] `install`: Install OpenLaw (C44; P0).
 - [ ] `deployment-configuration`: Configure a deployment (C45; P0).
 - [ ] `upgrade`: Upgrade a populated instance (C46; P0).
