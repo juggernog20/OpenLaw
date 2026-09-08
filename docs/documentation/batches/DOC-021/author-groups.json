@@ -1,0 +1,25 @@
+{
+  "name": "groups",
+  "startedAt": "2026-09-08T04:45:00.480Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "approver-groups",
+      "contentSha256": "858db239d62e952a01c8f7d588b9dc2b25d59e75677cd811277807186d11bbf8"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "create Approver group with two eligible people, exclude Contributor and refuse direct invalid member",
+      "result": "fail",
+      "startedAt": "2026-09-08T04:45:01.361Z",
+      "error": "expect(received).toBe(expected) // Object.is equality\n\nExpected: 400\nReceived: 422",
+      "at": "2026-09-08T04:45:02.166Z"
+    }
+  ],
+  "passed": false
+}

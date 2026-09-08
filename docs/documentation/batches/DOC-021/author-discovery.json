@@ -1,0 +1,87 @@
+{
+  "name": "discovery",
+  "startedAt": "2026-09-08T04:51:02.938Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "types-statuses-fields",
+      "contentSha256": "7da7433f34e03c926021864f3cc53d35fccbb62a9aa86e8fde9abbe4d6f59b3c"
+    },
+    {
+      "articleId": "matter-templates",
+      "contentSha256": "e63689f132c4bdb41a1a44a9b9073f20b566f2584c321d1527f406d5fa47fcef"
+    },
+    {
+      "articleId": "request-forms",
+      "contentSha256": "92cb436459e7ee7d48b47904796fb1912aa6c56d34e75ddc5061e0426a761337"
+    },
+    {
+      "articleId": "reminders-and-audit",
+      "contentSha256": "2272f29e086191104e4bdbfef1fdf8e17a8f042f00eca56390320a4b9a179117"
+    },
+    {
+      "articleId": "approver-groups",
+      "contentSha256": "858db239d62e952a01c8f7d588b9dc2b25d59e75677cd811277807186d11bbf8"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "types-statuses-fields contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths; keyboard focus and emulated 200 percent zoom remained usable",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:51:03.867Z",
+      "at": "2026-09-08T04:51:05.954Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "matter-templates contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths; keyboard focus and emulated 200 percent zoom remained usable",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:51:05.954Z",
+      "at": "2026-09-08T04:51:07.317Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "request-forms contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths; keyboard focus and emulated 200 percent zoom remained usable",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:51:07.317Z",
+      "at": "2026-09-08T04:51:08.775Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "reminders-and-audit contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths; keyboard focus and emulated 200 percent zoom remained usable",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:51:08.775Z",
+      "at": "2026-09-08T04:51:10.027Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "approver-groups contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths; keyboard focus and emulated 200 percent zoom remained usable",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:51:10.027Z",
+      "at": "2026-09-08T04:51:11.298Z"
+    },
+    {
+      "role": "signed-out",
+      "method": "browser-walkthrough",
+      "action": "five guides are discoverable in formal preview without application API calls",
+      "actual": "Five formal guide titles discoverable anonymously; zero application API requests",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:51:11.302Z",
+      "at": "2026-09-08T04:51:12.365Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T04:51:12.365Z"
+}

@@ -1,0 +1,38 @@
+{
+  "name": "forms-retry2",
+  "startedAt": "2026-09-08T04:44:05.121Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "request-forms",
+      "contentSha256": "92cb436459e7ee7d48b47904796fb1912aa6c56d34e75ddc5061e0426a761337"
+    },
+    {
+      "articleId": "matter-templates",
+      "contentSha256": "43244bfcd552adb7dcfc68e1ee456a1cbabfb12833bd8f923b5d13dc3aad73d2"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "add Knowledge guidance to a form and external guidance to Portal home",
+      "actual": "Knowledge link opened published Portal content from Matter form; malformed external URL kept dialog open, corrected local fixture address opened new tab from Portal home. External target is owned local stand-in, not a third-party availability claim.",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:44:06.928Z",
+      "at": "2026-09-08T04:44:09.139Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Business User tests contract form requiredness and submits; Administrator converts with carried values",
+      "result": "fail",
+      "startedAt": "2026-09-08T04:44:09.139Z",
+      "error": "locator.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByLabel('Summary', { exact: true })\u001b[22m\n",
+      "at": "2026-09-08T04:44:19.683Z"
+    }
+  ],
+  "passed": false
+}
