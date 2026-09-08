@@ -677,7 +677,7 @@
       "coverage": ["C33"],
       "articles": ["create-knowledge"],
       "roles": ["legal_team_member", "administrator"],
-      "environment": "authoring",
+      "environment": "knowledge",
       "prerequisites": [
         "Knowledge types/folders and a draft Knowledge Item with fictional Documents."
       ],
@@ -696,7 +696,7 @@
       "coverage": ["C34"],
       "articles": ["publish-knowledge"],
       "roles": ["legal_team_member", "administrator"],
-      "environment": "authoring",
+      "environment": "knowledge",
       "prerequisites": [
         "A draft Knowledge Item, a portal reader, and an out-of-audience comparison reader."
       ],

@@ -2,6 +2,7 @@
 
 /** M28's file-first Knowledge HTTP contract (#598). */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { z } from "zod";
 import { eq, knowledgeTypes, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
@@ -95,7 +96,11 @@ describe("file-first Knowledge", () => {
       ]),
     });
     expect(created.statusCode, created.body).toBe(201);
-    const item = created.json().knowledgeItems[0] as { id: string; primaryDocumentId: string };
+    const [item] = z
+      .object({
+        knowledgeItems: z.tuple([z.object({ id: z.string(), primaryDocumentId: z.string() })]),
+      })
+      .parse(created.json()).knowledgeItems;
     const base = `/api/v1/knowledge/${item.id}`;
     for (const [method, url, payload] of [
       ["PATCH", base, { audience: "everyone" }],

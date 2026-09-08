@@ -1,0 +1,102 @@
+{
+  "name": "publishing-legal",
+  "startedAt": "2026-09-08T01:47:45.908Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-knowledge",
+  "articleHashes": [
+    {
+      "articleId": "publish-knowledge",
+      "contentSha256": "b406433d5da8bedf14b847e6f70c9fdbf213760700cbf7498bfecd054a3f6c52"
+    },
+    {
+      "articleId": "create-knowledge",
+      "contentSha256": "958db5b200781b75af77a88e26bfd83912b8e1d0862ff82922ffa9685b3aa61c"
+    }
+  ],
+  "steps": [
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Draft and published Legal Only items stay unavailable to Portal readers",
+      "actual": "Publish removed Draft but Legal Only still redirected the Portal article to home and returned API404",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:47:49.970Z",
+      "at": "2026-09-08T01:47:51.260Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Set Everyone and read both primary and supporting files from a separate Business Portal account",
+      "actual": "Everyone exposed the item to a separately signed-in Business User, primary DOCX first and supporting PDF second; both browser downloads matched original bytes and guidance rendered without editing controls",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:47:51.260Z",
+      "at": "2026-09-08T01:47:52.007Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Configure and follow an internal Before you submit link with an Administrator actor",
+      "actual": "Administrator used Settings / Intake / Deflection links to add a Knowledge item link on Portal home; Business User followed it in the same tab",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:47:52.007Z",
+      "at": "2026-09-08T01:47:53.402Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Cancel and confirm audience removal; check retained configuration and blocked saved file links",
+      "actual": "Cancel retained Everyone; Continue saved Legal Only, hid the configured Portal link, and blocked the saved article plus both old download URLs with404 while the Settings row remained",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:47:53.402Z",
+      "at": "2026-09-08T01:47:54.812Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Unpublish and republish with Everyone retained",
+      "actual": "Unpublish returned Draft, preserved Everyone, and blocked the article and saved primary/supporting URLs; Publish restored the item and existing Portal link",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:47:54.812Z",
+      "at": "2026-09-08T01:47:56.797Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Edit published guidance in place and observe it without another Publish action",
+      "actual": "Blur saved a guidance edit while state stayed published; a fresh Portal read displayed it immediately",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:47:56.797Z",
+      "at": "2026-09-08T01:47:57.420Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Archive with a replacement and restore with publication, Documents, and audience retained",
+      "actual": "Archive retained a live replacement reference and disabled edits/uploads; old Portal item/file links were denied without redirecting to the replacement. Saved staff link exposed Restore; restoration retained two Documents and immediately reinstated published Everyone access",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:47:57.420Z",
+      "at": "2026-09-08T01:47:59.453Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "Staff Knowledge list and record refuse Contributor access",
+      "actual": "Contributor staff list and direct record redirected Home, and direct API read returned403",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:47:59.456Z",
+      "at": "2026-09-08T01:48:00.612Z"
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Everyone Knowledge still requires a Portal session",
+      "actual": "Anonymous browser redirected to Portal email sign-in for a published Everyone item",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:48:00.612Z",
+      "at": "2026-09-08T01:48:00.784Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T01:48:00.784Z"
+}

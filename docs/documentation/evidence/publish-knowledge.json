@@ -1,0 +1,60 @@
+{
+  "articleId": "publish-knowledge",
+  "contentSha256": "b406433d5da8bedf14b847e6f70c9fdbf213760700cbf7498bfecd054a3f6c52",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-knowledge",
+  "author": "Codex documentation author agent",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "not-run",
+  "sources": [
+    "docs/decision-records/DECISIONS-KNOWLEDGE.md",
+    "apps/web/src/routes/knowledge.tsx",
+    "apps/web/src/routes/knowledge-record.tsx",
+    "apps/web/src/routes/portal-knowledge.tsx",
+    "apps/api/src/modules/knowledge/routes.ts",
+    "apps/api/src/modules/documents/routes.ts",
+    "apps/api/src/modules/portal/knowledge.test.ts",
+    "apps/api/src/modules/knowledge/documents.test.ts",
+    "e2e/tests/35-m28-demo.spec.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C34",
+      "coverage": ["C34"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "A draft Knowledge Item, a portal reader, and an out-of-audience comparison reader."
+      ],
+      "expected": "Only the intended published audience reaches the item and its files; later removal takes effect. Direct links do not bypass publication/audience checks, including links to supporting Documents.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "V-C34",
+      "coverage": ["C34"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "A draft Knowledge Item, a portal reader, and an out-of-audience comparison reader."
+      ],
+      "expected": "Only the intended published audience reaches the item and its files; later removal takes effect. Direct links do not bypass publication/audience checks, including links to supporting Documents.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    }
+  ],
+  "limitations": [
+    "Independent technical and browser walkthrough review is pending.",
+    "Catalog remains in feature review pending DOC-025 whole-suite acceptance and DOC-027 publication/export.",
+    "The types and Fields guide linked by create-knowledge is a DOC-021 publication dependency."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null,
+  "authorEvidence": ["docs/documentation/batches/DOC-019/README.md"]
+}
