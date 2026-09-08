@@ -30,6 +30,16 @@
  * node e2e/scripts/upgrade-fidelity.mjs verify --in  /tmp/fingerprint.json
  * ```
  *
+ * **The fingerprint file is the harness, not an input.** `seed` writes it
+ * from what the baseline install answered, and `verify` reads it back into
+ * the requests it makes. Both ends are the same CI job: one disposable
+ * stack it started, one file under its own `RUNNER_TEMP`, one `BASE_URL`
+ * from its own environment. Nothing outside the job writes that file or
+ * answers those calls. A scanner reading this sees file data reaching a
+ * request and network data reaching a file, and both are true — they are
+ * how a test carries state across the upgrade it is testing. Do not
+ * "fix" the round trip; removing it removes the gate.
+ *
  * **It has no dependencies and is not built.** It runs on plain `node`
  * against whichever stack is up, which is what lets one copy drive both
  * versions across a `git checkout` in the middle of a CI job. CI copies
