@@ -480,6 +480,44 @@ describe("the provider model selector", () => {
     );
   });
 
+  // The first-run journey configures this pane without a provider to call, so
+  // it reaches Model through manual entry. It drives the control by role, and
+  // a control that changed shape under it failed the whole run rather than
+  // this assertion. Pinning the two shapes here is what tells us which one
+  // moved, in seconds rather than a container build.
+  it("offers Model as a list and swaps it for a text field on manual entry", async () => {
+    const user = userEvent.setup();
+    const calls: unknown[] = [];
+    stubApi({
+      signedIn: ADMIN,
+      extra: connectorApi({
+        connector: unconfigured(),
+        models: (call) => {
+          calls.push(call.body);
+          return json(200, { models: [], truncated: false });
+        },
+      }),
+    });
+    renderAt("/settings/ai-analysis");
+    await openProvider(user);
+    await user.selectOptions(screen.getByLabelText("Provider"), "custom");
+    await user.type(screen.getByLabelText("Base URL"), "http://127.0.0.1:9/v1");
+
+    expect(screen.getByRole("combobox", { name: "Model" })).toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: "Model" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Enter model ID manually" }));
+    const model = screen.getByRole("textbox", { name: "Model" });
+    expect(screen.queryByRole("combobox", { name: "Model" })).not.toBeInTheDocument();
+    await user.type(model, "m33-configuration-only");
+    await user.type(screen.getByLabelText("API key"), "m33-configuration-only");
+
+    // The credential remounts the selector. Manual entry and the typed id are
+    // the parent's, so both survive it, and no list was ever asked for.
+    expect(screen.getByRole("textbox", { name: "Model" })).toHaveValue("m33-configuration-only");
+    expect(calls).toEqual([]);
+  });
+
   it("explains partial lists and requires Azure deployment names", async () => {
     const user = userEvent.setup();
     stubApi({
