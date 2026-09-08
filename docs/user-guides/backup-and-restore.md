@@ -66,9 +66,10 @@ Use a new installation directory, a different Compose project, separate volumes,
 Review restored destinations before starting app or worker. Saved configuration and queued work can use the original relay, object store, identity provider, or signing account. For a recovery drill, isolate external traffic and arrange controlled recipients and storage before allowing those services to run.
 
 1. Prepare the source and images recorded with the backup, using the [installation procedure](install.md). Before starting app or worker, supply the retained `AUTH_SECRET` and `OPENLAW_SECRET_KEY`, the target's origin and port, and its distinct project name. Configure access to every restored file store. Do not complete first-run setup on this target before importing the database.
-2. Make the retained backup available to the operator and verify its hashes:
+2. Make the retained backup available on the target host. Set `BACKUP_DIR` to its path there, then verify its hashes. The path below is a placeholder:
 
    ```bash
+   BACKUP_DIR=/srv/openlaw-backups/2026-09-08
    (cd "$BACKUP_DIR" && sha256sum --check SHA256SUMS)
    docker compose up -d postgres
    ```

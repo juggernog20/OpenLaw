@@ -48,6 +48,14 @@ The three author projects were then stopped and their containers/networks remove
 
 CodeRabbit completed one pass with nine findings. Five changes clarified scheduling, Document terminology, the chosen readiness port, and refusal to overwrite `.env`. The exact environment-creation block passed fresh/existing-file checks in Bash and Zsh. Two requests to replace historical observation hashes were declined to preserve provenance; the current draft hashes remain separately pending independent verification. A request to turn the historical evidence report into imperative UI copy was declined because it reports observations. Canonical provider forward links remain intentional until DOC-022 merges.
 
+## Review corrections
+
+An independent source reading of the release corrected five statements after the author checks. `operator-troubleshooting` claimed that startup rejects a short `AUTH_SECRET`; only `OPENLAW_SECRET_KEY` carries a 32-character floor, and a short `AUTH_SECRET` is written to the log as a warning while the app starts. The same article sent an `accounts.issuer` refusal to a maintainer and to backup-based recovery; that migration names two cases in the log and each has its own documented correction, and a refusal applies none of the migration. `deployment-configuration` recorded the compare bound's maximum but not the 420000-millisecond maximum on `DOC_ENGINE_TIMEOUT_MS`, which stops app and worker startup when it is exceeded, and did not say that an unreadable `MAX_UPLOAD_MB` falls back to 100 MB instead of refusing to boot. `backup-and-restore` used `BACKUP_DIR` in the restore section without setting it on the separate target.
+
+These come from reading `packages/db/src/secrets.ts`, `apps/api/src/index.ts`, `apps/api/src/lib/doc-engine/config.ts`, `apps/api/src/lib/doc-engine/http.ts`, `apps/api/src/lib/uploads.ts`, `packages/db/migrations/0060_account_issuer.sql` and `docs/DEPLOYMENT.md`, not from a new deployment run. The three changed articles carry new bytes, so their per-article evidence hashes move with them and stay `not-run`. Historical action hashes in the `author-*.json` records still identify the bytes present at those actions.
+
+The stranded-journal hand repair in `docs/DEPLOYMENT.md` is still not offered to readers. That remains the author's recorded decision: the batch exercised one controlled fixture undo, which does not support a general bookkeeping-row edit as an operator procedure.
+
 ## Acceptance still to perform
 
 The five per-article evidence records remain `not-run` for independent verification. A fresh reviewer must perform the actual installation procedure from an empty target, record its duration, exercise configuration, upgrade, isolated restore and controlled diagnostics, and perform technical review. Author evidence and the automated suite support that review but do not satisfy it. Complete-suite verification, human proofreading and publication belong to the later program tasks.

@@ -1,6 +1,6 @@
 {
   "articleId": "backup-and-restore",
-  "contentSha256": "80aea7b8f2ac34dc4892eba848103f283d8424742fa77be34018672618a045a2",
+  "contentSha256": "0237339f91484b7a46623e1753c67ccbb376ae341ac8b40cb5d81237967a891a",
   "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
   "buildId": "app sha256:2851d6acd05418a0ddc57750ac75908892643af481f2755cb13a46f946d073b6; engine sha256:d0997fb7187067bc03f82e04ad45365ca5e3132b872e0b73c3934ceb2d67457a",
   "environment": "openlaw-docs-b8e31260-ops-author; ops-upgrade; ops-restore",

@@ -35,6 +35,7 @@
   ],
   "limitations": [
     "Retrospective index of completed private command logs, not newly run checks; logLastWrittenAt is filesystem provenance, not a claimed browser action time.",
-    "Fixture preparation uses API calls and inert signing configuration. Separate actual Mailpit delivery establishes SMTP decryption; no live signing provider claim."
+    "Fixture preparation uses API calls and inert signing configuration. Separate actual Mailpit delivery establishes SMTP decryption; no live signing provider claim.",
+    "The three checks carry one `actual` sentence and one logSha256 because that sentence is the fixed success line e2e/scripts/upgrade-fidelity.mjs prints on a passing verify. It is not a per-check description; each check ran against the project named beside it."
   ]
 }
