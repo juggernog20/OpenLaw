@@ -1761,7 +1761,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "listKnowledgeItemDocuments",
         summary:
-          "The Documents owned by one live Knowledge Item, newest first, with each version chain",
+          "The Documents owned by one Knowledge Item, including archived items, newest first, with each version chain",
         tags: ["documents"],
         params: EntityParams,
         querystring: ArchivedQuery.extend({ cursor: CursorSchema.optional() }),
@@ -1778,7 +1778,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         .from(knowledgeItems)
         .where(eq(knowledgeItems.id, request.params.id))
         .limit(1);
-      if (!item || item.archivedAt) throw httpError(404, "No Knowledge Item exists with this id.");
+      if (!item) throw httpError(404, "No Knowledge Item exists with this id.");
       return paperOf(
         app.db,
         request.user,

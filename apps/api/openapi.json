@@ -34074,7 +34074,7 @@
     "/api/v1/knowledge/{id}/documents": {
       "get": {
         "operationId": "listKnowledgeItemDocuments",
-        "summary": "The Documents owned by one live Knowledge Item, newest first, with each version chain",
+        "summary": "The Documents owned by one Knowledge Item, including archived items, newest first, with each version chain",
         "tags": ["documents"],
         "parameters": [
           {
