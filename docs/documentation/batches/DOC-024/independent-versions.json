@@ -1,0 +1,182 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-024",
+  "issue": 744,
+  "independentReview": true,
+  "reviewerKind": "agent",
+  "walkthroughReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat), a different agent from the author",
+  "author": "Codex documentation author",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "frontend": "Working documentation preview at 127.0.0.1:43333 over the immutable configuration backend at 127.0.0.1:43332",
+  "browser": "Playwright 1.62.1 Chromium from the workspace, headless, one isolated context per identity; scripts written by the reviewer from the article text",
+  "startedAt": "2026-09-08T12:01:26.742Z",
+  "finishedAt": "2026-09-08T12:02:06.508Z",
+  "articleHashes": [
+    {
+      "articleId": "troubleshooting",
+      "contentSha256": "e2404361abcc621f8ee36fcd03dec23150bdabc0070d30678ba54caaabb9dd1b"
+    },
+    {
+      "articleId": "reference",
+      "contentSha256": "ba4b1b0cc96db761cc19f06fa88d5e4d9625355873cc2a15d8f6deb58193f5d6"
+    },
+    {
+      "articleId": "versions-and-support",
+      "contentSha256": "dee7dab08d34a3a1f7c6828ca2a2a240fd8f2fdba13e710587d52265d7e94ae7"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "The reader states the edition identity the article tells this person to record",
+      "actual": "Reviewer check did not complete: Error: no build identity was shown: {\"supported\":\", Distribution commit, and Content digest. Publication target distinguishes where that edi\",\"distribution\":\", and Content digest. Publication target distinguishes where that edition is intended to b\",\"digest\":\". Publication target distinguishes where that edition is intended to be used.\",\"target\":\"distinguishes where that edition is intended to be ",
+      "startedAt": "2026-09-08T12:01:27.472Z",
+      "at": "2026-09-08T12:01:29.726Z",
+      "result": "fail"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "An unknown edition is reported, not silently replaced with the latest",
+      "actual": "Reviewer check did not complete: Error: the unknown-edition page lost its local navigation",
+      "startedAt": "2026-09-08T12:01:29.726Z",
+      "at": "2026-09-08T12:01:31.479Z",
+      "result": "fail"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A missing article and a missing section are reported with a way forward",
+      "actual": "A missing article answered \"Article unavailable\" with its explanation, and a missing section on the reference answered \"The requested section is unavailable. Use the page outline to find the current instructions.\" with the On this page outline present. Both recoveries the article names were available to this reader.",
+      "startedAt": "2026-09-08T12:01:31.479Z",
+      "at": "2026-09-08T12:01:34.922Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "The reader states the edition identity the article tells this person to record",
+      "actual": "Reviewer check did not complete: Error: no build identity was shown: {\"supported\":\", Distribution commit, and Content digest. Publication target distinguishes where that edi\",\"distribution\":\", and Content digest. Publication target distinguishes where that edition is intended to b\",\"digest\":\". Publication target distinguishes where that edition is intended to be used.\",\"target\":\"distinguishes where that edition is intended to be ",
+      "startedAt": "2026-09-08T12:01:35.534Z",
+      "at": "2026-09-08T12:01:37.791Z",
+      "result": "fail"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "An unknown edition is reported, not silently replaced with the latest",
+      "actual": "Reviewer check did not complete: Error: the unknown-edition page lost its local navigation",
+      "startedAt": "2026-09-08T12:01:37.791Z",
+      "at": "2026-09-08T12:01:39.519Z",
+      "result": "fail"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "A missing article and a missing section are reported with a way forward",
+      "actual": "A missing article answered \"Article unavailable\" with its explanation, and a missing section on the reference answered \"The requested section is unavailable. Use the page outline to find the current instructions.\" with the On this page outline present. Both recoveries the article names were available to this reader.",
+      "startedAt": "2026-09-08T12:01:39.520Z",
+      "at": "2026-09-08T12:01:42.951Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "The reader states the edition identity the article tells this person to record",
+      "actual": "Reviewer check did not complete: Error: no build identity was shown: {\"supported\":\", Distribution commit, and Content digest. Publication target distinguishes where that edi\",\"distribution\":\", and Content digest. Publication target distinguishes where that edition is intended to b\",\"digest\":\". Publication target distinguishes where that edition is intended to be used.\",\"target\":\"distinguishes where that edition is intended to be ",
+      "startedAt": "2026-09-08T12:01:43.487Z",
+      "at": "2026-09-08T12:01:45.740Z",
+      "result": "fail"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "An unknown edition is reported, not silently replaced with the latest",
+      "actual": "Reviewer check did not complete: Error: the unknown-edition page lost its local navigation",
+      "startedAt": "2026-09-08T12:01:45.740Z",
+      "at": "2026-09-08T12:01:47.527Z",
+      "result": "fail"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "A missing article and a missing section are reported with a way forward",
+      "actual": "A missing article answered \"Article unavailable\" with its explanation, and a missing section on the reference answered \"The requested section is unavailable. Use the page outline to find the current instructions.\" with the On this page outline present. Both recoveries the article names were available to this reader.",
+      "startedAt": "2026-09-08T12:01:47.527Z",
+      "at": "2026-09-08T12:01:50.968Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "The reader states the edition identity the article tells this person to record",
+      "actual": "Reviewer check did not complete: Error: no build identity was shown: {\"supported\":\", Distribution commit, and Content digest. Publication target distinguishes where that edi\",\"distribution\":\", and Content digest. Publication target distinguishes where that edition is intended to b\",\"digest\":\". Publication target distinguishes where that edition is intended to be used.\",\"target\":\"distinguishes where that edition is intended to be ",
+      "startedAt": "2026-09-08T12:01:51.927Z",
+      "at": "2026-09-08T12:01:54.238Z",
+      "result": "fail"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "An unknown edition is reported, not silently replaced with the latest",
+      "actual": "Reviewer check did not complete: Error: the unknown-edition page lost its local navigation",
+      "startedAt": "2026-09-08T12:01:54.238Z",
+      "at": "2026-09-08T12:01:55.969Z",
+      "result": "fail"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "A missing article and a missing section are reported with a way forward",
+      "actual": "A missing article answered \"Article unavailable\" with its explanation, and a missing section on the reference answered \"The requested section is unavailable. Use the page outline to find the current instructions.\" with the On this page outline present. Both recoveries the article names were available to this reader.",
+      "startedAt": "2026-09-08T12:01:55.969Z",
+      "at": "2026-09-08T12:01:59.414Z",
+      "result": "pass"
+    },
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "With the external tracker blocked, the local support article stays readable and usable",
+      "actual": "Reviewer check did not complete: Error: a failed external destination left the local article unreadable",
+      "startedAt": "2026-09-08T12:01:59.440Z",
+      "at": "2026-09-08T12:02:03.975Z",
+      "result": "fail"
+    },
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Edition details offer both the standalone copy and the retained download",
+      "actual": "Reviewer check did not complete: Error: the standalone controls the article names are missing",
+      "startedAt": "2026-09-08T12:02:03.975Z",
+      "at": "2026-09-08T12:02:06.446Z",
+      "result": "fail"
+    },
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "The retained edition reads from disk offline with JavaScript",
+      "actual": "Reviewer check did not complete: Error: no retained copy to read",
+      "startedAt": "2026-09-08T12:02:06.469Z",
+      "at": "2026-09-08T12:02:06.469Z",
+      "result": "fail"
+    },
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "The retained edition reads from disk offline without JavaScript",
+      "actual": "Reviewer check did not complete: Error: no retained copy to read",
+      "startedAt": "2026-09-08T12:02:06.490Z",
+      "at": "2026-09-08T12:02:06.491Z",
+      "result": "fail"
+    }
+  ],
+  "passed": false,
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not feature-owner approval.",
+    "The offline reading check loads the retained copy from disk in an offline browser context while the lab instance stays running for the other reviewers' checks. It proves independence from the network and from the app's own reader, not a stopped-instance drill.",
+    "No support report was submitted. The external tracker was blocked deliberately and only the local behavior was observed."
+  ]
+}

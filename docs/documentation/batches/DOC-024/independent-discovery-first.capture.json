@@ -1,0 +1,21 @@
+{
+  "kind": "independent-walkthrough-console-capture",
+  "task": "DOC-024",
+  "issue": 744,
+  "describes": "The reviewer's first independent discovery run, whose JSON record was overwritten by a later run of the same script name.",
+  "retained": "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
+  "sha256": "aabc9ce64d166d154dc3d219bf66a3b3c5dd097bdcff7f98f5a8fd585ebb0a45",
+  "provenance": "Verbatim reviewer tool output recovered by the root from this session's tool_result event at 2026-09-08T11:36:21.561Z into /tmp/openlaw-docs-run/744-captured-independent/discovery-first-tool-output.txt, then copied here byte for byte.",
+  "outcome": "18 passing observations, 8 failed attempts, as printed in the retained output.",
+  "unavailable": [
+    "The run's own JSON record, including its startedAt, finishedAt, per-step timestamps, article hashes and build identity block. Those were overwritten and are not reconstructed here.",
+    "Only the printed pass and fail lines survive; no per-step actual text beyond the failure messages the output carries."
+  ],
+  "failures": [
+    "For each of the four app roles, the reviewer's query \"which version\" did not find the versions-and-support guide, while \"report a defect\" did.",
+    "For each of the four app roles, the reviewer looked for a recovery link named \"roles and record access\"; the troubleshooting article's actual link text is \"your role and record access\"."
+  ],
+  "interpretation": "The later discovery record replaced \"which version\" with \"version information\", which is a search fallback the reviewer chose, not evidence that the original query now succeeds. \"which version\" was never rerun and is expected to keep failing, because local documentation search is a strict all-words match and the guide does not use the word \"which\". The recovery-link failure was a reviewer error about the link text, not a missing link.",
+  "supersededBy": "docs/documentation/batches/DOC-024/independent-discovery.json",
+  "verbatimNote": "Retained byte for byte, including the trailing harness line that names the reviewer's local workspace path and the absence of a final newline. Nothing was added, reordered or redacted."
+}

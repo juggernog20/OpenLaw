@@ -1,0 +1,62 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-024",
+  "issue": 744,
+  "independentReview": true,
+  "reviewerKind": "agent",
+  "walkthroughReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat), a different agent from the author",
+  "author": "Codex documentation author",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "frontend": "Working documentation preview at 127.0.0.1:43333 over the immutable configuration backend at 127.0.0.1:43332",
+  "browser": "Playwright 1.62.1 Chromium from the workspace, headless, one isolated context per identity; scripts written by the reviewer from the article text",
+  "startedAt": "2026-09-08T12:19:28.136Z",
+  "finishedAt": "2026-09-08T12:19:57.395Z",
+  "articleHashes": [
+    {
+      "articleId": "troubleshooting",
+      "contentSha256": "e2404361abcc621f8ee36fcd03dec23150bdabc0070d30678ba54caaabb9dd1b"
+    },
+    {
+      "articleId": "reference",
+      "contentSha256": "ba4b1b0cc96db761cc19f06fa88d5e4d9625355873cc2a15d8f6deb58193f5d6"
+    },
+    {
+      "articleId": "versions-and-support",
+      "contentSha256": "dee7dab08d34a3a1f7c6828ca2a2a240fd8f2fdba13e710587d52265d7e94ae7"
+    }
+  ],
+  "steps": [
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "A Comparison is computed and read, and the Version chain is unchanged by it",
+      "actual": "The Document held 3 Versions (v1, v2, v3) before the comparison. Compare with previous on version 2 produced an actual Comparison that reached the state \"ready\" for the pair v1 → v2. The panel text around the result was: \" AB | Name: | Title: | Date: | Fabrikam Health Systems | Name: | Title: | Date: | Inserted: | Counterparty comments | Inserted: | We have moved payment to 60 days to match our standard terms, and we need the assignment clause to permit an intra-group transfer.\". After reading it the chain still held 3 Versions (v1, v2, v3), and reopening the same pair read it again with the chain still at 3 Versions and no new preparation. Performing and reading a Comparison appends no Version, which is the reference's wording and the scenario's negative check.",
+      "startedAt": "2026-09-08T12:19:29.417Z",
+      "at": "2026-09-08T12:19:52.328Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "The actual role control offers exactly the four account roles, with no operator",
+      "actual": "Opening the role control on a user row offered exactly [\"Administrator\",\"Legal team member\",\"Contributor\",\"Business user\"]. No deployment-operator role can be assigned, so the reference row's \"not an additional app account role\" is a statement about what the app can grant, not only about who happens to hold an account. No role was changed; the menu was dismissed with Escape.",
+      "startedAt": "2026-09-08T12:19:52.329Z",
+      "at": "2026-09-08T12:19:57.373Z",
+      "result": "pass"
+    }
+  ],
+  "passed": true,
+  "correctionOf": [
+    "docs/documentation/batches/DOC-024/independent-reference.json: its comparison step reached the control without computing a Comparison, so its summary over-read the result.",
+    "docs/documentation/batches/DOC-024/independent-reference.json: its operator step listed the roles existing users hold, which cannot establish the set of permitted roles."
+  ],
+  "fixturePreparation": [
+    "Read the seeded Document \"Order Form - Fabrikam Health Systems - seat expansion.docx\" on C-21, which already carries three Versions including a Generated redline at v3 from the seed. Nothing was uploaded, exported or archived; the comparison was only computed and read."
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not feature-owner approval.",
+    "A Generated redline export was not performed. The reference's Generated redline row therefore rests on the seeded v3 redline and on the comparison guide, not on an export this reviewer ran."
+  ]
+}

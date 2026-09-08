@@ -1,0 +1,158 @@
+{
+  "articleId": "troubleshooting",
+  "contentSha256": "e2404361abcc621f8ee36fcd03dec23150bdabc0070d30678ba54caaabb9dd1b",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration (immutable backend); working documentation preview at 127.0.0.1:43333",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "walkthroughReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-08T11:54:09.727Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "docs/documentation/PUBLISHING.md",
+    "docs/documentation/edition.json",
+    "apps/web/src/components/documentation/documentation-reader.tsx",
+    "apps/api/src/lib/uploads.ts",
+    "apps/api/src/lib/render-family.ts",
+    "apps/api/src/modules/contracts/routes.ts",
+    "apps/web/src/components/approvals/approvals-signing-card.tsx"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C49",
+      "coverage": ["C49"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Symptom checks lead to supported recovery or specific escalation without access bypass or unsupported provider claims.",
+      "actual": "Read the escalation the article routes to this reader. On the request naming Nadia Haddad the requesting Administrator was offered only \"Cancel request\"; on the request naming himself he was offered Approve, Reject and Cancel request. He opened a Confidential Contract he did not create, added the Contributor team entry that recovered another reader's access, and reached the integrations settings where the connector state is read. Help and the formal reader reached all three guides and their recovery links.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-024/README.md",
+        "docs/documentation/batches/DOC-024/independent-discovery.json",
+        "docs/documentation/batches/DOC-024/independent-symptoms.json",
+        "docs/documentation/batches/DOC-024/independent-symptoms-second.json",
+        "docs/documentation/batches/DOC-024/independent-symptoms-retry.json",
+        "docs/documentation/batches/DOC-024/independent-approval-decision.json",
+        "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
+        "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
+      ],
+      "verifiedAt": "2026-09-08T11:52:53.570Z"
+    },
+    {
+      "id": "V-C49",
+      "coverage": ["C49"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Symptom checks lead to supported recovery or specific escalation without access bypass or unsupported provider claims.",
+      "actual": "Followed the symptom families that reach this reader. A wrong password answered \"Check your email and password.\" and left the account usable. An over-long filename was refused with copy naming the filename problem, nothing was stored, and the corrected name uploaded exactly once in the destination list. A deliberately damaged archive named .docx showed \"Preparing this document for reading…\" and then \"This file could not be prepared for reading here. Download it to read it.\", while Download returned the original 2,058 bytes and no Version was appended. The preference pane carried the In-app and Email switches, a Briefing section, and the app's own sentence \"In-app off turns the group off entirely, email included.\" The named approver decided once through a dialog that says \"A decision is final. To change it, ask for a new approval.\", and no decision control remained afterwards. Moving past Approval with one unresolved request raised the \"Move past approval\" warning, and Cancel left the Status on Draft. Signing offered no send control and no Analysis surface existed, so both symptoms ended at the configuration escalation the article names.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-024/README.md",
+        "docs/documentation/batches/DOC-024/independent-discovery.json",
+        "docs/documentation/batches/DOC-024/independent-symptoms.json",
+        "docs/documentation/batches/DOC-024/independent-symptoms-second.json",
+        "docs/documentation/batches/DOC-024/independent-symptoms-retry.json",
+        "docs/documentation/batches/DOC-024/independent-approval-decision.json",
+        "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
+        "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
+      ],
+      "verifiedAt": "2026-09-08T11:54:09.727Z"
+    },
+    {
+      "id": "V-C49",
+      "coverage": ["C49"],
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "expected": "Symptom checks lead to supported recovery or specific escalation without access bypass or unsupported provider claims.",
+      "actual": "Started from the article's missing-record symptom. A direct link to a Confidential Contract with no team entry answered \"Something went wrong.\" with a Reload control, leaked no record title, and did not change on a second Reload. After the Administrator added the qualifying team entry the same link opened the record, so the refusal was access and not deletion. The Entities module stayed closed. On the shared Contract there was no Add approver, no Apply group and no Add task, so the article's instruction to ask Legal for the legal action is the only route the app leaves open. Nothing in the article offered a way around any refusal.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-024/README.md",
+        "docs/documentation/batches/DOC-024/independent-discovery.json",
+        "docs/documentation/batches/DOC-024/independent-symptoms.json",
+        "docs/documentation/batches/DOC-024/independent-symptoms-second.json",
+        "docs/documentation/batches/DOC-024/independent-symptoms-retry.json",
+        "docs/documentation/batches/DOC-024/independent-approval-decision.json",
+        "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
+        "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
+      ],
+      "verifiedAt": "2026-09-08T11:41:36.342Z"
+    },
+    {
+      "id": "V-C49",
+      "coverage": ["C49"],
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "expected": "Symptom checks lead to supported recovery or specific escalation without access bypass or unsupported provider claims.",
+      "actual": "Followed the Portal symptoms. A Portal sign-in link worked once and was refused on reuse with the app's expired or already-used wording, which is the article's \"request a new link and open the newest message\" recovery. Notification settings in the Portal offered \"Request updates\". A staff Contract workspace stayed closed to this reader. Portal Help listed all three reference guides and their recovery links resolved.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-024/README.md",
+        "docs/documentation/batches/DOC-024/independent-discovery.json",
+        "docs/documentation/batches/DOC-024/independent-symptoms.json",
+        "docs/documentation/batches/DOC-024/independent-symptoms-second.json",
+        "docs/documentation/batches/DOC-024/independent-symptoms-retry.json",
+        "docs/documentation/batches/DOC-024/independent-approval-decision.json",
+        "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
+        "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
+      ],
+      "verifiedAt": "2026-09-08T11:48:32.343Z"
+    }
+  ],
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-024/README.md",
+    "docs/documentation/batches/DOC-024/author-approval-first.json",
+    "docs/documentation/batches/DOC-024/author-approval.json",
+    "docs/documentation/batches/DOC-024/author-discovery-first.json",
+    "docs/documentation/batches/DOC-024/author-discovery.json",
+    "docs/documentation/batches/DOC-024/author-discovery-second.json",
+    "docs/documentation/batches/DOC-024/author-files.json",
+    "docs/documentation/batches/DOC-024/author-files-retry.json",
+    "docs/documentation/batches/DOC-024/author-offline.json",
+    "docs/documentation/batches/DOC-024/author-recovery.json",
+    "docs/documentation/batches/DOC-024/author-reference-first.json",
+    "docs/documentation/batches/DOC-024/author-reference.json",
+    "docs/documentation/batches/DOC-024/author-symptoms.json"
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; it is not a human user study and not the feature owner's approval.",
+    "Articles were read from the working documentation preview over the immutable configuration backend, so the intended development-preview and Unverified article notices were visible throughout.",
+    "Real provider configuration C42/C43 stays blocked under #742. Signing and Analysis were observed unconfigured; that is not evidence that any live provider works.",
+    "Full-suite compatibility and publication acceptance remain DOC-025/027 work.",
+    "The user will proofread the assembled full suite; no human feature-owner sign-off is claimed."
+  ],
+  "authorCopyUpdate": "After author walkthroughs, copy-only review clarified target Document/source Document Version, assigned person and internal record-sharing wording. Historical records retain the bytes observed; that sentence was written while independent acceptance was still pending, and it is kept as the historical note it was. Independent acceptance has since been recorded; see sourceReview and the scenario results above.",
+  "independentEvidence": [
+    "docs/documentation/batches/DOC-024/README.md",
+    "docs/documentation/batches/DOC-024/independent-discovery.json",
+    "docs/documentation/batches/DOC-024/independent-symptoms.json",
+    "docs/documentation/batches/DOC-024/independent-symptoms-second.json",
+    "docs/documentation/batches/DOC-024/independent-symptoms-retry.json",
+    "docs/documentation/batches/DOC-024/independent-approval-decision.json",
+    "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
+    "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
+  ],
+  "verifiedAtBasis": "Each scenario's verifiedAt is the recorded time of that role's last passing observation for this article, taken from the independent records listed in its evidence. The article-level verifiedAt is the latest of those scenario times. It is not a single acceptance ceremony and no finer time is claimed.",
+  "sourceReview": {
+    "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+    "reviewerKind": "agent",
+    "method": "source-inspection",
+    "completedAt": "2026-09-08T11:28:16Z",
+    "recordedIn": "commit 2570232af33f8f0a4e77e90cb69c70a04898fae9 on docs/744-support-reference",
+    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+    "scope": [
+      "messages/en-US.json for every quoted UI label",
+      "apps/api/src/lib/uploads.ts for the upload ceiling, its MAX_UPLOAD_MB control and the 255-character filename bound",
+      "apps/api/src/lib/render-family.ts for the stored-type and preview families, including SVG as download-only",
+      "apps/api/src/lib/notifications/notifier.ts and catalog.ts for the in-app and email rule",
+      "apps/api/src/modules/contract-analysis/routes.ts and contract-envelopes/routes.ts for the Analysis target and the single live Envelope",
+      "CONTEXT.md and the canonical guides for the glossary, permission and Document rows",
+      "every internal link and heading anchor in the three articles"
+    ],
+    "outcome": "One correction was needed and applied: the reference article's title read \"file behaviour\", against the en-US rule in EDITORIAL.md and against the article's own \"File behavior and limits\" heading. Every other claim checked held. The same commit linked the batch record from WRITING-BATCHES.md and noted the aborted-run record shape.",
+    "note": "This source review is separate from the browser walkthroughs recorded in the scenarios below. Its completion time is the commit time of 2570232a converted to UTC, and that commit is the identity of this review's own correction. It does not cover any source read later in the session; those are recorded in sourceReviewAddendum or in the independent records that carry them, and none of them is backdated into this object."
+  }
+}
