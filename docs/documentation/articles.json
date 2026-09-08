@@ -604,7 +604,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["settings.signing"],
-      "status": "scoped"
+      "status": "draft"
     },
     {
       "id": "configure-analysis",
@@ -617,7 +617,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["settings.analysis"],
-      "status": "scoped"
+      "status": "draft"
     },
     {
       "id": "install",

@@ -1,0 +1,93 @@
+{
+  "articleId": "configure-signing",
+  "contentSha256": "c62a8b988945c88417c0b96ccce42926b8a6693d382dc6f8ef5c8b188ddb7e13",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "author": "Codex documentation author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": null,
+  "verifiedAt": null,
+  "status": "blocked",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-SETTINGS.md",
+    "apps/web/src/routes/settings-e-signature.tsx",
+    "apps/api/src/modules/signing-connector/routes.ts",
+    "apps/api/src/lib/signing/docusign.ts",
+    "apps/api/src/lib/signing/resolver.ts",
+    "apps/api/src/modules/signing-webhook/routes.ts",
+    "docs/documentation/batches/DOC-022/primary-sources.json"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C42",
+      "coverage": ["C42"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "A real disposable DocuSign developer account, consent/configuration access, and fictional paper."
+      ],
+      "expected": "The actual provider account is reached and OpenLaw receives the intended status and executed paper. Invalid credentials, disabled connector, webhook/reconciliation recovery, and secret rotation are tested without treating a stand-in as provider setup.",
+      "actual": "Blocked: no disposable real provider test configuration available. Local author checks are recorded separately and do not satisfy this end-to-end scenario.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/DOC-022/README.md"]
+    },
+    {
+      "id": "V-C42",
+      "coverage": ["C42"],
+      "role": "administrator",
+      "method": "live-provider-check",
+      "prerequisites": [
+        "A real disposable DocuSign developer account, consent/configuration access, and fictional paper."
+      ],
+      "expected": "The actual provider account is reached and OpenLaw receives the intended status and executed paper. Invalid credentials, disabled connector, webhook/reconciliation recovery, and secret rotation are tested without treating a stand-in as provider setup.",
+      "actual": "Blocked: no disposable real provider test configuration available. Local author checks are recorded separately and do not satisfy this end-to-end scenario.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/DOC-022/README.md"]
+    },
+    {
+      "id": "V-C42",
+      "coverage": ["C42"],
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "A real disposable DocuSign developer account, consent/configuration access, and fictional paper."
+      ],
+      "expected": "The actual provider account is reached and OpenLaw receives the intended status and executed paper. Invalid credentials, disabled connector, webhook/reconciliation recovery, and secret rotation are tested without treating a stand-in as provider setup.",
+      "actual": "Blocked: no disposable real provider test configuration available. Local author checks are recorded separately and do not satisfy this end-to-end scenario.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/DOC-022/README.md"]
+    },
+    {
+      "id": "V-C42",
+      "coverage": ["C42"],
+      "role": "operator",
+      "method": "live-provider-check",
+      "prerequisites": [
+        "A real disposable DocuSign developer account, consent/configuration access, and fictional paper."
+      ],
+      "expected": "The actual provider account is reached and OpenLaw receives the intended status and executed paper. Invalid credentials, disabled connector, webhook/reconciliation recovery, and secret rotation are tested without treating a stand-in as provider setup.",
+      "actual": "Blocked: no disposable real provider test configuration available. Local author checks are recorded separately and do not satisfy this end-to-end scenario.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/DOC-022/README.md"]
+    }
+  ],
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-022/author-local.json",
+    "docs/documentation/batches/DOC-022/author-discovery.json"
+  ],
+  "limitations": [
+    "Real disposable provider account configuration has not been supplied. C42/C43 remain blocked, with no release exception or denominator change.",
+    "Local browser observations are author checks only and do not establish real provider consent, credentials, callbacks, successful extraction, or secret rotation.",
+    "Independent technical and walkthrough review is pending; final human proofreading is reserved for the assembled suite.",
+    "The owned lab uses immutable app source 6a8873db; final candidate compatibility belongs to DOC-025."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null,
+  "authorCopyClarification": {
+    "previousContentSha256": "a546be9c0cd8d6f5ee15c1a8dc93341252d2fe84fb892e363a5d199c3c78dbeb",
+    "scope": "Clarified executed-copy terminology and Analysis run wording; no action, prerequisite or expected result changed. Earlier local author records retain their actual hashes; no live or independent walkthrough claimed."
+  }
+}
