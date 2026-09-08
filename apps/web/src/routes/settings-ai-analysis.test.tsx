@@ -451,6 +451,35 @@ describe("the provider model selector", () => {
     expect(screen.getByLabelText("API key")).toBeRequired();
   });
 
+  it("keeps manual entry while the endpoint and key are still being corrected", async () => {
+    const user = userEvent.setup();
+    const saves: unknown[] = [];
+    stubApi({ signedIn: ADMIN, extra: connectorApi({ connector: unconfigured() }, saves) });
+    renderAt("/settings/ai-analysis");
+    await openProvider(user);
+    await user.selectOptions(screen.getByLabelText("Provider"), "custom");
+    await user.type(screen.getByLabelText("Base URL"), "https://private.test/v");
+    await user.type(screen.getByLabelText("API key"), "private-test-key");
+    await user.click(screen.getByRole("button", { name: "Enter model ID manually" }));
+    await user.type(screen.getByLabelText("Model"), "private-model");
+
+    await user.type(screen.getByLabelText("Base URL"), "1");
+    expect(screen.getByLabelText("Model")).toHaveAttribute("maxlength", "300");
+    expect(screen.getByLabelText("Model")).toHaveValue("private-model");
+    await user.click(screen.getByRole("button", { name: "Save connector" }));
+    await waitFor(() =>
+      expect(saves).toEqual([
+        {
+          preset: "custom",
+          protocol: "openai_chat_completions",
+          baseUrl: "https://private.test/v1",
+          model: "private-model",
+          apiKey: "private-test-key",
+        },
+      ]),
+    );
+  });
+
   it("explains partial lists and requires Azure deployment names", async () => {
     const user = userEvent.setup();
     stubApi({

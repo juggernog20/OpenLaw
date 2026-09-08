@@ -107,6 +107,7 @@ export function SettingsAiAnalysisPage() {
   const [baseUrl, setBaseUrl] = useState(connector.baseUrl ?? initial.baseUrl ?? "");
   const [model, setModel] = useState(connector.model ?? initial.defaultModel);
   const [apiKey, setApiKey] = useState("");
+  const [manualModel, setManualModel] = useState(preset === "azure_openai");
   const [status, setStatus] = useState<Record<Field, FieldStatus>>({
     connector: "idle",
     test: "idle",
@@ -153,6 +154,7 @@ export function SettingsAiAnalysisPage() {
     setBaseUrl(option.baseUrl ?? "");
     setModel(option.defaultModel);
     setApiKey("");
+    setManualModel(next === "azure_openai");
     note("connector", "idle");
     note("test", "idle");
   }
@@ -393,6 +395,8 @@ export function SettingsAiAnalysisPage() {
             }
             value={model}
             onChange={setModel}
+            manualEntry={manualModel}
+            onManualEntryChange={setManualModel}
           />
 
           <div className="flex items-center gap-2">

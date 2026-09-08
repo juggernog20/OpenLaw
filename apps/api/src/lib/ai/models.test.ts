@@ -64,6 +64,20 @@ describe("provider model discovery", () => {
     expect(String(fetcher.mock.calls[0]![0])).not.toContain("test-provider-key");
   });
 
+  it("labels a Gemini model without a display name by its bare ID", async () => {
+    replies({
+      models: [
+        {
+          name: "models/gemini-unnamed",
+          supportedGenerationMethods: ["generateContent"],
+        },
+      ],
+    });
+    expect((await listAiModels(config("gemini"))).models).toEqual([
+      { id: "gemini-unnamed", label: "gemini-unnamed" },
+    ]);
+  });
+
   it.each(["openai", "ollama"] as const)(
     "lists %s IDs without inferring capabilities",
     async (preset) => {

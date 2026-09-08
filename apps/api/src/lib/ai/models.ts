@@ -128,7 +128,9 @@ export async function listAiModels(
       if (typeof rawId !== "string" || !rawId.trim() || rawId.length > 300) invalid();
       const id = config.protocol === "gemini" ? rawId.replace(/^models\//, "") : rawId;
       if (!id || id.trim() !== id) invalid();
-      const name = entry.display_name ?? entry.displayName ?? entry.name;
+      // Gemini repeats the prefixed resource path in `name`; only `displayName` reads well.
+      const name =
+        config.protocol === "gemini" ? entry.displayName : (entry.display_name ?? entry.name);
       const label = typeof name === "string" && name.trim() ? name.trim().slice(0, 300) : id;
       if (!found.has(id) && found.size >= MAX_MODELS) {
         truncated = true;

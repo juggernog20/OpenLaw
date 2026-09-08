@@ -13,21 +13,29 @@ type Discovery = paths["/api/v1/ai-connector/models"]["post"];
 type ModelList = Discovery["responses"]["200"]["content"]["application/json"];
 type Config = Discovery["requestBody"]["content"]["application/json"];
 
-/** The parent remounts this control when credentials or the destination change. */
+/**
+ * The parent remounts this control when credentials or the destination change,
+ * which drops the loaded list. Manual entry is the Administrator's own choice,
+ * so the parent holds it and it survives that remount.
+ */
 export function AiModelSelector({
   config,
   canLoad,
   value,
   onChange,
+  manualEntry,
+  onManualEntryChange,
 }: Readonly<{
   config: Config;
   canLoad: boolean;
   value: string;
   onChange: (value: string) => void;
+  manualEntry: boolean;
+  onManualEntryChange: (manual: boolean) => void;
 }>) {
   const intl = useIntl();
   const azure = config.preset === "azure_openai";
-  const [manual, setManual] = useState(azure);
+  const manual = azure || manualEntry;
   const [query, setQuery] = useState("");
   const [list, setList] = useState<ModelList | null>(null);
   const [loading, setLoading] = useState(false);
@@ -176,7 +184,12 @@ export function AiModelSelector({
           </Button>
         )}
         {!azure && (
-          <Button type="button" variant="ghost" size="sm" onClick={() => setManual(!manual)}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => onManualEntryChange(!manual)}
+          >
             {manual ? (
               <FormattedMessage
                 id="settings.aiAnalysis.models.useList"
