@@ -22,7 +22,9 @@ To update a registered provider, edit its fields and select **Save provider**. L
 
 ## Control Business Portal entry
 
-Add approved entries under **Allowed email domains** using **Add**; remove an entry with its removal control. Use domains such as `helix.example`, not full addresses. Check the saved list. OpenLaw checks this list at every magic-link sign-in, not only the first one. Removing a domain, or leaving the list empty, also stops existing Business Users on that domain from getting a new sign-in link. Tell the affected people before you narrow the list.
+Add approved entries under **Allowed email domains** using **Add**; remove an entry with its removal control. Use domains such as `helix.example`, not full addresses. Check the saved list. OpenLaw checks this list every time it issues a magic link, not only the first time. Removing a domain, or leaving the list empty, stops everyone on that domain from getting a new sign-in link, including Business Users who signed in before. Tell the affected people before you narrow the list.
+
+Narrowing the list does not by itself end Portal access. A session someone already holds keeps working, a link issued before the change still opens the Portal until it is used or expires, and an existing Business User who has an identity-provider account can still sign in through single sign-on. What the list always governs is entry by someone with no account yet: an unapproved address can neither receive a link nor establish an account through single sign-on. To end one person's access, archive the account or revoke its sessions. See [archive and restore a user](organisation-and-users.md#archive-and-restore-a-user).
 
 In OIDC mode, **Magic-link sign-in** can be turned off to require identity-provider sign-in for requesters. They then need suitable identity-provider accounts. Turning off magic links does not itself disable OIDC Portal entry. Test the intended [Portal sign-in flow](portal-sign-in.md) with an allowed address and confirm that an unapproved address cannot establish a new account. Domain restrictions do not replace staff-role and record-access controls.
 
