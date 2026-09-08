@@ -8,7 +8,11 @@ completed writing batches into this registry: `pass` retains the article's actua
 recorded-build observations, with compatibility recorded separately; `blocked`
 retains missing provider or complete-content publication requirements. The
 [G3](batches/DOC-025/G3.md) and [G4](batches/DOC-025/G4.md) reports distinguish these
-counts from release acceptance.
+counts from release acceptance. Independent acceptance of the available 54-article
+scope is recorded separately again, in
+[independent-acceptance.json](batches/DOC-025/independent-acceptance.json) and the
+other `independent-*` records of that batch; V-HELP and V-OFFLINE stay `blocked`
+because they need the complete 56-article edition.
 The [environment readiness record](environment-readiness.json) records the actual
 role sign-in and helper isolation checks for this preparation task.
 

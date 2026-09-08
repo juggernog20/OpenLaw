@@ -70,14 +70,26 @@
     "toAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
     "contentSha256": "09ba1d034467e55a18a1b06c5942e0485d9282afbfe6b31676e239b470809abe",
     "applicationSha256": "b7bc6323f8e3d95a4ee006eab289f434502dccfdb7aee4c5fcb2026e7c41cd30",
-    "reviewer": "Codex DOC-025 source compatibility audit (agent)",
+    "reviewer": "Independent DOC-025 acceptance seat (Opus 5 agent), separate from the documentation author",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-08T12:56:21.570227Z",
-    "summary": "The recorded historical walkthroughs retain their actual app/build identities. The only runtime changes in these ranges are the comment merge, empty Entity-calendar query normalization, and archived Knowledge Document read described below. The changed procedures already have independent walkthroughs on builds containing those fixes. No historical walkthrough is claimed to have been replayed at the target.",
+    "reviewedAt": "2026-09-08T13:42:44.735Z",
+    "summary": "This seat re-checked the source ranges, the four saved diffs and the cited independent walkthroughs, and corrected the a28331f7 conversations attribution from DOC-010 to DOC-011 with DOC-012 added for the Portal Request thread. The recorded walkthrough for this article keeps its own app build, timestamps and observations; nothing was replayed at the target. See batches/DOC-025/independent-compatibility.json, which is separate from the authored source audit it re-checked.",
     "evidence": [
       {
         "path": "batches/DOC-025/compatibility.json",
-        "sha256": "49f05880cb9b37b9140d4cee23302982e5745a501e8bfe3d039da6b1a62bc1da"
+        "sha256": "0ff7f7cfa20fe6d4b7cdeb768f6bd2ae0965ac50e88c3e2e2f8dc5f3e274e9c8"
+      },
+      {
+        "path": "batches/DOC-025/independent-compatibility.json",
+        "sha256": "c925d3f1ce3e04c3ff3b7044c634655a90351136324be7614ccd7cc02b23b4ca"
+      },
+      {
+        "path": "batches/DOC-011/independent-walkthrough.json",
+        "sha256": "63d36cf23af169046d54d342b1aecda43a64339f6fa36bd75ac2cc026c69dc12"
+      },
+      {
+        "path": "batches/DOC-012/independent-walkthrough.json",
+        "sha256": "f327834cc56aeae3ab6fe3e04257ee93cd113ddfd8d387a24b47965b11a023aa"
       },
       {
         "path": "batches/DOC-025/source-6a8873db.diff",
@@ -119,7 +131,13 @@
         "path": "batches/DOC-019/independent-supplement.json",
         "sha256": "6228340ea7202ff7f0b814d8aa502b72a9669204b64e7f30c4c410305e242b4a"
       }
-    ]
+    ],
+    "authoredSourceAudit": {
+      "path": "batches/DOC-025/compatibility.json",
+      "reviewer": "Codex DOC-025 source compatibility audit (agent)",
+      "reviewedAt": "2026-09-08T12:56:21.570227Z",
+      "note": "Authored source inspection, retained with its original identity and time. It shares its root author with this article, which is why an independent seat re-checked it."
+    }
   },
   "publicationBlockersBeforeDOC025": [
     "matter-templates (DOC-021) and document-versions (DOC-017) do not exist yet; comments-and-activity and follow-request are in review."

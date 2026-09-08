@@ -1,0 +1,1137 @@
+{
+  "kind": "independent-acceptance",
+  "task": "DOC-025",
+  "issue": 745,
+  "independentReview": true,
+  "reviewer": "Independent DOC-025 acceptance seat (Opus 5 agent), separate from the documentation author",
+  "reviewerKind": "agent",
+  "author": "Codex documentation author",
+  "method": "browser-walkthrough",
+  "startedAt": "2026-09-08T13:34:12.209Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:c585d8683816050bdf00568a6f4e1983f14fb3b364ac8202f4f4e40dab9ef52c; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "preview": "http://127.0.0.1:43333",
+  "articleCount": 54,
+  "articleHashes": [
+    {
+      "articleId": "staff-sign-in",
+      "contentSha256": "3c7ed38f6e42d021121f8566c99a6f9a45e3ec63cebe90e28a957ee20c575651"
+    },
+    {
+      "articleId": "portal-sign-in",
+      "contentSha256": "9d419eb6c397fcaca5aac93331cb5dd06905f8152446485705714e07995adf7d"
+    },
+    {
+      "articleId": "find-your-work",
+      "contentSha256": "6fa8eb3a4f1302279ec5419435fbeeb34596a17d1897bc90d62c52037f8ac8d0"
+    },
+    {
+      "articleId": "search-and-views",
+      "contentSha256": "e303479e3b19bde3f34d5131d4f5c59de37b6feab2ef9b50bacdb97cb5478b23"
+    },
+    {
+      "articleId": "personal-settings",
+      "contentSha256": "155c97620d4f7999fa850eb2923f73ee797df09b2e62bf61cf0e5b292c16b2b8"
+    },
+    {
+      "articleId": "roles-and-access",
+      "contentSha256": "d3fcc8fc2ea63b5fb1b5b55e33cceb1c9b1cd8b0ce6d059b61accb6189998e91"
+    },
+    {
+      "articleId": "comments-and-activity",
+      "contentSha256": "91b235629a33bd9e798fc887f6d92226d007ed7673ec767d55f65f04c85ab67f"
+    },
+    {
+      "articleId": "notifications",
+      "contentSha256": "7f0a7503cf875f644ef8642f7d5d6ac0c67e335c319d023faff93a30cd42f294"
+    },
+    {
+      "articleId": "submit-request",
+      "contentSha256": "29e285e98a77548c08f8958fed91f0200db47c8188ef90619dab061925059f90"
+    },
+    {
+      "articleId": "follow-request",
+      "contentSha256": "ca5dff1ef7d999e36d8655c3d00ffb6b5a2136427e86f2be168889ca417dbca3"
+    },
+    {
+      "articleId": "portal-knowledge",
+      "contentSha256": "f44331f28896c6fbdebed9d636bb937d06330e9a52e850bb0b755f987aacb559"
+    },
+    {
+      "articleId": "triage-requests",
+      "contentSha256": "b28fe6456b9259168173d057309994db811044beac40c09dcafd96ea7da36eea"
+    },
+    {
+      "articleId": "convert-request",
+      "contentSha256": "09ba1d034467e55a18a1b06c5942e0485d9282afbfe6b31676e239b470809abe"
+    },
+    {
+      "articleId": "create-contract",
+      "contentSha256": "63aaa9717afffaacbb0b91b64de6e741162912ea00fd3b945798dc746b6e1cac"
+    },
+    {
+      "articleId": "contract-stages",
+      "contentSha256": "a01d92cc6adf974978b91b9ff543402472ed5bd4300755e5a78a02370465854b"
+    },
+    {
+      "articleId": "contract-approvals",
+      "contentSha256": "e3b7b6ee7e2b8b121c8be45203099d69331e09d5d55d374b577d5fe81bcf67f6"
+    },
+    {
+      "articleId": "manual-signing",
+      "contentSha256": "2415ba7d5c22ff900dd3b3fd67a5012f86fd276dfc4eb7f299e59e3419e3d5ae"
+    },
+    {
+      "articleId": "electronic-signing",
+      "contentSha256": "df172df43d2efc94cbd2daa7f03cc1161332885578c353e5137b1e0ffe4c90fc"
+    },
+    {
+      "articleId": "terms-and-renewals",
+      "contentSha256": "d5af58d3f6934b6b5730e8e100c31ffc21e08640347b82750c9b39c24b085c6e"
+    },
+    {
+      "articleId": "contract-tasks-and-dates",
+      "contentSha256": "29654cec933cf7b62d1c87e2d75293f920de3f1f51b6859aae5a44e09356c43e"
+    },
+    {
+      "articleId": "contract-relations-and-ending",
+      "contentSha256": "ca10c84a725573c1e32fdae19502056cfd0075a0223131a3dc54d32d75272b47"
+    },
+    {
+      "articleId": "contract-analysis",
+      "contentSha256": "24e4375567bdf273873018732f93743584b71b260a07890f4f4719f257050243"
+    },
+    {
+      "articleId": "create-matter",
+      "contentSha256": "078e5ac72d41fa7ed55e02131b55dcdb86cb26d646485e64f5a494969e1aef73"
+    },
+    {
+      "articleId": "matter-status-and-archive",
+      "contentSha256": "7b4f1d4b77f4979d273e68ffcefe9be849c7e371cd518b256e466a6ba2df60cf"
+    },
+    {
+      "articleId": "matter-work",
+      "contentSha256": "621ed4366708c7b55defb625733358b565eef3a0bd443e500a1f24352e875ffd"
+    },
+    {
+      "articleId": "contributor-guide",
+      "contentSha256": "c3badc50235831daa34056e22dd2e260142e71f5020cd972b9bc868fbf339397"
+    },
+    {
+      "articleId": "document-versions",
+      "contentSha256": "e7d0286c6eefad20fd0e0a08df2dc6c530d5c3fa517e1b65e17e9f338e5f147d"
+    },
+    {
+      "articleId": "document-folders",
+      "contentSha256": "1844521ab7ef07fc40fe8e0c01aaeb7df5022acf1e8059b2b24716f809838fec"
+    },
+    {
+      "articleId": "document-previews",
+      "contentSha256": "12cf5181a1b0c37788c1cd3d07ce04d8ac6c41efc68fed4188d47074307bd24a"
+    },
+    {
+      "articleId": "compare-versions",
+      "contentSha256": "2bfbd81cb149cd8bed215e1ada5736bf85fe9e4445241fea4307f2c36dae09df"
+    },
+    {
+      "articleId": "document-repository",
+      "contentSha256": "59f88467c3a576764b212e36ebf5cb8bd49ff84a146a1ec3321d3d0a3da19969"
+    },
+    {
+      "articleId": "entities-and-counterparties",
+      "contentSha256": "7313af8226fa554a32c4e86919d581a972fd574654e4b8559ccd8df591fe177e"
+    },
+    {
+      "articleId": "entity-records",
+      "contentSha256": "9d8b0ae49f2d38291393c876d0851ec3811a5d6dd3d24add2631615ade6db0bc"
+    },
+    {
+      "articleId": "create-knowledge",
+      "contentSha256": "295001ee071b093a3d66f72fb1faf23a81a959d13c08fbaba19e3062a738d34f"
+    },
+    {
+      "articleId": "publish-knowledge",
+      "contentSha256": "cae7b9ef9551242ef7b502892e4a9f63fa0229caf44e1578ec684490b793ffa5"
+    },
+    {
+      "articleId": "first-run",
+      "contentSha256": "17a32bd77a5673364e11c7ff3906b3e657a90c6750e8df6ff60e2611391bf3e4"
+    },
+    {
+      "articleId": "organisation-and-users",
+      "contentSha256": "2d28269f8c2f22700cab66cdba067f377fbc5477e6a6f4365650241e3a0adc5a"
+    },
+    {
+      "articleId": "authentication-and-email",
+      "contentSha256": "a47a3665df8e885bd034226de107c182564f6048ea74aa6707f2f1eaff6df8db"
+    },
+    {
+      "articleId": "types-statuses-fields",
+      "contentSha256": "6e3fa892dc9b2bb23d05bd7b3125a187cdd1cbafb384cdf2d248064a1bcd1abe"
+    },
+    {
+      "articleId": "matter-templates",
+      "contentSha256": "c458f44480e167baf2930bdad0f03a944b0f10b890c7ff10468543328016f9e9"
+    },
+    {
+      "articleId": "request-forms",
+      "contentSha256": "5981f17a9afc7dc219cf98d35d603f7c5491eed8c253b7fbd9e5fab294bd873b"
+    },
+    {
+      "articleId": "reminders-and-audit",
+      "contentSha256": "91583fda511a5d75941af7d8b919de5db42298846ee2b9dad65fcd6f43a4565c"
+    },
+    {
+      "articleId": "install",
+      "contentSha256": "35b1bd584e291c4b42741097c9aa66ebd9db95092d293ed80821d3e7eee01b0f"
+    },
+    {
+      "articleId": "deployment-configuration",
+      "contentSha256": "d61044fe1f237dfaa0d4087d576a39434e2d5b57a30a8ac5816808daf2fe335b"
+    },
+    {
+      "articleId": "upgrade",
+      "contentSha256": "96cc17166c77af291161ea34540f2c1c9683d2736cd903c42e2692ba9fe8e94d"
+    },
+    {
+      "articleId": "backup-and-restore",
+      "contentSha256": "3a36f9794df340c90d415b20578e8cc58b97ee1972ccdec4c09913358a308361"
+    },
+    {
+      "articleId": "operator-troubleshooting",
+      "contentSha256": "4f5920cb683a58e59e590a6ab7bc756bab31080345b6936baccfcadf0e5e1aab"
+    },
+    {
+      "articleId": "troubleshooting",
+      "contentSha256": "e2404361abcc621f8ee36fcd03dec23150bdabc0070d30678ba54caaabb9dd1b"
+    },
+    {
+      "articleId": "reference",
+      "contentSha256": "ba4b1b0cc96db761cc19f06fa88d5e4d9625355873cc2a15d8f6deb58193f5d6"
+    },
+    {
+      "articleId": "versions-and-support",
+      "contentSha256": "7d9c38056ec82206d5cab8f13b7940c960c18ab0d337a77dfc0ca81dd08e013e"
+    },
+    {
+      "articleId": "entity-obligations",
+      "contentSha256": "b4a8ade34e728a7cb4de68a659779fe45d68781028d899b97c580771c1d0f604"
+    },
+    {
+      "articleId": "entity-structure-and-access",
+      "contentSha256": "95e5fbe88de8dcba1a417dada7ce078459a39aa633fa3f8e72d1ccc3a7295953"
+    },
+    {
+      "articleId": "archive-and-delete-documents",
+      "contentSha256": "f00bcd882a961a9944be0aed0bc83a991a29870eb318dbdfe8ef66c52c2c4551"
+    },
+    {
+      "articleId": "approver-groups",
+      "contentSha256": "baffd87c46ad0bfa7d084348f14bf7334da24590d99ca4c50a04cb870b7bdbb9"
+    }
+  ],
+  "scope": "Representative independent preview acceptance over the 54 merged guides. Not a replay of all 124 article/role/method combinations, not final 56-article V-HELP/V-OFFLINE, not provider C42/C43.",
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Full eligible index and recorded edition identity",
+      "actual": {
+        "count": 44,
+        "articleIds": [
+          "approver-groups",
+          "archive-and-delete-documents",
+          "authentication-and-email",
+          "comments-and-activity",
+          "compare-versions",
+          "contract-analysis",
+          "contract-approvals",
+          "contract-relations-and-ending",
+          "contract-stages",
+          "contract-tasks-and-dates",
+          "convert-request",
+          "create-contract",
+          "create-knowledge",
+          "create-matter",
+          "document-folders",
+          "document-previews",
+          "document-repository",
+          "document-versions",
+          "electronic-signing",
+          "entities-and-counterparties",
+          "entity-obligations",
+          "entity-records",
+          "entity-structure-and-access",
+          "find-your-work",
+          "first-run",
+          "manual-signing",
+          "matter-status-and-archive",
+          "matter-templates",
+          "matter-work",
+          "notifications",
+          "organisation-and-users",
+          "personal-settings",
+          "publish-knowledge",
+          "reference",
+          "reminders-and-audit",
+          "request-forms",
+          "roles-and-access",
+          "search-and-views",
+          "staff-sign-in",
+          "terms-and-renewals",
+          "triage-requests",
+          "troubleshooting",
+          "types-statuses-fields",
+          "versions-and-support"
+        ],
+        "edition": {
+          "Edition details": "documentation-development (Development)",
+          "Supported app": "0.0.1 / 6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+          "Distribution commit": "e80113b4fe8154e0e9cbc15f0fa129143701e70b (Working changes)",
+          "Content digest": "d563e8d89d4caf20340b3cecf6eb99e80510c4a9ca41c18a8993aac16cf22a72",
+          "Publication target": "feature-review"
+        }
+      },
+      "startedAt": "2026-09-08T13:34:13.132Z",
+      "at": "2026-09-08T13:34:14.470Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Read organisation-and-users across themes, 320px and CSS zoom 2",
+      "actual": {
+        "title": "Manage your organization and users",
+        "contentSha256": "2d28269f8c2f22700cab66cdba067f377fbc5477e6a6f4365650241e3a0adc5a",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "cssZoom": "CSS zoom 2 at 1280px, no overflow; this is not browser-chrome zoom"
+      },
+      "startedAt": "2026-09-08T13:34:14.471Z",
+      "at": "2026-09-08T13:34:15.652Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Read roles-and-access across themes, 320px and CSS zoom 2",
+      "actual": {
+        "title": "Understand roles and record access",
+        "contentSha256": "d3fcc8fc2ea63b5fb1b5b55e33cceb1c9b1cd8b0ce6d059b61accb6189998e91",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "cssZoom": "CSS zoom 2 at 1280px, no overflow; this is not browser-chrome zoom"
+      },
+      "startedAt": "2026-09-08T13:34:15.652Z",
+      "at": "2026-09-08T13:34:16.810Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Read versions-and-support across themes, 320px and CSS zoom 2",
+      "actual": {
+        "title": "Find version information and get help",
+        "contentSha256": "7d9c38056ec82206d5cab8f13b7940c960c18ab0d337a77dfc0ca81dd08e013e",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "cssZoom": "CSS zoom 2 at 1280px, no overflow; this is not browser-chrome zoom"
+      },
+      "startedAt": "2026-09-08T13:34:16.810Z",
+      "at": "2026-09-08T13:34:17.975Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Original DOC-024 \"which version\" query reaches the support guide",
+      "actual": {
+        "query": "which version",
+        "opened": "versions-and-support",
+        "note": "Strict all-word matching still applies; this is one query, not a general findability claim."
+      },
+      "startedAt": "2026-09-08T13:34:17.975Z",
+      "at": "2026-09-08T13:34:19.217Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search, focus, Back/Forward history",
+      "actual": "Typed query, Enter navigated, result focused, Enter opened the focused H1; Back restored the query and Forward the article.",
+      "startedAt": "2026-09-08T13:34:19.218Z",
+      "at": "2026-09-08T13:34:20.634Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Recovery: no matches, missing article, wrong edition, missing anchor",
+      "actual": "Zero-match index notice, unavailable-article notice, unbundled-edition notice and missing-anchor notice all appeared with a route back.",
+      "startedAt": "2026-09-08T13:34:20.634Z",
+      "at": "2026-09-08T13:34:25.170Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Full eligible index and recorded edition identity",
+      "actual": {
+        "count": 36,
+        "articleIds": [
+          "archive-and-delete-documents",
+          "comments-and-activity",
+          "compare-versions",
+          "contract-analysis",
+          "contract-approvals",
+          "contract-relations-and-ending",
+          "contract-stages",
+          "contract-tasks-and-dates",
+          "convert-request",
+          "create-contract",
+          "create-knowledge",
+          "create-matter",
+          "document-folders",
+          "document-previews",
+          "document-repository",
+          "document-versions",
+          "electronic-signing",
+          "entities-and-counterparties",
+          "entity-obligations",
+          "entity-records",
+          "entity-structure-and-access",
+          "find-your-work",
+          "manual-signing",
+          "matter-status-and-archive",
+          "matter-work",
+          "notifications",
+          "personal-settings",
+          "publish-knowledge",
+          "reference",
+          "roles-and-access",
+          "search-and-views",
+          "staff-sign-in",
+          "terms-and-renewals",
+          "triage-requests",
+          "troubleshooting",
+          "versions-and-support"
+        ],
+        "edition": {
+          "Edition details": "documentation-development (Development)",
+          "Supported app": "0.0.1 / 6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+          "Distribution commit": "e80113b4fe8154e0e9cbc15f0fa129143701e70b (Working changes)",
+          "Content digest": "d563e8d89d4caf20340b3cecf6eb99e80510c4a9ca41c18a8993aac16cf22a72",
+          "Publication target": "feature-review"
+        }
+      },
+      "startedAt": "2026-09-08T13:34:26.013Z",
+      "at": "2026-09-08T13:34:27.210Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Read contract-stages across themes, 320px and CSS zoom 2",
+      "actual": {
+        "title": "Change a Contract Status",
+        "contentSha256": "a01d92cc6adf974978b91b9ff543402472ed5bd4300755e5a78a02370465854b",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "cssZoom": "CSS zoom 2 at 1280px, no overflow; this is not browser-chrome zoom"
+      },
+      "startedAt": "2026-09-08T13:34:27.210Z",
+      "at": "2026-09-08T13:34:28.399Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Read comments-and-activity across themes, 320px and CSS zoom 2",
+      "actual": {
+        "title": "Choose who can read a comment",
+        "contentSha256": "91b235629a33bd9e798fc887f6d92226d007ed7673ec767d55f65f04c85ab67f",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "cssZoom": "CSS zoom 2 at 1280px, no overflow; this is not browser-chrome zoom"
+      },
+      "startedAt": "2026-09-08T13:34:28.399Z",
+      "at": "2026-09-08T13:34:29.546Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Read versions-and-support across themes, 320px and CSS zoom 2",
+      "actual": {
+        "title": "Find version information and get help",
+        "contentSha256": "7d9c38056ec82206d5cab8f13b7940c960c18ab0d337a77dfc0ca81dd08e013e",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "cssZoom": "CSS zoom 2 at 1280px, no overflow; this is not browser-chrome zoom"
+      },
+      "startedAt": "2026-09-08T13:34:29.546Z",
+      "at": "2026-09-08T13:34:30.699Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Original DOC-024 \"which version\" query reaches the support guide",
+      "actual": {
+        "query": "which version",
+        "opened": "versions-and-support",
+        "note": "Strict all-word matching still applies; this is one query, not a general findability claim."
+      },
+      "startedAt": "2026-09-08T13:34:30.699Z",
+      "at": "2026-09-08T13:34:31.881Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search, focus, Back/Forward history",
+      "actual": "Typed query, Enter navigated, result focused, Enter opened the focused H1; Back restored the query and Forward the article.",
+      "startedAt": "2026-09-08T13:34:31.881Z",
+      "at": "2026-09-08T13:34:33.248Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Recovery: no matches, missing article, wrong edition, missing anchor",
+      "actual": "Zero-match index notice, unavailable-article notice, unbundled-edition notice and missing-anchor notice all appeared with a route back.",
+      "startedAt": "2026-09-08T13:34:33.248Z",
+      "at": "2026-09-08T13:34:37.754Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "Full eligible index and recorded edition identity",
+      "actual": {
+        "count": 17,
+        "articleIds": [
+          "archive-and-delete-documents",
+          "comments-and-activity",
+          "compare-versions",
+          "contributor-guide",
+          "document-folders",
+          "document-previews",
+          "document-repository",
+          "document-versions",
+          "find-your-work",
+          "notifications",
+          "personal-settings",
+          "reference",
+          "roles-and-access",
+          "search-and-views",
+          "staff-sign-in",
+          "troubleshooting",
+          "versions-and-support"
+        ],
+        "edition": {
+          "Edition details": "documentation-development (Development)",
+          "Supported app": "0.0.1 / 6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+          "Distribution commit": "e80113b4fe8154e0e9cbc15f0fa129143701e70b (Working changes)",
+          "Content digest": "d563e8d89d4caf20340b3cecf6eb99e80510c4a9ca41c18a8993aac16cf22a72",
+          "Publication target": "feature-review"
+        }
+      },
+      "startedAt": "2026-09-08T13:34:38.562Z",
+      "at": "2026-09-08T13:34:39.744Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "Read contributor-guide across themes, 320px and CSS zoom 2",
+      "actual": {
+        "title": "Work on a shared Contract or Matter",
+        "contentSha256": "c3badc50235831daa34056e22dd2e260142e71f5020cd972b9bc868fbf339397",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "cssZoom": "CSS zoom 2 at 1280px, no overflow; this is not browser-chrome zoom"
+      },
+      "startedAt": "2026-09-08T13:34:39.744Z",
+      "at": "2026-09-08T13:34:40.867Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "Read document-versions across themes, 320px and CSS zoom 2",
+      "actual": {
+        "title": "Upload Documents and add Document Versions",
+        "contentSha256": "e7d0286c6eefad20fd0e0a08df2dc6c530d5c3fa517e1b65e17e9f338e5f147d",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "cssZoom": "CSS zoom 2 at 1280px, no overflow; this is not browser-chrome zoom"
+      },
+      "startedAt": "2026-09-08T13:34:40.867Z",
+      "at": "2026-09-08T13:34:42.009Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "Read versions-and-support across themes, 320px and CSS zoom 2",
+      "actual": {
+        "title": "Find version information and get help",
+        "contentSha256": "7d9c38056ec82206d5cab8f13b7940c960c18ab0d337a77dfc0ca81dd08e013e",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "cssZoom": "CSS zoom 2 at 1280px, no overflow; this is not browser-chrome zoom"
+      },
+      "startedAt": "2026-09-08T13:34:42.010Z",
+      "at": "2026-09-08T13:34:43.134Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "Original DOC-024 \"which version\" query reaches the support guide",
+      "actual": {
+        "query": "which version",
+        "opened": "versions-and-support",
+        "note": "Strict all-word matching still applies; this is one query, not a general findability claim."
+      },
+      "startedAt": "2026-09-08T13:34:43.134Z",
+      "at": "2026-09-08T13:34:44.405Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search, focus, Back/Forward history",
+      "actual": "Typed query, Enter navigated, result focused, Enter opened the focused H1; Back restored the query and Forward the article.",
+      "startedAt": "2026-09-08T13:34:44.405Z",
+      "at": "2026-09-08T13:34:45.742Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "Recovery: no matches, missing article, wrong edition, missing anchor",
+      "actual": "Zero-match index notice, unavailable-article notice, unbundled-edition notice and missing-anchor notice all appeared with a route back.",
+      "startedAt": "2026-09-08T13:34:45.742Z",
+      "at": "2026-09-08T13:34:50.123Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "Audience boundary: operator guide is out of audience here",
+      "actual": "The operator guide is absent from this index, shows the audience notice in place, and its formal link opens the public article. No role or grant changed.",
+      "startedAt": "2026-09-08T13:34:50.123Z",
+      "at": "2026-09-08T13:34:51.321Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Full eligible index and recorded edition identity",
+      "actual": {
+        "count": 11,
+        "articleIds": [
+          "comments-and-activity",
+          "document-previews",
+          "follow-request",
+          "notifications",
+          "portal-knowledge",
+          "portal-sign-in",
+          "reference",
+          "roles-and-access",
+          "submit-request",
+          "troubleshooting",
+          "versions-and-support"
+        ],
+        "edition": {
+          "Edition details": "documentation-development (Development)",
+          "Supported app": "0.0.1 / 6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+          "Distribution commit": "e80113b4fe8154e0e9cbc15f0fa129143701e70b (Working changes)",
+          "Content digest": "d563e8d89d4caf20340b3cecf6eb99e80510c4a9ca41c18a8993aac16cf22a72",
+          "Publication target": "feature-review"
+        }
+      },
+      "startedAt": "2026-09-08T13:34:52.268Z",
+      "at": "2026-09-08T13:34:53.453Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Read submit-request across themes, 320px and CSS zoom 2",
+      "actual": {
+        "title": "Submit a Request to Legal",
+        "contentSha256": "29e285e98a77548c08f8958fed91f0200db47c8188ef90619dab061925059f90",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "cssZoom": "CSS zoom 2 at 1280px, no overflow; this is not browser-chrome zoom"
+      },
+      "startedAt": "2026-09-08T13:34:53.454Z",
+      "at": "2026-09-08T13:34:54.584Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Read portal-knowledge across themes, 320px and CSS zoom 2",
+      "actual": {
+        "title": "Read Knowledge shared with the business",
+        "contentSha256": "f44331f28896c6fbdebed9d636bb937d06330e9a52e850bb0b755f987aacb559",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "cssZoom": "CSS zoom 2 at 1280px, no overflow; this is not browser-chrome zoom"
+      },
+      "startedAt": "2026-09-08T13:34:54.584Z",
+      "at": "2026-09-08T13:34:55.704Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Read versions-and-support across themes, 320px and CSS zoom 2",
+      "actual": {
+        "title": "Find version information and get help",
+        "contentSha256": "7d9c38056ec82206d5cab8f13b7940c960c18ab0d337a77dfc0ca81dd08e013e",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "cssZoom": "CSS zoom 2 at 1280px, no overflow; this is not browser-chrome zoom"
+      },
+      "startedAt": "2026-09-08T13:34:55.704Z",
+      "at": "2026-09-08T13:34:56.833Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Original DOC-024 \"which version\" query reaches the support guide",
+      "actual": {
+        "query": "which version",
+        "opened": "versions-and-support",
+        "note": "Strict all-word matching still applies; this is one query, not a general findability claim."
+      },
+      "startedAt": "2026-09-08T13:34:56.833Z",
+      "at": "2026-09-08T13:34:58.055Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search, focus, Back/Forward history",
+      "actual": "Typed query, Enter navigated, result focused, Enter opened the focused H1; Back restored the query and Forward the article.",
+      "startedAt": "2026-09-08T13:34:58.055Z",
+      "at": "2026-09-08T13:34:59.333Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Recovery: no matches, missing article, wrong edition, missing anchor",
+      "actual": "Zero-match index notice, unavailable-article notice, unbundled-edition notice and missing-anchor notice all appeared with a route back.",
+      "startedAt": "2026-09-08T13:34:59.333Z",
+      "at": "2026-09-08T13:35:03.823Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Audience boundary: operator guide is out of audience here",
+      "actual": "The operator guide is absent from this index, shows the audience notice in place, and its formal link opens the public article. No role or grant changed.",
+      "startedAt": "2026-09-08T13:35:03.823Z",
+      "at": "2026-09-08T13:35:05.017Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Full eligible index and recorded edition identity",
+      "actual": {
+        "count": 54,
+        "articleIds": [
+          "approver-groups",
+          "archive-and-delete-documents",
+          "authentication-and-email",
+          "backup-and-restore",
+          "comments-and-activity",
+          "compare-versions",
+          "contract-analysis",
+          "contract-approvals",
+          "contract-relations-and-ending",
+          "contract-stages",
+          "contract-tasks-and-dates",
+          "contributor-guide",
+          "convert-request",
+          "create-contract",
+          "create-knowledge",
+          "create-matter",
+          "deployment-configuration",
+          "document-folders",
+          "document-previews",
+          "document-repository",
+          "document-versions",
+          "electronic-signing",
+          "entities-and-counterparties",
+          "entity-obligations",
+          "entity-records",
+          "entity-structure-and-access",
+          "find-your-work",
+          "first-run",
+          "follow-request",
+          "install",
+          "manual-signing",
+          "matter-status-and-archive",
+          "matter-templates",
+          "matter-work",
+          "notifications",
+          "operator-troubleshooting",
+          "organisation-and-users",
+          "personal-settings",
+          "portal-knowledge",
+          "portal-sign-in",
+          "publish-knowledge",
+          "reference",
+          "reminders-and-audit",
+          "request-forms",
+          "roles-and-access",
+          "search-and-views",
+          "staff-sign-in",
+          "submit-request",
+          "terms-and-renewals",
+          "triage-requests",
+          "troubleshooting",
+          "types-statuses-fields",
+          "upgrade",
+          "versions-and-support"
+        ],
+        "edition": {
+          "Edition details": "documentation-development (Development)",
+          "Supported app": "0.0.1 / 6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+          "Distribution commit": "e80113b4fe8154e0e9cbc15f0fa129143701e70b (Working changes)",
+          "Content digest": "d563e8d89d4caf20340b3cecf6eb99e80510c4a9ca41c18a8993aac16cf22a72",
+          "Publication target": "feature-review"
+        }
+      },
+      "startedAt": "2026-09-08T13:35:05.066Z",
+      "at": "2026-09-08T13:35:06.189Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Read install across themes, 320px and CSS zoom 2",
+      "actual": {
+        "title": "Install OpenLaw",
+        "contentSha256": "35b1bd584e291c4b42741097c9aa66ebd9db95092d293ed80821d3e7eee01b0f",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "cssZoom": "CSS zoom 2 at 1280px, no overflow; this is not browser-chrome zoom"
+      },
+      "startedAt": "2026-09-08T13:35:06.189Z",
+      "at": "2026-09-08T13:35:07.269Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Read manual-signing across themes, 320px and CSS zoom 2",
+      "actual": {
+        "title": "Record a Contract signed outside OpenLaw",
+        "contentSha256": "2415ba7d5c22ff900dd3b3fd67a5012f86fd276dfc4eb7f299e59e3419e3d5ae",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "cssZoom": "CSS zoom 2 at 1280px, no overflow; this is not browser-chrome zoom"
+      },
+      "startedAt": "2026-09-08T13:35:07.269Z",
+      "at": "2026-09-08T13:35:08.348Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Read versions-and-support across themes, 320px and CSS zoom 2",
+      "actual": {
+        "title": "Find version information and get help",
+        "contentSha256": "7d9c38056ec82206d5cab8f13b7940c960c18ab0d337a77dfc0ca81dd08e013e",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "cssZoom": "CSS zoom 2 at 1280px, no overflow; this is not browser-chrome zoom"
+      },
+      "startedAt": "2026-09-08T13:35:08.348Z",
+      "at": "2026-09-08T13:35:09.419Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Original DOC-024 \"which version\" query reaches the support guide",
+      "actual": {
+        "query": "which version",
+        "opened": "versions-and-support",
+        "note": "Strict all-word matching still applies; this is one query, not a general findability claim."
+      },
+      "startedAt": "2026-09-08T13:35:09.419Z",
+      "at": "2026-09-08T13:35:10.527Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search, focus, Back/Forward history",
+      "actual": "Typed query, Enter navigated, result focused, Enter opened the focused H1; Back restored the query and Forward the article.",
+      "startedAt": "2026-09-08T13:35:10.527Z",
+      "at": "2026-09-08T13:35:11.689Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Recovery: no matches, missing article, wrong edition, missing anchor",
+      "actual": "Zero-match index notice, unavailable-article notice, unbundled-edition notice and missing-anchor notice all appeared with a route back.",
+      "startedAt": "2026-09-08T13:35:11.689Z",
+      "at": "2026-09-08T13:35:15.840Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Public reading and search send no application API calls",
+      "actual": {
+        "requests": 294,
+        "applicationApiRequests": 0
+      },
+      "startedAt": "2026-09-08T13:35:15.840Z",
+      "at": "2026-09-08T13:35:16.930Z",
+      "result": "pass"
+    }
+  ],
+  "completedAt": "2026-09-08T13:35:16.962Z",
+  "passed": true,
+  "originalCaptureName": "745-ind-acceptance-1788874452210.json"
+}

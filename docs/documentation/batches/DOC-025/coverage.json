@@ -23,7 +23,7 @@
       "verifiedAt": "2026-09-07T04:52:33.264Z",
       "contentSha256": "3c7ed38f6e42d021121f8566c99a6f9a45e3ec63cebe90e28a957ee20c575651",
       "evidence": "docs/documentation/evidence/staff-sign-in.json",
-      "evidenceSha256": "caa6cb43864d8923b10b59245612aca748514918074aa1fb1bbe909481443d00",
+      "evidenceSha256": "a8d64fa02eed24e7875700c156c7bd04ff4d98eee64ed52fd9317d1047bde663",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -38,7 +38,7 @@
       "verifiedAt": "2026-09-07T04:12:15.835Z",
       "contentSha256": "9d419eb6c397fcaca5aac93331cb5dd06905f8152446485705714e07995adf7d",
       "evidence": "docs/documentation/evidence/portal-sign-in.json",
-      "evidenceSha256": "e11739b0bf2748c357f7f4fdde9e641157d17b926086b12d935d2e4c432c3ff2",
+      "evidenceSha256": "c7020ba1bdf94d46fa461b9affa26cec84b60a62faf176e34624271f0d33c88d",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -53,7 +53,7 @@
       "verifiedAt": "2026-09-07T05:06:42.050Z",
       "contentSha256": "6fa8eb3a4f1302279ec5419435fbeeb34596a17d1897bc90d62c52037f8ac8d0",
       "evidence": "docs/documentation/evidence/find-your-work.json",
-      "evidenceSha256": "5b666acd73ee459c98aca883a5da9eb3eddc9a1aefc68ced745b871461a9d82c",
+      "evidenceSha256": "dd73e20985c5f269bf00da7aa2e378e286698b30eed2fe24c15faf6af954224a",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -68,7 +68,7 @@
       "verifiedAt": "2026-09-07T05:08:47.123Z",
       "contentSha256": "e303479e3b19bde3f34d5131d4f5c59de37b6feab2ef9b50bacdb97cb5478b23",
       "evidence": "docs/documentation/evidence/search-and-views.json",
-      "evidenceSha256": "84f71cdda7706b2e167083c7982da803f7979c6518358fad8125eebcb93b6838",
+      "evidenceSha256": "f81a061510dbc6b2f8e00545ecf2432afe989317aeb45e8f0edd59820c255540",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -83,7 +83,7 @@
       "verifiedAt": "2026-09-07T04:50:31.333Z",
       "contentSha256": "155c97620d4f7999fa850eb2923f73ee797df09b2e62bf61cf0e5b292c16b2b8",
       "evidence": "docs/documentation/evidence/personal-settings.json",
-      "evidenceSha256": "6007fee2c29416a685757dbb8f3d659f01e80944a03b3103b154ef8d3dde5b64",
+      "evidenceSha256": "0c24c62ac0593ee5d07b14a2a93b1a3a91816ef030f7a62166e6eeae95dc61f5",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -98,7 +98,7 @@
       "verifiedAt": "2026-09-07T06:43:31.726Z",
       "contentSha256": "d3fcc8fc2ea63b5fb1b5b55e33cceb1c9b1cd8b0ce6d059b61accb6189998e91",
       "evidence": "docs/documentation/evidence/roles-and-access.json",
-      "evidenceSha256": "a266d516e657f0c9b2e5e533522026ad5354a4369b7f8678512e2dfbf48dbba3",
+      "evidenceSha256": "ee2a44213807b879b8b1634bda7622f43063eacf11bc9c902f399b94d817d48e",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -113,7 +113,7 @@
       "verifiedAt": "2026-09-07T08:53:41.841Z",
       "contentSha256": "91b235629a33bd9e798fc887f6d92226d007ed7673ec767d55f65f04c85ab67f",
       "evidence": "docs/documentation/evidence/comments-and-activity.json",
-      "evidenceSha256": "3aa9089a331041f008be5a83dcb48b19b4337db9aa61fc973f22f3de479d64fc",
+      "evidenceSha256": "44250cc1bc92840a1585fd262f0c8ff4b991e6e23e074cdad457a923d574dc4d",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -128,7 +128,7 @@
       "verifiedAt": "2026-09-07T08:53:41.841Z",
       "contentSha256": "7f0a7503cf875f644ef8642f7d5d6ac0c67e335c319d023faff93a30cd42f294",
       "evidence": "docs/documentation/evidence/notifications.json",
-      "evidenceSha256": "9c15b4c33ce56afe7bfd58ccf30bf31b2a13bb4ced630e6d4c053b48137cb4d9",
+      "evidenceSha256": "c3990d2786fc664e3717bfdaabe78b245eeaede90673d71a2260e7f93f42e302",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -143,7 +143,7 @@
       "verifiedAt": "2026-09-07T10:07:20.254Z",
       "contentSha256": "29e285e98a77548c08f8958fed91f0200db47c8188ef90619dab061925059f90",
       "evidence": "docs/documentation/evidence/submit-request.json",
-      "evidenceSha256": "2e287450309d117c709cf90aee400017a6194ff238cc384e9fbf0d2f17db51e5",
+      "evidenceSha256": "a33bfd20b87d5b2b25e96c5f76502ce90fb4c0e6b6395685530701232e9507f8",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -158,7 +158,7 @@
       "verifiedAt": "2026-09-07T10:07:20.254Z",
       "contentSha256": "ca5dff1ef7d999e36d8655c3d00ffb6b5a2136427e86f2be168889ca417dbca3",
       "evidence": "docs/documentation/evidence/follow-request.json",
-      "evidenceSha256": "fbff5aef41e802ce9a9143e9847586ac9b8960786258c2540aa82f4eada02501",
+      "evidenceSha256": "c321f8befeb52312ba68197e407bd66e9031504337aa8909906b45cab271c57f",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -173,7 +173,7 @@
       "verifiedAt": "2026-09-07T10:07:20.254Z",
       "contentSha256": "f44331f28896c6fbdebed9d636bb937d06330e9a52e850bb0b755f987aacb559",
       "evidence": "docs/documentation/evidence/portal-knowledge.json",
-      "evidenceSha256": "6bb3427739035d2abaa17b4a01d3b54546056d26dda6c5236ffa78e918daca89",
+      "evidenceSha256": "da9f39d0bf4c027ef6f1c7c21d6b1ba14a389c7a9be59cf06c16c2a62d4192d2",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -188,7 +188,7 @@
       "verifiedAt": "2026-09-07T11:33:34.068Z",
       "contentSha256": "b28fe6456b9259168173d057309994db811044beac40c09dcafd96ea7da36eea",
       "evidence": "docs/documentation/evidence/triage-requests.json",
-      "evidenceSha256": "cc5ceea4cc94c59c189a40a30c7d6abbc0bed165e8ffd9f3043b1a5fefb7b207",
+      "evidenceSha256": "c11235e8a17ac3793db90a8d15b906f230e23a683419424788328fa37fd978dc",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -203,7 +203,7 @@
       "verifiedAt": "2026-09-07T11:33:34.068Z",
       "contentSha256": "09ba1d034467e55a18a1b06c5942e0485d9282afbfe6b31676e239b470809abe",
       "evidence": "docs/documentation/evidence/convert-request.json",
-      "evidenceSha256": "03a42165c8efbfcc09480362093688a3d0743fa77ae0d1620fc59d2db56497bd",
+      "evidenceSha256": "557c8cbf47debc15792389c63cdd900c04962961119cca5762875e178576cbc0",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -218,7 +218,7 @@
       "verifiedAt": "2026-09-07T14:11:42.202Z",
       "contentSha256": "63aaa9717afffaacbb0b91b64de6e741162912ea00fd3b945798dc746b6e1cac",
       "evidence": "docs/documentation/evidence/create-contract.json",
-      "evidenceSha256": "3e0a8902ae10f10e2add6282d708708541697d23f785b0c443f5271caa8e571e",
+      "evidenceSha256": "36ac22f6e115871f72ace8fdcf97a6ea634326fa969d27e4f7bdc7573901b68c",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -233,7 +233,7 @@
       "verifiedAt": "2026-09-07T13:32:50.763Z",
       "contentSha256": "a01d92cc6adf974978b91b9ff543402472ed5bd4300755e5a78a02370465854b",
       "evidence": "docs/documentation/evidence/contract-stages.json",
-      "evidenceSha256": "d25524356fcb4fc0a681c834a939f445522b1aebd4358516f4fee1e24e84f1be",
+      "evidenceSha256": "0c2fcd17603436ee45a2c74c2a71dab8802485c076074e646a281c4a87092413",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -248,7 +248,7 @@
       "verifiedAt": "2026-09-07T13:41:10.505Z",
       "contentSha256": "e3b7b6ee7e2b8b121c8be45203099d69331e09d5d55d374b577d5fe81bcf67f6",
       "evidence": "docs/documentation/evidence/contract-approvals.json",
-      "evidenceSha256": "9f297bc1fd1abb64af5126b0617e635fc7197a55da4e61d11fc057f33d20f38c",
+      "evidenceSha256": "982bf1664ec1bf30a5e3275234baaaf86542a329ffd0ded08c993f09651aa988",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -263,7 +263,7 @@
       "verifiedAt": "2026-09-07T13:44:06.138Z",
       "contentSha256": "2415ba7d5c22ff900dd3b3fd67a5012f86fd276dfc4eb7f299e59e3419e3d5ae",
       "evidence": "docs/documentation/evidence/manual-signing.json",
-      "evidenceSha256": "2667569e02d7e407dc7b24652048722c80ba601ae8314b263862af7103fb1935",
+      "evidenceSha256": "eec482036ef03a3a14421d88557d55e49b86a0df2276bdef5aef35b13aa27bb8",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -278,7 +278,7 @@
       "verifiedAt": "2026-09-07T14:10:51.241Z",
       "contentSha256": "df172df43d2efc94cbd2daa7f03cc1161332885578c353e5137b1e0ffe4c90fc",
       "evidence": "docs/documentation/evidence/electronic-signing.json",
-      "evidenceSha256": "f30f97bca9ac5e48e2786d0a9c30b97e0f06e0c7d5cf105617d86cb918e6ec5b",
+      "evidenceSha256": "dc2c6cd53fdc4146b9190efc7de1fcca6d59c6a6aee56b8d2af9a3500aef6212",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -293,7 +293,7 @@
       "verifiedAt": "2026-09-07T13:51:32.114Z",
       "contentSha256": "d5af58d3f6934b6b5730e8e100c31ffc21e08640347b82750c9b39c24b085c6e",
       "evidence": "docs/documentation/evidence/terms-and-renewals.json",
-      "evidenceSha256": "a430189b4eae5738f41649c5a91b111d77511d9a39f325c8800121777bdb915f",
+      "evidenceSha256": "74f39e83b714e895b90cafec826928a7ae5730da3ad94aca167400c7467a5181",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -308,7 +308,7 @@
       "verifiedAt": "2026-09-07T13:57:41.545Z",
       "contentSha256": "29654cec933cf7b62d1c87e2d75293f920de3f1f51b6859aae5a44e09356c43e",
       "evidence": "docs/documentation/evidence/contract-tasks-and-dates.json",
-      "evidenceSha256": "b3840d814e692d9751aa6942490c6124a9e8dc5bb3a6952388fdc076f255445a",
+      "evidenceSha256": "d9ebd1378d37ff995b126f0525cff00fab2064ff28610b82e1736ab415ec302b",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -323,7 +323,7 @@
       "verifiedAt": "2026-09-07T14:23:06.814Z",
       "contentSha256": "ca10c84a725573c1e32fdae19502056cfd0075a0223131a3dc54d32d75272b47",
       "evidence": "docs/documentation/evidence/contract-relations-and-ending.json",
-      "evidenceSha256": "4d623f130b4e9be124ac6673e03ad04ea82019121af0135f362a0adfd8217b3f",
+      "evidenceSha256": "1a6d60f3329fcf00eb8907b0a00e9fb6887ac1779f01cdde7ad04ff1caadcfa0",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -338,7 +338,7 @@
       "verifiedAt": "2026-09-07T17:20:09.933Z",
       "contentSha256": "24e4375567bdf273873018732f93743584b71b260a07890f4f4719f257050243",
       "evidence": "docs/documentation/evidence/contract-analysis.json",
-      "evidenceSha256": "88d45f4960be74f6a9d721b1ced805b970ead07d3b0a7b6cfaa75801feaec998",
+      "evidenceSha256": "fd241c45945fdeac2b2be8b76ef7d901551eee7959db49fc97eb3ab10eb72393",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -353,7 +353,7 @@
       "verifiedAt": "2026-09-07T19:22:19.461Z",
       "contentSha256": "078e5ac72d41fa7ed55e02131b55dcdb86cb26d646485e64f5a494969e1aef73",
       "evidence": "docs/documentation/evidence/create-matter.json",
-      "evidenceSha256": "4d4fce242c4c291af1f86adca5bf1461a56af3bd722fb273176b0dd03fe8ad09",
+      "evidenceSha256": "7c350840dded01fc13b577ddb9e90928adc9ecfa41a4c33f7c9c9e378f37ed82",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -368,7 +368,7 @@
       "verifiedAt": "2026-09-07T19:22:19.461Z",
       "contentSha256": "7b4f1d4b77f4979d273e68ffcefe9be849c7e371cd518b256e466a6ba2df60cf",
       "evidence": "docs/documentation/evidence/matter-status-and-archive.json",
-      "evidenceSha256": "988c9f39781e36f2634a475321aac7356e67c52404cdc28c4736874142152b58",
+      "evidenceSha256": "d2bdd799f7f50a4a61fb73ad6df42b33c28b59c5344121770bf10f59393cad40",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -383,7 +383,7 @@
       "verifiedAt": "2026-09-07T19:22:19.461Z",
       "contentSha256": "621ed4366708c7b55defb625733358b565eef3a0bd443e500a1f24352e875ffd",
       "evidence": "docs/documentation/evidence/matter-work.json",
-      "evidenceSha256": "073a9a44b3bb7f5db96a24f45fa67b8fbf8f1bc0046adc6fb5de70dd73a051f3",
+      "evidenceSha256": "8e242f4df502692b31ce92691a3f9e496b84698b482f6a43fc3e43acfec6f101",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -398,7 +398,7 @@
       "verifiedAt": "2026-09-07T06:43:31.726Z",
       "contentSha256": "c3badc50235831daa34056e22dd2e260142e71f5020cd972b9bc868fbf339397",
       "evidence": "docs/documentation/evidence/contributor-guide.json",
-      "evidenceSha256": "3fb8006c7436b4fed79643b70c1cd6c042a6bcf5fde2bf43a250aebf34f91e73",
+      "evidenceSha256": "7acbe352b589b4ea533e0267b32338b528b630839aa776adf2e1c79f975e52a2",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -413,7 +413,7 @@
       "verifiedAt": "2026-09-07T21:37:46.034Z",
       "contentSha256": "e7d0286c6eefad20fd0e0a08df2dc6c530d5c3fa517e1b65e17e9f338e5f147d",
       "evidence": "docs/documentation/evidence/document-versions.json",
-      "evidenceSha256": "d459fa180db3640aa74fc4b5df93427be58ed9cd499f4aa7df4f6457f38a1c94",
+      "evidenceSha256": "53fe2af5d91bf07eeda0d1717507ac86e291b882eb89df05741644e3067234f3",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -428,7 +428,7 @@
       "verifiedAt": "2026-09-07T21:17:26.874Z",
       "contentSha256": "1844521ab7ef07fc40fe8e0c01aaeb7df5022acf1e8059b2b24716f809838fec",
       "evidence": "docs/documentation/evidence/document-folders.json",
-      "evidenceSha256": "2a79fa47e7a0b5fad10b063048cd04a04cfea8fa265557f4eb530d4782207071",
+      "evidenceSha256": "23e1ae96cf11001327a833dab4faed66464046a38e0d57563759dcbb16566703",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -443,7 +443,7 @@
       "verifiedAt": "2026-09-07T21:37:09.916Z",
       "contentSha256": "12cf5181a1b0c37788c1cd3d07ce04d8ac6c41efc68fed4188d47074307bd24a",
       "evidence": "docs/documentation/evidence/document-previews.json",
-      "evidenceSha256": "eeba01d13b32e19f5f25faf4270abd3dd3cf30d2a2f1cc7a0f8ad81d7bf85d1f",
+      "evidenceSha256": "31a97a2521c72a26007186eece94f898bcdec638ec7384b15a5684428def44ca",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -458,7 +458,7 @@
       "verifiedAt": "2026-09-07T17:32:59.448Z",
       "contentSha256": "2bfbd81cb149cd8bed215e1ada5736bf85fe9e4445241fea4307f2c36dae09df",
       "evidence": "docs/documentation/evidence/compare-versions.json",
-      "evidenceSha256": "0886fe4134d9264eb6bcc5a17fd6d00da0a29cecc00c89248fb5cfd83773b94b",
+      "evidenceSha256": "e6310d7c1900d77e5051b4c0f66ffaaff61e438bd49fdd8b24482053d4c242a4",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -473,7 +473,7 @@
       "verifiedAt": "2026-09-07T21:28:12.634Z",
       "contentSha256": "59f88467c3a576764b212e36ebf5cb8bd49ff84a146a1ec3321d3d0a3da19969",
       "evidence": "docs/documentation/evidence/document-repository.json",
-      "evidenceSha256": "a0c77b654d948ea85c25c72d6170ff1ce008be172f40b80aca170bc26f9cdcef",
+      "evidenceSha256": "28d1d0852ac44f104235ef90baafb9ea1a91cfb472c03765561e617298622517",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -488,7 +488,7 @@
       "verifiedAt": "2026-09-08T01:14:28.623Z",
       "contentSha256": "7313af8226fa554a32c4e86919d581a972fd574654e4b8559ccd8df591fe177e",
       "evidence": "docs/documentation/evidence/entities-and-counterparties.json",
-      "evidenceSha256": "c2a0e3705cf421c0ac102f30dbd5a71d5cd8bea168af47519941f991044f2477",
+      "evidenceSha256": "9194e37b14f341c838375fc75c66eb5fa247a902c54fdf9a88dfe5cce765f04f",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -503,7 +503,7 @@
       "verifiedAt": "2026-09-08T01:14:28.623Z",
       "contentSha256": "9d8b0ae49f2d38291393c876d0851ec3811a5d6dd3d24add2631615ade6db0bc",
       "evidence": "docs/documentation/evidence/entity-records.json",
-      "evidenceSha256": "4310f0bfbb6795260a606990aa337f192935c4b0669ae6d3087ede3e2f83db9c",
+      "evidenceSha256": "a39108579d04c7f8ce53976e3f499eebbc8f2d73b9fc50fc1aac71ee58646b5f",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -807,7 +807,7 @@
       "verifiedAt": "2026-09-08T01:14:28.623Z",
       "contentSha256": "b4a8ade34e728a7cb4de68a659779fe45d68781028d899b97c580771c1d0f604",
       "evidence": "docs/documentation/evidence/entity-obligations.json",
-      "evidenceSha256": "cbc08a2257e98087a065ea61547b470b0f69330bd710be2a47950f0e7bcdf65d",
+      "evidenceSha256": "c3003e14fd5f53bc18cc0f8ca7ce8fca6283893b3a1aa787fe6438b26eabfb04",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -822,7 +822,7 @@
       "verifiedAt": "2026-09-08T01:14:28.623Z",
       "contentSha256": "95e5fbe88de8dcba1a417dada7ce078459a39aa633fa3f8e72d1ccc3a7295953",
       "evidence": "docs/documentation/evidence/entity-structure-and-access.json",
-      "evidenceSha256": "f78599676c60b4838af868bad6781c2628d757314aed92b77b1ed1c406e8079a",
+      "evidenceSha256": "f787f968e9f0b30f617b4b6fc06fcc7adbd65a5118747539047aa25fc52b8c99",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -837,7 +837,7 @@
       "verifiedAt": "2026-09-07T21:30:10.766Z",
       "contentSha256": "f00bcd882a961a9944be0aed0bc83a991a29870eb318dbdfe8ef66c52c2c4551",
       "evidence": "docs/documentation/evidence/archive-and-delete-documents.json",
-      "evidenceSha256": "4931f0e727e3fc26e6ad83b39fdd4cd8d22240e1c104eebd97e76d54549e7b9a",
+      "evidenceSha256": "620211e606fbedf0bdcf0bb191c2fe3286f8036216c805fd34b4d82efc69c0ea",
       "compatibility": "hash-bound-source-review",
       "issues": []
     },
@@ -1517,5 +1517,46 @@
   "gates": { "G3": "blocked", "G4": "blocked" },
   "releaseExceptions": [],
   "humanProofreading": "Pending full assembled suite; no human approval claimed.",
-  "updatedAt": "2026-09-08T13:15:51.355Z"
+  "updatedAt": "2026-09-08T13:44:37.703Z",
+  "independentAcceptance": {
+    "reviewer": "Independent DOC-025 acceptance seat (Opus 5 agent), separate from the documentation author",
+    "reviewerKind": "agent",
+    "completedAt": "2026-09-08T13:41:00.000Z",
+    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+    "buildId": "app sha256:c585d8683816050bdf00568a6f4e1983f14fb3b364ac8202f4f4e40dab9ef52c; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+    "environment": "openlaw-docs-b8e31260-configuration",
+    "scope": "Representative independent preview acceptance of the available 54-article scope, plus an independent re-check of the compatibility conclusions.",
+    "records": [
+      "batches/DOC-025/independent-compatibility.json",
+      "batches/DOC-025/independent-acceptance.json",
+      "batches/DOC-025/independent-zoom.json",
+      "batches/DOC-025/independent-contextual-help.json",
+      "batches/DOC-025/independent-contextual-help-first.json",
+      "batches/DOC-025/independent-contextual-help-retry.json",
+      "batches/DOC-025/independent-offline.json",
+      "batches/DOC-025/compiler-evidence-audit.json"
+    ],
+    "covered": [
+      "Full eligible index for Administrator, Legal Team Member, Contributor, Business User and the anonymous formal reader: 44, 36, 17, 11 and 54 guides, each matching the catalog.",
+      "Sampled reading with a focused H1, three themes at 320px and CSS zoom 2 at 1280px, with no overflow.",
+      "Actual Chromium browser zoom 200% for all five readers: chrome.tabs.getZoom 2, device pixel ratio 2, 1280px reflowed to 640 CSS pixels, CSS zoom still 1.",
+      "The original DOC-024 which version query reached the support guide for all five readers.",
+      "Keyboard search, result focus, focused article title and Back/Forward history for all five readers.",
+      "Recovery for no matches, an unavailable article, an unbundled edition and a missing anchor.",
+      "Audience boundaries for Contributor and Business User, including the in-place notice and the public formal link.",
+      "Public reading and search sent no application API request.",
+      "Portal and staff contextual Help narrow the same index, and no record identifier reaches a Help address.",
+      "A retained standalone copy outside the instance, read with the owned app stopped and the network refused, with JavaScript on and off, with the optional search script removed, and with one copied article deliberately withheld and then restored."
+    ],
+    "notCovered": [
+      "The 124 article/role/method combinations were not replayed. The 116 passing combinations stand on their own recorded builds.",
+      "C42 and C43 need real provider access under #742.",
+      "Final complete-content 56-article V-HELP and V-OFFLINE acceptance and DOC-027 publication remain outstanding.",
+      "No human proofreading and no human sign-off."
+    ],
+    "failedAttempts": [
+      "Staff contextual Help: first looked for the link on a Contract record, which DES-073 does not give one, then read the address before the client route settled. Two harness mistakes, no application change; recorded in independent-contextual-help-first.json and independent-contextual-help-retry.json and retested in independent-contextual-help.json."
+    ]
+  },
+  "gateNote": "G3 and G4 stay blocked. Independent acceptance of the available scope is complete and is recorded separately from release acceptance."
 }

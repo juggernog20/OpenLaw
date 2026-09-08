@@ -1,0 +1,115 @@
+{
+  "kind": "independent-acceptance",
+  "task": "DOC-025",
+  "issue": 745,
+  "independentReview": true,
+  "reviewer": "Independent DOC-025 acceptance seat (Opus 5 agent), separate from the documentation author",
+  "reviewerKind": "agent",
+  "method": "browser-walkthrough",
+  "startedAt": "2026-09-08T13:40:15.962Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:c585d8683816050bdf00568a6f4e1983f14fb3b364ac8202f4f4e40dab9ef52c; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "edition": {
+    "id": "documentation-development",
+    "channel": "development",
+    "supportedAppVersion": "0.0.1",
+    "supportedAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+    "distributionCommit": "2100ead5a69a9affaa3b338ca29815c7f740923c",
+    "workingChanges": false,
+    "publicationTarget": "feature-review",
+    "contentDigest": "d563e8d89d4caf20340b3cecf6eb99e80510c4a9ca41c18a8993aac16cf22a72"
+  },
+  "articleCount": 54,
+  "exportPath": "/tmp/openlaw-doc025-ind-export-fIX1JB",
+  "scope": "Retained 54-article development preview read outside the owned instance. This is not the final 56-article V-OFFLINE acceptance and does not include the two unmerged provider guides.",
+  "steps": [
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "The owned app refuses connection while stopped",
+      "actual": {
+        "appUrl": "http://127.0.0.1:43332",
+        "reachable": false,
+        "detail": "fetch failed"
+      },
+      "startedAt": "2026-09-08T13:40:26.831Z",
+      "at": "2026-09-08T13:40:26.839Z",
+      "result": "pass"
+    },
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Retained copy: complete index, prose and local search with the app stopped",
+      "actual": {
+        "articleCount": 54,
+        "javascript": true,
+        "externalRequests": 0,
+        "search": "Local search for 'restore' listed the backup guide with no network request."
+      },
+      "startedAt": "2026-09-08T13:40:26.839Z",
+      "at": "2026-09-08T13:40:27.146Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Retained copy: complete index and prose with JavaScript disabled",
+      "actual": {
+        "articleCount": 54,
+        "javascript": false,
+        "externalRequests": 0,
+        "search": null
+      },
+      "startedAt": "2026-09-08T13:40:27.146Z",
+      "at": "2026-09-08T13:40:27.325Z",
+      "result": "pass"
+    },
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Retained copy still reads with the optional search script removed",
+      "actual": "Removed search.js by name, read the static index and the installation guide, then put the file back.",
+      "startedAt": "2026-09-08T13:40:27.326Z",
+      "at": "2026-09-08T13:40:27.445Z",
+      "result": "pass"
+    },
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "A deliberately missing copied article is detected as incomplete",
+      "actual": {
+        "withheld": "backup-and-restore.html",
+        "indexStillLinksIt": true,
+        "articleHeadingsFound": 0,
+        "observed": "",
+        "conclusion": "Withholding one copied file makes that guide unreadable while the index still links it. A retained copy must be checked for completeness, not assumed."
+      },
+      "startedAt": "2026-09-08T13:40:27.445Z",
+      "at": "2026-09-08T13:40:27.568Z",
+      "result": "pass"
+    },
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Restoring the withheld article makes the copy complete again",
+      "actual": {
+        "restored": "backup-and-restore.html",
+        "articleCount": 54,
+        "externalRequests": 0
+      },
+      "startedAt": "2026-09-08T13:40:27.568Z",
+      "at": "2026-09-08T13:40:27.741Z",
+      "result": "pass"
+    }
+  ],
+  "imageBeforeStop": "sha256:c585d8683816050bdf00568a6f4e1983f14fb3b364ac8202f4f4e40dab9ef52c",
+  "instanceStoppedAt": "2026-09-08T13:40:26.831Z",
+  "stopCommand": "node scripts/documentation/lab.mjs stop configuration",
+  "instanceRestartedAt": "2026-09-08T13:40:41.081Z",
+  "restartCommand": "node scripts/documentation/lab.mjs up configuration",
+  "restartTail": "Lab configuration: http://127.0.0.1:43332; mail: http://127.0.0.1:48436",
+  "completedAt": "2026-09-08T13:40:41.081Z",
+  "passed": true,
+  "originalCaptureName": "745-ind-offline-1788874815962.json"
+}

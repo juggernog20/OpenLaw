@@ -154,7 +154,9 @@ a non-empty `summary`, and non-empty `evidence` entries with a local `path` and
 `sha256`. Paths are relative to `docs/documentation`. The compiler rejects
 missing/stale fields, altered supporting artifacts,
 reviews predating the walkthrough, and a `reviewer` that names the article's own
-author. This supplements the existing independent
+author. That last check is a floor, not a proof: one author writing under two task
+labels produces two unequal strings. Name a seat that did not write the article and
+did not author the source audit it re-checks. This supplements the existing independent
 role/method checks; it cannot turn a missing procedure or live-provider check into
 a pass. Source comparison must identify behavior changes and link the affected
 walkthroughs on builds containing those changes. Unchanged procedures can retain

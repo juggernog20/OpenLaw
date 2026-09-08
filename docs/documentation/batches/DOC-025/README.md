@@ -26,6 +26,22 @@ not a claim that every earlier scenario ran again. The compiler accepts historic
 evidence only with a current, hash-bound compatibility review and still requires
 all original independent role/method results.
 
+That audit and the guides share one root author under two task labels, so unequal
+reviewer strings did not make it independent. An
+[independent re-check](independent-compatibility.json) reproduced the four saved
+diffs against git byte for byte, read each commit against its parent, and read the
+cited walkthroughs. It found one wrong citation. The authored record credited
+DOC-010 for the four-role conversations on `a28331f7`, but DOC-010 is
+roles-and-access and contributor-guide on the earlier `d1d098ba`. The conversations
+walkthrough on `a28331f7` is
+[DOC-011](../DOC-011/independent-walkthrough.json), 08:46:35.623Z to 08:53:41.841Z,
+and the Portal Request thread on that build is
+[DOC-012](../DOC-012/independent-walkthrough.json), which was not cited at all even
+though it carries C10. Both are now cited, the authored audit keeps its own
+reviewer and time under a recorded correction, and every dependent hash is
+refreshed. Each article compatibility review now names the independent seat, so the
+compiler independence guard passes in substance.
+
 Three guides receive only en-US spelling corrections: manual-signing,
 contract-stages, and contract-relations-and-ending. Their `copyOnlyReview` fields
 retain the prior hashes and classify the change; no new procedure run is claimed.
@@ -36,6 +52,48 @@ reader. The earlier walkthrough/export hashes remain the bytes actually observed
 The DOC-017 glossary link is repaired. SET-008 retains its superseded wording and
 records that Field prompts has no collapse control, as the actual component and
 the provider draft show.
+
+## Independent acceptance of the available scope
+
+A seat separate from the documentation author ran its own browser checks on the
+owned configuration lab, app `6a8873db`, image `c585d868…`, engine `1c2f7f6f…`.
+[The acceptance run](independent-acceptance.json) records 38 passing steps with no
+failure. The full eligible index matched the catalog for every reader: 44
+Administrator, 36 Legal Team Member, 17 Contributor, 11 Business User, 54 anonymous
+formal. Each reader also passed sampled reading with a focused title, three themes
+at 320px and CSS zoom 2 at 1280px; the original DOC-024 "which version" query; the
+keyboard search, focus and Back/Forward run; and recovery from no matches, an
+unavailable article, an unbundled edition and a missing anchor. Contributor and
+Business User met the audience notice in place and reached the public formal
+article from it. Public reading and search sent no application API request. Every
+reader saw content digest `d563e8d8…`, which is what this branch compiles.
+
+[Browser zoom](independent-zoom.json) is separate from the CSS-zoom checks. A
+disposable Chromium profile with a tabs-permission extension set real zoom to 200%
+for all five readers: `chrome.tabs.getZoom` 2, device pixel ratio 2, 1280px
+reflowed to 640 CSS pixels, CSS zoom still 1, no overflow in any theme. No
+assistive-technology or human study is claimed.
+
+Contextual Help took two failed attempts, both mine and neither an application
+fault. I first looked for "Help with this page" on a Contract record; DES-073 puts
+that link on the pilot entries, which on staff are `/inbox` and `/inbox/:number`.
+I then read the address before the client route had settled.
+[The first attempt](independent-contextual-help-first.json) and
+[the retry](independent-contextual-help-retry.json) are kept.
+[The retest](independent-contextual-help.json) shows Inbox contextual Help
+narrowing to `topic=inbox`, a Contract record offering header Help with its 25
+route topics instead, and no record identifier in any Help address.
+
+[The offline run](independent-offline.json) exported a standalone copy, stopped the
+owned lab, and confirmed the app refused connection. Every context was offline and
+refused any http request. All 54 guides listed and read with JavaScript enabled and
+disabled, local search found the backup guide, and the copy still read with
+`search.js` removed by name and then put back. Withholding
+`backup-and-restore.html` left the index still linking a guide that would not open,
+which is the completeness failure a retained copy has to be checked for; restoring
+the file made the copy whole again. The lab came back healthy on the same image
+`c585d868…`, so this restart built nothing new. These are 54-article preview
+checks, not final 56-article V-HELP or V-OFFLINE acceptance.
 
 ## Preview observations
 

@@ -80,7 +80,7 @@
       "commit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
       "behavior": "Staff and Portal composers merge the just-posted comment with a live-read row of the same identity; this prevents duplicates without changing controls or access.",
       "affectedCoverage": ["C07", "C10", "C25"],
-      "verification": "DOC-010 independently exercised the resulting conversations as all four app roles on a28331f7. Earlier Contributor overview and account/access guides make no dependence on duplicate rows."
+      "verification": "DOC-011 independently exercised the resulting staff conversations as all four app roles on a28331f7, including audience tiers, mentions and attachments. DOC-012 independently exercised the Portal Request thread on the same build, including a failed reply whose retry posted once, which is the duplicate-row case this change addresses. DOC-010 covers the Contributor overview and the account/access guides on the earlier d1d098ba; neither depends on duplicate comment rows."
     },
     {
       "commit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
@@ -107,6 +107,14 @@
       "sha256": "1b5f0c18e22708eb763b5eaac87abc889777f0ac28b343082597214db385fe22"
     },
     {
+      "path": "batches/DOC-011/independent-walkthrough.json",
+      "sha256": "63d36cf23af169046d54d342b1aecda43a64339f6fa36bd75ac2cc026c69dc12"
+    },
+    {
+      "path": "batches/DOC-012/independent-walkthrough.json",
+      "sha256": "f327834cc56aeae3ab6fe3e04257ee93cd113ddfd8d387a24b47965b11a023aa"
+    },
+    {
       "path": "batches/DOC-018/independent-c31.json",
       "sha256": "0b645d4e404761df17bcca0ed4ebbdfd4f52608c648f7ee07b62f8ce23795a77"
     },
@@ -131,5 +139,13 @@
     "This is a source compatibility audit, not a new procedure walkthrough or human approval.",
     "Real-provider C42/C43 remain blocked under #742. No provider setup compatibility or completion is inferred.",
     "Every article remains review until whole-suite acceptance/publication; this record does not change catalog state."
+  ],
+  "corrections": [
+    {
+      "correctedBy": "Independent DOC-025 acceptance seat (Opus 5 agent), separate from the documentation author",
+      "correctedAt": "2026-09-08T13:41:42.873Z",
+      "finding": "changes[0].verification and affectedWalkthroughEvidence cited DOC-010 for the four-role conversations on a28331f7. DOC-010 is roles-and-access and contributor-guide on the earlier d1d098ba. The conversations walkthrough on a28331f7 is DOC-011, and the Portal Request thread on that build is DOC-012, which the earlier text did not cite at all.",
+      "resolution": "Named DOC-011 and DOC-012, kept DOC-010 for the statement it actually supports, and refreshed every dependent hash. The source inspection itself, its reviewer and its reviewedAt are unchanged."
+    }
   ]
 }
