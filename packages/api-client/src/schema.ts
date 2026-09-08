@@ -2787,7 +2787,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The Documents owned by one live Knowledge Item, newest first, with each version chain */
+    /** The Documents owned by one Knowledge Item, including archived items, newest first, with each version chain */
     get: operations["listKnowledgeItemDocuments"];
     put?: never;
     /** Upload a file as a Document owned by a Knowledge Item */

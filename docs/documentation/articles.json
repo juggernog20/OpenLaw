@@ -478,7 +478,7 @@
     },
     {
       "id": "create-knowledge",
-      "title": "Create and organise Knowledge Items",
+      "title": "Create and organize Knowledge Items",
       "section": "knowledge",
       "kind": "how-to",
       "coverage": ["C33"],
@@ -487,7 +487,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["knowledge.list", "knowledge.overview"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "publish-knowledge",
@@ -500,7 +500,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["knowledge.publishing"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "first-run",

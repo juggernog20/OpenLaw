@@ -1761,7 +1761,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "listKnowledgeItemDocuments",
         summary:
-          "The Documents owned by one live Knowledge Item, newest first, with each version chain",
+          "The Documents owned by one Knowledge Item, including archived items, newest first, with each version chain",
         tags: ["documents"],
         params: EntityParams,
         querystring: ArchivedQuery.extend({ cursor: CursorSchema.optional() }),
@@ -1773,12 +1773,17 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         .select({
           id: knowledgeItems.id,
           primaryDocumentId: knowledgeItems.primaryDocumentId,
-          archivedAt: knowledgeItems.archivedAt,
         })
         .from(knowledgeItems)
         .where(eq(knowledgeItems.id, request.params.id))
         .limit(1);
-      if (!item || item.archivedAt) throw httpError(404, "No Knowledge Item exists with this id.");
+      // An archived item still reads, as an archived contract does
+      // (#776). Archiving is a soft delete, the record read already
+      // answers an archived item, and restore is offered on the page
+      // this list feeds, so a 404 here only broke the way back. Writes
+      // stay frozen, because every document write asserts a live
+      // owner, and the portal gate is untouched.
+      if (!item) throw httpError(404, "No Knowledge Item exists with this id.");
       return paperOf(
         app.db,
         request.user,

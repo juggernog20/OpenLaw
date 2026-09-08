@@ -97,8 +97,10 @@ See the [batch verification record](batches/DOC-018/README.md) for the tested bu
 
 ## DOC-019 [#739](https://github.com/juggernog20/OpenLaw/issues/739)
 
-- [ ] `create-knowledge`: Create and organise Knowledge Items (C33; P1).
-- [ ] `publish-knowledge`: Publish Knowledge for the right audience (C34; P0).
+See the [batch verification record](batches/DOC-019/README.md) for the tested build, author outcomes, the independent walkthrough of V-C33 and V-C34 for both roles with their negative checks, the Business Portal reader checks, the discovery pass, the supplemental folder-move, primary-Document archive/restore and live-edit checks, and publication dependencies. Both per-article evidence records read `pass`, so both boxes are checked here. `create-knowledge` links `types-statuses-fields` (DOC-021), which is still unwritten, and `publish-knowledge` names the Deflection links settings that C40 (DOC-021) will document; those are publication dependencies tracked in the README and the catalog review status, not open verifications.
+
+- [x] `create-knowledge`: Create and organize Knowledge Items (C33; P1). Links `types-statuses-fields` (DOC-021).
+- [x] `publish-knowledge`: Publish Knowledge for the right audience (C34; P0).
 
 ## DOC-020 [#740](https://github.com/juggernog20/OpenLaw/issues/740)
 
