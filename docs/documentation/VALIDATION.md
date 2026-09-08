@@ -3,7 +3,12 @@
 Task: [#725](https://github.com/juggernog20/OpenLaw/issues/725).
 Use [scenarios.json](scenarios.json) with the
 [editorial evidence rules](EDITORIAL.md). These are scenario specifications;
-`not-run` means that no article walkthrough has been credited.
+`not-run` means that no article walkthrough has been credited. DOC-025 reconciles
+completed writing batches into this registry: `pass` retains the article's actual
+recorded-build observations, with compatibility recorded separately; `blocked`
+retains missing provider or complete-content publication requirements. The
+[G3](batches/DOC-025/G3.md) and [G4](batches/DOC-025/G4.md) reports distinguish these
+counts from release acceptance.
 The [environment readiness record](environment-readiness.json) records the actual
 role sign-in and helper isolation checks for this preparation task.
 

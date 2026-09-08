@@ -1,0 +1,31 @@
+{
+  "startedAt": "2026-09-08T13:08:23.126Z",
+  "reviewer": "Codex DOC-025 author (agent)",
+  "method": "browser-walkthrough",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "sha256:c585d8683816050bdf00568a6f4e1983f14fb3b364ac8202f4f4e40dab9ef52c",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "steps": [
+    {
+      "role": "business_user",
+      "at": "2026-09-08T13:08:27.238Z",
+      "result": "pass",
+      "actual": {
+        "headerHref": "/portal/help?topic=portal.request&topic=portal.files&topic=comments&topic=activity&topic=notifications&topic=errors&topic=reference&topic=support",
+        "contextHref": "/portal/help?topic=portal.request",
+        "headerResults": [
+          "Follow a Request and reply to Legal",
+          "Read and download Documents",
+          "Choose who can read a comment",
+          "Manage notifications and reminders",
+          "Resolve common problems",
+          "Look up terms, permissions, and file behavior",
+          "Find version information and get help"
+        ],
+        "contextResults": ["Follow a Request and reply to Legal"],
+        "conclusion": "Header combines registered Request/files topics; contextual link selects Request. Settled navigation and unfiltered index work. No record ID is carried into Help."
+      }
+    }
+  ],
+  "completedAt": "2026-09-08T13:08:27.257Z"
+}

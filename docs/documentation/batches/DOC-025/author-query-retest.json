@@ -1,0 +1,49 @@
+{
+  "startedAt": "2026-09-08T13:07:36.559Z",
+  "reviewer": "Codex DOC-025 author (agent)",
+  "method": "browser-walkthrough",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "sha256:c585d8683816050bdf00568a6f4e1983f14fb3b364ac8202f4f4e40dab9ef52c",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleId": "versions-and-support",
+  "contentSha256": "7d9c38056ec82206d5cab8f13b7940c960c18ab0d337a77dfc0ca81dd08e013e",
+  "query": "which version",
+  "steps": [
+    {
+      "role": "administrator",
+      "startedAt": "2026-09-08T13:07:37.597Z",
+      "at": "2026-09-08T13:07:38.995Z",
+      "result": "pass",
+      "actual": "Original DOC-024 query found the intended guide; selected result opened its focused title."
+    },
+    {
+      "role": "legal_team_member",
+      "startedAt": "2026-09-08T13:07:39.818Z",
+      "at": "2026-09-08T13:07:41.156Z",
+      "result": "pass",
+      "actual": "Original DOC-024 query found the intended guide; selected result opened its focused title."
+    },
+    {
+      "role": "contributor",
+      "startedAt": "2026-09-08T13:07:41.958Z",
+      "at": "2026-09-08T13:07:43.213Z",
+      "result": "pass",
+      "actual": "Original DOC-024 query found the intended guide; selected result opened its focused title."
+    },
+    {
+      "role": "business_user",
+      "startedAt": "2026-09-08T13:07:44.148Z",
+      "at": "2026-09-08T13:07:45.384Z",
+      "result": "pass",
+      "actual": "Original DOC-024 query found the intended guide; selected result opened its focused title."
+    },
+    {
+      "role": "anonymous",
+      "startedAt": "2026-09-08T13:07:45.407Z",
+      "at": "2026-09-08T13:07:46.601Z",
+      "result": "pass",
+      "actual": "Original DOC-024 query found the intended guide; selected result opened its focused title."
+    }
+  ],
+  "completedAt": "2026-09-08T13:07:46.605Z"
+}

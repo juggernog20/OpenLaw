@@ -146,6 +146,20 @@ range before publication; app behavior changes require affected walkthroughs aga
 DOC-005 establishes the reproducible verification build and DOC-025 verifies final
 coverage. Do not relabel old evidence as having run against a newer build.
 
+When an article's observed `appCommit` differs from the edition's supported build,
+DOC-025 records an article `compatibilityReview` beside the original evidence.
+It requires `fromAppCommit` and `toAppCommit` (full commits), `contentSha256`,
+`applicationSha256`, `reviewer`, `reviewerKind` (`agent` or `human`), `reviewedAt`,
+a non-empty `summary`, and non-empty `evidence` entries with a local `path` and
+`sha256`. Paths are relative to `docs/documentation`. The compiler rejects
+missing/stale fields, altered supporting artifacts,
+and reviews predating the walkthrough. This supplements the existing independent
+role/method checks; it cannot turn a missing procedure or live-provider check into
+a pass. Source comparison must identify behavior changes and link the affected
+walkthroughs on builds containing those changes. Unchanged procedures can retain
+their original observations. The edition-wide compatibility check still binds the
+target to the distribution's actual application bytes.
+
 The normal reader includes only `verified` and `published` articles whose evidence
 matches their bytes. An explicit development preview may include `draft` and
 `review` articles and must identify them as unverified. A source-less `scoped` or

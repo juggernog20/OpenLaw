@@ -3,6 +3,13 @@
   "id": "documentation-development",
   "channel": "development",
   "supportedAppVersion": "0.0.1",
-  "supportedAppCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
-  "publicationTarget": "feature-review"
+  "supportedAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "publicationTarget": "feature-review",
+  "compatibilityReview": {
+    "testedAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+    "applicationSha256": "b7bc6323f8e3d95a4ee006eab289f434502dccfdb7aee4c5fcb2026e7c41cd30",
+    "reviewer": "Codex DOC-025 source compatibility audit (agent)",
+    "reviewedAt": "2026-09-08T12:56:21.570227Z",
+    "summary": "DOC-025 source audit: target-to-distribution changes only remove an unused selected property and alter comments/test coverage; behavior and deployment configuration unchanged. See batches/DOC-025/compatibility.json. Historical article appCommit fields are preserved with hash-bound range reviews."
+  }
 }

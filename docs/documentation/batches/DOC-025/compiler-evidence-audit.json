@@ -1,0 +1,10 @@
+{
+  "at": "2026-09-08T13:15:12.131Z",
+  "method": "automated-test",
+  "reviewer": "Codex DOC-025 author (agent)",
+  "checkedArticles": 54,
+  "result": "pass",
+  "actual": "Compiler validated the actual current hashes, independent roles/methods, and compatibility artifacts of all merged articles in an isolated metadata copy before rejecting the expected provider publication link.",
+  "expectedPublicationRefusal": "Documentation: link to unpublished article configure-signing from electronic-signing",
+  "repositoryCatalogChanged": false
+}
