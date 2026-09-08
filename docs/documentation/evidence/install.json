@@ -3,13 +3,13 @@
   "contentSha256": "35b1bd584e291c4b42741097c9aa66ebd9db95092d293ed80821d3e7eee01b0f",
   "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
   "buildId": "app sha256:2851d6acd05418a0ddc57750ac75908892643af481f2755cb13a46f946d073b6; engine sha256:d0997fb7187067bc03f82e04ad45365ca5e3132b872e0b73c3934ceb2d67457a",
-  "environment": "openlaw-docs-b8e31260-ops-author; ops-upgrade; ops-restore",
+  "environment": "openlaw-docs-b8e31260-ops-author; ops-upgrade; ops-restore (author); openlaw-docs-b8e31260-rev-install; rev-upgrade; rev-restore; rev-recovery (independent)",
   "author": "Codex documentation author",
-  "technicalReviewer": null,
-  "walkthroughReviewer": null,
+  "technicalReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "walkthroughReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
   "reviewerKind": "agent",
-  "verifiedAt": null,
-  "status": "not-run",
+  "verifiedAt": "2026-09-08T10:05:10Z",
+  "status": "pass",
   "sources": [
     "compose.yml",
     "Dockerfile",
@@ -28,20 +28,80 @@
       "role": "operator",
       "method": "container-operation",
       "expected": "The app reaches readiness and first-run setup with the documented production defaults and topology. Missing secrets, occupied ports, and unavailable dependencies lead to the documented recovery; the authoring lab is not counted as production install evidence.",
-      "actual": "Independent operator walkthrough pending. Author operations are supporting evidence only.",
-      "result": "not-run",
-      "evidence": []
+      "actual": "Followed the article from an empty target on a disposable owned project (openlaw-docs-b8e31260-rev-install): checked the prerequisites, cloned the repository from its public address, detached to 6a8873dbda333fd9992eb77525d4bfa3f47af20d, ran the guarded .env block (mode 600), added the origin/port/project settings, wrote compose.operator.yml, validated the configuration, pulled Postgres and built the two images, started the stack and reached /readyz 200. Elapsed time from the first prerequisite command to readiness was 32 seconds on this host with a warm image cache, and about four minutes to the end of the article's working-installation checks including one failed attempt and the reviewer's own gaps; a --no-cache rebuild of both images took a further 32 seconds. That is far inside M34's under-an-hour goal on this host, and it is not a claim about a slower host, a cold dependency store, or the time to provision DNS, TLS and a public proxy. The published origin served Set up OpenLaw, the fictional Administrator Avery Morgan was created there, the welcome wizard saved an owned relay whose test message actually arrived, and an invitation reached the invited colleague carrying the configured origin. The article's working-installation list then passed: a fictional Contract, an upload whose download matched its SHA-256, processing to \"ready\", and a worker restart followed by new work processing. Negative checks behaved as documented: a missing AUTH_SECRET was refused by Compose before any container changed, and an occupied host port failed the start, named the port, left the unrelated listener alone, and recovered when an unused port was chosen.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-023/README.md",
+        "docs/documentation/batches/DOC-023/independent-install-firstrun.json",
+        "docs/documentation/batches/DOC-023/independent-install-firstrun-retry.json",
+        "docs/documentation/batches/DOC-023/independent-install-checks.json",
+        "docs/documentation/batches/DOC-023/independent-install-negatives.json"
+      ],
+      "verifiedAt": "2026-09-08T10:05:10Z"
     }
   ],
   "authorEvidence": ["docs/documentation/batches/DOC-023/README.md"],
   "limitations": [
-    "Independent technical review and actual operator walkthrough remain pending. Author operations do not satisfy the independent gate.",
-    "Author fresh build used a committed git archive, not the installation article clone procedure; no independent under-an-hour claim.",
+    "The independent walkthrough is an agent walkthrough, not a human installation study, and its elapsed time was measured on one fast host with a warm image cache.",
+    "The local check used http://127.0.0.1:43360 as its origin; public DNS, public certificate issuance and a production proxy deployment were not part of it.",
     "Local TLS uses an isolated Caddy internal CA and does not certify public DNS or certificate issuance.",
     "S3 and Azure operations use owned local compatible services and explicit disposable keys; no cloud identity credential-chain claim.",
     "Provider guides remain on unmerged PR #783; real provider checks C42/C43 are still blocked and are not waived.",
     "The user will proofread the assembled complete suite; no human proofreading or feature-owner sign-off is recorded."
   ],
   "previousEvidence": null,
-  "copyOnlyReview": null
+  "copyOnlyReview": null,
+  "independentEvidence": [
+    "docs/documentation/batches/DOC-023/independent-install-firstrun.json",
+    "docs/documentation/batches/DOC-023/independent-install-firstrun-retry.json",
+    "docs/documentation/batches/DOC-023/independent-install-checks.json",
+    "docs/documentation/batches/DOC-023/independent-install-negatives.json"
+  ],
+  "technicalReview": {
+    "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+    "reviewerKind": "agent",
+    "method": "source-inspection",
+    "completedAt": "2026-09-08T08:05:00Z",
+    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+    "scope": "Read the release under test for the behaviour the operator guides claim: the credential-key floor and the absence of one on AUTH_SECRET (packages/db/src/secrets.ts, apps/api/src/index.ts, apps/worker/src/index.ts), the doc-engine bounds and their boot-time refusal (apps/api/src/lib/doc-engine/config.ts, apps/api/src/lib/doc-engine/http.ts), the upload ceiling's silent fallback (apps/api/src/lib/uploads.ts), where outbound email is resolved and tested (apps/api/src/modules/email-settings/routes.ts), the event stream's frames and headers (apps/api/src/modules/events/routes.ts), the journal guard and its messages (packages/db/src/migration-journal.ts), the two refusals of 0060_account_issuer (packages/db/migrations/0060_account_issuer.sql), and the deployment topology and defaults (compose.yml, Dockerfile, .env.example, docs/DEPLOYMENT.md). This reading produced the five corrections in the first review commit. It is recorded separately from the container-operation walkthroughs and does not close a scenario on its own.",
+    "files": [
+      "packages/db/src/secrets.ts",
+      "apps/api/src/index.ts",
+      "apps/worker/src/index.ts",
+      "apps/api/src/lib/doc-engine/config.ts",
+      "apps/api/src/lib/doc-engine/http.ts",
+      "apps/api/src/lib/uploads.ts",
+      "apps/api/src/modules/email-settings/routes.ts",
+      "apps/api/src/modules/events/routes.ts",
+      "packages/db/src/migration-journal.ts",
+      "packages/db/migrations/0060_account_issuer.sql",
+      "compose.yml",
+      "Dockerfile",
+      ".env.example",
+      "docs/DEPLOYMENT.md"
+    ]
+  },
+  "verifiedAtBasis": "The completion of the last passing independent walkthrough step covering this article, recorded in the independent-* records listed under independentEvidence.",
+  "independentBuild": {
+    "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+    "note": "Images the reviewer built from the same sources with the installation article's own commands. They are not the author's images: the same source builds to a different digest here.",
+    "candidate": {
+      "source": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "app": "sha256:a7d883a0682569f98af530d0fccba8714f607fbf57fbb8711c91bce4e390e6f5",
+      "doc-engine": "sha256:6fe444660a91bd72d621a08ff0919a2bb99ab413f283abe83fdaa2f296446856"
+    },
+    "baseline": {
+      "source": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+      "app": "sha256:f065f6cd830092da90a4958c1e7ea75e6f992bc8eda1c9b6cadf086c4727c16e",
+      "doc-engine": "sha256:6fe444660a91bd72d621a08ff0919a2bb99ab413f283abe83fdaa2f296446856",
+      "note": "The document-engine image is byte-identical across the two revisions; only its tag differs."
+    },
+    "projects": [
+      "openlaw-docs-b8e31260-rev-install",
+      "openlaw-docs-b8e31260-rev-upgrade",
+      "openlaw-docs-b8e31260-rev-restore",
+      "openlaw-docs-b8e31260-rev-recovery"
+    ],
+    "postgres": "postgres:16"
+  }
 }

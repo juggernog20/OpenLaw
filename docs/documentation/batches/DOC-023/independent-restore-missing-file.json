@@ -1,0 +1,28 @@
+{
+  "name": "independent-restore-missing-file",
+  "scenario": "V-C47",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:57:38.687Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-restore",
+  "articleHashes": [
+    {
+      "articleId": "backup-and-restore",
+      "contentSha256": "0237339f91484b7a46623e1753c67ccbb376ae341ac8b40cb5d81237967a891a"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "container-operation",
+      "action": "A restored Document whose bytes are missing, and its recovery",
+      "actual": "One stored blob was removed from the restored target's file volume. The Document row was still listed (true) while its download failed with HTTP 500 — the guide's \"listed but its download fails\" case. Re-extracting the retained files archive into the same isolated target restored the bytes and the download matched the recorded SHA-256 again.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:57:39.062Z",
+      "at": "2026-09-08T09:57:40.275Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T09:57:40.275Z"
+}

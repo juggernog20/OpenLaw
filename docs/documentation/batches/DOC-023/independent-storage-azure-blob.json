@@ -1,0 +1,37 @@
+{
+  "name": "independent-storage-azure-blob",
+  "scenario": "V-C45",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:27:51.946Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-install",
+  "articleHashes": [
+    {
+      "articleId": "deployment-configuration",
+      "contentSha256": "d072207628c0589ee14b8d1575f58fdb70b1c8b6f349bd7ea3bdd70d902ac293"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Write a new Document on the azure-blob driver and read back every earlier store",
+      "actual": "Uploaded a new Document while STORAGE_DRIVER=azure-blob, then downloaded all 3 Documents written under local, s3, azure-blob and every SHA-256 matched what was uploaded.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:27:52.375Z",
+      "at": "2026-09-08T09:27:52.503Z"
+    },
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Worker processing works on the azure-blob driver",
+      "actual": "The worker read the newly stored file from the azure-blob driver and its extraction reached \"ready\" with the uploaded words.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:27:52.504Z",
+      "at": "2026-09-08T09:27:53.534Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T09:27:53.534Z"
+}

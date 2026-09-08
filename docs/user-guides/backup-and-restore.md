@@ -41,7 +41,7 @@ Record the source revision, app and engine image identities, database major vers
    docker compose images --format json > "$BACKUP_DIR/images.json"
    ```
 
-   Check each command's exit status. The file command runs `tar` with the app service's mounted volume; it does not start the API. Keep the entire store, including original uploads and derived renditions. If you have ever used S3 or Azure Blob storage, retain those referenced objects too: archiving the local volume does not copy them.
+   Check each command's exit status. `git rev-parse HEAD` records the checkout, which is the running build only while the working tree still holds it: during an upgrade the checkout already points at the target, so take the running build's identity from `images.json` and record the pre-upgrade revision with the backup. The file command runs `tar` with the app service's mounted volume; it does not start the API. Keep the entire store, including original uploads and derived renditions. If you have ever used S3 or Azure Blob storage, retain those referenced objects too: archiving the local volume does not copy them.
 
 4. Check that the dump and archive can be listed, then record file hashes:
 

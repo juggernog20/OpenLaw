@@ -1,0 +1,32 @@
+{
+  "name": "independent-storage-fault-corrected",
+  "scenario": "V-C48",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:42:48.988Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-install",
+  "articleHashes": [
+    {
+      "articleId": "deployment-configuration",
+      "contentSha256": "d072207628c0589ee14b8d1575f58fdb70b1c8b6f349bd7ea3bdd70d902ac293"
+    },
+    {
+      "articleId": "operator-troubleshooting",
+      "contentSha256": "a41ec1326ba60de8e8d03037ad4e7c3f4d3e946df2afadae8fa18214859b2b9f"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Readiness and file reads in phase corrected",
+      "actual": "After correcting S3_ENDPOINT, all 3 Documents across the local, s3 and azure-blob stores downloaded with matching SHA-256 values.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:42:49.437Z",
+      "at": "2026-09-08T09:42:49.489Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T09:42:49.489Z"
+}

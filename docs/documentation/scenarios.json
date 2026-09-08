@@ -910,7 +910,7 @@
         "Missing secrets, occupied ports, and unavailable dependencies lead to the documented recovery; the authoring lab is not counted as production install evidence."
       ],
       "requiredMethods": ["container-operation"],
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "id": "V-C45",
@@ -931,7 +931,7 @@
         "Wrong origin, limits, unavailable storage/engine, and mismatched encryption keys fail as documented and recover after correction."
       ],
       "requiredMethods": ["container-operation"],
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "id": "V-C46",
@@ -952,7 +952,7 @@
         "Exercise backup-based recovery in a separate target; do not imply that downgrading a migrated database is supported."
       ],
       "requiredMethods": ["container-operation"],
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "id": "V-C47",
@@ -973,7 +973,7 @@
         "Missing/wrong keys or missing files are detected; a backup archive alone never counts as a successful restore."
       ],
       "requiredMethods": ["container-operation"],
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "id": "V-C48",
@@ -994,7 +994,7 @@
         "Logs and reports omit credentials/private payloads; no destructive recovery is offered without its actual scope and consequence."
       ],
       "requiredMethods": ["container-operation"],
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "id": "V-C49",

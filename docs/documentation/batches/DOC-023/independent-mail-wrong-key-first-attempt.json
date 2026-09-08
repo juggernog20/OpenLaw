@@ -1,0 +1,23 @@
+{
+  "name": "independent-mail-wrong-key-first-attempt",
+  "scenario": "V-C45",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:31:01.742Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-install",
+  "steps": [
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Wrong credential key: first attempt",
+      "result": "fail",
+      "error": "The checker raised an uncaught Playwright error during sign-in seconds after the containers were recreated with the wrong key, and no step was recorded. This is a reviewer-side readiness race in the checker, not an observation about the deployment.",
+      "startedAt": "2026-09-08T09:31:01.742Z",
+      "at": "2026-09-08T09:31:12.000Z"
+    }
+  ],
+  "passed": false,
+  "supersededBy": "independent-mail-wrong-key",
+  "note": "Kept because the attempt happened. Its successor ran the same checks against the same wrong-key deployment phase and is the evidence for that phase."
+}

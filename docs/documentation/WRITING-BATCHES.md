@@ -129,11 +129,11 @@ See the [batch verification record](batches/DOC-021/README.md) for the tested bu
 
 Continue this independent operator batch while DOC-022 waits for disposable provider access. Keep the reviewed provider drafts in PR #783 and C42/C43 open as release requirements. Retain that blocker for final acceptance and publication.
 
-- [ ] `install`: Install OpenLaw (C44; P0).
-- [ ] `deployment-configuration`: Configure a deployment (C45; P0).
-- [ ] `upgrade`: Upgrade a populated instance (C46; P0).
-- [ ] `backup-and-restore`: Back up and restore OpenLaw (C47; P0).
-- [ ] `operator-troubleshooting`: Troubleshoot a deployment (C48; P0).
+- [x] `install`: Install OpenLaw (C44; P0).
+- [x] `deployment-configuration`: Configure a deployment (C45; P0).
+- [x] `upgrade`: Upgrade a populated instance (C46; P0).
+- [x] `backup-and-restore`: Back up and restore OpenLaw (C47; P0).
+- [x] `operator-troubleshooting`: Troubleshoot a deployment (C48; P0).
 
 ## DOC-024 [#744](https://github.com/juggernog20/OpenLaw/issues/744)
 

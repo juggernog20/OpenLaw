@@ -1,15 +1,15 @@
 {
   "articleId": "operator-troubleshooting",
-  "contentSha256": "a41ec1326ba60de8e8d03037ad4e7c3f4d3e946df2afadae8fa18214859b2b9f",
+  "contentSha256": "4f5920cb683a58e59e590a6ab7bc756bab31080345b6936baccfcadf0e5e1aab",
   "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
   "buildId": "app sha256:2851d6acd05418a0ddc57750ac75908892643af481f2755cb13a46f946d073b6; engine sha256:d0997fb7187067bc03f82e04ad45365ca5e3132b872e0b73c3934ceb2d67457a",
-  "environment": "openlaw-docs-b8e31260-ops-author; ops-upgrade; ops-restore",
+  "environment": "openlaw-docs-b8e31260-ops-author; ops-upgrade; ops-restore (author); openlaw-docs-b8e31260-rev-install; rev-upgrade; rev-restore; rev-recovery (independent)",
   "author": "Codex documentation author",
-  "technicalReviewer": null,
-  "walkthroughReviewer": null,
+  "technicalReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "walkthroughReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
   "reviewerKind": "agent",
-  "verifiedAt": null,
-  "status": "not-run",
+  "verifiedAt": "2026-09-08T10:05:10Z",
+  "status": "pass",
   "sources": [
     "compose.yml",
     "Dockerfile",
@@ -28,20 +28,90 @@
       "role": "operator",
       "method": "container-operation",
       "expected": "Each diagnosis reaches a concrete cause or supported escalation and restored service is actually checked. Logs and reports omit credentials/private payloads; no destructive recovery is offered without its actual scope and consequence.",
-      "actual": "Independent operator walkthrough pending. Author operations are supporting evidence only.",
-      "result": "not-run",
-      "evidence": []
+      "actual": "Induced seven controlled failures one at a time on a disposable installation and followed the article to each cause and recovery. A short AUTH_SECRET started normally with only a better-auth warning, which is why the key row was corrected. An unresolvable DATABASE_URL produced getaddrinfo ENOTFOUND and a restart loop; stopping the database under a running app gave /healthz 200 with /readyz 503 {\"status\":\"unavailable\"}; both recovered. A wrong retained S3 endpoint left /readyz ok while the file stored there failed to download with HTTP 500 and the other stores stayed intact, and correcting the endpoint restored all three. A stopped worker left a new upload \"pending\" with its original still downloadable, and resuming took new work to \"ready\". An unreachable document engine drove a real PDF to the terminal state \"failed\" under the normal retry timings while the API stayed ready, and correcting it processed a new PDF. A controlled journal fault made the app refuse to start with \"This database cannot apply the migrations it is missing.\" naming 0090_request_triage_assignee, and both read-only commands in the article ran against the refusing installation and mapped the unrecognized row to that migration; restoring the exact recorded hash returned readiness. Signing and Analysis connector diagnostics were not exercised: that provider access is still blocked under C42/C43.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-023/README.md",
+        "docs/documentation/batches/DOC-023/independent-diagnostics.json",
+        "docs/documentation/batches/DOC-023/independent-processing-worker-stopped.json",
+        "docs/documentation/batches/DOC-023/independent-processing-worker-resumed.json",
+        "docs/documentation/batches/DOC-023/independent-processing-engine-failed.json",
+        "docs/documentation/batches/DOC-023/independent-processing-engine-recovered.json",
+        "docs/documentation/batches/DOC-023/independent-storage-fault-wrong-endpoint.json",
+        "docs/documentation/batches/DOC-023/independent-storage-fault-corrected.json",
+        "docs/documentation/batches/DOC-023/independent-install-negatives.json",
+        "docs/documentation/batches/DOC-023/independent-corrections-confirmed.json"
+      ],
+      "verifiedAt": "2026-09-08T10:05:10Z"
     }
   ],
   "authorEvidence": ["docs/documentation/batches/DOC-023/README.md"],
   "limitations": [
-    "Independent technical review and actual operator walkthrough remain pending. Author operations do not satisfy the independent gate.",
-    "Author fresh build used a committed git archive, not the installation article clone procedure; no independent under-an-hour claim.",
+    "Signing and AI connector diagnostics remain unverified: real provider access is still blocked under C42/C43 in #742.",
+    "The migration fault was injected and undone by the reviewer on a disposable fixture; that undo is not an operator repair procedure.",
     "Local TLS uses an isolated Caddy internal CA and does not certify public DNS or certificate issuance.",
     "S3 and Azure operations use owned local compatible services and explicit disposable keys; no cloud identity credential-chain claim.",
     "Provider guides remain on unmerged PR #783; real provider checks C42/C43 are still blocked and are not waived.",
     "The user will proofread the assembled complete suite; no human proofreading or feature-owner sign-off is recorded."
   ],
   "previousEvidence": null,
-  "copyOnlyReview": null
+  "copyOnlyReview": null,
+  "independentEvidence": [
+    "docs/documentation/batches/DOC-023/independent-diagnostics.json",
+    "docs/documentation/batches/DOC-023/independent-processing-worker-stopped.json",
+    "docs/documentation/batches/DOC-023/independent-processing-worker-resumed.json",
+    "docs/documentation/batches/DOC-023/independent-processing-engine-failed.json",
+    "docs/documentation/batches/DOC-023/independent-processing-engine-recovered.json",
+    "docs/documentation/batches/DOC-023/independent-storage-fault-wrong-endpoint.json",
+    "docs/documentation/batches/DOC-023/independent-storage-fault-corrected.json",
+    "docs/documentation/batches/DOC-023/independent-install-negatives.json",
+    "docs/documentation/batches/DOC-023/independent-corrections-confirmed.json"
+  ],
+  "technicalReview": {
+    "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+    "reviewerKind": "agent",
+    "method": "source-inspection",
+    "completedAt": "2026-09-08T08:05:00Z",
+    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+    "scope": "Read the release under test for the behaviour the operator guides claim: the credential-key floor and the absence of one on AUTH_SECRET (packages/db/src/secrets.ts, apps/api/src/index.ts, apps/worker/src/index.ts), the doc-engine bounds and their boot-time refusal (apps/api/src/lib/doc-engine/config.ts, apps/api/src/lib/doc-engine/http.ts), the upload ceiling's silent fallback (apps/api/src/lib/uploads.ts), where outbound email is resolved and tested (apps/api/src/modules/email-settings/routes.ts), the event stream's frames and headers (apps/api/src/modules/events/routes.ts), the journal guard and its messages (packages/db/src/migration-journal.ts), the two refusals of 0060_account_issuer (packages/db/migrations/0060_account_issuer.sql), and the deployment topology and defaults (compose.yml, Dockerfile, .env.example, docs/DEPLOYMENT.md). This reading produced the five corrections in the first review commit. It is recorded separately from the container-operation walkthroughs and does not close a scenario on its own.",
+    "files": [
+      "packages/db/src/secrets.ts",
+      "apps/api/src/index.ts",
+      "apps/worker/src/index.ts",
+      "apps/api/src/lib/doc-engine/config.ts",
+      "apps/api/src/lib/doc-engine/http.ts",
+      "apps/api/src/lib/uploads.ts",
+      "apps/api/src/modules/email-settings/routes.ts",
+      "apps/api/src/modules/events/routes.ts",
+      "packages/db/src/migration-journal.ts",
+      "packages/db/migrations/0060_account_issuer.sql",
+      "compose.yml",
+      "Dockerfile",
+      ".env.example",
+      "docs/DEPLOYMENT.md"
+    ]
+  },
+  "verifiedAtBasis": "The completion of the last passing independent walkthrough step covering this article, recorded in the independent-* records listed under independentEvidence.",
+  "independentBuild": {
+    "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+    "note": "Images the reviewer built from the same sources with the installation article's own commands. They are not the author's images: the same source builds to a different digest here.",
+    "candidate": {
+      "source": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "app": "sha256:a7d883a0682569f98af530d0fccba8714f607fbf57fbb8711c91bce4e390e6f5",
+      "doc-engine": "sha256:6fe444660a91bd72d621a08ff0919a2bb99ab413f283abe83fdaa2f296446856"
+    },
+    "baseline": {
+      "source": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+      "app": "sha256:f065f6cd830092da90a4958c1e7ea75e6f992bc8eda1c9b6cadf086c4727c16e",
+      "doc-engine": "sha256:6fe444660a91bd72d621a08ff0919a2bb99ab413f283abe83fdaa2f296446856",
+      "note": "The document-engine image is byte-identical across the two revisions; only its tag differs."
+    },
+    "projects": [
+      "openlaw-docs-b8e31260-rev-install",
+      "openlaw-docs-b8e31260-rev-upgrade",
+      "openlaw-docs-b8e31260-rev-restore",
+      "openlaw-docs-b8e31260-rev-recovery"
+    ],
+    "postgres": "postgres:16"
+  }
 }

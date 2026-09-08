@@ -1,0 +1,28 @@
+{
+  "name": "independent-external-database-bundled",
+  "scenario": "V-C45",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:40:11.107Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-install",
+  "articleHashes": [
+    {
+      "articleId": "deployment-configuration",
+      "contentSha256": "d072207628c0589ee14b8d1575f58fdb70b1c8b6f349bd7ea3bdd70d902ac293"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Removing DATABASE_URL returns the original bundled database intact",
+      "actual": "With DATABASE_URL removed, the installation returned to its bundled database: the original Administrator signed in, 8 earlier Contracts were listed, and all 3 earlier Documents downloaded with matching SHA-256 values. The external database was a separate selection, not a transfer.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:40:11.217Z",
+      "at": "2026-09-08T09:40:11.626Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T09:40:11.626Z"
+}

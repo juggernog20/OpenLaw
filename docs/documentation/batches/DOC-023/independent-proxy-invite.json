@@ -1,0 +1,28 @@
+{
+  "name": "independent-proxy-invite",
+  "scenario": "V-C45",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:36:35.110Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-install",
+  "articleHashes": [
+    {
+      "articleId": "deployment-configuration",
+      "contentSha256": "d072207628c0589ee14b8d1575f58fdb70b1c8b6f349bd7ea3bdd70d902ac293"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "An invitation issued through the proxy origin carries that origin",
+      "actual": "An invitation created through the HTTPS origin reached the owned Mailpit (7 → 8 messages) and its set-password link uses https://openlaw-review.localhost:43372, which is the configured BASE_URL. The link itself is not published.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:36:35.523Z",
+      "at": "2026-09-08T09:36:35.945Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T09:36:35.945Z"
+}
