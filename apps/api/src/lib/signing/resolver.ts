@@ -107,7 +107,7 @@ export function createSigningResolver(
     }
     // A delivery is answered only by a connector that asked for one.
     // Polling keeps the secret it was configured with, so the mode is
-    // checked beside it: neither an old secret nor a mode change alone
+    // checked beside it. Neither an old secret nor a mode change alone
     // may leave an install verifying deliveries it no longer expects.
     if (purpose === "webhook" && (row.updateMode !== "webhook" || !row.webhookSecret)) return null;
     const key = `${row.id}:${row.updatedAt.getTime()}`;

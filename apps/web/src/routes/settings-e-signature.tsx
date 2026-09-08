@@ -151,11 +151,11 @@ export function SettingsESignaturePage() {
     setAccount(null);
     note("test", "idle");
     try {
-      // Polling does not draw the callback box, so what rides the save
-      // there is the stored address rather than whatever the box held
-      // when it went — a half-typed one would be refused by a rule about
-      // a field this pane is no longer showing. The stored address is
-      // sent back unchanged, which is what keeps it across a mode change.
+      // Polling does not draw the callback box. So what rides the save
+      // there is the stored address, not whatever the box held when it
+      // went. A half-typed one would come back refused by a rule about a
+      // field this pane is no longer showing. Sending the stored address
+      // unchanged is also what keeps it across a mode change.
       const callback =
         updateMode === "webhook" ? webhookUrl.trim() : (connector.webhookUrlOverride ?? "");
       const result = await api.PUT("/api/v1/signing-connectors/{provider}", {
