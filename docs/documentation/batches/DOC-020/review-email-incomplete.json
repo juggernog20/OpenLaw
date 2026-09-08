@@ -1,0 +1,59 @@
+{
+  "record": "review-email-incomplete",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-admin-review",
+  "fixture": {
+    "appUrl": "http://127.0.0.1:43328",
+    "mailUrl": "http://127.0.0.1:48435",
+    "draftPreview": "http://127.0.0.1:43331",
+    "providerMode": "dedicated local OpenID Connect fixture; full browser authorization and callback; no external identity-provider account",
+    "frozenConfigurationHashes": {
+      "source/.env": "47286908f614d1cd4cf769b7fe4168dac3db2d536faebfe4a4481312ad7868e2",
+      "overlay.json": "a37da4d9df42ec8c176757e063e8fc33f0cd5addfac8c774396f2140c91425cd",
+      "fixture/server.mjs": "b91a17c780f3f816a2eb4a5968a43fba405085743f9b174cbc7cf69528738363"
+    }
+  },
+  "successfulChecks": 1,
+  "failedAttempts": 0,
+  "runs": [
+    {
+      "run": "email-incomplete",
+      "startedAt": "2026-09-08T03:34:40.582Z",
+      "completedAt": "2026-09-08T03:34:49.895Z",
+      "articleHashes": [
+        {
+          "articleId": "first-run",
+          "contentSha256": "0f87bd0fce3032d84fbfe3a4c8056826879effd86102e19f8c61efa0f62e3b59"
+        },
+        {
+          "articleId": "authentication-and-email",
+          "contentSha256": "f272a2d7fa11a4088bb528d1642a40060ce7170aeff94234cb2a1e347d18f225"
+        }
+      ],
+      "steps": [
+        {
+          "role": "administrator / operator responsibility",
+          "method": "browser-walkthrough",
+          "action": "SMTP_URL without SMTP_FROM overrides a valid stored relay and blocks delivery",
+          "actual": "Under applied phase incomplete (ba55151ccfca66a9b666e9e65b9b8169c91b480deb1abd36a89c679d761599eb, 2026-09-08T03:34:36.774194+00:00) the pane read \"The deployment environment sets SMTP_URL but not SMTP_FROM\", the resolved source stayed env with a null from address, and the complete app relay saved before the override did not take over. An invitation attempt produced no message in Mailpit after 8 seconds, so an environment relay without a From address really does stop delivery. The app deliberately never returns a stored relay, so its survival is proved by the following stored phase rather than by reading it back here.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:34:40.643Z",
+          "at": "2026-09-08T03:34:49.895Z"
+        }
+      ]
+    }
+  ],
+  "deploymentPhase": {
+    "phase": "incomplete",
+    "appliedAt": "2026-09-08T03:34:36.774194+00:00",
+    "recreatedServices": ["app", "worker"],
+    "configurationHashes": {
+      ".env": "47286908f614d1cd4cf769b7fe4168dac3db2d536faebfe4a4481312ad7868e2",
+      "overlay.json": "a37da4d9df42ec8c176757e063e8fc33f0cd5addfac8c774396f2140c91425cd",
+      "review-phase-incomplete.json": "ba55151ccfca66a9b666e9e65b9b8169c91b480deb1abd36a89c679d761599eb"
+    }
+  }
+}

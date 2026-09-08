@@ -1,0 +1,81 @@
+{
+  "record": "review-discovery",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-admin-review",
+  "fixture": {
+    "appUrl": "http://127.0.0.1:43328",
+    "mailUrl": "http://127.0.0.1:48435",
+    "draftPreview": "http://127.0.0.1:43331",
+    "providerMode": "dedicated local OpenID Connect fixture; full browser authorization and callback; no external identity-provider account",
+    "frozenConfigurationHashes": {
+      "source/.env": "47286908f614d1cd4cf769b7fe4168dac3db2d536faebfe4a4481312ad7868e2",
+      "overlay.json": "a37da4d9df42ec8c176757e063e8fc33f0cd5addfac8c774396f2140c91425cd",
+      "fixture/server.mjs": "b91a17c780f3f816a2eb4a5968a43fba405085743f9b174cbc7cf69528738363"
+    }
+  },
+  "successfulChecks": 4,
+  "failedAttempts": 0,
+  "runs": [
+    {
+      "run": "discovery",
+      "startedAt": "2026-09-08T04:00:03.060Z",
+      "completedAt": "2026-09-08T04:00:11.190Z",
+      "articleHashes": [
+        {
+          "articleId": "first-run",
+          "contentSha256": "0f87bd0fce3032d84fbfe3a4c8056826879effd86102e19f8c61efa0f62e3b59"
+        },
+        {
+          "articleId": "organisation-and-users",
+          "contentSha256": "db8e042580c8e4ce397c96a91f8d468f4741d0db77c21e3cbae16ebb54fa3c1b"
+        },
+        {
+          "articleId": "authentication-and-email",
+          "contentSha256": "f272a2d7fa11a4088bb528d1642a40060ce7170aeff94234cb2a1e347d18f225"
+        }
+      ],
+      "steps": [
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "first-run: contextual Help, search, focused heading and outline, formal reader, themes, zoom",
+          "actual": "The page Help link opened its topic at http://127.0.0.1:43331/help?topic=settings.general&topic=notifications without listing the title; searching \"Set up a new OpenLaw instance\" from the Help index opened the article with its H1 focused, the outline link to \"Create the first Administrator\" focused that heading, and \"Read this article in the full documentation\" reached the formal reader. No horizontal overflow appeared in light, dark and warm themes at 320, 720 and 1440 CSS pixels, nor at emulated 200 percent zoom, and Tab moved focus off the body.",
+          "result": "pass",
+          "startedAt": "2026-09-08T04:00:03.096Z",
+          "at": "2026-09-08T04:00:05.719Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "organisation-and-users: contextual Help, search, focused heading and outline, formal reader, themes, zoom",
+          "actual": "The page Help link opened its topic at http://127.0.0.1:43331/help?topic=settings.users&topic=notifications without listing the title; searching \"Manage your organization and users\" from the Help index opened the article with its H1 focused, the outline link to \"Update organization details\" focused that heading, and \"Read this article in the full documentation\" reached the formal reader. No horizontal overflow appeared in light, dark and warm themes at 320, 720 and 1440 CSS pixels, nor at emulated 200 percent zoom, and Tab moved focus off the body.",
+          "result": "pass",
+          "startedAt": "2026-09-08T04:00:05.719Z",
+          "at": "2026-09-08T04:00:07.914Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "authentication-and-email: contextual Help, search, focused heading and outline, formal reader, themes, zoom",
+          "actual": "The page Help link opened its topic at http://127.0.0.1:43331/help?topic=settings.authentication&topic=settings.email&topic=notifications without listing the title; searching \"Configure sign-in, portal access, and email\" from the Help index opened the article with its H1 focused, the outline link to \"Choose built-in sign-in\" focused that heading, and \"Read this article in the full documentation\" reached the formal reader. No horizontal overflow appeared in light, dark and warm themes at 320, 720 and 1440 CSS pixels, nor at emulated 200 percent zoom, and Tab moved focus off the body.",
+          "result": "pass",
+          "startedAt": "2026-09-08T04:00:07.914Z",
+          "at": "2026-09-08T04:00:10.135Z"
+        },
+        {
+          "role": "signed-out",
+          "method": "browser-walkthrough",
+          "action": "All three guides are discoverable anonymously in the formal reader with no application API calls",
+          "actual": "Without any session the formal reader at /documentation listed all three titles, \"Set up a new OpenLaw instance\", \"Manage your organization and users\" and \"Configure sign-in, portal access, and email\", and the page made zero application API requests.",
+          "result": "pass",
+          "startedAt": "2026-09-08T04:00:10.135Z",
+          "at": "2026-09-08T04:00:11.190Z"
+        }
+      ],
+      "notes": ["Console and page errors observed during Help checks: none"]
+    }
+  ]
+}

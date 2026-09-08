@@ -1,6 +1,6 @@
 # Administration guide verification
 
-Three canonical guides cover C35–C37 for [#740](https://github.com/juggernog20/OpenLaw/issues/740): first-run setup, organization/users, and authentication/email. Author walkthroughs are complete. Independent technical review and the four required scenario/role walkthroughs remain pending. The catalog remains in feature review for DOC-025 acceptance and DOC-027 publication/export.
+Three canonical guides cover C35–C37 for [#740](https://github.com/juggernog20/OpenLaw/issues/740): first-run setup, organization/users, and authentication/email. Author walkthroughs are complete. Independent technical review and the four scenario/role walkthroughs are also complete: V-C35 Administrator, V-C36 Administrator, and V-C37 Administrator plus operator responsibility. The catalog remains in feature review for DOC-025 acceptance and DOC-027 publication/export.
 
 ## Build and method
 
@@ -39,6 +39,50 @@ Help checks covered all three titles, focused headings/outline links, formal lin
 Some author records predate narrow copy corrections: the explanation of automatic staff provisioning was removed, duplicate pending invitations were distinguished from active accounts, and the offboarding links now point directly to Matter setup and Entity Obligations. The records retain their actual hashes; the independent seat must use the final guide bytes.
 
 Reviewer corrections landed after those records, checked against current app source. The allowed-domain list is read at every magic-link sign-in (`isEmailDomainAllowed` in `apps/api/src/lib/org-settings.ts`), so both guides now state that emptying it or removing a domain also stops existing Business Users, not only new ones. The invite Role choice is quoted as the visible label "Legal team member". The invite refusal for a pending address named with a different role, and for a Business User's address, is now described. The Users table Role control is recorded as offering the fourth `business_user` value that the invitation form withholds, and a role change is stated to apply on the target's next action. The `evidence/*.json` content hashes were recomputed for these bytes; their status stays `not-run`, so no verification is claimed for them.
+
+## Independent review
+
+A separate seat repeated the acceptance work on its own fixture. It read no author record as evidence: every claim below rests on its own browser actions. The unseeded `admin-review` fixture ran the same immutable source `6a8873dbda333fd9992eb77525d4bfa3f47af20d` and the same app and engine images in project `openlaw-docs-b8e31260-admin-review`, app/mail ports 43328/48435, local OpenID Connect on 43329 with its identity control on 43330, and the draft Help preview on 43331. `apps/web` is byte-identical between that commit and this branch head, so the preview renders the same application behaviour as the image while serving the current guide bytes.
+
+The fixture had no users when this seat began, so first-run was walked properly: `/auth/setup` contextual Help was observed **before** any account existed, which a completed instance can no longer show. Devon Ashcroft was created through the first-account form. Priya Raman, Tomas Novak, Marisol Vega and Ingrid Sollberg are staff fixtures; Hannah Blum and Otto Lindqvist are Business Users on `northwind.example`; Rio Santos is an unapproved address that must not get in.
+
+| Record                                           | Successful checks |
+| ------------------------------------------------ | ----------------: |
+| [setup](review-setup.json)                       |                 9 |
+| [users](review-users.json)                       |                10 |
+| [portal](review-portal.json)                     |                 7 |
+| [offboarding](review-offboarding.json)           |                 7 |
+| [authentication](review-authentication.json)     |                 4 |
+| [oidc](review-oidc.json)                         |                12 |
+| [email-env](review-email-env.json)               |                 2 |
+| [email-incomplete](review-email-incomplete.json) |                 1 |
+| [email-stored](review-email-stored.json)         |                 2 |
+| [discovery](review-discovery.json)               |                 4 |
+| [final-bytes](review-final-bytes.json)           |                 4 |
+
+There are 62 successful independent checks. Fifteen failed attempts are retained in the same records with their errors. Every one was this seat's own harness fault, not application behaviour: a `<select>` assumed where the app uses a searchable timezone combobox and a radio group for the invite Role; set-password field labels guessed before reading them; an emailed link asserted against the preview origin when it correctly carries the deployment `BASE_URL`; a role-menu poll issued from a session that the demotion had just stripped of Administrator rights; a provider poll that caught the delete-and-reinsert update mid-flight; a readiness probe that threw instead of retrying while the app restarted. Each was corrected and only the affected check retried. None is represented as a passing result.
+
+### Deployment phases
+
+Email states that exist only before the wizard is finished were exercised on this seat's own fixture through three immutable overlay files, recreating **only** the owned app and worker. The frozen snapshot, `source/.env` and base `overlay.json` hashes were verified before each phase and never modified.
+
+| Phase        | Overlay sha256                                                     | Observed                                                                                                                               |
+| ------------ | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `env`        | `55d555a132d1099704fd5da7b8f6c469191b55e1b7ebab0e40da91d4e56f1e82` | Pane read-only, no Save relay or Clear relay, and a real invitation whose envelope From was the environment sender, not the stored one |
+| `incomplete` | `ba55151ccfca66a9b666e9e65b9b8169c91b480deb1abd36a89c679d761599eb` | Source held at `env` with a null from address; no message at all despite a complete stored relay                                       |
+| `stored`     | overlay removed                                                    | Pane returned to the app relay and delivered from the stored sender                                                                    |
+
+Operator work here is a responsibility carried out with deployment tools and the authorized Administrator interface, not a separate application role.
+
+### What the independent seat changed
+
+Walking the corrected role paragraph turned up something the earlier source review had got wrong. The Users table role control renders only on `Active` rows. A Portal-created Business User reads as Active, so it can be promoted in place, but the promotion leaves a row with no account behind it: it reads **Invited**, loses its role control, and cannot be changed again until that person uses the resent link to set a password. The guide sentence claiming a staff account can simply be returned to Portal-only access was therefore too broad. It now says "an active staff account" and describes the pending-invitation state. [final-bytes](review-final-bytes.json) re-walks the whole promote, resend, activate, revert cycle on a fresh Business User against the final guide bytes, so the corrected wording is verified rather than inferred.
+
+Records written before that correction keep their own earlier article hashes. That provenance is deliberate: they show the bytes each run actually exercised.
+
+### Independent limits
+
+Onboarding completion is instance-wide and irreversible, so one instance allows exactly one finishing action. This seat exercised **Set up later** on the final invitation step, the claim a reader is most likely to misread as a skip. **Finish** and the Welcome-step **Set up later** were not independently exercised here. Single sign-on was verified against a dedicated local OpenID Connect fixture with real discovery, authorization, token, JWKS and userinfo endpoints and a real callback; it is not certification of an external provider's client-secret handling or account policy, and it does not satisfy the real DocuSign and AI-provider verification DOC-022 requires. Evidence was taken on fixture commit `6a8873db` rather than the final app candidate, which DOC-025 reconciles.
 
 ## Compatibility and remaining checks
 

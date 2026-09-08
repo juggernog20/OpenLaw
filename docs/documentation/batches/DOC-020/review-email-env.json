@@ -1,0 +1,68 @@
+{
+  "record": "review-email-env",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-admin-review",
+  "fixture": {
+    "appUrl": "http://127.0.0.1:43328",
+    "mailUrl": "http://127.0.0.1:48435",
+    "draftPreview": "http://127.0.0.1:43331",
+    "providerMode": "dedicated local OpenID Connect fixture; full browser authorization and callback; no external identity-provider account",
+    "frozenConfigurationHashes": {
+      "source/.env": "47286908f614d1cd4cf769b7fe4168dac3db2d536faebfe4a4481312ad7868e2",
+      "overlay.json": "a37da4d9df42ec8c176757e063e8fc33f0cd5addfac8c774396f2140c91425cd",
+      "fixture/server.mjs": "b91a17c780f3f816a2eb4a5968a43fba405085743f9b174cbc7cf69528738363"
+    }
+  },
+  "successfulChecks": 2,
+  "failedAttempts": 0,
+  "runs": [
+    {
+      "run": "email-env",
+      "startedAt": "2026-09-08T03:34:05.342Z",
+      "completedAt": "2026-09-08T03:34:06.720Z",
+      "articleHashes": [
+        {
+          "articleId": "first-run",
+          "contentSha256": "0f87bd0fce3032d84fbfe3a4c8056826879effd86102e19f8c61efa0f62e3b59"
+        },
+        {
+          "articleId": "authentication-and-email",
+          "contentSha256": "f272a2d7fa11a4088bb528d1642a40060ce7170aeff94234cb2a1e347d18f225"
+        }
+      ],
+      "steps": [
+        {
+          "role": "administrator / operator responsibility",
+          "method": "browser-walkthrough",
+          "action": "A deployment SMTP_URL and SMTP_FROM make the wizard relay read-only and take over the sender",
+          "actual": "Under applied phase env (55d555a132d1099704fd5da7b8f6c469191b55e1b7ebab0e40da91d4e56f1e82, 2026-09-08T03:33:25.538141+00:00) the pane read \"Outbound email is set by the deployment environment.\" and showed deployment@northwind.example. No SMTP relay URL field and no Save relay or Clear relay control was present, so the wizard was read-only. The resolved source was env even though a complete app relay (legal@helix.example) was stored first.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:34:05.393Z",
+          "at": "2026-09-08T03:34:06.522Z"
+        },
+        {
+          "role": "administrator / operator responsibility",
+          "method": "browser-walkthrough",
+          "action": "A real invitation sent under the environment override arrives from the environment sender",
+          "actual": "The invitation to Ingrid Sollberg was delivered while the override was active and its envelope From was deployment@northwind.example, the environment sender, not the stored legal@helix.example. This proves the environment value is what actually sends, not merely what the pane displays.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:34:06.522Z",
+          "at": "2026-09-08T03:34:06.720Z"
+        }
+      ]
+    }
+  ],
+  "deploymentPhase": {
+    "phase": "env",
+    "appliedAt": "2026-09-08T03:33:25.538141+00:00",
+    "recreatedServices": ["app", "worker"],
+    "configurationHashes": {
+      ".env": "47286908f614d1cd4cf769b7fe4168dac3db2d536faebfe4a4481312ad7868e2",
+      "overlay.json": "a37da4d9df42ec8c176757e063e8fc33f0cd5addfac8c774396f2140c91425cd",
+      "review-phase-env.json": "55d555a132d1099704fd5da7b8f6c469191b55e1b7ebab0e40da91d4e56f1e82"
+    }
+  }
+}

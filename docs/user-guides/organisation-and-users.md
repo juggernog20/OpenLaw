@@ -23,9 +23,9 @@ If delivery fails, check the address and [outbound email](authentication-and-ema
 
 ## Change a role or revoke sessions
 
-Select the user's role in the Users table and choose the new role. Check the saved row. The new role applies on that person's next action; they do not have to sign in again. Role changes affect what the account can do; they do not transfer its assigned work.
+Select the user's role in the Users table and choose the new role. The role control appears on **Active** rows only. Check the saved row. The new role applies on that person's next action; they do not have to sign in again. Role changes affect what the account can do; they do not transfer its assigned work.
 
-This control also offers **Business user**, which the invitation form does not. Use it to give an existing Business User a staff role in place, or to return a staff account to Portal-only access.
+This control also offers **Business user**, which the invitation form does not. Use it to give an existing Business User a staff role in place, or to return an active staff account to Portal-only access. A Business User has never set a password. Promoting one therefore leaves a pending invitation: the row reads **Invited** and loses its role control until that person uses the resent link to set a password.
 
 Use the row's **Revoke all sessions** action when that person should sign in again on every device. Existing sessions stop granting access. The account remains active and can sign in again using its configured method. To prevent further sign-in, archive the account.
 

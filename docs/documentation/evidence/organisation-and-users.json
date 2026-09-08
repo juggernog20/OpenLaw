@@ -1,15 +1,15 @@
 {
   "articleId": "organisation-and-users",
-  "contentSha256": "416f94a4d22154dab1cb62841c8ac7e1b9856ecde5378a763c6ca375279c7ddf",
+  "contentSha256": "db8e042580c8e4ce397c96a91f8d468f4741d0db77c21e3cbae16ebb54fa3c1b",
   "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
   "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
-  "environment": "openlaw-docs-b8e31260-admin-onboarding",
+  "environment": "openlaw-docs-b8e31260-admin-review",
   "author": "Codex documentation author",
-  "technicalReviewer": null,
-  "walkthroughReviewer": null,
+  "technicalReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "walkthroughReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
   "reviewerKind": "agent",
-  "verifiedAt": null,
-  "status": "not-run",
+  "verifiedAt": "2026-09-08T04:02:50Z",
+  "status": "pass",
   "sources": [
     "CONTEXT.md",
     "docs/decision-records/DECISIONS-SETTINGS.md",
@@ -26,17 +26,35 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "expected": "Changes apply to the intended account and revoked sessions cease granting access. Unauthorized administration, invalid invites, and self/last-Administrator safeguards behave as implemented.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "Organization name saved on Enter, restored on Escape and survived reloads; Default locale offered only English (United States); Default timezone is a searchable combobox that saved Europe/London; Logo accepted a PNG and refused a text file. Invite user offers exactly Legal team member, Contributor and Administrator as radio choices, so the guide now quotes the sentence-case visible label. An invitation reached Mailpit, activation through Set your password turned the row Active, and the activated Legal team member was offered no Invite user control. Re-inviting a pending address with the same role resent and left one row; with a different role it was refused with \"This user already exists with a different role.\" and sent no mail; an activated account was refused with \"This user has already activated their account.\"; a Portal-created Business User address was refused the same way. The Users table Role control offers four choices including Business user, appears on Active rows only, and a promoted Portal account becomes a pending Invited row that loses its role control until the resent link sets a password. Revoke all sessions ended a live session on its next request while the row stayed Active and the password still worked. Archiving blocked sign-in, Show archived plus Restore returned the account, and previously revoked sessions stayed revoked. The signed-in Administrator row offered no Archive or Revoke all sessions control, and demoting the only Administrator was refused with \"You cannot demote the last Administrator.\" until a second Administrator was invited and activated; the demotion then applied immediately, costing the demoted session its Invite user control and returning 403 on its next request. A Contract kept its archived Owner, and only an explicit Owner reassignment through the record control moved the work before access was withdrawn.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-020/README.md",
+        "docs/documentation/batches/DOC-020/review-users.json",
+        "docs/documentation/batches/DOC-020/review-portal.json",
+        "docs/documentation/batches/DOC-020/review-offboarding.json",
+        "docs/documentation/batches/DOC-020/review-final-bytes.json",
+        "docs/documentation/batches/DOC-020/review-discovery.json"
+      ],
+      "verifiedAt": "2026-09-08T04:02:50Z"
     }
   ],
   "authorEvidence": ["docs/documentation/batches/DOC-020/README.md"],
   "limitations": [
-    "Independent technical review and scenario walkthroughs remain pending.",
-    "Agent walkthroughs are not human user studies or feature-owner approval.",
+    "Independent walkthroughs are agent walkthroughs, not human user studies or feature-owner approval.",
+    "Single sign-on was verified against a dedicated local OpenID Connect fixture. It is not certification of a real provider's client-secret handling or account policy, and it does not satisfy the real DocuSign and AI-provider verification required by DOC-022.",
+    "Onboarding completion is instance-wide and irreversible, so one instance permits one finishing action. Set up later on the final invitation step was exercised; Finish and the Welcome-step Set up later were not independently exercised here.",
+    "Evidence was taken on fixture app commit 6a8873dbda333fd9992eb77525d4bfa3f47af20d, not the final app candidate. DOC-025 reconciles the catalog against that candidate.",
     "Operator and module configuration guides remain forward publication dependencies."
   ],
   "previousEvidence": null,
-  "copyOnlyReview": null
+  "copyOnlyReview": null,
+  "independentEvidence": [
+    "docs/documentation/batches/DOC-020/README.md",
+    "docs/documentation/batches/DOC-020/review-users.json",
+    "docs/documentation/batches/DOC-020/review-portal.json",
+    "docs/documentation/batches/DOC-020/review-offboarding.json",
+    "docs/documentation/batches/DOC-020/review-final-bytes.json",
+    "docs/documentation/batches/DOC-020/review-discovery.json"
+  ]
 }
