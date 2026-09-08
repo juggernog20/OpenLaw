@@ -21,9 +21,11 @@
       "method": "browser-walkthrough",
       "action": "Reach the Audit log under Security and combine the three filters",
       "actual": "Settings > Security > Audit log opened as \"Audit log\" with columns [\"Event\",\"Record\",\"Audience\",\"When\"] (the security group needed expanding). The three filters combine and narrow in turn: unfiltered 50 entries, Person=\"Daniel Okafor\" 50, plus Action=\"contract_type.archived\" 2, plus Record=\"Contract\" -1.",
-      "result": "pass",
+      "result": "fail",
       "startedAt": "2026-09-08T05:52:09.770Z",
-      "at": "2026-09-08T05:52:13.701Z"
+      "at": "2026-09-08T05:52:13.701Z",
+      "error": "Reviewer helper error, not product behaviour: entry counts were row count minus a header row, so the Record filter printed -1 for an empty result. The filters did combine, but the numbers as written are not usable.",
+      "supersededBy": ["docs/documentation/batches/DOC-021/independent-repair-audit.json"]
     },
     {
       "role": "administrator",

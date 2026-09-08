@@ -21,9 +21,11 @@
       "method": "browser-walkthrough",
       "action": "Read the created Matter\u2019s Overview, Tasks and Key dates as a reader",
       "actual": "The record's section strip reads \"Overview Documents Key dates 1 Tasks 2\". Overview shows type \"Ind template type IND81T2F\", Priority/Risk and the Field: true. The Tasks section reads \"M-27 | Title | Matter type | Employment | Litigation | Regulatory | Commercial | Corporate | IP | Privacy | Advisory | Other | Product counsel | M&A | Docs replacement 1788842089553 revised | Ind supplier assessment IND81C9L revised | Docs matter 1788842089553 | Ind replacement type IND81C9L | Ind r\". The Key dates section reads \"M-27 | Title | Matter type | Employment | Litigation | Regulatory | Commercial | Corporate | IP | Privacy | Advisory | Other | Product counsel | M&A | Docs replacement 1788842089553 revised | Ind supplier assessment IND81C9L revised | Docs matter 1788842089553 | Ind replacement type IND81C9L | Ind r\".",
-      "result": "pass",
+      "result": "fail",
       "startedAt": "2026-09-08T05:32:38.404Z",
-      "at": "2026-09-08T05:32:39.085Z"
+      "at": "2026-09-08T05:32:39.085Z",
+      "error": "Reviewer helper error, not product behaviour: the section links were clicked without waiting for the route to change, so the Tasks and Key dates readings both captured the Overview type picker.",
+      "supersededBy": ["docs/documentation/batches/DOC-021/independent-template-record-retry3.json"]
     },
     {
       "role": "administrator",

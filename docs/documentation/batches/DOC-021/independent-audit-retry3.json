@@ -30,9 +30,11 @@
       "method": "browser-walkthrough",
       "action": "The From and To bounds use the browser\u2019s local calendar days",
       "actual": "The browser runs in Asia/Dubai, so its calendar day is 2026-09-08. Bounding From and To to that day left 50 entries and the query sent \"?from=2019-12-31T20:00:00.000Z&to=2026-09-08T19:59:59.999Z\"; bounding to 2020-01-01 sent \"?from=2019-12-31T20:00:00.000Z&to=2020-01-01T19:59:59.999Z\" \u2014 the civil dates become that day's first and last instants in this browser's zone. Bounding to 2020-01-01 matched nothing and the log said \"No entry matches these filters.\". Clear filters recovered 50 entries.",
-      "result": "pass",
+      "result": "fail",
       "startedAt": "2026-09-08T05:53:55.136Z",
-      "at": "2026-09-08T05:54:00.642Z"
+      "at": "2026-09-08T05:54:00.642Z",
+      "error": "False claim, not product behaviour: the \"today\" capture is a transient hybrid taken after From had been retyped to 2020 but before To followed, so it records from 2019-12-31T20:00:00.000Z against a to of 2026-09-08T19:59:59.999Z. Neither pair matches one civil day of input.",
+      "supersededBy": ["docs/documentation/batches/DOC-021/independent-repair-audit.json"]
     },
     {
       "role": "administrator",
@@ -53,6 +55,6 @@
       "at": "2026-09-08T05:54:08.935Z"
     }
   ],
-  "passed": true,
+  "passed": false,
   "completedAt": "2026-09-08T05:54:08.936Z"
 }

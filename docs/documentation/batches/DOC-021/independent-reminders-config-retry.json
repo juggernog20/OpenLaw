@@ -41,7 +41,8 @@
       "actual": "Reduced to a single entry [2]. That row offers no Remove control (0) and shows the lock \"2 days before is the only lead time and can't be removed\". Saving an empty list directly answered 400: {\"type\":\"about:blank\",\"title\":\"Request validation failed\",\"status\":400,\"detail\":\"One or more request fields are invalid.\",\"instance\":\"/api/v1/org/reminder-offsets\",\"errors\":[{\"path\":\"offsets\",\"message. The list was rebuilt to [2,4,0] for the delivery check.",
       "result": "pass",
       "startedAt": "2026-09-08T05:50:39.862Z",
-      "at": "2026-09-08T05:50:44.848Z"
+      "at": "2026-09-08T05:50:44.848Z",
+      "note": "The problem envelope quoted here is truncated: the capture was clipped at 200 characters and ends mid-errors at \"message\". The refusal and the unchanged list were observed correctly. A complete sanitized response for the same empty-list refusal, taken later without changing the reader's saved list, is in docs/documentation/batches/DOC-021/independent-repair-reminders.json."
     }
   ],
   "passed": true,

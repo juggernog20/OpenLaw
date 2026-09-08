@@ -21,9 +21,11 @@
       "method": "browser-walkthrough",
       "action": "Create a group by the guide route and refuse an ineligible member",
       "actual": "Created \"Ind sign-off panel IND81T2F\" with members [\"Nadia Haddad\",\"Priya Raman\"]. The member picker offers only Member+ people ([\"Blair Wentworth blair@helix.example\",\"Daniel Okafor daniel.okafor@helix.example\",\"Ellis Marlow 1788842858292 docs.reminders.1788842858292@helix.example\",\"Ines Duarte ines.duarte@helix.example\",\"Marcus Oyelaran marcus.oyelaran@helix.example\",\"Nadia Haddad nadia.haddad@helix.example\"]) and the dialog says \"\". Adding the Contributor Ravi Menon answered 400: {\"type\":\"about:blank\",\"title\":\"Request validation failed\",\"status\":400,\"detail\":\"One or more request fields are invalid.\",\"instance\":\"/api/v1/approver-groups/01a07f8e-5fbb-7931-929b-1d9d1bcd717c/members\",\"errors\":[{\"path.",
-      "result": "pass",
+      "result": "fail",
       "startedAt": "2026-09-08T05:47:11.729Z",
-      "at": "2026-09-08T05:47:22.230Z"
+      "at": "2026-09-08T05:47:22.230Z",
+      "error": "The captured refusal does not establish what the step claims. The member write used a userIds key where the route takes memberIds, so the 400 is request validation and says nothing about role eligibility, and the problem body is truncated mid-errors. The picker list was also a six-name sample presented as the whole offer, and it omits Priya Raman even though the group included them.",
+      "supersededBy": ["docs/documentation/batches/DOC-021/independent-repair-groups.json"]
     },
     {
       "role": "administrator",
@@ -39,18 +41,22 @@
       "method": "browser-walkthrough",
       "action": "A member who already has a pending request is skipped, not refused",
       "actual": "Contract 45 already had a manual Pending request for . The dialog said \"Asks Priya Raman.\" and \"Skips 1 person who already has a request open.\". Applying succeeded and left 2 Pending rows for [[null,\"manual\"],[null,\"group\"]] \u2014 the overlapping person was skipped rather than refused, and no duplicate row was made.",
-      "result": "pass",
+      "result": "fail",
       "startedAt": "2026-09-08T05:47:23.019Z",
-      "at": "2026-09-08T05:47:23.773Z"
+      "at": "2026-09-08T05:47:23.773Z",
+      "error": "Unusable identities, not product behaviour: the roster was read as approverName, a key the endpoint does not answer, so the before state reads \"for \" and the after rows read [[null,\"manual\"],[null,\"group\"]]. The step cannot show which person was skipped.",
+      "supersededBy": ["docs/documentation/batches/DOC-021/independent-repair-groups.json"]
     },
     {
       "role": "administrator",
       "method": "browser-walkthrough",
       "action": "A member who has lost Member+ standing refuses the whole apply and creates no partial roster",
       "actual": "With Priya Raman demoted to Contributor, applying the two-member group was refused by name: \"Priya Raman is not an Administrator or a Legal Team Member, so they can't approve a contract.\". Contract 46 held 0 Pending rows before and 0 after \u2014 the refusal created no partial roster, not even for the still-eligible member. Restoring their Legal role and applying again created 2 Pending rows for [null,null].",
-      "result": "pass",
+      "result": "fail",
       "startedAt": "2026-09-08T05:47:23.774Z",
-      "at": "2026-09-08T05:47:25.272Z"
+      "at": "2026-09-08T05:47:25.272Z",
+      "error": "Unusable identities, not product behaviour: the same wrong roster key left the restored apply recorded as \"2 Pending rows for [null,null]\", so the people asked after the refusal are not established.",
+      "supersededBy": ["docs/documentation/batches/DOC-021/independent-repair-groups.json"]
     },
     {
       "role": "administrator",

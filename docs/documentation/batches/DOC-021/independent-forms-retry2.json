@@ -57,11 +57,13 @@
       "method": "browser-walkthrough",
       "action": "Attach and require a form answer, then detach one",
       "actual": "\"Ind coverage region IND81T2F\" is attached and Required on the Matter form and attached on the Contract form. Detaching \"Ind requester contact IND81T2F\" removed the form attachment while the catalog definition survived (true). The Matter form now carries [].",
-      "result": "pass",
+      "result": "fail",
       "startedAt": "2026-09-08T05:36:48.505Z",
-      "at": "2026-09-08T05:36:50.905Z"
+      "at": "2026-09-08T05:36:50.905Z",
+      "error": "Reviewer helper error, not product behaviour: the attachment list was read from formFields/fields, but the endpoint answers attachedFields, so the step ends with an empty list that contradicts its own opening sentence. The required Field was in fact still attached and required.",
+      "supersededBy": ["docs/documentation/batches/DOC-021/independent-repair-forms.json"]
     }
   ],
-  "passed": true,
+  "passed": false,
   "completedAt": "2026-09-08T05:36:50.905Z"
 }

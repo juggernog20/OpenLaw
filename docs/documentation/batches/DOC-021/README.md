@@ -58,6 +58,7 @@ A second agent, independent of the author, followed the five guides on the same 
 
 | Record                                                                        | Scenario                      | Passed steps | Failed attempts |
 | ----------------------------------------------------------------------------- | ----------------------------- | -----------: | --------------: |
+| [repair-field-type](independent-repair-field-type.json)                       | V-C38                         |            1 |               0 |
 | [requiredness](independent-requiredness.json)                                 | V-C38                         |            0 |               1 |
 | [requiredness-retry](independent-requiredness-retry.json)                     | V-C38                         |            0 |               1 |
 | [requiredness-retry2](independent-requiredness-retry2.json)                   | V-C38                         |            1 |               1 |
@@ -68,16 +69,15 @@ A second agent, independent of the author, followed the five guides on the same 
 | [roles-retry](independent-roles-retry.json)                                   | V-C38                         |            2 |               0 |
 | [statuses](independent-statuses.json)                                         | V-C38                         |            0 |               1 |
 | [statuses-retry](independent-statuses-retry.json)                             | V-C38                         |            5 |               0 |
-| [taxonomies](independent-taxonomies.json)                                     | V-C38                         |            7 |               0 |
-| [discovery](independent-discovery.json)                                       | V-C38,V-C39,V-C40,V-C41,V-C55 |            6 |               0 |
-| [discovery-final](independent-discovery-final.json)                           | V-C38,V-C39,V-C40,V-C41,V-C55 |            6 |               0 |
+| [taxonomies](independent-taxonomies.json)                                     | V-C38                         |            6 |               1 |
+| [repair-anchor](independent-repair-anchor.json)                               | V-C39                         |            1 |               0 |
 | [template-create](independent-template-create.json)                           | V-C39                         |            0 |               1 |
-| [template-create-retry](independent-template-create-retry.json)               | V-C39                         |            4 |               0 |
+| [template-create-retry](independent-template-create-retry.json)               | V-C39                         |            3 |               1 |
 | [template-record](independent-template-record.json)                           | V-C39                         |            0 |               1 |
 | [template-record-retry](independent-template-record-retry.json)               | V-C39                         |            0 |               1 |
 | [template-record-retry2](independent-template-record-retry2.json)             | V-C39                         |            0 |               1 |
 | [template-record-retry3](independent-template-record-retry3.json)             | V-C39                         |            1 |               0 |
-| [template-recovery](independent-template-recovery.json)                       | V-C39                         |            1 |               1 |
+| [template-recovery](independent-template-recovery.json)                       | V-C39                         |            0 |               2 |
 | [template-recovery-retry](independent-template-recovery-retry.json)           | V-C39                         |            2 |               1 |
 | [templates](independent-templates.json)                                       | V-C39                         |            2 |               1 |
 | [templates-retry](independent-templates-retry.json)                           | V-C39                         |            3 |               1 |
@@ -88,33 +88,46 @@ A second agent, independent of the author, followed the five guides on the same 
 | [forms-corrections-final](independent-forms-corrections-final.json)           | V-C40                         |            2 |               0 |
 | [forms-corrections-retry](independent-forms-corrections-retry.json)           | V-C40                         |            2 |               1 |
 | [forms-retry](independent-forms-retry.json)                                   | V-C40                         |            3 |               1 |
-| [forms-retry2](independent-forms-retry2.json)                                 | V-C40                         |            5 |               0 |
+| [forms-retry2](independent-forms-retry2.json)                                 | V-C40                         |            4 |               1 |
 | [guidance](independent-guidance.json)                                         | V-C40                         |            0 |               1 |
 | [guidance-retry](independent-guidance-retry.json)                             | V-C40                         |            2 |               1 |
 | [guidance-retry2](independent-guidance-retry2.json)                           | V-C40                         |            0 |               1 |
 | [guidance-retry3](independent-guidance-retry3.json)                           | V-C40                         |            3 |               0 |
+| [repair-forms](independent-repair-forms.json)                                 | V-C40                         |            1 |               0 |
+| [repair-submit](independent-repair-submit.json)                               | V-C40                         |            1 |               0 |
 | [request-type-archive](independent-request-type-archive.json)                 | V-C40                         |            0 |               1 |
-| [request-type-archive-retry](independent-request-type-archive-retry.json)     | V-C40                         |            1 |               0 |
+| [request-type-archive-retry](independent-request-type-archive-retry.json)     | V-C40                         |            0 |               1 |
 | [request-type-lifecycle](independent-request-type-lifecycle.json)             | V-C40                         |            0 |               1 |
 | [request-type-lifecycle-retry](independent-request-type-lifecycle-retry.json) | V-C40                         |            2 |               0 |
 | [submit](independent-submit.json)                                             | V-C40                         |            1 |               1 |
-| [submit-retry](independent-submit-retry.json)                                 | V-C40                         |            2 |               1 |
-| [submit-retry2](independent-submit-retry2.json)                               | V-C40                         |            2 |               1 |
-| [submit-retry3](independent-submit-retry3.json)                               | V-C40                         |            2 |               1 |
-| [submit-retry4](independent-submit-retry4.json)                               | V-C40                         |            2 |               1 |
-| [submit-retry5](independent-submit-retry5.json)                               | V-C40                         |            3 |               0 |
-| [audit](independent-audit.json)                                               | V-C41                         |            2 |               1 |
-| [audit-retry](independent-audit-retry.json)                                   | V-C41                         |            3 |               1 |
-| [audit-retry2](independent-audit-retry2.json)                                 | V-C41                         |            2 |               2 |
-| [audit-retry3](independent-audit-retry3.json)                                 | V-C41                         |            4 |               0 |
+| [submit-retry](independent-submit-retry.json)                                 | V-C40                         |            1 |               2 |
+| [submit-retry2](independent-submit-retry2.json)                               | V-C40                         |            1 |               2 |
+| [submit-retry3](independent-submit-retry3.json)                               | V-C40                         |            1 |               2 |
+| [submit-retry4](independent-submit-retry4.json)                               | V-C40                         |            1 |               2 |
+| [submit-retry5](independent-submit-retry5.json)                               | V-C40                         |            2 |               1 |
+| [audit](independent-audit.json)                                               | V-C41                         |            1 |               2 |
+| [audit-retry](independent-audit-retry.json)                                   | V-C41                         |            2 |               2 |
+| [audit-retry2](independent-audit-retry2.json)                                 | V-C41                         |            1 |               3 |
+| [audit-retry3](independent-audit-retry3.json)                                 | V-C41                         |            3 |               1 |
 | [reminders-config](independent-reminders-config.json)                         | V-C41                         |            0 |               1 |
 | [reminders-config-retry](independent-reminders-config-retry.json)             | V-C41                         |            3 |               0 |
 | [reminders-delivery](independent-reminders-delivery.json)                     | V-C41                         |            3 |               0 |
+| [repair-audit](independent-repair-audit.json)                                 | V-C41                         |            3 |               0 |
+| [repair-reminders](independent-repair-reminders.json)                         | V-C41                         |            1 |               0 |
 | [groups](independent-groups.json)                                             | V-C55                         |            0 |               1 |
-| [groups-retry](independent-groups-retry.json)                                 | V-C55                         |            4 |               1 |
+| [groups-retry](independent-groups-retry.json)                                 | V-C55                         |            1 |               4 |
 | [groups-retry2](independent-groups-retry2.json)                               | V-C55                         |            4 |               0 |
+| [repair-groups](independent-repair-groups.json)                               | V-C55                         |            4 |               0 |
+| [discovery](independent-discovery.json)                                       | V-C38,V-C39,V-C40,V-C41,V-C55 |            6 |               0 |
+| [discovery-final](independent-discovery-final.json)                           | V-C38,V-C39,V-C40,V-C41,V-C55 |            6 |               0 |
 
-The independent pass holds 121 passing steps and 37 retained failed attempts across 55 records. Every failure is a reviewer helper mistake, never a relabelled product result: asynchronous required-checkbox state that a plain `check()` could not settle; a submit control named **Create** rather than "Create matter"; select values read as page text; the key-dates envelope key; row-action controls that are buttons in one pane and links in another; the request detail path; a Portal form that confirms in place instead of navigating; the audit Search box colliding with the global Search; an **Export CSV** link read as a button; a member picker whose checkboxes carry no aria-label; and duplicate fixtures left by interrupted attempts. Four steps that had first been written down as passes were relabelled `fail` after review, with the reason recorded in the step, because their assertions proved nothing: a scope check that used PATCH where the route is PUT and answered 404 twice, a rail assertion that counted the global navigation, a section reading that captured the Overview picker, and audit counts that printed −1 for an empty table. Each was redone.
+The independent pass holds 116 passing steps and 54 retained failed attempts across 62 records. Every failure is a reviewer helper mistake, never a relabelled product result: asynchronous required-checkbox state that a plain `check()` could not settle; a submit control named **Create** rather than "Create matter"; select values read as page text; the key-dates envelope key; row-action controls that are buttons in one pane and links in another; the request detail path; a Portal form that confirms in place instead of navigating; the audit Search box colliding with the global Search; an **Export CSV** link read as a button; a member picker whose checkboxes carry no aria-label; and duplicate fixtures left by interrupted attempts.
+
+Seventeen steps that had first been written down as passes were relabelled `fail`, each keeping its original text and timestamps and gaining a `supersededBy` link to the record that establishes the claim properly. Four were caught during the walkthroughs: a scope check that used PATCH where the route is PUT and answered 404 twice, a rail assertion that counted the global navigation, a section reading that captured the Overview picker, and audit counts that printed −1 for an empty table. Thirteen more came from a later reading of the evidence itself: a second −1 count; two audit date-bound steps whose captured query did not correspond to the inputs they described, one of them a transient hybrid taken between two keystrokes; a form attachment list read from an envelope key the endpoint does not answer, ending in `[]` against the step's own opening sentence; an approver-group membership write that used `userIds` where the route takes `memberIds`, so its 400 proved request validation rather than the role rule, alongside a six-name picker sample presented as the whole offer; two group rosters read as `approverName`, leaving the skipped and restored people as `null`; a request-type step claiming a stable identity while recording `requestTypeId unchanged: false`; an `isDisabled()` call on static text recorded as `disabled=null`; a template step recording `Tasks card (false)` yet passing; a section reading that captured the Overview for both Tasks and Key dates; and five Portal steps whose "no Request was created" clause matched an earlier probe's summary instead of proving the refusal created nothing.
+
+One historical capture is annotated rather than failed: the empty lead-time refusal in `reminders-config-retry` observed the right behaviour but clipped its problem envelope mid-`errors`, so the excerpt is marked truncated and a complete sanitized response sits in `repair-reminders`.
+
+The seven `repair-*` records re-establish every superseded claim, and each of their steps throws when the stated outcome is not observed. The audit bounds now come from an awaited response whose query carries exactly the instants the two date controls were set to, checked in both directions; the group checks name people by id and compare whole rosters before and after; the picker list is verified complete against the user list rather than sampled, with a well-formed `memberIds` write drawing the real 422 role refusal; the Portal refusal is proved against a unique summary no other Request carries; the field type is shown to be static text with no control at all; and the template anchor is asserted offset by offset against the new Matter's own creation instant.
 
 The reviewer's own retries also left extra fictional definitions in the lab, including a stray `Ind supplier assessment IND81C9L revised` Matter type and duplicate probe request types, all clearly named and harmless.
 
@@ -128,7 +141,7 @@ Request forms: the four Target states with their own explanations; attachable Fi
 
 Reminders and the Audit log: the organization list edited for real, with the duplicate, 731, last-entry and empty-list refusals; a brand-new fictional Legal Team Member on `Asia/Dubai` with no briefing history; the real queued `notification.morning-round` completing in the owned worker on the real clock; an actual Mailpit briefing naming the 4-day and On-the-day Key dates and omitting the 11-day one, with the bell linking to the record; and the audit filters, browser-local date bounds, search boundary, CSV export and Show older.
 
-Approver groups: creation, the Member+ picker, a refused Contributor, one Pending row per member stamped with the group, a second apply refused as a no-op, an already-pending member skipped, and edit, archive and restore all leaving earlier requests untouched.
+Approver groups: creation, a picker offering only Administrators and Legal Team Members, a refused Contributor, one Pending row per member stamped with the group, a second apply refused as a no-op, an already-pending member skipped, and edit, archive and restore all leaving earlier requests untouched.
 
 ### Corrections the independent pass made
 
@@ -138,7 +151,7 @@ Three `request-forms` sentences did not match the release and were rewritten, th
 - **Archiving a request type.** The guide said archiving an in-use request type "asks for a replacement for its Requests" and that Restore does not reverse the reassignment. Request types have no usage counter armed in this build, so a type still carrying a Request reports "is not used by any requests", disables its reassignment control and archives with no replacement; the Request keeps the archived type and stays readable to its Requester, while the type leaves the Portal's cards. The paragraph now describes that, and tells the reader to check what is still open first.
 - **The Matter carry-through label.** The cold pass had already replaced "the corresponding Matter section" with the exact heading; a real Matter conversion confirmed **Does not carry into the matter** on screen.
 
-The `approver-groups` correction from the cold pass was also confirmed against the running app. An archived member and an already-pending member are skipped, but a member who has lost Member+ standing, or who sits outside a Confidential Contract's audience, is refused by name and the whole apply creates nothing — the Pending count was identical before and after each refusal, so no partial roster is left behind.
+The `approver-groups` correction from the cold pass was also confirmed against the running app. An archived member and an already-pending member are skipped, but a member who is no longer an Administrator or Legal Team Member, or who sits outside a Confidential Contract's audience, is refused by name and the whole apply creates nothing — the Pending count was identical before and after each refusal, so no partial roster is left behind.
 
 ### Technical review
 
@@ -169,10 +182,10 @@ Five suggestions were not applied after checking the source:
 - Rewriting this internal evidence report as second-person commands misapplies DES-015's component/system-copy scope. It would turn observed results and pending review into instructions to a reader.
 - Rewriting factual guide explanations as commands such as keeping an immutable Slug fixed would imply a user choice that does not exist. EDITORIAL.md explicitly permits explanations and requires accurate conditions/consequences.
 - **Custom field defaults** is the exact visible template-editor heading in this build. The guide retains that UI label while using Field in ordinary prose.
-- Reverting the current template article hash to an earlier author's hash would misidentify the current article. Earlier observations retain their actual hashes; later supplement/discovery used the expanded conversion explanation. Per-article independent status remains not-run until the final bytes are independently verified.
+- Reverting the current template article hash to an earlier author's hash would misidentify the current article. Earlier observations retain their actual hashes; later supplement/discovery used the expanded conversion explanation. Per-article independent status was `not-run` when this disposition was written; the independent walkthrough has since verified the final bytes and each record now reads `pass`.
 - Restricting Deflection links to HTTPS would contradict both the current UI and validation, which accept HTTP and HTTPS. The local browser check exercised HTTP, and the guide does not claim the link itself creates a security guarantee.
 
-The independent Opus 5 review then checked every guide claim against the app source and raised two corrections, both applied here. `approver-groups` now separates the two apply outcomes the source draws apart: an archived or already-pending member is left out of the ask, while a member who has lost Member+ standing or sits outside a Confidential Contract's audience refuses the whole apply by name and creates nothing (`apps/api/src/modules/contract-approvals/routes.ts`, `apps/api/src/lib/approvers.ts`). `request-forms` now names the exact Matter conversion heading, **Does not carry into the matter**, instead of describing it. The `approver-groups` and `request-forms` per-article hashes were reissued for the new bytes; the author records retain their historical hashes. The approver-group correction adds an outcome the earlier author run did not exercise, so its independent walkthrough must cover it.
+The independent Opus 5 review then checked every guide claim against the app source and raised two corrections, both applied here. `approver-groups` now separates the two apply outcomes the source draws apart: an archived or already-pending member is left out of the ask, while a member who is no longer an Administrator or Legal Team Member, or who sits outside a Confidential Contract's audience, refuses the whole apply by name and creates nothing (`apps/api/src/modules/contract-approvals/routes.ts`, `apps/api/src/lib/approvers.ts`). `request-forms` now names the exact Matter conversion heading, **Does not carry into the matter**, instead of describing it. The `approver-groups` and `request-forms` per-article hashes were reissued for the new bytes; the author records retain their historical hashes. The approver-group correction adds an outcome the earlier author run did not exercise, so its independent walkthrough must cover it.
 
 The independent pass reran the checks on the final bytes: `format:check`, `secretlint` and `docs:lint` clean, documentation CI tooling 33/33, the documentation build with zero warnings, and `DOC_ENGINE_TEST_IMAGE=openlaw-doc-engine:test pnpm exec turbo run test --continue -- --maxWorkers=8` green at 5/5 tasks in 3m52.979s (API 176 files / 2,890 tests; web 97 files / 1,704 tests). No browser walkthrough ran while that suite was running.
 

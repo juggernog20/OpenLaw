@@ -8,7 +8,7 @@
   "technicalReviewer": "Opus 5 independent review agent",
   "walkthroughReviewer": "Opus 5 independent review agent",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-08T06:00:55Z",
+  "verifiedAt": "2026-09-08T06:33:00Z",
   "status": "pass",
   "sources": [
     "CONTEXT.md",
@@ -31,20 +31,22 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "expected": "Lead-time changes and audit facts are observable at the documented scope. The audit log is unavailable to other roles; timezone/channel limits and missing events are investigated rather than assumed.",
-      "actual": "Both rail entries read \"Notifications\"; the Organization one at /settings/reminders is headed \"Reminder lead times\" and the Personal one holds only that person's switches. Added 0, 4 and 11 to the organization list; a duplicate was refused with \"4 days before is already on the list.\" and 731 with \"Enter a whole number of days between 0 and 730.\"; zero rendered as \"On the day\"; Remove and a keyboard reorder both saved and survived a reload; reduced to one entry the row lost its Remove control, showed the only-lead-time lock, and an empty list was refused by the API. Delivery used a brand-new fictional Legal Team Member with no earlier briefing history, a saved Asia/Dubai timezone and their own preferences. The real queued notification.morning-round completed in the owned worker on the real clock; Mailpit delivered an actual briefing naming the 4-day and On-the-day Key dates and omitting the 11-day one, and the bell linked to the record's Key dates page rather than naming the Key date. Audit log: reached under Security, the Person, Action and Record filters combined and narrowed in turn, the From and To bounds became the browser's local calendar day in Asia/Dubai, an out-of-range window reported \"No entry matches these filters.\", Clear filters recovered, Search matched recorded audit text but not a Request answer's prose, Export CSV downloaded every matching entry, and Show older paged back. Legal and Contributor were redirected from the pane and refused 403 on GET /audit-log.",
+      "actual": "Both rail entries read \"Notifications\"; the Organization one at /settings/reminders is headed \"Reminder lead times\" and the Personal one holds only that person's switches. Added 0, 4 and 11 to the organization list; a duplicate was refused with \"4 days before is already on the list.\" and 731 with \"Enter a whole number of days between 0 and 730.\"; zero rendered as \"On the day\"; Remove and a keyboard reorder both saved and survived a reload; reduced to one entry the row lost its Remove control, showed the only-lead-time lock, and an empty list was refused by the API. Delivery used a brand-new fictional Legal Team Member with no earlier briefing history, a saved Asia/Dubai timezone and their own preferences. The real queued notification.morning-round completed in the owned worker on the real clock; Mailpit delivered an actual briefing naming the 4-day and On-the-day Key dates and omitting the 11-day one, and the bell linked to the record's Key dates page rather than naming the Key date. Audit log: reached under Security, the Person, Action and Record filters combined and narrowed in turn, the From and To bounds became the browser's local calendar day in Asia/Dubai, an out-of-range window reported \"No entry matches these filters.\", Clear filters recovered, Search matched recorded audit text but not a Request answer's prose, Export CSV downloaded every matching entry, and Show older paged back. Legal and Contributor were redirected from the pane and refused 403 on GET /audit-log. A later evidence review relabelled four audit steps: two negative row counts and two date-bound claims whose captured query did not match the inputs. repair-audit awaits the response whose query carries exactly the instants both controls were set to, in both directions, and re-counts the combined filters with the header row excluded; repair-reminders supplies a complete problem for the empty-list refusal without disturbing the reader's saved list.",
       "result": "pass",
       "evidence": [
+        "docs/documentation/batches/DOC-021/independent-audit.json",
         "docs/documentation/batches/DOC-021/independent-audit-retry.json",
         "docs/documentation/batches/DOC-021/independent-audit-retry2.json",
         "docs/documentation/batches/DOC-021/independent-audit-retry3.json",
-        "docs/documentation/batches/DOC-021/independent-audit.json",
-        "docs/documentation/batches/DOC-021/independent-discovery-final.json",
         "docs/documentation/batches/DOC-021/independent-discovery.json",
-        "docs/documentation/batches/DOC-021/independent-reminders-config-retry.json",
+        "docs/documentation/batches/DOC-021/independent-discovery-final.json",
         "docs/documentation/batches/DOC-021/independent-reminders-config.json",
+        "docs/documentation/batches/DOC-021/independent-reminders-config-retry.json",
         "docs/documentation/batches/DOC-021/independent-reminders-delivery.json",
-        "docs/documentation/batches/DOC-021/independent-roles-retry.json",
-        "docs/documentation/batches/DOC-021/independent-roles.json"
+        "docs/documentation/batches/DOC-021/independent-repair-audit.json",
+        "docs/documentation/batches/DOC-021/independent-repair-reminders.json",
+        "docs/documentation/batches/DOC-021/independent-roles.json",
+        "docs/documentation/batches/DOC-021/independent-roles-retry.json"
       ]
     }
   ],
@@ -66,7 +68,7 @@
   ],
   "previousEvidence": null,
   "copyOnlyReview": null,
-  "verifiedAtBasis": "Actual completion of the last passing walkthrough covering this article: the independent-discovery-final record, whose final step is stamped 2026-09-08T06:00:55.681Z, truncated to the second. Earlier action times inside the walkthrough records are unchanged.",
+  "verifiedAtBasis": "Actual completion of the last passing walkthrough covering this article: 2026-09-08T06:33:00.817Z, truncated to the second. Historical action times and article hashes inside the walkthrough records are unchanged, including records taken on earlier draft bytes of the same immutable app build.",
   "technicalReview": {
     "reviewer": "Opus 5 independent review agent",
     "reviewerKind": "agent",

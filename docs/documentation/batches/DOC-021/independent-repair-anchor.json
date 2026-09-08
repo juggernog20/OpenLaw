@@ -1,0 +1,32 @@
+{
+  "name": "independent-repair-anchor",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C39"],
+  "authorRecordName": "ind-repair-anchor",
+  "purpose": "Evidence repair: re-establishes a claim an earlier record recorded unreliably. Every step asserts and throws if its outcome is not observed.",
+  "startedAt": "2026-09-08T06:33:40.389Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "matter-templates",
+      "contentSha256": "c458f44480e167baf2930bdad0f03a944b0f10b890c7ff10468543328016f9e9"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A templated Matter anchors every relative date on its own UTC creation date",
+      "actual": "Matter 33 was created between 2026-09-08T06:33:42.065Z and 2026-09-08T06:33:42.194Z with createdAt 2026-09-08T06:33:42.112Z, so its UTC civil anchor is 2026-09-08. Every template Task resolved against that anchor: [[\"Confirm scope with the requester (revised)\",3,\"2026-09-11\",\"Nadia Haddad\"],[\"Open the evidence folder (retry probe)\",null,null,null]] (title, template offset, resolved due date, assignee) \u2014 the Matter Manager Task carries Nadia Haddad and the undated Task stays null. Every template Key date resolved the same way: [[\"Onboarding review point\",21,\"2026-09-29\"]]. The Matter took the template's Priority \"high\", Risk \"medium\" and Field defaults {\"ind_coverage_region_ind81t2f\":\"Benelux\"}, and the creation dialog had seeded Priority \"high\" and Risk \"medium\" from the same template. Each of these is an assertion: a mismatch throws.",
+      "result": "pass",
+      "startedAt": "2026-09-08T06:33:41.341Z",
+      "at": "2026-09-08T06:33:42.218Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T06:33:42.218Z"
+}

@@ -21,11 +21,15 @@
       "method": "browser-walkthrough",
       "action": "Archiving a request type that still carries Requests does not ask for a replacement",
       "actual": "\"Ind archive probe IND81T2F\" carried Request R-33. Its list row read \"Ind archive probe IND81T2F / Target: / No target / Form fields: / 0 fields\" and the API reported inUseCount=0 even though the Request exists, so the archive dialog said \"Archive Ind archive probe IND81T2F Ind archive probe IND81T2F is not used by any requests \u2014 it can be archived without reassignment. Reassign requests to No reassignment NDA request Contract review Legal question Vendor \" with its reassignment control disabled (true) and asked for no replacement. Archiving succeeded (archivedAt=2026-09-08T05:57:51.129Z) and R-33 still names the archived type (requestTypeId unchanged: false, status \"new\"). The Portal no longer offers the type (false) and its form is closed (true).",
-      "result": "pass",
+      "result": "fail",
       "startedAt": "2026-09-08T05:57:48.098Z",
-      "at": "2026-09-08T05:57:52.685Z"
+      "at": "2026-09-08T05:57:52.685Z",
+      "error": "Contradiction inside the step: it claims the Request still names the archived type while recording \"requestTypeId unchanged: false\". The comparison read a requestTypeId key that the request envelope does not carry; the type is nested under requestType.",
+      "supersededBy": [
+        "docs/documentation/batches/DOC-021/independent-request-type-lifecycle-retry.json"
+      ]
     }
   ],
-  "passed": true,
+  "passed": false,
   "completedAt": "2026-09-08T05:57:52.686Z"
 }

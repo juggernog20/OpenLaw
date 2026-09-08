@@ -21,9 +21,14 @@
       "method": "browser-walkthrough",
       "action": "Direct creation applies the template and anchors dates on the UTC creation date",
       "actual": "The dialog seeded Title \"Onboarding\", Priority \"high\", Risk \"medium\", Field \"Benelux\" and noted \"Template adds 2 tasks and 1 key date.\". Created between 2026-09-08T05:31:32.080Z and 2026-09-08T05:31:32.185Z as Matter 27 (createdAt 2026-09-08T05:31:32.124Z, UTC civil date 2026-09-08). Manager-targeted Task \"Confirm scope with the requester\" is assigned to Nadia Haddad and due 2026-09-11 (anchor+3); the undated Task \"Open the evidence folder\" has dueDate null and assignee null. Key date \"Onboarding review point\" is 2026-09-15 (anchor+7). The record page renders the Tasks card (false). Priority=high, Risk=medium, Field=\"Benelux\".",
-      "result": "pass",
+      "result": "fail",
       "startedAt": "2026-09-08T05:31:31.386Z",
-      "at": "2026-09-08T05:31:32.217Z"
+      "at": "2026-09-08T05:31:32.217Z",
+      "error": "Contradiction inside the step: it records \"The record page renders the Tasks card (false)\" yet passed. The page assertion searched the Overview for a Task title that lives in the record's own Tasks section. The date-anchor, default and assignment values in the same string were read from the API and are corroborated by the linked records.",
+      "supersededBy": [
+        "docs/documentation/batches/DOC-021/independent-template-record-retry3.json",
+        "docs/documentation/batches/DOC-021/independent-repair-anchor.json"
+      ]
     },
     {
       "role": "administrator",
@@ -53,6 +58,6 @@
       "at": "2026-09-08T05:31:39.165Z"
     }
   ],
-  "passed": true,
+  "passed": false,
   "completedAt": "2026-09-08T05:31:39.165Z"
 }

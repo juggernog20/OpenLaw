@@ -75,11 +75,13 @@
       "method": "browser-walkthrough",
       "action": "Confirm the immutable field type in the editor",
       "actual": "Reopened editor: Type control disabled=null, note \"The field type is immutable after creation.\". API corroborates fieldType=single_select, moduleScope=global.",
-      "result": "pass",
+      "result": "fail",
       "startedAt": "2026-09-08T05:21:15.236Z",
-      "at": "2026-09-08T05:21:25.313Z"
+      "at": "2026-09-08T05:21:25.313Z",
+      "error": "Unusable observation, not product behaviour: isDisabled() was called on something that is not a form control, so the step records \"disabled=null\" and establishes nothing about immutability. In Edit the field type is static text with no control at all.",
+      "supersededBy": ["docs/documentation/batches/DOC-021/independent-repair-field-type.json"]
     }
   ],
-  "passed": true,
+  "passed": false,
   "completedAt": "2026-09-08T05:21:25.313Z"
 }

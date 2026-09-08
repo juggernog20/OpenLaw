@@ -34,9 +34,11 @@
       "method": "browser-walkthrough",
       "action": "Submitting without a required answer is refused, then a valid Request is submitted",
       "actual": "With the required Field empty the Portal stayed on the form (true), marked [\"request-field-ind_coverage_region_ind81t2f\"] aria-invalid and reported \"Ind coverage region IND81T2F is required. / Fill Ind coverage region IND81T2F first \u2014 the form requires it.\"; no Request was created (false). Supplying \"Nordics\" and the budget note submitted Request R-23, confirmed on the page as \"Request R-23 is with Legal\".",
-      "result": "pass",
+      "result": "fail",
       "startedAt": "2026-09-08T05:42:13.513Z",
-      "at": "2026-09-08T05:42:16.700Z"
+      "at": "2026-09-08T05:42:16.700Z",
+      "error": "False claim inside the step: \"no Request was created (false)\". The uniqueness check searched for a summary the reviewer's own earlier probe submissions already carried, so it matched one of those instead of proving the refused attempt created nothing. The form staying put, the aria-invalid control and the two refusal sentences in the same string were observed correctly.",
+      "supersededBy": ["docs/documentation/batches/DOC-021/independent-repair-submit.json"]
     },
     {
       "role": "administrator",

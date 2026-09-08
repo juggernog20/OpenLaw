@@ -39,9 +39,14 @@
       "method": "browser-walkthrough",
       "action": "Search narrows the audit text and is not a search of record content",
       "actual": "Searching the configuration name \"Ind sign-off panel IND81T2F\" matched 11 entries, e.g. \"Nadia Haddad asked Daniel Okafor to approve this contract, from the Ind sign-off panel IND81T2F group Contract 01a07f8e-870e-76fc-97f1-967ae7779b7b Working team 3 minutes ago\". Searching the Request answer text \"Fictional budget note that has no home on the Matter type\" matched -1 entries and reported \"No entry matches these filters.\" \u2014 the Search box narrows recorded audit text, not Contract, Matter, Document or Knowledge content.",
-      "result": "pass",
+      "result": "fail",
       "startedAt": "2026-09-08T05:52:37.293Z",
-      "at": "2026-09-08T05:52:42.157Z"
+      "at": "2026-09-08T05:52:42.157Z",
+      "error": "Reviewer helper error, not product behaviour: the same header-row arithmetic printed \"-1 entries\" for the empty search result. The search boundary itself was re-established with real counts.",
+      "supersededBy": [
+        "docs/documentation/batches/DOC-021/independent-audit-retry3.json",
+        "docs/documentation/batches/DOC-021/independent-repair-audit.json"
+      ]
     },
     {
       "role": "administrator",
