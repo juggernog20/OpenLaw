@@ -86,7 +86,7 @@
     "docs/documentation/batches/DOC-022/author-fields.json"
   ],
   "limitations": [
-    "Real disposable provider account configuration has not been supplied. C42/C43 remain blocked, with no release exception or denominator change.",
+    "A supported AI-provider test configuration has not been supplied. Partial DocuSign author validation does not satisfy C43. Both coverage groups remain blocked without a release exception or denominator change.",
     "Local browser observations are author checks only and do not establish real provider consent, credentials, callbacks, successful extraction, or secret rotation.",
     "Independent agent technical source review is complete. Required independent browser/live-provider walkthroughs remain blocked; final human proofreading is reserved for the assembled suite.",
     "The owned lab uses immutable app source 6a8873db; final candidate compatibility belongs to DOC-025.",

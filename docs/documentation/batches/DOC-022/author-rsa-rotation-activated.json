@@ -1,0 +1,14 @@
+{
+  "startedAt": "2026-09-08T17:14:28.058Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "phase": "Activate replacement RSA key while original remains registered",
+  "passed": true,
+  "httpStatus": 200,
+  "intendedAccount": true,
+  "completedAt": "2026-09-08T17:14:31.776Z",
+  "observer": "Codex DOC-022 author",
+  "articleId": "configure-signing",
+  "contentSha256": "c62a8b988945c88417c0b96ccce42926b8a6693d382dc6f8ef5c8b188ddb7e13",
+  "acceptanceScope": "Partial author observations only. V-C42 remains blocked pending the complete round trip and independent walkthrough."
+}

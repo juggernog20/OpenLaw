@@ -1,0 +1,26 @@
+{
+  "recordedAt": "2026-09-08T17:18:18.027703+00:00",
+  "observer": "Codex DOC-022 author",
+  "source": "User-provided signed-in DocuSign developer account in the T3 integrated browser",
+  "observations": [
+    "Created a dedicated OpenLaw documentation validation integration in Demo; the existing OpenLaw integration was not edited.",
+    "Generated RSA keys locally and uploaded only their PEM public keys.",
+    "Registered a localhost consent redirect and completed individual signature/impersonation consent. The redirect returned an authorization code without an error; that code was not exchanged or retained.",
+    "The account initially had no Connect subscriptions or Connect keys. Created one Connect HMAC key and retained it only in private local configuration and the encrypted test-instance connector.",
+    "Registered a replacement RSA key, verified it before retiring the original test key, and confirmed only the replacement remained after reopening the provider editor.",
+    "The first replacement authentication returned HTTP 502; a later retry returned HTTP 200. No fixed propagation delay or underlying failure cause is inferred.",
+    "After retiring the original public key, saved the unchanged OpenLaw connector to invalidate its cached driver and verified a fresh connection test returned HTTP 200 for the intended account."
+  ],
+  "limitations": [
+    "No Envelope has been sent and no Signer inbox has been used. Recipient authorization is pending.",
+    "No account-level Connect subscription has been created because the public HTTPS callback address is pending. Callback delivery, executed-copy filing, reconciliation recovery and HMAC rotation remain unverified.",
+    "These are author observations, not independent acceptance. AI-provider configuration remains unavailable."
+  ],
+  "evidence": [
+    "author-live-signing-auth.json",
+    "author-rsa-rotation-first.json",
+    "author-rsa-rotation-activated.json",
+    "author-rsa-rotation-retired.json",
+    "author-rsa-rotation-fresh.json"
+  ]
+}

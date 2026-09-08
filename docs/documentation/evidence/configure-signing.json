@@ -30,7 +30,7 @@
         "A real disposable DocuSign developer account, consent/configuration access, and fictional paper."
       ],
       "expected": "The actual provider account is reached and OpenLaw receives the intended status and executed paper. Invalid credentials, disabled connector, webhook/reconciliation recovery, and secret rotation are tested without treating a stand-in as provider setup.",
-      "actual": "Blocked: no disposable real provider test configuration available. Local author checks are recorded separately and do not satisfy this end-to-end scenario.",
+      "actual": "Blocked: the author has completed real Demo authentication, invalid-key recovery, disable/re-enable and RSA rotation checks. An approved recipient and public HTTPS callback are still needed for the Envelope/executed-copy round trip, callback/reconciliation recovery, HMAC rotation and independent acceptance.",
       "result": "blocked",
       "evidence": ["docs/documentation/batches/DOC-022/README.md"]
     },
@@ -43,7 +43,7 @@
         "A real disposable DocuSign developer account, consent/configuration access, and fictional paper."
       ],
       "expected": "The actual provider account is reached and OpenLaw receives the intended status and executed paper. Invalid credentials, disabled connector, webhook/reconciliation recovery, and secret rotation are tested without treating a stand-in as provider setup.",
-      "actual": "Blocked: no disposable real provider test configuration available. Local author checks are recorded separately and do not satisfy this end-to-end scenario.",
+      "actual": "Blocked: the author has completed real Demo authentication, invalid-key recovery, disable/re-enable and RSA rotation checks. An approved recipient and public HTTPS callback are still needed for the Envelope/executed-copy round trip, callback/reconciliation recovery, HMAC rotation and independent acceptance.",
       "result": "blocked",
       "evidence": ["docs/documentation/batches/DOC-022/README.md"]
     },
@@ -56,7 +56,7 @@
         "A real disposable DocuSign developer account, consent/configuration access, and fictional paper."
       ],
       "expected": "The actual provider account is reached and OpenLaw receives the intended status and executed paper. Invalid credentials, disabled connector, webhook/reconciliation recovery, and secret rotation are tested without treating a stand-in as provider setup.",
-      "actual": "Blocked: no disposable real provider test configuration available. Local author checks are recorded separately and do not satisfy this end-to-end scenario.",
+      "actual": "Blocked: the author has completed real Demo authentication, invalid-key recovery, disable/re-enable and RSA rotation checks. An approved recipient and public HTTPS callback are still needed for the Envelope/executed-copy round trip, callback/reconciliation recovery, HMAC rotation and independent acceptance.",
       "result": "blocked",
       "evidence": ["docs/documentation/batches/DOC-022/README.md"]
     },
@@ -69,18 +69,24 @@
         "A real disposable DocuSign developer account, consent/configuration access, and fictional paper."
       ],
       "expected": "The actual provider account is reached and OpenLaw receives the intended status and executed paper. Invalid credentials, disabled connector, webhook/reconciliation recovery, and secret rotation are tested without treating a stand-in as provider setup.",
-      "actual": "Blocked: no disposable real provider test configuration available. Local author checks are recorded separately and do not satisfy this end-to-end scenario.",
+      "actual": "Blocked: the author has completed real Demo authentication, invalid-key recovery, disable/re-enable and RSA rotation checks. An approved recipient and public HTTPS callback are still needed for the Envelope/executed-copy round trip, callback/reconciliation recovery, HMAC rotation and independent acceptance.",
       "result": "blocked",
       "evidence": ["docs/documentation/batches/DOC-022/README.md"]
     }
   ],
   "authorEvidence": [
     "docs/documentation/batches/DOC-022/author-local.json",
-    "docs/documentation/batches/DOC-022/author-discovery.json"
+    "docs/documentation/batches/DOC-022/author-discovery.json",
+    "docs/documentation/batches/DOC-022/author-live-signing-auth.json",
+    "docs/documentation/batches/DOC-022/author-rsa-rotation-first.json",
+    "docs/documentation/batches/DOC-022/author-rsa-rotation-activated.json",
+    "docs/documentation/batches/DOC-022/author-rsa-rotation-retired.json",
+    "docs/documentation/batches/DOC-022/author-rsa-rotation-fresh.json",
+    "docs/documentation/batches/DOC-022/author-live-signing-setup.json"
   ],
   "limitations": [
-    "Real disposable provider account configuration has not been supplied. C42/C43 remain blocked, with no release exception or denominator change.",
-    "Local browser observations are author checks only and do not establish real provider consent, credentials, callbacks, successful extraction, or secret rotation.",
+    "DocuSign developer access is now available and partial live author checks are retained. Approved recipient and public HTTPS callback are pending. C42/C43 remain blocked, with no release exception or denominator change.",
+    "Earlier local observations retain their original scope. New live authentication/RSA observations do not prove callback delivery, executed-copy filing, HMAC rotation or independent acceptance.",
     "Independent agent technical source review is complete. Required independent browser/live-provider walkthroughs remain blocked; final human proofreading is reserved for the assembled suite.",
     "The owned lab uses immutable app source 6a8873db; final candidate compatibility belongs to DOC-025."
   ],
@@ -99,5 +105,10 @@
     "reviewCommit": "bff63ce5",
     "scope": "Compared both guides against application source, checked evidence consistency, corrected the nonexistent Field prompts expand instruction, and ran the full test suite and documentation checks. No independent browser or live-provider walkthrough was performed.",
     "evidence": ["docs/documentation/batches/DOC-022/README.md"]
+  },
+  "providerProgress": {
+    "status": "partial-author-validation",
+    "record": "docs/documentation/batches/DOC-022/author-live-signing-setup.json",
+    "endToEndAccepted": false
   }
 }
