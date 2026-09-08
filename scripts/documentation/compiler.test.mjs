@@ -4,6 +4,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync, symlinkSync } from "node
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { test } from "node:test";
 import { applicationDigest, buildIdentity, compileWorkspace } from "./build.mjs";
 import { compileDocumentation } from "./compiler.mjs";
@@ -287,6 +288,12 @@ test("an owned read refuses a symlink and reads through its own descriptor", (t)
   // lstat would also catch this. The point is that the kernel refuses it at
   // open, so nothing between a check and a read can put it back.
   assert.throws(() => readOwnedFile(link, "link.txt"), /symlink forbidden: link\.txt/);
+
+  // A named pipe with no writer. Without the non-blocking open this call
+  // never returns, so the assertion is that it answers at all.
+  const pipe = join(root, "pipe");
+  execFileSync("mkfifo", [pipe]);
+  assert.throws(() => readOwnedFile(pipe, "pipe"), /not a file: pipe/);
 
   assert.throws(() => readOwnedFile(root, "root"), /not a file: root/);
 });

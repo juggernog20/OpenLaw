@@ -27,6 +27,11 @@ import { closeSync, constants, fstatSync, openSync, readFileSync } from "node:fs
 // port cannot silently turn the open into a following one, and the
 // caller's own symlink check stays the guard if it ever is absent.
 const NO_FOLLOW = constants.O_NOFOLLOW ?? 0;
+// A named pipe answers `open` only when somebody writes to it, and the type
+// check below cannot run until the open returns. Opening without blocking
+// lets the check reject it instead of the build waiting on it. Regular files
+// ignore the flag, which is every file these readers want.
+const NO_BLOCK = constants.O_NONBLOCK ?? 0;
 
 /**
  * The bytes of one regular file, or an Error naming the reason. `label`
@@ -35,7 +40,7 @@ const NO_FOLLOW = constants.O_NOFOLLOW ?? 0;
 export function readOwnedFile(path, label = path) {
   let descriptor;
   try {
-    descriptor = openSync(path, constants.O_RDONLY | NO_FOLLOW);
+    descriptor = openSync(path, constants.O_RDONLY | NO_FOLLOW | NO_BLOCK);
   } catch (error) {
     // What the kernel answers when O_NOFOLLOW meets a symlink.
     if (error?.code === "ELOOP") throw new Error(`symlink forbidden: ${label}`, { cause: error });

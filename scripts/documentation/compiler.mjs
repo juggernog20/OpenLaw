@@ -85,9 +85,11 @@ export function readOwned(root, name) {
     requireThat(existsSync(at), `missing file: ${name}`);
     requireThat(!lstatSync(at).isSymbolicLink(), `symlink forbidden: ${name}`);
   }
-  // The walk above approves the names on the way down. This opens the last
+  requireThat(lstatSync(path).isFile(), `not a file: ${name}`);
+  // The checks above approve the names on the way down. This opens the last
   // one once and asks the descriptor, so the bytes an evidence record is
-  // bound to are the bytes that passed the type check.
+  // bound to are the bytes that passed the type check, not whatever the name
+  // resolved to on a second lookup.
   try {
     return readOwnedFile(path, name);
   } catch (error) {
