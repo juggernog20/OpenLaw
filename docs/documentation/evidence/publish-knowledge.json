@@ -8,7 +8,7 @@
   "technicalReviewer": "Independent review seat (agent)",
   "walkthroughReviewer": "Independent review seat (agent)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-08T02:29:04.607Z",
+  "verifiedAt": "2026-09-08T02:40:18.418Z",
   "status": "pass",
   "sources": [
     "docs/decision-records/DECISIONS-KNOWLEDGE.md",
@@ -99,6 +99,32 @@
       "completedAt": "2026-09-08T02:27:24.148Z",
       "stepsSummarized": "1 recorded steps for this role; the linked record holds each one separately",
       "evidence": ["docs/documentation/batches/DOC-019/independent-discovery.json"]
+    },
+    {
+      "id": "V-C34-supplement",
+      "coverage": ["C34"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "A guidance edit and a new Document Version on an already published Everyone item reach a separate Business Portal reader on reload with no second Publish action, while the earlier Version stays on the staff chain and the publication state does not change.",
+      "actual": "Audience Everyone and Publish put the item on the portal; Jonas Weber read its first guidance heading and downloaded the current Version, whose bytes matched the uploaded PDF. With no second Publish, the reloaded Portal article showed the edited guidance heading and its download returned the new current Version byte for byte; the staff chain still held Version 1 beside the current Version 2, and state, audience and the first publication stamp were unchanged (published/everyone).",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:39:42.709Z",
+      "completedAt": "2026-09-08T02:39:45.529Z",
+      "stepsSummarized": "2 supplemental steps for this role; the linked record holds each one separately",
+      "evidence": ["docs/documentation/batches/DOC-019/independent-supplement.json"]
+    },
+    {
+      "id": "V-C34-supplement",
+      "coverage": ["C34"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "A guidance edit and a new Document Version on an already published Everyone item reach a separate Business Portal reader on reload with no second Publish action, while the earlier Version stays on the staff chain and the publication state does not change.",
+      "actual": "Audience Everyone and Publish put the item on the portal; Jonas Weber read its first guidance heading and downloaded the current Version, whose bytes matched the uploaded PDF. With no second Publish, the reloaded Portal article showed the edited guidance heading and its download returned the new current Version byte for byte; the staff chain still held Version 1 beside the current Version 2, and state, audience and the first publication stamp were unchanged (published/everyone).",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:39:35.796Z",
+      "completedAt": "2026-09-08T02:39:38.614Z",
+      "stepsSummarized": "2 supplemental steps for this role; the linked record holds each one separately",
+      "evidence": ["docs/documentation/batches/DOC-019/independent-supplement.json"]
     }
   ],
   "limitations": [
@@ -112,6 +138,7 @@
   "authorEvidence": [
     "docs/documentation/batches/DOC-019/README.md",
     "docs/documentation/batches/DOC-019/independent-c34.json",
-    "docs/documentation/batches/DOC-019/independent-discovery.json"
+    "docs/documentation/batches/DOC-019/independent-discovery.json",
+    "docs/documentation/batches/DOC-019/independent-supplement.json"
   ]
 }

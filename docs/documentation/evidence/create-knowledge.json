@@ -8,7 +8,7 @@
   "technicalReviewer": "Independent review seat (agent)",
   "walkthroughReviewer": "Independent review seat (agent)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-08T02:29:04.607Z",
+  "verifiedAt": "2026-09-08T02:40:18.418Z",
   "status": "pass",
   "sources": [
     "docs/decision-records/DECISIONS-KNOWLEDGE.md",
@@ -99,6 +99,32 @@
       "completedAt": "2026-09-08T02:27:24.148Z",
       "stepsSummarized": "1 recorded steps for this role; the linked record holds each one separately",
       "evidence": ["docs/documentation/batches/DOC-019/independent-discovery.json"]
+    },
+    {
+      "id": "V-C33-supplement",
+      "coverage": ["C33"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Moving a folder under another parent through Parent folder and Save folder keeps its child folder, its item and that item’s Documents with it and finds them from the new parent; archiving the primary Document itself takes only its row out of the ordinary list, and Show archived with Restore returns it with its Version chain and primary designation.",
+      "actual": "Parent folder = Rev supp legal_team_member FD5D62 target and Save folder moved Rev supp legal_team_member FD5D62 moving out of Rev supp legal_team_member FD5D62 origin; its nested child folder stayed under it, its item kept that folder and both Documents, the new parent listed the item as a descendant, and the old parent no longer did. The primary row left the ordinary Documents list while the supporting DOCX stayed; the record read still names Rev supp legal_team_member FD5D62 filed pack.pdf as Primary document, and the archived Document kept both Versions and its isPrimary mark in the includeArchived read. Show archived listed the archived row as Archived and its Restore returned it to the ordinary list with both Versions in order 1..2, the Primary mark on its row, and the item again naming it under Primary document after a reload.",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:39:39.541Z",
+      "completedAt": "2026-09-08T02:39:42.708Z",
+      "stepsSummarized": "3 supplemental steps for this role; the linked record holds each one separately",
+      "evidence": ["docs/documentation/batches/DOC-019/independent-supplement.json"]
+    },
+    {
+      "id": "V-C33-supplement",
+      "coverage": ["C33"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Moving a folder under another parent through Parent folder and Save folder keeps its child folder, its item and that item’s Documents with it and finds them from the new parent; archiving the primary Document itself takes only its row out of the ordinary list, and Show archived with Restore returns it with its Version chain and primary designation.",
+      "actual": "Parent folder = Rev supp administrator C31C4F target and Save folder moved Rev supp administrator C31C4F moving out of Rev supp administrator C31C4F origin; its nested child folder stayed under it, its item kept that folder and both Documents, the new parent listed the item as a descendant, and the old parent no longer did. The primary row left the ordinary Documents list while the supporting DOCX stayed; the record read still names Rev supp administrator C31C4F filed pack.pdf as Primary document, and the archived Document kept both Versions and its isPrimary mark in the includeArchived read. Show archived listed the archived row as Archived and its Restore returned it to the ordinary list with both Versions in order 1..2, the Primary mark on its row, and the item again naming it under Primary document after a reload.",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:39:32.629Z",
+      "completedAt": "2026-09-08T02:39:35.795Z",
+      "stepsSummarized": "3 supplemental steps for this role; the linked record holds each one separately",
+      "evidence": ["docs/documentation/batches/DOC-019/independent-supplement.json"]
     }
   ],
   "limitations": [
@@ -112,6 +138,7 @@
   "authorEvidence": [
     "docs/documentation/batches/DOC-019/README.md",
     "docs/documentation/batches/DOC-019/independent-c33.json",
-    "docs/documentation/batches/DOC-019/independent-discovery.json"
+    "docs/documentation/batches/DOC-019/independent-discovery.json",
+    "docs/documentation/batches/DOC-019/independent-supplement.json"
   ]
 }

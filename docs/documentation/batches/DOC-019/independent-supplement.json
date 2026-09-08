@@ -1,0 +1,116 @@
+{
+  "name": "independent-supplement",
+  "kind": "independent-review-walkthrough",
+  "scenario": "V-C33/V-C34 supplement",
+  "articles": ["create-knowledge", "publish-knowledge"],
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-knowledge",
+  "reviewer": "Independent review seat (agent)",
+  "articleHashes": [
+    {
+      "articleId": "create-knowledge",
+      "contentSha256": "295001ee071b093a3d66f72fb1faf23a81a959d13c08fbaba19e3062a738d34f"
+    },
+    {
+      "articleId": "publish-knowledge",
+      "contentSha256": "cae7b9ef9551242ef7b502892e4a9f63fa0229caf44e1578ec684490b793ffa5"
+    }
+  ],
+  "articleHashesNote": "Article hashes were captured from the working tree at run start, before the first step of this record; they are the bytes committed on this branch and the same bytes the three earlier independent records exercised.",
+  "startedAt": "2026-09-08T02:39:30.623Z",
+  "completedAt": "2026-09-08T02:39:45.534Z",
+  "passed": true,
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Organize the library\" step 3: move a folder under another parent and find its contents from there",
+      "actual": "Parent folder = Rev supp administrator C31C4F target and Save folder moved Rev supp administrator C31C4F moving out of Rev supp administrator C31C4F origin; its nested child folder stayed under it, its item kept that folder and both Documents, the new parent listed the item as a descendant, and the old parent no longer did",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:39:32.629Z",
+      "at": "2026-09-08T02:39:34.235Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Add Documents\" note: archiving the primary Document takes its row out of the ordinary list",
+      "actual": "The primary row left the ordinary Documents list while the supporting DOCX stayed; the record read still names Rev supp administrator C31C4F filed pack.pdf as Primary document, and the archived Document kept both Versions and its isPrimary mark in the includeArchived read",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:39:34.236Z",
+      "at": "2026-09-08T02:39:35.028Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Add Documents\" note: Show archived and Restore return the row with its chain and designation",
+      "actual": "Show archived listed the archived row as Archived and its Restore returned it to the ordinary list with both Versions in order 1..2, the Primary mark on its row, and the item again naming it under Primary document after a reload",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:39:35.028Z",
+      "at": "2026-09-08T02:39:35.795Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "publish-knowledge live edits: a published Everyone item is read from the Portal before any change",
+      "actual": "Audience Everyone and Publish put the item on the portal; Jonas Weber read its first guidance heading and downloaded the current Version, whose bytes matched the uploaded PDF",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:39:35.796Z",
+      "at": "2026-09-08T02:39:37.099Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "publish-knowledge live edits: new guidance and a new Version reach the Portal with no second Publish",
+      "actual": "With no second Publish, the reloaded Portal article showed the edited guidance heading and its download returned the new current Version byte for byte; the staff chain still held Version 1 beside the current Version 2, and state, audience and the first publication stamp were unchanged (published/everyone)",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:39:37.099Z",
+      "at": "2026-09-08T02:39:38.614Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Organize the library\" step 3: move a folder under another parent and find its contents from there",
+      "actual": "Parent folder = Rev supp legal_team_member FD5D62 target and Save folder moved Rev supp legal_team_member FD5D62 moving out of Rev supp legal_team_member FD5D62 origin; its nested child folder stayed under it, its item kept that folder and both Documents, the new parent listed the item as a descendant, and the old parent no longer did",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:39:39.541Z",
+      "at": "2026-09-08T02:39:41.124Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Add Documents\" note: archiving the primary Document takes its row out of the ordinary list",
+      "actual": "The primary row left the ordinary Documents list while the supporting DOCX stayed; the record read still names Rev supp legal_team_member FD5D62 filed pack.pdf as Primary document, and the archived Document kept both Versions and its isPrimary mark in the includeArchived read",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:39:41.124Z",
+      "at": "2026-09-08T02:39:41.939Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Add Documents\" note: Show archived and Restore return the row with its chain and designation",
+      "actual": "Show archived listed the archived row as Archived and its Restore returned it to the ordinary list with both Versions in order 1..2, the Primary mark on its row, and the item again naming it under Primary document after a reload",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:39:41.939Z",
+      "at": "2026-09-08T02:39:42.708Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "publish-knowledge live edits: a published Everyone item is read from the Portal before any change",
+      "actual": "Audience Everyone and Publish put the item on the portal; Jonas Weber read its first guidance heading and downloaded the current Version, whose bytes matched the uploaded PDF",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:39:42.709Z",
+      "at": "2026-09-08T02:39:44.012Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "publish-knowledge live edits: new guidance and a new Version reach the Portal with no second Publish",
+      "actual": "With no second Publish, the reloaded Portal article showed the edited guidance heading and its download returned the new current Version byte for byte; the staff chain still held Version 1 beside the current Version 2, and state, audience and the first publication stamp were unchanged (published/everyone)",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:39:44.012Z",
+      "at": "2026-09-08T02:39:45.529Z"
+    }
+  ]
+}
