@@ -5753,6 +5753,51 @@
   "settings.aiAnalysis.model": {
     "defaultMessage": "Model"
   },
+  "settings.aiAnalysis.models.absent": {
+    "defaultMessage": "The selected model was not returned in this list. It is kept until you choose another model."
+  },
+  "settings.aiAnalysis.models.azure": {
+    "defaultMessage": "Enter the deployment name from Azure. The deployment endpoint does not provide a list of deployments."
+  },
+  "settings.aiAnalysis.models.choose": {
+    "defaultMessage": "Choose a model"
+  },
+  "settings.aiAnalysis.models.empty": {
+    "defaultMessage": "The provider returned no models for this list. You can enter a model ID manually."
+  },
+  "settings.aiAnalysis.models.failed": {
+    "defaultMessage": "Models could not be loaded. Try again or enter the model ID manually."
+  },
+  "settings.aiAnalysis.models.hint": {
+    "defaultMessage": "Enter the provider key and endpoint, if required, then load models. Loading does not save the connector or send Contract data."
+  },
+  "settings.aiAnalysis.models.load": {
+    "defaultMessage": "Load models"
+  },
+  "settings.aiAnalysis.models.loading": {
+    "defaultMessage": "Loading models…"
+  },
+  "settings.aiAnalysis.models.manual": {
+    "defaultMessage": "Enter model ID manually"
+  },
+  "settings.aiAnalysis.models.ollama": {
+    "defaultMessage": "Load models installed in Ollama. This does not download models."
+  },
+  "settings.aiAnalysis.models.partial": {
+    "defaultMessage": "This is a partial model list. Enter the model ID manually if it is missing."
+  },
+  "settings.aiAnalysis.models.refresh": {
+    "defaultMessage": "Refresh models"
+  },
+  "settings.aiAnalysis.models.search": {
+    "defaultMessage": "Search models"
+  },
+  "settings.aiAnalysis.models.testHint": {
+    "defaultMessage": "A listed model may not support Contract analysis. Save your choice and use Test connection before running an analysis."
+  },
+  "settings.aiAnalysis.models.useList": {
+    "defaultMessage": "Choose from list"
+  },
   "settings.aiAnalysis.pageTitle": {
     "defaultMessage": "AI analysis"
   },

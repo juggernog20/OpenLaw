@@ -11,6 +11,7 @@ import { useRef, useState, type ReactNode, type SubmitEvent as FormSubmitEvent }
 import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import type { paths } from "@openlaw/api-client";
+import { AiModelSelector } from "../components/ai-model-selector";
 import { AiFieldPromptsCard } from "../components/ai-field-prompts-card";
 import { PageTitle } from "../components/page-title";
 import { SettingsCard } from "../components/settings-card";
@@ -121,6 +122,24 @@ export function SettingsAiAnalysisPage() {
   const testing = useRef(false);
   const changingLifecycle = useRef(false);
   const selected = loaded.presets.find((option) => option.preset === preset)!;
+
+  const sameDestination = (() => {
+    if (connector.preset !== preset || connector.protocol !== protocol || !connector.baseUrl)
+      return false;
+    try {
+      const normalize = (value: string) => {
+        const url = new URL(value);
+        url.hash = "";
+        url.pathname = url.pathname.replace(/\/$/, "");
+        url.searchParams.sort();
+        return url.toString();
+      };
+      return normalize(connector.baseUrl) === normalize(baseUrl);
+    } catch {
+      return false;
+    }
+  })();
+  const canKeepKey = connector.hasApiKey && sameDestination;
 
   function note(field: Field, value: FieldStatus, message?: string) {
     setStatus((current) => ({ ...current, [field]: value }));
@@ -337,7 +356,7 @@ export function SettingsAiAnalysisPage() {
               id="ai-api-key"
               className="w-80"
               type="password"
-              required={selected.requiresApiKey && !connector.hasApiKey}
+              required={selected.requiresApiKey && !canKeepKey}
               value={apiKey}
               onChange={(event) => setApiKey(event.target.value)}
               placeholder={intl.formatMessage({
@@ -346,7 +365,7 @@ export function SettingsAiAnalysisPage() {
               })}
             />
             <p className="text-xs text-muted">
-              {connector.hasApiKey ? (
+              {canKeepKey ? (
                 <FormattedMessage
                   id="settings.aiAnalysis.apiKey.keep"
                   defaultMessage="Leave blank to keep the current key. Paste a new one to rotate."
@@ -365,18 +384,16 @@ export function SettingsAiAnalysisPage() {
             </p>
           </FormField>
 
-          <FormField
-            id="ai-model"
-            label={<FormattedMessage id="settings.aiAnalysis.model" defaultMessage="Model" />}
-          >
-            <Input
-              id="ai-model"
-              className="w-80"
-              required
-              value={model}
-              onChange={(event) => setModel(event.target.value)}
-            />
-          </FormField>
+          <AiModelSelector
+            key={JSON.stringify([preset, protocol, baseUrl, apiKey, connector.updatedAt])}
+            config={{ preset, protocol, baseUrl, ...(apiKey.trim() ? { apiKey } : {}) }}
+            canLoad={
+              (!selected.requiresApiKey || canKeepKey || !!apiKey.trim()) &&
+              (!selected.requiresBaseUrl || !!baseUrl.trim())
+            }
+            value={model}
+            onChange={setModel}
+          />
 
           <div className="flex items-center gap-2">
             <Button

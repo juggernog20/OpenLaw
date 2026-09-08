@@ -78,7 +78,7 @@ async function refusalReason(response: Response): Promise<string> {
 
 /** Reads at most `maxBytes` of the body, or says that it is longer and
  * stops. `null` is a response with no body at all. */
-async function readUpTo(
+export async function readUpTo(
   response: Response,
   maxBytes: number,
 ): Promise<{ raw: string; truncated: boolean } | null> {
