@@ -236,6 +236,10 @@ function verifyEvidence(a, source, metadataRoot, edition, scenarios) {
         c.evidence.length > 0,
       `missing or stale article compatibility review: ${a.id}`,
     );
+    requireThat(
+      nonempty(e.author) && normalizeSearch(c.reviewer) !== normalizeSearch(e.author),
+      `independent compatibility review required: ${a.id}`,
+    );
     for (const record of c.evidence) {
       requireThat(
         record && nonempty(record.path) && HASH.test(record.sha256),

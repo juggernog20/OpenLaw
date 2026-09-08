@@ -321,6 +321,11 @@ test("historical walkthroughs require a current, hash-bound compatibility review
     f.json("evidence/submit.json", { ...e, compatibilityReview: { ...review, ...patch } });
     assert.throws(() => f.compile(), /compatibility|outside source tree/);
   }
+  f.json("evidence/submit.json", {
+    ...e,
+    compatibilityReview: { ...review, reviewer: ` ${e.author.toUpperCase()} ` },
+  });
+  assert.throws(() => f.compile(), /independent compatibility review/);
   f.json("evidence/submit.json", e);
   f.json("evidence/compatibility.json", { summary: "Changed after review" });
   assert.throws(() => f.compile(), /compatibility evidence hash/);
