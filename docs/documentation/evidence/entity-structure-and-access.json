@@ -8,7 +8,7 @@
   "technicalReviewer": "Independent review seat (agent)",
   "walkthroughReviewer": "Independent review seat (agent)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-08T00:49:09.320Z",
+  "verifiedAt": "2026-09-08T01:14:28.623Z",
   "status": "pass",
   "sources": [
     "CONTEXT.md",
@@ -27,11 +27,15 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "expected": "Corporate facts and graph edges are accurate and explicit Grants control the intended reach. Restricted linked records remain protected; a Holding or chart relationship does not grant access.",
-      "actual": "Authorized shares 10000, Issued shares 7500 and Par value (minor units) 1 each saved when focus left the field and survived a reload; Typing 999 into Issued shares and pressing Escape returned the control to 7500 and left 7500 stored; The chart drew Rev C53 parent RYAG0T, Rev C53 secret sub RYAG0T and Rev C53 minor owner RYAG0T with their 75% and 25% edges; with the chart focused the arrow key panned and plus zoomed (translate(0 0) scale(1) to translate(40 0) scale(1.15)), zero fitted it back and Fit to window reset it the same way; \"-5\" and \"12.5\" were both refused with \"Enter a whole number of zero or more.\" and the saved 10000 was untouched after each; From Rev C53 parent RYAG0T's Ownership the reader saw \"Restricted Entity\" with no legal name and no navigation link; typing the record's own address in the browser did not open it either, so the Holding carried no access; After the Grant was removed the record's address no longer opened for the reader and Rev C53 parent RYAG0T's Ownership showed \"Restricted Entity\" again, so the recorded relationship survived while the access was withdrawn.",
+      "actual": "Authorized shares 10000, Issued shares 7500 and Par value (minor units) 1 each saved when focus left the field and survived a reload. Typing 999 into Issued shares and pressing Escape returned the control to 7500 and left 7500 stored. \"-5\" and \"12.5\" were both refused with \"Enter a whole number of zero or more.\" and the saved 10000 was untouched after each. The chart drew Rev C53 parent RYAG0T, Rev C53 secret sub RYAG0T and Rev C53 minor owner RYAG0T with their 75% and 25% edges; with the chart focused the arrow key panned and plus zoomed (translate(0 0) scale(1) to translate(40 0) scale(1.15)), zero fitted it back and Fit to window reset it the same way. Selecting the chart node for Rev C53 secret sub RYAG0T opened that Entity's own record. The Entity's Matters tab rolled up M-29 \"Rev C53b open matter RZ4A78\" and showed no row for the Confidential M-30 this reader cannot reach. Selecting the rolled-up Matter opened 29 showing \"Rev C53b open matter RZ4A78\". On the Entity record the Contracts tab badge read \"1 linked Contract\" (1) and the Matters tab badge read \"1 linked Matter\" (1); the counts endpoint corroborated {\"contracts\":1,\"matters\":1}. The Entity's Contracts tab showed no row for the Confidential Contract this reader cannot reach, so linking it to a reachable Entity did not widen its audience. The Legal Team Member saw the Confidentiality card with its switch disabled and no Manage access control, and the write behind it was refused with \"Only an Administrator can change Entity confidentiality.\", so only an Administrator changes the flag or its Grants. From Rev C53 parent RYAG0T's Ownership the reader saw \"Restricted Entity\" with no legal name and no navigation link; typing the record's own address in the browser did not open it either, so the Holding carried no access. With the Grant in place the reader opened \"Rev C53 secret sub RYAG0T\" and saw it named under Rev C53 parent RYAG0T's Holdings; opening the linked Confidential Contract's own address still did not show it, so the Grant covered this Entity only. After the Grant was removed the record's address no longer opened for the reader and Rev C53 parent RYAG0T's Ownership showed \"Restricted Entity\" again, so the recorded relationship survived while the access was withdrawn. With the flag off and no Grant in the list, the Legal Team Member opened \"Rev C53 secret sub RYAG0T\" directly. With the Field detached the Legal Team Member still saw M-29 under the Entity with a badge of \"1 linked Matter\", still saw no Confidential row, and opened the Matter at http://127.0.0.1:43306/matters/29.",
       "result": "pass",
       "startedAt": "2026-09-08T00:47:59.583Z",
-      "completedAt": "2026-09-08T00:49:09.297Z",
-      "evidence": ["docs/documentation/batches/DOC-018/independent-c53.json"]
+      "completedAt": "2026-09-08T01:11:18.670Z",
+      "stepsSummarized": "15 of this role's 16 recorded steps; the linked records hold every step",
+      "evidence": [
+        "docs/documentation/batches/DOC-018/independent-c53.json",
+        "docs/documentation/batches/DOC-018/independent-c53-linked-work.json"
+      ]
     },
     {
       "id": "V-C53",
@@ -39,57 +43,73 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "expected": "Corporate facts and graph edges are accurate and explicit Grants control the intended reach. Restricted linked records remain protected; a Holding or chart relationship does not grant access.",
-      "actual": "Authorized shares 10000, Issued shares 7500 and Par value (minor units) 1 each saved when focus left the field and survived a reload; Typing 999 into Issued shares and pressing Escape returned the control to 7500 and left 7500 stored; The chart drew Rev C53 parent RYAG0T, Rev C53 secret sub RYAG0T and Rev C53 minor owner RYAG0T with their 75% and 25% edges; with the chart focused the arrow key panned and plus zoomed (translate(0 0) scale(1) to translate(40 0) scale(1.15)), zero fitted it back and Fit to window reset it the same way; \"-5\" and \"12.5\" were both refused with \"Enter a whole number of zero or more.\" and the saved 10000 was untouched after each.",
+      "actual": "Authorized shares 10000, Issued shares 7500 and Par value (minor units) 1 each saved when focus left the field and survived a reload. Typing 999 into Issued shares and pressing Escape returned the control to 7500 and left 7500 stored. \"-5\" and \"12.5\" were both refused with \"Enter a whole number of zero or more.\" and the saved 10000 was untouched after each. The chart drew Rev C53 parent RYAG0T, Rev C53 secret sub RYAG0T and Rev C53 minor owner RYAG0T with their 75% and 25% edges; with the chart focused the arrow key panned and plus zoomed (translate(0 0) scale(1) to translate(40 0) scale(1.15)), zero fitted it back and Fit to window reset it the same way. Selecting the chart node for Rev C53 secret sub RYAG0T opened that Entity's own record. The Entity's Matters tab rolled up both M-29 \"Rev C53b open matter RZ4A78\" and the Confidential M-30 for the Administrator who reaches both. Selecting the rolled-up Matter opened 29 showing \"Rev C53b open matter RZ4A78\". On the Entity record the Contracts tab badge read \"2 linked Contracts\" (2) and the Matters tab badge read \"2 linked Matters\" (2); the counts endpoint corroborated {\"contracts\":2,\"matters\":2}. The Entity's Contracts tab listed the Confidential Contract \"Rev C53 confidential deed RYAG0T\" for the Administrator who reaches it. Turning on \"Confidential — restrict to the grant list\" saved and the Administrator kept access to \"Rev C53 secret sub RYAG0T\" without any Grant. Choosing Nadia Haddad in Confidential access and selecting Grant access put that person in the list on \"Rev C53 secret sub RYAG0T\". \"Remove Nadia Haddad\" took that person out of the Confidential access list, which returned to \"No grants yet.\". Against the same Entity the Administrator's badges read \"2 linked Contracts\" and \"2 linked Matters\" while the Legal Team Member's read \"1 linked Contract\" and \"1 linked Matter\" — each short by exactly the one Confidential record that reader cannot reach. After an Administrator fixture detached \"Rev C53b signing entity RZ4A78\" from the Employment Matter type, the Entity's Matters tab still listed M-29 and its badge still read \"2 linked Matters\", so the saved value kept the link.",
       "result": "pass",
       "startedAt": "2026-09-08T00:48:20.669Z",
-      "completedAt": "2026-09-08T00:49:08.690Z",
-      "evidence": ["docs/documentation/batches/DOC-018/independent-c53.json"]
+      "completedAt": "2026-09-08T01:11:17.716Z",
+      "stepsSummarized": "14 of this role's 16 recorded steps; the linked records hold every step",
+      "evidence": [
+        "docs/documentation/batches/DOC-018/independent-c53.json",
+        "docs/documentation/batches/DOC-018/independent-c53-linked-work.json"
+      ]
     },
     {
       "id": "DOC-018-discovery",
       "coverage": ["C53"],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "expected": "The guide is found from the Entity destination's Help and by its exact title, its outline and skip link work by keyboard, and it holds in Light, Dark and Warm at 320, 720 and 1440 CSS pixels and at 200 percent zoom.",
-      "actual": "The Entities destination offered a Help link, and the Help index headed \"Guides for Legal Team Member\" listed all four Entity guides by their exact titles; Each exact title was found by the Help search and resolved to its own article (Maintain Entities and Counterparties -> /help/entities-and-counterparties; Manage Holdings, Officers, and Registrations -> /help/entity-records; Track and file Entity obligations -> /help/entity-obligations; Manage Entity structure and access -> /help/entity-structure-and-access); Selecting \"Read the calendar and Home\" moved to #read-the-calendar-and-home; the focused element was H2#read-the-calendar-and-home and the section heading was in view; \"Read this article in the full documentation\" opened /documentation/entity-structure-and-access and showed the same guide, \"Manage Entity structure and access\", in the formal reader; The Help article kept its title and produced no horizontal overflow in every theme and width combination (light@320px:0px, light@720px:0px, light@1440px:0px, dark@320px:0px, dark@720px:0px, dark@1440px:0px, warm@320px:0px, warm@720px:0px, warm@1440px:0px); At an emulated 200 percent zoom (a 1440px layout halved to a 720x450 CSS viewport) the article kept its title with no horizontal overflow; Arriving at the article put focus on its H1 \"track-and-file-entity-obligations\"; Shift+Tab reached the outline link for the filing section with a visible focus indicator (outline: solid) and Enter followed it to #mark-a-filing-and-check-the-next-cycle; the shell's \"Skip to content\" link was present and targets #main.",
+      "expected": "This guide is listed in Help for this reader's audience and found by its exact title; its outline and the shell's skip link work by keyboard; it links out to itself in the formal reader; and it holds in Light, Dark and Warm at 320, 720 and 1440 CSS pixels and at an emulated 200 percent zoom.",
+      "actual": "The Entities destination offered a Help link, and the Help index headed \"Guides for Legal Team Member\" listed all four Entity guides by their exact titles. Each exact title was found by the Help search and resolved to its own article (Maintain Entities and Counterparties -> /help/entities-and-counterparties; Manage Holdings, Officers, and Registrations -> /help/entity-records; Track and file Entity obligations -> /help/entity-obligations; Manage Entity structure and access -> /help/entity-structure-and-access). Selecting \"Read the calendar and Home\" moved to #read-the-calendar-and-home; the focused element was H2#read-the-calendar-and-home and the section heading was in view. \"Read this article in the full documentation\" opened /documentation/entity-structure-and-access and showed the same guide, \"Manage Entity structure and access\", in the formal reader. The Help article kept its title and produced no horizontal overflow in every theme and width combination (light@320px:0px, light@720px:0px, light@1440px:0px, dark@320px:0px, dark@720px:0px, dark@1440px:0px, warm@320px:0px, warm@720px:0px, warm@1440px:0px). At an emulated 200 percent zoom (a 1440px layout halved to a 720x450 CSS viewport) the article kept its title with no horizontal overflow. Arriving at the article put focus on its H1 \"track-and-file-entity-obligations\"; Shift+Tab reached the outline link for the filing section with a visible focus indicator (outline: solid) and Enter followed it to #mark-a-filing-and-check-the-next-cycle; the shell's \"Skip to content\" link was present and targets #main. All four guides kept their titles with no horizontal overflow across every theme and width combination (36 checks: 4 guides x light/dark/warm x 320/720/1440 CSS pixels). All four guides kept their titles with no horizontal overflow at an emulated 200 percent zoom, a 1440px layout halved to a 720x450 CSS viewport (entities-and-counterparties, entity-records, entity-obligations, entity-structure-and-access). On every guide, arrival focus landed on the article H1, Shift+Tab reached its outline link with a visible focus indicator, and Enter followed it to the section (entities-and-counterparties#recover-from-an-unavailable-choice-or-refused-change; entity-records#archive-and-restore-an-entity; entity-obligations#mark-a-filing-and-check-the-next-cycle; entity-structure-and-access#grant-access-to-a-confidential-entity). Tabbing reached the \"Skip to content\" link and pressing Enter moved focus to MAIN#main with the address at \"#main\", so the skip link activates rather than merely being present. Each guide's \"Read this article in the full documentation\" opened its own formal page showing the same title (entities-and-counterparties -> /documentation/entities-and-counterparties; entity-records -> /documentation/entity-records; entity-obligations -> /documentation/entity-obligations; entity-structure-and-access -> /documentation/entity-structure-and-access).",
       "result": "pass",
       "startedAt": "2026-09-08T00:55:05.569Z",
-      "completedAt": "2026-09-08T00:55:40.513Z",
-      "evidence": ["docs/documentation/batches/DOC-018/independent-discovery.json"]
+      "completedAt": "2026-09-08T01:13:09.750Z",
+      "evidence": [
+        "docs/documentation/batches/DOC-018/independent-discovery.json",
+        "docs/documentation/batches/DOC-018/independent-discovery-coverage.json"
+      ]
     },
     {
       "id": "DOC-018-discovery",
       "coverage": ["C53"],
       "role": "administrator",
       "method": "browser-walkthrough",
-      "expected": "The guide is found from the Entity destination's Help and by its exact title, its outline and skip link work by keyboard, and it holds in Light, Dark and Warm at 320, 720 and 1440 CSS pixels and at 200 percent zoom.",
-      "actual": "The Entities destination offered a Help link, and the Help index headed \"Guides for Administrator\" listed all four Entity guides by their exact titles; Each exact title was found by the Help search and resolved to its own article (Maintain Entities and Counterparties -> /help/entities-and-counterparties; Manage Holdings, Officers, and Registrations -> /help/entity-records; Track and file Entity obligations -> /help/entity-obligations; Manage Entity structure and access -> /help/entity-structure-and-access); Selecting \"Read the calendar and Home\" moved to #read-the-calendar-and-home; the focused element was H2#read-the-calendar-and-home and the section heading was in view; \"Read this article in the full documentation\" opened /documentation/entity-structure-and-access and showed the same guide, \"Manage Entity structure and access\", in the formal reader; The Help article kept its title and produced no horizontal overflow in every theme and width combination (light@320px:0px, light@720px:0px, light@1440px:0px, dark@320px:0px, dark@720px:0px, dark@1440px:0px, warm@320px:0px, warm@720px:0px, warm@1440px:0px); At an emulated 200 percent zoom (a 1440px layout halved to a 720x450 CSS viewport) the article kept its title with no horizontal overflow; Arriving at the article put focus on its H1 \"track-and-file-entity-obligations\"; Shift+Tab reached the outline link for the filing section with a visible focus indicator (outline: solid) and Enter followed it to #mark-a-filing-and-check-the-next-cycle; the shell's \"Skip to content\" link was present and targets #main.",
+      "expected": "This guide is listed in Help for this reader's audience and found by its exact title; its outline and the shell's skip link work by keyboard; it links out to itself in the formal reader; and it holds in Light, Dark and Warm at 320, 720 and 1440 CSS pixels and at an emulated 200 percent zoom.",
+      "actual": "The Entities destination offered a Help link, and the Help index headed \"Guides for Administrator\" listed all four Entity guides by their exact titles. Each exact title was found by the Help search and resolved to its own article (Maintain Entities and Counterparties -> /help/entities-and-counterparties; Manage Holdings, Officers, and Registrations -> /help/entity-records; Track and file Entity obligations -> /help/entity-obligations; Manage Entity structure and access -> /help/entity-structure-and-access). Selecting \"Read the calendar and Home\" moved to #read-the-calendar-and-home; the focused element was H2#read-the-calendar-and-home and the section heading was in view. \"Read this article in the full documentation\" opened /documentation/entity-structure-and-access and showed the same guide, \"Manage Entity structure and access\", in the formal reader. The Help article kept its title and produced no horizontal overflow in every theme and width combination (light@320px:0px, light@720px:0px, light@1440px:0px, dark@320px:0px, dark@720px:0px, dark@1440px:0px, warm@320px:0px, warm@720px:0px, warm@1440px:0px). At an emulated 200 percent zoom (a 1440px layout halved to a 720x450 CSS viewport) the article kept its title with no horizontal overflow. Arriving at the article put focus on its H1 \"track-and-file-entity-obligations\"; Shift+Tab reached the outline link for the filing section with a visible focus indicator (outline: solid) and Enter followed it to #mark-a-filing-and-check-the-next-cycle; the shell's \"Skip to content\" link was present and targets #main. All four guides kept their titles with no horizontal overflow across every theme and width combination (36 checks: 4 guides x light/dark/warm x 320/720/1440 CSS pixels). All four guides kept their titles with no horizontal overflow at an emulated 200 percent zoom, a 1440px layout halved to a 720x450 CSS viewport (entities-and-counterparties, entity-records, entity-obligations, entity-structure-and-access). On every guide, arrival focus landed on the article H1, Shift+Tab reached its outline link with a visible focus indicator, and Enter followed it to the section (entities-and-counterparties#recover-from-an-unavailable-choice-or-refused-change; entity-records#archive-and-restore-an-entity; entity-obligations#mark-a-filing-and-check-the-next-cycle; entity-structure-and-access#grant-access-to-a-confidential-entity). Tabbing reached the \"Skip to content\" link and pressing Enter moved focus to MAIN#main with the address at \"#main\", so the skip link activates rather than merely being present. Each guide's \"Read this article in the full documentation\" opened its own formal page showing the same title (entities-and-counterparties -> /documentation/entities-and-counterparties; entity-records -> /documentation/entity-records; entity-obligations -> /documentation/entity-obligations; entity-structure-and-access -> /documentation/entity-structure-and-access).",
       "result": "pass",
       "startedAt": "2026-09-08T00:55:40.813Z",
-      "completedAt": "2026-09-08T00:56:15.702Z",
-      "evidence": ["docs/documentation/batches/DOC-018/independent-discovery.json"]
+      "completedAt": "2026-09-08T01:14:14.640Z",
+      "evidence": [
+        "docs/documentation/batches/DOC-018/independent-discovery.json",
+        "docs/documentation/batches/DOC-018/independent-discovery-coverage.json"
+      ]
     },
     {
       "id": "DOC-018-discovery",
       "coverage": ["C53"],
       "role": "anonymous",
       "method": "browser-walkthrough",
-      "expected": "The formal index lists the guide without a sign-in and asks the application for nothing.",
-      "actual": "Without any sign-in the formal index listed all four Entity guides behind a \"Skip to content\" link, offered no sign-in form or password field, and issued no /api/v1 request (0 application calls observed)",
+      "expected": "The formal reader lists and serves this guide without a sign-in and asks the application for nothing.",
+      "actual": "Without any sign-in the formal index listed all four Entity guides behind a \"Skip to content\" link, offered no sign-in form or password field, and issued no /api/v1 request (0 application calls observed). A fresh anonymous context visited the formal index and all four guide pages (/documentation/, /documentation/entities-and-counterparties, /documentation/entity-records, /documentation/entity-obligations, /documentation/entity-structure-and-access) and issued no request under /api/ at all — none to /api/v1/ and none to /api/auth/ — with no password field anywhere.",
       "result": "pass",
       "startedAt": "2026-09-08T00:56:15.724Z",
-      "completedAt": "2026-09-08T00:56:19.243Z",
-      "evidence": ["docs/documentation/batches/DOC-018/independent-discovery.json"]
+      "completedAt": "2026-09-08T01:14:28.623Z",
+      "evidence": [
+        "docs/documentation/batches/DOC-018/independent-discovery.json",
+        "docs/documentation/batches/DOC-018/independent-discovery-coverage.json"
+      ]
     }
   ],
   "authorEvidence": [
     "docs/documentation/batches/DOC-018/README.md",
     "docs/documentation/batches/DOC-018/independent-c53.json",
-    "docs/documentation/batches/DOC-018/independent-discovery.json"
+    "docs/documentation/batches/DOC-018/independent-c53-linked-work.json",
+    "docs/documentation/batches/DOC-018/independent-discovery.json",
+    "docs/documentation/batches/DOC-018/independent-discovery-coverage.json"
   ],
   "limitations": [
     "Agent walkthroughs by an independent review seat, not human user studies or feature-owner approval.",
-    "The types and Fields guide remains a publication dependency.",
+    "Known app limitation #774: a blank Entity-valued Field cannot be set from Matter Overview, so the Matter roll-up fixtures saved their Entity value through the API. The guide documents reading saved roll-up links and does not claim the Overview picker works.",
+    "The types and Fields guide remains a publication dependency for the guides that link it.",
     "Recorded against lab app source 8539f4cc, which is ahead of edition.json's supportedAppCommit; the whole suite is re-pinned to one build at DOC-025 acceptance.",
     "The catalog stays in feature review: DOC-025 whole-suite acceptance and DOC-027 publication are still ahead."
   ],

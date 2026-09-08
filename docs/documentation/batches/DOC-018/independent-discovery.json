@@ -152,5 +152,24 @@
     }
   ],
   "passed": true,
-  "completedAt": "2026-09-08T00:56:19.268Z"
+  "completedAt": "2026-09-08T00:56:19.268Z",
+  "articleHashes": [
+    {
+      "articleId": "entities-and-counterparties",
+      "contentSha256": "7313af8226fa554a32c4e86919d581a972fd574654e4b8559ccd8df591fe177e"
+    },
+    {
+      "articleId": "entity-records",
+      "contentSha256": "9d8b0ae49f2d38291393c876d0851ec3811a5d6dd3d24add2631615ade6db0bc"
+    },
+    {
+      "articleId": "entity-obligations",
+      "contentSha256": "b4a8ade34e728a7cb4de68a659779fe45d68781028d899b97c580771c1d0f604"
+    },
+    {
+      "articleId": "entity-structure-and-access",
+      "contentSha256": "95e5fbe88de8dcba1a417dada7ce078459a39aa633fa3f8e72d1ccc3a7295953"
+    }
+  ],
+  "articleHashesNote": "Associated after the runs, not captured at run start. These are the sha256 digests of the guides as committed; git shows the last content change was bab4d21f at 2026-09-07T23:11:00Z, before the earliest run here began at 2026-09-07T23:40:45.292Z, so every run exercised exactly these bytes."
 }

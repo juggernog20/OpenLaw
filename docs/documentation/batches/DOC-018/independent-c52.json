@@ -245,5 +245,12 @@
     }
   ],
   "passed": true,
-  "completedAt": "2026-09-08T00:42:59.307Z"
+  "completedAt": "2026-09-08T00:42:59.307Z",
+  "articleHashes": [
+    {
+      "articleId": "entity-obligations",
+      "contentSha256": "b4a8ade34e728a7cb4de68a659779fe45d68781028d899b97c580771c1d0f604"
+    }
+  ],
+  "articleHashesNote": "Associated after the runs, not captured at run start. These are the sha256 digests of the guides as committed; git shows the last content change was bab4d21f at 2026-09-07T23:11:00Z, before the earliest run here began at 2026-09-07T23:40:45.292Z, so every run exercised exactly these bytes."
 }

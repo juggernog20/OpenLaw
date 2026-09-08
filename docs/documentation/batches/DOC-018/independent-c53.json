@@ -57,11 +57,16 @@
     {
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "action": "C53 guide section: linked Contracts show only what this reader reaches",
-      "actual": "The Entity's Contracts tab showed neither a row nor a count for the Confidential Contract this reader cannot reach (tab reads \"Contracts\"), so linking it to a reachable Entity did not widen its audience",
+      "action": "C53 guide section: linked Contract rows show only what this reader reaches",
+      "actual": "The Entity's Contracts tab showed no row for the Confidential Contract this reader cannot reach, so linking it to a reachable Entity did not widen its audience.",
       "result": "pass",
       "startedAt": "2026-09-08T00:48:19.467Z",
-      "at": "2026-09-08T00:48:20.056Z"
+      "at": "2026-09-08T00:48:20.056Z",
+      "correction": {
+        "correctedAt": "2026-09-08T05:52:00.000Z",
+        "reason": "This step asserted row presence only. Its original text also quoted a tab label that getByRole('link', {name: /Contracts/}).first() had read from the global navigation, not the Entity record tab, and the Legal Team Member text claimed an absent count that was never observed. The scope is narrowed here to what the step actually checked; the tab counts are measured afresh in independent-c53-linked-work.json.",
+        "originalActual": "The Entity's Contracts tab showed neither a row nor a count for the Confidential Contract this reader cannot reach (tab reads \"Contracts\"), so linking it to a reachable Entity did not widen its audience"
+      }
     },
     {
       "role": "legal_team_member",
@@ -120,11 +125,16 @@
     {
       "role": "administrator",
       "method": "browser-walkthrough",
-      "action": "C53 guide section: linked Contracts show only what this reader reaches",
-      "actual": "The Entity's Contracts tab listed the Confidential Contract \"Rev C53 confidential deed RYAG0T\" for the Administrator who reaches it (tab reads \"Contracts\")",
+      "action": "C53 guide section: linked Contract rows show only what this reader reaches",
+      "actual": "The Entity's Contracts tab listed the Confidential Contract \"Rev C53 confidential deed RYAG0T\" for the Administrator who reaches it.",
       "result": "pass",
       "startedAt": "2026-09-08T00:48:40.424Z",
-      "at": "2026-09-08T00:48:41.015Z"
+      "at": "2026-09-08T00:48:41.015Z",
+      "correction": {
+        "correctedAt": "2026-09-08T05:52:00.000Z",
+        "reason": "This step asserted row presence only. Its original text also quoted a tab label that getByRole('link', {name: /Contracts/}).first() had read from the global navigation, not the Entity record tab, and the Legal Team Member text claimed an absent count that was never observed. The scope is narrowed here to what the step actually checked; the tab counts are measured afresh in independent-c53-linked-work.json.",
+        "originalActual": "The Entity's Contracts tab listed the Confidential Contract \"Rev C53 confidential deed RYAG0T\" for the Administrator who reaches it (tab reads \"Contracts\")"
+      }
     },
     {
       "role": "administrator",
@@ -200,5 +210,19 @@
     }
   ],
   "passed": true,
-  "completedAt": "2026-09-08T00:49:09.320Z"
+  "completedAt": "2026-09-08T00:49:09.320Z",
+  "corrections": [
+    {
+      "correctedAt": "2026-09-08T05:52:00.000Z",
+      "scope": "Both roles' linked-Contracts steps; see each step's `correction`.",
+      "supersededBy": "independent-c53-linked-work.json"
+    }
+  ],
+  "articleHashes": [
+    {
+      "articleId": "entity-structure-and-access",
+      "contentSha256": "95e5fbe88de8dcba1a417dada7ce078459a39aa633fa3f8e72d1ccc3a7295953"
+    }
+  ],
+  "articleHashesNote": "Associated after the runs, not captured at run start. These are the sha256 digests of the guides as committed; git shows the last content change was bab4d21f at 2026-09-07T23:11:00Z, before the earliest run here began at 2026-09-07T23:40:45.292Z, so every run exercised exactly these bytes."
 }
