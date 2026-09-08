@@ -29,7 +29,7 @@ all original independent role/method results.
 Three guides receive only en-US spelling corrections: manual-signing,
 contract-stages, and contract-relations-and-ending. Their `copyOnlyReview` fields
 retain the prior hashes and classify the change; no new procedure run is claimed.
-A fourth copy-only edit adds “which version” to the support guide’s opening
+A fourth copy-only edit adds "which version" to the support guide's opening
 sentence. `author-query-retest.json` records that exact previously failing query
 now reaching the intended guide as all four app roles and an anonymous formal
 reader. The earlier walkthrough/export hashes remain the bytes actually observed.
@@ -85,7 +85,7 @@ is a reference-guide sample, separate from the 162 article CSS-zoom observations
 The reference hash was associated afterward from unchanged bytes, with that fact
 recorded explicitly. No assistive-technology or human study is claimed.
 
-The first offline restart ran the lab helper’s normal build step and produced a
+The first offline restart ran the lab helper's normal build step and produced a
 new app image from the same sealed source. [The rebuild record](lab-rebuild.json)
 and retained build-log excerpt identify both images. Later observations correctly
 record `c585d868…`; earlier observations retain `01f561a6…`. They are not relabeled
@@ -111,6 +111,6 @@ limitations remain historical records. The 22 existing publication-blocker lists
 are retained as `publicationBlockersBeforeDOC025`; current `publicationBlockers`
 name the remaining acceptance/provider gates. No old walkthrough metadata is
 re-dated. The G3/G4 reports provide current counts rather than relying on old
-wording such as “this linked guide does not exist yet.”
+wording such as "this linked guide does not exist yet."
 
 CodeRabbit ran once and completed with eight findings. [Dispositions](review-dispositions.md) record the fixes and the source-verified rejection.

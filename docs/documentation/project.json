@@ -185,7 +185,8 @@
     {
       "id": "DOC-025",
       "issue": 745,
-      "status": "in-progress"
+      "status": "in-progress",
+      "pullRequest": 786
     },
     {
       "id": "DOC-026",
