@@ -1,0 +1,32 @@
+{
+  "name": "independent-pre-upgrade-recovery",
+  "scenario": "V-C46",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T10:02:31.448Z",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "environment": "openlaw-docs-b8e31260-rev-recovery",
+  "articleHashes": [
+    {
+      "articleId": "upgrade",
+      "contentSha256": "96cc17166c77af291161ea34540f2c1c9683d2736cd903c42e2692ba9fe8e94d"
+    },
+    {
+      "articleId": "backup-and-restore",
+      "contentSha256": "0237339f91484b7a46623e1753c67ccbb376ae341ac8b40cb5d81237967a891a"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "container-operation",
+      "action": "The pre-upgrade backup runs on its own build with its own data",
+      "actual": "The pre-upgrade dump and file archive were restored into an empty fourth project running the earlier image openlaw-local:d1d098ba9f4b, the build that wrote them. /readyz answered 200, the Administrator and the Contributor signed in, all 3 Contracts are present, 4 Document Versions downloaded with matching SHA-256 values, and the Contributor still reads Contract 1 while the Confidential Contract answers 404. Work accepted after the backup is absent (0 post-backup Contracts here), which is what the guide says a backup cannot recover. No older image was pointed at the migrated database.",
+      "result": "pass",
+      "startedAt": "2026-09-08T10:02:31.854Z",
+      "at": "2026-09-08T10:02:32.212Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T10:02:32.212Z"
+}

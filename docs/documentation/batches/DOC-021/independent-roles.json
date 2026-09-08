@@ -1,0 +1,87 @@
+{
+  "name": "independent-roles",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C38"],
+  "authorRecordName": "ind-roles",
+  "startedAt": "2026-09-08T05:27:41.455Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "types-statuses-fields",
+      "contentSha256": "6e3fa892dc9b2bb23d05bd7b3125a187cdd1cbafb384cdf2d248064a1bcd1abe"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Archiving an in-use type moves its records to the chosen replacement",
+      "actual": "The dialog read \"Archive Ind supplier assessment IND81T2F revised Ind supplier assessment IND81T2F revised is used by 2 matters. Pick a replacement type \u2014 those matters move to it when the type is archived. Reassign 2 matters to No reassignment Employment L\". Choosing \"Ind replacement type IND81T2F\" archived the type and moved Matter 24 to \"Ind replacement type IND81T2F\".",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:27:42.387Z",
+      "at": "2026-09-08T05:27:43.105Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Restoring the type does not move the reassigned record back",
+      "actual": "Restore returned \"Ind supplier assessment IND81T2F revised\" to the live list (archivedAt=null), but Matter 24 still reads type \"Ind replacement type IND81T2F\".",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:27:43.106Z",
+      "at": "2026-09-08T05:27:44.190Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Other cannot be archived",
+      "actual": "The Other row offers no archive control (0) and shows the protected lock (1).",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:27:44.190Z",
+      "at": "2026-09-08T05:27:44.196Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Archiving an in-use Officer role moves current and resigned appointments",
+      "actual": "Two appointments used the role: current \"Ind Current Officer IND81T2F\" and resigned \"Ind Former Officer IND81T2F\" (resignedOn 2024-05-06). The row read \"Ind compliance officer IND81T2F / 2 officers\" and the dialog read \"Archive Ind compliance officer IND81T2F Ind compliance officer IND81T2F is used by 2 officers. Pick a replacement role \u2014 those officers move to it when the role is archived. Reassign 2 officers to No reassignment Directo\". After archiving with \"Ind compliance officer IND81T2F spare\" as replacement both moved: Ind Current Officer IND81T2F -> Ind compliance officer IND81T2F spare (resignedOn none); Ind Former Officer IND81T2F -> Ind compliance officer IND81T2F spare (resignedOn 2024-05-06).",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:27:44.196Z",
+      "at": "2026-09-08T05:27:45.650Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Restoring an Officer role does not reverse the reassignment",
+      "actual": "Restore made \"Ind compliance officer IND81T2F\" selectable again (archivedAt=null) while both appointments stayed on the replacement: Ind Current Officer IND81T2F -> Ind compliance officer IND81T2F spare; Ind Former Officer IND81T2F -> Ind compliance officer IND81T2F spare. The Other role still shows the protected lock (1).",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:27:45.651Z",
+      "at": "2026-09-08T05:27:46.733Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Nadia Haddad cannot reach the configuration panes",
+      "actual": "Reader navigation: /settings/matters/types -> /settings/profile; /settings/contracts/statuses -> /settings/profile; /settings/entities/officer-roles -> /settings/profile; /settings/matters/fields -> /settings/profile. The settings rail offered no Organization entries (2 of them). A direct POST /officer-roles answered 403.",
+      "result": "fail",
+      "startedAt": "2026-09-08T05:27:46.733Z",
+      "at": "2026-09-08T05:27:49.902Z",
+      "error": "Reviewer helper error, not product behaviour: the rail assertion counted every link with those labels, so it matched the global navigation and reported \"no Organization entries (2 of them)\". The redirects and the 403 in the same step are sound, but the rail claim is not usable as written. Redone against /settings/ hrefs in ind-roles-retry."
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "Ravi Menon cannot reach the configuration panes",
+      "actual": "Reader navigation: /settings/matters/types -> /settings/profile; /settings/contracts/statuses -> /settings/profile; /settings/entities/officer-roles -> /settings/profile; /settings/matters/fields -> /settings/profile. The settings rail offered no Organization entries (2 of them). A direct POST /officer-roles answered 403.",
+      "result": "fail",
+      "startedAt": "2026-09-08T05:27:49.902Z",
+      "at": "2026-09-08T05:27:53.079Z",
+      "error": "Reviewer helper error, not product behaviour: the rail assertion counted every link with those labels, so it matched the global navigation and reported \"no Organization entries (2 of them)\". The redirects and the 403 in the same step are sound, but the rail claim is not usable as written. Redone against /settings/ hrefs in ind-roles-retry."
+    }
+  ],
+  "passed": false,
+  "completedAt": "2026-09-08T05:27:53.079Z"
+}

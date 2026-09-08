@@ -1,0 +1,61 @@
+{
+  "name": "taxonomies-retry2",
+  "startedAt": "2026-09-08T04:36:06.976Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "types-statuses-fields",
+      "contentSha256": "7da7433f34e03c926021864f3cc53d35fccbb62a9aa86e8fde9abbe4d6f59b3c"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "attach Fields to both types, requiredness and keyboard order survive reload",
+      "actual": "Global Field attached and required independently on Contract/Matter types; optional Matter Field attached and moved above it.",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:36:07.870Z",
+      "at": "2026-09-08T04:36:09.689Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "refuse Global narrowing while another module attaches it, preserve saved scope",
+      "actual": "Global to Contract scope refused because Matter attachment exists; Global retained.",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:36:09.689Z",
+      "at": "2026-09-08T04:36:10.407Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "required missing value refuses Matter creation, valid value saves",
+      "actual": "Missing required selection blocked, then M-19 saved North and optional text.",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:36:10.407Z",
+      "at": "2026-09-08T04:36:11.192Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "detach and archive Field retain values and restore attachment visibility",
+      "actual": "Detached and catalog-archived Field retained stored text; restore displayed its value again.",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:36:11.192Z",
+      "at": "2026-09-08T04:36:13.243Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "archive in-use Matter type requires replacement; restore does not reverse reassignment",
+      "result": "fail",
+      "startedAt": "2026-09-08T04:36:13.243Z",
+      "error": "expect(locator).toBeDisabled() failed\n\nLocator:  getByRole('dialog').getByRole('button', { name: 'Archive type', exact: true })\nExpected: disabled\nReceived: enabled\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.be.disabled\" with timeout 5000ms\n  - waiting for getByRole('dialog').getByRole('button', { name: 'Archive type', exact: true })\n    14 × locator resolved to <button type=\"submit\" class=\"inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-button text-base transition-[filter,background-color] duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link disabled:pointer-events-none disabled:opacity-50 bg-cta-danger font-semibold text-on-cta hover:brightness-95 active:brightness-90 h-8 px-3\">Archive type</button>\n       - unexpected value \"enabled\"\n",
+      "at": "2026-09-08T04:36:18.843Z"
+    }
+  ],
+  "passed": false
+}

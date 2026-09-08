@@ -1,0 +1,206 @@
+{
+  "name": "previews",
+  "startedAt": "2026-09-07T20:32:16.217Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "document-previews",
+      "contentSha256": "12cf5181a1b0c37788c1cd3d07ce04d8ac6c41efc68fed4188d47074307bd24a"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "C28 native preview and byte-identical original download",
+      "actual": "Expected native reading surface displayed; browser Download matched uploaded SHA-256",
+      "result": "pass",
+      "at": "2026-09-07T20:32:18.820Z"
+    },
+    {
+      "role": "administrator",
+      "action": "C28 word preview and byte-identical original download",
+      "actual": "Expected word reading surface displayed; browser Download matched uploaded SHA-256",
+      "result": "pass",
+      "at": "2026-09-07T20:32:19.268Z"
+    },
+    {
+      "role": "administrator",
+      "action": "C28 slides preview and byte-identical original download",
+      "actual": "Expected slides reading surface displayed; browser Download matched uploaded SHA-256",
+      "result": "pass",
+      "at": "2026-09-07T20:32:19.798Z"
+    },
+    {
+      "role": "administrator",
+      "action": "C28 scan preview and byte-identical original download",
+      "actual": "OCR ready with ocr provenance and expected words; original scan rendered and downloaded unchanged",
+      "result": "pass",
+      "at": "2026-09-07T20:32:20.213Z"
+    },
+    {
+      "role": "administrator",
+      "action": "C28 image preview and byte-identical original download",
+      "actual": "Expected image reading surface displayed; browser Download matched uploaded SHA-256",
+      "result": "pass",
+      "at": "2026-09-07T20:32:20.364Z"
+    },
+    {
+      "role": "administrator",
+      "action": "C28 email preview and byte-identical original download",
+      "actual": "Expected email reading surface displayed; browser Download matched uploaded SHA-256",
+      "result": "pass",
+      "at": "2026-09-07T20:32:20.940Z"
+    },
+    {
+      "role": "administrator",
+      "action": "C28 other preview and byte-identical original download",
+      "actual": "Download-only row directly downloaded original bytes without opening a preview",
+      "result": "pass",
+      "at": "2026-09-07T20:32:20.986Z"
+    },
+    {
+      "role": "administrator",
+      "action": "C28 bad preview and byte-identical original download",
+      "actual": "Intentionally invalid DOCX reached failed rendition and visible recovery card; original bytes remained downloadable",
+      "result": "pass",
+      "at": "2026-09-07T20:32:21.166Z"
+    },
+    {
+      "role": "administrator",
+      "action": "C28 recover failed conversion by appending corrected Word Version",
+      "actual": "Corrected file appended v2 and rendered/downloaded; failed v1 remained in the immutable chain",
+      "result": "pass",
+      "at": "2026-09-07T20:32:22.581Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "C28 native preview and byte-identical original download",
+      "actual": "Expected native reading surface displayed; browser Download matched uploaded SHA-256",
+      "result": "pass",
+      "at": "2026-09-07T20:32:25.473Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "C28 word preview and byte-identical original download",
+      "actual": "Expected word reading surface displayed; browser Download matched uploaded SHA-256",
+      "result": "pass",
+      "at": "2026-09-07T20:32:25.872Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "C28 slides preview and byte-identical original download",
+      "actual": "Expected slides reading surface displayed; browser Download matched uploaded SHA-256",
+      "result": "pass",
+      "at": "2026-09-07T20:32:27.162Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "C28 scan preview and byte-identical original download",
+      "actual": "OCR ready with ocr provenance and expected words; original scan rendered and downloaded unchanged",
+      "result": "pass",
+      "at": "2026-09-07T20:32:27.556Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "C28 image preview and byte-identical original download",
+      "actual": "Expected image reading surface displayed; browser Download matched uploaded SHA-256",
+      "result": "pass",
+      "at": "2026-09-07T20:32:27.720Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "C28 email preview and byte-identical original download",
+      "actual": "Expected email reading surface displayed; browser Download matched uploaded SHA-256",
+      "result": "pass",
+      "at": "2026-09-07T20:32:28.172Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "C28 other preview and byte-identical original download",
+      "actual": "Download-only row directly downloaded original bytes without opening a preview",
+      "result": "pass",
+      "at": "2026-09-07T20:32:28.220Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "C28 bad preview and byte-identical original download",
+      "actual": "Intentionally invalid DOCX reached failed rendition and visible recovery card; original bytes remained downloadable",
+      "result": "pass",
+      "at": "2026-09-07T20:32:28.717Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "C28 recover failed conversion by appending corrected Word Version",
+      "actual": "Corrected file appended v2 and rendered/downloaded; failed v1 remained in the immutable chain",
+      "result": "pass",
+      "at": "2026-09-07T20:32:30.088Z"
+    },
+    {
+      "role": "contributor",
+      "action": "C28 native preview and byte-identical original download",
+      "actual": "Expected native reading surface displayed; browser Download matched uploaded SHA-256",
+      "result": "pass",
+      "at": "2026-09-07T20:32:32.753Z"
+    },
+    {
+      "role": "contributor",
+      "action": "C28 word preview and byte-identical original download",
+      "actual": "Expected word reading surface displayed; browser Download matched uploaded SHA-256",
+      "result": "pass",
+      "at": "2026-09-07T20:32:33.120Z"
+    },
+    {
+      "role": "contributor",
+      "action": "C28 slides preview and byte-identical original download",
+      "actual": "Expected slides reading surface displayed; browser Download matched uploaded SHA-256",
+      "result": "pass",
+      "at": "2026-09-07T20:32:33.488Z"
+    },
+    {
+      "role": "contributor",
+      "action": "C28 scan preview and byte-identical original download",
+      "actual": "OCR ready with ocr provenance and expected words; original scan rendered and downloaded unchanged",
+      "result": "pass",
+      "at": "2026-09-07T20:32:33.888Z"
+    },
+    {
+      "role": "contributor",
+      "action": "C28 image preview and byte-identical original download",
+      "actual": "Expected image reading surface displayed; browser Download matched uploaded SHA-256",
+      "result": "pass",
+      "at": "2026-09-07T20:32:34.036Z"
+    },
+    {
+      "role": "contributor",
+      "action": "C28 email preview and byte-identical original download",
+      "actual": "Expected email reading surface displayed; browser Download matched uploaded SHA-256",
+      "result": "pass",
+      "at": "2026-09-07T20:32:34.468Z"
+    },
+    {
+      "role": "contributor",
+      "action": "C28 other preview and byte-identical original download",
+      "actual": "Download-only row directly downloaded original bytes without opening a preview",
+      "result": "pass",
+      "at": "2026-09-07T20:32:34.504Z"
+    },
+    {
+      "role": "contributor",
+      "action": "C28 bad preview and byte-identical original download",
+      "actual": "Intentionally invalid DOCX reached failed rendition and visible recovery card; original bytes remained downloadable",
+      "result": "pass",
+      "at": "2026-09-07T20:32:34.654Z"
+    },
+    {
+      "role": "contributor",
+      "action": "C28 recover failed conversion by appending corrected Word Version",
+      "actual": "Corrected file appended v2 and rendered/downloaded; failed v1 remained in the immutable chain",
+      "result": "pass",
+      "at": "2026-09-07T20:32:36.002Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T20:32:36.005Z"
+}

@@ -234,7 +234,7 @@ async function saveConnector(
   },
 ): Promise<void> {
   const saved = await request.put(`/api/v1/signing-connectors/${PROVIDER}`, {
-    data: { environment: "demo", ...config },
+    data: { environment: "demo", updateMode: "webhook", ...config },
   });
   expect(saved.status(), await saved.text()).toBe(200);
   const connector = z

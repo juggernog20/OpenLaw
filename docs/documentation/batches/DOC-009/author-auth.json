@@ -1,0 +1,39 @@
+{
+  "author": "Codex",
+  "independentReview": false,
+  "startedAt": "2026-09-07T03:45:53.629Z",
+  "finishedAt": "2026-09-07T03:46:05.810Z",
+  "phase": "contributor revoke",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "environment": "openlaw-docs-b8e31260-pilot",
+  "articleHashes": {
+    "staff-sign-in": "8ad02d5fc14664f6ba625ed31e65d93a4b6af5b79b63efc3c274e481d5e64a9b"
+  },
+  "results": [
+    {
+      "id": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "result": "pass",
+      "actual": "Expired activation refused; Administrator resent a fresh invitation; mismatch refused then password set; consumed link refused; wrong password refused; signed in as intended role; Profile enrollment and current authenticator code succeeded; wrong code refused; backup code worked once and replay refused; Administrator revoked session and reload returned to sign-in; new password plus code restored access; replacement enrollment issued a different secret, disabling two-factor restored password-only sign-in; empty Your Tasks showed its explicit empty result; sign-out returned to login.",
+      "fixtureEmail": "docs.access.1788752753629.0@helix.example"
+    },
+    {
+      "id": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "result": "pass",
+      "actual": "Expired activation refused; Administrator resent a fresh invitation; mismatch refused then password set; consumed link refused; wrong password refused; signed in as intended role; Profile enrollment and current authenticator code succeeded; wrong code refused; backup code worked once and replay refused; Administrator revoked session and reload returned to sign-in; new password plus code restored access; replacement enrollment issued a different secret, disabling two-factor restored password-only sign-in; empty Your Tasks showed its explicit empty result; sign-out returned to login.",
+      "fixtureEmail": "docs.access.1788752753629.1@helix.example"
+    },
+    {
+      "id": "V-C01",
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "result": "pass",
+      "actual": "Expired activation refused; Administrator resent a fresh invitation; mismatch refused then password set; consumed link refused; wrong password refused; signed in as intended role; Profile enrollment and current authenticator code succeeded; wrong code refused; backup code worked once and replay refused; Administrator revoked session and reload returned to sign-in; new password plus code restored access; replacement enrollment issued a different secret, disabling two-factor restored password-only sign-in; empty Your Tasks showed its explicit empty result; sign-out returned to login.",
+      "fixtureEmail": "docs.access.1788752753629.2@helix.example"
+    }
+  ],
+  "buildId": "app sha256:69c7cd47338eff05c787e985743dd45b2229792827d82fd5f54a50a9c63d8757; engine sha256:1dce5b67898cc8ae720231fa66e049208ed207e69053a2cf4c1bd0e172cea401"
+}

@@ -156,6 +156,7 @@ function connectorApi(
     test?: globalThis.Response;
     prompts?: PromptResponse["prompts"];
     promptSaves?: unknown[];
+    models?: (call: StubCall) => globalThis.Response | Promise<globalThis.Response>;
   } = {},
   saves: unknown[] = [],
 ) {
@@ -196,6 +197,8 @@ function connectorApi(
       }
       return json(200, { prompts });
     }
+    if (call.url.pathname === "/api/v1/ai-connector/models")
+      return options.models?.(call) ?? json(200, { models: [], truncated: false });
     if (call.url.pathname === "/api/v1/ai-connector/test" && call.method === "POST") {
       return options.test ?? json(200, { ok: true });
     }
@@ -256,6 +259,7 @@ describe("the AI analysis connector pane (#662)", () => {
     await openProvider(user);
     expect(screen.getByLabelText("API key")).toHaveValue("");
     expect(screen.getByText(/Leave blank to keep the current key/)).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Enter model ID manually" }));
     await user.clear(screen.getByLabelText("Model"));
     await user.type(screen.getByLabelText("Model"), "gpt-updated");
     await user.click(screen.getByRole("button", { name: "Save connector" }));
@@ -350,5 +354,184 @@ describe("the Field prompts card (#665)", () => {
       "href",
       "/settings/contracts/fields",
     );
+  });
+});
+
+describe("the provider model selector", () => {
+  it("searches display names, saves the exact ID and preserves selection on refresh", async () => {
+    const user = userEvent.setup();
+    const saves: unknown[] = [];
+    let count = 0;
+    stubApi({
+      signedIn: ADMIN,
+      extra: connectorApi(
+        {
+          models: () =>
+            json(200, {
+              models:
+                count++ === 0
+                  ? [
+                      { id: "vendor/legal", label: "Legal model" },
+                      { id: "vendor/general", label: "General model" },
+                    ]
+                  : [],
+              truncated: false,
+            }),
+        },
+        saves,
+      ),
+    });
+    renderAt("/settings/ai-analysis");
+    await openProvider(user);
+    await user.click(screen.getByRole("button", { name: "Load models" }));
+    await user.type(await screen.findByRole("searchbox", { name: "Search models" }), "Legal");
+    expect(screen.queryByRole("option", { name: /General model/ })).not.toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText("Model"), "vendor/legal");
+    await user.click(screen.getByRole("button", { name: "Refresh models" }));
+    expect(await screen.findByText(/selected model was not returned/)).toBeVisible();
+    expect(screen.getByLabelText("Model")).toHaveValue("vendor/legal");
+    await user.click(screen.getByRole("button", { name: "Save connector" }));
+    await waitFor(() => expect(saves).toEqual([{ preset: "openai", model: "vendor/legal" }]));
+  });
+
+  it("loads unsaved credentials before a connector exists and keeps manual fallback after failure", async () => {
+    const user = userEvent.setup();
+    const calls: unknown[] = [];
+    stubApi({
+      signedIn: ADMIN,
+      extra: connectorApi({
+        connector: unconfigured(),
+        models: (call) => {
+          calls.push(call.body);
+          return problem(502, "The provider refused model discovery with HTTP 401.");
+        },
+      }),
+    });
+    renderAt("/settings/ai-analysis");
+    await openProvider(user);
+    expect(screen.getByRole("button", { name: "Load models" })).toBeDisabled();
+    await user.type(screen.getByLabelText("API key"), "new-test-key");
+    await user.click(screen.getByRole("button", { name: "Load models" }));
+    expect(await screen.findByText(/HTTP 401/)).toBeVisible();
+    expect(calls).toEqual([
+      {
+        preset: "anthropic",
+        protocol: "anthropic_messages",
+        baseUrl: "https://api.anthropic.com/v1",
+        apiKey: "new-test-key",
+      },
+    ]);
+    await user.click(screen.getByRole("button", { name: "Enter model ID manually" }));
+    await user.clear(screen.getByLabelText("Model"));
+    await user.type(screen.getByLabelText("Model"), "private-model");
+    expect(screen.getByLabelText("Model")).toHaveValue("private-model");
+  });
+
+  it("ignores an old provider response after a provider change", async () => {
+    const user = userEvent.setup();
+    let answer!: (response: globalThis.Response) => void;
+    stubApi({
+      signedIn: ADMIN,
+      extra: connectorApi({
+        models: () =>
+          new Promise((resolve) => {
+            answer = resolve;
+          }),
+      }),
+    });
+    renderAt("/settings/ai-analysis");
+    await openProvider(user);
+    await user.click(screen.getByRole("button", { name: "Load models" }));
+    expect(await screen.findByRole("button", { name: "Loading models…" })).toBeDisabled();
+    await user.selectOptions(screen.getByLabelText("Provider"), "gemini");
+    answer(json(200, { models: [{ id: "stale-model", label: "Stale model" }], truncated: false }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Load models" })).toBeDisabled());
+    expect(screen.queryByRole("option", { name: /Stale model/ })).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Model")).toHaveValue("gemini-3.6-flash");
+    expect(screen.getByLabelText("API key")).toBeRequired();
+  });
+
+  it("keeps manual entry while the endpoint and key are still being corrected", async () => {
+    const user = userEvent.setup();
+    const saves: unknown[] = [];
+    stubApi({ signedIn: ADMIN, extra: connectorApi({ connector: unconfigured() }, saves) });
+    renderAt("/settings/ai-analysis");
+    await openProvider(user);
+    await user.selectOptions(screen.getByLabelText("Provider"), "custom");
+    await user.type(screen.getByLabelText("Base URL"), "https://private.test/v");
+    await user.type(screen.getByLabelText("API key"), "private-test-key");
+    await user.click(screen.getByRole("button", { name: "Enter model ID manually" }));
+    await user.type(screen.getByLabelText("Model"), "private-model");
+
+    await user.type(screen.getByLabelText("Base URL"), "1");
+    expect(screen.getByLabelText("Model")).toHaveAttribute("maxlength", "300");
+    expect(screen.getByLabelText("Model")).toHaveValue("private-model");
+    await user.click(screen.getByRole("button", { name: "Save connector" }));
+    await waitFor(() =>
+      expect(saves).toEqual([
+        {
+          preset: "custom",
+          protocol: "openai_chat_completions",
+          baseUrl: "https://private.test/v1",
+          model: "private-model",
+          apiKey: "private-test-key",
+        },
+      ]),
+    );
+  });
+
+  // The first-run journey configures this pane without a provider to call, so
+  // it reaches Model through manual entry. It drives the control by role, and
+  // a control that changed shape under it failed the whole run rather than
+  // this assertion. Pinning the two shapes here is what tells us which one
+  // moved, in seconds rather than a container build.
+  it("offers Model as a list and swaps it for a text field on manual entry", async () => {
+    const user = userEvent.setup();
+    const calls: unknown[] = [];
+    stubApi({
+      signedIn: ADMIN,
+      extra: connectorApi({
+        connector: unconfigured(),
+        models: (call) => {
+          calls.push(call.body);
+          return json(200, { models: [], truncated: false });
+        },
+      }),
+    });
+    renderAt("/settings/ai-analysis");
+    await openProvider(user);
+    await user.selectOptions(screen.getByLabelText("Provider"), "custom");
+    await user.type(screen.getByLabelText("Base URL"), "http://127.0.0.1:9/v1");
+
+    expect(screen.getByRole("combobox", { name: "Model" })).toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: "Model" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Enter model ID manually" }));
+    const model = screen.getByRole("textbox", { name: "Model" });
+    expect(screen.queryByRole("combobox", { name: "Model" })).not.toBeInTheDocument();
+    await user.type(model, "m33-configuration-only");
+    await user.type(screen.getByLabelText("API key"), "m33-configuration-only");
+
+    // The credential remounts the selector. Manual entry and the typed id are
+    // the parent's, so both survive it, and no list was ever asked for.
+    expect(screen.getByRole("textbox", { name: "Model" })).toHaveValue("m33-configuration-only");
+    expect(calls).toEqual([]);
+  });
+
+  it("explains partial lists and requires Azure deployment names", async () => {
+    const user = userEvent.setup();
+    stubApi({
+      signedIn: ADMIN,
+      extra: connectorApi({ models: () => json(200, { models: [], truncated: true }) }),
+    });
+    renderAt("/settings/ai-analysis");
+    await openProvider(user);
+    await user.click(screen.getByRole("button", { name: "Load models" }));
+    expect(await screen.findByText(/partial model list/)).toBeVisible();
+    expect(screen.getByText(/returned no models/)).toBeVisible();
+    await user.selectOptions(screen.getByLabelText("Provider"), "azure_openai");
+    expect(screen.queryByRole("button", { name: "Load models" })).not.toBeInTheDocument();
+    expect(screen.getByText(/Enter the deployment name from Azure/)).toBeVisible();
+    expect(screen.getByLabelText("Model")).toHaveAttribute("maxlength", "300");
   });
 });

@@ -1,0 +1,16 @@
+{
+  "startedAt": "2026-09-08T08:40:00.532750+00:00",
+  "completedAt": "2026-09-08T08:40:02.855602+00:00",
+  "project": "openlaw-docs-b8e31260-ops-upgrade",
+  "action": "upgrade",
+  "fromCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "toCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "images": {
+    "app": "sha256:2851d6acd05418a0ddc57750ac75908892643af481f2755cb13a46f946d073b6",
+    "worker": "sha256:2851d6acd05418a0ddc57750ac75908892643af481f2755cb13a46f946d073b6",
+    "doc-engine": "sha256:d0997fb7187067bc03f82e04ad45365ca5e3132b872e0b73c3934ceb2d67457a",
+    "postgres": "sha256:8a4b045886180c64f518ca6a4b0791b15fb997f3b3b619bd5ee141914668db55"
+  },
+  "phase": "candidate",
+  "sourceArchiveSha256": "a57ef571b8e445f20e2d2aff33dac2a846c05d398bc6c63dd7eb019143a9be53"
+}

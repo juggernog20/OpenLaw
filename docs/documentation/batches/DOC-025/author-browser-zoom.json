@@ -1,0 +1,207 @@
+{
+  "startedAt": "2026-09-08T13:13:40.986Z",
+  "reviewer": "Codex DOC-025 author (agent)",
+  "method": "browser-walkthrough",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "sha256:c585d8683816050bdf00568a6f4e1983f14fb3b364ac8202f4f4e40dab9ef52c",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "Actual browser zoom 200% in three themes",
+      "startedAt": "2026-09-08T13:13:40.986Z",
+      "at": "2026-09-08T13:13:42.858Z",
+      "result": "pass",
+      "actual": {
+        "before": {
+          "width": 1280,
+          "dpr": 1,
+          "cssZoom": "1"
+        },
+        "chromeTabsGetZoom": 2,
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          }
+        ]
+      }
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Actual browser zoom 200% in three themes",
+      "startedAt": "2026-09-08T13:13:42.898Z",
+      "at": "2026-09-08T13:13:44.686Z",
+      "result": "pass",
+      "actual": {
+        "before": {
+          "width": 1280,
+          "dpr": 1,
+          "cssZoom": "1"
+        },
+        "chromeTabsGetZoom": 2,
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          }
+        ]
+      }
+    },
+    {
+      "role": "contributor",
+      "action": "Actual browser zoom 200% in three themes",
+      "startedAt": "2026-09-08T13:13:44.725Z",
+      "at": "2026-09-08T13:13:46.426Z",
+      "result": "pass",
+      "actual": {
+        "before": {
+          "width": 1280,
+          "dpr": 1,
+          "cssZoom": "1"
+        },
+        "chromeTabsGetZoom": 2,
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          }
+        ]
+      }
+    },
+    {
+      "role": "business_user",
+      "action": "Actual browser zoom 200% in three themes",
+      "startedAt": "2026-09-08T13:13:46.466Z",
+      "at": "2026-09-08T13:13:47.803Z",
+      "result": "pass",
+      "actual": {
+        "before": {
+          "width": 1280,
+          "dpr": 1,
+          "cssZoom": "1"
+        },
+        "chromeTabsGetZoom": 2,
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          }
+        ]
+      }
+    },
+    {
+      "role": "anonymous",
+      "action": "Actual browser zoom 200% in three themes",
+      "startedAt": "2026-09-08T13:13:47.844Z",
+      "at": "2026-09-08T13:13:48.652Z",
+      "result": "pass",
+      "actual": {
+        "before": {
+          "width": 1280,
+          "dpr": 1,
+          "cssZoom": "1"
+        },
+        "chromeTabsGetZoom": 2,
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          }
+        ]
+      }
+    }
+  ],
+  "completedAt": "2026-09-08T13:13:48.690Z",
+  "articleHashAssociation": {
+    "articleId": "reference",
+    "contentSha256": "ba4b1b0cc96db761cc19f06fa88d5e4d9625355873cc2a15d8f6deb58193f5d6",
+    "associatedAt": "2026-09-08T13:15:11.435213Z",
+    "basis": "Associated after capture; verified byte-identical to reference.md at d6df148c and the hash captured in author-discovery.json. This guide was unchanged throughout these zoom runs."
+  }
+}

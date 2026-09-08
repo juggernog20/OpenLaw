@@ -1,0 +1,64 @@
+{
+  "articleId": "contract-tasks-and-dates",
+  "contentSha256": "05701bf7e4daa6099cca5ced8e61e360dbef0641fd53aa93c031bbcb29a59d67",
+  "appCommit": "67dbe788c73641a02218e2c0a0cbcdd5a0682a87",
+  "buildId": "Source integration only; no walkthrough build recorded for this article revision",
+  "environment": "dev integration source review",
+  "author": "Codex integration author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "blocked",
+  "sources": [
+    "CONTEXT.md",
+    "apps/web/src/components/contracts/tasks-card.tsx",
+    "apps/web/src/components/tasks/assignee-picker.tsx",
+    "apps/web/src/components/contracts/key-dates-card.tsx",
+    "apps/web/src/components/home/tasks-card.tsx",
+    "apps/web/src/components/home/dates-card.tsx",
+    "apps/api/src/modules/contract-tasks/routes.ts",
+    "apps/api/src/modules/contract-key-dates/routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C19",
+      "coverage": ["C19"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Task and Key date updates persist and affect their distinct supported surfaces. Read-only/archived restrictions and missing recipients do not produce misleading reminder promises. The current Contract Task screen exposes no reorder control; verify that limit rather than crediting an API reorder as a user workflow.",
+      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/dev-integration/README.md"]
+    },
+    {
+      "id": "V-C19",
+      "coverage": ["C19"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Task and Key date updates persist and affect their distinct supported surfaces. Read-only/archived restrictions and missing recipients do not produce misleading reminder promises. The current Contract Task screen exposes no reorder control; verify that limit rather than crediting an API reorder as a user workflow.",
+      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/dev-integration/README.md"]
+    }
+  ],
+  "authorEvidence": [],
+  "limitations": [
+    "This article changed during the dev integration and requires fresh technical and walkthrough acceptance. Its earlier hash, reviewers, timestamps and observations are preserved in previousEvidence.",
+    "No full-suite acceptance, human proofreading or publication is claimed. DOC-025 must verify the combined candidate."
+  ],
+  "previousEvidence": "docs/documentation/batches/dev-integration/previous-contract-tasks-and-dates.json",
+  "copyOnlyReview": null,
+  "publicationBlockers": [
+    "DOC-025 complete-suite acceptance and DOC-027 publication remain pending; live-provider C42/C43 are blocked under #742. Linked non-provider guides now exist with passing article evidence and remain in catalog review."
+  ],
+  "publicationBlockersBeforeDOC025": [
+    "notifications, roles-and-access and terms-and-renewals are in review; reminder delivery evidence belongs to the notifications guide."
+  ],
+  "publicationBlockerReconciliation": {
+    "reviewer": "Codex DOC-025 evidence audit (agent)",
+    "reviewedAt": "2026-09-08T13:10:20.947051Z",
+    "priorEvidenceCommit": "d6df148c2d6a94fa0b8f053aa5e2494f697c65f5",
+    "summary": "Preserves earlier blocker notes separately and identifies current suite gates. No walkthrough date, build, result or catalog status changed."
+  }
+}

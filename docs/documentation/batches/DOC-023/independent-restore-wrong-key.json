@@ -1,0 +1,28 @@
+{
+  "name": "independent-restore-wrong-key",
+  "scenario": "V-C47",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:58:03.856Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-restore",
+  "articleHashes": [
+    {
+      "articleId": "backup-and-restore",
+      "contentSha256": "0237339f91484b7a46623e1753c67ccbb376ae341ac8b40cb5d81237967a891a"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "A wrong credential key on the restored target",
+      "actual": "With a different OPENLAW_SECRET_KEY supplied to the restored target, all 5 restored Contracts still read normally, but the saved relay was not usable: GET /email-settings reported source \"unset\" and the test send failed with HTTP 502 and the detail \"The test email could not be sent. SMTP is not configured — save a relay first.\". Nothing reached the controlled mailbox.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:58:04.275Z",
+      "at": "2026-09-08T09:58:06.323Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T09:58:06.323Z"
+}

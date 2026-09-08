@@ -1,0 +1,51 @@
+{
+  "startedAt": "2026-09-08T10:59:54.907Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "troubleshooting",
+      "contentSha256": "0b5c8a359c24faa4a2c97d557b23a4ad4c37939a8cb919e0b63d2130c628779b"
+    },
+    {
+      "articleId": "reference",
+      "contentSha256": "9ec760d76d77a25e047c71f896e0961e1a7afcf6fab06e3e8c942c7770bdf7c0"
+    },
+    {
+      "articleId": "versions-and-support",
+      "contentSha256": "157906267e63b29066d1835dcda7de6c69d8c83338da745d340a8ded3e06ed0b"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Prepare damaged office file and read the original while processing",
+      "actual": "Intentionally malformed Word fixture uploaded through API; actual browser reader state: Support-damaged-archive.docx\nv1\nSupport-damaged-archive.docx\nDownload\n\nPreparing this document for reading…. Download returned unchanged original bytes.",
+      "startedAt": "2026-09-08T10:59:55.847Z",
+      "at": "2026-09-08T10:59:56.603Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Failed preview has supported download recovery",
+      "actual": "Normal processing of damaged Word reached actual failed preview; Download still returned original bytes and preview failure added no Version.",
+      "startedAt": "2026-09-08T10:59:56.603Z",
+      "at": "2026-09-08T10:59:56.647Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Download-only stored file follows reference",
+      "actual": "Stored text file name downloaded directly with original bytes; no preview promised.",
+      "startedAt": "2026-09-08T10:59:56.648Z",
+      "at": "2026-09-08T10:59:57.308Z",
+      "result": "pass"
+    }
+  ],
+  "completedAt": "2026-09-08T10:59:57.314Z",
+  "passed": true
+}

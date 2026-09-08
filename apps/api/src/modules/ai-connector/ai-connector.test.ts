@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { activityLog, aiConnector, aiFieldPrompts, asc, inArray, sql, type Db } from "@openlaw/db";
 import { CORE_ANALYSIS_TARGETS } from "@openlaw/shared";
 import { FAKE_VALID_AI_KEY } from "../../lib/ai/fake.js";
@@ -80,6 +80,7 @@ afterAll(async () => {
 });
 
 beforeEach(clear);
+afterEach(() => vi.unstubAllGlobals());
 
 describe("the AI connector role gate", () => {
   it("refuses every operation to anonymous and non-Administrator callers", async () => {
@@ -87,6 +88,7 @@ describe("the AI connector role gate", () => {
       { method: "GET" as const, url: URL },
       { method: "PUT" as const, url: URL, payload: { preset: "ollama", model: "llama3.2" } },
       { method: "POST" as const, url: `${URL}/test` },
+      { method: "POST" as const, url: `${URL}/models`, payload: { preset: "ollama" } },
       { method: "POST" as const, url: `${URL}/disable` },
       { method: "POST" as const, url: `${URL}/enable` },
       { method: "DELETE" as const, url: URL },
@@ -286,6 +288,7 @@ describe("saving and reading", () => {
     });
     const azure = await save({
       preset: "azure_openai",
+      apiKey: FAKE_VALID_AI_KEY,
       baseUrl:
         "https://legal.openai.azure.com/openai/deployments/contracts/chat/completions?api-version=2026-01-01",
       model: "contracts",
@@ -422,5 +425,128 @@ describe("the settings history", () => {
     ]);
     expect(rows.every((row) => row.visibility === "admin_only")).toBe(true);
     expect(JSON.stringify(rows)).not.toContain(FAKE_VALID_AI_KEY);
+  });
+});
+
+describe("model discovery", () => {
+  async function discover(payload: Record<string, unknown>) {
+    return harness.app.inject({
+      method: "POST",
+      url: `${URL}/models`,
+      cookies: adminCookies,
+      payload,
+    });
+  }
+
+  it("loads pending settings without requiring a model or saving settings", async () => {
+    const fetcher = vi.fn().mockResolvedValue(Response.json({ data: [{ id: "test-model" }] }));
+    vi.stubGlobal("fetch", fetcher);
+    const response = await discover({
+      preset: "openai",
+      apiKey: FAKE_VALID_AI_KEY,
+      baseUrl: "https://ignored.test",
+      protocol: "gemini",
+    });
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.json()).toEqual({
+      models: [{ id: "test-model", label: "test-model" }],
+      truncated: false,
+    });
+    expect(String(fetcher.mock.calls[0]![0])).toBe("https://api.openai.com/v1/models");
+    expect(await harness.db.select().from(aiConnector)).toHaveLength(0);
+    expect(await auditRows(harness.db)).toHaveLength(0);
+    expect(response.body).not.toContain(FAKE_VALID_AI_KEY);
+  });
+
+  it("reuses the sealed key only at the saved destination", async () => {
+    await save({
+      preset: "custom",
+      protocol: "openai_chat_completions",
+      baseUrl: "https://private.test/v1/",
+      model: "one",
+      apiKey: FAKE_VALID_AI_KEY,
+    });
+    const fetcher = vi.fn().mockResolvedValueOnce(Response.json({ data: [] }));
+    vi.stubGlobal("fetch", fetcher);
+    const same = await discover({
+      preset: "custom",
+      protocol: "openai_chat_completions",
+      baseUrl: "https://private.test/v1",
+    });
+    expect(same.statusCode, same.body).toBe(200);
+    expect(fetcher.mock.calls[0]![1]).toMatchObject({
+      headers: { authorization: `Bearer ${FAKE_VALID_AI_KEY}` },
+    });
+    for (const config of [
+      { preset: "openai" },
+      { preset: "custom", protocol: "openai_chat_completions", baseUrl: "https://other.test/v1" },
+      { preset: "custom", protocol: "gemini", baseUrl: "https://private.test/v1" },
+      {
+        preset: "custom",
+        protocol: "openai_chat_completions",
+        baseUrl: "https://private.test/other",
+      },
+    ]) {
+      const refused = await discover(config);
+      expect(refused.statusCode, refused.body).toBe(400);
+      const saveRefused = await save({ ...config, model: "two" });
+      expect(saveRefused.statusCode, saveRefused.body).toBe(400);
+    }
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect((await harness.db.select().from(aiConnector))[0]?.model).toBe("one");
+  });
+
+  it("uses a newly entered key at a changed destination without changing the saved key", async () => {
+    await save({ preset: "openai", model: "old", apiKey: FAKE_VALID_AI_KEY });
+    const fetcher = vi.fn().mockResolvedValue(Response.json({ data: [] }));
+    vi.stubGlobal("fetch", fetcher);
+    const result = await discover({ preset: "anthropic", apiKey: "replacement-test-key" });
+    expect(result.statusCode, result.body).toBe(200);
+    expect(fetcher.mock.calls[0]![1]).toMatchObject({
+      headers: { "x-api-key": "replacement-test-key" },
+    });
+    expect((await harness.db.select().from(aiConnector))[0]?.apiKey).toBe(FAKE_VALID_AI_KEY);
+  });
+
+  it("lists Ollama without sending a previous provider key and explains Azure manual entry", async () => {
+    await save({ preset: "openai", model: "old", apiKey: FAKE_VALID_AI_KEY });
+    const fetcher = vi.fn().mockResolvedValue(Response.json({ data: [] }));
+    vi.stubGlobal("fetch", fetcher);
+    expect((await discover({ preset: "ollama" })).statusCode).toBe(200);
+    expect(fetcher.mock.calls[0]![1].headers).not.toHaveProperty("authorization");
+    const azure = await discover({
+      preset: "azure_openai",
+      baseUrl: "https://azure.test/deployment",
+    });
+    expect(azure.statusCode).toBe(400);
+    expect(azure.json().detail).toContain("deployment name");
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  it("clears a previous provider key when saving keyless Ollama and records the change", async () => {
+    await save({ preset: "openai", model: "old", apiKey: FAKE_VALID_AI_KEY });
+    const result = await save({ preset: "ollama", model: "installed" });
+    expect(result.statusCode, result.body).toBe(200);
+    expect(result.json().connector.hasApiKey).toBe(false);
+    expect((await harness.db.select().from(aiConnector))[0]?.apiKey).toBeNull();
+    expect(await auditRows(harness.db)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          action: "ai_connector.updated",
+          payload: { preset: "ollama", field: "apiKey", old: "[secret]", new: "[secret]" },
+        }),
+      ]),
+    );
+  });
+
+  it("does not expose an echoed secret when a provider refuses discovery", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response(FAKE_VALID_AI_KEY, { status: 401 })),
+    );
+    const response = await discover({ preset: "openai", apiKey: FAKE_VALID_AI_KEY });
+    expect(response.statusCode).toBe(502);
+    expect(response.json().detail).toContain("HTTP 401");
+    expect(response.body).not.toContain(FAKE_VALID_AI_KEY);
   });
 });

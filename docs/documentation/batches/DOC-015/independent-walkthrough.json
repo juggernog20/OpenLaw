@@ -1,0 +1,556 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-015",
+  "issue": 735,
+  "independentReview": true,
+  "reviewerKind": "agent",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "author": "Codex documentation author",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-analysis-workflow",
+  "environments": {
+    "analysis-workflow": {
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0"
+    }
+  },
+  "method": "browser-walkthrough",
+  "startedAt": "2026-09-07T17:19:22.122Z",
+  "finishedAt": "2026-09-07T17:32:59.448Z",
+  "frontend": "The dedicated analysis-workflow lab at port 43304 with its declared local OpenAI-compatible provider stand-in (control at port 43315) for C21, and the same lab's real Document engine and worker for C29; separate browser sessions for the other legal role, Priya Raman and Ravi Menon; the lab APIs for prerequisite records, the provider control for pauses and a malformed reply, a scoped pause of this lab's worker for the pending state, and Python zipfile/XML inspection of downloaded redlines",
+  "browser": "Playwright 1.62.1 Chromium from the private documentation cache, headless, one isolated context per identity at 1280×1800 CSS px; scripts written by the reviewer from the guide text",
+  "articleHashesTested": [
+    {
+      "articleId": "contract-analysis",
+      "contentSha256": ["24e4375567bdf273873018732f93743584b71b260a07890f4f4719f257050243"]
+    },
+    {
+      "articleId": "compare-versions",
+      "contentSha256": ["2bfbd81cb149cd8bed215e1ada5736bf85fe9e4445241fea4307f2c36dae09df"]
+    }
+  ],
+  "articleHashesCurrent": [
+    {
+      "articleId": "contract-analysis",
+      "contentSha256": "24e4375567bdf273873018732f93743584b71b260a07890f4f4719f257050243"
+    },
+    {
+      "articleId": "compare-versions",
+      "contentSha256": "2bfbd81cb149cd8bed215e1ada5736bf85fe9e4445241fea4307f2c36dae09df"
+    }
+  ],
+  "authorHashesHistorical": [
+    {
+      "articleId": "contract-analysis",
+      "contentSha256": ["24e4375567bdf273873018732f93743584b71b260a07890f4f4719f257050243"]
+    },
+    {
+      "articleId": "compare-versions",
+      "contentSha256": ["0199b96fd4cfc7b542b3c225280c53851b8d8576b39be403ac84ab8732ae169c"]
+    }
+  ],
+  "fixturePreparation": [
+    "Reused the author's Contract types, prompted Fields, Counterparty, accounts and lab connection details by identifier, the author's fictional Word and PDF comparison files (their contents were checked before use), and the author's sign-in, PDF-generation, upload and provider-control helpers as setup conveniences. Every walked record was created fresh by the reviewer with a 'Rev …' title and the run stamp; earlier records from the author or from the reviewer's own failed runs were not reused.",
+    "C21: per role a Confidential Contract of the author's analysis type with the other legal role as member and Ravi Menon as Contributor (C-56 Administrator, C-58 Legal Team Member), plus one Contract per role whose only primary Document is an intentionally malformed PDF (C-57, C-59). The reviewer's own fictional paper used new markers, a 60-day notice, a March 31, 2027 expiry, Muscat as location, an unknown Counterparty name and a non-numeric tier in Version 1, then a 90-day notice, a June 30, 2027 expiry, Doha, the real Counterparty name and tier 2 in Version 2; both answer sets were registered at the local provider control before upload, the longer marker first.",
+    "C29: per role a Confidential Contract of the author's plain type prepared by the Administrator's API session as setup (C-65 Administrator, C-66 Legal Team Member, C-67 Contributor) with a download-only TXT primary placeholder, a Word Document with three hand-set Versions (thirty/monthly, sixty/quarterly, ninety/annually), a PDF/Word pair, a TXT/PDF pair and a malformed-PDF/PDF pair. The Contributor's Generated redline and the corrected PDF Version were added by the Administrator as setup and are recorded as such.",
+    "Competing and boundary actions came from separate sessions: the other legal role edited a prompted Field while a run waited at the provider; Priya Raman was the Legal reader outside the Confidential team; Ravi Menon was the Contributor on each team. The only injected faults were the provider control's pause and malformed reply (C21) and a pause of this lab's worker (C29), which was resumed in the same step."
+  ],
+  "corrections": [
+    "compare-versions: before the walkthrough the review seat replaced \"a reached reader\" with \"a person who can read the Document\" in the archive sentence (commit 669048e4). The behaviour is unchanged; the walkthrough ran on the corrected bytes and the author record keeps the hash it ran against.",
+    "No guide text changed as a result of the walkthrough itself: every checked instruction and outcome in both guides matched the app."
+  ],
+  "observations": [
+    "Earlier reviewer runs failed on harness assumptions, not on app or guide behaviour: a refusal message and a link label were read after the page had moved on; the reader panel is an aside (complementary landmark), not a region; adding a Version answers with the whole Document; with Newer at v2 the Older list cannot offer v2, so Newer v3 was chosen first; Counterparties sit beside the Contract in the record envelope and the primary Document is the documents list's isPrimary flag. Each was corrected in the harness and the run repeated; the final records hold only the completed runs on the final bytes.",
+    "With the owning Contract archived and the Document itself live, the compare page still shows Export track changes; the click answers 409 and the refusal appears beside the control, which the guide's failure paragraph covers. With the Document archived the control is not shown. Both cases refused the write and both were readable.",
+    "A run's Kept rows can show a returned value that differs from the saved one (returned notice 90 and location Doha while Overview and Fields held the confirmed 60 and edited Salalah), as the guide says.",
+    "An unknown Counterparty name is reported Unmatched and links nothing; a later run returning the exact live Counterparty name linked it and reported Written.",
+    "Unverified dates acted on the record immediately: the 60-day notice against a March 31, 2027 expiry produced a January 30, 2027 notice deadline on Key dates before any confirmation.",
+    "The Contributor's compare page shows neither the export control nor the \"Export needs two Word files.\" sentence; a direct export answers 403 in every state. Legal roles get 409 for a text Comparison, an archived Document and an archived owner."
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "C21 ran against the declared local OpenAI-compatible provider stand-in with fictional paper and known answers; it verifies OpenLaw's workflow handling, not real provider configuration (C43), and no external provider traffic occurred.",
+    "The provider outage path (a 503 that the worker may retry) was not exercised; the malformed-reply terminal failure was.",
+    "Browser contexts were 1280×1800 CSS px; layout checks in the discovery record are CSS-pixel measurements, not browser zoom or assistive technology acceptance.",
+    "Prerequisite records were applied through the lab APIs by the Administrator or acting session; Document archive and restore used the API rather than the Documents row menu.",
+    "Linked guides remain unpublished: Document Versions and Document reading and processing (DOC-017) and Analysis connector setup (DOC-022). Both articles stay in review."
+  ],
+  "steps": [
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Before you start: the card shows no run yet, Run analysis refuses a Contract without a primary Document, a primary whose extraction failed is refused, and a disabled connector hides the card and refuses a direct run",
+      "result": "pass",
+      "actual": "C-56: card read \"No analysis has run yet.\"; Run analysis answered \"This Contract has no primary Document to analyze.\" and no run was created. C-57: the malformed primary PDF reached text state failed and Run analysis refused with \"no ready, non-empty text\". With the connector disabled the card was absent and POST /analysis answered 409; enabling it brought the card back.",
+      "at": "2026-09-07T17:19:28.390Z",
+      "ms": 2830
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Run Analysis: uploading the first primary PDF starts an automatic run; the card shows Running… then completes in place with Version, model and evidence; each outcome label matches the known answers; Unverified dates and Value already act on the record",
+      "result": "pass",
+      "actual": "Uploading Version 1 queued an automatic run (paused at the local provider); Overview read \"Running…\" with no Run analysis control, then, without a page load, \"Completed … on Version 1 with docs-analysis-fixture.\" Rows read Written with the exact quotes for Expiry date, Notice period and Docs Analysis location 1788793067221; Docs Analysis tier 1788793067221 (Platinum) read Invalid; Docs Analysis absent 1788793067221 (quote absent from the paper) read Unsupported; Counterparty read Unmatched for the unknown name and no Counterparty was linked. Eight values carry Unverified. Key dates already showed Mar 31 expiry and Jan 30 notice deadline; saved Value USD 2,500 monthly.",
+      "at": "2026-09-07T17:19:30.644Z",
+      "ms": 2254
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Confirm or correct one value: Confirm clears only the notice marker, a repeat is refused, editing renewal period and the location Field clears only their markers, other markers stay, and History records the confirmation",
+      "result": "pass",
+      "actual": "Confirm beside Notice period cleared only that marker (7 left) and kept 60; a second confirmation answered 400. Renewal period 6→12 on Overview cleared its marker (6 left); Docs Analysis location 1788793067221 Muscat→Salalah on Fields cleared its marker (5 left). Expiry date still read Unverified. History listed the confirmation.",
+      "at": "2026-09-07T17:19:32.289Z",
+      "ms": 1644
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Rerun after a change: marking Version 1 executed triggers a run; a newer upload does not become the target or start a run; Run analysis still names Version 1; marking Version 2 executed runs on it, replaces unverified values, keeps confirmed and edited ones (Kept with a different returned value) and links the matching Counterparty",
+      "result": "pass",
+      "actual": "Mark as executed copy on Version 1 started an automatic run on Version 1. Version 2's upload became current, did not move the pin, made no provider request and started no run. Run analysis then reported Version 1 with its March 31 quote and kept the confirmed notice, edited renewal and edited location. Marking Version 2 executed ran on Version 2: expiry became June 30, 2027 (Unverified again), tier 2 was Written, the returned notice 90 and location Doha were Kept while Overview/Fields still hold 60 and Salalah, and Docs Analysis Counterparty 1788793067221 was linked as Written.",
+      "at": "2026-09-07T17:19:38.746Z",
+      "ms": 6457
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Concurrent change: the other legal person edits an unverified value while a manual run is pending; completion keeps the saved edit and reports the returned answer as Kept",
+      "result": "pass",
+      "actual": "Nadia Haddad saved Docs Analysis tier 1788793067221 2→5 while the run waited at the provider. Completion kept 5 with no marker and listed the returned 2 as Kept; the expiry marker from the earlier run stayed.",
+      "at": "2026-09-07T17:19:40.396Z",
+      "ms": 1650
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "If Analysis cannot finish: a malformed provider reply records Failed with its reason, Version and model and changes nothing; a rerun succeeds; clearing an optional core value lets the next run fill and mark it again",
+      "result": "pass",
+      "actual": "The provider's malformed reply produced \"Failed … on Version 2 with docs-analysis-fixture: The provider reply did not contain one JSON object.…\"; values and markers were unchanged. With valid replies restored, Run analysis completed. Clearing the edited renewal period (12) let the next run write 6 again as Unverified.",
+      "at": "2026-09-07T17:19:41.723Z",
+      "ms": 1327
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Supporting Documents are not targets: a supporting PDF with ready text starts no run and sends nothing to the provider",
+      "result": "pass",
+      "actual": "A second Document with ready text left the primary Document, the latest run and the provider request count unchanged.",
+      "at": "2026-09-07T17:19:45.137Z",
+      "ms": 3414
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Roles and states: the Contributor has no Run or Confirm controls and is refused; an outsider cannot reach the Confidential Contract; Ended refuses a run but allows confirmation; archive refuses confirmation until restored; a disabled connector keeps markers and Confirm all clears them",
+      "result": "pass",
+      "actual": "Ravi Menon (Contributor on the team) saw no Run analysis or Confirm control and both writes answered 403; Priya Raman (Legal, not on the team) got 404. Moving to Expired (Ended) removed Run analysis and a direct run answered 409, while Confirm on Expiry date still cleared its marker. Archive removed Confirm and a direct confirmation answered 409; Restore kept the Ended stage. With the connector disabled the card still listed 6 Unverified values and Confirm all cleared them without changing any saved value.",
+      "at": "2026-09-07T17:19:47.782Z",
+      "ms": 2645
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Before you start: the card shows no run yet, Run analysis refuses a Contract without a primary Document, a primary whose extraction failed is refused, and a disabled connector hides the card and refuses a direct run",
+      "result": "pass",
+      "actual": "C-58: card read \"No analysis has run yet.\"; Run analysis answered \"This Contract has no primary Document to analyze.\" and no run was created. C-59: the malformed primary PDF reached text state failed and Run analysis refused with \"no ready, non-empty text\". With the connector disabled the card was absent and POST /analysis answered 409; enabling it brought the card back.",
+      "at": "2026-09-07T17:19:50.717Z",
+      "ms": 2850
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Run Analysis: uploading the first primary PDF starts an automatic run; the card shows Running… then completes in place with Version, model and evidence; each outcome label matches the known answers; Unverified dates and Value already act on the record",
+      "result": "pass",
+      "actual": "Uploading Version 1 queued an automatic run (paused at the local provider); Overview read \"Running…\" with no Run analysis control, then, without a page load, \"Completed … on Version 1 with docs-analysis-fixture.\" Rows read Written with the exact quotes for Expiry date, Notice period and Docs Analysis location 1788793067221; Docs Analysis tier 1788793067221 (Platinum) read Invalid; Docs Analysis absent 1788793067221 (quote absent from the paper) read Unsupported; Counterparty read Unmatched for the unknown name and no Counterparty was linked. Eight values carry Unverified. Key dates already showed Mar 31 expiry and Jan 30 notice deadline; saved Value USD 2,500 monthly.",
+      "at": "2026-09-07T17:19:52.956Z",
+      "ms": 2239
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Confirm or correct one value: Confirm clears only the notice marker, a repeat is refused, editing renewal period and the location Field clears only their markers, other markers stay, and History records the confirmation",
+      "result": "pass",
+      "actual": "Confirm beside Notice period cleared only that marker (7 left) and kept 60; a second confirmation answered 400. Renewal period 6→12 on Overview cleared its marker (6 left); Docs Analysis location 1788793067221 Muscat→Salalah on Fields cleared its marker (5 left). Expiry date still read Unverified. History listed the confirmation.",
+      "at": "2026-09-07T17:19:54.507Z",
+      "ms": 1551
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Rerun after a change: marking Version 1 executed triggers a run; a newer upload does not become the target or start a run; Run analysis still names Version 1; marking Version 2 executed runs on it, replaces unverified values, keeps confirmed and edited ones (Kept with a different returned value) and links the matching Counterparty",
+      "result": "pass",
+      "actual": "Mark as executed copy on Version 1 started an automatic run on Version 1. Version 2's upload became current, did not move the pin, made no provider request and started no run. Run analysis then reported Version 1 with its March 31 quote and kept the confirmed notice, edited renewal and edited location. Marking Version 2 executed ran on Version 2: expiry became June 30, 2027 (Unverified again), tier 2 was Written, the returned notice 90 and location Doha were Kept while Overview/Fields still hold 60 and Salalah, and Docs Analysis Counterparty 1788793067221 was linked as Written.",
+      "at": "2026-09-07T17:20:01.003Z",
+      "ms": 6495
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Concurrent change: the other legal person edits an unverified value while a manual run is pending; completion keeps the saved edit and reports the returned answer as Kept",
+      "result": "pass",
+      "actual": "Daniel Okafor saved Docs Analysis tier 1788793067221 2→5 while the run waited at the provider. Completion kept 5 with no marker and listed the returned 2 as Kept; the expiry marker from the earlier run stayed.",
+      "at": "2026-09-07T17:20:02.621Z",
+      "ms": 1618
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "If Analysis cannot finish: a malformed provider reply records Failed with its reason, Version and model and changes nothing; a rerun succeeds; clearing an optional core value lets the next run fill and mark it again",
+      "result": "pass",
+      "actual": "The provider's malformed reply produced \"Failed … on Version 2 with docs-analysis-fixture: The provider reply did not contain one JSON object.…\"; values and markers were unchanged. With valid replies restored, Run analysis completed. Clearing the edited renewal period (12) let the next run write 6 again as Unverified.",
+      "at": "2026-09-07T17:20:03.935Z",
+      "ms": 1314
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Supporting Documents are not targets: a supporting PDF with ready text starts no run and sends nothing to the provider",
+      "result": "pass",
+      "actual": "A second Document with ready text left the primary Document, the latest run and the provider request count unchanged.",
+      "at": "2026-09-07T17:20:07.348Z",
+      "ms": 3413
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Roles and states: the Contributor has no Run or Confirm controls and is refused; an outsider cannot reach the Confidential Contract; Ended refuses a run but allows confirmation; archive refuses confirmation until restored; a disabled connector keeps markers and Confirm all clears them",
+      "result": "pass",
+      "actual": "Ravi Menon (Contributor on the team) saw no Run analysis or Confirm control and both writes answered 403; Priya Raman (Legal, not on the team) got 404. Moving to Expired (Ended) removed Run analysis and a direct run answered 409, while Confirm on Expiry date still cleared its marker. Archive removed Confirm and a direct confirmation answered 409; Restore kept the Ended stage. With the connector disabled the card still listed 6 Unverified values and Confirm all cleared them without changing any saved value.",
+      "at": "2026-09-07T17:20:09.933Z",
+      "ms": 2585
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Choose the Versions: Compare with previous on the Word Document opens v2 → v3, Preparing comparison shows while processing is held, Changes appears when it finishes, and the chain still has three Versions",
+      "result": "pass",
+      "actual": "Compare with previous answered 202 and opened /documents/…/compare for v2 → v3. With the lab worker paused the page read \"Preparing comparison\" (a live status region) while the API said pending; after resuming, the page updated to \"Changes\" (2 changes, Word mode) without any new Document Version.",
+      "at": "2026-09-07T17:28:18.168Z",
+      "ms": 2676
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "The pair control: choosing Older v1 and Newer v2 opens each pair immediately; v1 → v2 lists thirty→sixty and monthly→quarterly as deletions and insertions; Previous change and Next change move the current change; Older only offers earlier Versions",
+      "result": "pass",
+      "actual": "Older v1 opened v1 → v3 at once, then Newer v2 opened v1 → v2. The compared text struck through \"thirty\" and \"monthly\" and underlined \"sixty\" and \"quarterly\"; the Changes pane listed 2 changes, Next change moved the current change to the second and Previous change back to the first. With v1 → v2 selected, Older offered only v1 and Newer v2 and v3. Still three Versions.",
+      "at": "2026-09-07T17:28:21.825Z",
+      "ms": 3657
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "The Document reader offers Compare for a Version with a previous eligible Version, and it opens the stored v2 → v3 Comparison",
+      "result": "pass",
+      "actual": "The reader panel for 735-compare-older.docx version 3 showed a Compare link named \"Compare with the previous version, 2 changes\"; it opened the existing v2 → v3 Comparison, which was already ready.",
+      "at": "2026-09-07T17:28:22.946Z",
+      "ms": 1121
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Export a Word Comparison: Export track changes appends a Generated redline Version 4 recording v1 and v2, Open redline opens it, the downloaded file carries the tracked insertions and deletions, a repeat export reuses Version 4, reopening the pair adds nothing, and Generated redlines are excluded and refused as operands",
+      "result": "pass",
+      "actual": "Export track changes answered 201 and the control became Open redline. Version 4 is kind generated_redline, source generated, made from v1 and v2; Open redline opened the reader on version 4. The downloaded DOCX (sha256 1a44306290c0…) carries w:ins [\"sixty\",\"quarterly\"] and w:del [\"thirty\",\"monthly\"]. Exporting the same pair again answered 200 with the same Version; reopening v1 → v2 answered 200 and showed Open redline; Newer still offered only v2 and v3 and a direct request naming Version 4 answered 400. Four Versions.",
+      "at": "2026-09-07T17:28:24.411Z",
+      "ms": 1465
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "A text Comparison (PDF against Word) says it was built from extracted text, shows the wording changes, and cannot be exported as tracked changes",
+      "result": "pass",
+      "actual": "The PDF → Word pair opened in text mode with the extracted-text sentence, struck \"thirty\" and underlined \"sixty\". The page read \"Export needs two Word files.\" with no export control and a direct export answered 409; the chain stayed at two Versions.",
+      "at": "2026-09-07T17:28:27.020Z",
+      "ms": 2608
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "If the Comparison fails: a TXT operand fails with its reason and keeps both Download links; reopening returns the same failed Comparison with no retry; a corrected PDF Version added by an Administrator compares as No changes although its bytes differ; a failed extraction names that failure",
+      "result": "pass",
+      "actual": "TXT v1 → PDF v2 read \"Comparison failed: Version 1 does not support extracted text.\" with two Download links whose bytes matched the uploaded files. Reopening returned the same failed Comparison and no retry control. After the Administrator added the corrected PDF as Version 3, the acting role chose v2 → v3 and read \"No changes\" while the two files' hashes differ. The malformed-PDF pair read \"Version 1 text extraction failed.\"",
+      "at": "2026-09-07T17:28:35.487Z",
+      "ms": 8467
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Archiving: an archived Document and an archived owning Contract still show Changes, the export is refused until both are restored, and after Restore the previously unexported v2 → v3 pair exports as Version 5",
+      "result": "pass",
+      "actual": "With the Word Document archived the v2 → v3 Comparison still read Changes, no export control was shown and a direct export answered 409. With the Document restored and the owning Contract archived (Contract actions → Archive), Changes stayed readable and the export was refused with 409 (the visible control showed the refusal). After Restore, Export track changes on v2 → v3 answered 201 and appended Version 5 (generated_redline from v2 and v3; w:ins [\"ninety\",\"annually\"], w:del [\"sixty\",\"quarterly\"]).",
+      "at": "2026-09-07T17:28:38.827Z",
+      "ms": 3340
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Access: a Legal Team Member outside the Confidential Contract cannot read the Comparison",
+      "result": "pass",
+      "actual": "Priya Raman (Legal, not on the Confidential team) got 404 reading and requesting the v1 → v2 Comparison, and the compare page showed no Changes pane or pair control for her.",
+      "at": "2026-09-07T17:28:39.411Z",
+      "ms": 584
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Choose the Versions: Compare with previous on the Word Document opens v2 → v3, Preparing comparison shows while processing is held, Changes appears when it finishes, and the chain still has three Versions",
+      "result": "pass",
+      "actual": "Compare with previous answered 202 and opened /documents/…/compare for v2 → v3. With the lab worker paused the page read \"Preparing comparison\" (a live status region) while the API said pending; after resuming, the page updated to \"Changes\" (2 changes, Word mode) without any new Document Version.",
+      "at": "2026-09-07T17:28:48.119Z",
+      "ms": 2655
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "The pair control: choosing Older v1 and Newer v2 opens each pair immediately; v1 → v2 lists thirty→sixty and monthly→quarterly as deletions and insertions; Previous change and Next change move the current change; Older only offers earlier Versions",
+      "result": "pass",
+      "actual": "Older v1 opened v1 → v3 at once, then Newer v2 opened v1 → v2. The compared text struck through \"thirty\" and \"monthly\" and underlined \"sixty\" and \"quarterly\"; the Changes pane listed 2 changes, Next change moved the current change to the second and Previous change back to the first. With v1 → v2 selected, Older offered only v1 and Newer v2 and v3. Still three Versions.",
+      "at": "2026-09-07T17:28:51.790Z",
+      "ms": 3671
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "The Document reader offers Compare for a Version with a previous eligible Version, and it opens the stored v2 → v3 Comparison",
+      "result": "pass",
+      "actual": "The reader panel for 735-compare-older.docx version 3 showed a Compare link named \"Compare with the previous version, 2 changes\"; it opened the existing v2 → v3 Comparison, which was already ready.",
+      "at": "2026-09-07T17:28:52.575Z",
+      "ms": 785
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Export a Word Comparison: Export track changes appends a Generated redline Version 4 recording v1 and v2, Open redline opens it, the downloaded file carries the tracked insertions and deletions, a repeat export reuses Version 4, reopening the pair adds nothing, and Generated redlines are excluded and refused as operands",
+      "result": "pass",
+      "actual": "Export track changes answered 201 and the control became Open redline. Version 4 is kind generated_redline, source generated, made from v1 and v2; Open redline opened the reader on version 4. The downloaded DOCX (sha256 6ba748627333…) carries w:ins [\"sixty\",\"quarterly\"] and w:del [\"thirty\",\"monthly\"]. Exporting the same pair again answered 200 with the same Version; reopening v1 → v2 answered 200 and showed Open redline; Newer still offered only v2 and v3 and a direct request naming Version 4 answered 400. Four Versions.",
+      "at": "2026-09-07T17:28:54.060Z",
+      "ms": 1485
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "A text Comparison (PDF against Word) says it was built from extracted text, shows the wording changes, and cannot be exported as tracked changes",
+      "result": "pass",
+      "actual": "The PDF → Word pair opened in text mode with the extracted-text sentence, struck \"thirty\" and underlined \"sixty\". The page read \"Export needs two Word files.\" with no export control and a direct export answered 409; the chain stayed at two Versions.",
+      "at": "2026-09-07T17:28:56.654Z",
+      "ms": 2594
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "If the Comparison fails: a TXT operand fails with its reason and keeps both Download links; reopening returns the same failed Comparison with no retry; a corrected PDF Version added by an Administrator compares as No changes although its bytes differ; a failed extraction names that failure",
+      "result": "pass",
+      "actual": "TXT v1 → PDF v2 read \"Comparison failed: Version 1 does not support extracted text.\" with two Download links whose bytes matched the uploaded files. Reopening returned the same failed Comparison and no retry control. After the Administrator added the corrected PDF as Version 3, the acting role chose v2 → v3 and read \"No changes\" while the two files' hashes differ. The malformed-PDF pair read \"Version 1 text extraction failed.\"",
+      "at": "2026-09-07T17:29:05.082Z",
+      "ms": 8427
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Archiving: an archived Document and an archived owning Contract still show Changes, the export is refused until both are restored, and after Restore the previously unexported v2 → v3 pair exports as Version 5",
+      "result": "pass",
+      "actual": "With the Word Document archived the v2 → v3 Comparison still read Changes, no export control was shown and a direct export answered 409. With the Document restored and the owning Contract archived (Contract actions → Archive), Changes stayed readable and the export was refused with 409 (the visible control showed the refusal). After Restore, Export track changes on v2 → v3 answered 201 and appended Version 5 (generated_redline from v2 and v3; w:ins [\"ninety\",\"annually\"], w:del [\"sixty\",\"quarterly\"]).",
+      "at": "2026-09-07T17:29:08.415Z",
+      "ms": 3333
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Access: a Legal Team Member outside the Confidential Contract cannot read the Comparison",
+      "result": "pass",
+      "actual": "Priya Raman (Legal, not on the Confidential team) got 404 reading and requesting the v1 → v2 Comparison, and the compare page showed no Changes pane or pair control for her.",
+      "at": "2026-09-07T17:29:08.985Z",
+      "ms": 570
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "contributor",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Choose the Versions: Compare with previous on the Word Document opens v2 → v3, Preparing comparison shows while processing is held, Changes appears when it finishes, and the chain still has three Versions",
+      "result": "pass",
+      "actual": "Compare with previous answered 202 and opened /documents/…/compare for v2 → v3. With the lab worker paused the page read \"Preparing comparison\" (a live status region) while the API said pending; after resuming, the page updated to \"Changes\" (2 changes, Word mode) without any new Document Version.",
+      "at": "2026-09-07T17:29:17.726Z",
+      "ms": 2687
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "contributor",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "The pair control: choosing Older v1 and Newer v2 opens each pair immediately; v1 → v2 lists thirty→sixty and monthly→quarterly as deletions and insertions; Previous change and Next change move the current change; Older only offers earlier Versions",
+      "result": "pass",
+      "actual": "Older v1 opened v1 → v3 at once, then Newer v2 opened v1 → v2. The compared text struck through \"thirty\" and \"monthly\" and underlined \"sixty\" and \"quarterly\"; the Changes pane listed 2 changes, Next change moved the current change to the second and Previous change back to the first. With v1 → v2 selected, Older offered only v1 and Newer v2 and v3. Still three Versions.",
+      "at": "2026-09-07T17:29:21.370Z",
+      "ms": 3643
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "contributor",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "The Document reader offers Compare for a Version with a previous eligible Version, and it opens the stored v2 → v3 Comparison",
+      "result": "pass",
+      "actual": "The reader panel for 735-compare-older.docx version 3 showed a Compare link named \"Compare with the previous version, 2 changes\"; it opened the existing v2 → v3 Comparison, which was already ready.",
+      "at": "2026-09-07T17:29:22.167Z",
+      "ms": 797
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "contributor",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Contributors can read Comparisons but cannot export: no export control or sentence is shown, a direct export is refused, and after an Administrator prepares the Generated redline the Contributor can read and download it",
+      "result": "pass",
+      "actual": "On the ready v1 → v2 Word Comparison Ravi Menon saw neither Export track changes, Open redline nor the Word-files sentence; a direct export answered 403 and the chain stayed at three Versions. The Administrator's setup export appended Version 4 (generated_redline); the Contributor then opened it in the reader and downloaded it (w:ins [\"sixty\",\"quarterly\"], w:del [\"thirty\",\"monthly\"]); a further export attempt still answered 403. This is not credited as a Contributor export.",
+      "at": "2026-09-07T17:29:23.433Z",
+      "ms": 1266
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "contributor",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "A text Comparison (PDF against Word) says it was built from extracted text, shows the wording changes, and cannot be exported as tracked changes",
+      "result": "pass",
+      "actual": "The PDF → Word pair opened in text mode with the extracted-text sentence, struck \"thirty\" and underlined \"sixty\". No export control or sentence was shown and a direct export answered 403; the chain stayed at two Versions.",
+      "at": "2026-09-07T17:29:26.003Z",
+      "ms": 2569
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "contributor",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "If the Comparison fails: a TXT operand fails with its reason and keeps both Download links; reopening returns the same failed Comparison with no retry; a corrected PDF Version added by an Administrator compares as No changes although its bytes differ; a failed extraction names that failure",
+      "result": "pass",
+      "actual": "TXT v1 → PDF v2 read \"Comparison failed: Version 1 does not support extracted text.\" with two Download links whose bytes matched the uploaded files. Reopening returned the same failed Comparison and no retry control. After the Administrator added the corrected PDF as Version 3, the acting role chose v2 → v3 and read \"No changes\" while the two files' hashes differ. The malformed-PDF pair read \"Version 1 text extraction failed.\"",
+      "at": "2026-09-07T17:29:34.389Z",
+      "ms": 8386
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "contributor",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Archiving: an archived Document and an archived owning Contract still show Changes to the Contributor, who remains refused before and after Restore",
+      "result": "pass",
+      "actual": "With the Word Document archived the v2 → v3 Comparison still read Changes, no export control was shown and a direct export answered 403. With the Document restored and the owning Contract archived (Administrator setup), Changes stayed readable and the export was refused with 403. After Restore the Contributor still read Changes and a direct export still answered 403; four Versions.",
+      "at": "2026-09-07T17:29:36.172Z",
+      "ms": 1783
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "contributor",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Access: a Legal Team Member outside the Confidential Contract cannot read the Comparison",
+      "result": "pass",
+      "actual": "Priya Raman (Legal, not on the Confidential team) got 404 reading and requesting the v1 → v2 Comparison, and the compare page showed no Changes pane or pair control for her.",
+      "at": "2026-09-07T17:29:36.738Z",
+      "ms": 566
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "administrator",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Close comparison returns to the owning Contract's Documents section",
+      "result": "pass",
+      "actual": "Close comparison on the ready v1 → v2 Comparison opened /contracts/65/documents, where the Word Document's row and its Actions menu were shown again.",
+      "at": "2026-09-07T17:32:56.423Z",
+      "ms": 727
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "legal_team_member",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Close comparison returns to the owning Contract's Documents section",
+      "result": "pass",
+      "actual": "Close comparison on the ready v1 → v2 Comparison opened /contracts/66/documents, where the Word Document's row and its Actions menu were shown again.",
+      "at": "2026-09-07T17:32:57.934Z",
+      "ms": 697
+    },
+    {
+      "article": "compare-versions",
+      "scenario": "V-C29",
+      "role": "contributor",
+      "environment": "openlaw-docs-b8e31260-analysis-workflow",
+      "step": "Close comparison returns to the owning Contract's Documents section",
+      "result": "pass",
+      "actual": "Close comparison on the ready v1 → v2 Comparison opened /contracts/67/documents, where the Word Document's row and its Actions menu were shown again.",
+      "at": "2026-09-07T17:32:59.445Z",
+      "ms": 695
+    }
+  ],
+  "passed": true
+}

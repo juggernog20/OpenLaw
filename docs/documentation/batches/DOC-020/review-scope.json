@@ -1,0 +1,127 @@
+{
+  "record": "review-scope",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "purpose": "Supplemental scope checks only. Two factual-scope questions raised before merge, not a rerun of the earlier scenarios.",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-admin-review",
+  "fixture": {
+    "appUrl": "http://127.0.0.1:43328",
+    "mailUrl": "http://127.0.0.1:48435",
+    "draftPreview": "http://127.0.0.1:43331",
+    "providerMode": "dedicated local OpenID Connect fixture; full browser authorization and callback; no external identity-provider account",
+    "frozenConfigurationHashes": {
+      "source/.env": "47286908f614d1cd4cf769b7fe4168dac3db2d536faebfe4a4481312ad7868e2",
+      "overlay.json": "a37da4d9df42ec8c176757e063e8fc33f0cd5addfac8c774396f2140c91425cd",
+      "fixture/server.mjs": "b91a17c780f3f816a2eb4a5968a43fba405085743f9b174cbc7cf69528738363"
+    }
+  },
+  "policyRestored": true,
+  "successfulChecks": 9,
+  "failedAttempts": 0,
+  "runs": [
+    {
+      "run": "scope",
+      "startedAt": "2026-09-08T04:12:15.433Z",
+      "completedAt": "2026-09-08T04:12:39.691Z",
+      "articleHashes": [
+        {
+          "articleId": "first-run",
+          "contentSha256": "0f87bd0fce3032d84fbfe3a4c8056826879effd86102e19f8c61efa0f62e3b59"
+        },
+        {
+          "articleId": "organisation-and-users",
+          "contentSha256": "db8e042580c8e4ce397c96a91f8d468f4741d0db77c21e3cbae16ebb54fa3c1b"
+        },
+        {
+          "articleId": "authentication-and-email",
+          "contentSha256": "f272a2d7fa11a4088bb528d1642a40060ce7170aeff94234cb2a1e347d18f225"
+        }
+      ],
+      "steps": [
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Prepare: OIDC mode with the provider pointed at the requester domain",
+          "actual": "The instance was put in OIDC mode with provider helix-idp scoped to northwind.example, which is still an allowed domain. This is the starting policy for the scope checks.",
+          "result": "pass",
+          "startedAt": "2026-09-08T04:12:15.477Z",
+          "at": "2026-09-08T04:12:16.757Z"
+        },
+        {
+          "role": "business user",
+          "method": "browser-walkthrough",
+          "action": "A new Business User is created by magic link and then links an identity-provider account",
+          "actual": "Nils Okonkwo was created as a Business User by redeeming a magic link, then completed a single sign-on round trip through the local identity provider while northwind.example was still allowed. The existing row now carries a linked identity-provider account and keeps role business_user.",
+          "result": "pass",
+          "startedAt": "2026-09-08T04:12:16.757Z",
+          "at": "2026-09-08T04:12:19.190Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Capture an unused magic link, then remove the domain from the allowlist",
+          "actual": "A fresh sign-in link was issued to Nils and deliberately left unused, then northwind.example was removed from Allowed email domains. The link was obtained before the removal and has never been followed.",
+          "result": "pass",
+          "startedAt": "2026-09-08T04:12:19.190Z",
+          "at": "2026-09-08T04:12:21.037Z"
+        },
+        {
+          "role": "business user",
+          "method": "browser-walkthrough",
+          "action": "The unused link issued before removal still admits the existing account",
+          "actual": "Following the previously issued, never-used link after the domain was removed reached the Portal at http://127.0.0.1:43328/portal. Redemption of a link already in someone's hands is not re-checked against the allowlist for an account that already exists.",
+          "result": "pass",
+          "startedAt": "2026-09-08T04:12:21.037Z",
+          "at": "2026-09-08T04:12:21.738Z"
+        },
+        {
+          "role": "business user",
+          "method": "browser-walkthrough",
+          "action": "The same existing account cannot obtain a NEW magic link once the domain is removed",
+          "actual": "With the domain removed, the same existing Business User asked for a new link, saw the neutral \"Check your email\" screen and received nothing within 8 seconds. Issuing a new magic link is refused for everyone on a removed domain, which is the narrower claim the authentication guide already makes.",
+          "result": "pass",
+          "startedAt": "2026-09-08T04:12:21.738Z",
+          "at": "2026-09-08T04:12:30.527Z"
+        },
+        {
+          "role": "business user",
+          "method": "browser-walkthrough",
+          "action": "The existing account still completes a fresh single sign-on after the domain is removed",
+          "actual": "In a clean browser context with no prior session, the existing Business User completed a full identity-provider round trip after northwind.example was removed and reached the Portal at http://127.0.0.1:43328/portal. Removing a domain does not close single sign-on for an account that already exists, so \"every Portal sign-in\" overstates the effect.",
+          "result": "pass",
+          "startedAt": "2026-09-08T04:12:30.528Z",
+          "at": "2026-09-08T04:12:31.873Z"
+        },
+        {
+          "role": "business user",
+          "method": "browser-walkthrough",
+          "action": "An unknown address on the removed domain is still refused single sign-on",
+          "actual": "A never-seen address on the removed domain completed the identity-provider authorization but was refused at the OpenLaw callback, landing at http://127.0.0.1:43328/auth/login?error=sso&error=signup+disabled with no account created. The allowlist still governs who may newly enter; it stops governing an account that already exists.",
+          "result": "pass",
+          "startedAt": "2026-09-08T04:12:31.874Z",
+          "at": "2026-09-08T04:12:36.595Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "A Business User that already has an account stays Active when promoted",
+          "actual": "Otto Lindqvist is a Business User who had previously set a password, so his row already had an account behind it. Promoting him to Contributor left the row Active with its role control intact and offered no Resend invite, and he was returned to Business user immediately. The pending-invitation outcome therefore depends on whether that account has ever been activated, not on being a Business User.",
+          "result": "pass",
+          "startedAt": "2026-09-08T04:12:36.596Z",
+          "at": "2026-09-08T04:12:37.718Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Restore the fixture policy after the scope checks",
+          "actual": "The fixture was returned to its prior policy: both allowed domains present, the provider scoped back to helix.example, and the mode back to Built-in.",
+          "result": "pass",
+          "startedAt": "2026-09-08T04:12:37.718Z",
+          "at": "2026-09-08T04:12:39.691Z"
+        }
+      ]
+    }
+  ]
+}

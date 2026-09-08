@@ -1,0 +1,42 @@
+{
+  "name": "independent-upgrade-baseline-retry",
+  "scenario": "V-C46",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:48:29.784Z",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "environment": "openlaw-docs-b8e31260-rev-upgrade",
+  "articleHashes": [
+    {
+      "articleId": "upgrade",
+      "contentSha256": "96cc17166c77af291161ea34540f2c1c9683d2736cd903c42e2692ba9fe8e94d"
+    },
+    {
+      "articleId": "backup-and-restore",
+      "contentSha256": "0237339f91484b7a46623e1753c67ccbb376ae341ac8b40cb5d81237967a891a"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Save an encrypted relay on the earlier build and send a real test",
+      "actual": "The earlier build d1d098ba9f4b holds the fictional Administrator Morgan Baseline. An SMTP relay was saved in the app, encrypted under this deployment's OPENLAW_SECRET_KEY (source \"app\"), and a test message actually arrived in the owned Mailpit.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:48:30.144Z",
+      "at": "2026-09-08T09:48:30.236Z"
+    },
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Populate fictional Contracts, a Matter, Documents and Versions",
+      "result": "fail",
+      "startedAt": "2026-09-08T09:48:30.236Z",
+      "error": "patch /contracts/3 returned 400: {\"type\":\"about:blank\",\"title\":\"Request validation failed\",\"status\":400,\"detail\":\"One or more request fields are invalid.\",\"instance\":\"/api/v1/contracts/3\",\"errors\":[{\"path\":\"\",\"message\":\"Unrecognized key: \\\"confidential\\\"\"}]}",
+      "at": "2026-09-08T09:48:30.293Z"
+    }
+  ],
+  "passed": false,
+  "supersededBy": "independent-upgrade-baseline-retry2",
+  "note": "The relay step passed. Marking the Contract Confidential used a field name the API does not take (`confidential`); the field is `isConfidential`."
+}

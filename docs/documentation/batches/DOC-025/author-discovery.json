@@ -1,0 +1,4870 @@
+{
+  "startedAt": "2026-09-08T12:54:41.658Z",
+  "reviewer": "Codex DOC-025 author (agent)",
+  "method": "browser-walkthrough",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "preview": "http://127.0.0.1:43333",
+  "articleHashes": [
+    {
+      "articleId": "staff-sign-in",
+      "contentSha256": "3c7ed38f6e42d021121f8566c99a6f9a45e3ec63cebe90e28a957ee20c575651"
+    },
+    {
+      "articleId": "portal-sign-in",
+      "contentSha256": "9d419eb6c397fcaca5aac93331cb5dd06905f8152446485705714e07995adf7d"
+    },
+    {
+      "articleId": "find-your-work",
+      "contentSha256": "6fa8eb3a4f1302279ec5419435fbeeb34596a17d1897bc90d62c52037f8ac8d0"
+    },
+    {
+      "articleId": "search-and-views",
+      "contentSha256": "e303479e3b19bde3f34d5131d4f5c59de37b6feab2ef9b50bacdb97cb5478b23"
+    },
+    {
+      "articleId": "personal-settings",
+      "contentSha256": "155c97620d4f7999fa850eb2923f73ee797df09b2e62bf61cf0e5b292c16b2b8"
+    },
+    {
+      "articleId": "roles-and-access",
+      "contentSha256": "d3fcc8fc2ea63b5fb1b5b55e33cceb1c9b1cd8b0ce6d059b61accb6189998e91"
+    },
+    {
+      "articleId": "comments-and-activity",
+      "contentSha256": "91b235629a33bd9e798fc887f6d92226d007ed7673ec767d55f65f04c85ab67f"
+    },
+    {
+      "articleId": "notifications",
+      "contentSha256": "7f0a7503cf875f644ef8642f7d5d6ac0c67e335c319d023faff93a30cd42f294"
+    },
+    {
+      "articleId": "submit-request",
+      "contentSha256": "29e285e98a77548c08f8958fed91f0200db47c8188ef90619dab061925059f90"
+    },
+    {
+      "articleId": "follow-request",
+      "contentSha256": "ca5dff1ef7d999e36d8655c3d00ffb6b5a2136427e86f2be168889ca417dbca3"
+    },
+    {
+      "articleId": "portal-knowledge",
+      "contentSha256": "f44331f28896c6fbdebed9d636bb937d06330e9a52e850bb0b755f987aacb559"
+    },
+    {
+      "articleId": "triage-requests",
+      "contentSha256": "b28fe6456b9259168173d057309994db811044beac40c09dcafd96ea7da36eea"
+    },
+    {
+      "articleId": "convert-request",
+      "contentSha256": "09ba1d034467e55a18a1b06c5942e0485d9282afbfe6b31676e239b470809abe"
+    },
+    {
+      "articleId": "create-contract",
+      "contentSha256": "63aaa9717afffaacbb0b91b64de6e741162912ea00fd3b945798dc746b6e1cac"
+    },
+    {
+      "articleId": "contract-stages",
+      "contentSha256": "a01d92cc6adf974978b91b9ff543402472ed5bd4300755e5a78a02370465854b"
+    },
+    {
+      "articleId": "contract-approvals",
+      "contentSha256": "e3b7b6ee7e2b8b121c8be45203099d69331e09d5d55d374b577d5fe81bcf67f6"
+    },
+    {
+      "articleId": "manual-signing",
+      "contentSha256": "2415ba7d5c22ff900dd3b3fd67a5012f86fd276dfc4eb7f299e59e3419e3d5ae"
+    },
+    {
+      "articleId": "electronic-signing",
+      "contentSha256": "df172df43d2efc94cbd2daa7f03cc1161332885578c353e5137b1e0ffe4c90fc"
+    },
+    {
+      "articleId": "terms-and-renewals",
+      "contentSha256": "d5af58d3f6934b6b5730e8e100c31ffc21e08640347b82750c9b39c24b085c6e"
+    },
+    {
+      "articleId": "contract-tasks-and-dates",
+      "contentSha256": "29654cec933cf7b62d1c87e2d75293f920de3f1f51b6859aae5a44e09356c43e"
+    },
+    {
+      "articleId": "contract-relations-and-ending",
+      "contentSha256": "ca10c84a725573c1e32fdae19502056cfd0075a0223131a3dc54d32d75272b47"
+    },
+    {
+      "articleId": "contract-analysis",
+      "contentSha256": "24e4375567bdf273873018732f93743584b71b260a07890f4f4719f257050243"
+    },
+    {
+      "articleId": "create-matter",
+      "contentSha256": "078e5ac72d41fa7ed55e02131b55dcdb86cb26d646485e64f5a494969e1aef73"
+    },
+    {
+      "articleId": "matter-status-and-archive",
+      "contentSha256": "7b4f1d4b77f4979d273e68ffcefe9be849c7e371cd518b256e466a6ba2df60cf"
+    },
+    {
+      "articleId": "matter-work",
+      "contentSha256": "621ed4366708c7b55defb625733358b565eef3a0bd443e500a1f24352e875ffd"
+    },
+    {
+      "articleId": "contributor-guide",
+      "contentSha256": "c3badc50235831daa34056e22dd2e260142e71f5020cd972b9bc868fbf339397"
+    },
+    {
+      "articleId": "document-versions",
+      "contentSha256": "e7d0286c6eefad20fd0e0a08df2dc6c530d5c3fa517e1b65e17e9f338e5f147d"
+    },
+    {
+      "articleId": "document-folders",
+      "contentSha256": "1844521ab7ef07fc40fe8e0c01aaeb7df5022acf1e8059b2b24716f809838fec"
+    },
+    {
+      "articleId": "document-previews",
+      "contentSha256": "12cf5181a1b0c37788c1cd3d07ce04d8ac6c41efc68fed4188d47074307bd24a"
+    },
+    {
+      "articleId": "compare-versions",
+      "contentSha256": "2bfbd81cb149cd8bed215e1ada5736bf85fe9e4445241fea4307f2c36dae09df"
+    },
+    {
+      "articleId": "document-repository",
+      "contentSha256": "59f88467c3a576764b212e36ebf5cb8bd49ff84a146a1ec3321d3d0a3da19969"
+    },
+    {
+      "articleId": "entities-and-counterparties",
+      "contentSha256": "7313af8226fa554a32c4e86919d581a972fd574654e4b8559ccd8df591fe177e"
+    },
+    {
+      "articleId": "entity-records",
+      "contentSha256": "9d8b0ae49f2d38291393c876d0851ec3811a5d6dd3d24add2631615ade6db0bc"
+    },
+    {
+      "articleId": "create-knowledge",
+      "contentSha256": "295001ee071b093a3d66f72fb1faf23a81a959d13c08fbaba19e3062a738d34f"
+    },
+    {
+      "articleId": "publish-knowledge",
+      "contentSha256": "cae7b9ef9551242ef7b502892e4a9f63fa0229caf44e1578ec684490b793ffa5"
+    },
+    {
+      "articleId": "first-run",
+      "contentSha256": "17a32bd77a5673364e11c7ff3906b3e657a90c6750e8df6ff60e2611391bf3e4"
+    },
+    {
+      "articleId": "organisation-and-users",
+      "contentSha256": "2d28269f8c2f22700cab66cdba067f377fbc5477e6a6f4365650241e3a0adc5a"
+    },
+    {
+      "articleId": "authentication-and-email",
+      "contentSha256": "a47a3665df8e885bd034226de107c182564f6048ea74aa6707f2f1eaff6df8db"
+    },
+    {
+      "articleId": "types-statuses-fields",
+      "contentSha256": "6e3fa892dc9b2bb23d05bd7b3125a187cdd1cbafb384cdf2d248064a1bcd1abe"
+    },
+    {
+      "articleId": "matter-templates",
+      "contentSha256": "c458f44480e167baf2930bdad0f03a944b0f10b890c7ff10468543328016f9e9"
+    },
+    {
+      "articleId": "request-forms",
+      "contentSha256": "5981f17a9afc7dc219cf98d35d603f7c5491eed8c253b7fbd9e5fab294bd873b"
+    },
+    {
+      "articleId": "reminders-and-audit",
+      "contentSha256": "91583fda511a5d75941af7d8b919de5db42298846ee2b9dad65fcd6f43a4565c"
+    },
+    {
+      "articleId": "install",
+      "contentSha256": "35b1bd584e291c4b42741097c9aa66ebd9db95092d293ed80821d3e7eee01b0f"
+    },
+    {
+      "articleId": "deployment-configuration",
+      "contentSha256": "d61044fe1f237dfaa0d4087d576a39434e2d5b57a30a8ac5816808daf2fe335b"
+    },
+    {
+      "articleId": "upgrade",
+      "contentSha256": "96cc17166c77af291161ea34540f2c1c9683d2736cd903c42e2692ba9fe8e94d"
+    },
+    {
+      "articleId": "backup-and-restore",
+      "contentSha256": "3a36f9794df340c90d415b20578e8cc58b97ee1972ccdec4c09913358a308361"
+    },
+    {
+      "articleId": "operator-troubleshooting",
+      "contentSha256": "4f5920cb683a58e59e590a6ab7bc756bab31080345b6936baccfcadf0e5e1aab"
+    },
+    {
+      "articleId": "troubleshooting",
+      "contentSha256": "e2404361abcc621f8ee36fcd03dec23150bdabc0070d30678ba54caaabb9dd1b"
+    },
+    {
+      "articleId": "reference",
+      "contentSha256": "ba4b1b0cc96db761cc19f06fa88d5e4d9625355873cc2a15d8f6deb58193f5d6"
+    },
+    {
+      "articleId": "versions-and-support",
+      "contentSha256": "dee7dab08d34a3a1f7c6828ca2a2a240fd8f2fdba13e710587d52265d7e94ae7"
+    },
+    {
+      "articleId": "entity-obligations",
+      "contentSha256": "b4a8ade34e728a7cb4de68a659779fe45d68781028d899b97c580771c1d0f604"
+    },
+    {
+      "articleId": "entity-structure-and-access",
+      "contentSha256": "95e5fbe88de8dcba1a417dada7ce078459a39aa633fa3f8e72d1ccc3a7295953"
+    },
+    {
+      "articleId": "archive-and-delete-documents",
+      "contentSha256": "f00bcd882a961a9944be0aed0bc83a991a29870eb318dbdfe8ef66c52c2c4551"
+    },
+    {
+      "articleId": "approver-groups",
+      "contentSha256": "baffd87c46ad0bfa7d084348f14bf7334da24590d99ca4c50a04cb870b7bdbb9"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "Complete eligible index and header entry",
+      "error": "expect(received).toEqual(expected) // deep equality\n\n- Expected  - 46\n+ Received  +  1\n\n- Array [\n-   \"approver-groups\",\n-   \"archive-and-delete-documents\",\n-   \"authentication-and-email\",\n-   \"comments-and-activity\",\n-   \"compare-versions\",\n-   \"contract-analysis\",\n-   \"contract-approvals\",\n-   \"contract-relations-and-ending\",\n-   \"contract-stages\",\n-   \"contract-tasks-and-dates\",\n-   \"convert-request\",\n-   \"create-contract\",\n-   \"create-knowledge\",\n-   \"create-matter\",\n-   \"document-folders\",\n-   \"document-previews\",\n-   \"document-repository\",\n-   \"document-versions\",\n-   \"electronic-signing\",\n-   \"entities-and-counterparties\",\n-   \"entity-obligations\",\n-   \"entity-records\",\n-   \"entity-structure-and-access\",\n-   \"find-your-work\",\n-   \"first-run\",\n-   \"manual-signing\",\n-   \"matter-status-and-archive\",\n-   \"matter-templates\",\n-   \"matter-work\",\n-   \"notifications\",\n-   \"organisation-and-users\",\n-   \"personal-settings\",\n-   \"publish-knowledge\",\n-   \"reference\",\n-   \"reminders-and-audit\",\n-   \"request-forms\",\n-   \"roles-and-access\",\n-   \"search-and-views\",\n-   \"staff-sign-in\",\n-   \"terms-and-renewals\",\n-   \"triage-requests\",\n-   \"troubleshooting\",\n-   \"types-statuses-fields\",\n-   \"versions-and-support\",\n- ]\n+ Array []",
+      "startedAt": "2026-09-08T12:54:42.664Z",
+      "at": "2026-09-08T12:54:45.542Z",
+      "result": "fail"
+    },
+    {
+      "role": "administrator",
+      "action": "Read staff-sign-in",
+      "actual": {
+        "title": "Set up your account and sign in",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:54:45.542Z",
+      "at": "2026-09-08T12:54:46.704Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read find-your-work",
+      "actual": {
+        "title": "Find your work on Home",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:54:46.704Z",
+      "at": "2026-09-08T12:54:47.868Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read search-and-views",
+      "actual": {
+        "title": "Search, filter, and save views",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:54:47.868Z",
+      "at": "2026-09-08T12:54:48.995Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read personal-settings",
+      "actual": {
+        "title": "Manage your profile and preferences",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:54:48.995Z",
+      "at": "2026-09-08T12:54:50.137Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read roles-and-access",
+      "actual": {
+        "title": "Understand roles and record access",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:54:50.137Z",
+      "at": "2026-09-08T12:54:51.281Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read comments-and-activity",
+      "actual": {
+        "title": "Choose who can read a comment",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:54:51.282Z",
+      "at": "2026-09-08T12:54:52.519Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read notifications",
+      "actual": {
+        "title": "Manage notifications and reminders",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:54:52.519Z",
+      "at": "2026-09-08T12:54:53.647Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read triage-requests",
+      "actual": {
+        "title": "Assign and triage Requests",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:54:53.647Z",
+      "at": "2026-09-08T12:54:54.775Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read convert-request",
+      "actual": {
+        "title": "Convert a Request to a Contract or Matter",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:54:54.775Z",
+      "at": "2026-09-08T12:54:55.885Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read create-contract",
+      "actual": {
+        "title": "Create and maintain a Contract",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:54:55.885Z",
+      "at": "2026-09-08T12:54:57.027Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read contract-stages",
+      "actual": {
+        "title": "Change a Contract Status",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:54:57.027Z",
+      "at": "2026-09-08T12:54:58.176Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read contract-approvals",
+      "actual": {
+        "title": "Request and give approval",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:54:58.176Z",
+      "at": "2026-09-08T12:54:59.300Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read manual-signing",
+      "actual": {
+        "title": "Record a Contract signed outside OpenLaw",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:54:59.300Z",
+      "at": "2026-09-08T12:55:00.411Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read electronic-signing",
+      "actual": {
+        "title": "Send a Contract for electronic signature",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:00.411Z",
+      "at": "2026-09-08T12:55:01.526Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read terms-and-renewals",
+      "actual": {
+        "title": "Manage Contract terms and renewals",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:01.526Z",
+      "at": "2026-09-08T12:55:02.732Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read contract-tasks-and-dates",
+      "actual": {
+        "title": "Manage Contract Tasks and Key dates",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:02.733Z",
+      "at": "2026-09-08T12:55:03.882Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read contract-relations-and-ending",
+      "actual": {
+        "title": "Relate, end, and archive Contracts",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:03.882Z",
+      "at": "2026-09-08T12:55:05.037Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read contract-analysis",
+      "actual": {
+        "title": "Review Contract analysis and verify values",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:05.037Z",
+      "at": "2026-09-08T12:55:06.156Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read create-matter",
+      "actual": {
+        "title": "Create a Matter and use a template",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:06.156Z",
+      "at": "2026-09-08T12:55:07.295Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read matter-status-and-archive",
+      "actual": {
+        "title": "Change a Matter Status or archive it",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:07.296Z",
+      "at": "2026-09-08T12:55:08.479Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read matter-work",
+      "actual": {
+        "title": "Manage Matter Tasks, Key dates, and relationships",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:08.480Z",
+      "at": "2026-09-08T12:55:09.637Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read document-versions",
+      "actual": {
+        "title": "Upload Documents and add Document Versions",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:09.637Z",
+      "at": "2026-09-08T12:55:10.801Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read document-folders",
+      "actual": {
+        "title": "Organize folders and upload in bulk",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:10.801Z",
+      "at": "2026-09-08T12:55:11.944Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read document-previews",
+      "actual": {
+        "title": "Read and download Documents",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:11.945Z",
+      "at": "2026-09-08T12:55:13.082Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read compare-versions",
+      "actual": {
+        "title": "Compare Document Versions and export a Generated redline",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:13.082Z",
+      "at": "2026-09-08T12:55:14.289Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read document-repository",
+      "actual": {
+        "title": "Find Documents in the repository",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:14.289Z",
+      "at": "2026-09-08T12:55:15.413Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read entities-and-counterparties",
+      "actual": {
+        "title": "Maintain Entities and Counterparties",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:15.413Z",
+      "at": "2026-09-08T12:55:16.538Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read entity-records",
+      "actual": {
+        "title": "Manage Holdings, Officers, and Registrations",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:16.538Z",
+      "at": "2026-09-08T12:55:17.663Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read create-knowledge",
+      "actual": {
+        "title": "Create and organize Knowledge Items",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:17.663Z",
+      "at": "2026-09-08T12:55:18.812Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read publish-knowledge",
+      "actual": {
+        "title": "Publish Knowledge for the right audience",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:18.813Z",
+      "at": "2026-09-08T12:55:19.975Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read first-run",
+      "actual": {
+        "title": "Set up a new OpenLaw instance",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:19.975Z",
+      "at": "2026-09-08T12:55:21.154Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read organisation-and-users",
+      "actual": {
+        "title": "Manage your organization and users",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:21.155Z",
+      "at": "2026-09-08T12:55:22.284Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read authentication-and-email",
+      "actual": {
+        "title": "Configure sign-in, portal access, and email",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:22.284Z",
+      "at": "2026-09-08T12:55:23.413Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read types-statuses-fields",
+      "actual": {
+        "title": "Configure types, Statuses, and Fields",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:23.413Z",
+      "at": "2026-09-08T12:55:24.629Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read matter-templates",
+      "actual": {
+        "title": "Configure Matter templates",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:24.630Z",
+      "at": "2026-09-08T12:55:25.771Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read request-forms",
+      "actual": {
+        "title": "Configure request types and forms",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:25.772Z",
+      "at": "2026-09-08T12:55:26.898Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read reminders-and-audit",
+      "actual": {
+        "title": "Configure reminders and use the Audit log",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:26.898Z",
+      "at": "2026-09-08T12:55:28.068Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read troubleshooting",
+      "actual": {
+        "title": "Resolve common problems",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:28.069Z",
+      "at": "2026-09-08T12:55:29.261Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read reference",
+      "actual": {
+        "title": "Look up terms, permissions, and file behavior",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:29.261Z",
+      "at": "2026-09-08T12:55:30.487Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read versions-and-support",
+      "actual": {
+        "title": "Find version information and get help",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:30.487Z",
+      "at": "2026-09-08T12:55:31.657Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read entity-obligations",
+      "actual": {
+        "title": "Track and file Entity obligations",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:31.657Z",
+      "at": "2026-09-08T12:55:32.850Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read entity-structure-and-access",
+      "actual": {
+        "title": "Manage Entity structure and access",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:32.850Z",
+      "at": "2026-09-08T12:55:33.994Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read archive-and-delete-documents",
+      "actual": {
+        "title": "Archive, restore, or permanently delete Documents",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:33.994Z",
+      "at": "2026-09-08T12:55:35.167Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Read approver-groups",
+      "actual": {
+        "title": "Configure reusable Approver groups",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:35.168Z",
+      "at": "2026-09-08T12:55:36.310Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "action": "Keyboard search, Back/Forward and no results recovery",
+      "actual": "Keyboard query/Enter/focused heading; URL retains query on Back and article on Forward; zero-match query and index recovery.",
+      "startedAt": "2026-09-08T12:55:36.310Z",
+      "at": "2026-09-08T12:55:39.982Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Complete eligible index and header entry",
+      "error": "expect(received).toEqual(expected) // deep equality\n\n- Expected  - 38\n+ Received  +  1\n\n- Array [\n-   \"archive-and-delete-documents\",\n-   \"comments-and-activity\",\n-   \"compare-versions\",\n-   \"contract-analysis\",\n-   \"contract-approvals\",\n-   \"contract-relations-and-ending\",\n-   \"contract-stages\",\n-   \"contract-tasks-and-dates\",\n-   \"convert-request\",\n-   \"create-contract\",\n-   \"create-knowledge\",\n-   \"create-matter\",\n-   \"document-folders\",\n-   \"document-previews\",\n-   \"document-repository\",\n-   \"document-versions\",\n-   \"electronic-signing\",\n-   \"entities-and-counterparties\",\n-   \"entity-obligations\",\n-   \"entity-records\",\n-   \"entity-structure-and-access\",\n-   \"find-your-work\",\n-   \"manual-signing\",\n-   \"matter-status-and-archive\",\n-   \"matter-work\",\n-   \"notifications\",\n-   \"personal-settings\",\n-   \"publish-knowledge\",\n-   \"reference\",\n-   \"roles-and-access\",\n-   \"search-and-views\",\n-   \"staff-sign-in\",\n-   \"terms-and-renewals\",\n-   \"triage-requests\",\n-   \"troubleshooting\",\n-   \"versions-and-support\",\n- ]\n+ Array []",
+      "startedAt": "2026-09-08T12:55:40.876Z",
+      "at": "2026-09-08T12:55:43.054Z",
+      "result": "fail"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read staff-sign-in",
+      "actual": {
+        "title": "Set up your account and sign in",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:43.054Z",
+      "at": "2026-09-08T12:55:44.189Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read find-your-work",
+      "actual": {
+        "title": "Find your work on Home",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:44.190Z",
+      "at": "2026-09-08T12:55:45.318Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read search-and-views",
+      "actual": {
+        "title": "Search, filter, and save views",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:45.318Z",
+      "at": "2026-09-08T12:55:46.473Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read personal-settings",
+      "actual": {
+        "title": "Manage your profile and preferences",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:46.473Z",
+      "at": "2026-09-08T12:55:47.614Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read roles-and-access",
+      "actual": {
+        "title": "Understand roles and record access",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:47.614Z",
+      "at": "2026-09-08T12:55:48.755Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read comments-and-activity",
+      "actual": {
+        "title": "Choose who can read a comment",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:48.755Z",
+      "at": "2026-09-08T12:55:49.891Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read notifications",
+      "actual": {
+        "title": "Manage notifications and reminders",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:49.892Z",
+      "at": "2026-09-08T12:55:51.018Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read triage-requests",
+      "actual": {
+        "title": "Assign and triage Requests",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:51.018Z",
+      "at": "2026-09-08T12:55:52.203Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read convert-request",
+      "actual": {
+        "title": "Convert a Request to a Contract or Matter",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:52.204Z",
+      "at": "2026-09-08T12:55:53.396Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read create-contract",
+      "actual": {
+        "title": "Create and maintain a Contract",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:53.397Z",
+      "at": "2026-09-08T12:55:54.539Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read contract-stages",
+      "actual": {
+        "title": "Change a Contract Status",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:54.539Z",
+      "at": "2026-09-08T12:55:55.677Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read contract-approvals",
+      "actual": {
+        "title": "Request and give approval",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:55.677Z",
+      "at": "2026-09-08T12:55:56.851Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read manual-signing",
+      "actual": {
+        "title": "Record a Contract signed outside OpenLaw",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:56.851Z",
+      "at": "2026-09-08T12:55:57.985Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read electronic-signing",
+      "actual": {
+        "title": "Send a Contract for electronic signature",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:57.985Z",
+      "at": "2026-09-08T12:55:59.099Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read terms-and-renewals",
+      "actual": {
+        "title": "Manage Contract terms and renewals",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:55:59.100Z",
+      "at": "2026-09-08T12:56:00.229Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read contract-tasks-and-dates",
+      "actual": {
+        "title": "Manage Contract Tasks and Key dates",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:00.229Z",
+      "at": "2026-09-08T12:56:01.347Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read contract-relations-and-ending",
+      "actual": {
+        "title": "Relate, end, and archive Contracts",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:01.347Z",
+      "at": "2026-09-08T12:56:02.497Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read contract-analysis",
+      "actual": {
+        "title": "Review Contract analysis and verify values",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:02.497Z",
+      "at": "2026-09-08T12:56:03.646Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read create-matter",
+      "actual": {
+        "title": "Create a Matter and use a template",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:03.646Z",
+      "at": "2026-09-08T12:56:04.779Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read matter-status-and-archive",
+      "actual": {
+        "title": "Change a Matter Status or archive it",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:04.780Z",
+      "at": "2026-09-08T12:56:05.896Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read matter-work",
+      "actual": {
+        "title": "Manage Matter Tasks, Key dates, and relationships",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:05.896Z",
+      "at": "2026-09-08T12:56:07.038Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read document-versions",
+      "actual": {
+        "title": "Upload Documents and add Document Versions",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:07.039Z",
+      "at": "2026-09-08T12:56:08.229Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read document-folders",
+      "actual": {
+        "title": "Organize folders and upload in bulk",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:08.229Z",
+      "at": "2026-09-08T12:56:09.341Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read document-previews",
+      "actual": {
+        "title": "Read and download Documents",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:09.342Z",
+      "at": "2026-09-08T12:56:10.519Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read compare-versions",
+      "actual": {
+        "title": "Compare Document Versions and export a Generated redline",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:10.520Z",
+      "at": "2026-09-08T12:56:11.655Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read document-repository",
+      "actual": {
+        "title": "Find Documents in the repository",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:11.656Z",
+      "at": "2026-09-08T12:56:12.839Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read entities-and-counterparties",
+      "actual": {
+        "title": "Maintain Entities and Counterparties",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:12.840Z",
+      "at": "2026-09-08T12:56:13.988Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read entity-records",
+      "actual": {
+        "title": "Manage Holdings, Officers, and Registrations",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:13.989Z",
+      "at": "2026-09-08T12:56:15.127Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read create-knowledge",
+      "actual": {
+        "title": "Create and organize Knowledge Items",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:15.127Z",
+      "at": "2026-09-08T12:56:16.223Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read publish-knowledge",
+      "actual": {
+        "title": "Publish Knowledge for the right audience",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:16.223Z",
+      "at": "2026-09-08T12:56:17.375Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read troubleshooting",
+      "actual": {
+        "title": "Resolve common problems",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:17.376Z",
+      "at": "2026-09-08T12:56:18.595Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read reference",
+      "actual": {
+        "title": "Look up terms, permissions, and file behavior",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:18.595Z",
+      "at": "2026-09-08T12:56:19.700Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read versions-and-support",
+      "actual": {
+        "title": "Find version information and get help",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:19.701Z",
+      "at": "2026-09-08T12:56:20.878Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read entity-obligations",
+      "actual": {
+        "title": "Track and file Entity obligations",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:20.879Z",
+      "at": "2026-09-08T12:56:28.647Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read entity-structure-and-access",
+      "actual": {
+        "title": "Manage Entity structure and access",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:28.648Z",
+      "at": "2026-09-08T12:56:29.809Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Read archive-and-delete-documents",
+      "actual": {
+        "title": "Archive, restore, or permanently delete Documents",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:29.810Z",
+      "at": "2026-09-08T12:56:30.963Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Keyboard search, Back/Forward and no results recovery",
+      "actual": "Keyboard query/Enter/focused heading; URL retains query on Back and article on Forward; zero-match query and index recovery.",
+      "startedAt": "2026-09-08T12:56:30.963Z",
+      "at": "2026-09-08T12:56:34.610Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "action": "Complete eligible index and header entry",
+      "error": "expect(received).toEqual(expected) // deep equality\n\n- Expected  - 19\n+ Received  +  1\n\n- Array [\n-   \"archive-and-delete-documents\",\n-   \"comments-and-activity\",\n-   \"compare-versions\",\n-   \"contributor-guide\",\n-   \"document-folders\",\n-   \"document-previews\",\n-   \"document-repository\",\n-   \"document-versions\",\n-   \"find-your-work\",\n-   \"notifications\",\n-   \"personal-settings\",\n-   \"reference\",\n-   \"roles-and-access\",\n-   \"search-and-views\",\n-   \"staff-sign-in\",\n-   \"troubleshooting\",\n-   \"versions-and-support\",\n- ]\n+ Array []",
+      "startedAt": "2026-09-08T12:56:35.456Z",
+      "at": "2026-09-08T12:56:37.622Z",
+      "result": "fail"
+    },
+    {
+      "role": "contributor",
+      "action": "Read staff-sign-in",
+      "actual": {
+        "title": "Set up your account and sign in",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:37.623Z",
+      "at": "2026-09-08T12:56:38.768Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "action": "Read find-your-work",
+      "actual": {
+        "title": "Find your work on Home",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:38.769Z",
+      "at": "2026-09-08T12:56:39.943Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "action": "Read search-and-views",
+      "actual": {
+        "title": "Search, filter, and save views",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:39.944Z",
+      "at": "2026-09-08T12:56:41.057Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "action": "Read personal-settings",
+      "actual": {
+        "title": "Manage your profile and preferences",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:41.057Z",
+      "at": "2026-09-08T12:56:42.192Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "action": "Read roles-and-access",
+      "actual": {
+        "title": "Understand roles and record access",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:42.193Z",
+      "at": "2026-09-08T12:56:43.313Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "action": "Read comments-and-activity",
+      "actual": {
+        "title": "Choose who can read a comment",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:43.314Z",
+      "at": "2026-09-08T12:56:44.441Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "action": "Read notifications",
+      "actual": {
+        "title": "Manage notifications and reminders",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:44.442Z",
+      "at": "2026-09-08T12:56:45.624Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "action": "Read contributor-guide",
+      "actual": {
+        "title": "Work on a shared Contract or Matter",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:45.625Z",
+      "at": "2026-09-08T12:56:46.773Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "action": "Read document-versions",
+      "actual": {
+        "title": "Upload Documents and add Document Versions",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:46.774Z",
+      "at": "2026-09-08T12:56:47.873Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "action": "Read document-folders",
+      "actual": {
+        "title": "Organize folders and upload in bulk",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:47.873Z",
+      "at": "2026-09-08T12:56:49.008Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "action": "Read document-previews",
+      "actual": {
+        "title": "Read and download Documents",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:49.009Z",
+      "at": "2026-09-08T12:56:50.112Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "action": "Read compare-versions",
+      "actual": {
+        "title": "Compare Document Versions and export a Generated redline",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:50.112Z",
+      "at": "2026-09-08T12:56:51.219Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "action": "Read document-repository",
+      "actual": {
+        "title": "Find Documents in the repository",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:51.219Z",
+      "at": "2026-09-08T12:56:52.337Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "action": "Read troubleshooting",
+      "actual": {
+        "title": "Resolve common problems",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:52.338Z",
+      "at": "2026-09-08T12:56:53.471Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "action": "Read reference",
+      "actual": {
+        "title": "Look up terms, permissions, and file behavior",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:53.472Z",
+      "at": "2026-09-08T12:56:54.593Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "action": "Read versions-and-support",
+      "actual": {
+        "title": "Find version information and get help",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:54.593Z",
+      "at": "2026-09-08T12:56:55.717Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "action": "Read archive-and-delete-documents",
+      "actual": {
+        "title": "Archive, restore, or permanently delete Documents",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:56:55.717Z",
+      "at": "2026-09-08T12:56:56.835Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "action": "Keyboard search, Back/Forward and no results recovery",
+      "actual": "Keyboard query/Enter/focused heading; URL retains query on Back and article on Forward; zero-match query and index recovery.",
+      "startedAt": "2026-09-08T12:56:56.836Z",
+      "at": "2026-09-08T12:57:00.381Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "action": "Out-of-audience Help points to public prerequisites",
+      "error": "locator.click: Error: strict mode violation: getByRole('link', { name: 'Read this article in the full documentation', exact: true }) resolved to 2 elements:\n    1) <a data-discover=\"true\" href=\"/documentation/install\">Read this article in the full documentation</a> aka getByLabel('Documentation', { exact: true }).getByRole('link', { name: 'Read this article in the full' })\n    2) <a data-discover=\"true\" href=\"/documentation/install\">Read this article in the full documentation</a> aka getByRole('link', { name: 'Read this article in the full' }).nth(1)\n\nCall log:\n\u001b[2m  - waiting for getByRole('link', { name: 'Read this article in the full documentation', exact: true })\u001b[22m\n",
+      "startedAt": "2026-09-08T12:57:00.382Z",
+      "at": "2026-09-08T12:57:01.527Z",
+      "result": "fail"
+    },
+    {
+      "role": "business_user",
+      "action": "Complete eligible index and header entry",
+      "error": "expect(received).toEqual(expected) // deep equality\n\n- Expected  - 13\n+ Received  +  1\n\n- Array [\n-   \"comments-and-activity\",\n-   \"document-previews\",\n-   \"follow-request\",\n-   \"notifications\",\n-   \"portal-knowledge\",\n-   \"portal-sign-in\",\n-   \"reference\",\n-   \"roles-and-access\",\n-   \"submit-request\",\n-   \"troubleshooting\",\n-   \"versions-and-support\",\n- ]\n+ Array []",
+      "startedAt": "2026-09-08T12:57:02.488Z",
+      "at": "2026-09-08T12:57:04.682Z",
+      "result": "fail"
+    },
+    {
+      "role": "business_user",
+      "action": "Read portal-sign-in",
+      "actual": {
+        "title": "Sign in to the Business Portal",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:04.683Z",
+      "at": "2026-09-08T12:57:05.821Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "action": "Read roles-and-access",
+      "actual": {
+        "title": "Understand roles and record access",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:05.822Z",
+      "at": "2026-09-08T12:57:06.993Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "action": "Read comments-and-activity",
+      "actual": {
+        "title": "Choose who can read a comment",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:06.993Z",
+      "at": "2026-09-08T12:57:08.104Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "action": "Read notifications",
+      "actual": {
+        "title": "Manage notifications and reminders",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:08.104Z",
+      "at": "2026-09-08T12:57:09.243Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "action": "Read submit-request",
+      "actual": {
+        "title": "Submit a Request to Legal",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:09.244Z",
+      "at": "2026-09-08T12:57:10.340Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "action": "Read follow-request",
+      "actual": {
+        "title": "Follow a Request and reply to Legal",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:10.341Z",
+      "at": "2026-09-08T12:57:11.458Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "action": "Read portal-knowledge",
+      "actual": {
+        "title": "Read Knowledge shared with the business",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:11.458Z",
+      "at": "2026-09-08T12:57:12.616Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "action": "Read document-previews",
+      "actual": {
+        "title": "Read and download Documents",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:12.616Z",
+      "at": "2026-09-08T12:57:13.733Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "action": "Read troubleshooting",
+      "actual": {
+        "title": "Resolve common problems",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:13.734Z",
+      "at": "2026-09-08T12:57:14.853Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "action": "Read reference",
+      "actual": {
+        "title": "Look up terms, permissions, and file behavior",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:14.853Z",
+      "at": "2026-09-08T12:57:15.984Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "action": "Read versions-and-support",
+      "actual": {
+        "title": "Find version information and get help",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:15.985Z",
+      "at": "2026-09-08T12:57:17.113Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "action": "Keyboard search, Back/Forward and no results recovery",
+      "error": "expect(locator).toBeFocused() failed\n\nLocator: getByRole('heading', { name: 'Find version information and get help', level: 1 })\nExpected: focused\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.be.focused\" with timeout 5000ms\n  - waiting for getByRole('heading', { name: 'Find version information and get help', level: 1 })\n",
+      "startedAt": "2026-09-08T12:57:17.113Z",
+      "at": "2026-09-08T12:57:23.289Z",
+      "result": "fail"
+    },
+    {
+      "role": "business_user",
+      "action": "Out-of-audience Help points to public prerequisites",
+      "error": "locator.click: Error: strict mode violation: getByRole('link', { name: 'Read this article in the full documentation', exact: true }) resolved to 2 elements:\n    1) <a data-discover=\"true\" href=\"/documentation/install\">Read this article in the full documentation</a> aka getByLabel('Documentation', { exact: true }).getByRole('link', { name: 'Read this article in the full' })\n    2) <a data-discover=\"true\" href=\"/documentation/install\">Read this article in the full documentation</a> aka getByRole('link', { name: 'Read this article in the full' }).nth(1)\n\nCall log:\n\u001b[2m  - waiting for getByRole('link', { name: 'Read this article in the full documentation', exact: true })\u001b[22m\n",
+      "startedAt": "2026-09-08T12:57:23.290Z",
+      "at": "2026-09-08T12:57:24.408Z",
+      "result": "fail"
+    },
+    {
+      "role": "anonymous",
+      "action": "Complete eligible index and header entry",
+      "error": "expect(received).toEqual(expected) // deep equality\n\n- Expected  - 56\n+ Received  +  1\n\n- Array [\n-   \"approver-groups\",\n-   \"archive-and-delete-documents\",\n-   \"authentication-and-email\",\n-   \"backup-and-restore\",\n-   \"comments-and-activity\",\n-   \"compare-versions\",\n-   \"contract-analysis\",\n-   \"contract-approvals\",\n-   \"contract-relations-and-ending\",\n-   \"contract-stages\",\n-   \"contract-tasks-and-dates\",\n-   \"contributor-guide\",\n-   \"convert-request\",\n-   \"create-contract\",\n-   \"create-knowledge\",\n-   \"create-matter\",\n-   \"deployment-configuration\",\n-   \"document-folders\",\n-   \"document-previews\",\n-   \"document-repository\",\n-   \"document-versions\",\n-   \"electronic-signing\",\n-   \"entities-and-counterparties\",\n-   \"entity-obligations\",\n-   \"entity-records\",\n-   \"entity-structure-and-access\",\n-   \"find-your-work\",\n-   \"first-run\",\n-   \"follow-request\",\n-   \"install\",\n-   \"manual-signing\",\n-   \"matter-status-and-archive\",\n-   \"matter-templates\",\n-   \"matter-work\",\n-   \"notifications\",\n-   \"operator-troubleshooting\",\n-   \"organisation-and-users\",\n-   \"personal-settings\",\n-   \"portal-knowledge\",\n-   \"portal-sign-in\",\n-   \"publish-knowledge\",\n-   \"reference\",\n-   \"reminders-and-audit\",\n-   \"request-forms\",\n-   \"roles-and-access\",\n-   \"search-and-views\",\n-   \"staff-sign-in\",\n-   \"submit-request\",\n-   \"terms-and-renewals\",\n-   \"triage-requests\",\n-   \"troubleshooting\",\n-   \"types-statuses-fields\",\n-   \"upgrade\",\n-   \"versions-and-support\",\n- ]\n+ Array []",
+      "startedAt": "2026-09-08T12:57:24.450Z",
+      "at": "2026-09-08T12:57:26.584Z",
+      "result": "fail"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read staff-sign-in",
+      "actual": {
+        "title": "Set up your account and sign in",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:26.584Z",
+      "at": "2026-09-08T12:57:27.634Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read portal-sign-in",
+      "actual": {
+        "title": "Sign in to the Business Portal",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:27.635Z",
+      "at": "2026-09-08T12:57:28.692Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read find-your-work",
+      "actual": {
+        "title": "Find your work on Home",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:28.693Z",
+      "at": "2026-09-08T12:57:29.737Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read search-and-views",
+      "actual": {
+        "title": "Search, filter, and save views",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:29.738Z",
+      "at": "2026-09-08T12:57:30.805Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read personal-settings",
+      "actual": {
+        "title": "Manage your profile and preferences",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:30.805Z",
+      "at": "2026-09-08T12:57:31.842Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read roles-and-access",
+      "actual": {
+        "title": "Understand roles and record access",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:31.843Z",
+      "at": "2026-09-08T12:57:32.904Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read comments-and-activity",
+      "actual": {
+        "title": "Choose who can read a comment",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:32.905Z",
+      "at": "2026-09-08T12:57:33.967Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read notifications",
+      "actual": {
+        "title": "Manage notifications and reminders",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:33.967Z",
+      "at": "2026-09-08T12:57:35.045Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read submit-request",
+      "actual": {
+        "title": "Submit a Request to Legal",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:35.045Z",
+      "at": "2026-09-08T12:57:36.088Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read follow-request",
+      "actual": {
+        "title": "Follow a Request and reply to Legal",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:36.088Z",
+      "at": "2026-09-08T12:57:37.156Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read portal-knowledge",
+      "actual": {
+        "title": "Read Knowledge shared with the business",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:37.156Z",
+      "at": "2026-09-08T12:57:38.209Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read triage-requests",
+      "actual": {
+        "title": "Assign and triage Requests",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:38.209Z",
+      "at": "2026-09-08T12:57:39.315Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read convert-request",
+      "actual": {
+        "title": "Convert a Request to a Contract or Matter",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:39.316Z",
+      "at": "2026-09-08T12:57:40.376Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read create-contract",
+      "actual": {
+        "title": "Create and maintain a Contract",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:40.377Z",
+      "at": "2026-09-08T12:57:41.428Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read contract-stages",
+      "actual": {
+        "title": "Change a Contract Status",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:41.428Z",
+      "at": "2026-09-08T12:57:42.483Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read contract-approvals",
+      "actual": {
+        "title": "Request and give approval",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:42.484Z",
+      "at": "2026-09-08T12:57:43.542Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read manual-signing",
+      "actual": {
+        "title": "Record a Contract signed outside OpenLaw",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:43.543Z",
+      "at": "2026-09-08T12:57:44.630Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read electronic-signing",
+      "actual": {
+        "title": "Send a Contract for electronic signature",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:44.630Z",
+      "at": "2026-09-08T12:57:45.676Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read terms-and-renewals",
+      "actual": {
+        "title": "Manage Contract terms and renewals",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:45.677Z",
+      "at": "2026-09-08T12:57:46.738Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read contract-tasks-and-dates",
+      "actual": {
+        "title": "Manage Contract Tasks and Key dates",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:46.738Z",
+      "at": "2026-09-08T12:57:47.787Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read contract-relations-and-ending",
+      "actual": {
+        "title": "Relate, end, and archive Contracts",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:47.788Z",
+      "at": "2026-09-08T12:57:48.931Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read contract-analysis",
+      "actual": {
+        "title": "Review Contract analysis and verify values",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:48.932Z",
+      "at": "2026-09-08T12:57:50.038Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read create-matter",
+      "actual": {
+        "title": "Create a Matter and use a template",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:50.039Z",
+      "at": "2026-09-08T12:57:51.082Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read matter-status-and-archive",
+      "actual": {
+        "title": "Change a Matter Status or archive it",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:51.083Z",
+      "at": "2026-09-08T12:57:52.163Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read matter-work",
+      "actual": {
+        "title": "Manage Matter Tasks, Key dates, and relationships",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:52.164Z",
+      "at": "2026-09-08T12:57:53.207Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read contributor-guide",
+      "actual": {
+        "title": "Work on a shared Contract or Matter",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:53.207Z",
+      "at": "2026-09-08T12:57:54.258Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read document-versions",
+      "actual": {
+        "title": "Upload Documents and add Document Versions",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:54.259Z",
+      "at": "2026-09-08T12:57:55.372Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read document-folders",
+      "actual": {
+        "title": "Organize folders and upload in bulk",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:55.372Z",
+      "at": "2026-09-08T12:57:56.434Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read document-previews",
+      "actual": {
+        "title": "Read and download Documents",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:56.434Z",
+      "at": "2026-09-08T12:57:58.184Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read compare-versions",
+      "actual": {
+        "title": "Compare Document Versions and export a Generated redline",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:58.184Z",
+      "at": "2026-09-08T12:57:59.249Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read document-repository",
+      "actual": {
+        "title": "Find Documents in the repository",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:57:59.250Z",
+      "at": "2026-09-08T12:58:00.341Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read entities-and-counterparties",
+      "actual": {
+        "title": "Maintain Entities and Counterparties",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:58:00.342Z",
+      "at": "2026-09-08T12:58:01.403Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read entity-records",
+      "actual": {
+        "title": "Manage Holdings, Officers, and Registrations",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:58:01.404Z",
+      "at": "2026-09-08T12:58:02.454Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read create-knowledge",
+      "actual": {
+        "title": "Create and organize Knowledge Items",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:58:02.454Z",
+      "at": "2026-09-08T12:58:03.511Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read publish-knowledge",
+      "actual": {
+        "title": "Publish Knowledge for the right audience",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:58:03.512Z",
+      "at": "2026-09-08T12:58:04.568Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read first-run",
+      "actual": {
+        "title": "Set up a new OpenLaw instance",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:58:04.569Z",
+      "at": "2026-09-08T12:58:05.669Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read organisation-and-users",
+      "actual": {
+        "title": "Manage your organization and users",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:58:05.670Z",
+      "at": "2026-09-08T12:58:06.744Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read authentication-and-email",
+      "actual": {
+        "title": "Configure sign-in, portal access, and email",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:58:06.745Z",
+      "at": "2026-09-08T12:58:07.801Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read types-statuses-fields",
+      "actual": {
+        "title": "Configure types, Statuses, and Fields",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:58:07.802Z",
+      "at": "2026-09-08T12:58:08.863Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read matter-templates",
+      "actual": {
+        "title": "Configure Matter templates",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:58:08.864Z",
+      "at": "2026-09-08T12:58:09.933Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read request-forms",
+      "actual": {
+        "title": "Configure request types and forms",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:58:09.934Z",
+      "at": "2026-09-08T12:58:11.007Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read reminders-and-audit",
+      "actual": {
+        "title": "Configure reminders and use the Audit log",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:58:11.008Z",
+      "at": "2026-09-08T12:58:12.056Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read install",
+      "actual": {
+        "title": "Install OpenLaw",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:58:12.057Z",
+      "at": "2026-09-08T12:58:13.132Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read deployment-configuration",
+      "actual": {
+        "title": "Configure a deployment",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:58:13.132Z",
+      "at": "2026-09-08T12:58:14.206Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read upgrade",
+      "actual": {
+        "title": "Upgrade a populated instance",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:58:14.207Z",
+      "at": "2026-09-08T12:58:15.255Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read backup-and-restore",
+      "actual": {
+        "title": "Back up and restore OpenLaw",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:58:15.256Z",
+      "at": "2026-09-08T12:58:16.349Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read operator-troubleshooting",
+      "actual": {
+        "title": "Troubleshoot a deployment",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:58:16.349Z",
+      "at": "2026-09-08T12:58:17.404Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read troubleshooting",
+      "actual": {
+        "title": "Resolve common problems",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:58:17.405Z",
+      "at": "2026-09-08T12:58:18.455Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read reference",
+      "actual": {
+        "title": "Look up terms, permissions, and file behavior",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:58:18.455Z",
+      "at": "2026-09-08T12:58:19.526Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read versions-and-support",
+      "actual": {
+        "title": "Find version information and get help",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:58:19.527Z",
+      "at": "2026-09-08T12:58:20.570Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read entity-obligations",
+      "actual": {
+        "title": "Track and file Entity obligations",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:58:20.571Z",
+      "at": "2026-09-08T12:58:21.651Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read entity-structure-and-access",
+      "actual": {
+        "title": "Manage Entity structure and access",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:58:21.652Z",
+      "at": "2026-09-08T12:58:22.693Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read archive-and-delete-documents",
+      "actual": {
+        "title": "Archive, restore, or permanently delete Documents",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:58:22.693Z",
+      "at": "2026-09-08T12:58:23.743Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Read approver-groups",
+      "actual": {
+        "title": "Configure reusable Approver groups",
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 320,
+            "overflow": false
+          }
+        ],
+        "zoom": "CSS zoom 2 at 1280px; not browser chrome zoom"
+      },
+      "startedAt": "2026-09-08T12:58:23.744Z",
+      "at": "2026-09-08T12:58:24.813Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Keyboard search, Back/Forward and no results recovery",
+      "actual": "Keyboard query/Enter/focused heading; URL retains query on Back and article on Forward; zero-match query and index recovery.",
+      "startedAt": "2026-09-08T12:58:24.814Z",
+      "at": "2026-09-08T12:58:28.168Z",
+      "result": "pass"
+    },
+    {
+      "role": "anonymous",
+      "action": "Formal reading/search without data APIs",
+      "actual": "Public search and reading sent no application API requests.",
+      "startedAt": "2026-09-08T12:58:28.170Z",
+      "at": "2026-09-08T12:58:29.266Z",
+      "result": "pass"
+    }
+  ],
+  "completedAt": "2026-09-08T12:58:29.313Z"
+}

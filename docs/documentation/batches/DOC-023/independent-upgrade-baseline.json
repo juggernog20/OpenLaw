@@ -1,0 +1,33 @@
+{
+  "name": "independent-upgrade-baseline",
+  "scenario": "V-C46",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:45:58.138Z",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "environment": "openlaw-docs-b8e31260-rev-upgrade",
+  "articleHashes": [
+    {
+      "articleId": "upgrade",
+      "contentSha256": "96cc17166c77af291161ea34540f2c1c9683d2736cd903c42e2692ba9fe8e94d"
+    },
+    {
+      "articleId": "backup-and-restore",
+      "contentSha256": "0237339f91484b7a46623e1753c67ccbb376ae341ac8b40cb5d81237967a891a"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Set up the earlier build and save an encrypted relay",
+      "result": "fail",
+      "startedAt": "2026-09-08T09:45:58.248Z",
+      "error": "locator.fill: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByLabel('Email', { exact: true })\u001b[22m\n",
+      "at": "2026-09-08T09:46:18.692Z"
+    }
+  ],
+  "passed": false,
+  "supersededBy": "independent-upgrade-baseline-retry2",
+  "note": "The setup form succeeded and created the Administrator; the step then signed in again although the session was already established, and the sign-in page was not there to fill."
+}

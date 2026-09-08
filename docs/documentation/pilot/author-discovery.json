@@ -1,0 +1,191 @@
+{
+  "kind": "author-draft-discovery",
+  "articleHashes": {
+    "request-forms": "3b674df25d4c3aa6a0b3feec3a6cd91f91725a7c289760639b166d0221ef3a6c",
+    "submit-request": "a76db796fa3dd246e0c42fc4b32324af19c96281a372daccf4aa9a440a98625b",
+    "triage-requests": "e593909b8792e8622aad7214b38e605f0544c48348edec47d003c9526bca2337",
+    "convert-request": "393898f5eea37000401ad1b7c90e3a427955073a9c091e8cb46d35b1e412d54b"
+  },
+  "independentReview": false,
+  "checkedAt": "2026-09-07T02:30:21.948Z",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "environment": "pilot",
+  "frontend": "Vite draft preview, unchanged app source with working canonical Markdown",
+  "normalPublication": false,
+  "findings": [
+    {
+      "role": "administrator",
+      "entry": "/settings/intake/request-types",
+      "query": "form target",
+      "articleId": "request-forms",
+      "topicPath": "/help?topic=settings.intake",
+      "result": "pass",
+      "elapsedSeconds": 1,
+      "layouts": [
+        {
+          "theme": "light",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "light",
+          "width": 320,
+          "result": "pass"
+        },
+        {
+          "theme": "dark",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "dark",
+          "width": 320,
+          "result": "pass"
+        },
+        {
+          "theme": "warm",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "warm",
+          "width": 320,
+          "result": "pass"
+        }
+      ],
+      "actual": "Header Help found the draft by local search; article and section focus worked, all-theme wide/narrow layouts fit, and the full-documentation link opened the same article."
+    },
+    {
+      "role": "legal_team_member",
+      "entry": "/inbox",
+      "query": "assign request",
+      "articleId": "triage-requests",
+      "topicPath": "/help?topic=inbox",
+      "result": "pass",
+      "elapsedSeconds": 1,
+      "layouts": [
+        {
+          "theme": "light",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "light",
+          "width": 320,
+          "result": "pass"
+        },
+        {
+          "theme": "dark",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "dark",
+          "width": 320,
+          "result": "pass"
+        },
+        {
+          "theme": "warm",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "warm",
+          "width": 320,
+          "result": "pass"
+        }
+      ],
+      "actual": "Header Help found the draft by local search; article and section focus worked, all-theme wide/narrow layouts fit, and the full-documentation link opened the same article."
+    },
+    {
+      "role": "legal_team_member",
+      "entry": "/inbox/25",
+      "query": "convert request",
+      "articleId": "convert-request",
+      "topicPath": "/help?topic=inbox.convert",
+      "result": "pass",
+      "elapsedSeconds": 1,
+      "layouts": [
+        {
+          "theme": "light",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "light",
+          "width": 320,
+          "result": "pass"
+        },
+        {
+          "theme": "dark",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "dark",
+          "width": 320,
+          "result": "pass"
+        },
+        {
+          "theme": "warm",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "warm",
+          "width": 320,
+          "result": "pass"
+        }
+      ],
+      "actual": "Header Help found the draft by local search; article and section focus worked, all-theme wide/narrow layouts fit, and the full-documentation link opened the same article."
+    },
+    {
+      "role": "business_user",
+      "entry": "/portal",
+      "query": "submit request",
+      "articleId": "submit-request",
+      "topicPath": "/portal/help?topic=portal.home",
+      "result": "pass",
+      "elapsedSeconds": 1,
+      "layouts": [
+        {
+          "theme": "light",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "light",
+          "width": 320,
+          "result": "pass"
+        },
+        {
+          "theme": "dark",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "dark",
+          "width": 320,
+          "result": "pass"
+        },
+        {
+          "theme": "warm",
+          "width": 1440,
+          "result": "pass"
+        },
+        {
+          "theme": "warm",
+          "width": 320,
+          "result": "pass"
+        }
+      ],
+      "actual": "Header Help found the draft by local search; article and section focus worked, all-theme wide/narrow layouts fit, and the full-documentation link opened the same article."
+    }
+  ],
+  "anonymousIndex": "Four draft articles present, no API requests",
+  "limitations": [
+    "Agent/script elapsed time, not human findability performance.",
+    "Narrow-layout checks are CSS pixels; no assistive-technology user study."
+  ],
+  "author": "Codex"
+}

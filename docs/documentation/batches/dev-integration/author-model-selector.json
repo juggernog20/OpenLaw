@@ -1,0 +1,60 @@
+{
+  "sourceCommit": "ad5958f66be543483921feda99bdfc23c0b62cd1",
+  "appImageId": "sha256:bffef00c454f176cbf0e50dbd5779586354b7a5e1f21966d25f9878362b12a7b",
+  "engineImageId": "sha256:90770a80fd3ef58e069723bde061f38c4f65ca7ec049f3330f9bf24a1c87d7d9",
+  "environment": "openlaw-docs-b8e31260-model-selector",
+  "method": "Browser against built application and controlled HTTP provider fixture",
+  "startedAt": "2026-09-08T19:10:22.553Z",
+  "steps": [
+    {
+      "name": "Load pending provider models without saving or inference",
+      "result": "pass",
+      "at": "2026-09-08T19:10:23.336Z"
+    },
+    {
+      "name": "Search labels and save the exact model ID",
+      "result": "pass",
+      "at": "2026-09-08T19:10:23.419Z"
+    },
+    {
+      "name": "Keep a selected model when a later list omits it",
+      "result": "pass",
+      "at": "2026-09-08T19:10:23.589Z"
+    },
+    {
+      "name": "Keep manual entry through endpoint and key edits",
+      "result": "pass",
+      "at": "2026-09-08T19:10:23.692Z"
+    },
+    {
+      "name": "Show provider status without echoing its error body",
+      "result": "pass",
+      "at": "2026-09-08T19:10:23.857Z"
+    },
+    {
+      "name": "Discard a pending model list after a provider change",
+      "result": "pass",
+      "at": "2026-09-08T19:10:24.300Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T19:10:24.349Z",
+  "providerRequests": [
+    {
+      "method": "GET",
+      "path": "/v1/models"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/models"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/models"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/models"
+    }
+  ]
+}

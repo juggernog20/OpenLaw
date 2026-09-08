@@ -41,6 +41,7 @@
  *    Below that width the mock's order holds: picker, panel, list.
  */
 
+import { HelpLink } from "../components/documentation/help-link";
 import { Link, redirect, useLoaderData } from "react-router";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { ArrowRight, FolderOpen } from "lucide-react";
@@ -100,6 +101,7 @@ export function PortalHomePage() {
           </p>
         )}
       </div>
+      <HelpLink surface="portal" contextual />
       <div className="grid gap-section-gap @3xl/page:grid-cols-portal-split">
         {requestTypes.length > 0 ? (
           <ul

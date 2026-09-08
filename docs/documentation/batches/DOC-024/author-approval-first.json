@@ -1,0 +1,31 @@
+{
+  "startedAt": "2026-09-08T10:55:40.625Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "troubleshooting",
+      "contentSha256": "0b5c8a359c24faa4a2c97d557b23a4ad4c37939a8cb919e0b63d2130c628779b"
+    },
+    {
+      "articleId": "reference",
+      "contentSha256": "9ec760d76d77a25e047c71f896e0961e1a7afcf6fab06e3e8c942c7770bdf7c0"
+    },
+    {
+      "articleId": "versions-and-support",
+      "contentSha256": "157906267e63b29066d1835dcda7de6c69d8c83338da745d340a8ded3e06ed0b"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Named Approval action limit",
+      "startedAt": "2026-09-08T10:55:41.659Z",
+      "at": "2026-09-08T10:55:52.257Z",
+      "result": "fail",
+      "error": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Actions', exact: true })\u001b[22m\n"
+    }
+  ]
+}

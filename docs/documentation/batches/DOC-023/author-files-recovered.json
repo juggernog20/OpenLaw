@@ -1,0 +1,30 @@
+{
+  "name": "files-recovered",
+  "author": "Codex documentation author",
+  "startedAt": "2026-09-08T08:47:12.667Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-ops-author",
+  "articleHashes": [
+    {
+      "articleId": "deployment-configuration",
+      "contentSha256": "448fe4bb036badf05c60f89cfff4e000852e79ec397ca0d39c11b3c6cbbf2c97"
+    },
+    {
+      "articleId": "operator-troubleshooting",
+      "contentSha256": "7cc1ef3aa031d020052f58202aa3bf9fdfca0a446eeec8953f375ddfa75de92a"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "All retained storage drivers read correctly after endpoint correction",
+      "actual": "Local, S3 and Azure files all download with original SHA-256 after recreating app/worker with correct reader endpoint.",
+      "result": "pass",
+      "startedAt": "2026-09-08T08:47:13.095Z",
+      "at": "2026-09-08T08:47:13.162Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T08:47:13.162Z"
+}

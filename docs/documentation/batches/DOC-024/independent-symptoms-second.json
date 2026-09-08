@@ -1,0 +1,132 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-024",
+  "issue": 744,
+  "independentReview": true,
+  "reviewerKind": "agent",
+  "walkthroughReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat), a different agent from the author",
+  "author": "Codex documentation author",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "frontend": "Working documentation preview at 127.0.0.1:43333 over the immutable configuration backend at 127.0.0.1:43332",
+  "browser": "Playwright 1.62.1 Chromium from the workspace, headless, one isolated context per identity; scripts written by the reviewer from the article text",
+  "startedAt": "2026-09-08T11:45:53.909Z",
+  "finishedAt": "2026-09-08T11:49:18.962Z",
+  "articleHashes": [
+    {
+      "articleId": "troubleshooting",
+      "contentSha256": "e2404361abcc621f8ee36fcd03dec23150bdabc0070d30678ba54caaabb9dd1b"
+    },
+    {
+      "articleId": "reference",
+      "contentSha256": "ba4b1b0cc96db761cc19f06fa88d5e4d9625355873cc2a15d8f6deb58193f5d6"
+    },
+    {
+      "articleId": "versions-and-support",
+      "contentSha256": "dee7dab08d34a3a1f7c6828ca2a2a240fd8f2fdba13e710587d52265d7e94ae7"
+    }
+  ],
+  "steps": [
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "An over-long filename is refused with actionable copy, and a corrected name uploads exactly once",
+      "actual": "A 318-character filename was refused with copy naming the filename problem, and nothing was stored. Renaming to \"Docs V-C49 corrected name.pdf\" stored it once. Checking the destination list before retrying, as the article says, is what shows whether the first attempt landed.",
+      "startedAt": "2026-09-08T11:45:55.200Z",
+      "at": "2026-09-08T11:46:15.086Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "A damaged Word file reaches the article's failure message and its original still downloads",
+      "actual": "Reviewer check did not complete: Error: the damaged file did not reach the documented failure (pending seen: false)",
+      "startedAt": "2026-09-08T11:46:15.086Z",
+      "at": "2026-09-08T11:48:24.592Z",
+      "result": "fail"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "The preference pane shows the In-app and Email choices and states the rule the article gives",
+      "actual": "The staff pane lists each event group with its In-app and Email switches and a Briefing section, and states \"Email off keeps the bell items coming. In-app off turns the group off entirely, email included.\" That is the app's own wording for the article's sentence that turning In-app off also stops that group's new email. No preference was changed.",
+      "startedAt": "2026-09-08T11:48:24.592Z",
+      "at": "2026-09-08T11:48:27.360Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "The Portal reader finds Request updates under Notification settings",
+      "actual": "As the Business User, Notification settings in the Portal offered \"Request updates\", which is the control the article tells this reader to check.",
+      "startedAt": "2026-09-08T11:48:27.360Z",
+      "at": "2026-09-08T11:48:32.343Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Only the named person can answer an Approval Request; the requester can cancel it",
+      "actual": "Reviewer check did not complete: Error: the requester had no cancel control",
+      "startedAt": "2026-09-08T11:48:32.343Z",
+      "at": "2026-09-08T11:48:35.152Z",
+      "result": "fail"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "The named approver decides once, and the decision cannot be edited into another one",
+      "actual": "Reviewer check did not complete: Error: the named approver had no Approve control",
+      "startedAt": "2026-09-08T11:48:35.152Z",
+      "at": "2026-09-08T11:48:37.887Z",
+      "result": "fail"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Moving past Approval with an unresolved request raises the Move past approval warning",
+      "actual": "Reviewer check did not complete: TimeoutError: locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Draft', exact: true }).first()\u001b[22m\n",
+      "startedAt": "2026-09-08T11:48:37.887Z",
+      "at": "2026-09-08T11:49:10.680Z",
+      "result": "fail"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Electronic signing offers no send control on this unconfigured install",
+      "actual": "On the \"Approvals & signing\" surface of C-56 there was no send-for-signature control, because this lab has no Signing connector configured. The article's instruction to ask the Administrator whether the connector is enabled is the reachable next step. This records an unconfigured connector and is not evidence that any live signing provider works.",
+      "startedAt": "2026-09-08T11:49:10.680Z",
+      "at": "2026-09-08T11:49:13.438Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "The Administrator surface the article names shows the connector state",
+      "actual": "The Administrator reached the integrations settings the article's escalation points at and read the current connector state there: Skip to content | openlaw | / | workspace | / | Help | 9+ | DO | Home | Inbox | Matters | Contracts | Documents | Entities | Knowledge | Settings | Personal | Profile | Appearance | Notifications | Organization | General | Users | Security | Matters | Contracts | Intake | Entities | Knowledge | Noti. Recorded as an unconfigured or disabled state only; C42 and C43 real-provider setup stays blocked on #742.",
+      "startedAt": "2026-09-08T11:49:13.438Z",
+      "at": "2026-09-08T11:49:16.197Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Analysis is not offered while its connector is disabled",
+      "actual": "The Contract offered these surfaces: Fields, Documents, Approvals\n2, Key dates, Tasks. No Analysis surface is present while the AI connector is disabled, which is the \"whether Analysis is enabled\" check the article asks the reader to make first. Not evidence about any live AI provider.",
+      "startedAt": "2026-09-08T11:49:16.197Z",
+      "at": "2026-09-08T11:49:18.934Z",
+      "result": "pass"
+    }
+  ],
+  "passed": false,
+  "fixturePreparation": [
+    "Uploaded fictional files to C-56 through the app's own Upload control: a small valid PDF under an over-long name, the same PDF under a corrected name, and a deliberately damaged archive named .docx.",
+    "Approval requests were created through the API as the Administrator so that the decision itself could be followed in the browser as the named approver."
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not feature-owner approval.",
+    "The Signing connector is not configured and the AI connector is disabled in this lab. Those steps record an unconfigured state only and do not satisfy C42/C43, which stay blocked on #742.",
+    "Email delivery itself was not re-tested here; only the preference surfaces the article tells the reader to check."
+  ]
+}

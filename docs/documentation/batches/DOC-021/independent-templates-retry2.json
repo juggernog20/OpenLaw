@@ -1,0 +1,58 @@
+{
+  "name": "independent-templates-retry2",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C39"],
+  "authorRecordName": "ind-templates-retry2",
+  "startedAt": "2026-09-08T05:30:07.162Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "matter-templates",
+      "contentSha256": "c458f44480e167baf2930bdad0f03a944b0f10b890c7ff10468543328016f9e9"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Prepare a live Matter type with an attached Field",
+      "actual": "Created Matter type \"Ind template type IND81T2F\" and attached the Global Field \"Ind coverage region IND81T2F\" (not required), as the guide's prerequisite asks.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:30:08.080Z",
+      "at": "2026-09-08T05:30:09.242Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Create the template by the guide route",
+      "actual": "Settings > Matters > Templates, Matter type \"Ind template type IND81T2F\": \"Ind onboarding playbook IND81T2F\" already exists from the interrupted first attempt.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:30:09.242Z",
+      "at": "2026-09-08T05:30:09.530Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Fill all four areas and confirm them after a reopen",
+      "actual": "Saved and reopened: {\"priority\":\"high\",\"risk\":\"medium\",\"prefix\":\"Onboarding\",\"field\":\"Benelux\",\"task1\":\"Confirm scope with the requester\",\"task1Offset\":\"3\",\"task1Role\":\"matter_manager\",\"task2\":\"Open the evidence folder\",\"task2Offset\":\"\",\"keyDate\":\"Onboarding review point\",\"keyOffset\":\"7\"}. All four areas the guide names (details, Field defaults, Tasks, Key dates) survived the reload.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:30:09.530Z",
+      "at": "2026-09-08T05:30:11.920Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Offsets outside 0 to 3650 are refused with the guide\u2019s rule",
+      "actual": "The offset input declares {\"min\":\"0\",\"max\":\"3650\",\"step\":\"1\"}. Saving 3651 was refused with \"Give every row a name and use whole-number offsets from 0 to 3650 days.\" and the stored offset stayed 7. Restoring 7 saved again (stored offset 7).",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:30:11.920Z",
+      "at": "2026-09-08T05:30:13.521Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T05:30:13.521Z"
+}

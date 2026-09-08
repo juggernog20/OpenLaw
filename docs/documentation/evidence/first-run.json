@@ -1,0 +1,62 @@
+{
+  "articleId": "first-run",
+  "contentSha256": "17a32bd77a5673364e11c7ff3906b3e657a90c6750e8df6ff60e2611391bf3e4",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-admin-review",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "walkthroughReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-08T04:13:42Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-SETTINGS.md",
+    "apps/web/src/routes/setup.tsx",
+    "apps/web/src/routes/welcome.tsx",
+    "apps/api/src/modules/auth/routes.ts",
+    "apps/api/src/modules/users/routes.ts",
+    "docs/DEPLOYMENT.md"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C35",
+      "coverage": ["C35"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "The Administrator reaches the app and the saved settings reflect the completed steps. Validation/retry and resumed onboarding work; no M33 checklist or Review step absent from this build is claimed.",
+      "actual": "Walked a genuinely fresh instance (needsSetup true) on http://127.0.0.1:43328. Set up OpenLaw refused a seven-character password at the field and refused mismatched entries with \"The passwords do not match.\"; the corrected submission created the first Administrator and opened Welcome to OpenLaw. Contextual Help was observed on /auth/setup before any account existed and again on the unfinished wizard. The five steps Welcome, Authentication, Business-user portal, Outbound email and Invite your team behaved as documented: unregistered OIDC was refused, two bare domains saved, a reload returned to Welcome with saved settings intact but the step position lost, a middle-step Set up later advanced one step while onboarding stayed incomplete, and Set up later on Invite your team ended onboarding so /welcome then redirected Home. Email was exercised before completion across three immutable deployment phases: a stored app relay delivering a real test message, an environment override that made the pane read-only and sent a real invitation from the environment sender, an environment relay without SMTP_FROM that blocked delivery despite a complete stored relay, and recovery to the stored sender after removing the override and recreating app and worker. Supplemental scope check: the allowed-domain list governs new entry and each new magic link, but does not by itself end Portal access. Step 3 wording narrowed accordingly and now points at the authentication guide for the exact reach.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-020/README.md",
+        "docs/documentation/batches/DOC-020/review-setup.json",
+        "docs/documentation/batches/DOC-020/review-email-env.json",
+        "docs/documentation/batches/DOC-020/review-email-incomplete.json",
+        "docs/documentation/batches/DOC-020/review-email-stored.json",
+        "docs/documentation/batches/DOC-020/review-discovery.json",
+        "docs/documentation/batches/DOC-020/review-scope.json"
+      ],
+      "verifiedAt": "2026-09-08T04:13:42Z"
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-020/README.md"],
+  "limitations": [
+    "Independent walkthroughs are agent walkthroughs, not human user studies or feature-owner approval.",
+    "Single sign-on was verified against a dedicated local OpenID Connect fixture. It is not certification of a real provider's client-secret handling or account policy, and it does not satisfy the real DocuSign and AI-provider verification required by DOC-022.",
+    "Onboarding completion is instance-wide and irreversible, so one instance permits one finishing action. Set up later on the final invitation step was exercised; Finish and the Welcome-step Set up later were not independently exercised here.",
+    "Evidence was taken on fixture app commit 6a8873dbda333fd9992eb77525d4bfa3f47af20d, not the final app candidate. DOC-025 reconciles the catalog against that candidate.",
+    "Operator and module configuration guides remain forward publication dependencies."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null,
+  "independentEvidence": [
+    "docs/documentation/batches/DOC-020/README.md",
+    "docs/documentation/batches/DOC-020/review-setup.json",
+    "docs/documentation/batches/DOC-020/review-email-env.json",
+    "docs/documentation/batches/DOC-020/review-email-incomplete.json",
+    "docs/documentation/batches/DOC-020/review-email-stored.json",
+    "docs/documentation/batches/DOC-020/review-discovery.json",
+    "docs/documentation/batches/DOC-020/review-scope.json"
+  ]
+}

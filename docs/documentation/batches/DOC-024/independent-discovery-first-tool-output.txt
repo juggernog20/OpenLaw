@@ -1,0 +1,37 @@
+PASS administrator :: Header Help lists all three reference articles
+PASS administrator :: Representative queries find troubleshooting and it opens with its own title
+PASS administrator :: Representative queries find reference and it opens with its own title
+FAIL administrator :: Representative queries find versions-and-support and it opens with its own title
+     Error: "which version" -> NOT FOUND; "report a defect" -> found
+PASS administrator :: Help article offers the full-documentation link and reaches the same article there
+FAIL administrator :: Troubleshooting recovery links reach their named canonical guides
+     Error: no recovery link named "roles and record access"
+PASS legal_team_member :: Header Help lists all three reference articles
+PASS legal_team_member :: Representative queries find troubleshooting and it opens with its own title
+PASS legal_team_member :: Representative queries find reference and it opens with its own title
+FAIL legal_team_member :: Representative queries find versions-and-support and it opens with its own title
+     Error: "which version" -> NOT FOUND; "report a defect" -> found
+PASS legal_team_member :: Help article offers the full-documentation link and reaches the same article there
+FAIL legal_team_member :: Troubleshooting recovery links reach their named canonical guides
+     Error: no recovery link named "roles and record access"
+PASS contributor :: Header Help lists all three reference articles
+PASS contributor :: Representative queries find troubleshooting and it opens with its own title
+PASS contributor :: Representative queries find reference and it opens with its own title
+FAIL contributor :: Representative queries find versions-and-support and it opens with its own title
+     Error: "which version" -> NOT FOUND; "report a defect" -> found
+PASS contributor :: Help article offers the full-documentation link and reaches the same article there
+FAIL contributor :: Troubleshooting recovery links reach their named canonical guides
+     Error: no recovery link named "roles and record access"
+PASS business_user :: Header Help lists all three reference articles
+PASS business_user :: Representative queries find troubleshooting and it opens with its own title
+PASS business_user :: Representative queries find reference and it opens with its own title
+FAIL business_user :: Representative queries find versions-and-support and it opens with its own title
+     Error: "which version" -> NOT FOUND; "report a defect" -> found
+PASS business_user :: Help article offers the full-documentation link and reaches the same article there
+FAIL business_user :: Troubleshooting recovery links reach their named canonical guides
+     Error: no recovery link named "roles and record access"
+PASS operator :: Signed-out formal reader offers all three articles and needs no app session
+PASS operator :: Audience filter narrows the signed-out index to Deployment operator guides
+
+independent-discovery: 18 pass, 8 fail
+Shell cwd was reset to /home/blairwentworth/projects/OpenLaw-documentation

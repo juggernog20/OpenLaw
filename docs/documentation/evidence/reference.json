@@ -1,0 +1,137 @@
+{
+  "articleId": "reference",
+  "contentSha256": "71259a27b93b495c22a73ba251ec3224ac610ae24b6dee7b88de83a2ac809135",
+  "appCommit": "67dbe788c73641a02218e2c0a0cbcdd5a0682a87",
+  "buildId": "Source integration only; no walkthrough build recorded for this article revision",
+  "environment": "dev integration source review",
+  "author": "Codex integration author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "blocked",
+  "sources": [
+    "CONTEXT.md",
+    "apps/api/src/lib/render-family.ts",
+    "apps/api/src/lib/uploads.ts",
+    "apps/api/src/modules/contracts/routes.ts",
+    "apps/web/src/components/approvals/approvals-signing-card.tsx",
+    "apps/web/src/components/documentation/documentation-reader.tsx",
+    "docs/documentation/PUBLISHING.md",
+    "docs/documentation/edition.json",
+    "packages/db/src/schema/auth.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C50",
+      "coverage": ["C50"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Reference matches role limits, configured versus fixed concepts and actual file behavior.",
+      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/dev-integration/README.md"],
+      "verifiedAt": "2026-09-08T12:19:57.373Z"
+    },
+    {
+      "id": "V-C50",
+      "coverage": ["C50"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Reference matches role limits, configured versus fixed concepts and actual file behavior.",
+      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/dev-integration/README.md"],
+      "verifiedAt": "2026-09-08T12:19:52.328Z"
+    },
+    {
+      "id": "V-C50",
+      "coverage": ["C50"],
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "expected": "Reference matches role limits, configured versus fixed concepts and actual file behavior.",
+      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/dev-integration/README.md"],
+      "verifiedAt": "2026-09-08T11:57:12.852Z"
+    },
+    {
+      "id": "V-C50",
+      "coverage": ["C50"],
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "expected": "Reference matches role limits, configured versus fixed concepts and actual file behavior.",
+      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/dev-integration/README.md"],
+      "verifiedAt": "2026-09-08T11:57:19.566Z"
+    },
+    {
+      "id": "V-C50",
+      "coverage": ["C50"],
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "expected": "Reference matches role limits, configured versus fixed concepts and actual file behavior.",
+      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/dev-integration/README.md"],
+      "verifiedAt": "2026-09-08T12:21:35.382Z"
+    }
+  ],
+  "authorEvidence": [],
+  "limitations": [
+    "This article changed during the dev integration and requires fresh technical and walkthrough acceptance. Its earlier hash, reviewers, timestamps and observations are preserved in previousEvidence.",
+    "No full-suite acceptance, human proofreading or publication is claimed. DOC-025 must verify the combined candidate."
+  ],
+  "authorCopyUpdate": "After author walkthroughs, copy-only review clarified target Document/source Document Version, assigned person and internal record-sharing wording. Review then corrected the title spelling to en-US, from \"file behaviour\" to \"file behavior\", to match EDITORIAL.md and this article's own heading. Historical records retain the bytes observed; that sentence was written while independent acceptance was still pending, and it is kept as the historical note it was. Independent acceptance has since been recorded; see sourceReview and the scenario results above.",
+  "independentEvidence": [
+    "docs/documentation/batches/DOC-024/README.md",
+    "docs/documentation/batches/DOC-024/independent-discovery.json",
+    "docs/documentation/batches/DOC-024/independent-reference.json",
+    "docs/documentation/batches/DOC-024/independent-reference-retry.json",
+    "docs/documentation/batches/DOC-024/independent-comparison-and-roles.json",
+    "docs/documentation/batches/DOC-024/independent-operator-reference.json",
+    "docs/documentation/batches/DOC-024/independent-operator-reference-retry.json",
+    "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
+    "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
+  ],
+  "verifiedAtBasis": "Each scenario's verifiedAt is the recorded time of that role's last passing observation for this article, taken from the independent records listed in its evidence. The article-level verifiedAt is the latest of those scenario times. It is not a single acceptance ceremony and no finer time is claimed.",
+  "sourceReview": {
+    "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+    "reviewerKind": "agent",
+    "method": "source-inspection",
+    "completedAt": "2026-09-08T11:28:16Z",
+    "recordedIn": "commit 2570232af33f8f0a4e77e90cb69c70a04898fae9 on docs/744-support-reference",
+    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+    "scope": [
+      "messages/en-US.json for every quoted UI label",
+      "apps/api/src/lib/uploads.ts for the upload ceiling, its MAX_UPLOAD_MB control and the 255-character filename bound",
+      "apps/api/src/lib/render-family.ts for the stored-type and preview families, including SVG as download-only",
+      "apps/api/src/lib/notifications/notifier.ts and catalog.ts for the in-app and email rule",
+      "apps/api/src/modules/contract-analysis/routes.ts and contract-envelopes/routes.ts for the Analysis target and the single live Envelope",
+      "CONTEXT.md and the canonical guides for the glossary, permission and Document rows",
+      "every internal link and heading anchor in the three articles"
+    ],
+    "outcome": "One correction was needed and applied: the reference article's title read \"file behaviour\", against the en-US rule in EDITORIAL.md and against the article's own \"File behavior and limits\" heading. Every other claim checked held. The same commit linked the batch record from WRITING-BATCHES.md and noted the aborted-run record shape.",
+    "note": "This source review is separate from the browser walkthroughs recorded in the scenarios below. Its completion time is the commit time of 2570232a converted to UTC, and that commit is the identity of this review's own correction. It does not cover any source read later in the session; those are recorded in sourceReviewAddendum or in the independent records that carry them, and none of them is backdated into this object."
+  },
+  "sourceReviewAddendum": {
+    "reason": "The reference's Deployment operator row says the role is not an app account role. The first operator observation listed the roles existing users hold, which cannot establish the set of roles the app permits, so the account-role enum was read during the audit.",
+    "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+    "reviewerKind": "agent",
+    "method": "source-inspection",
+    "scope": ["packages/db/src/schema/auth.ts for the USER_ROLES account-role enum"],
+    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+    "firstReadAt": "2026-09-08T12:18:42.809Z",
+    "observationsAt": ["2026-09-08T12:20:40.513Z", "2026-09-08T12:21:35.382Z"],
+    "completedAt": "2026-09-08T12:21:35.382Z",
+    "recordedIn": [
+      "docs/documentation/batches/DOC-024/independent-operator-reference.json",
+      "docs/documentation/batches/DOC-024/independent-operator-reference-retry.json"
+    ],
+    "outcome": "USER_ROLES declares administrator, legal_team_member, contributor and business_user, and the users table role column is typed to that enum. The matching browser evidence is the Administrator's role control in independent-comparison-and-roles.json.",
+    "note": "This addendum happened after the cold review and after commit 2570232a. It is dated by its own observations and is not folded into that commit's identity."
+  },
+  "previousEvidence": "docs/documentation/batches/dev-integration/previous-reference.json",
+  "copyOnlyReview": null
+}

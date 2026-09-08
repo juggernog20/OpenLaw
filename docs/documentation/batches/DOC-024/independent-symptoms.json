@@ -1,0 +1,104 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-024",
+  "issue": 744,
+  "independentReview": true,
+  "reviewerKind": "agent",
+  "walkthroughReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat), a different agent from the author",
+  "author": "Codex documentation author",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "frontend": "Working documentation preview at 127.0.0.1:43333 over the immutable configuration backend at 127.0.0.1:43332",
+  "browser": "Playwright 1.62.1 Chromium from the workspace, headless, one isolated context per identity; scripts written by the reviewer from the article text",
+  "startedAt": "2026-09-08T11:41:11.487Z",
+  "finishedAt": "2026-09-08T11:41:36.529Z",
+  "articleHashes": [
+    {
+      "articleId": "troubleshooting",
+      "contentSha256": "e2404361abcc621f8ee36fcd03dec23150bdabc0070d30678ba54caaabb9dd1b"
+    },
+    {
+      "articleId": "reference",
+      "contentSha256": "ba4b1b0cc96db761cc19f06fa88d5e4d9625355873cc2a15d8f6deb58193f5d6"
+    },
+    {
+      "articleId": "versions-and-support",
+      "contentSha256": "dee7dab08d34a3a1f7c6828ca2a2a240fd8f2fdba13e710587d52265d7e94ae7"
+    }
+  ],
+  "steps": [
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Wrong password gives the article's visible error, and the correct one still works",
+      "actual": "The app answered \"Check your email and password.\" and stayed on the sign-in page, which is the visible error the article tells the reader to give an Administrator. No account lockout followed and the correct password signed in on the next attempt.",
+      "startedAt": "2026-09-08T11:41:11.581Z",
+      "at": "2026-09-08T11:41:14.614Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "A used Portal sign-in link is refused and a fresh link is the documented recovery",
+      "actual": "The first use of the link signed in at /portal. Opening the same link again was refused with the app's expired/already-used wording, so \"request a new link and open the newest message\" is the actual recovery. The link itself is kept out of this record.",
+      "startedAt": "2026-09-08T11:41:14.620Z",
+      "at": "2026-09-08T11:41:18.944Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "A Confidential Contract answers the article's generic refusal, not a hint that it exists",
+      "actual": "As a Contributor with no team entry, C-55 showed \"Something went wrong.\" with a Reload control and no record title. Reloading again did not change access, exactly as the article says. Nothing in the article offered a way around the refusal.",
+      "startedAt": "2026-09-08T11:41:20.095Z",
+      "at": "2026-09-08T11:41:25.394Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "The article's escalation works: the Administrator adds the team entry the Contributor needs",
+      "actual": "Following the article's escalation, the Administrator added Ravi Menon as a Contributor team entry on C-55. This is fixture preparation performed as the person the article names, not a reader instruction.",
+      "startedAt": "2026-09-08T11:41:25.394Z",
+      "at": "2026-09-08T11:41:25.420Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "Reload after the team entry reaches the same record",
+      "actual": "With the qualifying team entry the same direct link opened C-55 \"Docs V-C49 confidential access review\". The recovery the article names is the one that worked; the refusal was access, not deletion.",
+      "startedAt": "2026-09-08T11:41:25.421Z",
+      "at": "2026-09-08T11:41:28.651Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "A Contributor cannot open the Entities module, so a linked record grants nothing",
+      "actual": "The Entities module did not open for the Contributor and its navigation entry is absent, which supports the reference statement that Confidential Entities need their own arrangement and that a Contract team entry gives no Entity access.",
+      "startedAt": "2026-09-08T11:41:28.651Z",
+      "at": "2026-09-08T11:41:31.393Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "Legal-managed actions the article lists are absent for a Contributor on shared work",
+      "actual": "On the shared Contract the Contributor had no Add approver, no Apply group and no Add task control (approvals surface read: \"Legal-managed details are read-only. You can edit the business Fields available to you. Approvals & signing 0 No approva\"). The article's instruction to ask Legal to perform the legal action is the only route the app leaves open.",
+      "startedAt": "2026-09-08T11:41:31.393Z",
+      "at": "2026-09-08T11:41:36.342Z",
+      "result": "pass"
+    }
+  ],
+  "passed": true,
+  "fixturePreparation": [
+    "Created two fictional Contracts as the Legal Team Member through the API: C-55 \"Docs V-C49 confidential access review\" (Confidential) and C-56 \"Docs V-C49 upload and approval review\".",
+    "Added the Contributor team entry as the Administrator, which is the person the troubleshooting article names for that escalation."
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not feature-owner approval.",
+    "Signing and Analysis remain unconfigured in this lab. Their checks record an unconfigured connector, which is not evidence that any live provider works."
+  ]
+}

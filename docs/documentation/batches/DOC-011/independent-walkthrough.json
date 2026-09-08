@@ -1,0 +1,505 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-011",
+  "issue": 731,
+  "independentReview": true,
+  "reviewerKind": "agent",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "author": "Codex documentation author",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "method": "browser-walkthrough",
+  "startedAt": "2026-09-07T08:46:35.623Z",
+  "finishedAt": "2026-09-07T08:53:41.841Z",
+  "frontend": "Committed conversations lab at port 43302 for every guide step; Mailpit at port 48427 for delivery checks; the lab worker's own clock, notifier, mailer, and pg-boss queue for the morning rounds",
+  "browser": "Playwright 1.62.1 Chromium from the workspace, headless, one isolated context per role (Daniel Okafor, Nadia Haddad, Ravi Menon, Jonas Weber) plus three fresh fictional accounts for the morning rounds; scripts written by the reviewer from the guide text, not the author's scripts",
+  "articleHashesTested": [
+    {
+      "articleId": "comments-and-activity",
+      "contentSha256": ["91b235629a33bd9e798fc887f6d92226d007ed7673ec767d55f65f04c85ab67f"]
+    },
+    {
+      "articleId": "notifications",
+      "contentSha256": ["7f0a7503cf875f644ef8642f7d5d6ac0c67e335c319d023faff93a30cd42f294"]
+    }
+  ],
+  "articleHashesCurrent": [
+    {
+      "articleId": "comments-and-activity",
+      "contentSha256": "91b235629a33bd9e798fc887f6d92226d007ed7673ec767d55f65f04c85ab67f"
+    },
+    {
+      "articleId": "notifications",
+      "contentSha256": "7f0a7503cf875f644ef8642f7d5d6ac0c67e335c319d023faff93a30cd42f294"
+    }
+  ],
+  "authorHashesHistorical": [
+    {
+      "articleId": "comments-and-activity",
+      "contentSha256": "1fdb1f7a545c7b5e2ffd2bd90bc832be95d5b26f87f1204324c5e6f6a19f536b"
+    },
+    {
+      "articleId": "notifications",
+      "contentSha256": [
+        "101fbc59c9d5f0fc3344f819aef96f6863d5be34c2851dbe37d196eb88fed54d",
+        "c94f9a85fad12d7fdf1856784fe2bf8e0e8bf541a1df7653b729c0c96cf4124e"
+      ]
+    }
+  ],
+  "fixturePreparation": [
+    "Reused the author's fixture identifiers: Contract C-33 and Matter M-22 converted from Jonas Weber's Requests R-17 and R-18, unconverted R-16, and the four role accounts; sign-in helpers and lab connection details were reused, the walkthrough steps were not.",
+    "Comment posts that arrange a notification event (mentions, Working team and Full thread comments, 27 seed mentions for the Mark all read check) were made through the comments API as the acting role; the notification steps under test were then followed in the browser.",
+    "Jonas Weber's extra Request for the New requests check was submitted through the Requests API from his Portal session; the intake guide owns the submission procedure.",
+    "Daniel Okafor removed and restored Ravi Menon's Contributor entry on C-33 through the team API for the access-removal check; an interrupted earlier attempt was restored the same way before the recorded run.",
+    "Role accounts' notification choices were returned to the seeded defaults through the preferences API before the recorded notifications run, because earlier interrupted attempts had left overrides.",
+    "Morning rounds: three fresh fictional accounts were invited through the Administrator API and set their passwords from Mailpit; a separate Contract C-35 with one due-today Task per account and two Key dates on the same date was created through the API; the timezone and briefing choices were made in the browser; each round was queued as notification.morning-round on the existing lab worker's pg-boss connection and awaited, with no clock override or configuration change.",
+    "Failed operations were produced by aborting the specific browser request (comment post, thread read, earlier page, preference save, bell read, older page) with Playwright routing; the app and worker were not changed.",
+    "HTTP corroboration (attachment downloads, unread counts, activity tiers, preference reads) is reported inside the step text and is not the walkthrough evidence."
+  ],
+  "corrections": [
+    "comments-and-activity, Attach paper to a comment: File is offered on Contract conversations only; Matter and Request conversations do not offer it. The Administrator walkthrough found no File control on the M-22 attachment and the API refuses filing from a non-Contract thread. The guide now says so.",
+    "comments-and-activity, Read the Activity feed: the Inbox Request page has a conversation but no History panel, and the converted record's History begins with the record's creation. The guide no longer lists the Legal Request page as a History location or claims Request-era entries stay readable on the Request.",
+    "Both scenarios were rerun in full against the corrected bytes; the tested hashes above are the current file hashes."
+  ],
+  "observations": [
+    "A download of comment paper that arrives while an Administrator's redaction of that comment is still in flight answered 500 (BlobNotFoundError) rather than 404, because the stored file is deleted before the comment row is marked redacted inside the same transaction. After the redaction completes the same URL answers 404. Recorded for product triage; the guide statement that redaction removes attached paper holds.",
+    "Portal Help with this page on a Request opens topic portal.request, whose article is still scoped (DOC-012), so it lists no guide yet; the Portal header Help on the same page combines the route topics and lists the comments and notifications guides. This is the documented in-progress state, not a Help mapping fault of this task.",
+    "With Dates approaching In-app off, the fresh Contributor account received no date reminder in the bell or the briefing email even with Dates Email on, as the guide states. Two same-date Key dates produced one named reminder for the Legal Team Member, the limitation issue #760 records."
+  ],
+  "steps": [
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "step": "Comments open on the newest page with the unread badge; Show older loads earlier comments at the head of the thread",
+      "result": "pass",
+      "actual": "Panel opened with 0 rows; Show older grew it to 50 and the head row changed (DO Daniel Okafor Working team 5 minutes ago Ind bell seed 17 -> DO Daniel Okafor Working team 8 minutes ago Ind bell seed 17); the unread count after reading the loaded conversation is 0.",
+      "at": "2026-09-07T08:48:14.844Z",
+      "ms": 161
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "step": "Choose an audience: three tiers offered, description follows the tier, posts appear under her name at the tier",
+      "result": "pass",
+      "actual": "Audience group offered Legal only, Working team, Full thread. Descriptions: Legal only: Visible to Administrators and Legal Team Members. | Working team: Visible to the legal team and Contributors on this record. | Full thread: Visible to everyone on this record, including the requester.. Posted one comment per tier; each row shows Nadia Haddad and its tier label.",
+      "at": "2026-09-07T08:48:15.411Z",
+      "ms": 567
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "step": "Mention a person: @ opens People you can mention; selection lands in Mentioned; a full-thread mention of the Administrator posts without a widen prompt",
+      "result": "pass",
+      "actual": "Typed @Dan; People you can mention listed Daniel Okafor; Mentioned showed Remove Daniel Okafor; Full thread post succeeded with no Widen the audience? dialog.",
+      "at": "2026-09-07T08:48:15.841Z",
+      "ms": 430
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "step": "Attach paper: Attach files lists the names, Remove drops one before posting, the post shows its attachment and the file is retrievable",
+      "result": "pass",
+      "actual": "Selected two PDFs, Remove took one out, post carries ind-nadia-a-1788770890491.pdf; GET /api/v1/comments/<id>/attachments/<id>?entityType=contract&entityId=01a07ac6-df8f-7d14-bbae-d2efa43aacfc answered 200 with a Content-Disposition attachment. File control on the attachment: present for the Legal Team Member.",
+      "at": "2026-09-07T08:48:16.083Z",
+      "ms": 242
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "step": "Edit or remove a post: Edit then Save shows edited; Cancel leaves text; Delete confirmation leaves Comment deleted by its author.",
+      "result": "pass",
+      "actual": "Cancel discarded the edit; Save produced the edited marker; Delete asked Delete this comment? and the row became Comment deleted by its author.",
+      "at": "2026-09-07T08:48:16.807Z",
+      "ms": 724
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "step": "Alternate: no Redact on the Legal Team Member menu and no actions on another author's comment; tier cannot be changed after posting",
+      "result": "pass",
+      "actual": "Own menu items: Edit, Delete (no Redact). Edit form offers 0 audience controls, so the tier cannot be changed.",
+      "at": "2026-09-07T08:48:17.124Z",
+      "ms": 317
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "step": "History panel lists entries in order, newest first, with Show older when more exist; a thread already fully on screen offers no Show older",
+      "result": "pass",
+      "actual": "After her posts the live re-read had merged the whole thread on screen (259 rows, Show older offered: true); unread for her now 0. History: 25 entries loaded, Show older grew it to 50; first entry: Nadia Haddad deleted a comment this minute",
+      "at": "2026-09-07T08:48:18.017Z",
+      "ms": 893
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "administrator",
+      "step": "Widen the audience?: a Legal only mention of the Contributor prompts; Cancel keeps the draft unposted; Widen and post posts at the proposed tier",
+      "result": "pass",
+      "actual": "Dialog text: Widen the audience? Ravi Menon cannot see a legal only comment. Post it at working team instead to reach them. Visible to the legal team and Contributors on this record. Cancel Widen and post. Cancel kept the draft and nothing was posted (thread read confirms). Widen and post published the comment at Working team.",
+      "at": "2026-09-07T08:48:19.248Z",
+      "ms": 576
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "administrator",
+      "step": "Attach paper with a Full thread post on the Matter: no File control there; on the Contract the Administrator's File control opens the filing dialog and can be cancelled",
+      "result": "pass",
+      "actual": "M-22 Full thread post carries ind-daniel-matter-1788770890491.pdf; File controls on the Matter attachment: 0. C-33 Working team post carries ind-daniel-contract-1788770890491.pdf; its File control opened File attachment (File attachment ind-daniel-contract-1788770890491.pdf Destination New Document New Version on an existing Document Document name Confidentia); Cancel closed it and the attachment shows no Filed to marker (DOC-017 owns the filing procedure).",
+      "at": "2026-09-07T08:48:22.106Z",
+      "ms": 2858
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "administrator",
+      "step": "Redact: Administrator sees Redact only on another author's comment; redacting a deleted comment and a comment with paper leaves Comment removed by an Administrator. and the file no longer downloads",
+      "result": "pass",
+      "actual": "Other-author menu: Redact. Redacting the author-deleted comment and the comment with paper both asked Redact this comment? and left Comment removed by an Administrator.; the earlier attachment URL now answers 404 for its author.",
+      "at": "2026-09-07T08:48:23.630Z",
+      "ms": 1524
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "administrator",
+      "step": "Edit and delete own comments; History shows the comment actions",
+      "result": "pass",
+      "actual": "Own Legal only post edited (edited marker) then deleted after the confirmation. History first comment entries: Daniel Okafor deleted a comment this minute || Daniel Okafor changed a comment this minute || Daniel Okafor commented this minute || Daniel Okafor removed a comment from the record this minute",
+      "at": "2026-09-07T08:48:24.677Z",
+      "ms": 1047
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "contributor",
+      "step": "Audience offers Working team and Full thread only; Legal only comments are absent; Working team posts and the redacted marker are visible",
+      "result": "pass",
+      "actual": "Audience values: working_team, full_thread. Nadia's Legal only text absent; her Working team comment and Daniel's widened comment present; Comment removed by an Administrator. present.",
+      "at": "2026-09-07T08:48:25.473Z",
+      "ms": 136
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "contributor",
+      "step": "Post with paper at Working team; mention the Legal Team Member; no File control; edit and delete own",
+      "result": "pass",
+      "actual": "Working team post carries ind-ravi-1788770890491.pdf with no File control for the Contributor; @Nad listed Nadia Haddad and posted at Working team without a widen prompt; own edit shows edited; own delete confirmed.",
+      "at": "2026-09-07T08:48:26.496Z",
+      "ms": 1023
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "contributor",
+      "step": "History as Contributor applies visibility limits",
+      "result": "pass",
+      "actual": "History opened with 75 entries naming actions only, never comment text (sample: Ravi Menon deleted a comment this minute Ravi Menon commented this minute Ravi Menon changed a comment this minu). HTTP corroboration: the Contributor's full activity read carries tiers full_thread/working_team while the Legal Team Member's carries full_thread/legal_only/working_team.",
+      "at": "2026-09-07T08:48:27.701Z",
+      "ms": 1205
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "contributor",
+      "step": "Recovery: sixth file refused at five, Remove restores capacity, a failed post keeps text and paper, retry posts once",
+      "result": "pass",
+      "actual": "Six selected files listed 5; after Remove and one more selection 5. Aborted POST showed The comment could not be posted. Try again. with text and ind-ravi-retry-1788770890491.pdf retained; retry answered 201 and the thread holds exactly one such comment.",
+      "at": "2026-09-07T08:48:28.220Z",
+      "ms": 519
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "contributor",
+      "step": "Recovery: failed conversation read recovers on reopening; failed Show older recovers on retry",
+      "result": "pass",
+      "actual": "Blocked read showed The conversation could not be read. Reopen the panel to try again.; reopening loaded the thread. Blocked earlier page showed The earlier comments could not be read. Try again. with the loaded rows kept; retry loaded more.",
+      "at": "2026-09-07T08:48:29.494Z",
+      "ms": 1274
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "business_user",
+      "step": "Reply from the Portal on the converted Request: Your requests, Conversation, only Full thread content, reply with paper under You, no picker/mention/actions",
+      "result": "pass",
+      "actual": "Legal only, Working team, and the widened comment and the Contributor's paper are absent; Nadia's Full thread comments present. Reply with ind-jonas-1788770890491.pdf appears under You. Audience radios: 0; Comment actions menus: 0; mention listbox on @: 0.",
+      "at": "2026-09-07T08:48:30.949Z",
+      "ms": 1455
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "business_user",
+      "step": "Reply on the unconverted Request; Legal reads both replies on the record and Request conversations",
+      "result": "pass",
+      "actual": "R-16 reply shown under You. On C-33 Nadia sees Jonas Weber's reply at Full thread with its paper; on /inbox/16 the Comments panel shows the R-16 reply; History control on the Legal Request page: absent.",
+      "at": "2026-09-07T08:48:33.289Z",
+      "ms": 2340
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "business_user",
+      "step": "Portal recovery: failed send keeps text and paper, retry sends once; failed read asks for a reload; failed earlier page retries",
+      "result": "pass",
+      "actual": "Aborted send showed The reply could not be sent. Try again. with text and paper kept; retry sent once. Blocked read showed the reload message and reload recovered. Blocked earlier page showed The earlier replies could not be read. Try again.; retry loaded more.",
+      "at": "2026-09-07T08:48:35.470Z",
+      "ms": 2181
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "business_user",
+      "step": "Portal shows Request status and conversation only, and the Matter conversion keeps the Full thread post visible on R-18",
+      "result": "pass",
+      "actual": "R-18 shows Daniel's Full thread Matter comment with its paper under Legal; History control count 0; status text present: true.",
+      "at": "2026-09-07T08:48:36.093Z",
+      "ms": 623
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "step": "Open a notification: badge, opening marks the displayed items read, an item opens its record, Show older loads more, Mark all read clears the rest",
+      "result": "pass",
+      "actual": "Badge text \"9+\" (button name Notifications, 28 unread); unread 28 before opening, 3 after the 25 displayed items were marked read; the mention item linked to /contracts/33 and opened C-33; With 3 items still unread beyond the displayed page Mark all read was offered and took unread to 0; Show older then grew the list from 25 to 50; with nothing unread the control is absent.",
+      "at": "2026-09-07T08:51:49.752Z",
+      "ms": 1627
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "step": "Change preferences outside the Portal: profile menu, Settings, Personal, Notifications; the grid, Briefing, and channel shapes match the guide",
+      "result": "pass",
+      "actual": "Reached /settings/notifications through the profile menu and the Personal group. Five staff groups with In-app/Email switches; Dates approaching has In-app only; Knowledge items has Email only; Briefing offers Approvals, Tasks, Dates, Obligations, Intake email switches.",
+      "at": "2026-09-07T08:51:49.976Z",
+      "ms": 223
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "step": "Email off keeps the bell item and sends no mail; Email on delivers; In-app off stops both; a reload confirms each saved choice",
+      "result": "pass",
+      "actual": "Email off (after the mail queue settled): unread rose by one and the newest item reads Ravi Menon mentioned you; no mention mail in 3 s. Email on: mail arrived naming Ravi Menon. In-app off: no new mention item and unread unchanged, no mail after 3 s. Both switches restored to on and confirmed after reload.",
+      "at": "2026-09-07T08:52:48.986Z",
+      "ms": 59010
+    },
+    {
+      "article": "notifications",
+      "role": "administrator",
+      "step": "Activity on your records: as Owner of C-33 a comment reaches the bell with no mail by default; Email on delivers; the item opens the record",
+      "result": "pass",
+      "actual": "Default Activity Email off: Nadia's comment produced a commented on bell item and no New comment on mail in 3 s; Email on: mail arrived (Hello Daniel Okafor,\r); switch returned to off. Bell item /contracts/33 opened C-33.",
+      "at": "2026-09-07T08:53:02.851Z",
+      "ms": 13865
+    },
+    {
+      "article": "notifications",
+      "role": "administrator",
+      "step": "New requests: a Request submitted from the Portal reaches the Administrator and Legal Team Member bells and opens the Inbox Request; the Contributor sees the switch but receives nothing",
+      "result": "pass",
+      "actual": "R-28 produced bell items for Daniel and Nadia; Daniel's item /inbox/28 opened /inbox/28. Ravi's pane shows New requests In-app (true) yet his bell has no item for it.",
+      "at": "2026-09-07T08:53:05.291Z",
+      "ms": 2440
+    },
+    {
+      "article": "notifications",
+      "role": "administrator",
+      "step": "Recovery: a failed preference save shows the error and the switch returns; a failed bell read recovers on reopening; a failed Show older retries",
+      "result": "pass",
+      "actual": "Blocked PATCH: The change could not be saved. Try again. shown and New requests Email stayed false (confirmed after reload). Blocked read: Notifications could not be read. Close this and open it again.; reopening listed items. Blocked older page: The older notifications could not be read. Try again. with 25 rows kept; retry loaded more.",
+      "at": "2026-09-07T08:53:07.067Z",
+      "ms": 1776
+    },
+    {
+      "article": "notifications",
+      "role": "contributor",
+      "step": "A mention reaches the Contributor with one Assigned to you item and opens the record; removing his team entry hides the record's items and refuses the old destination; restoring the entry restores both",
+      "result": "pass",
+      "actual": "Unread rose by exactly one and the newest item reads Daniel Okafor mentioned you (no separate commented on item; C-33 items on the page before: 25); /contracts/33 opened C-33. After Daniel removed his Contributor entry (fixture operation) the bell listed no C-33 items and the same destination showed Something went wrong.; after the entry was restored the item returned and C-33 opened.",
+      "at": "2026-09-07T08:53:09.942Z",
+      "ms": 2874
+    },
+    {
+      "article": "notifications",
+      "role": "business_user",
+      "step": "Portal bell: items concern own Requests and open the Request, including the converted one; Notification settings offers Request updates only",
+      "result": "pass",
+      "actual": "Nadia's Full thread comment produced a Portal bell item /portal/requests/17 that opened R-17 (converted to C-33) and a mail \"Hello Jonas Weber,\r\". Notification settings shows Request updates In-app and Email only; no Briefing or staff groups (2 switches).",
+      "at": "2026-09-07T08:53:15.871Z",
+      "ms": 5929
+    },
+    {
+      "article": "notifications",
+      "role": "business_user",
+      "step": "Portal preferences: Email off keeps the bell item with no mail; In-app off stops both; restored choices deliver again; a failed save shows the error",
+      "result": "pass",
+      "actual": "Email off: unread rose to 1 and the bell listed the Request item, and no \"replied\" mail in 3 s. In-app off: unread count unchanged at 0 and no mail. Both restored: mail arrived. Blocked save showed The change could not be saved. Try again. and Email stayed on.",
+      "at": "2026-09-07T08:53:41.111Z",
+      "ms": 25240
+    },
+    {
+      "article": "notifications",
+      "role": "business_user",
+      "step": "Portal recovery: a failed bell read asks to close and reopen; reopening lists items",
+      "result": "pass",
+      "actual": "Blocked Portal read showed Notifications could not be read. Close this and open it again.; reopening listed the Request items.",
+      "at": "2026-09-07T08:53:41.841Z",
+      "ms": 730
+    },
+    {
+      "article": "notifications",
+      "role": "administrator",
+      "step": "Initial choices on a fresh account match the guide table and the Briefing defaults",
+      "result": "pass",
+      "actual": "Fresh account: Assigned to you In-app+Email on; Activity In-app on, Email off; Dates approaching In-app on; New requests In-app on, Email off; Knowledge Email on; Briefing Approvals/Tasks/Dates/Obligations on, Intake off.",
+      "at": "2026-09-07T08:46:40.501Z",
+      "ms": 589
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "step": "Initial choices on a fresh account match the guide table and the Briefing defaults",
+      "result": "pass",
+      "actual": "Fresh account: Assigned to you In-app+Email on; Activity In-app on, Email off; Dates approaching In-app on; New requests In-app on, Email off; Knowledge Email on; Briefing Approvals/Tasks/Dates/Obligations on, Intake off.",
+      "at": "2026-09-07T08:46:41.096Z",
+      "ms": 594
+    },
+    {
+      "article": "notifications",
+      "role": "contributor",
+      "step": "Initial choices on a fresh account match the guide table and the Briefing defaults",
+      "result": "pass",
+      "actual": "Fresh account: Assigned to you In-app+Email on; Activity In-app on, Email off; Dates approaching In-app on; New requests In-app on, Email off; Knowledge Email on; Briefing Approvals/Tasks/Dates/Obligations on, Intake off.",
+      "at": "2026-09-07T08:46:41.686Z",
+      "ms": 590
+    },
+    {
+      "article": "notifications",
+      "role": "administrator",
+      "step": "Set the daily briefing and timezone through the UI; a saved timezone before 08:00 defers the briefing on a real morning round",
+      "result": "pass",
+      "actual": "Profile timezone America/Chicago (local hour 3); Tasks Email true, Dates Email false, Dates approaching In-app true.",
+      "at": "2026-09-07T08:46:43.312Z",
+      "ms": 1626
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "step": "Set the daily briefing and timezone through the UI; a saved timezone before 08:00 defers the briefing on a real morning round",
+      "result": "pass",
+      "actual": "Profile timezone America/Chicago (local hour 3); Tasks Email false, Dates Email true, Dates approaching In-app true.",
+      "at": "2026-09-07T08:46:44.917Z",
+      "ms": 1605
+    },
+    {
+      "article": "notifications",
+      "role": "contributor",
+      "step": "Set the daily briefing and timezone through the UI; a saved timezone before 08:00 defers the briefing on a real morning round",
+      "result": "pass",
+      "actual": "Profile timezone America/Chicago (local hour 3); Tasks Email true, Dates Email true, Dates approaching In-app false.",
+      "at": "2026-09-07T08:46:46.402Z",
+      "ms": 1485
+    },
+    {
+      "article": "notifications",
+      "role": "administrator",
+      "step": "Round before 08:00 local: no briefing mail and no daily summary in the bell",
+      "result": "pass",
+      "actual": "Morning round ab1fd2e4-62ad-43ac-9489-b82bbeb19134 completed at 2026-09-07T08:46:48.578Z; America/Chicago local hour 3: no briefing mail, no daily summary item.",
+      "at": "2026-09-07T08:46:49.079Z",
+      "ms": 11
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "step": "Round before 08:00 local: no briefing mail and no daily summary in the bell",
+      "result": "pass",
+      "actual": "Morning round ab1fd2e4-62ad-43ac-9489-b82bbeb19134 completed at 2026-09-07T08:46:48.578Z; America/Chicago local hour 3: no briefing mail, no daily summary item.",
+      "at": "2026-09-07T08:46:49.088Z",
+      "ms": 8
+    },
+    {
+      "article": "notifications",
+      "role": "contributor",
+      "step": "Round before 08:00 local: no briefing mail and no daily summary in the bell",
+      "result": "pass",
+      "actual": "Morning round ab1fd2e4-62ad-43ac-9489-b82bbeb19134 completed at 2026-09-07T08:46:48.578Z; America/Chicago local hour 3: no briefing mail, no daily summary item.",
+      "at": "2026-09-07T08:46:49.096Z",
+      "ms": 8
+    },
+    {
+      "article": "notifications",
+      "role": "administrator",
+      "step": "Round after 08:00 local: the briefing carries only the chosen sections, the same-date Key dates limitation shows, and the bell summary opens Home",
+      "result": "pass",
+      "actual": "Round edc8bd68-e57f-42f5-b8c4-6fae66d308d4 at 2026-09-07T08:46:52.725Z; Asia/Dubai local hour 12. Mail Task section present; date labels named: 0 of 2 same-date Key dates (none), expected dates absent; bell date reminder items 1; bell summary \"Your daily briefing is ready this minute\" opened Home.",
+      "at": "2026-09-07T08:46:53.466Z",
+      "ms": 693
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "step": "Round after 08:00 local: the briefing carries only the chosen sections, the same-date Key dates limitation shows, and the bell summary opens Home",
+      "result": "pass",
+      "actual": "Round edc8bd68-e57f-42f5-b8c4-6fae66d308d4 at 2026-09-07T08:46:52.725Z; Asia/Dubai local hour 12. Mail Task section absent; date labels named: 1 of 2 same-date Key dates (Ind morning date A 1788770795671), expected dates present; bell date reminder items 1; bell summary \"Your daily briefing is ready this minute\" opened Home.",
+      "at": "2026-09-07T08:46:54.165Z",
+      "ms": 699
+    },
+    {
+      "article": "notifications",
+      "role": "contributor",
+      "step": "Round after 08:00 local: the briefing carries only the chosen sections, the same-date Key dates limitation shows, and the bell summary opens Home",
+      "result": "pass",
+      "actual": "Round edc8bd68-e57f-42f5-b8c4-6fae66d308d4 at 2026-09-07T08:46:52.725Z; Asia/Dubai local hour 12. Mail Task section present; date labels named: 0 of 2 same-date Key dates (none), expected dates absent; bell date reminder items 0; bell summary \"Your daily briefing is ready this minute\" opened Home.",
+      "at": "2026-09-07T08:46:54.848Z",
+      "ms": 683
+    },
+    {
+      "article": "notifications",
+      "role": "administrator",
+      "step": "Another round on the same local day sends no second briefing",
+      "result": "pass",
+      "actual": "Round 370d4b37-3b51-41d2-80fb-7e48e56cf693 at 2026-09-07T08:46:56.580Z left the briefing mail count at 1.",
+      "at": "2026-09-07T08:46:57.004Z",
+      "ms": 6
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "step": "Another round on the same local day sends no second briefing",
+      "result": "pass",
+      "actual": "Round 370d4b37-3b51-41d2-80fb-7e48e56cf693 at 2026-09-07T08:46:56.580Z left the briefing mail count at 1.",
+      "at": "2026-09-07T08:46:57.007Z",
+      "ms": 3
+    },
+    {
+      "article": "notifications",
+      "role": "contributor",
+      "step": "Another round on the same local day sends no second briefing",
+      "result": "pass",
+      "actual": "Round 370d4b37-3b51-41d2-80fb-7e48e56cf693 at 2026-09-07T08:46:56.580Z left the briefing mail count at 1.",
+      "at": "2026-09-07T08:46:57.011Z",
+      "ms": 4
+    }
+  ],
+  "morningRounds": {
+    "contract": "C-35",
+    "timezoneBefore": "America/Chicago",
+    "timezoneAfter": "Asia/Dubai",
+    "date": "2026-09-07",
+    "keyDates": ["Ind morning date A 1788770795671", "Ind morning date B 1788770795671"],
+    "accounts": [
+      {
+        "role": "administrator",
+        "task": "Ind morning Task 1788770795671 administrator"
+      },
+      {
+        "role": "legal_team_member",
+        "task": "Ind morning Task 1788770795671 legal_team_member"
+      },
+      {
+        "role": "contributor",
+        "task": "Ind morning Task 1788770795671 contributor"
+      }
+    ]
+  },
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "Mail absence was observed for 3 seconds after each controlled event once the Mailpit queue had settled, paired with positive deliveries through the same worker; this bounds the lab, not an arbitrary relay.",
+    "Filing an attachment, the Administrator lead-time procedure, and Document Versions were not performed; their guides (DOC-017, DOC-021) are unpublished and both articles stay in review until they pass.",
+    "The morning rounds were queued by the reviewer rather than waiting for the hourly cron; the worker served them with its real clock and rules."
+  ]
+}

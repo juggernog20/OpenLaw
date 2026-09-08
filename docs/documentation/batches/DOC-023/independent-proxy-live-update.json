@@ -1,0 +1,38 @@
+{
+  "name": "independent-proxy-live-update",
+  "scenario": "V-C45",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T10:19:39.323Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-install",
+  "articleHashes": [
+    {
+      "articleId": "deployment-configuration",
+      "contentSha256": "d61044fe1f237dfaa0d4087d576a39434e2d5b57a30a8ac5816808daf2fe335b"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Prepare a reachable Contract and a second signed-in person",
+      "actual": "Contract 12 (id 01a08087-d2ba-7e15-993e-a1f847b5a843) was created through the HTTPS origin, and the fictional Legal Team Member Nadia Live holds an activated account reached from a real invitation through the same origin.",
+      "result": "pass",
+      "startedAt": "2026-09-08T10:19:39.753Z",
+      "at": "2026-09-08T10:19:44.389Z"
+    },
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "A change by a second signed-in browser reaches the first without a reload",
+      "result": "fail",
+      "startedAt": "2026-09-08T10:19:44.389Z",
+      "error": "post /contracts/12/comments returned 404: {\"type\":\"about:blank\",\"title\":\"Not found\",\"status\":404,\"detail\":\"Route POST /api/v1/contracts/12/comments does not exist.\",\"instance\":\"/api/v1/contracts/12/comments\"}",
+      "at": "2026-09-08T10:19:46.320Z"
+    }
+  ],
+  "passed": false,
+  "supersededBy": "independent-proxy-live-update-retry2",
+  "note": "The Contract and the second person were prepared here. Posting the comment used /contracts/:number/comments, which does not exist; the route is POST /comments with the record named in the body."
+}

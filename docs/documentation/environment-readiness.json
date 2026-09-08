@@ -1,0 +1,120 @@
+{
+  "kind": "environment-preflight",
+  "articleVerification": false,
+  "appCommit": "a3ce2501dab2b33e8598b7ae31da597a6ed26564",
+  "appImageId": "sha256:bc412bf331a5cbb682eb1e9cf8cc103d2f17c34cf8b6a3b097dc136239be5ae3",
+  "engineImageId": "sha256:7473cfa20513ac79908a40737a6ad69c2237355601e4d5cc40fb86cee8fb9ed4",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:bc412bf331a5cbb682eb1e9cf8cc103d2f17c34cf8b6a3b097dc136239be5ae3"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:7473cfa20513ac79908a40737a6ad69c2237355601e4d5cc40fb86cee8fb9ed4"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:8a4b045886180c64f518ca6a4b0791b15fb997f3b3b619bd5ee141914668db55"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:bc412bf331a5cbb682eb1e9cf8cc103d2f17c34cf8b6a3b097dc136239be5ae3"
+    }
+  ],
+  "seed": {
+    "status": "complete",
+    "scale": "light",
+    "randomSeed": 7,
+    "startedAt": "2026-09-06T22:42:26.797Z",
+    "ai": "disabled",
+    "signing": "unconfigured",
+    "completedAt": "2026-09-06T22:42:37.191Z"
+  },
+  "checkedAt": "2026-09-06T22:50:24.939Z",
+  "reviewerKind": "agent",
+  "checks": [
+    {
+      "email": "daniel.okafor@helix.example",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "result": "pass",
+      "actual": "Password sign-in reached Home in a separate browser context; /me confirmed the intended role."
+    },
+    {
+      "email": "nadia.haddad@helix.example",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "result": "pass",
+      "actual": "Password sign-in reached Home in a separate browser context; /me confirmed the intended role."
+    },
+    {
+      "email": "ravi.menon@helix.example",
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "result": "pass",
+      "actual": "Password sign-in reached Home in a separate browser context; /me confirmed the intended role."
+    },
+    {
+      "email": "jonas.weber@helix.example",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "result": "pass",
+      "actual": "A newly issued Mailpit magic link reached the Business Portal in a separate browser context; /me confirmed the intended role."
+    }
+  ],
+  "task": "DOC-005",
+  "purpose": "Environment readiness only; no article has been walked through or verified.",
+  "isolationChecks": {
+    "checkedAt": "2026-09-06T22:55:21.633Z",
+    "checks": [
+      {
+        "label": "Traversal name rejected",
+        "result": "pass"
+      },
+      {
+        "label": "Unknown lab rejected",
+        "result": "pass"
+      },
+      {
+        "label": "Existing lab cannot be overwritten",
+        "result": "pass"
+      },
+      {
+        "label": "Modified source rejected",
+        "result": "pass"
+      },
+      {
+        "label": "Modified configuration rejected",
+        "result": "pass"
+      },
+      {
+        "label": "Ownership mismatch blocks destruction",
+        "result": "pass"
+      },
+      {
+        "label": "Fresh app starts with inherited deployment and remote Docker variables excluded",
+        "result": "pass"
+      },
+      {
+        "label": "Owned fixture containers, volumes and state removed successfully",
+        "result": "pass"
+      },
+      {
+        "label": "Failed extraction removes the partial lab and preserves the original error",
+        "result": "pass",
+        "checkedAt": "2026-09-06T23:07:00.919Z"
+      }
+    ]
+  },
+  "limitations": [
+    "The app snapshot predates Help implementation.",
+    "AI is disabled and Signing is unconfigured; no real provider setup has been verified.",
+    "Upgrade, restore, article walkthroughs and publication scenarios remain not-run.",
+    "Checks were performed by an agent, not a human user study."
+  ]
+}

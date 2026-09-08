@@ -1,0 +1,37 @@
+{
+  "startedAt": "2026-09-08T13:11:44.077Z",
+  "reviewer": "Codex DOC-025 author (agent)",
+  "method": "browser-walkthrough",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "sha256:c585d8683816050bdf00568a6f4e1983f14fb3b364ac8202f4f4e40dab9ef52c",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "steps": [
+    {
+      "role": "anonymous",
+      "action": "Actual Chromium browser zoom 200%",
+      "at": "2026-09-08T13:11:45.606Z",
+      "result": "pass",
+      "actual": {
+        "before": {
+          "width": 1280,
+          "dpr": 1,
+          "cssZoom": "1"
+        },
+        "after": {
+          "width": 640,
+          "dpr": 2,
+          "cssZoom": "1",
+          "overflow": false
+        },
+        "chromeTabsGetZoom": 2
+      }
+    }
+  ],
+  "completedAt": "2026-09-08T13:11:45.650Z",
+  "articleHashAssociation": {
+    "articleId": "reference",
+    "contentSha256": "ba4b1b0cc96db761cc19f06fa88d5e4d9625355873cc2a15d8f6deb58193f5d6",
+    "associatedAt": "2026-09-08T13:15:11.432061Z",
+    "basis": "Associated after capture; verified byte-identical to reference.md at d6df148c and the hash captured in author-discovery.json. This guide was unchanged throughout these zoom runs."
+  }
+}

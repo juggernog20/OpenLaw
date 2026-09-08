@@ -1,0 +1,56 @@
+{
+  "articleId": "matter-work",
+  "contentSha256": "020bf3cc086bafd7efbd28255bb5c607fb5864836abef8e58d17336ae12a2836",
+  "appCommit": "67dbe788c73641a02218e2c0a0cbcdd5a0682a87",
+  "buildId": "Source integration only; no walkthrough build recorded for this article revision",
+  "environment": "dev integration source review",
+  "author": "Codex integration author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "blocked",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-MATTERS.md",
+    "apps/web/src/components/matters/tasks-card.tsx",
+    "apps/web/src/components/matters/key-dates-card.tsx",
+    "apps/web/src/components/matters/related-matters-card.tsx",
+    "apps/web/src/components/matters/relation-dialog.tsx",
+    "apps/web/src/components/matters/linked-contracts-card.tsx",
+    "apps/web/src/components/contracts/contract-matter-link-dialog.tsx",
+    "apps/api/src/modules/matter-tasks/routes.ts",
+    "apps/api/src/modules/matter-key-dates/routes.ts",
+    "apps/api/src/modules/matter-relations/routes.ts",
+    "apps/api/src/modules/contract-matters/routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C24",
+      "coverage": ["C24"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Tasks, Key dates, Matter relationships, and linked Contracts remain distinct and accurate, and History records the changes. Invalid hierarchy loops, restricted targets, and unauthorized changes do not expose or alter hidden work.",
+      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/dev-integration/README.md"]
+    },
+    {
+      "id": "V-C24",
+      "coverage": ["C24"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Tasks, Key dates, Matter relationships, and linked Contracts remain distinct and accurate, and History records the changes. Invalid hierarchy loops, restricted targets, and unauthorized changes do not expose or alter hidden work.",
+      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/dev-integration/README.md"]
+    }
+  ],
+  "authorEvidence": [],
+  "limitations": [
+    "This article changed during the dev integration and requires fresh technical and walkthrough acceptance. Its earlier hash, reviewers, timestamps and observations are preserved in previousEvidence.",
+    "No full-suite acceptance, human proofreading or publication is claimed. DOC-025 must verify the combined candidate."
+  ],
+  "previousEvidence": "docs/documentation/batches/dev-integration/previous-matter-work.json",
+  "copyOnlyReview": null
+}

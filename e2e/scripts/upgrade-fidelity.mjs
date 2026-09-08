@@ -30,6 +30,16 @@
  * node e2e/scripts/upgrade-fidelity.mjs verify --in  /tmp/fingerprint.json
  * ```
  *
+ * **The fingerprint file is the harness, not an input.** `seed` writes it
+ * from what the baseline install answered, and `verify` reads it back into
+ * the requests it makes. Both ends are the same CI job: one disposable
+ * stack it started, one file under its own `RUNNER_TEMP`, one `BASE_URL`
+ * from its own environment. Nothing outside the job writes that file or
+ * answers those calls. A scanner reading this sees file data reaching a
+ * request and network data reaching a file, and both are true — they are
+ * how a test carries state across the upgrade it is testing. Do not
+ * "fix" the round trip; removing it removes the gate.
+ *
  * **It has no dependencies and is not built.** It runs on plain `node`
  * against whichever stack is up, which is what lets one copy drive both
  * versions across a `git checkout` in the middle of a CI job. CI copies
@@ -667,7 +677,12 @@ async function seed() {
   // TECH-022 these land in the clear, and the upgrade is what seals
   // them — so this row is the one that proves the boot pass works
   // against real data rather than only against a fixture.
+  // `updateMode` is a field the baseline does not know, so it drops it and
+  // the row lands in the only mode that release had. A build that does know
+  // it saves the same mode, which is what lets the verify half below assert
+  // one answer whichever release seeded.
   await put("/api/v1/signing-connectors/docusign", {
+    updateMode: "webhook",
     environment: "demo",
     integrationKey: "upgrade-fidelity-integration-key",
     apiUserId: randomUUID(),
@@ -1199,6 +1214,10 @@ async function verify(fingerprint) {
     connector.hasPrivateKey && connector.hasWebhookSecret,
     "the signing connector lost its credentials across the upgrade — they were readable before it",
   );
+  // SET-009 gives new connectors the polling default. A connector that
+  // existed before the upgrade keeps answering deliveries, which is a
+  // promise only populated data can check.
+  same(connector.updateMode, "webhook", "connector update mode");
 
   const feed = await get(
     `/api/v1/activity?entityType=contract&entityId=${encodeURIComponent(fingerprint.comment.contractId)}`,

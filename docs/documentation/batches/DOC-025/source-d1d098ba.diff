@@ -1,0 +1,443 @@
+diff --git a/apps/api/openapi.json b/apps/api/openapi.json
+index 2daff2a9..78f123d7 100644
+--- a/apps/api/openapi.json
++++ b/apps/api/openapi.json
+@@ -34074,7 +34074,7 @@
+     "/api/v1/knowledge/{id}/documents": {
+       "get": {
+         "operationId": "listKnowledgeItemDocuments",
+-        "summary": "The Documents owned by one live Knowledge Item, newest first, with each version chain",
++        "summary": "The Documents owned by one Knowledge Item, including archived items, newest first, with each version chain",
+         "tags": ["documents"],
+         "parameters": [
+           {
+diff --git a/apps/api/src/modules/documents/routes.ts b/apps/api/src/modules/documents/routes.ts
+index fc661e78..71f638de 100644
+--- a/apps/api/src/modules/documents/routes.ts
++++ b/apps/api/src/modules/documents/routes.ts
+@@ -1761,7 +1761,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
+       schema: {
+         operationId: "listKnowledgeItemDocuments",
+         summary:
+-          "The Documents owned by one live Knowledge Item, newest first, with each version chain",
++          "The Documents owned by one Knowledge Item, including archived items, newest first, with each version chain",
+         tags: ["documents"],
+         params: EntityParams,
+         querystring: ArchivedQuery.extend({ cursor: CursorSchema.optional() }),
+@@ -1773,12 +1773,17 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
+         .select({
+           id: knowledgeItems.id,
+           primaryDocumentId: knowledgeItems.primaryDocumentId,
+-          archivedAt: knowledgeItems.archivedAt,
+         })
+         .from(knowledgeItems)
+         .where(eq(knowledgeItems.id, request.params.id))
+         .limit(1);
+-      if (!item || item.archivedAt) throw httpError(404, "No Knowledge Item exists with this id.");
++      // An archived item still reads, as an archived contract does
++      // (#776). Archiving is a soft delete, the record read already
++      // answers an archived item, and restore is offered on the page
++      // this list feeds, so a 404 here only broke the way back. Writes
++      // stay frozen, because every document write asserts a live
++      // owner, and the portal gate is untouched.
++      if (!item) throw httpError(404, "No Knowledge Item exists with this id.");
+       return paperOf(
+         app.db,
+         request.user,
+diff --git a/apps/api/src/modules/knowledge/documents.test.ts b/apps/api/src/modules/knowledge/documents.test.ts
+index 388cd5a6..6f6fdcc3 100644
+--- a/apps/api/src/modules/knowledge/documents.test.ts
++++ b/apps/api/src/modules/knowledge/documents.test.ts
+@@ -2,6 +2,7 @@
+ 
+ /** M28's file-first Knowledge HTTP contract (#598). */
+ import { afterAll, beforeAll, describe, expect, it } from "vitest";
++import { z } from "zod";
+ import { eq, knowledgeTypes, users } from "@openlaw/db";
+ import { provisionUser } from "../../auth/instance.js";
+ import {
+@@ -85,6 +86,99 @@ beforeAll(async () => {
+ afterAll(async () => harness.stop());
+ 
+ describe("file-first Knowledge", () => {
++  it("keeps archived item paper readable for staff restoration without restoring Portal reach", async () => {
++    const created = await harness.app.inject({
++      method: "POST",
++      url: "/api/v1/knowledge/from-files",
++      cookies: memberCookies,
++      ...multipart({ knowledgeTypeId: templateId }, [
++        { filename: "Restore guide.pdf", contentType: "application/pdf", content: "%PDF retained" },
++      ]),
++    });
++    expect(created.statusCode, created.body).toBe(201);
++    const [item] = z
++      .object({
++        knowledgeItems: z.tuple([z.object({ id: z.string(), primaryDocumentId: z.string() })]),
++      })
++      .parse(created.json()).knowledgeItems;
++    const base = `/api/v1/knowledge/${item.id}`;
++    for (const [method, url, payload] of [
++      ["PATCH", base, { audience: "everyone" }],
++      ["POST", `${base}/publish`, {}],
++    ] as const) {
++      const response = await harness.app.inject({ method, url, payload, cookies: memberCookies });
++      expect(response.statusCode, response.body).toBe(200);
++    }
++    const portalUrl = `/api/v1/portal/knowledge/${item.id}`;
++    const before = await harness.app.inject({
++      method: "GET",
++      url: portalUrl,
++      cookies: businessCookies,
++    });
++    expect(before.statusCode, before.body).toBe(200);
++    const downloadUrl = before.json().knowledgeItem.documents[0].currentVersion
++      .downloadUrl as string;
++    const archived = await harness.app.inject({
++      method: "POST",
++      url: `${base}/archive`,
++      cookies: memberCookies,
++      payload: {},
++    });
++    expect(archived.statusCode, archived.body).toBe(200);
++    const adminCookies = await signInCookies(harness.app, TEST_ADMIN.email, TEST_ADMIN.password);
++    for (const cookies of [memberCookies, adminCookies]) {
++      const record = await harness.app.inject({ method: "GET", url: base, cookies });
++      expect(record.statusCode, record.body).toBe(200);
++      expect(record.json().knowledgeItem.archivedAt).not.toBeNull();
++      const paper = await harness.app.inject({ method: "GET", url: `${base}/documents`, cookies });
++      expect(paper.statusCode, paper.body).toBe(200);
++      expect(paper.json().documents[0].id).toBe(item.primaryDocumentId);
++      expect(paper.json().documents[0].versions).toHaveLength(1);
++    }
++    for (const cookies of [contributorCookies, businessCookies]) {
++      const paper = await harness.app.inject({ method: "GET", url: `${base}/documents`, cookies });
++      expect(paper.statusCode, paper.body).toBe(403);
++    }
++    for (const url of [portalUrl, downloadUrl]) {
++      const response = await harness.app.inject({ method: "GET", url, cookies: businessCookies });
++      expect(response.statusCode, response.body).toBe(404);
++    }
++    const upload = await harness.app.inject({
++      method: "POST",
++      url: `${base}/documents`,
++      cookies: memberCookies,
++      ...multipart({}, [
++        { filename: "Blocked.pdf", contentType: "application/pdf", content: "%PDF blocked" },
++      ]),
++    });
++    expect(upload.statusCode, upload.body).toBe(409);
++    const restored = await harness.app.inject({
++      method: "POST",
++      url: `${base}/restore`,
++      cookies: memberCookies,
++      payload: {},
++    });
++    expect(restored.statusCode, restored.body).toBe(200);
++    const download = await harness.app.inject({
++      method: "GET",
++      url: downloadUrl,
++      cookies: businessCookies,
++    });
++    expect(download.statusCode, download.body).toBe(200);
++    expect(download.body).toBe("%PDF retained");
++    // Archived again on the way out, and not only for tidiness: this
++    // item's primary is a PDF, and the next case asserts the exact
++    // rows `format=pdf` answers. The library listing leaves archived
++    // items out, so putting it back is what keeps that list to one.
++    const cleanup = await harness.app.inject({
++      method: "POST",
++      url: `${base}/archive`,
++      cookies: memberCookies,
++      payload: {},
++    });
++    expect(cleanup.statusCode, cleanup.body).toBe(200);
++  });
++
+   it("creates one draft per file and exposes the primary format and owner in the repository", async () => {
+     const created = await harness.app.inject({
+       method: "POST",
+diff --git a/apps/web/src/components/comments/comment-applet.tsx b/apps/web/src/components/comments/comment-applet.tsx
+index 682c8064..c09b2a8b 100644
+--- a/apps/web/src/components/comments/comment-applet.tsx
++++ b/apps/web/src/components/comments/comment-applet.tsx
+@@ -410,7 +410,10 @@ export function useCommentApplet({
+         // what is here" into a one-row conversation, under a load error
+         // that is still on screen and beside a count claiming 1.
+         onPosted={(posted) =>
+-          setComments((current) => (current === null ? null : [...current, posted]))
++          setComments((current) =>
++            // A live read may already include this post, or a later edit of it.
++            current === null ? null : mergeCommentWindow([posted], current),
++          )
+         }
+         // A correction answers with the row as it now stands, so the
+         // thread takes the server's word for it rather than guessing at
+diff --git a/apps/web/src/components/portal/request-thread.tsx b/apps/web/src/components/portal/request-thread.tsx
+index 0616efc8..bf6d1f35 100644
+--- a/apps/web/src/components/portal/request-thread.tsx
++++ b/apps/web/src/components/portal/request-thread.tsx
+@@ -249,7 +249,10 @@ export function RequestThread({
+         )}
+         <Composer
+           requestId={requestId}
+-          onPosted={(comment) => setComments((current) => [...current, comment])}
++          onPosted={(comment) =>
++            // Keep the live read's row if it arrived before the posting response.
++            setComments((current) => mergeCommentWindow([comment], current))
++          }
+         />
+       </div>
+     </section>
+diff --git a/apps/web/src/routes/contract-record.test.tsx b/apps/web/src/routes/contract-record.test.tsx
+index 43054049..0c919c16 100644
+--- a/apps/web/src/routes/contract-record.test.tsx
++++ b/apps/web/src/routes/contract-record.test.tsx
+@@ -4454,6 +4454,46 @@ describe("the contract record's comment applet (M9/2)", () => {
+   });
+ 
+   describe("live comment prompts", () => {
++    it("keeps one comment when a live read arrives before the posting response", async () => {
++      const user = userEvent.setup();
++      const sources = stubEventSource();
++      const posted = comment("c-posted", "The signed copy is ready.", "working_team");
++      const comments = commentsApi();
++      const record = pageApi(comments);
++      let finishPost!: (response: Response) => void;
++      stubApi({
++        signedIn: MEMBER,
++        extra: (call) => {
++          if (call.url.pathname === "/api/v1/comments" && call.method === "POST") {
++            comments.setThread([posted]);
++            return new Promise<Response>((resolve) => {
++              finishPost = resolve;
++            });
++          }
++          return record(call);
++        },
++      });
++      renderAt("/contracts/42");
++      await openChat(user);
++      const box = screen.getByRole("textbox", { name: "New comment" });
++      await user.type(box, posted.body);
++      await user.click(screen.getByRole("button", { name: "Comment" }));
++      await waitFor(() => expect(finishPost).toBeTypeOf("function"));
++      sources[0]!.emit({
++        kind: "record",
++        action: "comment.posted",
++        entityType: "contract",
++        entityId: "c1",
++        entryId: "activity-posted-before-response",
++        visibility: "working_team",
++      });
++      expect(await screen.findByText(posted.body)).toBeInTheDocument();
++      await act(async () => finishPost(json(201, { comment: posted })));
++      await waitFor(() => expect(box).toHaveValue(""));
++      expect(screen.getAllByText(posted.body)).toHaveLength(1);
++      expect(screen.getByRole("img", { name: "1 comment" })).toBeInTheDocument();
++    });
++
+     it("adds a new server row to an open thread without reopening it", async () => {
+       const user = userEvent.setup();
+       const sources = stubEventSource();
+diff --git a/apps/web/src/routes/entities-calendar.test.tsx b/apps/web/src/routes/entities-calendar.test.tsx
+index 8321eb90..3a727ba1 100644
+--- a/apps/web/src/routes/entities-calendar.test.tsx
++++ b/apps/web/src/routes/entities-calendar.test.tsx
+@@ -142,6 +142,43 @@ describe("the Entities compliance calendar", () => {
+     expect(search.get("includeCompleted")).toBe("true");
+   });
+ 
++  it.each(["entity", "completed"])(
++    "applies the %s filter while leaving the other optional controls blank",
++    async (filter) => {
++      const queries: URLSearchParams[] = [];
++      const read = calendarApi(obligations, queries);
++      stubApi({
++        signedIn: MEMBER,
++        extra: (call) => {
++          const response = read(call);
++          if (
++            call.url.pathname === "/api/v1/entities/calendar" &&
++            [...call.url.searchParams.values()].some((value) => value === "")
++          ) {
++            return json(400, { detail: "Optional filters must be omitted when unused." });
++          }
++          return response;
++        },
++      });
++      const { router } = renderAt("/entities");
++      await screen.findByRole("heading", { name: "Compliance calendar" });
++      const user = userEvent.setup();
++      if (filter === "entity") await user.selectOptions(screen.getByLabelText("Entity"), "e1");
++      else await user.click(screen.getByLabelText("Include completed"));
++      await user.click(screen.getByRole("button", { name: "Apply" }));
++
++      await waitFor(() => {
++        expect(router.state.location.search).not.toBe("");
++        expect(router.state.navigation.state).toBe("idle");
++      });
++      expect(screen.getByRole("heading", { name: "Compliance calendar" })).toBeInTheDocument();
++      expect(screen.getByText("Overdue annual return")).toBeInTheDocument();
++      expect(queries.at(-1)?.toString()).toBe(
++        filter === "entity" ? "entity=e1" : "includeCompleted=true",
++      );
++    },
++  );
++
+   it("draws the month as a CSS grid and steps months with a Today control", async () => {
+     stubApi({ signedIn: MEMBER, extra: calendarApi() });
+     renderAt("/entities?calendar=month&month=2026-09");
+diff --git a/apps/web/src/routes/entities.tsx b/apps/web/src/routes/entities.tsx
+index 6b899ff2..84b39dcb 100644
+--- a/apps/web/src/routes/entities.tsx
++++ b/apps/web/src/routes/entities.tsx
+@@ -159,10 +159,10 @@ export async function entitiesLoader({ request }: LoaderFunctionArgs) {
+   const view: "calendar" | "list" | "chart" =
+     requestedView === "chart" ? "chart" : requestedView === "list" ? "list" : "calendar";
+   const query = {
+-    entity: url.searchParams.get("entity") ?? undefined,
+-    assignee: url.searchParams.get("assignee") ?? undefined,
+-    from: url.searchParams.get("from") ?? undefined,
+-    to: url.searchParams.get("to") ?? undefined,
++    entity: url.searchParams.get("entity") || undefined,
++    assignee: url.searchParams.get("assignee") || undefined,
++    from: url.searchParams.get("from") || undefined,
++    to: url.searchParams.get("to") || undefined,
+     includeCompleted:
+       url.searchParams.get("includeCompleted") === "true" ? ("true" as const) : undefined,
+   };
+diff --git a/apps/web/src/routes/help.test.tsx b/apps/web/src/routes/help.test.tsx
+index 9bd528f6..e66b9d27 100644
+--- a/apps/web/src/routes/help.test.tsx
++++ b/apps/web/src/routes/help.test.tsx
+@@ -52,7 +52,9 @@ describe("Help in the app shells", () => {
+     async (role) => {
+       stubApi({ signedIn: person(role) });
+       renderAt("/help");
+-      expect(await screen.findByRole("heading", { level: 1, name: "Help" })).toHaveFocus();
++      await waitFor(() =>
++        expect(screen.getByRole("heading", { level: 1, name: "Help" })).toHaveFocus(),
++      );
+       expect(screen.getAllByRole("main")).toHaveLength(1);
+       expect(screen.getByRole("link", { name: "Try the documentation reader" })).toBeVisible();
+       expect(screen.queryByRole("combobox", { name: "Audience" })).not.toBeInTheDocument();
+@@ -70,7 +72,9 @@ describe("Help in the app shells", () => {
+   it("keeps Business Users in Portal Help and applies the portal audience to visiting staff", async () => {
+     stubApi({ signedIn: person("business_user") });
+     const { router } = renderAt("/help/validation-procedure#before-you-start");
+-    expect(await screen.findByRole("heading", { name: "Before you start" })).toHaveFocus();
++    await waitFor(() =>
++      expect(screen.getByRole("heading", { name: "Before you start" })).toHaveFocus(),
++    );
+     expect(router.state.location.pathname).toBe("/portal/help/validation-procedure");
+     expect(screen.getByRole("link", { name: "Legal request portal" })).toBeVisible();
+     expect(screen.queryByRole("combobox", { name: "Search" })).not.toBeInTheDocument();
+@@ -122,16 +126,20 @@ describe("Help in the app shells", () => {
+     expect(await screen.findByRole("link", { name: "Try the documentation reader" })).toBeVisible();
+     expect(calls.every((url) => !url.includes("fictional") && !url.includes("/search"))).toBe(true);
+     await user.click(screen.getByRole("link", { name: "Try the documentation reader" }));
+-    expect(
+-      await screen.findByRole("heading", { level: 1, name: "Try the documentation reader" }),
+-    ).toHaveFocus();
++    await waitFor(() =>
++      expect(
++        screen.getByRole("heading", { level: 1, name: "Try the documentation reader" }),
++      ).toHaveFocus(),
++    );
+     await user.click(screen.getByRole("link", { name: "the recovery fixture" }));
+-    expect(await screen.findByRole("heading", { name: "Retry" })).toHaveFocus();
++    await waitFor(() => expect(screen.getByRole("heading", { name: "Retry" })).toHaveFocus());
+     expect(router.state.location.pathname).toBe("/help/validation-recovery");
+     await act(() => router.navigate(-1));
+-    expect(
+-      await screen.findByRole("heading", { level: 1, name: "Try the documentation reader" }),
+-    ).toHaveFocus();
++    await waitFor(() =>
++      expect(
++        screen.getByRole("heading", { level: 1, name: "Try the documentation reader" }),
++      ).toHaveFocus(),
++    );
+     expect(
+       within(screen.getByRole("navigation", { name: "Documentation" })).getByRole("link", {
+         name: "Read this article in the full documentation",
+@@ -158,10 +166,14 @@ describe("Help in the app shells", () => {
+     stubFetch(() => json(503, {}));
+     const user = userEvent.setup();
+     const { router } = renderAt("/portal/help/validation-procedure#before-you-start");
+-    expect(await screen.findByRole("heading", { name: "Help session unavailable" })).toHaveFocus();
++    await waitFor(() =>
++      expect(screen.getByRole("heading", { name: "Help session unavailable" })).toHaveFocus(),
++    );
+     expect(document.title).toBe("Help session unavailable · OpenLaw");
+     await user.click(screen.getByRole("link", { name: "All documentation" }));
+-    expect(await screen.findByRole("heading", { name: "Before you start" })).toHaveFocus();
++    await waitFor(() =>
++      expect(screen.getByRole("heading", { name: "Before you start" })).toHaveFocus(),
++    );
+     expect(router.state.location.pathname).toBe("/documentation/validation-procedure");
+   });
+ });
+diff --git a/apps/web/src/routes/portal-request.test.tsx b/apps/web/src/routes/portal-request.test.tsx
+index 842eb32a..30005c81 100644
+--- a/apps/web/src/routes/portal-request.test.tsx
++++ b/apps/web/src/routes/portal-request.test.tsx
+@@ -591,6 +591,46 @@ describe("the conversation", () => {
+     expect(within(card).getByText("Legal")).toBeInTheDocument();
+   });
+ 
++  it("keeps one reply when a live read arrives before the posting response", async () => {
++    const user = userEvent.setup();
++    const sources = stubEventSource();
++    const posted = comment({ id: "c-posted", body: "The signed copy is ready." });
++    const liveThread = { comments: [] as Comment[] };
++    let finishPost!: (response: Response) => void;
++    stubApi({
++      signedIn: REQUESTER,
++      extra: stubs(
++        (call) => {
++          if (call.url.pathname === "/api/v1/comments" && call.method === "POST") {
++            liveThread.comments = [posted];
++            return new Promise<Response>((resolve) => {
++              finishPost = resolve;
++            });
++          }
++          return undefined;
++        },
++        detailRead(detail(), 200, liveThread),
++      ),
++    });
++    renderAt("/portal/requests/45");
++    const box = await screen.findByRole("textbox", { name: "Reply to Legal" });
++    await user.type(box, posted.body);
++    await user.click(screen.getByRole("button", { name: "Send" }));
++    await waitFor(() => expect(finishPost).toBeTypeOf("function"));
++    sources[0]!.emit({
++      kind: "record",
++      action: "comment.posted",
++      entityType: "request",
++      entityId: "rq1",
++      entryId: "activity-posted-before-response",
++      visibility: "full_thread",
++    });
++    expect(await screen.findByText(posted.body)).toBeInTheDocument();
++    finishPost(json(201, { comment: posted }));
++    await waitFor(() => expect(box).toHaveValue(""));
++    expect(screen.getAllByText(posted.body)).toHaveLength(1);
++  });
++
+   it("adds and replaces Full Thread replies from live comment prompts", async () => {
+     const sources = stubEventSource();
+     const liveThread = {
+diff --git a/packages/api-client/src/schema.ts b/packages/api-client/src/schema.ts
+index 556bd10f..81ae6120 100644
+--- a/packages/api-client/src/schema.ts
++++ b/packages/api-client/src/schema.ts
+@@ -2787,7 +2787,7 @@ export interface paths {
+       path?: never;
+       cookie?: never;
+     };
+-    /** The Documents owned by one live Knowledge Item, newest first, with each version chain */
++    /** The Documents owned by one Knowledge Item, including archived items, newest first, with each version chain */
+     get: operations["listKnowledgeItemDocuments"];
+     put?: never;
+     /** Upload a file as a Document owned by a Knowledge Item */

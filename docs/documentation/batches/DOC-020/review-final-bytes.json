@@ -1,0 +1,80 @@
+{
+  "record": "review-final-bytes",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-admin-review",
+  "fixture": {
+    "appUrl": "http://127.0.0.1:43328",
+    "mailUrl": "http://127.0.0.1:48435",
+    "draftPreview": "http://127.0.0.1:43331",
+    "providerMode": "dedicated local OpenID Connect fixture; full browser authorization and callback; no external identity-provider account",
+    "frozenConfigurationHashes": {
+      "source/.env": "47286908f614d1cd4cf769b7fe4168dac3db2d536faebfe4a4481312ad7868e2",
+      "overlay.json": "a37da4d9df42ec8c176757e063e8fc33f0cd5addfac8c774396f2140c91425cd",
+      "fixture/server.mjs": "b91a17c780f3f816a2eb4a5968a43fba405085743f9b174cbc7cf69528738363"
+    }
+  },
+  "successfulChecks": 4,
+  "failedAttempts": 0,
+  "runs": [
+    {
+      "run": "final-bytes",
+      "startedAt": "2026-09-08T04:00:58.009Z",
+      "completedAt": "2026-09-08T04:01:02.954Z",
+      "articleHashes": [
+        {
+          "articleId": "organisation-and-users",
+          "contentSha256": "db8e042580c8e4ce397c96a91f8d468f4741d0db77c21e3cbae16ebb54fa3c1b"
+        },
+        {
+          "articleId": "first-run",
+          "contentSha256": "0f87bd0fce3032d84fbfe3a4c8056826879effd86102e19f8c61efa0f62e3b59"
+        },
+        {
+          "articleId": "authentication-and-email",
+          "contentSha256": "f272a2d7fa11a4088bb528d1642a40060ce7170aeff94234cb2a1e347d18f225"
+        }
+      ],
+      "steps": [
+        {
+          "role": "business user",
+          "method": "browser-walkthrough",
+          "action": "A new Business User enters the Portal and is listed as Active with role Business user",
+          "actual": "Otto Lindqvist entered the Portal on the allowed domain northwind.example. His row is Active with role Business user and carries a Role control, which is why the promotion described next is offered at all.",
+          "result": "pass",
+          "startedAt": "2026-09-08T04:00:58.052Z",
+          "at": "2026-09-08T04:01:00.021Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Promoting the Business User leaves a pending invitation whose row loses the role control",
+          "actual": "The Role control offered four choices, one more than the invitation form. Choosing Legal team member promoted the Portal-created account in place. The row then read Legal team member and Invited, and its role control was gone, leaving Resend invite. This is exactly what the corrected guide paragraph now tells a reader to expect.",
+          "result": "pass",
+          "startedAt": "2026-09-08T04:01:00.021Z",
+          "at": "2026-09-08T04:01:00.203Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "The resent link restores an Active row and the role control returns",
+          "actual": "Resend invite delivered a set-password link. After the person set a password the row returned to Active and its role control reappeared. The corrected sentence, that the row loses its role control until that person uses the resent link to set a password, is accurate against these final guide bytes.",
+          "result": "pass",
+          "startedAt": "2026-09-08T04:01:00.203Z",
+          "at": "2026-09-08T04:01:01.999Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Returning an active staff row to Business user restores Portal-only access",
+          "actual": "Setting an Active staff row back to Business user succeeded, and that person signing in with their own password landed in the Portal rather than the staff application. The qualifier \"an active staff account\" in the corrected sentence is the accurate one.",
+          "result": "pass",
+          "startedAt": "2026-09-08T04:01:01.999Z",
+          "at": "2026-09-08T04:01:02.954Z"
+        }
+      ]
+    }
+  ]
+}

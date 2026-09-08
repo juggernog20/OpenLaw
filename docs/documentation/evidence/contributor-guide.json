@@ -1,0 +1,41 @@
+{
+  "articleId": "contributor-guide",
+  "contentSha256": "279714f01601850e530c33fc253bf68bbf5efb8ea8585651ff3a4053e8fc437e",
+  "appCommit": "67dbe788c73641a02218e2c0a0cbcdd5a0682a87",
+  "buildId": "Source integration only; no walkthrough build recorded for this article revision",
+  "environment": "dev integration source review",
+  "author": "Codex integration author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "blocked",
+  "sources": [
+    "apps/api/src/modules/contracts/routes.ts",
+    "apps/api/src/modules/matters/routes.ts",
+    "apps/api/src/modules/documents/contributor-documents.test.ts",
+    "apps/web/src/routes/contract-record.tsx",
+    "apps/web/src/routes/matter-record.tsx",
+    "apps/web/src/components/documents/documents-card.tsx",
+    "apps/web/src/components/comments/comment-applet.tsx"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C25",
+      "coverage": ["C25"],
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "expected": "Contributor actions succeed only on reached work and the guide identifies the actual legal-action limits. Stage/Status moves and other reserved legal actions remain unavailable; removing Ravi's reach stops access.",
+      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/dev-integration/README.md"]
+    }
+  ],
+  "authorEvidence": [],
+  "limitations": [
+    "This article changed during the dev integration and requires fresh technical and walkthrough acceptance. Its earlier hash, reviewers, timestamps and observations are preserved in previousEvidence.",
+    "No full-suite acceptance, human proofreading or publication is claimed. DOC-025 must verify the combined candidate."
+  ],
+  "previousEvidence": "docs/documentation/batches/dev-integration/previous-contributor-guide.json",
+  "copyOnlyReview": null
+}

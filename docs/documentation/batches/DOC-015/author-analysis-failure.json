@@ -1,0 +1,31 @@
+{
+  "name": "analysis-failure",
+  "startedAt": "2026-09-07T16:52:52.360Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-analysis-workflow",
+  "articleHashes": [
+    {
+      "articleId": "contract-analysis",
+      "contentSha256": "24e4375567bdf273873018732f93743584b71b260a07890f4f4719f257050243"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "a primary PDF with failed text extraction refuses Run analysis and queues no run",
+      "actual": "C-46 primary PDF failed actual text extraction; Run analysis displayed no ready, non-empty text and created no run.",
+      "result": "pass",
+      "at": "2026-09-07T16:52:54.846Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "a primary PDF with failed text extraction refuses Run analysis and queues no run",
+      "actual": "C-47 primary PDF failed actual text extraction; Run analysis displayed no ready, non-empty text and created no run.",
+      "result": "pass",
+      "at": "2026-09-07T16:52:57.249Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T16:52:57.251Z"
+}

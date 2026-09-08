@@ -1,0 +1,49 @@
+{
+  "name": "independent-guidance-retry3",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C40"],
+  "authorRecordName": "ind-guidance-retry3",
+  "startedAt": "2026-09-08T05:39:22.861Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "request-forms",
+      "contentSha256": "9cc8ffec262de2a13e3472cc2518ca4a203898038208798f30fc2d6082461a7c"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Add a Knowledge link placed on the Matter request type",
+      "actual": "Remove deleted 2 duplicate link(s) left by interrupted attempts, with no archive or restore offered. Added a Knowledge link \"Ind read this before asking IND81T2F\" to published item \"How to ask legal for help\", placed on \"Ind advisory intake IND81T2F\". The picker offered 10 eligible published items.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:39:23.796Z",
+      "at": "2026-09-08T05:39:26.140Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A malformed external address is refused; a valid one saves on Portal home",
+      "actual": "\"helix.example/policies\" was refused: \"Enter a full web address that starts with http:// or https://.\". Re-entering the owned address http://127.0.0.1:43332/auth/login saved the link on Portal home.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:39:26.141Z",
+      "at": "2026-09-08T05:39:27.245Z"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Jonas Weber sees the guidance panel on Portal home and on the chosen form",
+      "actual": "Portal home shows \"Before you submit\" carrying the Portal-home link \"Ind external policy page IND81T2F\" -> http://127.0.0.1:43332/auth/login (target _blank, an owned local page, so this claims nothing about a third-party site). The form-placed Knowledge link is absent from home (true). Opening \"Ind advisory intake IND81T2F\" at /portal/new/ind_advisory_intake_ind81t2f shows its own panel with \"Ind read this before asking IND81T2F\" (true). The form reads \"All request types | Ind advisory intake IND81T2F | Help with this page | About your request | Summary* | (required) | Description* | (required) | Attachments | Drop files here \u2014 the redline, the prior agreement, the term sheet. Up to 20 files. | Choose files | Urgency* | (required) | Low | Medium | High | Critical | How soon Legal should look at it. | Details for Ind advisory intake IND81T2F | Ind coverage region IND\".",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:39:27.246Z",
+      "at": "2026-09-08T05:39:28.234Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T05:39:28.235Z"
+}

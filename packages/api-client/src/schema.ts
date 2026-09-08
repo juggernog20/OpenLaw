@@ -462,7 +462,7 @@ export interface paths {
     };
     /** The e-signature connector's state (CTR-013): whether it is configured, which estate and credentials it names, and the webhook URL to paste into the provider's console. Never the RSA key or the Connect secret */
     get: operations["getSigningConnector"];
-    /** Save the e-signature connector (CTR-013, TECH-013). The RSA key and the Connect secret are write-only: blank keeps the stored value, a value rotates it. A first save without the Connect secret is refused — the webhook must never answer unsigned deliveries */
+    /** Save the e-signature connector (CTR-013, TECH-013). The RSA key and the Connect secret are write-only: blank keeps the stored value, a value rotates it. Webhook mode requires a Connect secret. New connectors default to polling */
     put: operations["saveSigningConnector"];
     post?: never;
     /** Take the e-signature connector out (CTR-013). The row and both secrets go, and the install is back to the zero-config manual hand-off. Refused while any envelope is still out: deleting the credentials strands that round for good — nothing left to void it with, and nothing for the reconciliation sweep to ask. Turn the connector off instead if the sending has to stop before the paper comes back */
@@ -537,6 +537,23 @@ export interface paths {
     post?: never;
     /** Remove the AI connector and its API key */
     delete: operations["deleteAiConnector"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/ai-connector/models": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** List models for pending connector settings without saving them */
+    post: operations["listAiConnectorModels"];
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -2833,7 +2850,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The Documents owned by one live Knowledge Item, newest first, with each version chain */
+    /** The Documents owned by one Knowledge Item, including archived items, newest first, with each version chain */
     get: operations["listKnowledgeItemDocuments"];
     put?: never;
     /** Upload a file as a Document owned by a Knowledge Item */
@@ -6162,6 +6179,9 @@ export interface operations {
               enabled: boolean;
               disabledAt: string | null;
               environment: ("demo" | "production") | null;
+              /** @enum {string} */
+              updateMode: "polling" | "webhook";
+              webhookUrlOverride: string | null;
               integrationKey: string | null;
               apiUserId: string | null;
               hasPrivateKey: boolean;
@@ -6197,6 +6217,9 @@ export interface operations {
         "application/json": {
           /** @enum {string} */
           environment: "demo" | "production";
+          /** @enum {string} */
+          updateMode?: "polling" | "webhook";
+          webhookUrl?: string | null;
           integrationKey: string;
           apiUserId: string;
           privateKey?: string;
@@ -6219,6 +6242,9 @@ export interface operations {
               enabled: boolean;
               disabledAt: string | null;
               environment: ("demo" | "production") | null;
+              /** @enum {string} */
+              updateMode: "polling" | "webhook";
+              webhookUrlOverride: string | null;
               integrationKey: string | null;
               apiUserId: string | null;
               hasPrivateKey: boolean;
@@ -6265,6 +6291,9 @@ export interface operations {
               enabled: boolean;
               disabledAt: string | null;
               environment: ("demo" | "production") | null;
+              /** @enum {string} */
+              updateMode: "polling" | "webhook";
+              webhookUrlOverride: string | null;
               integrationKey: string | null;
               apiUserId: string | null;
               hasPrivateKey: boolean;
@@ -6348,6 +6377,9 @@ export interface operations {
               enabled: boolean;
               disabledAt: string | null;
               environment: ("demo" | "production") | null;
+              /** @enum {string} */
+              updateMode: "polling" | "webhook";
+              webhookUrlOverride: string | null;
               integrationKey: string | null;
               apiUserId: string | null;
               hasPrivateKey: boolean;
@@ -6394,6 +6426,9 @@ export interface operations {
               enabled: boolean;
               disabledAt: string | null;
               environment: ("demo" | "production") | null;
+              /** @enum {string} */
+              updateMode: "polling" | "webhook";
+              webhookUrlOverride: string | null;
               integrationKey: string | null;
               apiUserId: string | null;
               hasPrivateKey: boolean;
@@ -6621,6 +6656,53 @@ export interface operations {
               requiresApiKey: boolean;
               requiresBaseUrl: boolean;
             }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listAiConnectorModels: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          preset:
+            "anthropic" | "openai" | "azure_openai" | "gemini" | "openrouter" | "ollama" | "custom";
+          /** @enum {string} */
+          protocol?: "anthropic_messages" | "openai_chat_completions" | "gemini";
+          baseUrl?: string;
+          apiKey?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            models: {
+              id: string;
+              label: string;
+            }[];
+            truncated: boolean;
           };
         };
       };

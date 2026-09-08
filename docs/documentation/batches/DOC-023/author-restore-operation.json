@@ -1,0 +1,20 @@
+{
+  "startedAt": "2026-09-08T08:42:39.881150+00:00",
+  "completedAt": "2026-09-08T08:42:50.109225+00:00",
+  "project": "openlaw-docs-b8e31260-ops-restore",
+  "sourceProject": "openlaw-docs-b8e31260-ops-upgrade",
+  "sourceCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "emptyPublicTableCount": 0,
+  "backupHashes": {
+    "database.dump": "a017f0d217e944ae094da39747eeee00a8805f2bf92ff6a838455cc6281663db",
+    "files.tar.gz": "a5046b0b72405478bd9938690e5a9d5bb56a21b892c9ed61cd1955696108aba3"
+  },
+  "actualImages": {
+    "app": "sha256:2851d6acd05418a0ddc57750ac75908892643af481f2755cb13a46f946d073b6",
+    "worker": "sha256:2851d6acd05418a0ddc57750ac75908892643af481f2755cb13a46f946d073b6",
+    "doc-engine": "sha256:d0997fb7187067bc03f82e04ad45365ca5e3132b872e0b73c3934ceb2d67457a",
+    "postgres": "sha256:8a4b045886180c64f518ca6a4b0791b15fb997f3b3b619bd5ee141914668db55"
+  },
+  "restoredKeysFromSeparatePrivateSource": true,
+  "externalDestinations": "Only isolated project-local Mailpit, no production provider configured; inert signing fixture cannot authenticate."
+}

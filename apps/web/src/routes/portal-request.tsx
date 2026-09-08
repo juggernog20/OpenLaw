@@ -72,6 +72,7 @@
  *    than under it. Below that width the mock's order holds.
  */
 
+import { HelpLink } from "../components/documentation/help-link";
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { defineMessage, FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { CircleCheck, CircleX, FileText, Info, PackageCheck } from "lucide-react";
@@ -175,6 +176,7 @@ export function PortalRequestPage() {
           />
         </p>
       </div>
+      <HelpLink surface="portal" contextual />
       <div className="grid gap-section-gap @3xl/page:grid-cols-portal-split">
         <div className="flex min-w-0 flex-col gap-4">
           <StatusBanner status={request.status} declinedReason={request.declinedReason} />

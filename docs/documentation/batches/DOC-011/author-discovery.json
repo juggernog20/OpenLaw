@@ -1,0 +1,86 @@
+{
+  "name": "discovery",
+  "startedAt": "2026-09-07T07:56:08.613Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "comments-and-activity",
+      "contentSha256": "1fdb1f7a545c7b5e2ffd2bd90bc832be95d5b26f87f1204324c5e6f6a19f536b"
+    },
+    {
+      "articleId": "notifications",
+      "contentSha256": "c94f9a85fad12d7fdf1856784fe2bf8e0e8bf541a1df7653b729c0c96cf4124e"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "comments-and-activity discovery and reader layout",
+      "actual": "Contextual Help entry, search, article and section focus, and formal link passed; no horizontal overflow in light/dark/warm at 320/720/1440 CSS px. CSS checks are not browser zoom or assistive technology acceptance.",
+      "result": "pass",
+      "at": "2026-09-07T07:56:11.202Z"
+    },
+    {
+      "role": "administrator",
+      "action": "notifications discovery and reader layout",
+      "actual": "Contextual Help entry, search, article and section focus, and formal link passed; no horizontal overflow in light/dark/warm at 320/720/1440 CSS px. CSS checks are not browser zoom or assistive technology acceptance.",
+      "result": "pass",
+      "at": "2026-09-07T07:56:12.452Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "comments-and-activity discovery and reader layout",
+      "actual": "Contextual Help entry, search, article and section focus, and formal link passed; no horizontal overflow in light/dark/warm at 320/720/1440 CSS px. CSS checks are not browser zoom or assistive technology acceptance.",
+      "result": "pass",
+      "at": "2026-09-07T07:56:14.884Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "notifications discovery and reader layout",
+      "actual": "Contextual Help entry, search, article and section focus, and formal link passed; no horizontal overflow in light/dark/warm at 320/720/1440 CSS px. CSS checks are not browser zoom or assistive technology acceptance.",
+      "result": "pass",
+      "at": "2026-09-07T07:56:16.155Z"
+    },
+    {
+      "role": "contributor",
+      "action": "comments-and-activity discovery and reader layout",
+      "actual": "Contextual Help entry, search, article and section focus, and formal link passed; no horizontal overflow in light/dark/warm at 320/720/1440 CSS px. CSS checks are not browser zoom or assistive technology acceptance.",
+      "result": "pass",
+      "at": "2026-09-07T07:56:18.652Z"
+    },
+    {
+      "role": "contributor",
+      "action": "notifications discovery and reader layout",
+      "actual": "Contextual Help entry, search, article and section focus, and formal link passed; no horizontal overflow in light/dark/warm at 320/720/1440 CSS px. CSS checks are not browser zoom or assistive technology acceptance.",
+      "result": "pass",
+      "at": "2026-09-07T07:56:19.953Z"
+    },
+    {
+      "role": "business_user",
+      "action": "comments-and-activity discovery and reader layout",
+      "actual": "Contextual Help entry, search, article and section focus, and formal link passed; no horizontal overflow in light/dark/warm at 320/720/1440 CSS px. CSS checks are not browser zoom or assistive technology acceptance.",
+      "result": "pass",
+      "at": "2026-09-07T07:56:22.422Z"
+    },
+    {
+      "role": "business_user",
+      "action": "notifications discovery and reader layout",
+      "actual": "Contextual Help entry, search, article and section focus, and formal link passed; no horizontal overflow in light/dark/warm at 320/720/1440 CSS px. CSS checks are not browser zoom or assistive technology acceptance.",
+      "result": "pass",
+      "at": "2026-09-07T07:56:23.768Z"
+    },
+    {
+      "role": "signed-out",
+      "action": "formal documentation serves both articles without application API calls",
+      "actual": "Both guide titles present in formal preview index; zero API calls",
+      "result": "pass",
+      "at": "2026-09-07T07:56:24.753Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T07:56:24.753Z",
+  "author": "Codex documentation author",
+  "independentReview": false
+}

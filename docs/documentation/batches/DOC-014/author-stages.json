@@ -1,0 +1,87 @@
+{
+  "name": "stages",
+  "startedAt": "2026-09-07T13:00:57.016Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "contract-stages",
+      "contentSha256": "8fec18cd5b3f50c0baadebd2b8fd68772cc118da4341915dec4674774a1a0553"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "move through Draft, Review, Approval, Signature and Active Statuses and check their Stage mapping",
+      "actual": "C-67: Draft → draft; Internal review → review; Awaiting approval → approval; Out for signature → signature; Active → active; selecting Signature did not send an Envelope",
+      "result": "pass",
+      "at": "2026-09-07T13:01:00.127Z"
+    },
+    {
+      "role": "administrator",
+      "action": "regress to Review and rename a configured Status without changing its Stage",
+      "actual": "Active regressed to Review; Administrator fixture rename changed Status text while Stage stayed Review",
+      "result": "pass",
+      "at": "2026-09-07T13:01:00.610Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Ended remains editable and History records the lifecycle changes",
+      "actual": "Ended Contract accepted later Description and History showed its Status change",
+      "result": "pass",
+      "at": "2026-09-07T13:01:01.109Z"
+    },
+    {
+      "role": "administrator",
+      "action": "archiving freezes Stage changes and a direct write is refused",
+      "actual": "Archive removed Stage control; archived edit refused and title unchanged",
+      "result": "pass",
+      "at": "2026-09-07T13:01:01.922Z"
+    },
+    {
+      "role": "administrator",
+      "action": "restore preserves Status, reopening uses the Stage control, and Contributors cannot change it",
+      "actual": "Restore kept Ended; chosen Active Status reopened; reached Contributor had no Stage control and API403",
+      "result": "pass",
+      "at": "2026-09-07T13:01:02.808Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "move through Draft, Review, Approval, Signature and Active Statuses and check their Stage mapping",
+      "actual": "C-76: Draft → draft; Internal review → review; Awaiting approval → approval; Out for signature → signature; Active → active; selecting Signature did not send an Envelope",
+      "result": "pass",
+      "at": "2026-09-07T13:01:04.236Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "regress to Review and rename a configured Status without changing its Stage",
+      "actual": "Active regressed to Review; Administrator fixture rename changed Status text while Stage stayed Review",
+      "result": "pass",
+      "at": "2026-09-07T13:01:04.570Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Ended remains editable and History records the lifecycle changes",
+      "actual": "Ended Contract accepted later Description and History showed its Status change",
+      "result": "pass",
+      "at": "2026-09-07T13:01:04.940Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "archiving freezes Stage changes and a direct write is refused",
+      "actual": "Archive removed Stage control; archived edit refused and title unchanged",
+      "result": "pass",
+      "at": "2026-09-07T13:01:05.737Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "restore preserves Status, reopening uses the Stage control, and Contributors cannot change it",
+      "actual": "Restore kept Ended; chosen Active Status reopened; reached Contributor had no Stage control and API403",
+      "result": "pass",
+      "at": "2026-09-07T13:01:06.611Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T13:01:06.611Z"
+}

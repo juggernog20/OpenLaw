@@ -1,0 +1,33 @@
+{
+  "name": "independent-upgrade-baseline-retry3",
+  "scenario": "V-C46",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:49:17.618Z",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "environment": "openlaw-docs-b8e31260-rev-upgrade",
+  "articleHashes": [
+    {
+      "articleId": "upgrade",
+      "contentSha256": "96cc17166c77af291161ea34540f2c1c9683d2736cd903c42e2692ba9fe8e94d"
+    },
+    {
+      "articleId": "backup-and-restore",
+      "contentSha256": "0237339f91484b7a46623e1753c67ccbb376ae341ac8b40cb5d81237967a891a"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Activate a Contributor from a real invitation and record its reach",
+      "result": "fail",
+      "startedAt": "2026-09-08T09:49:18.017Z",
+      "error": "post /auth/invites returned 409: {\"type\":\"about:blank\",\"title\":\"This user has already activated their account.\",\"status\":409,\"detail\":\"This user has already activated their account.\",\"instance\":\"/api/v1/auth/invites\"}",
+      "at": "2026-09-08T09:49:18.028Z"
+    }
+  ],
+  "passed": false,
+  "supersededBy": "independent-upgrade-baseline-contributor",
+  "note": "This pass re-invited a Contributor who had already activated in the previous attempt, so the invitation was refused with 409. The membership and reach were recorded in the successor."
+}

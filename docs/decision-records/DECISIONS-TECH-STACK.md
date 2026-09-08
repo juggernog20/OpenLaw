@@ -224,6 +224,23 @@ This is worth the two lines whenever a file has more than one statement that mus
 
 `0060_account_issuer.sql` is the worked example and carries the argument in its own comments. The `database` agent skill repeats this rule where a migration author will be standing.
 
+### TECH-006 integration addendum: Home branch migration history (2026-09-07)
+
+The Home branch and dev independently used migration numbers 0090 and 0091.
+Dev's onboarding and account migrations retain their original files, hashes and
+timestamps. Request assignment now lands as 0092, with a snapshot generated from
+the combined schema. Existing assignments survive this migration.
+
+Some local installs already applied the Home branch's later UX migrations. The
+journal guard recognizes those exact content hashes and timestamps and applies
+only the missing dev onboarding and account migrations before normal migration
+processing. Each repair records the canonical hash and timestamp in the same
+transaction as its schema change. Unknown histories still refuse to start.
+
+The upgrade rehearsal covers current dev, the known Home branch history, repeat
+startup, and refusal of an unknown history. No existing database is changed as
+part of preparing this integration.
+
 ## TECH-007: Background jobs — pg-boss on Postgres
 
 - **Status:** Accepted
@@ -300,6 +317,20 @@ The addendum above gave the reconciliation sweep an in-process interval loop on 
 **What it costs is a round at boot.** The loop swept immediately on start; the schedule waits for the next tick, so a worker that has just restarted can be up to five minutes behind. That is the right trade for a fallback feed measured in minutes, and the alternative — a boot round per replica beside the schedule — puts the duplication straight back on every rolling deploy, which is the one moment replica count is guaranteed to be greater than one.
 
 **Alternatives considered.** _Document a single worker replica and pin it in `compose.yml`_ — cheaper, and it makes correct scaling a thing an operator can silently break with no error and no sign. _A leader-election flag of our own_ — a second source of the truth pg-boss already holds, and TECH-007's own M12/6 note declines exactly that reasoning for the backfill sweep.
+
+### Addendum, 2026-09-08, #789: limit each Envelope's provider checks
+
+The worker still checks for due Envelopes every five minutes. Each Envelope now
+stores `next_reconcile_at`. An atomic claim prevents overlapping workers from
+checking the same Envelope. The claim reserves 20 minutes, including time for
+bounded authentication and status requests if the process stops during a call.
+After each attempt, successful or failed, the next check is due in 15 minutes.
+A restart or connector mode change retains that timestamp. The normal delay for
+later checks is about 15 to 20 minutes. An outage can make it longer.
+
+This supersedes the earlier five-minute provider polling interval, while retaining
+the single pg-boss schedule. DocuSign requires at least 15 minutes between polls of
+one resource. See [DocuSign's API limits](https://www.docusign.com/blog/developers/dsdev-from-the-trenches-api-rate-limits).
 
 ### Addendum (2026-08-18) — settled in M18/1: the first queue that leaves the building
 
@@ -520,6 +551,34 @@ The connector is a sealed singleton in `ai_connector`. The API resolves it for T
 
 The protocol adapter only parses the provider's reply. The writer then requires an exact evidence quote in the analyzed text, coerces each answer through the target's stored type, keeps human-set or confirmed values, applies CTR-006's term rules, and treats Contract value as one amount-currency-cadence write. For a Counterparty, exactly one live case-insensitive name match may be linked, and only when the Contract has no Counterparty. Zero matches, several matches, or an existing Contract link produce an `unmatched` result. No analysis run creates or replaces a Counterparty.
 
+### Addendum, 2026-09-08, provider model selection, #791
+
+Settings loads model IDs and display names from the provider when an Administrator selects
+**Load models**. The list can be searched and refreshed. The stored selection remains available
+if a later list omits it. **Enter model ID manually** supports private models and providers whose
+listing endpoint is unavailable. Azure's full deployment endpoint keeps manual deployment-name
+entry because a base-model catalog is not a list of the install's deployments.
+
+The API lists models before any connector save. It sends no Contract data and makes no inference
+call. Anthropic and Gemini pagination shares a 30-second deadline, at most ten pages, 5 MB per page,
+and 5,000 model options. A partial list is marked. Gemini lists only `generateContent` models;
+OpenRouter excludes models whose metadata rules out text input or output. Other providers do not
+supply reliable chat capability metadata, so Test connection remains required to check the choice.
+Ollama lists installed models through its compatible `/v1/models` endpoint and never pulls weights.
+
+Discovery refuses redirects and never treats pagination values as destination URLs. Provider
+refusals expose the HTTP status, not response text that could echo a key. A stored key is reused
+only for the same preset, protocol and normalized endpoint, for discovery and for a save. Changing
+that destination requires a new key. Moving to keyless Ollama clears the old provider key. Loading
+models does not write connector settings or Activity. Changing the pending provider, protocol,
+endpoint or key discards pending list results.
+
+Protocol references: [Anthropic models](https://platform.claude.com/docs/en/api/models/list),
+[OpenAI models](https://developers.openai.com/api/reference/resources/models/methods/list),
+[Gemini models](https://ai.google.dev/api/models),
+[OpenRouter models](https://openrouter.ai/docs/api/api-reference/models/list-all-models-and-their-properties),
+and [Ollama compatibility](https://docs.ollama.com/api/openai-compatibility).
+
 ## TECH-013: DocuSign auth — JWT grant (service integration)
 
 - **Status:** Accepted
@@ -532,6 +591,12 @@ DocuSign **JWT grant**: org admin creates the DocuSign app, one-time consent; Op
 ### Addendum (2026-08-16, M15/1)
 
 The surface shipped in **Settings → Organization → Integrations → E-signature** (SET-007), and it asks for one field more than this decision listed: the **DocuSign Connect HMAC secret**, without which a connector cannot be saved. The account is **discovered, not configured** — `/oauth/userinfo` answers the integration user's default account — so the pane asks for three plain values — environment, integration key, and user ID — plus two secrets, rather than for an account id. The assertion is RS256, scoped `signature impersonation`, and lives ten minutes.
+
+### Addendum, 2026-09-08, #789: optional Connect setup
+
+CTR-013 now allows Polling without a Connect subscription or secret. This supersedes
+the unconditional Connect-secret requirement above. Webhook mode still requires
+HMAC verification. JWT authentication and consent are unchanged in both modes.
 
 ### Alternatives considered
 
@@ -1168,6 +1233,58 @@ The rule of this decision stands unchanged. When a third page needs a relations 
 - TECH-024 remains the data rule for the page. A lazy applet reads once per mount through its seam and holds nothing across tabs; it does not become a client cache.
 - The incremental migration is reviewable and preserves per-link access doctrine while converging the presentation.
 
+## TECH-026: Compile one Markdown source set for bundled Help and standalone documentation
+
+- **Status:** Accepted
+- **Date:** 2026-09-07
+- **Task:** [#724](https://github.com/juggernog20/OpenLaw/issues/724)
+
+### Context
+
+OpenLaw already builds a Vite/React client and serves its static assets from the
+API process (TECH-017). Product instructions must work on an isolated network and
+remain readable from a retained copy when that process is down.
+
+### Decision
+
+Keep articles under `docs/user-guides/` and discovery, edition, redirect, and review
+metadata under `docs/documentation/`. Use Node build tooling with Marked for Markdown
+and sanitize-html for the generated HTML. Reject raw HTML and unsupported URLs or
+assets, transform links/anchors, and then sanitize with explicit tag and attribute
+allowlists. Compiler dependencies belong to the build, not the API runtime. Lock
+and audit them when introduced in DOC-006.
+
+Compile the article outline, plain search text, and reader HTML from the same source.
+Generate the app payload and standalone HTML edition from that compiler, resolving
+internal links for each destination. The standalone edition uses relative links,
+local assets, and embedded search data; its index and prose work without JavaScript.
+Do not reuse or expand the organization Knowledge renderer for product documentation.
+
+Integrate generation with Vite dev/build and include all canonical source, metadata,
+and compiler inputs in Turbo's cache graph. Selectively admit the required docs paths
+through `.dockerignore`. Supply immutable app source identity for release image builds:
+`.git` is excluded, and the package version alone does not identify a development build.
+
+Normal readers expose verified/published content with matching evidence. Explicit
+previews can include marked drafts. Complete-suite publication separately requires
+all P0/P1 coverage. Preserve the tested app commit, content hash, distribution commit,
+and compatibility review instead of rewriting old verification evidence.
+
+### Alternatives considered
+
+An external docs/search service introduces an internet dependency. A separate site
+framework duplicates build/theming work at this scale. The existing Knowledge
+renderer lacks the required grammar and has different heading/link semantics.
+Raw Markdown alone does not provide the agreed reading and recovery surfaces.
+
+### Consequences
+
+The compiler and export add build maintenance but require no new runtime service,
+database, or account. DOC-006 verifies safe rendering, links, evidence selection,
+search, build invalidation, and offline export. Detailed paths and failure behavior
+are in [the publishing design](../documentation/PUBLISHING.md). The primary library
+references consulted for this choice are linked there.
+
 ## Index of decisions
 
 | #        | Decision                                                                      | Status                 |
@@ -1197,20 +1314,4 @@ The rule of this decision stands unchanged. When a third page needs a relations 
 | TECH-023 | Shared machinery grows named per-mount hooks — a third mount is configuration | Accepted               |
 | TECH-024 | Web data and state model — loaders read, screens own what they show           | Accepted               |
 | TECH-025 | A record applet's third web mount becomes configuration                       | Accepted               |
-
-### TECH-006 integration addendum: Home branch migration history (2026-09-07)
-
-The Home branch and dev independently used migration numbers 0090 and 0091.
-Dev's onboarding and account migrations retain their original files, hashes and
-timestamps. Request assignment now lands as 0092, with a snapshot generated from
-the combined schema. Existing assignments survive this migration.
-
-Some local installs already applied the Home branch's later UX migrations. The
-journal guard recognizes those exact content hashes and timestamps and applies
-only the missing dev onboarding and account migrations before normal migration
-processing. Each repair records the canonical hash and timestamp in the same
-transaction as its schema change. Unknown histories still refuse to start.
-
-The upgrade rehearsal covers current dev, the known Home branch history, repeat
-startup, and refusal of an unknown history. No existing database is changed as
-part of preparing this integration.
+| TECH-026 | Compile one Markdown source set for bundled Help and standalone documentation | Accepted               |

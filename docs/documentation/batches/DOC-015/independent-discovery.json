@@ -1,0 +1,172 @@
+{
+  "kind": "independent-help-discovery",
+  "task": "DOC-015",
+  "issue": 735,
+  "independentReview": true,
+  "reviewerKind": "agent",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "startedAt": "2026-09-07T17:31:28.093Z",
+  "finishedAt": "2026-09-07T17:32:20.737Z",
+  "frontend": "Vite preview reader at port 43316 serving the working canonical Markdown, proxied to the analysis-workflow lab at port 43304; the lab's own Help at port 43304 for the exclusion check",
+  "articleHashesTested": [
+    {
+      "articleId": "contract-analysis",
+      "contentSha256": ["24e4375567bdf273873018732f93743584b71b260a07890f4f4719f257050243"]
+    },
+    {
+      "articleId": "compare-versions",
+      "contentSha256": ["2bfbd81cb149cd8bed215e1ada5736bf85fe9e4445241fea4307f2c36dae09df"]
+    }
+  ],
+  "articleHashesCurrent": [
+    {
+      "articleId": "contract-analysis",
+      "contentSha256": "24e4375567bdf273873018732f93743584b71b260a07890f4f4719f257050243"
+    },
+    {
+      "articleId": "compare-versions",
+      "contentSha256": "2bfbd81cb149cd8bed215e1ada5736bf85fe9e4445241fea4307f2c36dae09df"
+    }
+  ],
+  "themes": ["light", "warm", "dark"],
+  "widths": [320, 720, 1440],
+  "limitations": [
+    "Preview reader checks of the working canonical Markdown; the committed lab's normal Help excludes both review articles by design and its record and compare Help links carry no topic.",
+    "CSS-pixel overflow measurements only; not browser zoom or assistive technology acceptance.",
+    "One earlier discovery run stopped on a syntax error in the reviewer's own script before any browser step; the run was repeated on unchanged bytes."
+  ],
+  "steps": [
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "step": "the header Help link on the Contract record carries the contracts.analysis topic and its Help listing offers \"Review Contract analysis and verify values\"",
+      "result": "pass",
+      "actual": "/contracts/56 → Help href /help?topic=contracts.overview&topic=contracts.progression&topic=contracts.approvals&topic=contracts.signing&topic=contracts.term&topic=contracts.renewal&topic=contracts.tasks&topic=contracts.dates&topic=contracts.relations&topic=contracts.actions&topic=contracts.analysis&topic=access&topic=comments&topic=activity&topic=notifications listed \"Review Contract analysis and verify values\"",
+      "at": "2026-09-07T17:31:30.463Z",
+      "ms": 1401,
+      "reader": "preview 43316"
+    },
+    {
+      "article": "compare-versions",
+      "role": "administrator",
+      "step": "the header Help link on the compare page carries the documents.compare topic and its Help listing offers \"Compare Document Versions and export a Generated redline\"",
+      "result": "pass",
+      "actual": "/documents/<id>/compare?from=<id>&to=<id> → Help href /help?topic=documents.compare&topic=notifications listed \"Compare Document Versions and export a Generated redline\"",
+      "at": "2026-09-07T17:31:31.400Z",
+      "ms": 936,
+      "reader": "preview 43316"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "step": "Help opens \"Review Contract analysis and verify values\" with focus on its title, shows the current sentence, the outline reaches \"Run Analysis and read its outcome\", search finds it by title and by \"Confirm all\", and the formal link opens the full documentation",
+      "result": "pass",
+      "actual": "/help/contract-analysis focused \"H1 Review Contract analysis and verify values\"; the sentence \"Unverified values are already usable.\" is present; the outline link moved \"Run Analysis and read its outcome\" into view; title search and \"Confirm all\" both listed the guide; nonsense showed the no-match message; formal link /documentation/contract-analysis rendered /documentation/contract-analysis",
+      "at": "2026-09-07T17:31:36.493Z",
+      "ms": 5093,
+      "reader": "preview 43316"
+    },
+    {
+      "article": "compare-versions",
+      "role": "administrator",
+      "step": "Help opens \"Compare Document Versions and export a Generated redline\" with focus on its title, shows the current sentence, the outline reaches \"Choose the Versions\", search finds it by title and by \"Export track changes\", and the formal link opens the full documentation",
+      "result": "pass",
+      "actual": "/help/compare-versions focused \"H1 Compare Document Versions and export a Generated redline\"; the sentence \"A Generated redline cannot itself be a Comparison operand.\" is present; the outline link moved \"Choose the Versions\" into view; title search and \"Export track changes\" both listed the guide; nonsense showed the no-match message; formal link /documentation/compare-versions rendered /documentation/compare-versions",
+      "at": "2026-09-07T17:31:41.569Z",
+      "ms": 5076,
+      "reader": "preview 43316"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "step": "no horizontal overflow for either guide in light, warm and dark themes at 320, 720 and 1440 CSS px",
+      "result": "pass",
+      "actual": "18 page loads measured; none scrolled horizontally and the main landmark kept a usable width",
+      "at": "2026-09-07T17:31:55.108Z",
+      "ms": 13539,
+      "reader": "preview 43316"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "step": "the header Help link on the Contract record carries the contracts.analysis topic and its Help listing offers \"Review Contract analysis and verify values\"",
+      "result": "pass",
+      "actual": "/contracts/58 → Help href /help?topic=contracts.overview&topic=contracts.progression&topic=contracts.approvals&topic=contracts.signing&topic=contracts.term&topic=contracts.renewal&topic=contracts.tasks&topic=contracts.dates&topic=contracts.relations&topic=contracts.actions&topic=contracts.analysis&topic=access&topic=comments&topic=activity&topic=notifications listed \"Review Contract analysis and verify values\"",
+      "at": "2026-09-07T17:31:57.279Z",
+      "ms": 1324,
+      "reader": "preview 43316"
+    },
+    {
+      "article": "compare-versions",
+      "role": "legal_team_member",
+      "step": "the header Help link on the compare page carries the documents.compare topic and its Help listing offers \"Compare Document Versions and export a Generated redline\"",
+      "result": "pass",
+      "actual": "/documents/<id>/compare?from=<id>&to=<id> → Help href /help?topic=documents.compare&topic=notifications listed \"Compare Document Versions and export a Generated redline\"",
+      "at": "2026-09-07T17:31:58.207Z",
+      "ms": 928,
+      "reader": "preview 43316"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "step": "Help opens \"Review Contract analysis and verify values\" with focus on its title, shows the current sentence, the outline reaches \"Run Analysis and read its outcome\", search finds it by title and by \"Confirm all\", and the formal link opens the full documentation",
+      "result": "pass",
+      "actual": "/help/contract-analysis focused \"H1 Review Contract analysis and verify values\"; the sentence \"Unverified values are already usable.\" is present; the outline link moved \"Run Analysis and read its outcome\" into view; title search and \"Confirm all\" both listed the guide; nonsense showed the no-match message; formal link /documentation/contract-analysis rendered /documentation/contract-analysis",
+      "at": "2026-09-07T17:32:03.322Z",
+      "ms": 5115,
+      "reader": "preview 43316"
+    },
+    {
+      "article": "compare-versions",
+      "role": "legal_team_member",
+      "step": "Help opens \"Compare Document Versions and export a Generated redline\" with focus on its title, shows the current sentence, the outline reaches \"Choose the Versions\", search finds it by title and by \"Export track changes\", and the formal link opens the full documentation",
+      "result": "pass",
+      "actual": "/help/compare-versions focused \"H1 Compare Document Versions and export a Generated redline\"; the sentence \"A Generated redline cannot itself be a Comparison operand.\" is present; the outline link moved \"Choose the Versions\" into view; title search and \"Export track changes\" both listed the guide; nonsense showed the no-match message; formal link /documentation/compare-versions rendered /documentation/compare-versions",
+      "at": "2026-09-07T17:32:08.403Z",
+      "ms": 5081,
+      "reader": "preview 43316"
+    },
+    {
+      "article": "compare-versions",
+      "role": "contributor",
+      "step": "the header Help link on the compare page carries the documents.compare topic and its Help listing offers \"Compare Document Versions and export a Generated redline\"",
+      "result": "pass",
+      "actual": "/documents/<id>/compare?from=<id>&to=<id> → Help href /help?topic=documents.compare&topic=notifications listed \"Compare Document Versions and export a Generated redline\"",
+      "at": "2026-09-07T17:32:10.408Z",
+      "ms": 1178,
+      "reader": "preview 43316"
+    },
+    {
+      "article": "compare-versions",
+      "role": "contributor",
+      "step": "Help opens \"Compare Document Versions and export a Generated redline\" with focus on its title, shows the current sentence, the outline reaches \"Choose the Versions\", search finds it by title and by \"Export track changes\", and the formal link opens the full documentation",
+      "result": "pass",
+      "actual": "/help/compare-versions focused \"H1 Compare Document Versions and export a Generated redline\"; the sentence \"A Generated redline cannot itself be a Comparison operand.\" is present; the outline link moved \"Choose the Versions\" into view; title search and \"Export track changes\" both listed the guide; nonsense showed the no-match message; formal link /documentation/compare-versions rendered /documentation/compare-versions",
+      "at": "2026-09-07T17:32:15.542Z",
+      "ms": 5134,
+      "reader": "preview 43316"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "anonymous",
+      "step": "the formal edition lists and serves both guides to a signed-out reader without app API calls",
+      "result": "pass",
+      "actual": "Index listed 2 guides; each /documentation/<id> rendered its title; API paths requested: []; preview notice shown true",
+      "at": "2026-09-07T17:32:18.089Z",
+      "ms": 2544,
+      "reader": "preview 43316"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "step": "the committed lab's normal Help excludes both review articles and its record and compare Help links carry no topic",
+      "result": "pass",
+      "actual": "Normal Help at port 43304 lists neither guide; the lab's record Help link is /help and the compare page's is /help",
+      "at": "2026-09-07T17:32:20.737Z",
+      "ms": 2648,
+      "reader": "lab 43304"
+    }
+  ],
+  "passed": true
+}

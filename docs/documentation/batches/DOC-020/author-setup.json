@@ -1,0 +1,84 @@
+{
+  "name": "author-setup",
+  "startedAt": "2026-09-08T03:00:21.035Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-admin-onboarding",
+  "articleHashes": [
+    {
+      "articleId": "first-run",
+      "contentSha256": "b09bb7b41ac0d32c76ad2fbb659fa1660355ba8955bcf37155d4f0091063200e"
+    },
+    {
+      "articleId": "authentication-and-email",
+      "contentSha256": "cf6a83eedade936111c8b87314602fe4ffa19ca81cc3422e51e8cdcc3416153c"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Fresh account setup rejects mismatched passwords, then creates the first Administrator",
+      "actual": "Mismatch stayed on setup; corrected submission opened Welcome and signed in Avery as first Administrator.",
+      "result": "pass",
+      "startedAt": "2026-09-08T03:00:21.036Z",
+      "at": "2026-09-08T03:00:21.384Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "OIDC cannot be selected without a provider; built-in sign-in continues",
+      "actual": "Unregistered OIDC was refused; built-in continued to Portal configuration.",
+      "result": "pass",
+      "startedAt": "2026-09-08T03:00:21.385Z",
+      "at": "2026-09-08T03:00:21.552Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Save allowed domains and resume unfinished onboarding with saved settings",
+      "actual": "Reload returned to Welcome, preserved helix.example, and allowed continuation to unset email.",
+      "result": "pass",
+      "startedAt": "2026-09-08T03:00:21.553Z",
+      "at": "2026-09-08T03:00:21.799Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Invalid relay is rejected; a saved unreachable relay produces a delivery error",
+      "actual": "Non-SMTP scheme could not save; unreachable SMTP saved but Send test email failed, keeping Replace relay available.",
+      "result": "pass",
+      "startedAt": "2026-09-08T03:00:21.799Z",
+      "at": "2026-09-08T03:00:22.008Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Replace relay and deliver a real SMTP test message to the local mailbox",
+      "actual": "Corrected stored SMTP relay sent a test email received in Avery’s Mailpit inbox; URL was not rendered again.",
+      "result": "pass",
+      "startedAt": "2026-09-08T03:00:22.008Z",
+      "at": "2026-09-08T03:00:22.221Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Clear stored relay, restore it, and verify saved SMTP survives reload",
+      "actual": "Clear changed source to unset; a newly saved relay remained source app after reload and wizard re-entry.",
+      "result": "pass",
+      "startedAt": "2026-09-08T03:00:22.221Z",
+      "at": "2026-09-08T03:00:22.521Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Invite first colleague and finish onboarding",
+      "actual": "Legal Team Member invitation reached Rowan’s mailbox; Finish entered Home; revisiting /welcome redirected Home.",
+      "result": "pass",
+      "startedAt": "2026-09-08T03:00:22.521Z",
+      "at": "2026-09-08T03:00:22.853Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T03:00:22.854Z"
+}

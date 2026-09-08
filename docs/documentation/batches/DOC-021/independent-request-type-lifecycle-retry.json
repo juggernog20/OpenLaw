@@ -1,0 +1,41 @@
+{
+  "name": "independent-request-type-lifecycle-retry",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C40"],
+  "authorRecordName": "ind-request-type-lifecycle-retry",
+  "startedAt": "2026-09-08T05:59:37.554Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "request-forms",
+      "contentSha256": "5981f17a9afc7dc219cf98d35d603f7c5491eed8c253b7fbd9e5fab294bd873b"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Rename, reorder, and restore a request type from the list",
+      "actual": "Show archived revealed \"Ind archive probe IND81T2F\" (archivedAt 2026-09-08T05:57:51.129Z); Restore returned it live (archivedAt=null). Renaming it to \"Ind archive probe IND81T2F revised\" kept the slug \"ind_archive_probe_ind81t2f_2\". The keyboard reorder moved it from \"Reorder Ind archive probe IND81T2F revised, position 13 of 13. Use the arrow keys to move it.\" to \"Reorder Ind archive probe IND81T2F revised, position 12 of 13. Use the arrow keys to move it.\" and the order survived a reload. The Portal offers the restored type again (4 card).",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:59:38.487Z",
+      "at": "2026-09-08T05:59:44.952Z",
+      "note": "The trailing \"(4 card)\" counted every Portal link whose text matches the renamed type, so it includes the reader's own earlier Requests and is not a count of new-request cards. That the restored type is offered again, and that the archived one is not, is established precisely by the next step's card-href check."
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "An archived request type leaves the Portal while its Requests keep it",
+      "actual": "Request R-33 named \"Ind archive probe IND81T2F revised\" before the archive. The dialog read \"Archive Ind archive probe IND81T2F revised Ind archive probe IND81T2F revised is not used by any requests \u2014 it can be archived without reassignment. Reassign requests to No reassignment NDA request Co\" \u2014 it reports no usage and its reassignment control is disabled (true) even though that Request exists, so no replacement is asked for. After archiving, R-33 still names \"Ind archive probe IND81T2F revised\" (same id: true) and the Requester can still read it in the Portal (true). The type has left the Portal's new-request cards (true) and its form URL redirects to /portal.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:59:44.953Z",
+      "at": "2026-09-08T05:59:48.331Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T05:59:48.331Z"
+}

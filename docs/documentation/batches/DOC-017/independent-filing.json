@@ -1,0 +1,83 @@
+{
+  "name": "filing",
+  "reviewer": "Independent review seat (Opus 5 agent)",
+  "startedAt": "2026-09-07T21:37:38.185Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "document-versions",
+      "contentSha256": "6fc24d687bf1e36712a9721028436b974b2b71da17fe07dbf83363f013257a9c"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C26 filing step 1-4: a Legal only attachment files as a New Document with Confidential preselected",
+      "actual": "Filing a Legal only comment attachment opened File attachment with New Document chosen and Confidential already selected; File created a one-Version Confidential Document and the comment showed Filed to that Version",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:39.130Z",
+      "at": "2026-09-07T21:37:40.308Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C26 filing: the second destination appends a New Version on an existing Document",
+      "actual": "Choosing New Version on an existing Document filed the second attachment as v2 with the chosen kind and note; v1 and its filename stayed in the chain and the comment reported the destination Version",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:40.309Z",
+      "at": "2026-09-07T21:37:40.651Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C26 filing negative: Matter comments offer no filing action",
+      "actual": "The Matter conversation accepted the same attachment and offered no File control anywhere in the panel, so this Contract workflow is Contract-only exactly as the guide says",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:40.651Z",
+      "at": "2026-09-07T21:37:41.376Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C26 filing step 1-4: a Legal only attachment files as a New Document with Confidential preselected",
+      "actual": "Filing a Legal only comment attachment opened File attachment with New Document chosen and Confidential already selected; File created a one-Version Confidential Document and the comment showed Filed to that Version",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:42.212Z",
+      "at": "2026-09-07T21:37:43.356Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C26 filing: the second destination appends a New Version on an existing Document",
+      "actual": "Choosing New Version on an existing Document filed the second attachment as v2 with the chosen kind and note; v1 and its filename stayed in the chain and the comment reported the destination Version",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:43.357Z",
+      "at": "2026-09-07T21:37:43.697Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C26 filing negative: Matter comments offer no filing action",
+      "actual": "The Matter conversation accepted the same attachment and offered no File control anywhere in the panel, so this Contract workflow is Contract-only exactly as the guide says",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:43.697Z",
+      "at": "2026-09-07T21:37:44.433Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C26 filing negative: a Contributor supplies an attachment but gets no filing action",
+      "actual": "The Contributor attached permitted paper to the Contract conversation, saw no File control, and the attachment did not appear as a managed Document. The guide's requester/managed distinction held",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:37:45.236Z",
+      "at": "2026-09-07T21:37:46.034Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T21:37:46.037Z",
+  "reviewerKind": "agent",
+  "note": "Independent review seat. Fresh fictional \"Rev\" records and this seat's own steps and assertions; the author records are supporting evidence only. Each step's \"at\" is written when that awaited step settled, and \"startedAt\" when it began; these are automated browser checks against a local instance, not measured human task times."
+}

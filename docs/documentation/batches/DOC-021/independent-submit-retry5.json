@@ -1,0 +1,56 @@
+{
+  "name": "independent-submit-retry5",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C40"],
+  "authorRecordName": "ind-submit-retry5",
+  "startedAt": "2026-09-08T05:44:45.918Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "request-forms",
+      "contentSha256": "9cc8ffec262de2a13e3472cc2518ca4a203898038208798f30fc2d6082461a7c"
+    },
+    {
+      "articleId": "matter-templates",
+      "contentSha256": "c458f44480e167baf2930bdad0f03a944b0f10b890c7ff10468543328016f9e9"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Add a form-only Field that the destination Matter type does not attach",
+      "actual": "\"Ind budget note IND81T2F\" is on the \"Ind advisory intake IND81T2F\" form but is not attached to the destination Matter type \"Ind template type IND81T2F\" (attached slugs: [\"ind_coverage_region_ind81t2f\"]).",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:44:46.836Z",
+      "at": "2026-09-08T05:44:47.460Z"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Submitting without a required answer is refused, then a valid Request is submitted",
+      "actual": "With the required Field empty the Portal stayed on the form (true), marked [\"request-field-ind_coverage_region_ind81t2f\"] aria-invalid and reported \"Ind coverage region IND81T2F is required. / Fill Ind coverage region IND81T2F first \u2014 the form requires it.\"; no Request was created (false). Supplying \"Nordics\" and the budget note submitted Request R-26, confirmed on the page as \"Request R-26 is with Legal\".",
+      "result": "fail",
+      "startedAt": "2026-09-08T05:44:47.460Z",
+      "at": "2026-09-08T05:44:50.696Z",
+      "note": "The \"no Request was created\" clause reads false because the reviewer's own earlier probe submissions already carried this summary, so the search matched one of those rather than a Request from the refused attempt. The refusal evidence in this step is the form staying put, the aria-invalid control and the two refusal sentences.",
+      "error": "False claim inside the step: \"no Request was created (false)\". The uniqueness check searched for a summary the reviewer's own earlier probe submissions already carried, so it matched one of those instead of proving the refused attempt created nothing. The form staying put, the aria-invalid control and the two refusal sentences in the same string were observed correctly.",
+      "supersededBy": ["docs/documentation/batches/DOC-021/independent-repair-submit.json"]
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Convert the Request with its template and read the conversion defaults",
+      "actual": "The Request page reads Converts to \"Matter \u00b7 Ind template type IND81T2F\" and Triage offers [\"Convert to contract\",\"Convert to matter\",\"Resolve request without converting\"]. The dialog seeded Title \"Ind advisory submission IND81T2F\" from the Summary, showed the bound Matter type as fixed text \"Ind template type IND81T2F\" with no type picker (0 comboboxes) and the note \"Set by the request type. Triage confirms the routing rather than choosing it.\", Priority \"High\" from Urgency high, and the note \"Taken from the urgency the requester gave. Risk stays yours to set on the record.\". It grouped the answers under the exact headings \"Carries into the matter\" (true, holding \"Ind coverage region IND81T2F\") and \"Does not carry into the matter\" (true, holding \"Ind budget note IND81T2F\"), explained as \"This matter type has no field for these. Nothing is deleted, and they stay on the request where you can still read them.\". Converting landed on /inbox/26; the Request now reads status \"converted\". Converted between 2026-09-08T05:44:51.434Z and 2026-09-08T05:44:51.507Z into Matter 31 (createdAt 2026-09-08T05:44:51.476Z, UTC anchor 2026-09-08). Risk=null, Matter Manager=null, Priority=high. The template's Key date landed on 2026-09-29 (anchor+21 from the Matter's creation date, not the Request's 2026-09-08). Tasks: [[\"Confirm scope with the requester (revised)\",\"2026-09-11\",null],[\"Open the evidence folder (retry probe)\",null,null]].",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:44:50.696Z",
+      "at": "2026-09-08T05:44:51.540Z"
+    }
+  ],
+  "passed": false,
+  "completedAt": "2026-09-08T05:44:51.540Z"
+}

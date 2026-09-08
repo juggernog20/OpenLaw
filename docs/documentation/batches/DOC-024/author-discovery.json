@@ -1,0 +1,214 @@
+{
+  "startedAt": "2026-09-08T10:52:43.645Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "preview": "http://127.0.0.1:43333",
+  "articleHashes": [
+    {
+      "articleId": "troubleshooting",
+      "contentSha256": "0b5c8a359c24faa4a2c97d557b23a4ad4c37939a8cb919e0b63d2130c628779b"
+    },
+    {
+      "articleId": "reference",
+      "contentSha256": "9ec760d76d77a25e047c71f896e0961e1a7afcf6fab06e3e8c942c7770bdf7c0"
+    },
+    {
+      "articleId": "versions-and-support",
+      "contentSha256": "157906267e63b29066d1835dcda7de6c69d8c83338da745d340a8ded3e06ed0b"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Header Help reaches all three reference articles",
+      "actual": "Header Help exposes troubleshooting, reference, and support for this authenticated role.",
+      "startedAt": "2026-09-08T10:52:44.568Z",
+      "at": "2026-09-08T10:52:45.871Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "troubleshooting search, reading, edition and formal link",
+      "actual": "Representative query found article; focused title, edition metadata, full-guide navigation and narrow layouts in three themes passed.",
+      "startedAt": "2026-09-08T10:52:45.872Z",
+      "at": "2026-09-08T10:52:47.140Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "reference search, reading, edition and formal link",
+      "actual": "Representative query found article; focused title, edition metadata, full-guide navigation and narrow layouts in three themes passed.",
+      "startedAt": "2026-09-08T10:52:47.140Z",
+      "at": "2026-09-08T10:52:48.531Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "versions-and-support search, reading, edition and formal link",
+      "actual": "Representative query found article; focused title, edition metadata, full-guide navigation and narrow layouts in three themes passed.",
+      "startedAt": "2026-09-08T10:52:48.531Z",
+      "at": "2026-09-08T10:52:49.809Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Unknown edition and article preserve local navigation",
+      "actual": "Explicit older edition refused without silent fallback; missing article returned to working index.",
+      "startedAt": "2026-09-08T10:52:49.809Z",
+      "at": "2026-09-08T10:52:51.884Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Header Help reaches all three reference articles",
+      "actual": "Header Help exposes troubleshooting, reference, and support for this authenticated role.",
+      "startedAt": "2026-09-08T10:52:52.727Z",
+      "at": "2026-09-08T10:52:54.016Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "troubleshooting search, reading, edition and formal link",
+      "actual": "Representative query found article; focused title, edition metadata, full-guide navigation and narrow layouts in three themes passed.",
+      "startedAt": "2026-09-08T10:52:54.016Z",
+      "at": "2026-09-08T10:52:55.241Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "reference search, reading, edition and formal link",
+      "actual": "Representative query found article; focused title, edition metadata, full-guide navigation and narrow layouts in three themes passed.",
+      "startedAt": "2026-09-08T10:52:55.241Z",
+      "at": "2026-09-08T10:52:56.622Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "versions-and-support search, reading, edition and formal link",
+      "actual": "Representative query found article; focused title, edition metadata, full-guide navigation and narrow layouts in three themes passed.",
+      "startedAt": "2026-09-08T10:52:56.623Z",
+      "at": "2026-09-08T10:52:58.007Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Unknown edition and article preserve local navigation",
+      "actual": "Explicit older edition refused without silent fallback; missing article returned to working index.",
+      "startedAt": "2026-09-08T10:52:58.007Z",
+      "at": "2026-09-08T10:53:00.066Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "Header Help reaches all three reference articles",
+      "actual": "Header Help exposes troubleshooting, reference, and support for this authenticated role.",
+      "startedAt": "2026-09-08T10:53:00.938Z",
+      "at": "2026-09-08T10:53:02.205Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "troubleshooting search, reading, edition and formal link",
+      "actual": "Representative query found article; focused title, edition metadata, full-guide navigation and narrow layouts in three themes passed.",
+      "startedAt": "2026-09-08T10:53:02.205Z",
+      "at": "2026-09-08T10:53:03.373Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "reference search, reading, edition and formal link",
+      "actual": "Representative query found article; focused title, edition metadata, full-guide navigation and narrow layouts in three themes passed.",
+      "startedAt": "2026-09-08T10:53:03.374Z",
+      "at": "2026-09-08T10:53:04.703Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "versions-and-support search, reading, edition and formal link",
+      "actual": "Representative query found article; focused title, edition metadata, full-guide navigation and narrow layouts in three themes passed.",
+      "startedAt": "2026-09-08T10:53:04.704Z",
+      "at": "2026-09-08T10:53:06.020Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "Unknown edition and article preserve local navigation",
+      "actual": "Explicit older edition refused without silent fallback; missing article returned to working index.",
+      "startedAt": "2026-09-08T10:53:06.020Z",
+      "at": "2026-09-08T10:53:07.962Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Header Help reaches all three reference articles",
+      "actual": "Header Help exposes troubleshooting, reference, and support for this authenticated role.",
+      "startedAt": "2026-09-08T10:53:08.894Z",
+      "at": "2026-09-08T10:53:10.148Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "troubleshooting search, reading, edition and formal link",
+      "actual": "Representative query found article; focused title, edition metadata, full-guide navigation and narrow layouts in three themes passed.",
+      "startedAt": "2026-09-08T10:53:10.148Z",
+      "at": "2026-09-08T10:53:11.448Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "reference search, reading, edition and formal link",
+      "actual": "Representative query found article; focused title, edition metadata, full-guide navigation and narrow layouts in three themes passed.",
+      "startedAt": "2026-09-08T10:53:11.448Z",
+      "at": "2026-09-08T10:53:12.764Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "versions-and-support search, reading, edition and formal link",
+      "actual": "Representative query found article; focused title, edition metadata, full-guide navigation and narrow layouts in three themes passed.",
+      "startedAt": "2026-09-08T10:53:12.764Z",
+      "at": "2026-09-08T10:53:14.015Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Unknown edition and article preserve local navigation",
+      "actual": "Explicit older edition refused without silent fallback; missing article returned to working index.",
+      "startedAt": "2026-09-08T10:53:14.015Z",
+      "at": "2026-09-08T10:53:15.882Z",
+      "result": "pass"
+    },
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Signed-out full suite search with external requests blocked",
+      "actual": "Anonymous formal guides available; failed external tracker navigation left Back/local prose usable; no application API calls.",
+      "startedAt": "2026-09-08T10:53:15.885Z",
+      "at": "2026-09-08T10:53:18.194Z",
+      "result": "pass"
+    }
+  ],
+  "completedAt": "2026-09-08T10:53:18.194Z",
+  "passed": true
+}

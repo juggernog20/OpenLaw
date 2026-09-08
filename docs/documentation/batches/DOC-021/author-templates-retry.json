@@ -1,0 +1,44 @@
+{
+  "name": "templates-retry",
+  "startedAt": "2026-09-08T04:41:05.090Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "matter-templates",
+      "contentSha256": "43244bfcd552adb7dcfc68e1ee456a1cbabfb12833bd8f923b5d13dc3aad73d2"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "invalid template offset refuses save; corrected value persists",
+      "actual": "Negative offset refused with 0..3650 guidance; corrected +2 saved.",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:41:06.558Z",
+      "at": "2026-09-08T04:41:06.690Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "direct Matter creation applies defaults, UTC offsets and Manager assignment",
+      "actual": "M-21 copied Low/Critical and Fields; Task due 2026-09-10 assigned Nadia, undated Task unassigned, Key date 2026-09-13 verified in record.",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:41:06.690Z",
+      "at": "2026-09-08T04:41:08.698Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "editing and archiving template leave existing work unchanged; restore recovers definition",
+      "actual": "Edited future Priority/Task, archived template absent from creation; existing Matter Low and original Tasks/dates unchanged; restore retained revised definition.",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:41:08.698Z",
+      "at": "2026-09-08T04:41:11.643Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T04:41:11.643Z"
+}

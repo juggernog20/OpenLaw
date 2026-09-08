@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** The staff triage queue, with shared quick filters and private saved views. */
+import { HelpLink } from "../components/documentation/help-link";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Inbox } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -297,7 +298,12 @@ export function InboxPage() {
               />
             )
           }
-          actions={tableControls}
+          actions={
+            <>
+              <HelpLink surface="staff" contextual />
+              {tableControls}
+            </>
+          }
         />
       }
     >

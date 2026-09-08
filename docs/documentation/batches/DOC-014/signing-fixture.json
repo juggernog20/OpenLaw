@@ -1,0 +1,24 @@
+{
+  "name": "signing-workflow",
+  "project": "openlaw-docs-b8e31260-signing-workflow",
+  "sourceCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "appImageId": "sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d",
+  "engineImageId": "sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "appUrl": "http://127.0.0.1:43303",
+  "mailUrl": "http://127.0.0.1:48428",
+  "providerControlUrl": "http://127.0.0.1:43313",
+  "providerMode": "isolated DocuSign protocol stand-in; no real provider account",
+  "configurationHashes": {
+    "source/.env": "991604647abb1520fd2059812090e7f465e52c58fa4f990b7161b5bbcec80ff3",
+    "overlay.json": "ec868ae83ca933e279a532163efa53151182abae515b69be20462f52a0f694b2",
+    "fixture/docusign.ts": "cd4b83bbba031740d9ded8e3e33ddba751cb18d1323262f33191ac29091d087a",
+    "fixture/package.json": "1239d4d885dcad42201a27ed9324f8f0f760b78700d8db9ced39a511cffe7eae",
+    "fixture/server.mjs": "7c674cbf6153a10a8423f08c966611594967f0c5ec03c8721be82230a9b6efe2",
+    "fixture/settings.json": "acacfbbdccde48fcfb54f3175338e0111a3c10fe4bd488fc5f5c4cb15f1f94a8"
+  },
+  "sourceSnapshotSha256": "89ec90c53999343c6986aaa62fe348e17bf1e2d26717bbfa575062742e8b5702",
+  "startedAt": "2026-09-07T11:49:11.685074+00:00",
+  "purpose": "C17 workflow fixture provenance; not C42 provider configuration acceptance",
+  "applicationSourceModified": false,
+  "realProviderTraffic": false
+}

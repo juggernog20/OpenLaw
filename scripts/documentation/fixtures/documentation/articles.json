@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "sections": [
+    {
+      "id": "validation",
+      "title": "Validation fixtures"
+    }
+  ],
+  "articles": [
+    {
+      "id": "validation-procedure",
+      "title": "Try the documentation reader",
+      "section": "validation",
+      "kind": "how-to",
+      "coverage": ["C01"],
+      "ownerTask": "DOC-006",
+      "audiences": ["administrator", "legal_team_member", "contributor", "business_user"],
+      "destinations": ["formal", "staff-help", "portal-help"],
+      "priority": "P0",
+      "contexts": [
+        "validation.reader",
+        "portal.home",
+        "portal.form",
+        "portal.request",
+        "portal.files",
+        "inbox",
+        "inbox.convert",
+        "auth",
+        "setup",
+        "welcome",
+        "portal.entry",
+        "settings.intake"
+      ],
+      "status": "draft"
+    },
+    {
+      "id": "validation-recovery",
+      "title": "Recover a validation fixture",
+      "section": "validation",
+      "kind": "troubleshooting",
+      "coverage": ["C02"],
+      "ownerTask": "DOC-006",
+      "audiences": ["administrator", "legal_team_member"],
+      "destinations": ["formal", "staff-help"],
+      "priority": "P0",
+      "contexts": ["validation.reader", "support"],
+      "status": "draft"
+    }
+  ]
+}

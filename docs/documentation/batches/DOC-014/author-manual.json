@@ -1,0 +1,101 @@
+{
+  "name": "manual",
+  "startedAt": "2026-09-07T13:00:57.003Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "manual-signing",
+      "contentSha256": "03b260c04c972776c0e7ebc275c6fb6437f10a0ea6b78d5a06a211d1745b841f"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "upload initial paper and choose Signature without a connector or Envelope",
+      "actual": "C-163 primary Version1; Signature selected manually; signing unconfigured, no Send action and zero Envelopes",
+      "result": "pass",
+      "at": "2026-09-07T13:00:59.801Z"
+    },
+    {
+      "role": "administrator",
+      "action": "failed executed upload keeps the draft and Signature; retry stores distinct executed paper without pinning",
+      "actual": "Controlled failed POST preserved Version1 and Signature; UI retry created unpinned Executed-kind Version2; reader download exactly matched distinct executed PDF",
+      "result": "pass",
+      "at": "2026-09-07T13:01:00.265Z"
+    },
+    {
+      "role": "administrator",
+      "action": "mark, unmark and re-mark the executed Version without changing Status",
+      "actual": "Version2 designation set, cleared and reset; Contract remained Signature",
+      "result": "pass",
+      "at": "2026-09-07T13:01:00.693Z"
+    },
+    {
+      "role": "administrator",
+      "action": "a later current Version preserves the earlier executed designation and correct signed bytes",
+      "actual": "Version3 is current while Version2 retains executed designation; expanded historical Version2 reader returned original executed bytes",
+      "result": "pass",
+      "at": "2026-09-07T13:01:01.147Z"
+    },
+    {
+      "role": "administrator",
+      "action": "explicitly move to Active and inspect History while the manual flow retains zero Envelopes",
+      "actual": "Explicit Active choice recorded in History; no Envelope created by upload, pin or Status change",
+      "result": "pass",
+      "at": "2026-09-07T13:01:01.396Z"
+    },
+    {
+      "role": "administrator",
+      "action": "reached Contributor can read the paper but cannot designate the executed Version",
+      "actual": "Contributor reached the Document, had no executed designation action, pin API403 and existing Version2 designation retained",
+      "result": "pass",
+      "at": "2026-09-07T13:01:02.276Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "upload initial paper and choose Signature without a connector or Envelope",
+      "actual": "C-165 primary Version1; Signature selected manually; signing unconfigured, no Send action and zero Envelopes",
+      "result": "pass",
+      "at": "2026-09-07T13:01:03.568Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "failed executed upload keeps the draft and Signature; retry stores distinct executed paper without pinning",
+      "actual": "Controlled failed POST preserved Version1 and Signature; UI retry created unpinned Executed-kind Version2; reader download exactly matched distinct executed PDF",
+      "result": "pass",
+      "at": "2026-09-07T13:01:04.057Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "mark, unmark and re-mark the executed Version without changing Status",
+      "actual": "Version2 designation set, cleared and reset; Contract remained Signature",
+      "result": "pass",
+      "at": "2026-09-07T13:01:04.363Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "a later current Version preserves the earlier executed designation and correct signed bytes",
+      "actual": "Version3 is current while Version2 retains executed designation; expanded historical Version2 reader returned original executed bytes",
+      "result": "pass",
+      "at": "2026-09-07T13:01:04.791Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "explicitly move to Active and inspect History while the manual flow retains zero Envelopes",
+      "actual": "Explicit Active choice recorded in History; no Envelope created by upload, pin or Status change",
+      "result": "pass",
+      "at": "2026-09-07T13:01:04.976Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "reached Contributor can read the paper but cannot designate the executed Version",
+      "actual": "Contributor reached the Document, had no executed designation action, pin API403 and existing Version2 designation retained",
+      "result": "pass",
+      "at": "2026-09-07T13:01:05.811Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T13:01:05.811Z"
+}

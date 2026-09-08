@@ -7,6 +7,18 @@ export default tseslint.config(
   { ignores: ["**/dist/", "**/.turbo/", "**/node_modules/"] },
   eslint.configs.recommended,
   tseslint.configs.recommended,
+  {
+    files: ["scripts/documentation/**/*.mjs"],
+    languageOptions: {
+      globals: {
+        process: "readonly",
+        console: "readonly",
+        URL: "readonly",
+        fetch: "readonly",
+        AbortSignal: "readonly",
+      },
+    },
+  },
   // The Rules of Hooks, on the one package that has any (TECH-001).
   // Nothing else in the monorepo renders, so the plugin is scoped rather
   // than global: it would cost every other package a parse for rules

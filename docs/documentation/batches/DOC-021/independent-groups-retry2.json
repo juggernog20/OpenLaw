@@ -1,0 +1,58 @@
+{
+  "name": "independent-groups-retry2",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C55"],
+  "authorRecordName": "ind-groups-retry2",
+  "startedAt": "2026-09-08T05:48:47.553Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "approver-groups",
+      "contentSha256": "baffd87c46ad0bfa7d084348f14bf7334da24590d99ca4c50a04cb870b7bdbb9"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "On a Confidential Contract an out-of-audience member refuses the whole apply",
+      "actual": "Contract 49 is Confidential. Applying the group was refused by name in the dialog: \"Nadia Haddad can't see this contract, so they can't be asked to approve it.\". Pending rows before 0, after 0 \u2014 no partial roster, so the group did not reach inside the record's audience.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:48:48.493Z",
+      "at": "2026-09-08T05:48:49.297Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Editing, archiving and restoring the group leaves existing requests as they were",
+      "actual": "Contract 44 held [[\"Nadia Haddad\",\"group\",\"Ind sign-off panel IND81T2F\"],[\"Priya Raman\",\"group\",\"Ind sign-off panel IND81T2F\"]]. Editing the membership to [\"Daniel Okafor\",\"Nadia Haddad\"] left those requests unchanged ([[\"Nadia Haddad\",\"group\",\"Ind sign-off panel IND81T2F\"],[\"Priya Raman\",\"group\",\"Ind sign-off panel IND81T2F\"]]). The archive dialog read \"Archive Ind sign-off panel IND81T2F Ind sign-off panel IND81T2F leaves the apply picker. Its 2 members are kept, and approvals already requested from the group are untouched. The change applies immedi\" with no replacement asked; archiving left them unchanged again ([[\"Nadia Haddad\",\"group\",\"Ind sign-off panel IND81T2F\"],[\"Priya Raman\",\"group\",\"Ind sign-off panel IND81T2F\"]]) and took the group out of the apply picker ([\"Pick a group\",\"Docs assessment approvers 1788842701361\",\"Docs assessment approvers 1788842728405\",\"Executive committee\",\"Finance sign-off\",\"Privacy review\",\"Security review\"]). Restore returned it with members [\"Daniel Okafor\",\"Nadia Haddad\"].",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:48:49.297Z",
+      "at": "2026-09-08T05:48:52.672Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A former member who lost standing is marked Can no longer approve in the editor",
+      "actual": "With Nadia Haddad demoted, the group editor still lists them as a checked member (true) and marks the row \"Nadia Haddad nadia.haddad@helix.example Can no longer approve\" \u2014 the guide's instruction to clear that selection before saving a valid member list.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:48:52.673Z",
+      "at": "2026-09-08T05:48:53.348Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Legal cannot configure approver groups",
+      "actual": "Nadia Haddad opening the Approver groups pane landed on /settings/profile. POST /approver-groups answered 403 while GET /approver-groups answered 403, so Legal may apply a group but not configure one; applying to Contract 44 answered 201.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:48:53.348Z",
+      "at": "2026-09-08T05:48:54.793Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T05:48:54.793Z"
+}

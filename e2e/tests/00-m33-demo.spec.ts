@@ -291,8 +291,27 @@ test("M33: the first run leaves a named, populated system and skipped steps in S
         .getByLabel("Protocol")
         .selectOption({ label: "OpenAI-compatible chat completions" });
       await page.getByLabel("Base URL").fill("http://127.0.0.1:9/v1");
-      await page.getByLabel("Model").fill("m33-configuration-only");
+      // Model is a provider-backed list now (#792). Its list arrives from
+      // "Load models", which calls the provider, so this run takes the manual
+      // entry the pane offers beside it and types the id instead. The endpoint
+      // above is the discard port, so a call that did go out would hang rather
+      // than answer, and the request count below is what proves none went.
+      const modelRequests: string[] = [];
+      page.on("request", (request) => {
+        if (request.url().includes("/api/v1/ai-connector/models"))
+          modelRequests.push(request.url());
+      });
+      await expect(page.getByRole("combobox", { name: "Model", exact: true })).toBeVisible();
+      await page.getByRole("button", { name: "Enter model ID manually" }).click();
+      const model = page.getByRole("textbox", { name: "Model", exact: true });
+      await expect(model).toBeVisible();
+      await model.fill("m33-configuration-only");
       await page.getByLabel("API key").fill("m33-configuration-only");
+      // The pane remounts the selector when a credential changes, and the typed
+      // id has to survive that: it is the value the save below sends.
+      await expect(page.getByRole("textbox", { name: "Model", exact: true })).toHaveValue(
+        "m33-configuration-only",
+      );
       // Saving validates and stores configuration locally; no provider is called.
       createdConnector = true;
       const saving = page.waitForResponse(
@@ -301,6 +320,7 @@ test("M33: the first run leaves a named, populated system and skipped steps in S
       );
       await page.getByRole("button", { name: "Save connector" }).click();
       expect((await saving).status()).toBe(200);
+      expect(modelRequests).toEqual([]);
       await page.goto("/settings/general");
       await page.reload();
       await expectChecklist(page, {

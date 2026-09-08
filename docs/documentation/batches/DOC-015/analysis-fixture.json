@@ -1,0 +1,22 @@
+{
+  "name": "analysis-workflow",
+  "project": "openlaw-docs-b8e31260-analysis-workflow",
+  "sourceCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "appImageId": "sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d",
+  "engineImageId": "sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "appUrl": "http://127.0.0.1:43304",
+  "mailUrl": "http://127.0.0.1:48429",
+  "providerControlUrl": "http://127.0.0.1:43315",
+  "providerMode": "dedicated deterministic OpenAI-compatible local stand-in; no real provider account",
+  "configurationHashes": {
+    "source/.env": "be899c7774e2bf39220bd77983d1a680b2578d7e0eb29e21eb4f1d7d1313a2c6",
+    "overlay.json": "6fb25b45832c82f9ed4f5ce65c316d08f299798469cec9ab28ef378b0f5afe20",
+    "fixture/server.mjs": "07f22dc8553cb0350f32aadc737db64f972d620303cffecd693cc3e6ba698d31",
+    "fixture/settings.json": "2884c59ff28174afcbc975a2be672879fcaed1e35c80bc9d551399469592b5fe"
+  },
+  "sourceSnapshotSha256": "1267292c4ef618e83502ba416ad5ce9beb1ff79fb0d87cfc13aaad00a93963e0",
+  "createdAt": "2026-09-07T14:49:01.369211+00:00",
+  "purpose": "C21 workflow fixture provenance; not C43 provider configuration acceptance",
+  "applicationSourceModified": false,
+  "realProviderTraffic": false
+}

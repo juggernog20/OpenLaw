@@ -1,0 +1,53 @@
+{
+  "name": "reminders-complete3",
+  "startedAt": "2026-09-08T04:51:01.833Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "reminders-and-audit",
+      "contentSha256": "2272f29e086191104e4bdbfef1fdf8e17a8f042f00eca56390320a4b9a179117"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "check eligible colleague bell and actual Mailpit briefing for included and excluded lead times",
+      "actual": "Real worker produced colleague bell and Mailpit email for 2026-09-10 at 2-day lead; 8-day date absent. Saved timezone Antarctica/Casey, actual local hour 12.",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:51:03.577Z",
+      "at": "2026-09-08T04:51:04.238Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "find reminder configuration audit, combine filters, export matching CSV and recover empty filter",
+      "actual": "Admin actor+org_settings.updated+System+reminderOffsetDays filters found before/after list changes; actual downloaded CSV contained matching event; empty search and Clear filters behaved as documented.",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:51:04.238Z",
+      "at": "2026-09-08T04:51:05.370Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Audit log unavailable to other roles",
+      "actual": "Redirect to Profile and API403; no Administrator log exposed.",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:51:05.371Z",
+      "at": "2026-09-08T04:51:06.832Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "Audit log unavailable to other roles",
+      "actual": "Redirect to Profile and API403; no Administrator log exposed.",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:51:06.832Z",
+      "at": "2026-09-08T04:51:08.286Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T04:51:08.286Z"
+}

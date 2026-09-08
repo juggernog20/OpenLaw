@@ -1,0 +1,71 @@
+{
+  "articleId": "approver-groups",
+  "contentSha256": "baffd87c46ad0bfa7d084348f14bf7334da24590d99ca4c50a04cb870b7bdbb9",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Opus 5 independent review agent",
+  "walkthroughReviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-08T06:32:12Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-SETTINGS.md",
+    "apps/web/src/routes/settings-contract-fields.tsx",
+    "apps/web/src/routes/settings-matter-template-editor.tsx",
+    "apps/web/src/routes/settings-request-type-editor.tsx",
+    "apps/web/src/routes/settings-reminders.tsx",
+    "apps/web/src/routes/settings-audit-log.tsx",
+    "apps/web/src/routes/settings-approver-groups.tsx",
+    "apps/api/src/modules/fields/routes.ts",
+    "apps/api/src/modules/matters/create.ts",
+    "apps/api/src/modules/requests/convert.ts",
+    "apps/api/src/pipeline/morning-round.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C55",
+      "coverage": ["C55"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Applying a group snapshots members into Approval requests; later group edits do not rewrite those requests. Non-Member+ selections and unauthorized configuration are refused; existing requests retain their recorded identities.",
+      "actual": "Created a group through Settings > Contracts > Approver groups with two Legal members; the picker offered only Administrators and Legal Team Members and adding a Contributor was refused. Applying it created one Pending Approval Request per member, each stamped with the group name, and the dialog carried the snapshot warning. A second apply on the same record was refused as a no-op and the roster was unchanged. On a record where one member already held a pending request, the dialog said \"Skips 1 person who already has a request open.\" and the apply succeeded without a duplicate. With a member demoted to Contributor the whole apply was refused by name and the record held the same number of Pending rows before and after, so no partial roster was created; restoring their role and applying again created both rows. On a Confidential Contract an out-of-audience member produced the same whole-apply refusal by name with no rows created. Editing the membership, archiving and restoring the group all left the earlier requests exactly as they were, and archiving asked for no replacement. A demoted member still appears in the editor marked \"Can no longer approve\". Nadia Haddad was redirected from the pane and refused 403 on the approver-group routes while still able to apply a group to a Contract. A later evidence review relabelled three group steps: one whose 400 proved request validation rather than the role rule and whose picker list was a sample, and two whose rosters read as null. repair-groups draws the real 422 role refusal from a well-formed memberIds write, verifies the picker list is complete against the user list, and names every asked, skipped and refused person by id with whole rosters before and after.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-021/independent-discovery.json",
+        "docs/documentation/batches/DOC-021/independent-discovery-final.json",
+        "docs/documentation/batches/DOC-021/independent-groups.json",
+        "docs/documentation/batches/DOC-021/independent-groups-retry.json",
+        "docs/documentation/batches/DOC-021/independent-groups-retry2.json",
+        "docs/documentation/batches/DOC-021/independent-repair-groups.json"
+      ]
+    }
+  ],
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-021/README.md",
+    "docs/documentation/batches/DOC-021/author-discovery.json",
+    "docs/documentation/batches/DOC-021/author-groups.json",
+    "docs/documentation/batches/DOC-021/author-groups-retry.json"
+  ],
+  "limitations": [
+    "Technical review and the walkthrough were both performed by the same independent agent; they are separate methods (source inspection and browser walkthrough), not two independent people.",
+    "Independent agent walkthrough, not a human user study; the author and the reviewer are different agents.",
+    "Verified on the owned lab at immutable source 6a8873db; final candidate compatibility belongs to DOC-025.",
+    "Known #774 blank Matter Entity-valued Field picker and #770 template-default clear behaviour remain open and are described as limits, not fixed.",
+    "No human feature owner has signed off behaviour accuracy, and the user's final proofreading of the assembled suite has not happened."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null,
+  "verifiedAtBasis": "Actual completion of the last passing walkthrough covering this article: 2026-09-08T06:32:12.563Z, truncated to the second. Historical action times and article hashes inside the walkthrough records are unchanged, including records taken on earlier draft bytes of the same immutable app build.",
+  "technicalReview": {
+    "reviewer": "Opus 5 independent review agent",
+    "reviewerKind": "agent",
+    "method": "source-inspection",
+    "completedAt": "2026-09-08T06:12:26Z",
+    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+    "scope": "Read the approver-group pane, its unordered list, member picker and archive guard (apps/web/src/routes/settings-approver-groups.tsx), the apply dialog's preview, skip note and snapshot warning (components/approvals/approvals-signing-card.tsx), the one eligibility rule shared by the template and the record (apps/api/src/lib/approvers.ts), and the apply route where archived and already-pending members are filtered out before any refusal while a member who has lost Member+ standing or sits outside a confidential record's audience is refused by name for the whole act (apps/api/src/modules/contract-approvals/routes.ts).",
+    "notHeld": "An agent source review of the release under test. It is not a human feature owner's sign-off on behaviour accuracy, and it is not the user's final proofreading of the assembled suite."
+  }
+}

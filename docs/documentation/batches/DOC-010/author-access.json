@@ -1,0 +1,179 @@
+{
+  "kind": "author-browser-walkthrough",
+  "article": "roles-and-access",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "startedAt": "2026-09-07T05:54:38.145Z",
+  "contentSha256": "71054f73ae3d6b6c25b537232243e2627b6936187bbb44f5700fa35406e15e94",
+  "steps": [
+    {
+      "role": "administrator",
+      "step": "contract exception",
+      "actual": "Opened both shared and Confidential records without an audience Grant.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:41.472Z"
+    },
+    {
+      "role": "legal_team_member",
+      "step": "contract initial reach",
+      "actual": "Opened shared record; Confidential child refused without its own team entry.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:41.670Z"
+    },
+    {
+      "role": "contributor",
+      "step": "contract initial reach",
+      "actual": "Opened shared record; Confidential child refused without its own team entry.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:41.863Z"
+    },
+    {
+      "role": "legal_team_member",
+      "step": "contract team membership",
+      "actual": "Administrator added a team entry through the UI: record opened. Administrator removed it: next read refused.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:42.600Z"
+    },
+    {
+      "role": "contributor",
+      "step": "contract team membership",
+      "actual": "Administrator added a team entry through the UI: record opened. Administrator removed it: next read refused.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:43.305Z"
+    },
+    {
+      "role": "legal_team_member",
+      "step": "contract accountable person",
+      "actual": "Owner or Matter Manager assignment admitted Nadia without a team entry; returning it to Daniel removed that access.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:43.807Z"
+    },
+    {
+      "role": "contributor",
+      "step": "contract shared removal",
+      "actual": "Removing the last team entry stopped access to the non-Confidential record; adding it restored access. Nadia retained ordinary Legal Team Member access.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:44.666Z"
+    },
+    {
+      "role": "legal_team_member",
+      "step": "contract relationship",
+      "actual": "Shared parent displayed its Confidential child only as a title-free Restricted relationship. The child still refused direct access.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:44.923Z"
+    },
+    {
+      "role": "contributor",
+      "step": "contract relationship",
+      "actual": "Shared parent did not grant access to its Confidential child; only the Restricted relationship appeared.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:44.923Z"
+    },
+    {
+      "role": "business_user",
+      "step": "contract Portal boundary",
+      "actual": "Following the staff record link returned Jonas to the Portal without record content.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:44.982Z"
+    },
+    {
+      "role": "administrator",
+      "step": "matter exception",
+      "actual": "Opened both shared and Confidential records without an audience Grant.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:45.111Z"
+    },
+    {
+      "role": "legal_team_member",
+      "step": "matter initial reach",
+      "actual": "Opened shared record; Confidential child refused without its own team entry.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:45.241Z"
+    },
+    {
+      "role": "contributor",
+      "step": "matter initial reach",
+      "actual": "Opened shared record; Confidential child refused without its own team entry.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:45.365Z"
+    },
+    {
+      "role": "legal_team_member",
+      "step": "matter team membership",
+      "actual": "Administrator added a team entry through the UI: record opened. Administrator removed it: next read refused.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:45.776Z"
+    },
+    {
+      "role": "contributor",
+      "step": "matter team membership",
+      "actual": "Administrator added a team entry through the UI: record opened. Administrator removed it: next read refused.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:46.248Z"
+    },
+    {
+      "role": "legal_team_member",
+      "step": "matter accountable person",
+      "actual": "Owner or Matter Manager assignment admitted Nadia without a team entry; returning it to Daniel removed that access.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:46.621Z"
+    },
+    {
+      "role": "contributor",
+      "step": "matter shared removal",
+      "actual": "Removing the last team entry stopped access to the non-Confidential record; adding it restored access. Nadia retained ordinary Legal Team Member access.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:47.181Z"
+    },
+    {
+      "role": "legal_team_member",
+      "step": "matter relationship",
+      "actual": "Shared parent displayed its Confidential child only as a title-free Restricted relationship. The child still refused direct access.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:47.304Z"
+    },
+    {
+      "role": "contributor",
+      "step": "matter relationship",
+      "actual": "Shared parent did not grant access to its Confidential child; only the Restricted relationship appeared.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:47.304Z"
+    },
+    {
+      "role": "business_user",
+      "step": "matter Portal boundary",
+      "actual": "Following the staff record link returned Jonas to the Portal without record content.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:47.368Z"
+    },
+    {
+      "role": "administrator",
+      "step": "Entity Grants",
+      "actual": "Manage access granted and removed Nadia through the UI; Administrator retained access.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:47.792Z"
+    },
+    {
+      "role": "legal_team_member",
+      "step": "Entity Grants",
+      "actual": "Confidential Entity refused before Grant, opened after Grant, and refused after removal; Manage access absent.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:47.792Z"
+    },
+    {
+      "role": "contributor",
+      "step": "Entity boundary",
+      "actual": "Entity link returned Ravi to Home; Contract and Matter team entries did not grant Entity access.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:47.826Z"
+    },
+    {
+      "role": "business_user",
+      "step": "Entity boundary",
+      "actual": "Entity link returned Jonas to the Portal.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:47.869Z"
+    }
+  ],
+  "passed": true,
+  "finishedAt": "2026-09-07T05:54:47.869Z"
+}

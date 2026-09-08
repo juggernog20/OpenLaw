@@ -1,0 +1,125 @@
+{
+  "name": "authoring",
+  "startedAt": "2026-09-08T01:46:45.969Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-knowledge",
+  "articleHashes": [
+    {
+      "articleId": "create-knowledge",
+      "contentSha256": "409e97a76d12be895cf7a182fac6e6c16ad3dba60c76910803dfcc1e2e7e8360"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Create parent and child Knowledge Folders through the library controls",
+      "actual": "Add folder created a root folder and a nested child under the selected parent",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:46:47.486Z",
+      "at": "2026-09-08T01:46:47.919Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Create separate draft items from two selected files",
+      "actual": "Two selected PDFs created two filename-titled Draft/Legal Only items in the chosen child folder, each with its own primary Document; first item opened",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:46:47.920Z",
+      "at": "2026-09-08T01:46:48.287Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Edit title and guidance, preview Markdown, and confirm persistence after reload",
+      "actual": "Title saved with Enter; Preview rendered a heading/list/emphasis and blurred the editor to save guidance; reload retained both",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:46:48.288Z",
+      "at": "2026-09-08T01:46:48.578Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Upload supporting paper and move the primary choice",
+      "actual": "Shared Upload added a supporting DOCX; Set as primary moved the choice and Open preview opened its current Version",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:46:48.578Z",
+      "at": "2026-09-08T01:46:48.995Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Create a guidance-only item with no Document and change its folder",
+      "actual": "New Knowledge Item created an Article with no primary Document; Markdown guidance and child Folder saved without requiring a file",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:46:48.995Z",
+      "at": "2026-09-08T01:46:50.079Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Filter by parent and Type, rename/move folders, exclude cycles, and dissolve without deleting items",
+      "actual": "Parent selection included descendant items; Type narrowed independently; self/descendants were absent from parent choices; rename saved and Delete folder promoted its child without losing either item or its Documents",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:46:50.079Z",
+      "at": "2026-09-08T01:46:51.129Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Create parent and child Knowledge Folders through the library controls",
+      "actual": "Add folder created a root folder and a nested child under the selected parent",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:46:52.603Z",
+      "at": "2026-09-08T01:46:52.979Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Create separate draft items from two selected files",
+      "actual": "Two selected PDFs created two filename-titled Draft/Legal Only items in the chosen child folder, each with its own primary Document; first item opened",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:46:52.979Z",
+      "at": "2026-09-08T01:46:53.251Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Edit title and guidance, preview Markdown, and confirm persistence after reload",
+      "actual": "Title saved with Enter; Preview rendered a heading/list/emphasis and blurred the editor to save guidance; reload retained both",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:46:53.251Z",
+      "at": "2026-09-08T01:46:53.488Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Upload supporting paper and move the primary choice",
+      "actual": "Shared Upload added a supporting DOCX; Set as primary moved the choice and Open preview opened its current Version",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:46:53.488Z",
+      "at": "2026-09-08T01:46:53.845Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Create a guidance-only item with no Document and change its folder",
+      "actual": "New Knowledge Item created an Article with no primary Document; Markdown guidance and child Folder saved without requiring a file",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:46:53.845Z",
+      "at": "2026-09-08T01:46:54.947Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Filter by parent and Type, rename/move folders, exclude cycles, and dissolve without deleting items",
+      "actual": "Parent selection included descendant items; Type narrowed independently; self/descendants were absent from parent choices; rename saved and Delete folder promoted its child without losing either item or its Documents",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:46:54.947Z",
+      "at": "2026-09-08T01:46:56.031Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T01:46:56.035Z"
+}

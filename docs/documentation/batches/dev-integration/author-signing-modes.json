@@ -1,0 +1,50 @@
+{
+  "kind": "author-settings-check",
+  "startedAt": "2026-09-08T18:28:27.150Z",
+  "appCommit": "2fc7243e35b5ee43b75c62f26c73240a789eba61",
+  "buildId": {
+    "app": "sha256:b53edc4ac5aa542d4978e98da17e8019eba49a21248cce9f68528ffe07e87f15",
+    "engine": "sha256:ee6be00b9a89a7fb986781c28759b327d75b7fbe3f8e3aa02d6695d1fa9af19a"
+  },
+  "environment": "openlaw-docs-b8e31260-signing-modes",
+  "method": "browser-walkthrough with live DocuSign developer authentication",
+  "steps": [
+    {
+      "action": "New connector defaults to Polling with no Connect secret or callback fields",
+      "startedAt": "2026-09-08T18:28:28.713Z",
+      "at": "2026-09-08T18:28:28.722Z",
+      "passed": true
+    },
+    {
+      "action": "Polling saves real Demo credentials without a Connect secret and authenticates",
+      "startedAt": "2026-09-08T18:28:28.722Z",
+      "at": "2026-09-08T18:28:30.984Z",
+      "passed": true
+    },
+    {
+      "action": "Webhook reveals the required secret and accepts a separate HTTPS callback",
+      "startedAt": "2026-09-08T18:28:30.984Z",
+      "at": "2026-09-08T18:28:31.624Z",
+      "passed": true
+    },
+    {
+      "action": "Switching to Polling ignores an unfinished callback edit and retains stored credentials",
+      "startedAt": "2026-09-08T18:28:31.625Z",
+      "at": "2026-09-08T18:28:32.263Z",
+      "passed": true
+    },
+    {
+      "action": "Reload retains Polling and leaves the RSA private key blank",
+      "startedAt": "2026-09-08T18:28:32.263Z",
+      "at": "2026-09-08T18:28:32.348Z",
+      "passed": true
+    }
+  ],
+  "limitations": [
+    "Author observations only; no independent provider-guide acceptance.",
+    "No Envelope sent, callback delivery, executed-copy filing or HMAC rotation tested in this record.",
+    "The saved example gateway URL is metadata only. No gateway or Connect subscription was created."
+  ],
+  "completedAt": "2026-09-08T18:28:32.349Z",
+  "passed": true
+}

@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "method": "source-inspection",
+  "reviewer": "Codex DOC-025 source compatibility audit (agent)",
+  "reviewedAt": "2026-09-08T12:56:21.570227Z",
+  "targetAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "distributionCommit": "d6df148c2d6a94fa0b8f053aa5e2494f697c65f5",
+  "applicationSha256": "b7bc6323f8e3d95a4ee006eab289f434502dccfdb7aee4c5fcb2026e7c41cd30",
+  "scope": [
+    "apps",
+    "packages",
+    "styles",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "tsconfig.base.json",
+    "compose.yml",
+    "Dockerfile"
+  ],
+  "ranges": [
+    {
+      "fromAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "toDistributionCommit": "d6df148c2d6a94fa0b8f053aa5e2494f697c65f5",
+      "diff": "batches/DOC-025/source-6a8873db.diff",
+      "sha256": "8cd083e289202edabcb0b747783c0935d2a6be17e8db533990b400ee3306c77a",
+      "files": [
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/api/src/modules/knowledge/documents.test.ts"
+      ]
+    },
+    {
+      "fromAppCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
+      "toDistributionCommit": "d6df148c2d6a94fa0b8f053aa5e2494f697c65f5",
+      "diff": "batches/DOC-025/source-8539f4cc.diff",
+      "sha256": "84e4ce0b6f4d9df8b7472cd18f37ca0a66425ad75035e936ccd5632b05c06161",
+      "files": [
+        "apps/api/openapi.json",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/api/src/modules/knowledge/documents.test.ts",
+        "packages/api-client/src/schema.ts"
+      ]
+    },
+    {
+      "fromAppCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "toDistributionCommit": "d6df148c2d6a94fa0b8f053aa5e2494f697c65f5",
+      "diff": "batches/DOC-025/source-a28331f7.diff",
+      "sha256": "2612e70d9c4c033ae157606a1dff357e5ce90120137993408e0dd8d82585af63",
+      "files": [
+        "apps/api/openapi.json",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/api/src/modules/knowledge/documents.test.ts",
+        "apps/web/src/routes/entities-calendar.test.tsx",
+        "apps/web/src/routes/entities.tsx",
+        "packages/api-client/src/schema.ts"
+      ]
+    },
+    {
+      "fromAppCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+      "toDistributionCommit": "d6df148c2d6a94fa0b8f053aa5e2494f697c65f5",
+      "diff": "batches/DOC-025/source-d1d098ba.diff",
+      "sha256": "4b461123d37fc1e0aea0dc197f7c1461143c84c9acb4ca606a35b8f2247e8840",
+      "files": [
+        "apps/api/openapi.json",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/api/src/modules/knowledge/documents.test.ts",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/portal/request-thread.tsx",
+        "apps/web/src/routes/contract-record.test.tsx",
+        "apps/web/src/routes/entities-calendar.test.tsx",
+        "apps/web/src/routes/entities.tsx",
+        "apps/web/src/routes/help.test.tsx",
+        "apps/web/src/routes/portal-request.test.tsx",
+        "packages/api-client/src/schema.ts"
+      ]
+    }
+  ],
+  "conclusion": "The recorded historical walkthroughs retain their actual app/build identities. The only runtime changes in these ranges are the comment merge, empty Entity-calendar query normalization, and archived Knowledge Document read described below. The changed procedures already have independent walkthroughs on builds containing those fixes. No historical walkthrough is claimed to have been replayed at the target.",
+  "changes": [
+    {
+      "commit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "behavior": "Staff and Portal composers merge the just-posted comment with a live-read row of the same identity; this prevents duplicates without changing controls or access.",
+      "affectedCoverage": ["C07", "C10", "C25"],
+      "verification": "DOC-011 independently exercised the resulting staff conversations as all four app roles on a28331f7, including audience tiers, mentions and attachments. DOC-012 independently exercised the Portal Request thread on the same build, including a failed reply whose retry posted once, which is the duplicate-row case this change addresses. DOC-010 covers the Contributor overview and the account/access guides on the earlier d1d098ba; neither depends on duplicate comment rows."
+    },
+    {
+      "commit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
+      "behavior": "Empty Entity calendar filters become absent query values rather than empty strings; nonempty values are unchanged.",
+      "affectedCoverage": ["C31", "C52", "C04"],
+      "verification": "DOC-018 independently opened Calendar/List and filtered/cleared calendar results as both legal roles on 8539f4cc. Generic saved-view instructions retain the same actions."
+    },
+    {
+      "commit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "behavior": "Member+ can list Documents of an archived Knowledge Item so the record opens for Restore. Existing writes remain frozen and Portal gates remain unchanged.",
+      "affectedCoverage": ["C33", "C34", "C26", "C54"],
+      "verification": "DOC-019 independently archived/reopened/restored Knowledge Items and their Documents as both legal roles on 6a8873db; Contributor/Portal refusals are recorded in the same batch."
+    },
+    {
+      "commit": "611a5b93c9f0aa59abd076805eda4f89a43c4b1b",
+      "behavior": "After 6a8873db only an unused selected archivedAt property and comments changed in the Knowledge read; no response, condition, authorization, schema, or label changed. Other app-range files are tests or generated OpenAPI wording.",
+      "affectedCoverage": [],
+      "verification": "Source diff from 6a8873db to the recorded distribution. Existing selected id and primaryDocumentId and the paperOf call are unchanged."
+    }
+  ],
+  "affectedWalkthroughEvidence": [
+    {
+      "path": "batches/DOC-010/independent-walkthrough.json",
+      "sha256": "1b5f0c18e22708eb763b5eaac87abc889777f0ac28b343082597214db385fe22"
+    },
+    {
+      "path": "batches/DOC-011/independent-walkthrough.json",
+      "sha256": "63d36cf23af169046d54d342b1aecda43a64339f6fa36bd75ac2cc026c69dc12"
+    },
+    {
+      "path": "batches/DOC-012/independent-walkthrough.json",
+      "sha256": "f327834cc56aeae3ab6fe3e04257ee93cd113ddfd8d387a24b47965b11a023aa"
+    },
+    {
+      "path": "batches/DOC-018/independent-c31.json",
+      "sha256": "0b645d4e404761df17bcca0ed4ebbdfd4f52608c648f7ee07b62f8ce23795a77"
+    },
+    {
+      "path": "batches/DOC-018/independent-c52.json",
+      "sha256": "fbd026728c9fda605e50b741300b1189bff7d88ecba59aa7afdf6ffd1720c871"
+    },
+    {
+      "path": "batches/DOC-019/independent-c33.json",
+      "sha256": "6f1cf40b5b56805d79e92ebf39de90be67bcf60b2e2f87954c93f426c60d1922"
+    },
+    {
+      "path": "batches/DOC-019/independent-c34.json",
+      "sha256": "7f3dbee20dab93cf3624c83dd57c2fda2cba5dce99ec67a7fac6afcaf0d5b645"
+    },
+    {
+      "path": "batches/DOC-019/independent-supplement.json",
+      "sha256": "6228340ea7202ff7f0b814d8aa502b72a9669204b64e7f30c4c410305e242b4a"
+    }
+  ],
+  "limits": [
+    "This is a source compatibility audit, not a new procedure walkthrough or human approval.",
+    "Real-provider C42/C43 remain blocked under #742. No provider setup compatibility or completion is inferred.",
+    "Every article remains review until whole-suite acceptance/publication; this record does not change catalog state."
+  ],
+  "corrections": [
+    {
+      "correctedBy": "Independent DOC-025 acceptance seat (Opus 5 agent), separate from the documentation author",
+      "correctedAt": "2026-09-08T13:41:42.873Z",
+      "finding": "changes[0].verification and affectedWalkthroughEvidence cited DOC-010 for the four-role conversations on a28331f7. DOC-010 is roles-and-access and contributor-guide on the earlier d1d098ba. The conversations walkthrough on a28331f7 is DOC-011, and the Portal Request thread on that build is DOC-012, which the earlier text did not cite at all.",
+      "resolution": "Named DOC-011 and DOC-012, kept DOC-010 for the statement it actually supports, and refreshed every dependent hash. The source inspection itself, its reviewer and its reviewedAt are unchanged."
+    }
+  ]
+}

@@ -1,0 +1,192 @@
+{
+  "articleId": "entity-structure-and-access",
+  "contentSha256": "95e5fbe88de8dcba1a417dada7ce078459a39aa633fa3f8e72d1ccc3a7295953",
+  "appCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
+  "buildId": "app sha256:800689bba1e0bd183d33760b14e4775a593d23d1cf9ded4ad752e788e60bd818; engine sha256:b69fd318f42ddbb78e8531a4b7151bcd58d9788b367a26d528d41c5bebfa792f",
+  "environment": "openlaw-docs-b8e31260-entities",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Independent review seat (agent)",
+  "walkthroughReviewer": "Independent review seat (agent)",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-08T01:14:28.623Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-ENTITIES.md",
+    "apps/web/src/components/entities/share-capital-card.tsx",
+    "apps/web/src/components/entities/entity-grants-dialog.tsx",
+    "apps/web/src/routes/entity-record.tsx",
+    "apps/web/src/routes/entities.tsx",
+    "apps/api/src/modules/entities/grant-routes.ts",
+    "apps/api/src/modules/entities/holding-routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C53",
+      "coverage": ["C53"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Corporate facts and graph edges are accurate and explicit Grants control the intended reach. Restricted linked records remain protected; a Holding or chart relationship does not grant access.",
+      "actual": "Authorized shares 10000, Issued shares 7500 and Par value (minor units) 1 each saved when focus left the field and survived a reload. Typing 999 into Issued shares and pressing Escape returned the control to 7500 and left 7500 stored. \"-5\" and \"12.5\" were both refused with \"Enter a whole number of zero or more.\" and the saved 10000 was untouched after each. The chart drew Rev C53 parent RYAG0T, Rev C53 secret sub RYAG0T and Rev C53 minor owner RYAG0T with their 75% and 25% edges; with the chart focused the arrow key panned and plus zoomed (translate(0 0) scale(1) to translate(40 0) scale(1.15)), zero fitted it back and Fit to window reset it the same way. Selecting the chart node for Rev C53 secret sub RYAG0T opened that Entity's own record. The Entity's Matters tab rolled up M-29 \"Rev C53b open matter RZ4A78\" and showed no row for the Confidential M-30 this reader cannot reach. Selecting the rolled-up Matter opened 29 showing \"Rev C53b open matter RZ4A78\". On the Entity record the Contracts tab badge read \"1 linked Contract\" (1) and the Matters tab badge read \"1 linked Matter\" (1); the counts endpoint corroborated {\"contracts\":1,\"matters\":1}. The Entity's Contracts tab showed no row for the Confidential Contract this reader cannot reach, so linking it to a reachable Entity did not widen its audience. The Legal Team Member saw the Confidentiality card with its switch disabled and no Manage access control, and the write behind it was refused with \"Only an Administrator can change Entity confidentiality.\", so only an Administrator changes the flag or its Grants. From Rev C53 parent RYAG0T's Ownership the reader saw \"Restricted Entity\" with no legal name and no navigation link; typing the record's own address in the browser did not open it either, so the Holding carried no access. With the Grant in place the reader opened \"Rev C53 secret sub RYAG0T\" and saw it named under Rev C53 parent RYAG0T's Holdings; opening the linked Confidential Contract's own address still did not show it, so the Grant covered this Entity only. After the Grant was removed the record's address no longer opened for the reader and Rev C53 parent RYAG0T's Ownership showed \"Restricted Entity\" again, so the recorded relationship survived while the access was withdrawn. With the flag off and no Grant in the list, the Legal Team Member opened \"Rev C53 secret sub RYAG0T\" directly. With the Field detached the Legal Team Member still saw M-29 under the Entity with a badge of \"1 linked Matter\", still saw no Confidential row, and opened the Matter at http://127.0.0.1:43306/matters/29.",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:47:59.583Z",
+      "completedAt": "2026-09-08T01:11:18.670Z",
+      "stepsSummarized": "15 of this role's 16 recorded steps; the linked records hold every step",
+      "evidence": [
+        "docs/documentation/batches/DOC-018/independent-c53.json",
+        "docs/documentation/batches/DOC-018/independent-c53-linked-work.json"
+      ]
+    },
+    {
+      "id": "V-C53",
+      "coverage": ["C53"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Corporate facts and graph edges are accurate and explicit Grants control the intended reach. Restricted linked records remain protected; a Holding or chart relationship does not grant access.",
+      "actual": "Authorized shares 10000, Issued shares 7500 and Par value (minor units) 1 each saved when focus left the field and survived a reload. Typing 999 into Issued shares and pressing Escape returned the control to 7500 and left 7500 stored. \"-5\" and \"12.5\" were both refused with \"Enter a whole number of zero or more.\" and the saved 10000 was untouched after each. The chart drew Rev C53 parent RYAG0T, Rev C53 secret sub RYAG0T and Rev C53 minor owner RYAG0T with their 75% and 25% edges; with the chart focused the arrow key panned and plus zoomed (translate(0 0) scale(1) to translate(40 0) scale(1.15)), zero fitted it back and Fit to window reset it the same way. Selecting the chart node for Rev C53 secret sub RYAG0T opened that Entity's own record. The Entity's Matters tab rolled up both M-29 \"Rev C53b open matter RZ4A78\" and the Confidential M-30 for the Administrator who reaches both. Selecting the rolled-up Matter opened 29 showing \"Rev C53b open matter RZ4A78\". On the Entity record the Contracts tab badge read \"2 linked Contracts\" (2) and the Matters tab badge read \"2 linked Matters\" (2); the counts endpoint corroborated {\"contracts\":2,\"matters\":2}. The Entity's Contracts tab listed the Confidential Contract \"Rev C53 confidential deed RYAG0T\" for the Administrator who reaches it. Turning on \"Confidential — restrict to the grant list\" saved and the Administrator kept access to \"Rev C53 secret sub RYAG0T\" without any Grant. Choosing Nadia Haddad in Confidential access and selecting Grant access put that person in the list on \"Rev C53 secret sub RYAG0T\". \"Remove Nadia Haddad\" took that person out of the Confidential access list, which returned to \"No grants yet.\". Against the same Entity the Administrator's badges read \"2 linked Contracts\" and \"2 linked Matters\" while the Legal Team Member's read \"1 linked Contract\" and \"1 linked Matter\" — each short by exactly the one Confidential record that reader cannot reach. After an Administrator fixture detached \"Rev C53b signing entity RZ4A78\" from the Employment Matter type, the Entity's Matters tab still listed M-29 and its badge still read \"2 linked Matters\", so the saved value kept the link.",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:48:20.669Z",
+      "completedAt": "2026-09-08T01:11:17.716Z",
+      "stepsSummarized": "14 of this role's 16 recorded steps; the linked records hold every step",
+      "evidence": [
+        "docs/documentation/batches/DOC-018/independent-c53.json",
+        "docs/documentation/batches/DOC-018/independent-c53-linked-work.json"
+      ]
+    },
+    {
+      "id": "DOC-018-discovery",
+      "coverage": ["C53"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "This guide is listed in Help for this reader's audience and found by its exact title; its outline and the shell's skip link work by keyboard; it links out to itself in the formal reader; and it holds in Light, Dark and Warm at 320, 720 and 1440 CSS pixels and at an emulated 200 percent zoom.",
+      "actual": "The Entities destination offered a Help link, and the Help index headed \"Guides for Legal Team Member\" listed all four Entity guides by their exact titles. Each exact title was found by the Help search and resolved to its own article (Maintain Entities and Counterparties -> /help/entities-and-counterparties; Manage Holdings, Officers, and Registrations -> /help/entity-records; Track and file Entity obligations -> /help/entity-obligations; Manage Entity structure and access -> /help/entity-structure-and-access). Selecting \"Read the calendar and Home\" moved to #read-the-calendar-and-home; the focused element was H2#read-the-calendar-and-home and the section heading was in view. \"Read this article in the full documentation\" opened /documentation/entity-structure-and-access and showed the same guide, \"Manage Entity structure and access\", in the formal reader. The Help article kept its title and produced no horizontal overflow in every theme and width combination (light@320px:0px, light@720px:0px, light@1440px:0px, dark@320px:0px, dark@720px:0px, dark@1440px:0px, warm@320px:0px, warm@720px:0px, warm@1440px:0px). At an emulated 200 percent zoom (a 1440px layout halved to a 720x450 CSS viewport) the article kept its title with no horizontal overflow. Arriving at the article put focus on its H1 \"track-and-file-entity-obligations\"; Shift+Tab reached the outline link for the filing section with a visible focus indicator (outline: solid) and Enter followed it to #mark-a-filing-and-check-the-next-cycle; the shell's \"Skip to content\" link was present and targets #main. All four guides kept their titles with no horizontal overflow across every theme and width combination (36 checks: 4 guides x light/dark/warm x 320/720/1440 CSS pixels). All four guides kept their titles with no horizontal overflow at an emulated 200 percent zoom, a 1440px layout halved to a 720x450 CSS viewport (entities-and-counterparties, entity-records, entity-obligations, entity-structure-and-access). On every guide, arrival focus landed on the article H1, Shift+Tab reached its outline link with a visible focus indicator, and Enter followed it to the section (entities-and-counterparties#recover-from-an-unavailable-choice-or-refused-change; entity-records#archive-and-restore-an-entity; entity-obligations#mark-a-filing-and-check-the-next-cycle; entity-structure-and-access#grant-access-to-a-confidential-entity). Tabbing reached the \"Skip to content\" link and pressing Enter moved focus to MAIN#main with the address at \"#main\", so the skip link activates rather than merely being present. Each guide's \"Read this article in the full documentation\" opened its own formal page showing the same title (entities-and-counterparties -> /documentation/entities-and-counterparties; entity-records -> /documentation/entity-records; entity-obligations -> /documentation/entity-obligations; entity-structure-and-access -> /documentation/entity-structure-and-access).",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:55:05.569Z",
+      "completedAt": "2026-09-08T01:13:09.750Z",
+      "evidence": [
+        "docs/documentation/batches/DOC-018/independent-discovery.json",
+        "docs/documentation/batches/DOC-018/independent-discovery-coverage.json"
+      ]
+    },
+    {
+      "id": "DOC-018-discovery",
+      "coverage": ["C53"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "This guide is listed in Help for this reader's audience and found by its exact title; its outline and the shell's skip link work by keyboard; it links out to itself in the formal reader; and it holds in Light, Dark and Warm at 320, 720 and 1440 CSS pixels and at an emulated 200 percent zoom.",
+      "actual": "The Entities destination offered a Help link, and the Help index headed \"Guides for Administrator\" listed all four Entity guides by their exact titles. Each exact title was found by the Help search and resolved to its own article (Maintain Entities and Counterparties -> /help/entities-and-counterparties; Manage Holdings, Officers, and Registrations -> /help/entity-records; Track and file Entity obligations -> /help/entity-obligations; Manage Entity structure and access -> /help/entity-structure-and-access). Selecting \"Read the calendar and Home\" moved to #read-the-calendar-and-home; the focused element was H2#read-the-calendar-and-home and the section heading was in view. \"Read this article in the full documentation\" opened /documentation/entity-structure-and-access and showed the same guide, \"Manage Entity structure and access\", in the formal reader. The Help article kept its title and produced no horizontal overflow in every theme and width combination (light@320px:0px, light@720px:0px, light@1440px:0px, dark@320px:0px, dark@720px:0px, dark@1440px:0px, warm@320px:0px, warm@720px:0px, warm@1440px:0px). At an emulated 200 percent zoom (a 1440px layout halved to a 720x450 CSS viewport) the article kept its title with no horizontal overflow. Arriving at the article put focus on its H1 \"track-and-file-entity-obligations\"; Shift+Tab reached the outline link for the filing section with a visible focus indicator (outline: solid) and Enter followed it to #mark-a-filing-and-check-the-next-cycle; the shell's \"Skip to content\" link was present and targets #main. All four guides kept their titles with no horizontal overflow across every theme and width combination (36 checks: 4 guides x light/dark/warm x 320/720/1440 CSS pixels). All four guides kept their titles with no horizontal overflow at an emulated 200 percent zoom, a 1440px layout halved to a 720x450 CSS viewport (entities-and-counterparties, entity-records, entity-obligations, entity-structure-and-access). On every guide, arrival focus landed on the article H1, Shift+Tab reached its outline link with a visible focus indicator, and Enter followed it to the section (entities-and-counterparties#recover-from-an-unavailable-choice-or-refused-change; entity-records#archive-and-restore-an-entity; entity-obligations#mark-a-filing-and-check-the-next-cycle; entity-structure-and-access#grant-access-to-a-confidential-entity). Tabbing reached the \"Skip to content\" link and pressing Enter moved focus to MAIN#main with the address at \"#main\", so the skip link activates rather than merely being present. Each guide's \"Read this article in the full documentation\" opened its own formal page showing the same title (entities-and-counterparties -> /documentation/entities-and-counterparties; entity-records -> /documentation/entity-records; entity-obligations -> /documentation/entity-obligations; entity-structure-and-access -> /documentation/entity-structure-and-access).",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:55:40.813Z",
+      "completedAt": "2026-09-08T01:14:14.640Z",
+      "evidence": [
+        "docs/documentation/batches/DOC-018/independent-discovery.json",
+        "docs/documentation/batches/DOC-018/independent-discovery-coverage.json"
+      ]
+    },
+    {
+      "id": "DOC-018-discovery",
+      "coverage": ["C53"],
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "expected": "The formal reader lists and serves this guide without a sign-in and asks the application for nothing.",
+      "actual": "Without any sign-in the formal index listed all four Entity guides behind a \"Skip to content\" link, offered no sign-in form or password field, and issued no /api/v1 request (0 application calls observed). A fresh anonymous context visited the formal index and all four guide pages (/documentation/, /documentation/entities-and-counterparties, /documentation/entity-records, /documentation/entity-obligations, /documentation/entity-structure-and-access) and issued no request under /api/ at all — none to /api/v1/ and none to /api/auth/ — with no password field anywhere.",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:56:15.724Z",
+      "completedAt": "2026-09-08T01:14:28.623Z",
+      "evidence": [
+        "docs/documentation/batches/DOC-018/independent-discovery.json",
+        "docs/documentation/batches/DOC-018/independent-discovery-coverage.json"
+      ]
+    }
+  ],
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-018/README.md",
+    "docs/documentation/batches/DOC-018/independent-c53.json",
+    "docs/documentation/batches/DOC-018/independent-c53-linked-work.json",
+    "docs/documentation/batches/DOC-018/independent-discovery.json",
+    "docs/documentation/batches/DOC-018/independent-discovery-coverage.json"
+  ],
+  "limitations": [
+    "Agent walkthroughs by an independent review seat, not human user studies or feature-owner approval.",
+    "Known app limitation #774: a blank Entity-valued Field cannot be set from Matter Overview, so the Matter roll-up fixtures saved their Entity value through the API. The guide documents reading saved roll-up links and does not claim the Overview picker works.",
+    "The types and Fields guide remains a publication dependency for the guides that link it.",
+    "Recorded against lab app source 8539f4cc, which is ahead of edition.json's supportedAppCommit; the whole suite is re-pinned to one build at DOC-025 acceptance.",
+    "The catalog stays in feature review: DOC-025 whole-suite acceptance and DOC-027 publication are still ahead."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null,
+  "compatibilityReview": {
+    "fromAppCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
+    "toAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+    "contentSha256": "95e5fbe88de8dcba1a417dada7ce078459a39aa633fa3f8e72d1ccc3a7295953",
+    "applicationSha256": "b7bc6323f8e3d95a4ee006eab289f434502dccfdb7aee4c5fcb2026e7c41cd30",
+    "reviewer": "Independent DOC-025 acceptance seat (Opus 5 agent), separate from the documentation author",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-08T13:42:44.735Z",
+    "summary": "This seat re-checked the source ranges, the four saved diffs and the cited independent walkthroughs, and corrected the a28331f7 conversations attribution from DOC-010 to DOC-011 with DOC-012 added for the Portal Request thread. The recorded walkthrough for this article keeps its own app build, timestamps and observations; nothing was replayed at the target. See batches/DOC-025/independent-compatibility.json, which is separate from the authored source audit it re-checked.",
+    "evidence": [
+      {
+        "path": "batches/DOC-025/compatibility.json",
+        "sha256": "0ff7f7cfa20fe6d4b7cdeb768f6bd2ae0965ac50e88c3e2e2f8dc5f3e274e9c8"
+      },
+      {
+        "path": "batches/DOC-025/independent-compatibility.json",
+        "sha256": "c925d3f1ce3e04c3ff3b7044c634655a90351136324be7614ccd7cc02b23b4ca"
+      },
+      {
+        "path": "batches/DOC-011/independent-walkthrough.json",
+        "sha256": "63d36cf23af169046d54d342b1aecda43a64339f6fa36bd75ac2cc026c69dc12"
+      },
+      {
+        "path": "batches/DOC-012/independent-walkthrough.json",
+        "sha256": "f327834cc56aeae3ab6fe3e04257ee93cd113ddfd8d387a24b47965b11a023aa"
+      },
+      {
+        "path": "batches/DOC-025/source-6a8873db.diff",
+        "sha256": "8cd083e289202edabcb0b747783c0935d2a6be17e8db533990b400ee3306c77a"
+      },
+      {
+        "path": "batches/DOC-025/source-8539f4cc.diff",
+        "sha256": "84e4ce0b6f4d9df8b7472cd18f37ca0a66425ad75035e936ccd5632b05c06161"
+      },
+      {
+        "path": "batches/DOC-025/source-a28331f7.diff",
+        "sha256": "2612e70d9c4c033ae157606a1dff357e5ce90120137993408e0dd8d82585af63"
+      },
+      {
+        "path": "batches/DOC-025/source-d1d098ba.diff",
+        "sha256": "4b461123d37fc1e0aea0dc197f7c1461143c84c9acb4ca606a35b8f2247e8840"
+      },
+      {
+        "path": "batches/DOC-010/independent-walkthrough.json",
+        "sha256": "1b5f0c18e22708eb763b5eaac87abc889777f0ac28b343082597214db385fe22"
+      },
+      {
+        "path": "batches/DOC-018/independent-c31.json",
+        "sha256": "0b645d4e404761df17bcca0ed4ebbdfd4f52608c648f7ee07b62f8ce23795a77"
+      },
+      {
+        "path": "batches/DOC-018/independent-c52.json",
+        "sha256": "fbd026728c9fda605e50b741300b1189bff7d88ecba59aa7afdf6ffd1720c871"
+      },
+      {
+        "path": "batches/DOC-019/independent-c33.json",
+        "sha256": "6f1cf40b5b56805d79e92ebf39de90be67bcf60b2e2f87954c93f426c60d1922"
+      },
+      {
+        "path": "batches/DOC-019/independent-c34.json",
+        "sha256": "7f3dbee20dab93cf3624c83dd57c2fda2cba5dce99ec67a7fac6afcaf0d5b645"
+      },
+      {
+        "path": "batches/DOC-019/independent-supplement.json",
+        "sha256": "6228340ea7202ff7f0b814d8aa502b72a9669204b64e7f30c4c410305e242b4a"
+      }
+    ],
+    "authoredSourceAudit": {
+      "path": "batches/DOC-025/compatibility.json",
+      "reviewer": "Codex DOC-025 source compatibility audit (agent)",
+      "reviewedAt": "2026-09-08T12:56:21.570227Z",
+      "note": "Authored source inspection, retained with its original identity and time. It shares its root author with this article, which is why an independent seat re-checked it."
+    }
+  }
+}

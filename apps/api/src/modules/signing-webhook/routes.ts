@@ -18,10 +18,9 @@
  * **Nothing unsigned is believed.** There is no auth guard here, so the
  * signature is the whole gate: a delivery whose HMAC does not verify
  * against this install's stored Connect secret is refused, and so is
- * one carrying no signature at all. TECH-013's rule that the secret is
- * mandatory rather than optional-if-configured is what makes that a
- * gate and not a suggestion — an install with no connector verifies
- * nothing, so it believes nothing.
+ * one carrying no signature at all. Only an enabled connector in
+ * Webhook mode can receive deliveries. Polling mode refuses them even
+ * when it retains a secret from an earlier configuration.
  *
  * **A forged delivery and a malformed one are answered identically.**
  * 401, one sentence, no detail about which check failed. Telling a
@@ -132,7 +131,7 @@ export const signingWebhookRoutes: FastifyPluginAsync = async (app) => {
       // Resolved live, so a key an Administrator rotated a second ago
       // is the key this delivery is checked against. An install with no
       // connector resolves to nothing and believes nothing.
-      const signing = await app.resolveSigningProvider().catch((error: unknown) => {
+      const signing = await app.resolveSigningProvider("webhook").catch((error: unknown) => {
         // A stored connector that cannot be built into a driver — an
         // unreadable RSA key, a row a later adapter wrote — verifies
         // nothing, so the delivery is unsigned as far as this install

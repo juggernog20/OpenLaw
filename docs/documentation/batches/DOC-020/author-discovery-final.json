@@ -1,0 +1,61 @@
+{
+  "name": "author-discovery-final",
+  "startedAt": "2026-09-08T03:09:12.377Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-admin-onboarding",
+  "articleHashes": [
+    {
+      "articleId": "first-run",
+      "contentSha256": "b09bb7b41ac0d32c76ad2fbb659fa1660355ba8955bcf37155d4f0091063200e"
+    },
+    {
+      "articleId": "organisation-and-users",
+      "contentSha256": "eb8adb38abd25960500df5a7cdc31ff62988d97c8f3c0c49856575cfc50cc304"
+    },
+    {
+      "articleId": "authentication-and-email",
+      "contentSha256": "bbb092098d1b8932cfdc35d741042f9cfdbec82935fc9f30902c5caf88d25df9"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "first-run contextual Help, title search, heading focus and formal reader",
+      "actual": "Help title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths; keyboard focus and emulated 200 percent zoom remained usable",
+      "result": "pass",
+      "startedAt": "2026-09-08T03:09:13.286Z",
+      "at": "2026-09-08T03:09:15.136Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "organisation-and-users contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title; title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths; keyboard focus and emulated 200 percent zoom remained usable",
+      "result": "pass",
+      "startedAt": "2026-09-08T03:09:15.137Z",
+      "at": "2026-09-08T03:09:16.446Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "authentication-and-email contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title; title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths; keyboard focus and emulated 200 percent zoom remained usable",
+      "result": "pass",
+      "startedAt": "2026-09-08T03:09:16.446Z",
+      "at": "2026-09-08T03:09:17.796Z"
+    },
+    {
+      "role": "signed-out",
+      "method": "browser-walkthrough",
+      "action": "three guides are discoverable in formal preview without application API calls",
+      "actual": "All three formal guide titles discoverable anonymously; zero application API requests",
+      "result": "pass",
+      "startedAt": "2026-09-08T03:09:17.802Z",
+      "at": "2026-09-08T03:09:18.864Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T03:09:18.864Z"
+}

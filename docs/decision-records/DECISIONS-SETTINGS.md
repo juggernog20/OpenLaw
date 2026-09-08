@@ -155,9 +155,16 @@ The setup checklist reports current configuration, not a stored history of skip 
 
 ### Addendum (2026-09-05) — View as business user
 
-Settings → Personal → Profile includes an **App view** card for Administrators and Legal Team Members. **View as business user** opens `/portal`, using the existing requester-scoped forms, Your requests list, and conversations. The signed-in account and role stay the same; the portal shows that person's own Requests, and submissions and replies are real.
+~~Settings → Personal → Profile includes an **App view** card for Administrators and Legal Team Members.~~ Superseded by the SET-006 navigation addendum below: the control now has its own `/settings/app-view` page. **View as business user** opens `/portal`, using the existing requester-scoped forms, Your requests list, and conversations. The signed-in account and role stay the same; the portal shows that person's own Requests, and submissions and replies are real.
 
-Every authenticated portal page shows Member+ staff a **Viewing as business user** notice and **Return to legal view** link to `/settings/profile`. The route determines the view, so reloads and portal navigation retain the return control without a stored preference. Business Users and Contributors see neither control. This supersedes the INT-001 M20/2 addendum's decision to omit a staff return control; its session gate and requester scoping still apply.
+Every authenticated portal page shows Member+ staff a **Viewing as business user** notice and **Return to legal view** link ~~to `/settings/profile`~~ to `/settings/app-view` (updated by the SET-006 navigation addendum below). The route determines the view, so reloads and portal navigation retain the return control without a stored preference. Business Users and Contributors see neither control. This supersedes the INT-001 M20/2 addendum's decision to omit a staff return control; its session gate and requester scoping still apply.
+
+### SET-006 UX review addendum (2026-09-06) — View Business Portal navigation
+
+View Business Portal moves from the Profile card to its own Personal sidebar entry and page at
+`/settings/app-view`. It remains available to Administrators and Legal Team Members.
+The portal's Return to legal view control returns to this page. The existing session,
+role and requester scope are unchanged.
 
 ## SET-007 — E-signature lives in Organization → Integrations, not in Contracts
 
@@ -174,10 +181,30 @@ Every authenticated portal page shows Member+ staff a **Viewing as business user
 - **Status** — Accepted
 - **Date** — 2026-09-03
 - **Context** — SET-001 and SET-007 both filed the AI credentials under Integrations, beside E-signature, and M31 shipped the pane there (#661, DES-070). The pane holds more than a credential. It holds the AI connector and the seven core Field prompts, and it drives Contract analysis across the product: the Analysis run, the Unverified marker on the Contract, Key dates, Home, and the briefing. Reviewing the built product, the owner judged that an Integrations tab hides a product feature behind a plumbing label.
-- **Decision** — **AI analysis is a section of its own.** The pane lives at **Settings → Organization → AI analysis**, `/settings/ai-analysis`, with its own rail entry (`sparkles` glyph) placed after Notifications and before Integrations, so Integrations stays last as SET-001 draws it. The pane's content is unchanged: the DES-054 Provider card and the Field prompts card, both collapsed on arrival. ~~SET-007's "The AI-analysis pane (CTR-008) joins Integrations in M31" sentence~~ and ~~DES-070's "The Integrations destination keeps its E-signature and AI analysis tabs"~~ are **superseded by this record**; the rest of both stands. Integrations keeps E-signature as its only pane, and its tab strip stays, ready for a second connector.
+- **Decision** — **AI analysis is a section of its own.** The pane lives at **Settings → Organization → AI analysis**, `/settings/ai-analysis`, with its own rail entry (`sparkles` glyph) placed after Notifications and before Integrations, so Integrations stays last as SET-001 draws it. The pane's content is unchanged: the DES-054 Provider card and the Field prompts card. ~~Both are collapsed on arrival.~~ **Implementation reconciliation (2026-09-08, DOC-025):** the Provider card starts collapsed; Field prompts has no expand/collapse control (`AiFieldPromptsCard`). This corrects the recorded UI description; no configuration behavior changes. ~~SET-007's "The AI-analysis pane (CTR-008) joins Integrations in M31" sentence~~ and ~~DES-070's "The Integrations destination keeps its E-signature and AI analysis tabs"~~ are **superseded by this record**; the rest of both stands. Integrations keeps E-signature as its only pane, and its tab strip stays, ready for a second connector.
 - **Rationale** — Integrations is for accounts with other companies whose absence costs nothing (an install with no DocuSign connector still has the manual hand-off). AI analysis is a feature with configuration, not a connector with a feature attached: its prompts shape what the product writes onto every Contract, and an Administrator looking for "where do I tune what the AI extracts" should find it on the rail, not one click behind Integrations. One pane, one address (SET-001) still holds; the address moved.
 - **Alternatives considered** — Keep the Integrations tab and add a rail deep-link (declined: two addresses for one pane). Split the pane, credentials under Integrations and prompts under Contracts (declined: the prompts are useless without the AI connector, and CTR-008 already keeps catalog Field prompts under Contracts → Fields; a third home would scatter one feature across three sections). A redirect from the old address (declined: nothing shipped to anyone at the old address, and the rail is the only door).
 - **Consequences** — The Organization rail gains an **AI analysis** entry. Every Organization pane rule applies unchanged: Administrator-only (SET-002), immediate apply (SET-003), activity-logged at `admin_only`. The old address `/settings/integrations/ai-analysis` no longer resolves. `CONTEXT.md`, `DEPLOYMENT.md`, `SCHEMA.md`, CTR-008, TECH-024, and DES-070 are amended in place. The ST7 redraw already owed by `SETTINGS-INVENTORY.md` now also owes the new rail entry and a frame of its own for the pane.
+
+### Addendum, 2026-09-08, #791
+
+The Provider card uses a searchable model list with **Load models** and **Refresh models**.
+The Administrator can load choices before saving. An explicit manual entry control supports
+private model IDs and failed discovery. Azure keeps deployment-name entry. The selected model
+survives refresh, including when it is missing from the returned list. A changed provider or
+endpoint requires a new API key. Loading models makes no settings change; saving the selected
+model uses the existing connector save and Activity path.
+
+## SET-009: select the Signing connector's update mode
+
+- **Status:** Accepted
+- **Date:** 2026-09-08
+- **Decision:** The Administrator selects Polling or Webhook under E-signature. The form explains outbound access and delayed updates for Polling, and the public HTTPS gateway and signed Connect subscription for Webhook. The Connect secret and public callback fields appear for Webhook. A separate callback URL leaves the app base URL unchanged. The saved mode takes effect after Save connector without a restart.
+- **Migration:** Existing connectors keep Webhook. New connectors default to Polling. API saves that omit the mode keep the current value. Switching modes keeps the credentials and outstanding Envelopes. Changes are recorded in the Audit log.
+- **Rationale:** Private installations need outbound-only updates. Teams that need prompt updates can configure a gateway and signed Connect subscription. Polling trades latency for simpler network setup.
+- **Alternatives:** Requiring a public app address excludes private deployments. Removing reconciliation from Webhook mode would leave missed deliveries unresolved. Operating a hosted relay is outside this change.
+- **Consequences:** Operators choose and test their update path. Both modes send selected Documents to DocuSign. Webhook requires gateway and subscription maintenance.
+- **Source:** User request, issue #789. Extends SET-007 and CTR-013.
 
 ## Index of decisions
 
@@ -191,10 +218,4 @@ Every authenticated portal page shows Member+ staff a **Viewing as business user
 | SET-006 | Personal profile scope; email change deferred                              | Accepted                                                                           |
 | SET-007 | E-signature lives in Organization → Integrations, not in Contracts         | Accepted; the AI-pane sentence superseded by SET-008                               |
 | SET-008 | AI analysis is an Organization section of its own, not an Integrations tab | Accepted                                                                           |
-
-### SET-006 UX review addendum (2026-09-06) — View Business Portal navigation
-
-View Business Portal moves from the Profile card to its own Personal sidebar entry and page at
-`/settings/app-view`. It remains available to Administrators and Legal Team Members.
-The portal's Return to legal view control returns to this page. The existing session,
-role and requester scope are unchanged.
+| SET-009 | Select the Signing connector update mode                                   | Accepted                                                                           |

@@ -1,0 +1,221 @@
+{
+  "kind": "independent-acceptance",
+  "task": "DOC-025",
+  "issue": 745,
+  "independentReview": true,
+  "reviewer": "Independent DOC-025 acceptance seat (Opus 5 agent), separate from the documentation author",
+  "reviewerKind": "agent",
+  "method": "browser-walkthrough",
+  "startedAt": "2026-09-08T13:36:12.194Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:c585d8683816050bdf00568a6f4e1983f14fb3b364ac8202f4f4e40dab9ef52c; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleId": "reference",
+  "contentSha256": "ba4b1b0cc96db761cc19f06fa88d5e4d9625355873cc2a15d8f6deb58193f5d6",
+  "contentHashNote": "The reference guide hash was taken before the run, from the bytes the preview serves.",
+  "mechanism": "Disposable Chromium profile with a tabs-permission extension calling chrome.tabs.setZoom/getZoom. This is real browser-chrome zoom, not CSS zoom.",
+  "limitations": [
+    "One reference guide sampled per role, separate from the CSS-zoom checks in the acceptance run.",
+    "No assistive-technology study and no human timing measurement is claimed."
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Actual Chromium browser zoom 200% on the reference guide in three themes",
+      "startedAt": "2026-09-08T13:36:12.194Z",
+      "at": "2026-09-08T13:36:13.966Z",
+      "result": "pass",
+      "actual": {
+        "before": {
+          "width": 1280,
+          "dpr": 1,
+          "cssZoom": "1"
+        },
+        "chromeTabsGetZoom": 2,
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          }
+        ]
+      }
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Actual Chromium browser zoom 200% on the reference guide in three themes",
+      "startedAt": "2026-09-08T13:36:14.014Z",
+      "at": "2026-09-08T13:36:15.842Z",
+      "result": "pass",
+      "actual": {
+        "before": {
+          "width": 1280,
+          "dpr": 1,
+          "cssZoom": "1"
+        },
+        "chromeTabsGetZoom": 2,
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          }
+        ]
+      }
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "Actual Chromium browser zoom 200% on the reference guide in three themes",
+      "startedAt": "2026-09-08T13:36:15.880Z",
+      "at": "2026-09-08T13:36:17.568Z",
+      "result": "pass",
+      "actual": {
+        "before": {
+          "width": 1280,
+          "dpr": 1,
+          "cssZoom": "1"
+        },
+        "chromeTabsGetZoom": 2,
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          }
+        ]
+      }
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Actual Chromium browser zoom 200% on the reference guide in three themes",
+      "startedAt": "2026-09-08T13:36:17.606Z",
+      "at": "2026-09-08T13:36:18.907Z",
+      "result": "pass",
+      "actual": {
+        "before": {
+          "width": 1280,
+          "dpr": 1,
+          "cssZoom": "1"
+        },
+        "chromeTabsGetZoom": 2,
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          }
+        ]
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Actual Chromium browser zoom 200% on the reference guide in three themes",
+      "startedAt": "2026-09-08T13:36:18.940Z",
+      "at": "2026-09-08T13:36:19.862Z",
+      "result": "pass",
+      "actual": {
+        "before": {
+          "width": 1280,
+          "dpr": 1,
+          "cssZoom": "1"
+        },
+        "chromeTabsGetZoom": 2,
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          },
+          {
+            "theme": "dark",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          },
+          {
+            "theme": "warm",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false
+          }
+        ]
+      }
+    }
+  ],
+  "completedAt": "2026-09-08T13:36:19.911Z",
+  "passed": true,
+  "originalCaptureName": "745-ind-zoom-1788874572194.json"
+}

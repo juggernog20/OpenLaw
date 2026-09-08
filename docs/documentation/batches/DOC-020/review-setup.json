@@ -1,0 +1,121 @@
+{
+  "record": "review-setup",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-admin-review",
+  "fixture": {
+    "appUrl": "http://127.0.0.1:43328",
+    "mailUrl": "http://127.0.0.1:48435",
+    "draftPreview": "http://127.0.0.1:43331",
+    "providerMode": "dedicated local OpenID Connect fixture; full browser authorization and callback; no external identity-provider account",
+    "frozenConfigurationHashes": {
+      "source/.env": "47286908f614d1cd4cf769b7fe4168dac3db2d536faebfe4a4481312ad7868e2",
+      "overlay.json": "a37da4d9df42ec8c176757e063e8fc33f0cd5addfac8c774396f2140c91425cd",
+      "fixture/server.mjs": "b91a17c780f3f816a2eb4a5968a43fba405085743f9b174cbc7cf69528738363"
+    }
+  },
+  "successfulChecks": 9,
+  "failedAttempts": 0,
+  "runs": [
+    {
+      "run": "setup",
+      "startedAt": "2026-09-08T03:32:50.345Z",
+      "completedAt": "2026-09-08T03:32:55.181Z",
+      "articleHashes": [
+        {
+          "articleId": "first-run",
+          "contentSha256": "0f87bd0fce3032d84fbfe3a4c8056826879effd86102e19f8c61efa0f62e3b59"
+        },
+        {
+          "articleId": "authentication-and-email",
+          "contentSha256": "f272a2d7fa11a4088bb528d1642a40060ce7170aeff94234cb2a1e347d18f225"
+        }
+      ],
+      "steps": [
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "A genuinely fresh instance offers setup Help that reaches the first-run guide",
+          "actual": "On an instance still reporting needsSetup true, \"Help with this page\" on Set up OpenLaw opened the formal reader at the setup topic and the first-run guide was reachable and rendered its H1.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:32:50.382Z",
+          "at": "2026-09-08T03:32:51.633Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Setup refuses mismatched passwords and a short password, then creates the first Administrator",
+          "actual": "A seven-character password left the Password field invalid and stayed on Set up OpenLaw; a mismatch raised \"The passwords do not match.\"; the corrected submission signed Devon Ashcroft in as first Administrator and opened Welcome to OpenLaw.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:32:51.633Z",
+          "at": "2026-09-08T03:32:52.746Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Welcome offers its own contextual Help before onboarding is finished",
+          "actual": "The unfinished wizard exposed \"Help with this page\", which opened the same formal setup topic listing the first-run guide; returning to /welcome still showed the wizard.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:32:52.746Z",
+          "at": "2026-09-08T03:32:53.639Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Unregistered OIDC cannot be selected; built-in sign-in continues to the portal step",
+          "actual": "Selecting Single sign-on (OIDC) with no provider was refused with \"Register an identity provider before switching to single sign-on.\"; Built-in sign-in continued to the step titled Business-user portal.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:32:53.639Z",
+          "at": "2026-09-08T03:32:53.809Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Portal step saves two allowed domains entered without an email username",
+          "actual": "Add accepted the bare domains helix.example and northwind.example, each gaining a Remove control; Continue saved them and opened Outbound email. The API read back exactly those two saved domains.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:32:53.809Z",
+          "at": "2026-09-08T03:32:53.982Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Reloading the unfinished wizard returns to Welcome and keeps saved settings",
+          "actual": "A reload dropped the current step back to Welcome, as the guide states; Get started then Continue showed both saved domains still present, so saved settings survived while the step position did not.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:32:53.982Z",
+          "at": "2026-09-08T03:32:54.849Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Set up later on a middle step skips only that step and does not finish onboarding",
+          "actual": "Set up later on Business-user portal moved to Outbound email and stayed inside the wizard; the onboarding record still reported completed false, confirming a middle-step skip is not the finishing action.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:32:54.849Z",
+          "at": "2026-09-08T03:32:54.906Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Outbound email starts unset, rejects a non-SMTP relay, and saves a working relay",
+          "actual": "The step opened on \"Outbound email is not set up.\"; an https:// relay was refused and left the source unset; smtp://mailpit:1025 with a From address saved, switched the pane to Replace relay, stopped showing the relay URL again, and moved the resolved source to app.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:32:54.907Z",
+          "at": "2026-09-08T03:32:55.043Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Send test email delivers a real SMTP message to the signed-in Administrator",
+          "actual": "Send test email reported \"Test email sent\" and a real message reached Devon Ashcroft in the fixture Mailpit inbox, so a saved relay was confirmed by delivery rather than by the save alone.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:32:55.043Z",
+          "at": "2026-09-08T03:32:55.181Z"
+        }
+      ]
+    }
+  ]
+}

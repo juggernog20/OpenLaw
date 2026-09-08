@@ -1,0 +1,60 @@
+{
+  "kind": "author-browser-walkthrough",
+  "article": "contributor-guide",
+  "role": "contributor",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "startedAt": "2026-09-07T05:54:48.138Z",
+  "contentSha256": "2df76fed1a4fcec4d5c7da49c77eb9c95fef3c35e161cd4d727223c57d07b51e",
+  "steps": [
+    {
+      "step": "contract business edits",
+      "actual": "Browser edits persisted after reload; legal Field omitted; legal-managed controls unavailable.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:50.565Z"
+    },
+    {
+      "step": "contract supporting Documents",
+      "actual": "Uploaded and opened a supporting PDF; Add version appended a second Version. Folder and Document administration unavailable; Contract primary-chain write absent.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:51.128Z"
+    },
+    {
+      "step": "contract conversation",
+      "actual": "Posted at Working team and Full thread under Ravi Menon; Legal only absent.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:51.417Z"
+    },
+    {
+      "step": "contract reserved action refusal",
+      "actual": "In addition to absent or disabled browser controls, a Contributor title-write attempt was refused with HTTP 403.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:51.427Z"
+    },
+    {
+      "step": "matter business edits",
+      "actual": "Browser edits persisted after reload; legal Field omitted; legal-managed controls unavailable.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:51.656Z"
+    },
+    {
+      "step": "matter supporting Documents",
+      "actual": "Uploaded and opened a supporting PDF; Add version appended a second Version. Folder and Document administration unavailable; Contract primary-chain write absent.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:52.177Z"
+    },
+    {
+      "step": "matter conversation",
+      "actual": "Posted at Working team and Full thread under Ravi Menon; Legal only absent.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:52.426Z"
+    },
+    {
+      "step": "matter reserved action refusal",
+      "actual": "In addition to absent or disabled browser controls, a Contributor title-write attempt was refused with HTTP 403.",
+      "result": "pass",
+      "at": "2026-09-07T05:54:52.432Z"
+    }
+  ],
+  "passed": true,
+  "finishedAt": "2026-09-07T05:54:52.432Z"
+}

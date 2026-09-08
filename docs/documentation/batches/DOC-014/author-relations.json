@@ -1,0 +1,129 @@
+{
+  "name": "relations",
+  "startedAt": "2026-09-07T12:46:35.190Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "contract-relations-and-ending",
+      "contentSha256": "29377c21400749c9f3e4fcc59863b7ae77ec6d916dedcdcf198ff93726745a4c"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "cancel a parent choice, then set parent and reject the reverse cycle",
+      "actual": "C-154 Cancel saved no parent; set C-155; attempting reverse parent through UI refused cycle and preserved graph",
+      "result": "pass",
+      "at": "2026-09-07T12:46:39.273Z"
+    },
+    {
+      "role": "administrator",
+      "action": "create all typed links and inspect outgoing/incoming direction; duplicate and self are refused",
+      "actual": "Related symmetric; Renews and Amends outgoing on root/incoming on other; reverse UI labels Renewed by/Amended by; duplicate UI refusal and self API409 leave three links",
+      "result": "pass",
+      "at": "2026-09-07T12:46:42.237Z"
+    },
+    {
+      "role": "administrator",
+      "action": "remove only a selected typed link and the immediate parent, retaining other records",
+      "actual": "Removed only Related typed link and immediate parent; Renews/Amends and both target records retained",
+      "result": "pass",
+      "at": "2026-09-07T12:46:42.536Z"
+    },
+    {
+      "role": "administrator",
+      "action": "link a Matter with independent flags, then unlink before moving to another Matter",
+      "actual": "Matter link kept Contract Confidential/Matter public; explicit Unlink freed sole Matter slot and second link moved it; advisory changed no flags",
+      "result": "pass",
+      "at": "2026-09-07T12:46:43.681Z"
+    },
+    {
+      "role": "administrator",
+      "action": "confidentiality suggestion is optional and a non-reaching Legal reader sees a restricted relation without gaining access",
+      "actual": "Administrator fixture link to inaccessible Confidential target rendered Restricted contract for Nadia and direct404; UI parent-link suggestion declined, root stayed public while parent stayed Confidential",
+      "result": "pass",
+      "at": "2026-09-07T12:46:45.527Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Ended is editable, hidden by default, and discoverable with Show ended",
+      "actual": "Ended retained legal edits; default list omitted C-154; Filter→Show ended revealed it",
+      "result": "pass",
+      "at": "2026-09-07T12:46:46.430Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Archive freezes the record without ending linked work; Restore retains Ended until explicit reopen",
+      "actual": "Archive kept Ended, hid link edits and refused parent409; linked Contract/Matter stayed unarchived; Show archived plus Show ended revealed record; Restore kept Ended; explicit Active reopened with History retained",
+      "result": "pass",
+      "at": "2026-09-07T12:46:47.998Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Contributor can read reached relationships but cannot link or change lifecycle",
+      "actual": "Reached Contributor read related card but had no link/Stage controls and relation POST403",
+      "result": "pass",
+      "at": "2026-09-07T12:46:48.660Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "cancel a parent choice, then set parent and reject the reverse cycle",
+      "actual": "C-158 Cancel saved no parent; set C-159; attempting reverse parent through UI refused cycle and preserved graph",
+      "result": "pass",
+      "at": "2026-09-07T12:46:51.823Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "create all typed links and inspect outgoing/incoming direction; duplicate and self are refused",
+      "actual": "Related symmetric; Renews and Amends outgoing on root/incoming on other; reverse UI labels Renewed by/Amended by; duplicate UI refusal and self API409 leave three links",
+      "result": "pass",
+      "at": "2026-09-07T12:46:54.841Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "remove only a selected typed link and the immediate parent, retaining other records",
+      "actual": "Removed only Related typed link and immediate parent; Renews/Amends and both target records retained",
+      "result": "pass",
+      "at": "2026-09-07T12:46:55.132Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "link a Matter with independent flags, then unlink before moving to another Matter",
+      "actual": "Matter link kept Contract Confidential/Matter public; explicit Unlink freed sole Matter slot and second link moved it; advisory changed no flags",
+      "result": "pass",
+      "at": "2026-09-07T12:46:56.351Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "confidentiality suggestion is optional and a non-reaching Legal reader sees a restricted relation without gaining access",
+      "actual": "Administrator fixture link to inaccessible Confidential target rendered Restricted contract for Nadia and direct404; UI parent-link suggestion declined, root stayed public while parent stayed Confidential",
+      "result": "pass",
+      "at": "2026-09-07T12:46:58.215Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Ended is editable, hidden by default, and discoverable with Show ended",
+      "actual": "Ended retained legal edits; default list omitted C-158; Filter→Show ended revealed it",
+      "result": "pass",
+      "at": "2026-09-07T12:46:59.207Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Archive freezes the record without ending linked work; Restore retains Ended until explicit reopen",
+      "actual": "Archive kept Ended, hid link edits and refused parent409; linked Contract/Matter stayed unarchived; Show archived plus Show ended revealed record; Restore kept Ended; explicit Active reopened with History retained",
+      "result": "pass",
+      "at": "2026-09-07T12:47:00.779Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Contributor can read reached relationships but cannot link or change lifecycle",
+      "actual": "Reached Contributor read related card but had no link/Stage controls and relation POST403",
+      "result": "pass",
+      "at": "2026-09-07T12:47:01.459Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T12:47:01.459Z"
+}

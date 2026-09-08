@@ -1,0 +1,113 @@
+{
+  "kind": "independent-help-discovery",
+  "task": "DOC-013",
+  "issue": 733,
+  "independentReview": true,
+  "reviewerKind": "agent",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "startedAt": "2026-09-07T11:32:43.786Z",
+  "finishedAt": "2026-09-07T11:33:34.068Z",
+  "frontend": "Vite preview reader at port 43312 serving the working canonical Markdown, proxied to the committed lab at port 43302; the lab's own Help at port 43302 for the exclusion check",
+  "articleHashesTested": [
+    {
+      "articleId": "triage-requests",
+      "contentSha256": ["b28fe6456b9259168173d057309994db811044beac40c09dcafd96ea7da36eea"]
+    },
+    {
+      "articleId": "convert-request",
+      "contentSha256": ["09ba1d034467e55a18a1b06c5942e0485d9282afbfe6b31676e239b470809abe"]
+    }
+  ],
+  "articleHashesCurrent": [
+    {
+      "articleId": "triage-requests",
+      "contentSha256": "b28fe6456b9259168173d057309994db811044beac40c09dcafd96ea7da36eea"
+    },
+    {
+      "articleId": "convert-request",
+      "contentSha256": "09ba1d034467e55a18a1b06c5942e0485d9282afbfe6b31676e239b470809abe"
+    }
+  ],
+  "themes": ["light", "warm", "dark"],
+  "widths": [320, 720, 1440],
+  "limitations": [
+    "Preview reader checks of the working canonical Markdown; the committed lab's normal Help excludes both review articles by design.",
+    "CSS-pixel overflow measurements only; not browser zoom or assistive technology acceptance.",
+    "An earlier discovery run recorded an empty Help listing because the reviewer read the list before it rendered; the listing wait was corrected and the run repeated on unchanged bytes."
+  ],
+  "steps": [
+    {
+      "article": "triage-requests",
+      "role": "administrator",
+      "step": "Help with this page from the Inbox lists the triage guide; the article opens with focus on its title, the outline reaches Resolve without conversion, and the formal link opens the full documentation",
+      "result": "pass",
+      "actual": "Help href /help?topic=inbox; listed [\"Assign and triage Requests\"]; opened /help/triage-requests with focus on \"H1 Assign and triage Requests\"; outline link put \"H2 Resolve without conversion\" in view; formal link /documentation/triage-requests#resolve-without-conversion rendered the article at /documentation/triage-requests",
+      "at": "2026-09-07T11:32:46.294Z",
+      "ms": 1632
+    },
+    {
+      "article": "convert-request",
+      "role": "administrator",
+      "step": "Help with this page from R-130 lists the conversion guide; the final text is shown, the outline reaches If conversion is refused, and the formal link opens",
+      "result": "pass",
+      "actual": "Help href /help?topic=inbox.convert; listed [\"Convert a Request to a Contract or Matter\"]; opened /help/convert-request with focus on \"H1 Convert a Request to a Contract or Matter\"; the three reviewed sentences are present; outline reached If conversion is refused; related links Assign and triage Requests:1, Follow a Request and reply to Legal:1, Choose who can read a comment:1, Work with Document Versions:1; formal link /documentation/convert-request#if-conversion-is-refused opened /documentation/convert-request",
+      "at": "2026-09-07T11:32:47.511Z",
+      "ms": 1217
+    },
+    {
+      "article": "triage-requests",
+      "role": "administrator",
+      "step": "search finds both guides by title and by a phrase, and says when nothing matches; no horizontal overflow in three themes at three widths",
+      "result": "pass",
+      "actual": "title searches -> Assign and triage Requests, Convert a Request to a Contract or Matter | Assign and triage Requests, Convert a Request to a Contract or Matter; \"Resolution note\" -> Assign and triage Requests; \"Template (optional)\" -> Convert a Request to a Contract or Matter; nonsense -> no-match message shown 1x; no horizontal overflow for either article in light/warm/dark at 320/720/1440 CSS px",
+      "at": "2026-09-07T11:33:06.760Z",
+      "ms": 19249
+    },
+    {
+      "article": "triage-requests",
+      "role": "legal_team_member",
+      "step": "Help with this page from the Inbox lists the triage guide; the article opens with focus on its title, the outline reaches Resolve without conversion, and the formal link opens the full documentation",
+      "result": "pass",
+      "actual": "Help href /help?topic=inbox; listed [\"Assign and triage Requests\"]; opened /help/triage-requests with focus on \"H1 Assign and triage Requests\"; outline link put \"H2 Resolve without conversion\" in view; formal link /documentation/triage-requests#resolve-without-conversion rendered the article at /documentation/triage-requests",
+      "at": "2026-09-07T11:33:09.182Z",
+      "ms": 1571
+    },
+    {
+      "article": "convert-request",
+      "role": "legal_team_member",
+      "step": "Help with this page from R-130 lists the conversion guide; the final text is shown, the outline reaches If conversion is refused, and the formal link opens",
+      "result": "pass",
+      "actual": "Help href /help?topic=inbox.convert; listed [\"Convert a Request to a Contract or Matter\"]; opened /help/convert-request with focus on \"H1 Convert a Request to a Contract or Matter\"; the three reviewed sentences are present; outline reached If conversion is refused; related links Assign and triage Requests:1, Follow a Request and reply to Legal:1, Choose who can read a comment:1, Work with Document Versions:1; formal link /documentation/convert-request#if-conversion-is-refused opened /documentation/convert-request",
+      "at": "2026-09-07T11:33:10.358Z",
+      "ms": 1176
+    },
+    {
+      "article": "triage-requests",
+      "role": "legal_team_member",
+      "step": "search finds both guides by title and by a phrase, and says when nothing matches; no horizontal overflow in three themes at three widths",
+      "result": "pass",
+      "actual": "title searches -> Assign and triage Requests, Convert a Request to a Contract or Matter | Assign and triage Requests, Convert a Request to a Contract or Matter; \"Resolution note\" -> Assign and triage Requests; \"Template (optional)\" -> Convert a Request to a Contract or Matter; nonsense -> no-match message shown 1x; no horizontal overflow for either article in light/warm/dark at 320/720/1440 CSS px",
+      "at": "2026-09-07T11:33:29.569Z",
+      "ms": 19211
+    },
+    {
+      "article": "convert-request",
+      "role": "anonymous",
+      "step": "the formal edition lists and serves both guides to a signed-out reader without app API calls",
+      "result": "pass",
+      "actual": "Index listed both guides; each /documentation/<id> rendered its h1; API paths requested: []; notice \"Development preview: draft and validation content is unverified.\"",
+      "at": "2026-09-07T11:33:32.061Z",
+      "ms": 2486
+    },
+    {
+      "article": "triage-requests",
+      "role": "legal_team_member",
+      "step": "the committed lab's normal Help excludes the review articles",
+      "result": "pass",
+      "actual": "Normal Help at port 43302 lists neither guide; Help with this page on the lab Inbox links to /help?topic=inbox",
+      "at": "2026-09-07T11:33:34.068Z",
+      "ms": 2007
+    }
+  ]
+}

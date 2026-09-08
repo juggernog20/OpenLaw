@@ -1,0 +1,48 @@
+{
+  "kind": "publishing-validation-fixture",
+  "articleVerification": false,
+  "checkedAt": "2026-09-07T00:06:03.116Z",
+  "checks": [
+    {
+      "check": "Public preview, all-word search, canonical links and Back with API/external access blocked",
+      "result": "pass"
+    },
+    {
+      "check": "Light/Dark/Warm at 1440, 720 and 375 CSS pixels; CSS zoom 200%; no page overflow",
+      "result": "pass"
+    },
+    {
+      "check": "Retired article route preserves and focuses its section",
+      "result": "pass"
+    },
+    {
+      "check": "Keyboard search submission, Tab/Enter article navigation, and keyboard scrolling of a wide code example",
+      "result": "pass"
+    },
+    {
+      "check": "Standalone file:// index and article with JavaScript enabled (including search)",
+      "result": "pass"
+    },
+    {
+      "check": "Standalone file:// index and article with JavaScript disabled",
+      "result": "pass"
+    },
+    {
+      "check": "Retained standalone index/prose with preview server stopped and network blocked, with and without JavaScript; file alias preserves its anchor",
+      "result": "pass",
+      "checkedAt": "2026-09-07T00:06:34.281Z"
+    },
+    {
+      "check": "A live canonical edit refreshes both public reading and the standalone export; source restored afterward",
+      "result": "pass"
+    }
+  ],
+  "sourceBaseCommit": "b5aba87089c4f2f4cd740088ccfa880b6e986986",
+  "sourceState": "working-tree",
+  "environment": "Explicit loopback Vite validation fixture and retained standalone HTML",
+  "limitations": [
+    "Publishing fixture checks, not article verification or a human user study.",
+    "The retained-copy test stops the fixture preview server; it does not stop any other local app instance.",
+    "200% check uses CSS zoom; three themes and viewport widths were inspected separately."
+  ]
+}

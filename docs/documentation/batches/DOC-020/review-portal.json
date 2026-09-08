@@ -1,0 +1,151 @@
+{
+  "record": "review-portal",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-admin-review",
+  "fixture": {
+    "appUrl": "http://127.0.0.1:43328",
+    "mailUrl": "http://127.0.0.1:48435",
+    "draftPreview": "http://127.0.0.1:43331",
+    "providerMode": "dedicated local OpenID Connect fixture; full browser authorization and callback; no external identity-provider account",
+    "frozenConfigurationHashes": {
+      "source/.env": "47286908f614d1cd4cf769b7fe4168dac3db2d536faebfe4a4481312ad7868e2",
+      "overlay.json": "a37da4d9df42ec8c176757e063e8fc33f0cd5addfac8c774396f2140c91425cd",
+      "fixture/server.mjs": "b91a17c780f3f816a2eb4a5968a43fba405085743f9b174cbc7cf69528738363"
+    }
+  },
+  "successfulChecks": 7,
+  "failedAttempts": 2,
+  "runs": [
+    {
+      "run": "portal",
+      "startedAt": "2026-09-08T03:42:29.501Z",
+      "completedAt": "2026-09-08T03:42:51.736Z",
+      "articleHashes": [
+        {
+          "articleId": "organisation-and-users",
+          "contentSha256": "416f94a4d22154dab1cb62841c8ac7e1b9856ecde5378a763c6ca375279c7ddf"
+        },
+        {
+          "articleId": "authentication-and-email",
+          "contentSha256": "f272a2d7fa11a4088bb528d1642a40060ce7170aeff94234cb2a1e347d18f225"
+        }
+      ],
+      "steps": [
+        {
+          "role": "business user",
+          "method": "browser-walkthrough",
+          "action": "A Business User on an allowed domain enters the Portal with a magic link",
+          "actual": "Hannah Blum, on the allowed domain northwind.example, requested a link from the Legal request portal, saw the neutral \"Check your email\" response, and the emailed link opened the Portal under her identity. She was never invited: Portal entry created the account.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:42:29.536Z",
+          "at": "2026-09-08T03:42:31.007Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "An address outside the allowed domains gets the same neutral answer and no link",
+          "actual": "rio.santos@blackpine.example, on no allowed domain, saw the identical \"Check your email\" screen but no message arrived within 7 seconds and no account was created. The neutral response does not confirm eligibility, which is why the guide tells an Administrator to confirm an unapproved address cannot establish a new account rather than trusting the screen.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:42:31.007Z",
+          "at": "2026-09-08T03:42:38.804Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "The Business User appears in Users and cannot be given a staff role by invitation",
+          "actual": "The Portal-created account is listed in Settings then Users with role Business user. A staff invitation for the same address was refused with \"This user already exists with a different role.\" and sent no email, confirming the corrected guide: a Business User address cannot be converted to staff through the invitation form.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:42:38.804Z",
+          "at": "2026-09-08T03:42:45.151Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "The Users table Role control offers four choices and promotes a Business User in place",
+          "actual": "The Users table Role control is a menu offering four choices, Administrator, Legal team member, Contributor and Business user, one more than the invitation form. Choosing Contributor promoted the Portal-created account to staff in place, which is the capability the corrected guide now records.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:42:45.151Z",
+          "at": "2026-09-08T03:42:46.149Z"
+        },
+        {
+          "role": "business user",
+          "method": "browser-walkthrough",
+          "action": "A promoted account keeps its live session and gains the new role on its next request",
+          "result": "fail",
+          "startedAt": "2026-09-08T03:42:46.150Z",
+          "error": "expect(locator).toBeVisible() failed\n\nLocator: getByRole('banner').getByRole('button', { name: 'Hannah Blum', exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.be.visible\" with timeout 5000ms\n  - waiting for getByRole('banner').getByRole('button', { name: 'Hannah Blum', exact: true })\n",
+          "at": "2026-09-08T03:42:51.736Z"
+        }
+      ]
+    },
+    {
+      "run": "portal2",
+      "startedAt": "2026-09-08T03:43:23.006Z",
+      "completedAt": "2026-09-08T03:43:41.142Z",
+      "articleHashes": [
+        {
+          "articleId": "organisation-and-users",
+          "contentSha256": "416f94a4d22154dab1cb62841c8ac7e1b9856ecde5378a763c6ca375279c7ddf"
+        },
+        {
+          "articleId": "authentication-and-email",
+          "contentSha256": "f272a2d7fa11a4088bb528d1642a40060ce7170aeff94234cb2a1e347d18f225"
+        }
+      ],
+      "steps": [
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Return the promoted account to Business user and confirm a live session follows the role",
+          "result": "fail",
+          "startedAt": "2026-09-08T03:43:23.061Z",
+          "error": "locator.click: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Contributor \u2014 change the role of hannah.blum@northwind.example', exact: true })\u001b[22m\n",
+          "at": "2026-09-08T03:43:41.141Z"
+        }
+      ]
+    },
+    {
+      "run": "portal3",
+      "startedAt": "2026-09-08T03:44:35.367Z",
+      "completedAt": "2026-09-08T03:44:38.634Z",
+      "articleHashes": [
+        {
+          "articleId": "organisation-and-users",
+          "contentSha256": "416f94a4d22154dab1cb62841c8ac7e1b9856ecde5378a763c6ca375279c7ddf"
+        }
+      ],
+      "steps": [
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Promoting a Portal-created account turns its row into a pending invitation without a Role control",
+          "actual": "After the in-place promotion from Business user to Contributor, the row reads Contributor and Invited, and its Role control is gone. Only Resend invite and Revoke invite remain; there is no Archive control either. A Portal-created account has never set a password, so promoting it leaves a pending staff invitation, and the role cannot be changed again from the table until it activates.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:44:35.403Z",
+          "at": "2026-09-08T03:44:36.484Z"
+        },
+        {
+          "role": "contributor",
+          "method": "browser-walkthrough",
+          "action": "The promoted person activates through Resend invite and the row becomes Active",
+          "actual": "Resend invite delivered a set-password link to the promoted account. After setting a password the row moved to Active, which is the recovery path back to a manageable staff row.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:44:36.484Z",
+          "at": "2026-09-08T03:44:37.633Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "With the row Active again, the Role control returns and offers all four roles",
+          "actual": "Once the account was Active the Role control reappeared with all four choices, Administrator, Legal team member, Contributor and Business user, and choosing Business user returned it to Portal-only access. So the fourth choice does return a staff account to the Portal, but only while the row is Active.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:44:37.633Z",
+          "at": "2026-09-08T03:44:38.634Z"
+        }
+      ]
+    }
+  ]
+}

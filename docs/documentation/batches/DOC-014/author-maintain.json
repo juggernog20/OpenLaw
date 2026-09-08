@@ -1,0 +1,101 @@
+{
+  "name": "maintain",
+  "startedAt": "2026-09-07T12:10:10.301Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "create-contract",
+      "contentSha256": "92e03bb50f11e209417fcd45471707c2221e3d2d3f137865e0c6135fb93dd36a"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "create/link two Counterparties, change primary and remove one link without deleting the party",
+      "actual": "Two named Counterparties saved; second made primary; first removed from Contract but still offered as an existing Counterparty",
+      "result": "pass",
+      "at": "2026-09-07T12:10:13.818Z"
+    },
+    {
+      "role": "administrator",
+      "action": "save Value as Amount, Currency and Cadence together; clear and restore it",
+      "actual": "1250.50 USD Annually saved as one value; empty amount cleared whole value; restored",
+      "result": "pass",
+      "at": "2026-09-07T12:10:14.255Z"
+    },
+    {
+      "role": "administrator",
+      "action": "save business and legal Fields, cancel an unsaved edit, and reject clearing a required Field",
+      "actual": "Both Field tags saved for legal role; Escape discarded unsaved text; clearing required value refused and reload retained prior",
+      "result": "pass",
+      "at": "2026-09-07T12:10:14.811Z"
+    },
+    {
+      "role": "administrator",
+      "action": "changing type asks for its missing required Field, supports Cancel, and retains existing values",
+      "actual": "Cancel kept old type; required number3 allowed new type; original answers retained",
+      "result": "pass",
+      "at": "2026-09-07T12:10:15.570Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Team additions grant access; removing one role preserves another; Contributor rights remain limited",
+      "actual": "Ravi gained this Contract with Contributor rights; Priya kept Member access after Watcher removal; grouped role controls preserved remaining grants",
+      "result": "pass",
+      "at": "2026-09-07T12:10:16.827Z"
+    },
+    {
+      "role": "administrator",
+      "action": "a failed Field save keeps the stored value and reload supports a deliberate retry",
+      "actual": "Controlled failed browser PATCH preserved stored answer; reload showed it; retry saved once",
+      "result": "pass",
+      "at": "2026-09-07T12:10:17.655Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "create/link two Counterparties, change primary and remove one link without deleting the party",
+      "actual": "Two named Counterparties saved; second made primary; first removed from Contract but still offered as an existing Counterparty",
+      "result": "pass",
+      "at": "2026-09-07T12:10:19.432Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "save Value as Amount, Currency and Cadence together; clear and restore it",
+      "actual": "1250.50 USD Annually saved as one value; empty amount cleared whole value; restored",
+      "result": "pass",
+      "at": "2026-09-07T12:10:19.758Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "save business and legal Fields, cancel an unsaved edit, and reject clearing a required Field",
+      "actual": "Both Field tags saved for legal role; Escape discarded unsaved text; clearing required value refused and reload retained prior",
+      "result": "pass",
+      "at": "2026-09-07T12:10:20.019Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "changing type asks for its missing required Field, supports Cancel, and retains existing values",
+      "actual": "Cancel kept old type; required number3 allowed new type; original answers retained",
+      "result": "pass",
+      "at": "2026-09-07T12:10:20.814Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Team additions grant access; removing one role preserves another; Contributor rights remain limited",
+      "actual": "Ravi gained this Contract with Contributor rights; Priya kept Member access after Watcher removal; grouped role controls preserved remaining grants",
+      "result": "pass",
+      "at": "2026-09-07T12:10:22.078Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "a failed Field save keeps the stored value and reload supports a deliberate retry",
+      "actual": "Controlled failed browser PATCH preserved stored answer; reload showed it; retry saved once",
+      "result": "pass",
+      "at": "2026-09-07T12:10:22.837Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T12:10:22.837Z"
+}

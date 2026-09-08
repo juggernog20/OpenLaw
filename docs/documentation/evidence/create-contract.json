@@ -1,0 +1,65 @@
+{
+  "articleId": "create-contract",
+  "contentSha256": "47fd79617177199075b878852e58515847792a1534b1e69aae7781be46fbd2a3",
+  "appCommit": "67dbe788c73641a02218e2c0a0cbcdd5a0682a87",
+  "buildId": "Source integration only; no walkthrough build recorded for this article revision",
+  "environment": "dev integration source review",
+  "author": "Codex integration author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "blocked",
+  "sources": [
+    "CONTEXT.md",
+    "apps/web/src/components/contracts/create-contract-dialog.tsx",
+    "apps/web/src/routes/contract-record.tsx",
+    "apps/web/src/routes/contracts.tsx",
+    "apps/web/src/components/contracts/team-applet.tsx",
+    "apps/web/src/components/counterparty-picker.tsx",
+    "apps/api/src/modules/contracts/routes.ts",
+    "apps/api/src/modules/counterparties/routes.ts",
+    "apps/api/src/lib/contract-access.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C14",
+      "coverage": ["C14"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "The Contract stores the intended parties, accountability, and values and is reached by the expected people. Required/invalid values and archived references are handled without creating an unintended Contract.",
+      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/dev-integration/README.md"]
+    },
+    {
+      "id": "V-C14",
+      "coverage": ["C14"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "The Contract stores the intended parties, accountability, and values and is reached by the expected people. Required/invalid values and archived references are handled without creating an unintended Contract.",
+      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/dev-integration/README.md"]
+    }
+  ],
+  "authorEvidence": [],
+  "limitations": [
+    "This article changed during the dev integration and requires fresh technical and walkthrough acceptance. Its earlier hash, reviewers, timestamps and observations are preserved in previousEvidence.",
+    "No full-suite acceptance, human proofreading or publication is claimed. DOC-025 must verify the combined candidate."
+  ],
+  "previousEvidence": "docs/documentation/batches/dev-integration/previous-create-contract.json",
+  "copyOnlyReview": null,
+  "publicationBlockers": [
+    "DOC-025 complete-suite acceptance and DOC-027 publication remain pending; live-provider C42/C43 are blocked under #742. Linked non-provider guides now exist with passing article evidence and remain in catalog review."
+  ],
+  "publicationBlockersBeforeDOC025": [
+    "document-versions (DOC-017) does not exist yet; convert-request, roles-and-access, notifications and the sibling Contract guides are in review."
+  ],
+  "publicationBlockerReconciliation": {
+    "reviewer": "Codex DOC-025 evidence audit (agent)",
+    "reviewedAt": "2026-09-08T13:10:20.947051Z",
+    "priorEvidenceCommit": "d6df148c2d6a94fa0b8f053aa5e2494f697c65f5",
+    "summary": "Preserves earlier blocker notes separately and identifies current suite gates. No walkthrough date, build, result or catalog status changed."
+  }
+}

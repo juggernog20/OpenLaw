@@ -1,0 +1,74 @@
+{
+  "name": "discovery",
+  "startedAt": "2026-09-07T18:31:46.768Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "create-matter",
+      "contentSha256": "078e5ac72d41fa7ed55e02131b55dcdb86cb26d646485e64f5a494969e1aef73"
+    },
+    {
+      "articleId": "matter-status-and-archive",
+      "contentSha256": "7b4f1d4b77f4979d273e68ffcefe9be849c7e371cd518b256e466a6ba2df60cf"
+    },
+    {
+      "articleId": "matter-work",
+      "contentSha256": "621ed4366708c7b55defb625733358b565eef3a0bd443e500a1f24352e875ffd"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "create-matter contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T18:31:49.439Z"
+    },
+    {
+      "role": "administrator",
+      "action": "matter-status-and-archive contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T18:31:50.803Z"
+    },
+    {
+      "role": "administrator",
+      "action": "matter-work contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T18:31:52.254Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "create-matter contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T18:31:54.738Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "matter-status-and-archive contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T18:31:56.134Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "matter-work contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths",
+      "result": "pass",
+      "at": "2026-09-07T18:31:57.549Z"
+    },
+    {
+      "role": "signed-out",
+      "action": "all three guides are discoverable in formal preview without application API calls",
+      "actual": "All three formal guide titles discoverable anonymously; zero application API requests",
+      "result": "pass",
+      "at": "2026-09-07T18:31:59.377Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T18:31:59.377Z"
+}

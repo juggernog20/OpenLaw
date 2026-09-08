@@ -1,0 +1,56 @@
+{
+  "name": "independent-proxy",
+  "scenario": "V-C45",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:34:25.616Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-install",
+  "articleHashes": [
+    {
+      "articleId": "deployment-configuration",
+      "contentSha256": "d072207628c0589ee14b8d1575f58fdb70b1c8b6f349bd7ea3bdd70d902ac293"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Sign in through the public HTTPS origin the proxy serves",
+      "actual": "Signed in at https://openlaw-review.localhost:43372 through the local Caddy instance, which terminates TLS with its internal CA and forwards to the app container. The browser context accepts that private CA; this does not test public certificate issuance.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:34:25.700Z",
+      "at": "2026-09-08T09:34:26.060Z"
+    },
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "A sign-in posted with a wrong Origin is refused",
+      "actual": "Posting the same sign-in with Origin https://not-the-configured-origin.example was refused with HTTP 403, so the app compares the forwarded Origin against BASE_URL.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:34:26.060Z",
+      "at": "2026-09-08T09:34:26.075Z"
+    },
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Upload and download a Document through the proxy",
+      "actual": "Uploaded and downloaded a Document entirely through the HTTPS origin; the downloaded bytes matched the uploaded SHA-256.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:34:26.075Z",
+      "at": "2026-09-08T09:34:26.489Z"
+    },
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "A live update arrives on /api/events through the proxy",
+      "result": "fail",
+      "startedAt": "2026-09-08T09:34:26.489Z",
+      "error": "page.evaluate: Error: no event within 30s\n    at eval (eval at evaluate (:311:30), <anonymous>:3:59)",
+      "at": "2026-09-08T09:34:56.494Z"
+    }
+  ],
+  "passed": false,
+  "supersededBy": "independent-proxy-sse-retry",
+  "note": "The first three steps passed. The event-stream step used EventSource.onmessage, which never fires for the named SSE frames this stream sends, so it timed out. The retry read the raw stream instead; the invitation-origin step it never reached is in independent-proxy-invite."
+}

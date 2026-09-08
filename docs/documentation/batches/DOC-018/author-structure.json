@@ -1,0 +1,107 @@
+{
+  "name": "structure",
+  "startedAt": "2026-09-07T22:50:56.202Z",
+  "appCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
+  "buildId": "app sha256:800689bba1e0bd183d33760b14e4775a593d23d1cf9ded4ad752e788e60bd818; engine sha256:b69fd318f42ddbb78e8531a4b7151bcd58d9788b367a26d528d41c5bebfa792f",
+  "environment": "openlaw-docs-b8e31260-entities",
+  "articleHashes": [
+    {
+      "articleId": "entity-structure-and-access",
+      "contentSha256": "8d899e10da28af6d4e9d70dad737995e7603f4e7eb712c48d6a67af6511a4da0"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C53 save simple capital values and reject a negative/fractional edit without replacing them",
+      "actual": "Three capital values saved independently as nonnegative integers; negative and fractional edits displayed refusal and Escape restored the saved 1000; no currency selector was offered",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:50:57.988Z",
+      "at": "2026-09-07T22:50:58.674Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C53 inspect ownership chart and operate keyboard pan, zoom and fit",
+      "actual": "Chart included the recorded Entity and Holdings; arrow-key pan and plus zoom changed its transform, zero/Fit restored the view, and its named link opened the Entity",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:50:58.674Z",
+      "at": "2026-09-07T22:50:59.451Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C53 link Contract by Our entity and Matter by an Entity-valued Field; inspect roll-up rows",
+      "actual": "Our entity selection put the Contract in the Entity roll-up; an Entity Field selected in Create matter put that Matter in its roll-up; actual target links were visible",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:50:59.451Z",
+      "at": "2026-09-07T22:51:02.020Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C53 save simple capital values and reject a negative/fractional edit without replacing them",
+      "actual": "Three capital values saved independently as nonnegative integers; negative and fractional edits displayed refusal and Escape restored the saved 1000; no currency selector was offered",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:51:02.021Z",
+      "at": "2026-09-07T22:51:02.733Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C53 inspect ownership chart and operate keyboard pan, zoom and fit",
+      "actual": "Chart included the recorded Entity and Holdings; arrow-key pan and plus zoom changed its transform, zero/Fit restored the view, and its named link opened the Entity",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:51:02.733Z",
+      "at": "2026-09-07T22:51:03.533Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C53 link Contract by Our entity and Matter by an Entity-valued Field; inspect roll-up rows",
+      "actual": "Our entity selection put the Contract in the Entity roll-up; an Entity Field selected in Create matter put that Matter in its roll-up; actual target links were visible",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:51:03.533Z",
+      "at": "2026-09-07T22:51:06.103Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C53 detach an Entity Field while preserving its saved Matter roll-up reference",
+      "actual": "Administrator API fixture detached the Field; both browser roll-ups retained the Matter because its Entity value remains saved. This fixture action is separate from reader steps",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:51:06.103Z",
+      "at": "2026-09-07T22:51:07.310Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C53 set Confidential through its actual switch and preserve Administrator access",
+      "actual": "Administrator turned on the named Confidential switch and retained access without an explicit Grant; Legal reader got 404. An API fixture added a Holding to test that known relationship separately",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:51:08.060Z",
+      "at": "2026-09-07T22:51:08.837Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C53 Holding does not grant Entity access and linked work respects its own Confidential audience",
+      "actual": "Known Holding used Restricted Entity without a legal-name link; hidden Contract contributed no Legal row or count while Administrator counted it; Legal reader had no access-management action and a disabled flag",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:51:08.837Z",
+      "at": "2026-09-07T22:51:10.621Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C53 grant a Legal Team Member access, then remove it and turn the flag off",
+      "actual": "Grant access added the named Legal reader and the Entity opened in that separate browser; linked Confidential Contract stayed inaccessible. Removing the Grant returned 404; clearing the flag restored general Legal access",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:51:10.621Z",
+      "at": "2026-09-07T22:51:11.444Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T22:51:11.450Z"
+}

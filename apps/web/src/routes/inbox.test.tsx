@@ -415,7 +415,14 @@ describe("Inbox filters and views", () => {
     const user = userEvent.setup();
     await chooseFilter(user, "Urgency", ["High", "Critical"], router, ["urgency", "high,critical"]);
     await chooseFilter(user, "Requester", ["Dana Reyes"], router, ["requester", "u7"]);
-    await user.click(screen.getByRole("button", { name: "Show more" }));
+    await waitFor(() => {
+      expect(router.state.navigation.state).toBe("idle");
+      expect(screen.queryByRole("dialog", { name: "Filter" })).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Show more" })).toBeEnabled();
+    });
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: "Show more" }));
+    });
     await screen.findByRole("row", { name: /Next page/ });
     expect(asked.at(-1)?.searchParams.get("urgency")).toBe("high,critical");
     expect(asked.at(-1)?.searchParams.get("requester")).toBe("u7");

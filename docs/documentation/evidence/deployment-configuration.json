@@ -1,0 +1,92 @@
+{
+  "articleId": "deployment-configuration",
+  "contentSha256": "b661e8eb9077609e5b06974d96043e80c95db5fa5ecca9d7bc779396ec605468",
+  "appCommit": "67dbe788c73641a02218e2c0a0cbcdd5a0682a87",
+  "buildId": "Source integration only; no walkthrough build recorded for this article revision",
+  "environment": "dev integration source review",
+  "author": "Codex integration author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "blocked",
+  "sources": [
+    "compose.yml",
+    "Dockerfile",
+    "docs/DEPLOYMENT.md",
+    "packages/db/src/migration-journal.ts",
+    "apps/api/src/lib/storage/config.ts",
+    "apps/api/src/modules/email-settings/routes.ts",
+    "apps/api/src/pipeline/pg-boss.ts",
+    "apps/api/src/pipeline/text-extraction.ts",
+    "e2e/scripts/upgrade-fidelity.mjs"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C45",
+      "coverage": ["C45"],
+      "role": "operator",
+      "method": "container-operation",
+      "expected": "Each claimed configuration path is demonstrated with actual requests/files and recorded effective values excluding secrets. Wrong origin, limits, unavailable storage/engine, and mismatched encryption keys fail as documented and recover after correction.",
+      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/dev-integration/README.md"],
+      "verifiedAt": "2026-09-08T10:21:38.430Z"
+    }
+  ],
+  "authorEvidence": [],
+  "limitations": [
+    "This article changed during the dev integration and requires fresh technical and walkthrough acceptance. Its earlier hash, reviewers, timestamps and observations are preserved in previousEvidence.",
+    "No full-suite acceptance, human proofreading or publication is claimed. DOC-025 must verify the combined candidate."
+  ],
+  "previousEvidence": "docs/documentation/batches/dev-integration/previous-deployment-configuration.json",
+  "copyOnlyReview": null,
+  "independentEvidence": [
+    "docs/documentation/batches/DOC-023/independent-storage-local.json",
+    "docs/documentation/batches/DOC-023/independent-storage-s3.json",
+    "docs/documentation/batches/DOC-023/independent-storage-azure-blob.json",
+    "docs/documentation/batches/DOC-023/independent-upload-limit.json",
+    "docs/documentation/batches/DOC-023/independent-proxy.json",
+    "docs/documentation/batches/DOC-023/independent-proxy-sse-retry.json",
+    "docs/documentation/batches/DOC-023/independent-proxy-invite.json",
+    "docs/documentation/batches/DOC-023/independent-proxy-live-update.json",
+    "docs/documentation/batches/DOC-023/independent-proxy-live-update-retry.json",
+    "docs/documentation/batches/DOC-023/independent-proxy-live-update-retry2.json",
+    "docs/documentation/batches/DOC-023/independent-external-database-external.json",
+    "docs/documentation/batches/DOC-023/independent-external-database-external-retry.json",
+    "docs/documentation/batches/DOC-023/independent-external-database-write.json",
+    "docs/documentation/batches/DOC-023/independent-external-database-bundled.json",
+    "docs/documentation/batches/DOC-023/independent-mail-saved-relay.json",
+    "docs/documentation/batches/DOC-023/independent-mail-env-override.json",
+    "docs/documentation/batches/DOC-023/independent-mail-override-removed.json",
+    "docs/documentation/batches/DOC-023/independent-mail-rotation-with-previous.json",
+    "docs/documentation/batches/DOC-023/independent-mail-rotation-retired.json",
+    "docs/documentation/batches/DOC-023/independent-mail-wrong-key-first-attempt.json",
+    "docs/documentation/batches/DOC-023/independent-mail-wrong-key.json",
+    "docs/documentation/batches/DOC-023/independent-mail-key-restored.json",
+    "docs/documentation/batches/DOC-023/independent-diagnostics.json"
+  ],
+  "verifiedAtBasis": "The latest observation in the independent records that cover this article: independent-proxy-live-update-retry2, whose last recorded action is 2026-09-08T10:21:38.430Z. Each article carries its own time rather than one batch-wide maximum.",
+  "independentBuild": {
+    "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+    "note": "Images the reviewer built from the same sources with the installation article's own commands. They are not the author's images: the same source builds to a different digest here.",
+    "candidate": {
+      "source": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "app": "sha256:a7d883a0682569f98af530d0fccba8714f607fbf57fbb8711c91bce4e390e6f5",
+      "doc-engine": "sha256:6fe444660a91bd72d621a08ff0919a2bb99ab413f283abe83fdaa2f296446856"
+    },
+    "baseline": {
+      "source": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+      "app": "sha256:f065f6cd830092da90a4958c1e7ea75e6f992bc8eda1c9b6cadf086c4727c16e",
+      "doc-engine": "sha256:6fe444660a91bd72d621a08ff0919a2bb99ab413f283abe83fdaa2f296446856",
+      "note": "The document-engine image is byte-identical across the two revisions; only its tag differs."
+    },
+    "projects": [
+      "openlaw-docs-b8e31260-rev-install",
+      "openlaw-docs-b8e31260-rev-upgrade",
+      "openlaw-docs-b8e31260-rev-restore",
+      "openlaw-docs-b8e31260-rev-recovery"
+    ],
+    "postgres": "postgres:16"
+  }
+}

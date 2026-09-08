@@ -1,0 +1,59 @@
+{
+  "name": "independent-repair-archived-target",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C40"],
+  "authorRecordName": "ind-repair-archived-target",
+  "purpose": "Evidence repair: re-establishes the archived-target conversion outcome, which an earlier record recorded by counting a picker and sampling isDisabled() without ever choosing a type. Every step asserts and throws if its outcome is not observed.",
+  "startedAt": "2026-09-08T06:41:43.769Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "request-forms",
+      "contentSha256": "5981f17a9afc7dc219cf98d35d603f7c5491eed8c253b7fbd9e5fab294bd873b"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Prepare an own Contract type, a form bound to it, and a real Request",
+      "actual": "Created the reviewer's own Contract type \"Ind archived target type IND81T2F 1788849703769\" (01a07fc0-4f08-7927-b9b4-93eeec578c8e) and request type \"Ind archived target form IND81T2F 1788849703769\" (01a07fc0-518a-79c9-bcab-99838dc9e64f), bound the form's Target to that type, and submitted R-36 \"Ind archived target submission IND81T2F 1788849703769\" from the Portal. The Request reads targetModule \"contract\" and targetTypeId 01a07fc0-4f08-7927-b9b4-93eeec578c8e. No shared seed type is touched by this check.",
+      "result": "pass",
+      "startedAt": "2026-09-08T06:41:44.699Z",
+      "at": "2026-09-08T06:41:47.674Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Archiving the bound type leaves the form naming it and gives conversion a live picker",
+      "actual": "The archive dialog read \"Archive Ind archived target type IND81T2F 1788849703769 Ind archived target type IND81T2F 1788849703769 is not used by any contracts \u2014 it can be archived without reassignment. Reas\" and the type is archived (archivedAt 2026-09-08T06:41:48.338Z). The request type's Target still names it as \"Ind archived target type IND81T2F 1788849703769 (archived)\" with the saved value contract:01a07fc0-4f08-7927-b9b4-93eeec578c8e unchanged. Opening Convert to contract offers a Contract type picker whose selection starts blank and lists 12 live types, none of them the archived one and none marked archived, under the note \"This request type left the contract type to conversion.\".",
+      "result": "pass",
+      "startedAt": "2026-09-08T06:41:47.674Z",
+      "at": "2026-09-08T06:41:49.669Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A blank type is refused inline and converts nothing; an explicit live type completes it",
+      "actual": "With the picker blank the confirm control was disabled=false, so pressing it is what proves the refusal: it produced the inline message \"Pick a contract type.\", sent no convert request, left the dialog open and left R-36 at status \"new\". Choosing the live type \"MSA\" (019ff1f5-301f-7669-b8f7-ffcea14a5420) and confirming converted R-36 to status \"converted\" and created Contract 53 \"Ind archived target conversion 1788849703769\" of contractTypeId 019ff1f5-301f-7669-b8f7-ffcea14a5420, which is the chosen live type and not the archived 01a07fc0-4f08-7927-b9b4-93eeec578c8e. The Contract count went 47 -> 48, and the record page's Contract type control reads 019ff1f5-301f-7669-b8f7-ffcea14a5420.",
+      "result": "pass",
+      "startedAt": "2026-09-08T06:41:49.670Z",
+      "at": "2026-09-08T06:41:51.946Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Restore the reviewer\u2019s archived Contract type",
+      "actual": "Restored \"Ind archived target type IND81T2F 1788849703769\" (01a07fc0-4f08-7927-b9b4-93eeec578c8e) to the live list (archivedAt=null); the shared seed types were never archived by this check. Contract 53 still reads contractTypeId 019ff1f5-301f-7669-b8f7-ffcea14a5420 (\"MSA\"), so restoring the type it was never given changed nothing.",
+      "result": "pass",
+      "startedAt": "2026-09-08T06:41:51.946Z",
+      "at": "2026-09-08T06:41:52.711Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T06:41:52.711Z"
+}

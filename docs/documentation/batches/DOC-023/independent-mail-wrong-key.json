@@ -1,0 +1,41 @@
+{
+  "name": "independent-mail-wrong-key",
+  "scenario": "V-C45",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:31:39.289Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-install",
+  "articleHashes": [
+    {
+      "articleId": "deployment-configuration",
+      "contentSha256": "d072207628c0589ee14b8d1575f58fdb70b1c8b6f349bd7ea3bdd70d902ac293"
+    },
+    {
+      "articleId": "operator-troubleshooting",
+      "contentSha256": "a41ec1326ba60de8e8d03037ad4e7c3f4d3e946df2afadae8fa18214859b2b9f"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Email configuration source and a real send in phase wrong-key",
+      "actual": "Email source is \"unset\". The test send failed with HTTP 502 and the message \"Bad gateway\", and the owned Mailpit received nothing (still 6).",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:31:39.684Z",
+      "at": "2026-09-08T09:31:42.712Z"
+    },
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Records stay readable in phase wrong-key",
+      "actual": "The Contract list still answered 200 with 5 records, so ordinary record access is independent of the credential key state.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:31:42.712Z",
+      "at": "2026-09-08T09:31:42.736Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T09:31:42.736Z"
+}

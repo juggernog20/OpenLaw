@@ -1,0 +1,32 @@
+{
+  "name": "independent-repair-forms",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C40"],
+  "authorRecordName": "ind-repair-forms",
+  "purpose": "Evidence repair: re-establishes a claim an earlier record recorded unreliably. Every step asserts and throws if its outcome is not observed.",
+  "startedAt": "2026-09-08T06:31:16.521Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "request-forms",
+      "contentSha256": "5981f17a9afc7dc219cf98d35d603f7c5491eed8c253b7fbd9e5fab294bd873b"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Detaching one form Field leaves the required Field attached and required",
+      "actual": "Before the detach the form carried 3 attachments: [[\"01a07f76-9db1-7251-888b-1b82b16bb3e2\",\"Ind coverage region IND81T2F\",true],[\"01a07f87-fd6a-7bdf-ad8e-5f5c247a19cd\",\"Ind budget note IND81T2F\",false],[\"01a07fb6-6e71-7f20-9639-fe4b1c8b3b60\",\"Ind detach probe IND81T2F\",false]]. Detaching \"Ind detach probe IND81T2F\" (01a07fb6-6e71-7f20-9639-fe4b1c8b3b60) with the pane's Detach control left 2: [[\"01a07f76-9db1-7251-888b-1b82b16bb3e2\",\"Ind coverage region IND81T2F\",true],[\"01a07f87-fd6a-7bdf-ad8e-5f5c247a19cd\",\"Ind budget note IND81T2F\",false]]. \"Ind coverage region IND81T2F\" (01a07f76-9db1-7251-888b-1b82b16bb3e2) is still attached with isRequired=true, and its Required box in the pane still reads checked after a reload. The detached Field keeps its catalog definition (\"Ind detach probe IND81T2F\", id 01a07fb6-6e71-7f20-9639-fe4b1c8b3b60, archivedAt=null). The envelope read here is attachedFields, the key the endpoint actually returns.",
+      "result": "pass",
+      "startedAt": "2026-09-08T06:31:17.467Z",
+      "at": "2026-09-08T06:31:18.858Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T06:31:18.859Z"
+}

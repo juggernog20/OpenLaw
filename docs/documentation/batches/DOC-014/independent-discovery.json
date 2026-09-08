@@ -1,0 +1,400 @@
+{
+  "kind": "independent-help-discovery",
+  "task": "DOC-014",
+  "issue": 734,
+  "independentReview": true,
+  "reviewerKind": "agent",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "startedAt": "2026-09-07T14:13:35.447Z",
+  "finishedAt": "2026-09-07T14:19:36.894Z",
+  "frontend": "Vite preview reader at port 43312 serving the working canonical Markdown, proxied to the committed conversations lab at port 43302, for all eight guides; the signing preview reader at port 43314, proxied to the dedicated signing lab, for electronic-signing; the conversations lab's own Help at port 43302 for the exclusion check",
+  "articleHashesTested": [
+    {
+      "articleId": "create-contract",
+      "contentSha256": ["63aaa9717afffaacbb0b91b64de6e741162912ea00fd3b945798dc746b6e1cac"]
+    },
+    {
+      "articleId": "contract-stages",
+      "contentSha256": ["8fec18cd5b3f50c0baadebd2b8fd68772cc118da4341915dec4674774a1a0553"]
+    },
+    {
+      "articleId": "contract-approvals",
+      "contentSha256": ["e3b7b6ee7e2b8b121c8be45203099d69331e09d5d55d374b577d5fe81bcf67f6"]
+    },
+    {
+      "articleId": "manual-signing",
+      "contentSha256": ["03b260c04c972776c0e7ebc275c6fb6437f10a0ea6b78d5a06a211d1745b841f"]
+    },
+    {
+      "articleId": "electronic-signing",
+      "contentSha256": ["df172df43d2efc94cbd2daa7f03cc1161332885578c353e5137b1e0ffe4c90fc"]
+    },
+    {
+      "articleId": "terms-and-renewals",
+      "contentSha256": ["d5af58d3f6934b6b5730e8e100c31ffc21e08640347b82750c9b39c24b085c6e"]
+    },
+    {
+      "articleId": "contract-tasks-and-dates",
+      "contentSha256": ["29654cec933cf7b62d1c87e2d75293f920de3f1f51b6859aae5a44e09356c43e"]
+    },
+    {
+      "articleId": "contract-relations-and-ending",
+      "contentSha256": ["22e819b39d5dc754cde76f9704911e4684d27085db53a971e0472043a53b60fb"]
+    }
+  ],
+  "articleHashesCurrent": [
+    {
+      "articleId": "create-contract",
+      "contentSha256": "63aaa9717afffaacbb0b91b64de6e741162912ea00fd3b945798dc746b6e1cac"
+    },
+    {
+      "articleId": "contract-stages",
+      "contentSha256": "8fec18cd5b3f50c0baadebd2b8fd68772cc118da4341915dec4674774a1a0553"
+    },
+    {
+      "articleId": "contract-approvals",
+      "contentSha256": "e3b7b6ee7e2b8b121c8be45203099d69331e09d5d55d374b577d5fe81bcf67f6"
+    },
+    {
+      "articleId": "manual-signing",
+      "contentSha256": "03b260c04c972776c0e7ebc275c6fb6437f10a0ea6b78d5a06a211d1745b841f"
+    },
+    {
+      "articleId": "electronic-signing",
+      "contentSha256": "df172df43d2efc94cbd2daa7f03cc1161332885578c353e5137b1e0ffe4c90fc"
+    },
+    {
+      "articleId": "terms-and-renewals",
+      "contentSha256": "d5af58d3f6934b6b5730e8e100c31ffc21e08640347b82750c9b39c24b085c6e"
+    },
+    {
+      "articleId": "contract-tasks-and-dates",
+      "contentSha256": "29654cec933cf7b62d1c87e2d75293f920de3f1f51b6859aae5a44e09356c43e"
+    },
+    {
+      "articleId": "contract-relations-and-ending",
+      "contentSha256": "22e819b39d5dc754cde76f9704911e4684d27085db53a971e0472043a53b60fb"
+    }
+  ],
+  "themes": ["light", "warm", "dark"],
+  "widths": [320, 720, 1440],
+  "limitations": [
+    "Preview reader checks of the working canonical Markdown; the committed lab's normal Help excludes all eight review articles by design and its record Help link carries no topic.",
+    "CSS-pixel overflow measurements only; not browser zoom or assistive technology acceptance.",
+    "Two earlier signing-preview runs timed out on the reviewer's listing wait (a cold Vite compile, then a heading locator for plain text); the wait was corrected and the run repeated on unchanged bytes."
+  ],
+  "steps": [
+    {
+      "article": "create-contract",
+      "role": "administrator",
+      "step": "the header Help link on the Contracts list and on C-193 carries the page topics, and the Help listing offers all eight Contract guides",
+      "result": "pass",
+      "actual": "Contracts list Help → /help?topic=contracts.list&topic=lists&topic=search&topic=notifications listed create-contract; record Help → /help?topic=contracts.overview&topic=contracts.progression&topic=contracts.appro… listed 8 guides: create-contract, contract-stages, contract-approvals, manual-signing, electronic-signing, terms-and-renewals, contract-tasks-and-dates, contract-relations-and-ending",
+      "at": "2026-09-07T14:13:38.742Z",
+      "ms": 2341,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "create-contract",
+      "role": "administrator",
+      "step": "Help opens \"Create and maintain a Contract\" with focus on its title, shows the current sentence, the outline reaches \"Create the record\", and the formal link opens the full documentation",
+      "result": "pass",
+      "actual": "/help/create-contract focused \"H1 Create and maintain a Contract\"; the sentence \"On Overview, changing Contract type may open Change contract type\" is present; outline reached \"Create the record\"; formal link /documentation/create-contract rendered /documentation/create-contract",
+      "at": "2026-09-07T14:13:39.705Z",
+      "ms": 963,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "contract-stages",
+      "role": "administrator",
+      "step": "Help opens \"Change a Contract Status\" with focus on its title, shows the current sentence, the outline reaches \"Change the Status\", and the formal link opens the full documentation",
+      "result": "pass",
+      "actual": "/help/contract-stages focused \"H1 Change a Contract Status\"; the sentence \"A Status maps to one Stage\" is present; outline reached \"Change the Status\"; formal link /documentation/contract-stages rendered /documentation/contract-stages",
+      "at": "2026-09-07T14:13:40.645Z",
+      "ms": 940,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "contract-approvals",
+      "role": "administrator",
+      "step": "Help opens \"Request and give approval\" with focus on its title, shows the current sentence, the outline reaches \"Ask for approval\", and the formal link opens the full documentation",
+      "result": "pass",
+      "actual": "/help/contract-approvals focused \"H1 Request and give approval\"; the sentence \"Everyone selected is asked at once\" is present; outline reached \"Ask for approval\"; formal link /documentation/contract-approvals rendered /documentation/contract-approvals",
+      "at": "2026-09-07T14:13:41.549Z",
+      "ms": 903,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "manual-signing",
+      "role": "administrator",
+      "step": "Help opens \"Record a Contract signed outside OpenLaw\" with focus on its title, shows the current sentence, the outline reaches \"Hand off and file the executed copy\", and the formal link opens the full documentation",
+      "result": "pass",
+      "actual": "/help/manual-signing focused \"H1 Record a Contract signed outside OpenLaw\"; the sentence \"Manual hand-off creates no OpenLaw Envelope row\" is present; outline reached \"Hand off and file the executed copy\"; formal link /documentation/manual-signing rendered /documentation/manual-signing",
+      "at": "2026-09-07T14:13:42.446Z",
+      "ms": 897,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "electronic-signing",
+      "role": "administrator",
+      "step": "Help opens \"Send a Contract for electronic signature\" with focus on its title, shows the current sentence, the outline reaches \"Send the Envelope\", and the formal link opens the full documentation",
+      "result": "pass",
+      "actual": "/help/electronic-signing focused \"H1 Send a Contract for electronic signature\"; the sentence \"A blank subject uses the C- reference and title\" is present; outline reached \"Send the Envelope\"; formal link /documentation/electronic-signing rendered /documentation/electronic-signing",
+      "at": "2026-09-07T14:13:43.364Z",
+      "ms": 918,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "terms-and-renewals",
+      "role": "administrator",
+      "step": "Help opens \"Manage Contract terms and renewals\" with focus on its title, shows the current sentence, the outline reaches \"Record the term\", and the formal link opens the full documentation",
+      "result": "pass",
+      "actual": "/help/terms-and-renewals focused \"H1 Manage Contract terms and renewals\"; the sentence \"The app does not advance expiry automatically\" is present; outline reached \"Record the term\"; formal link /documentation/terms-and-renewals rendered /documentation/terms-and-renewals",
+      "at": "2026-09-07T14:13:44.264Z",
+      "ms": 900,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "role": "administrator",
+      "step": "Help opens \"Manage Contract Tasks and Key dates\" with focus on its title, shows the current sentence, the outline reaches \"Maintain Tasks\", and the formal link opens the full documentation",
+      "result": "pass",
+      "actual": "/help/contract-tasks-and-dates focused \"H1 Manage Contract Tasks and Key dates\"; the sentence \"The current Contract Task screen has no reordering control\" is present; outline reached \"Maintain Tasks\"; formal link /documentation/contract-tasks-and-dates rendered /documentation/contract-tasks-and-dates",
+      "at": "2026-09-07T14:13:45.179Z",
+      "ms": 915,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "administrator",
+      "step": "Help opens \"Relate, end, and archive Contracts\" with focus on its title, shows the current sentence, the outline reaches \"Relate Contracts\", and the formal link opens the full documentation",
+      "result": "pass",
+      "actual": "/help/contract-relations-and-ending focused \"H1 Relate, end, and archive Contracts\"; the sentence \"That can be this Contract or the one you linked\" is present; outline reached \"Relate Contracts\"; formal link /documentation/contract-relations-and-ending rendered /documentation/contract-relations-and-ending",
+      "at": "2026-09-07T14:13:46.080Z",
+      "ms": 901,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "create-contract",
+      "role": "administrator",
+      "step": "search finds each guide by title and by a control name, and says when nothing matches",
+      "result": "pass",
+      "actual": "Every title search found its guide; \"Make primary\" → create-contract; \"Move anyway\" → contract-stages, contract-approvals; \"Apply group\" → contract-approvals; \"Unmark as executed copy\" → manual-signing; \"Void envelope\" → electronic-signing; \"Paper as amendment\" → terms-and-renewals; \"Add to team and assign\" → create-contract, contract-tasks-and-dates; \"Show archived\" → create-contract, terms-and-renewals, contract-tasks-and-dates, contract-relations-and-ending; nonsense showed the no-match message",
+      "at": "2026-09-07T14:14:05.736Z",
+      "ms": 19656,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "create-contract",
+      "role": "administrator",
+      "step": "no horizontal overflow for any of the guides in light, warm and dark themes at 320, 720 and 1440 CSS px",
+      "result": "pass",
+      "actual": "72 page loads measured; none scrolled horizontally",
+      "at": "2026-09-07T14:15:00.772Z",
+      "ms": 55036,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "create-contract",
+      "role": "legal_team_member",
+      "step": "the header Help link on the Contracts list and on C-194 carries the page topics, and the Help listing offers all eight Contract guides",
+      "result": "pass",
+      "actual": "Contracts list Help → /help?topic=contracts.list&topic=lists&topic=search&topic=notifications listed create-contract; record Help → /help?topic=contracts.overview&topic=contracts.progression&topic=contracts.appro… listed 8 guides: create-contract, contract-stages, contract-approvals, manual-signing, electronic-signing, terms-and-renewals, contract-tasks-and-dates, contract-relations-and-ending",
+      "at": "2026-09-07T14:15:03.959Z",
+      "ms": 2334,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "create-contract",
+      "role": "legal_team_member",
+      "step": "Help opens \"Create and maintain a Contract\" with focus on its title, shows the current sentence, the outline reaches \"Create the record\", and the formal link opens the full documentation",
+      "result": "pass",
+      "actual": "/help/create-contract focused \"H1 Create and maintain a Contract\"; the sentence \"On Overview, changing Contract type may open Change contract type\" is present; outline reached \"Create the record\"; formal link /documentation/create-contract rendered /documentation/create-contract",
+      "at": "2026-09-07T14:15:04.912Z",
+      "ms": 952,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "contract-stages",
+      "role": "legal_team_member",
+      "step": "Help opens \"Change a Contract Status\" with focus on its title, shows the current sentence, the outline reaches \"Change the Status\", and the formal link opens the full documentation",
+      "result": "pass",
+      "actual": "/help/contract-stages focused \"H1 Change a Contract Status\"; the sentence \"A Status maps to one Stage\" is present; outline reached \"Change the Status\"; formal link /documentation/contract-stages rendered /documentation/contract-stages",
+      "at": "2026-09-07T14:15:05.858Z",
+      "ms": 946,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "contract-approvals",
+      "role": "legal_team_member",
+      "step": "Help opens \"Request and give approval\" with focus on its title, shows the current sentence, the outline reaches \"Ask for approval\", and the formal link opens the full documentation",
+      "result": "pass",
+      "actual": "/help/contract-approvals focused \"H1 Request and give approval\"; the sentence \"Everyone selected is asked at once\" is present; outline reached \"Ask for approval\"; formal link /documentation/contract-approvals rendered /documentation/contract-approvals",
+      "at": "2026-09-07T14:15:06.758Z",
+      "ms": 900,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "manual-signing",
+      "role": "legal_team_member",
+      "step": "Help opens \"Record a Contract signed outside OpenLaw\" with focus on its title, shows the current sentence, the outline reaches \"Hand off and file the executed copy\", and the formal link opens the full documentation",
+      "result": "pass",
+      "actual": "/help/manual-signing focused \"H1 Record a Contract signed outside OpenLaw\"; the sentence \"Manual hand-off creates no OpenLaw Envelope row\" is present; outline reached \"Hand off and file the executed copy\"; formal link /documentation/manual-signing rendered /documentation/manual-signing",
+      "at": "2026-09-07T14:15:07.674Z",
+      "ms": 916,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "electronic-signing",
+      "role": "legal_team_member",
+      "step": "Help opens \"Send a Contract for electronic signature\" with focus on its title, shows the current sentence, the outline reaches \"Send the Envelope\", and the formal link opens the full documentation",
+      "result": "pass",
+      "actual": "/help/electronic-signing focused \"H1 Send a Contract for electronic signature\"; the sentence \"A blank subject uses the C- reference and title\" is present; outline reached \"Send the Envelope\"; formal link /documentation/electronic-signing rendered /documentation/electronic-signing",
+      "at": "2026-09-07T14:15:08.578Z",
+      "ms": 904,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "terms-and-renewals",
+      "role": "legal_team_member",
+      "step": "Help opens \"Manage Contract terms and renewals\" with focus on its title, shows the current sentence, the outline reaches \"Record the term\", and the formal link opens the full documentation",
+      "result": "pass",
+      "actual": "/help/terms-and-renewals focused \"H1 Manage Contract terms and renewals\"; the sentence \"The app does not advance expiry automatically\" is present; outline reached \"Record the term\"; formal link /documentation/terms-and-renewals rendered /documentation/terms-and-renewals",
+      "at": "2026-09-07T14:15:09.477Z",
+      "ms": 899,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "role": "legal_team_member",
+      "step": "Help opens \"Manage Contract Tasks and Key dates\" with focus on its title, shows the current sentence, the outline reaches \"Maintain Tasks\", and the formal link opens the full documentation",
+      "result": "pass",
+      "actual": "/help/contract-tasks-and-dates focused \"H1 Manage Contract Tasks and Key dates\"; the sentence \"The current Contract Task screen has no reordering control\" is present; outline reached \"Maintain Tasks\"; formal link /documentation/contract-tasks-and-dates rendered /documentation/contract-tasks-and-dates",
+      "at": "2026-09-07T14:15:10.376Z",
+      "ms": 899,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "legal_team_member",
+      "step": "Help opens \"Relate, end, and archive Contracts\" with focus on its title, shows the current sentence, the outline reaches \"Relate Contracts\", and the formal link opens the full documentation",
+      "result": "pass",
+      "actual": "/help/contract-relations-and-ending focused \"H1 Relate, end, and archive Contracts\"; the sentence \"That can be this Contract or the one you linked\" is present; outline reached \"Relate Contracts\"; formal link /documentation/contract-relations-and-ending rendered /documentation/contract-relations-and-ending",
+      "at": "2026-09-07T14:15:11.276Z",
+      "ms": 900,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "create-contract",
+      "role": "legal_team_member",
+      "step": "search finds each guide by title and by a control name, and says when nothing matches",
+      "result": "pass",
+      "actual": "Every title search found its guide; \"Make primary\" → create-contract; \"Move anyway\" → contract-stages, contract-approvals; \"Apply group\" → contract-approvals; \"Unmark as executed copy\" → manual-signing; \"Void envelope\" → electronic-signing; \"Paper as amendment\" → terms-and-renewals; \"Add to team and assign\" → create-contract, contract-tasks-and-dates; \"Show archived\" → create-contract, terms-and-renewals, contract-tasks-and-dates, contract-relations-and-ending; nonsense showed the no-match message",
+      "at": "2026-09-07T14:15:30.972Z",
+      "ms": 19695,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "create-contract",
+      "role": "anonymous",
+      "step": "the formal edition lists and serves the guides to a signed-out reader without app API calls",
+      "result": "pass",
+      "actual": "Index listed 8 guides; each /documentation/<id> rendered its title; API paths requested: []; preview notice shown true",
+      "at": "2026-09-07T14:15:37.934Z",
+      "ms": 6958,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "create-contract",
+      "role": "legal_team_member",
+      "step": "the committed lab's normal Help excludes the review articles and its record Help link carries no topic",
+      "result": "pass",
+      "actual": "Normal Help at port 43302 lists none of the eight guides; the lab record's Help link is /help",
+      "at": "2026-09-07T14:15:39.976Z",
+      "ms": 2042,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "electronic-signing",
+      "role": "administrator",
+      "step": "the header Help link on the Contracts list and on C-42 carries the page topics, and the Help listing offers the electronic-signing guide",
+      "result": "pass",
+      "actual": "Contracts list Help → /help?topic=contracts.list&topic=lists&topic=search&topic=notifications listed ; record Help → /help?topic=contracts.overview&topic=contracts.progression&topic=contracts.appro… listed 1 guides: electronic-signing",
+      "at": "2026-09-07T14:19:16.268Z",
+      "ms": 2302,
+      "reader": "signing preview 43314"
+    },
+    {
+      "article": "electronic-signing",
+      "role": "administrator",
+      "step": "Help opens \"Send a Contract for electronic signature\" with focus on its title, shows the current sentence, the outline reaches \"Send the Envelope\", and the formal link opens the full documentation",
+      "result": "pass",
+      "actual": "/help/electronic-signing focused \"H1 Send a Contract for electronic signature\"; the sentence \"A blank subject uses the C- reference and title\" is present; outline reached \"Send the Envelope\"; formal link /documentation/electronic-signing rendered /documentation/electronic-signing",
+      "at": "2026-09-07T14:19:17.240Z",
+      "ms": 971,
+      "reader": "signing preview 43314"
+    },
+    {
+      "article": "electronic-signing",
+      "role": "administrator",
+      "step": "search finds each guide by title and by a control name, and says when nothing matches",
+      "result": "pass",
+      "actual": "Every title search found its guide; \"Void envelope\" → electronic-signing; nonsense showed the no-match message",
+      "at": "2026-09-07T14:19:20.704Z",
+      "ms": 3464,
+      "reader": "signing preview 43314"
+    },
+    {
+      "article": "electronic-signing",
+      "role": "administrator",
+      "step": "no horizontal overflow for any of the guides in light, warm and dark themes at 320, 720 and 1440 CSS px",
+      "result": "pass",
+      "actual": "9 page loads measured; none scrolled horizontally",
+      "at": "2026-09-07T14:19:27.570Z",
+      "ms": 6866,
+      "reader": "signing preview 43314"
+    },
+    {
+      "article": "electronic-signing",
+      "role": "legal_team_member",
+      "step": "the header Help link on the Contracts list and on C-43 carries the page topics, and the Help listing offers the electronic-signing guide",
+      "result": "pass",
+      "actual": "Contracts list Help → /help?topic=contracts.list&topic=lists&topic=search&topic=notifications listed ; record Help → /help?topic=contracts.overview&topic=contracts.progression&topic=contracts.appro… listed 1 guides: electronic-signing",
+      "at": "2026-09-07T14:19:30.670Z",
+      "ms": 2256,
+      "reader": "signing preview 43314"
+    },
+    {
+      "article": "electronic-signing",
+      "role": "legal_team_member",
+      "step": "Help opens \"Send a Contract for electronic signature\" with focus on its title, shows the current sentence, the outline reaches \"Send the Envelope\", and the formal link opens the full documentation",
+      "result": "pass",
+      "actual": "/help/electronic-signing focused \"H1 Send a Contract for electronic signature\"; the sentence \"A blank subject uses the C- reference and title\" is present; outline reached \"Send the Envelope\"; formal link /documentation/electronic-signing rendered /documentation/electronic-signing",
+      "at": "2026-09-07T14:19:31.617Z",
+      "ms": 947,
+      "reader": "signing preview 43314"
+    },
+    {
+      "article": "electronic-signing",
+      "role": "legal_team_member",
+      "step": "search finds each guide by title and by a control name, and says when nothing matches",
+      "result": "pass",
+      "actual": "Every title search found its guide; \"Void envelope\" → electronic-signing; nonsense showed the no-match message",
+      "at": "2026-09-07T14:19:35.091Z",
+      "ms": 3473,
+      "reader": "signing preview 43314"
+    },
+    {
+      "article": "electronic-signing",
+      "role": "anonymous",
+      "step": "the formal edition lists and serves the guides to a signed-out reader without app API calls",
+      "result": "pass",
+      "actual": "Index listed 1 guides; each /documentation/<id> rendered its title; API paths requested: []; preview notice shown true",
+      "at": "2026-09-07T14:19:36.894Z",
+      "ms": 1800,
+      "reader": "signing preview 43314"
+    }
+  ],
+  "passed": true
+}

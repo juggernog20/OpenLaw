@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-08T14:51:44.792Z",
+  "editionId": "documentation-development",
+  "supportedAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "distribution": {
+    "commit": "23429bc4e1ab53cff0690e5188a1b6793c803592",
+    "dirty": false,
+    "applicationSha256": "b7bc6323f8e3d95a4ee006eab289f434502dccfdb7aee4c5fcb2026e7c41cd30"
+  },
+  "counts": {
+    "articles": 56,
+    "articlesWithValidEvidence": 54,
+    "catalogStates": {
+      "review": 54,
+      "scoped": 2
+    },
+    "catalogVerifiedOrPublished": 0,
+    "coverageGroups": 55,
+    "groupsWithValidArticleEvidence": 53,
+    "requiredArticleRoleMethods": 124,
+    "creditedArticleRoleMethods": 116,
+    "requiredSharedRoleMethods": 7
+  },
+  "priorities": {
+    "P0": {
+      "required": 39,
+      "articleEvidencePass": 37
+    },
+    "P1": {
+      "required": 16,
+      "articleEvidencePass": 16
+    }
+  },
+  "distributionReview": {
+    "pass": true,
+    "error": null
+  },
+  "completePublication": {
+    "pass": false,
+    "error": "Article evidence is incomplete: configure-signing"
+  },
+  "sharedScenarios": [
+    {
+      "id": "V-HELP",
+      "declaredStatus": "blocked",
+      "requiredRoleMethods": 5
+    },
+    {
+      "id": "V-OFFLINE",
+      "declaredStatus": "blocked",
+      "requiredRoleMethods": 2
+    }
+  ],
+  "scope": "Clean DOC-026 merge preflight before DOC-027 edits. Evidence report only, not a final publication or new walkthrough."
+}
