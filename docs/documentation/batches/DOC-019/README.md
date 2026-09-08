@@ -61,6 +61,8 @@ Independent walkthrough and technical review are recorded; both per-article evid
 
 The author static pass completed all 19 tasks, and all 33 documentation/CI tooling tests passed. Normal and preview documentation builds passed. The full uncached workspace suite passed all five tasks, including 2,890 API and 1,704 web tests, in 3m51.095s. A later response-schema assertion improvement passed all four Knowledge Document tests; it changes test validation only.
 
+The independent seat then ran the same checks against its own commits, with no browsers running: the uncached full workspace suite passed all 5 tasks in 4m5.402s, including 2,890 API tests in 176 files and 1,704 web tests in 97 files. The normal and preview documentation builds passed, the preview build's only Knowledge warning being the known `types-statuses-fields` forward link; the 33 documentation and CI tooling tests passed; Prettier and secretlint passed over the evidence, the records and both guides.
+
 CodeRabbit ran once. Its response-schema and Document-terminology suggestions were applied. Its suggestion to turn this evidence README into second-person imperative instructions was not applied: the README records actual outcomes, while the user guides give instructions.
 
 DOC-021 will extend the linked request-form configuration guidance. DOC-025 must review compatibility with the final app candidate while retaining these actual build identities. The user will proofread after the full suite is assembled.
