@@ -63,9 +63,10 @@
       "startedAt": "2026-09-08T00:48:19.467Z",
       "at": "2026-09-08T00:48:20.056Z",
       "correction": {
-        "correctedAt": "2026-09-08T05:52:00.000Z",
+        "correctedAt": "2026-09-08T01:22:29.000Z",
         "reason": "This step asserted row presence only. Its original text also quoted a tab label that getByRole('link', {name: /Contracts/}).first() had read from the global navigation, not the Entity record tab, and the Legal Team Member text claimed an absent count that was never observed. The scope is narrowed here to what the step actually checked; the tab counts are measured afresh in independent-c53-linked-work.json.",
-        "originalActual": "The Entity's Contracts tab showed neither a row nor a count for the Confidential Contract this reader cannot reach (tab reads \"Contracts\"), so linking it to a reachable Entity did not widen its audience"
+        "originalActual": "The Entity's Contracts tab showed neither a row nor a count for the Confidential Contract this reader cannot reach (tab reads \"Contracts\"), so linking it to a reachable Entity did not widen its audience",
+        "timestampCorrection": "Clerical timestamp correction applied 2026-09-08T01:25:23.000Z. These correctedAt values first read 2026-09-08T05:52:00.000Z, a local-clock (+04:00) reading mislabelled as UTC and so about four and a half hours in the future. The correction itself was made in the session that produced commit 8a19298c, whose commit time in UTC, 2026-09-08T01:22:29.000Z, is the real anchor recorded above and bounds when the edit was made. No observed walkthrough time, original-claim text or count evidence changed."
       }
     },
     {
@@ -131,9 +132,10 @@
       "startedAt": "2026-09-08T00:48:40.424Z",
       "at": "2026-09-08T00:48:41.015Z",
       "correction": {
-        "correctedAt": "2026-09-08T05:52:00.000Z",
+        "correctedAt": "2026-09-08T01:22:29.000Z",
         "reason": "This step asserted row presence only. Its original text also quoted a tab label that getByRole('link', {name: /Contracts/}).first() had read from the global navigation, not the Entity record tab, and the Legal Team Member text claimed an absent count that was never observed. The scope is narrowed here to what the step actually checked; the tab counts are measured afresh in independent-c53-linked-work.json.",
-        "originalActual": "The Entity's Contracts tab listed the Confidential Contract \"Rev C53 confidential deed RYAG0T\" for the Administrator who reaches it (tab reads \"Contracts\")"
+        "originalActual": "The Entity's Contracts tab listed the Confidential Contract \"Rev C53 confidential deed RYAG0T\" for the Administrator who reaches it (tab reads \"Contracts\")",
+        "timestampCorrection": "Clerical timestamp correction applied 2026-09-08T01:25:23.000Z. These correctedAt values first read 2026-09-08T05:52:00.000Z, a local-clock (+04:00) reading mislabelled as UTC and so about four and a half hours in the future. The correction itself was made in the session that produced commit 8a19298c, whose commit time in UTC, 2026-09-08T01:22:29.000Z, is the real anchor recorded above and bounds when the edit was made. No observed walkthrough time, original-claim text or count evidence changed."
       }
     },
     {
@@ -213,9 +215,10 @@
   "completedAt": "2026-09-08T00:49:09.320Z",
   "corrections": [
     {
-      "correctedAt": "2026-09-08T05:52:00.000Z",
+      "correctedAt": "2026-09-08T01:22:29.000Z",
       "scope": "Both roles' linked-Contracts steps; see each step's `correction`.",
-      "supersededBy": "independent-c53-linked-work.json"
+      "supersededBy": "independent-c53-linked-work.json",
+      "timestampCorrection": "Clerical timestamp correction applied 2026-09-08T01:25:23.000Z. These correctedAt values first read 2026-09-08T05:52:00.000Z, a local-clock (+04:00) reading mislabelled as UTC and so about four and a half hours in the future. The correction itself was made in the session that produced commit 8a19298c, whose commit time in UTC, 2026-09-08T01:22:29.000Z, is the real anchor recorded above and bounds when the edit was made. No observed walkthrough time, original-claim text or count evidence changed."
     }
   ],
   "articleHashes": [
