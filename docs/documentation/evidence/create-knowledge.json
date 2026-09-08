@@ -5,11 +5,11 @@
   "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
   "environment": "openlaw-docs-b8e31260-knowledge",
   "author": "Codex documentation author agent",
-  "technicalReviewer": null,
-  "walkthroughReviewer": null,
+  "technicalReviewer": "Independent review seat (agent)",
+  "walkthroughReviewer": "Independent review seat (agent)",
   "reviewerKind": "agent",
-  "verifiedAt": null,
-  "status": "not-run",
+  "verifiedAt": "2026-09-08T02:29:04.607Z",
+  "status": "pass",
   "sources": [
     "docs/decision-records/DECISIONS-KNOWLEDGE.md",
     "apps/web/src/routes/knowledge.tsx",
@@ -27,34 +27,91 @@
       "coverage": ["C33"],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "prerequisites": [
-        "Knowledge types/folders and a draft Knowledge Item with fictional Documents."
-      ],
       "expected": "The item, its guidance, its folder, and its Documents remain distinct records with a working primary choice. Unavailable/archived references and insufficient role permissions have supported outcomes.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "Knowledge opened with the New action, the All Knowledge folder entry and the Knowledge items list. Create drafts answered 201 with two items titled Rev C33 legal_team_member 145C4F policy A.pdf and Rev C33 legal_team_member 145C4F policy B.pdf; each was Draft, Legal Only, filed in Library with its own primary Document, the first opened at its record and the second was listed in Knowledge. Enter saved the title and the heading followed it; the Type selection saved to Precedent on change and both values were still there after a reload. Create item made a Draft Legal Only Article with Primary document None; Add guidance took Markdown, Preview rendered its heading and link and saved on the editor blur, and the source was still there after a reload. Upload added plain.docx as a second Document; Set as primary marked its row Primary and named it in the Primary document control, Open preview opened and closed its current Version, and the original file stayed on the item as a supporting Document with its own single-version chain. The record’s Documents section offered no folder button or folder filter, so its Documents read as one flat list. Add folder with All Knowledge selected made a top-level folder and with that folder selected made a child under it; the move dialog offered neither the folder itself nor its descendant as a parent; Save folder renamed it and the up/down controls moved it one sibling position and back (displayOrder 11→10→11, taking 2 and 1 click(s)). The record’s Folder control moved the item into Rev C33 legal_team_member 145C4F child; the child folder listed it and the parent folder listed it too, so a folder selection reads its descendants. Type, State, Audience, Author and Format were each offered; Type=Article kept the guidance item and dropped the Precedent, State=Published then hid the draft as well, and clearing both filters brought the item back. The delete dialog said its folders and items move to the parent and that nothing is deleted; after Delete folder the child folder became top-level, the item stayed in that child folder and still held both of its Documents. The separately prepared archived Knowledge type \"Rev C33 archived type 95C160\" was absent from the record Type control and from the New Knowledge Item dialog, while the live Playbook type was still offered. Archiving the guidance item marked it Archived and disabled Title, Type, Folder and Audience while the Upload control disappeared; a direct upload to the archived item answered 409; the saved record address still opened after a reload and Restore returned it to an editable state. No Manage types… control was offered beside Type for a Legal Team Member, which is what the guide says about asking an Administrator.",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:41.817Z",
+      "completedAt": "2026-09-08T02:22:58.162Z",
+      "stepsSummarized": "13 recorded steps for this role; the linked record holds each one separately",
+      "evidence": ["docs/documentation/batches/DOC-019/independent-c33.json"]
     },
     {
       "id": "V-C33",
       "coverage": ["C33"],
       "role": "administrator",
       "method": "browser-walkthrough",
-      "prerequisites": [
-        "Knowledge types/folders and a draft Knowledge Item with fictional Documents."
-      ],
       "expected": "The item, its guidance, its folder, and its Documents remain distinct records with a working primary choice. Unavailable/archived references and insufficient role permissions have supported outcomes.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "Knowledge opened with the New action, the All Knowledge folder entry and the Knowledge items list. Create drafts answered 201 with two items titled Rev C33 administrator 95B8E2 policy A.pdf and Rev C33 administrator 95B8E2 policy B.pdf; each was Draft, Legal Only, filed in Library with its own primary Document, the first opened at its record and the second was listed in Knowledge. Enter saved the title and the heading followed it; the Type selection saved to Precedent on change and both values were still there after a reload. Create item made a Draft Legal Only Article with Primary document None; Add guidance took Markdown, Preview rendered its heading and link and saved on the editor blur, and the source was still there after a reload. Upload added plain.docx as a second Document; Set as primary marked its row Primary and named it in the Primary document control, Open preview opened and closed its current Version, and the original file stayed on the item as a supporting Document with its own single-version chain. The record’s Documents section offered no folder button or folder filter, so its Documents read as one flat list. Add folder with All Knowledge selected made a top-level folder and with that folder selected made a child under it; the move dialog offered neither the folder itself nor its descendant as a parent; Save folder renamed it and the up/down controls moved it one sibling position and back (displayOrder 11→10→11, taking 1 and 1 click(s)). The record’s Folder control moved the item into Rev C33 administrator 95B8E2 child; the child folder listed it and the parent folder listed it too, so a folder selection reads its descendants. Type, State, Audience, Author and Format were each offered; Type=Article kept the guidance item and dropped the Precedent, State=Published then hid the draft as well, and clearing both filters brought the item back. The delete dialog said its folders and items move to the parent and that nothing is deleted; after Delete folder the child folder became top-level, the item stayed in that child folder and still held both of its Documents. The separately prepared archived Knowledge type \"Rev C33 archived type 95C160\" was absent from the record Type control and from the New Knowledge Item dialog, while the live Playbook type was still offered. Archiving the guidance item marked it Archived and disabled Title, Type, Folder and Audience while the Upload control disappeared; a direct upload to the archived item answered 409; the saved record address still opened after a reload and Restore returned it to an editable state. Manage types… was beside Type and opened Settings / Knowledge types.",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:29.751Z",
+      "completedAt": "2026-09-08T02:22:41.010Z",
+      "stepsSummarized": "13 recorded steps for this role; the linked record holds each one separately",
+      "evidence": ["docs/documentation/batches/DOC-019/independent-c33.json"]
+    },
+    {
+      "id": "V-C33",
+      "coverage": ["C33"],
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "expected": "A Contributor has no staff Knowledge authoring or browsing access.",
+      "actual": "As Ravi Menon the Knowledge list and a direct Knowledge record both left the browser on Home with no Knowledge item in the navigation, and the record and its Documents answered 403.",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:58.945Z",
+      "completedAt": "2026-09-08T02:23:00.131Z",
+      "stepsSummarized": "1 recorded steps for this role; the linked record holds each one separately",
+      "evidence": ["docs/documentation/batches/DOC-019/independent-c33.json"]
+    },
+    {
+      "id": "DOC-019-discovery",
+      "coverage": ["C33"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Both guides are reachable from their Help contexts and the formal reader, and stay usable with the keyboard, in three themes, in narrow layouts and at 200 percent zoom.",
+      "actual": "Help on /knowledge offered \"Create and organize Knowledge Items\" (Publish Knowledge for the right audience listed 0 times there) and Help on a Knowledge record offered both guides, matching their knowledge.list, knowledge.overview and knowledge.publishing contexts. Searching the exact title opened create-knowledge with its h1 focused; the outline links for Before you start, Start with files, Start with guidance each focused their heading; the formal link reached /documentation/create-knowledge. Searching the exact title opened publish-knowledge with its h1 focused; the outline links for Before you start, Publish and check the Portal, Withdraw or restrict an item each focused their heading; the formal link reached /documentation/publish-knowledge. Both guides were read in light, dark and warm themes at 320, 720 and 1440 CSS pixels and at emulated 200 percent zoom with no horizontal overflow in any of the 20 combinations. Tabbing from the top of the Help panel reached the \"Publish Knowledge for the right audience\" link and Enter opened it, leaving focus on the article heading. Searching Help for the fictional Knowledge Item title \"Rev discovery 9BB976 fictional pack\" answered No matching articles, so product Help did not reach the organization’s Knowledge, exactly as create-knowledge says.",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:27:13.923Z",
+      "completedAt": "2026-09-08T02:27:23.056Z",
+      "stepsSummarized": "6 recorded steps for this role; the linked record holds each one separately",
+      "evidence": ["docs/documentation/batches/DOC-019/independent-discovery.json"]
+    },
+    {
+      "id": "DOC-019-discovery",
+      "coverage": ["C33"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Both guides are reachable from their Help contexts and the formal reader, and stay usable with the keyboard, in three themes, in narrow layouts and at 200 percent zoom.",
+      "actual": "Help on /knowledge offered \"Create and organize Knowledge Items\" (Publish Knowledge for the right audience listed 0 times there) and Help on a Knowledge record offered both guides, matching their knowledge.list, knowledge.overview and knowledge.publishing contexts. Searching the exact title opened create-knowledge with its h1 focused; the outline links for Before you start, Start with files, Start with guidance each focused their heading; the formal link reached /documentation/create-knowledge. Searching the exact title opened publish-knowledge with its h1 focused; the outline links for Before you start, Publish and check the Portal, Withdraw or restrict an item each focused their heading; the formal link reached /documentation/publish-knowledge. Both guides were read in light, dark and warm themes at 320, 720 and 1440 CSS pixels and at emulated 200 percent zoom with no horizontal overflow in any of the 20 combinations. Tabbing from the top of the Help panel reached the \"Publish Knowledge for the right audience\" link and Enter opened it, leaving focus on the article heading. Searching Help for the fictional Knowledge Item title \"Rev discovery 9BB976 fictional pack\" answered No matching articles, so product Help did not reach the organization’s Knowledge, exactly as create-knowledge says.",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:27:03.879Z",
+      "completedAt": "2026-09-08T02:27:13.106Z",
+      "stepsSummarized": "6 recorded steps for this role; the linked record holds each one separately",
+      "evidence": ["docs/documentation/batches/DOC-019/independent-discovery.json"]
+    },
+    {
+      "id": "DOC-019-discovery",
+      "coverage": ["C33"],
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "expected": "Both guides are reachable from their Help contexts and the formal reader, and stay usable with the keyboard, in three themes, in narrow layouts and at 200 percent zoom.",
+      "actual": "A browser with no session listed both guide titles in /documentation and opened publish-knowledge with zero requests to the application API.",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:27:23.058Z",
+      "completedAt": "2026-09-08T02:27:24.148Z",
+      "stepsSummarized": "1 recorded steps for this role; the linked record holds each one separately",
+      "evidence": ["docs/documentation/batches/DOC-019/independent-discovery.json"]
     }
   ],
   "limitations": [
-    "Independent technical and browser walkthrough review is pending.",
-    "Catalog remains in feature review pending DOC-025 whole-suite acceptance and DOC-027 publication/export.",
+    "Agent walkthroughs by an independent review seat, not human user studies or feature-owner approval.",
+    "Recorded against lab app source 6a8873db, which is ahead of edition.json’s supportedAppCommit; the whole suite is re-pinned to one build at DOC-025 acceptance.",
+    "The catalog stays in feature review: DOC-025 whole-suite acceptance and DOC-027 publication are still ahead.",
     "The types and Fields guide linked by create-knowledge is a DOC-021 publication dependency."
   ],
   "previousEvidence": null,
   "copyOnlyReview": null,
-  "authorEvidence": ["docs/documentation/batches/DOC-019/README.md"]
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-019/README.md",
+    "docs/documentation/batches/DOC-019/independent-c33.json",
+    "docs/documentation/batches/DOC-019/independent-discovery.json"
+  ]
 }

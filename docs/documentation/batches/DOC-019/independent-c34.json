@@ -1,0 +1,184 @@
+{
+  "name": "independent-c34",
+  "kind": "independent-review-walkthrough",
+  "scenario": "V-C34",
+  "articles": ["publish-knowledge"],
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-knowledge",
+  "reviewer": "Independent review seat (agent)",
+  "articleHashes": [
+    {
+      "articleId": "publish-knowledge",
+      "contentSha256": "cae7b9ef9551242ef7b502892e4a9f63fa0229caf44e1578ec684490b793ffa5"
+    }
+  ],
+  "articleHashesNote": "Article hashes were captured from the working tree at run start, before the first step of this record; they are the bytes committed on this branch.",
+  "startedAt": "2026-09-08T02:25:32.714Z",
+  "completedAt": "2026-09-08T02:26:13.212Z",
+  "passed": true,
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "publish-knowledge \"Before you start\" table rows 1-2: a Draft and a published Legal Only item stay off the Portal",
+      "actual": "While Draft and while published Legal Only, both Portal readers (Jonas Weber and Amara Nwosu) were redirected to the Portal home and the article API answered 404 (4 denied reads); Publish removed the Draft marker without showing On the portal; the Contributor Ravi Menon could not open the staff record",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:25:37.810Z",
+      "at": "2026-09-08T02:25:40.829Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "publish-knowledge \"Publish and check the Portal\" steps 1-2: Everyone puts the published item on the portal",
+      "actual": "Audience Everyone on the published item showed the On the portal marker and saved audience=everyone",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:25:40.829Z",
+      "at": "2026-09-08T02:25:40.888Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "publish-knowledge \"Publish and check the Portal\" step 3: an Administrator adds the deflection link in Settings / Intake / Deflection links",
+      "actual": "Settings / Intake / Deflection links offered Add link with Target, Label and Placement exactly as the corrected guide names them; Daniel Okafor (the publisher, an Administrator) added a Knowledge item link placed on the Portal home",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:25:40.888Z",
+      "at": "2026-09-08T02:25:41.606Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "publish-knowledge \"Publish and check the Portal\" step 4: the Portal reader follows the link and downloads both Documents",
+      "actual": "Jonas Weber reached the article from Before you submit, read its title and guidance heading, and downloaded both Documents with bytes equal to the uploaded PDF and DOCX; the Documents region sat above Guidance and the primary was listed first; no staff actions were offered. Amara Nwosu and the Contributor Ravi Menon reached the same published Everyone article",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:25:41.606Z",
+      "at": "2026-09-08T02:25:43.481Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "publish-knowledge \"Withdraw or restrict an item\" steps 1-3 and its negative: Legal Only blocks the article and both saved file links",
+      "actual": "The dialog named 1 deflection link; Cancel left Audience on Everyone and Continue saved Legal Only. The On the portal marker went, the link disappeared from Before you submit, and the saved article address plus both saved Document download addresses answered 404 for both Portal readers (6 denied reads). The deflection link row was still in Settings",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:25:43.481Z",
+      "at": "2026-09-08T02:25:46.478Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "publish-knowledge \"Withdraw or restrict an item\" step 1: Unpublish returns the item to Draft and republishing restores reach",
+      "actual": "Unpublish asked the same portal question, returned the item to Draft and kept Audience Everyone; while draft the article and both file addresses answered 404 (6 denied reads); Publish alone brought back the existing deflection link, the article and both downloads",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:25:46.478Z",
+      "at": "2026-09-08T02:25:49.125Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "publish-knowledge \"Archive and restore\" steps 1-4: an archived item freezes and keeps its publication state through Restore",
+      "actual": "Archive with Rev C34 administrator 5D86B5 replacement pack under Replaced by marked the item Archived, disabled Title and Audience and removed Upload, while the article, both file addresses and the Before you submit link went (6 denied reads). The saved staff address still opened the archived record with its Documents listed and offered Restore; restoring returned published/Everyone with both Documents and the recorded replacement, and the Portal article, both downloads and the deflection link all worked again",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:25:49.125Z",
+      "at": "2026-09-08T02:25:53.039Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "publish-knowledge \"Archive and restore\": naming a replacement does not redirect the old Portal address",
+      "actual": "With the item archived and Rev C34 administrator 5D86B5 replacement pack named as its replacement, the old Portal address returned the reader to the Portal home rather than to the replacement, and the unpublished replacement itself answered 404; the item was restored afterwards",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:25:53.039Z",
+      "at": "2026-09-08T02:25:54.588Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "publish-knowledge \"Before you start\" negative: Everyone still needs a Portal session",
+      "actual": "A browser with no session was sent to the Portal sign-in page for the published Everyone item, and its direct article request answered 401",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:25:54.588Z",
+      "at": "2026-09-08T02:25:54.749Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "publish-knowledge \"Before you start\" table rows 1-2: a Draft and a published Legal Only item stay off the Portal",
+      "actual": "While Draft and while published Legal Only, both Portal readers (Jonas Weber and Amara Nwosu) were redirected to the Portal home and the article API answered 404 (4 denied reads); Publish removed the Draft marker without showing On the portal; the Contributor Ravi Menon could not open the staff record",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:25:56.269Z",
+      "at": "2026-09-08T02:25:59.243Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "publish-knowledge \"Publish and check the Portal\" steps 1-2: Everyone puts the published item on the portal",
+      "actual": "Audience Everyone on the published item showed the On the portal marker and saved audience=everyone",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:25:59.243Z",
+      "at": "2026-09-08T02:25:59.281Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "publish-knowledge \"Publish and check the Portal\" step 3: an Administrator adds the deflection link in Settings / Intake / Deflection links",
+      "actual": "Settings / Intake / Deflection links offered Add link with Target, Label and Placement exactly as the corrected guide names them; Daniel Okafor in a separate Administrator context added a Knowledge item link placed on the Portal home",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:25:59.281Z",
+      "at": "2026-09-08T02:26:00.019Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "publish-knowledge \"Publish and check the Portal\" step 4: the Portal reader follows the link and downloads both Documents",
+      "actual": "Jonas Weber reached the article from Before you submit, read its title and guidance heading, and downloaded both Documents with bytes equal to the uploaded PDF and DOCX; the Documents region sat above Guidance and the primary was listed first; no staff actions were offered. Amara Nwosu and the Contributor Ravi Menon reached the same published Everyone article",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:26:00.019Z",
+      "at": "2026-09-08T02:26:01.921Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "publish-knowledge \"Withdraw or restrict an item\" steps 1-3 and its negative: Legal Only blocks the article and both saved file links",
+      "actual": "The dialog named 1 deflection link; Cancel left Audience on Everyone and Continue saved Legal Only. The On the portal marker went, the link disappeared from Before you submit, and the saved article address plus both saved Document download addresses answered 404 for both Portal readers (6 denied reads). The deflection link row was still in Settings",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:26:01.921Z",
+      "at": "2026-09-08T02:26:04.961Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "publish-knowledge \"Withdraw or restrict an item\" step 1: Unpublish returns the item to Draft and republishing restores reach",
+      "actual": "Unpublish asked the same portal question, returned the item to Draft and kept Audience Everyone; while draft the article and both file addresses answered 404 (6 denied reads); Publish alone brought back the existing deflection link, the article and both downloads",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:26:04.961Z",
+      "at": "2026-09-08T02:26:07.671Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "publish-knowledge \"Archive and restore\" steps 1-4: an archived item freezes and keeps its publication state through Restore",
+      "actual": "Archive with Rev C34 legal_team_member 2459EE replacement pack under Replaced by marked the item Archived, disabled Title and Audience and removed Upload, while the article, both file addresses and the Before you submit link went (6 denied reads). The saved staff address still opened the archived record with its Documents listed and offered Restore; restoring returned published/Everyone with both Documents and the recorded replacement, and the Portal article, both downloads and the deflection link all worked again",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:26:07.671Z",
+      "at": "2026-09-08T02:26:11.495Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "publish-knowledge \"Archive and restore\": naming a replacement does not redirect the old Portal address",
+      "actual": "With the item archived and Rev C34 legal_team_member 2459EE replacement pack named as its replacement, the old Portal address returned the reader to the Portal home rather than to the replacement, and the unpublished replacement itself answered 404; the item was restored afterwards",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:26:11.495Z",
+      "at": "2026-09-08T02:26:13.033Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "publish-knowledge \"Before you start\" negative: Everyone still needs a Portal session",
+      "actual": "A browser with no session was sent to the Portal sign-in page for the published Everyone item, and its direct article request answered 401",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:26:13.033Z",
+      "at": "2026-09-08T02:26:13.194Z"
+    }
+  ]
+}

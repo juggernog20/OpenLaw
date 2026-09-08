@@ -1,6 +1,6 @@
 # Knowledge guide verification
 
-Two canonical guides cover C33 and C34 for [#739](https://github.com/juggernog20/OpenLaw/issues/739): Knowledge authoring and publication/audience control. They serve staff Help and the formal reader. Author walkthroughs are complete; independent technical and browser review is pending. The catalog remains in feature review for DOC-025 acceptance and DOC-027 publication/export.
+Two canonical guides cover C33 and C34 for [#739](https://github.com/juggernog20/OpenLaw/issues/739): Knowledge authoring and publication/audience control. They serve staff Help and the formal reader. Author walkthroughs and the independent technical and browser review are complete. The catalog remains in feature review for DOC-025 acceptance and DOC-027 publication/export.
 
 ## Build and actors
 
@@ -35,12 +35,32 @@ A prior attempt on app source `8539f4cc` exposed the archived-record failure bel
 
 The regression failed before the change and passed afterward. Together with existing Knowledge and Portal cases, seven tests passed. The regression checks both legal roles' retained Document reads, Contributor/Business refusal, archived upload refusal, Portal article/download denial, and successful download after restore. The author browser runs then reopened and restored archived records for both roles on the corrected immutable build. The OpenAPI description and generated client were refreshed.
 
-## Remaining review and publication
+## Independent review
 
-Independent technical review and all four required scenario/role walkthroughs remain pending. The reviewer must also verify Business Portal primary/supporting file access and removal, and the two guides' Help/formal presentation. Per-article evidence deliberately remains `not-run` until that independent work is recorded.
+An independent review seat followed both final guides in this same immutable lab, in its own browser contexts, with its own fixtures named for each run. Its records are [V-C33](independent-c33.json) (27 steps, 2026-09-08T02:22:27.924Z to 2026-09-08T02:23:00.137Z), [V-C34](independent-c34.json) (18 steps, 2026-09-08T02:25:32.714Z to 2026-09-08T02:26:13.212Z) and [discovery](independent-discovery.json) (13 steps, 2026-09-08T02:27:02.064Z to 2026-09-08T02:27:24.151Z). Every step passed. Each record captures the guide hashes at its own run start, and those hashes are the bytes committed on this branch.
+
+V-C33 was walked for both the Administrator and the Legal Team Member: file-first creation into Library, title and type persistence through a reload, guidance-only creation with rendered Markdown, a supporting upload with the primary choice moved to it, folders and their cycle-safe parent choices, sibling reordering, moving an item by its Folder field, independent list filters, and folder dissolution that kept both items and Documents. Its negative checks were the separately prepared archived Knowledge type absent from both type pickers, an archived item that disabled Title, Type, Folder and Audience and offered no Upload (a direct upload answered 409), Manage types… offered only to the Administrator, and a Contributor left on Home with 403 for the record and its Documents.
+
+V-C34 was walked for both publishers, with Jonas Weber and Amara Nwosu each signed in to their own Business Portal context and Ravi Menon as a Contributor comparison reader. Draft and published Legal Only items stayed off the portal; Everyone plus the Deflection links configuration put the article and both file downloads in front of the Portal readers, with bytes equal to the uploaded PDF and DOCX; Legal Only, Unpublish and Archive each removed the article, the Before you submit link and both saved Document download addresses, which is the scenario's direct-link negative check; Restore returned the published Everyone state, both Documents and the recorded replacement; a named replacement did not redirect the old portal address; and a browser with no session was sent to Portal sign-in.
+
+Discovery covered both guides for both roles on the draft preview: contextual Help offered `create-knowledge` on the Knowledge list and both guides on a Knowledge record, exact-title search opened each article with its h1 focused, outline links focused their headings, the formal link reached `/documentation/<id>`, and the Help panel was reachable and operable by keyboard alone. Neither guide overflowed horizontally in light, dark and warm themes at 320, 720 and 1440 CSS pixels or at emulated 200 percent zoom. Help search for a fictional Knowledge Item title answered "No matching articles", which is the separation `create-knowledge` claims. Signed out, both guide titles were listed in `/documentation` and one opened with zero application API requests.
+
+Two observations came out of the independent runs. The library's folder up/down control ignores a click while another folder request is still in flight, so one reorder needed a second click before the saved order moved; the guide's sentence about those controls is still accurate, and this is left for the feature owner. The `publish-knowledge` step 3 correction was exercised end to end: Settings, Intake, Deflection links, Add link, Target "Knowledge item", Label and Placement all carry the names the guide now uses.
+
+Timestamps in every record here, the author's and the independent seat's, are actual `new Date().toISOString()` reads taken around each awaited action; short local operations complete in well under a second, and no timing is inferred or typed by hand.
+
+## Application changes since the tested build
+
+The lab runs app source `6a8873db` and was not rebuilt. Commit `611a5b93` on this branch touches the same Knowledge paper read only by removing an unused selected `archivedAt` column and adding comments, and adds one test comment; it changes no request handling, no response and no label, so every walkthrough recorded here holds for it. DOC-025 re-pins the whole suite to one candidate build.
+
+## Remaining publication dependencies
+
+Independent walkthrough and technical review are recorded; both per-article evidence records read `pass`. What is left is not verification of these two guides: `create-knowledge` links `types-statuses-fields` (DOC-021), `publish-knowledge` names the Deflection links settings that C40 (DOC-021) will document, the scenario registry keeps its aggregate `not-run` until DOC-025, and the catalog stays in feature review until DOC-025 acceptance and DOC-027 publication.
+
+## Checks and tooling
 
 The author static pass completed all 19 tasks, and all 33 documentation/CI tooling tests passed. Normal and preview documentation builds passed. The full uncached workspace suite passed all five tasks, including 2,890 API and 1,704 web tests, in 3m51.095s. A later response-schema assertion improvement passed all four Knowledge Document tests; it changes test validation only.
 
 CodeRabbit ran once. Its response-schema and Document-terminology suggestions were applied. Its suggestion to turn this evidence README into second-person imperative instructions was not applied: the README records actual outcomes, while the user guides give instructions.
 
-The types/Fields guide is a forward publication dependency. DOC-021 will extend the linked request-form configuration guidance. DOC-025 must review compatibility with the final app candidate while retaining these actual build identities. The user will proofread after the full suite is assembled.
+DOC-021 will extend the linked request-form configuration guidance. DOC-025 must review compatibility with the final app candidate while retaining these actual build identities. The user will proofread after the full suite is assembled.

@@ -1,0 +1,265 @@
+{
+  "name": "independent-c33",
+  "kind": "independent-review-walkthrough",
+  "scenario": "V-C33",
+  "articles": ["create-knowledge"],
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-knowledge",
+  "reviewer": "Independent review seat (agent)",
+  "articleHashes": [
+    {
+      "articleId": "create-knowledge",
+      "contentSha256": "295001ee071b093a3d66f72fb1faf23a81a959d13c08fbaba19e3062a738d34f"
+    }
+  ],
+  "articleHashesNote": "Article hashes were captured from the working tree at run start, before the first step of this record; they are the bytes committed on this branch.",
+  "startedAt": "2026-09-08T02:22:27.924Z",
+  "completedAt": "2026-09-08T02:23:00.137Z",
+  "passed": true,
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Before you start\": Knowledge opens with the authoring controls for this role",
+      "actual": "Knowledge opened with the New action, the All Knowledge folder entry and the Knowledge items list",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:29.751Z",
+      "at": "2026-09-08T02:22:30.392Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Start with files\" steps 1-3: two files become two filename-titled drafts in Library",
+      "actual": "Create drafts answered 201 with two items titled Rev C33 administrator 95B8E2 policy A.pdf and Rev C33 administrator 95B8E2 policy B.pdf; each was Draft, Legal Only, filed in Library with its own primary Document, the first opened at its record and the second was listed in Knowledge",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:30.393Z",
+      "at": "2026-09-08T02:22:31.839Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Start with files\" step 4: Title saves on Enter and Type saves on change, both surviving reload",
+      "actual": "Enter saved the title and the heading followed it; the Type selection saved to Precedent on change and both values were still there after a reload",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:31.840Z",
+      "at": "2026-09-08T02:22:31.997Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Start with guidance\" steps 1-4: a guidance-only item with rendered Markdown",
+      "actual": "Create item made a Draft Legal Only Article with Primary document None; Add guidance took Markdown, Preview rendered its heading and link and saved on the editor blur, and the source was still there after a reload",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:31.997Z",
+      "at": "2026-09-08T02:22:33.051Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Add Documents and choose the primary\" steps 1-3",
+      "actual": "Upload added plain.docx as a second Document; Set as primary marked its row Primary and named it in the Primary document control, Open preview opened and closed its current Version, and the original file stayed on the item as a supporting Document with its own single-version chain",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:33.051Z",
+      "at": "2026-09-08T02:22:33.967Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Add Documents\" note: an item’s Documents are a flat list with no folder control",
+      "actual": "The record’s Documents section offered no folder button or folder filter, so its Documents read as one flat list",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:33.967Z",
+      "at": "2026-09-08T02:22:33.975Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Organize the library\" steps 2-4: nested folders, cycle-safe parent choices and sibling order",
+      "actual": "Add folder with All Knowledge selected made a top-level folder and with that folder selected made a child under it; the move dialog offered neither the folder itself nor its descendant as a parent; Save folder renamed it and the up/down controls moved it one sibling position and back (displayOrder 11→10→11, taking 1 and 1 click(s))",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:33.975Z",
+      "at": "2026-09-08T02:22:35.277Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Organize the library\" step 4: an item moves by changing its record Folder",
+      "actual": "The record’s Folder control moved the item into Rev C33 administrator 95B8E2 child; the child folder listed it and the parent folder listed it too, so a folder selection reads its descendants",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:35.278Z",
+      "at": "2026-09-08T02:22:36.562Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Organize the library\" step 1: Type narrows the list on its own and Clear filters restores it",
+      "actual": "Type, State, Audience, Author and Format were each offered; Type=Article kept the guidance item and dropped the Precedent, State=Published then hid the draft as well, and clearing both filters brought the item back",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:36.563Z",
+      "at": "2026-09-08T02:22:37.342Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Organize the library\" step 5: dissolving a folder promotes its children and keeps every item",
+      "actual": "The delete dialog said its folders and items move to the parent and that nothing is deleted; after Delete folder the child folder became top-level, the item stayed in that child folder and still held both of its Documents",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:37.342Z",
+      "at": "2026-09-08T02:22:38.133Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Recover from an unavailable choice\" negative: an archived Knowledge type is not offered",
+      "actual": "The separately prepared archived Knowledge type \"Rev C33 archived type 95C160\" was absent from the record Type control and from the New Knowledge Item dialog, while the live Playbook type was still offered",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:38.133Z",
+      "at": "2026-09-08T02:22:39.475Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Recover from an unavailable choice\" negative: an archived item takes no edit and no upload",
+      "actual": "Archiving the guidance item marked it Archived and disabled Title, Type, Folder and Audience while the Upload control disappeared; a direct upload to the archived item answered 409; the saved record address still opened after a reload and Restore returned it to an editable state",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:39.475Z",
+      "at": "2026-09-08T02:22:40.378Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Recover from an unavailable choice\": Manage types… is offered to Administrators only",
+      "actual": "Manage types… was beside Type and opened Settings / Knowledge types",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:40.379Z",
+      "at": "2026-09-08T02:22:41.010Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Before you start\": Knowledge opens with the authoring controls for this role",
+      "actual": "Knowledge opened with the New action, the All Knowledge folder entry and the Knowledge items list",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:41.817Z",
+      "at": "2026-09-08T02:22:42.458Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Start with files\" steps 1-3: two files become two filename-titled drafts in Library",
+      "actual": "Create drafts answered 201 with two items titled Rev C33 legal_team_member 145C4F policy A.pdf and Rev C33 legal_team_member 145C4F policy B.pdf; each was Draft, Legal Only, filed in Library with its own primary Document, the first opened at its record and the second was listed in Knowledge",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:42.458Z",
+      "at": "2026-09-08T02:22:43.899Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Start with files\" step 4: Title saves on Enter and Type saves on change, both surviving reload",
+      "actual": "Enter saved the title and the heading followed it; the Type selection saved to Precedent on change and both values were still there after a reload",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:43.899Z",
+      "at": "2026-09-08T02:22:44.046Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Start with guidance\" steps 1-4: a guidance-only item with rendered Markdown",
+      "actual": "Create item made a Draft Legal Only Article with Primary document None; Add guidance took Markdown, Preview rendered its heading and link and saved on the editor blur, and the source was still there after a reload",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:44.046Z",
+      "at": "2026-09-08T02:22:45.081Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Add Documents and choose the primary\" steps 1-3",
+      "actual": "Upload added plain.docx as a second Document; Set as primary marked its row Primary and named it in the Primary document control, Open preview opened and closed its current Version, and the original file stayed on the item as a supporting Document with its own single-version chain",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:45.081Z",
+      "at": "2026-09-08T02:22:46.017Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Add Documents\" note: an item’s Documents are a flat list with no folder control",
+      "actual": "The record’s Documents section offered no folder button or folder filter, so its Documents read as one flat list",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:46.018Z",
+      "at": "2026-09-08T02:22:46.025Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Organize the library\" steps 2-4: nested folders, cycle-safe parent choices and sibling order",
+      "actual": "Add folder with All Knowledge selected made a top-level folder and with that folder selected made a child under it; the move dialog offered neither the folder itself nor its descendant as a parent; Save folder renamed it and the up/down controls moved it one sibling position and back (displayOrder 11→10→11, taking 2 and 1 click(s))",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:46.025Z",
+      "at": "2026-09-08T02:22:52.364Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Organize the library\" step 4: an item moves by changing its record Folder",
+      "actual": "The record’s Folder control moved the item into Rev C33 legal_team_member 145C4F child; the child folder listed it and the parent folder listed it too, so a folder selection reads its descendants",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:52.365Z",
+      "at": "2026-09-08T02:22:53.776Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Organize the library\" step 1: Type narrows the list on its own and Clear filters restores it",
+      "actual": "Type, State, Audience, Author and Format were each offered; Type=Article kept the guidance item and dropped the Precedent, State=Published then hid the draft as well, and clearing both filters brought the item back",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:53.776Z",
+      "at": "2026-09-08T02:22:54.582Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Organize the library\" step 5: dissolving a folder promotes its children and keeps every item",
+      "actual": "The delete dialog said its folders and items move to the parent and that nothing is deleted; after Delete folder the child folder became top-level, the item stayed in that child folder and still held both of its Documents",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:54.583Z",
+      "at": "2026-09-08T02:22:55.386Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Recover from an unavailable choice\" negative: an archived Knowledge type is not offered",
+      "actual": "The separately prepared archived Knowledge type \"Rev C33 archived type 95C160\" was absent from the record Type control and from the New Knowledge Item dialog, while the live Playbook type was still offered",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:55.386Z",
+      "at": "2026-09-08T02:22:56.724Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Recover from an unavailable choice\" negative: an archived item takes no edit and no upload",
+      "actual": "Archiving the guidance item marked it Archived and disabled Title, Type, Folder and Audience while the Upload control disappeared; a direct upload to the archived item answered 409; the saved record address still opened after a reload and Restore returned it to an editable state",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:56.725Z",
+      "at": "2026-09-08T02:22:57.589Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Recover from an unavailable choice\": Manage types… is offered to Administrators only",
+      "actual": "No Manage types… control was offered beside Type for a Legal Team Member, which is what the guide says about asking an Administrator",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:57.589Z",
+      "at": "2026-09-08T02:22:58.162Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge \"Before you start\" negative: a Contributor cannot browse or author the staff library",
+      "actual": "As Ravi Menon the Knowledge list and a direct Knowledge record both left the browser on Home with no Knowledge item in the navigation, and the record and its Documents answered 403",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:22:58.945Z",
+      "at": "2026-09-08T02:23:00.131Z"
+    }
+  ]
+}
