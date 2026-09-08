@@ -1,0 +1,32 @@
+{
+  "name": "independent-install-firstrun-retry",
+  "scenario": "V-C44",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:22:03.400Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-install",
+  "articleHashes": [
+    {
+      "articleId": "install",
+      "contentSha256": "35b1bd584e291c4b42741097c9aa66ebd9db95092d293ed80821d3e7eee01b0f"
+    },
+    {
+      "articleId": "first-run",
+      "contentSha256": "17a32bd77a5673364e11c7ff3906b3e657a90c6750e8df6ff60e2611391bf3e4"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Resume the unfinished wizard and invite a colleague",
+      "actual": "The resumed wizard kept the saved authentication, portal and relay choices. Send invite delivered a real invitation to the fictional Rowan Operator through the saved relay, and its set-password link uses the configured origin http://127.0.0.1:43360. The link itself is not published.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:22:03.796Z",
+      "at": "2026-09-08T09:22:05.319Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T09:22:05.319Z"
+}

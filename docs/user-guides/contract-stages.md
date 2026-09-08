@@ -4,7 +4,7 @@ Record where a Contract stands and check the Stage that its Status represents.
 
 ## Before you start
 
-Sign in as a Legal Team Member or Administrator with access to an unarchived Contract. Status names are configured for your organisation. Their six fixed Stages are Draft, Review, Approval, Signature, Active, and Ended.
+Sign in as a Legal Team Member or Administrator with access to an unarchived Contract. Status names are configured for your organization. Their six fixed Stages are Draft, Review, Approval, Signature, Active, and Ended.
 
 ## Change the Status
 

@@ -1,0 +1,53 @@
+{
+  "name": "independent-corrections-confirmed",
+  "scenario": "V-C46/V-C47/V-C48",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T10:03:34.991Z",
+  "completedAt": "2026-09-08T10:04:19.834Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-upgrade; openlaw-docs-b8e31260-rev-restore",
+  "articleHashes": [
+    {
+      "articleId": "backup-and-restore",
+      "contentSha256": "3a36f9794df340c90d415b20578e8cc58b97ee1972ccdec4c09913358a308361"
+    },
+    {
+      "articleId": "operator-troubleshooting",
+      "contentSha256": "4f5920cb683a58e59e590a6ab7bc756bab31080345b6936baccfcadf0e5e1aab"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "container-operation",
+      "action": "The backup's recorded revision during an upgrade checkout",
+      "actual": "In the upgrade directory, after the article's checkout of the target, git rev-parse HEAD answers 6a8873dbda333fd9992eb77525d4bfa3f47af20d while the backup taken at that moment recorded openlaw-local:d1d098ba9f4ba6557a542857d530446b76b1847c and openlaw-engine-local:d1d098ba9f4ba6557a542857d530446b76b1847c in its images.json. The two provenance files in backups/pre-upgrade therefore disagree, which is what the corrected step 3 now warns about.",
+      "result": "pass",
+      "startedAt": "2026-09-08T10:03:34.991Z",
+      "at": "2026-09-08T10:03:35.037Z"
+    },
+    {
+      "role": "operator",
+      "method": "container-operation",
+      "action": "An occupied port leaves the instance down until the port is corrected",
+      "actual": "Setting the restored target's PORT to a port another owned project already published made docker compose up -d fail with \"Bind for :::43364 failed: port is already allocated\", and docker compose ps then listed only doc-engine and postgres. Restoring the intended port and starting again brought app and worker back and /readyz answered 200. This is the sentence added to the port row.",
+      "result": "pass",
+      "startedAt": "2026-09-08T10:03:35.037Z",
+      "at": "2026-09-08T10:03:48.949Z"
+    },
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "A wrong credential key reads as unconfigured email",
+      "actual": "On the restored target with a different OPENLAW_SECRET_KEY, GET /api/v1/email-settings answered {\"source\":\"unset\",\"fromAddress\":null} and the test send failed 502 with the detail \"The test email could not be sent. SMTP is not configured \u2014 save a relay first.\", although the relay was saved and readable under the retained key. Putting the retained key back restored source \"app\" and real delivery. This is the sentence added to the email section.",
+      "result": "pass",
+      "startedAt": "2026-09-08T10:03:48.949Z",
+      "at": "2026-09-08T10:04:19.834Z",
+      "timingBasis": "Not separately logged while it ran. The interval is bounded by the two sources that are: the previous step's completion in logs/confirm-corrections.log at 10:03:48.949Z, and the modification time of the restored target's .env at 10:04:19.834Z, which is when the retained key was written back after the observation. The earlier values in this field were rounded estimates and are replaced by these bounds."
+    }
+  ],
+  "passed": true,
+  "note": "These three checks re-ran the behaviours behind the corrections made after the walkthroughs, against the corrected article bytes recorded above.",
+  "timingBasis": "Steps one and two carry the timestamps logs/confirm-corrections.log recorded as they ran. Step three is bounded by that log and by the target .env file's modification time, as its own timingBasis states."
+}

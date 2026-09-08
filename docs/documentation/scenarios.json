@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "planned",
+  "status": "partial-acceptance",
   "scenarios": [
     {
       "id": "V-C01",
@@ -21,7 +21,12 @@
         "Expired activation, incorrect password/code, and revoked-session behavior are observable without exposing another account."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/staff-sign-in.json"]
+      }
     },
     {
       "id": "V-C02",
@@ -42,7 +47,12 @@
         "An unapproved domain gets the supported refusal/neutral response; a bad link offers a working recovery route."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/portal-sign-in.json"]
+      }
     },
     {
       "id": "V-C03",
@@ -61,7 +71,12 @@
         "Empty sections and unavailable records have useful outcomes; / and Escape retain their existing behavior."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/find-your-work.json"]
+      }
     },
     {
       "id": "V-C04",
@@ -82,7 +97,12 @@
         "The hidden record never appears; no-match search and failed reads preserve understandable state. Track rapid-click issue #751 separately."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/search-and-views.json"]
+      }
     },
     {
       "id": "V-C05",
@@ -101,7 +121,12 @@
         "Another account's preferences remain unchanged; no absent M33 App view route is claimed."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/personal-settings.json"]
+      }
     },
     {
       "id": "V-C06",
@@ -122,7 +147,12 @@
         "Removed membership/Grants cease granting access; parent or related-record links do not grant inherited reach."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/roles-and-access.json"]
+      }
     },
     {
       "id": "V-C07",
@@ -143,7 +173,12 @@
         "Legal Only and Working Team content stay outside the Business User view; failed attachments do not falsely appear filed."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/comments-and-activity.json"]
+      }
     },
     {
       "id": "V-C08",
@@ -164,7 +199,12 @@
         "Portal preferences expose only supported groups; disabled email, unavailable records, and timing/timezone limits are explained."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/notifications.json"]
+      }
     },
     {
       "id": "V-C09",
@@ -185,7 +225,12 @@
         "Missing required values prevent submission; attachment failure is reported without concealing a successfully created Request."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/submit-request.json"]
+      }
     },
     {
       "id": "V-C10",
@@ -204,7 +249,12 @@
         "A second Business User cannot open it; Legal-only conversation and internal work details remain unavailable."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/follow-request.json"]
+      }
     },
     {
       "id": "V-C11",
@@ -225,7 +275,12 @@
         "Unpublished or out-of-audience items and their files remain unavailable; a broken external link does not block the Request form."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/portal-knowledge.json"]
+      }
     },
     {
       "id": "V-C12",
@@ -246,7 +301,12 @@
         "A concurrent disposition produces a clear lost-race result rather than a second outcome."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/triage-requests.json"]
+      }
     },
     {
       "id": "V-C13",
@@ -267,7 +327,12 @@
         "Concurrent conversion, archived carried references, and missing required values have supported repair or refusal paths."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/convert-request.json"]
+      }
     },
     {
       "id": "V-C14",
@@ -288,7 +353,12 @@
         "Required/invalid values and archived references are handled without creating an unintended Contract."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/create-contract.json"]
+      }
     },
     {
       "id": "V-C15",
@@ -307,7 +377,12 @@
         "An archived/read-only record offers no unsupported mutation; renaming a Status does not change its Stage."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/contract-stages.json"]
+      }
     },
     {
       "id": "V-C16",
@@ -328,7 +403,12 @@
         "A different user cannot answer someone else's request; unresolved approval is a warning, not an invented hard lock."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/contract-approvals.json"]
+      }
     },
     {
       "id": "V-C17-manual",
@@ -347,7 +427,12 @@
         "A Version kind alone does not set the Executed pin; unsupported users cannot perform the legal action."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/manual-signing.json"]
+      }
     },
     {
       "id": "V-C17-electronic",
@@ -368,7 +453,12 @@
         "Unavailable/disabled configuration, a second live Envelope, and provider failure have the documented outcomes. Local stand-ins do not satisfy C42 setup checks."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/electronic-signing.json"]
+      }
     },
     {
       "id": "V-C18",
@@ -389,7 +479,12 @@
         "Invalid or stale dates are refused/re-read; Task due dates are not substituted for Contract deadlines."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/terms-and-renewals.json"]
+      }
     },
     {
       "id": "V-C19",
@@ -411,7 +506,12 @@
         "The current Contract Task screen exposes no reorder control; verify that limit rather than crediting an API reorder as a user workflow."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/contract-tasks-and-dates.json"]
+      }
     },
     {
       "id": "V-C20",
@@ -432,7 +532,12 @@
         "Cycles/invalid links are refused; a restricted target does not leak its details."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/contract-relations-and-ending.json"]
+      }
     },
     {
       "id": "V-C21",
@@ -453,7 +558,12 @@
         "Disabled connector, failed extraction, changed source, and stale evidence have the documented states. C43 separately verifies real provider setup."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/contract-analysis.json"]
+      }
     },
     {
       "id": "V-C22",
@@ -474,7 +584,12 @@
         "Missing required values and unavailable templates produce the supported validation or selection behavior."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/create-matter.json"]
+      }
     },
     {
       "id": "V-C23",
@@ -493,7 +608,12 @@
         "An archived Matter cannot be edited through ordinary controls; Contributor restrictions remain clear."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/matter-status-and-archive.json"]
+      }
     },
     {
       "id": "V-C24",
@@ -510,7 +630,12 @@
         "Invalid hierarchy loops (the Matter itself or a descendant as parent), restricted targets, and unauthorized changes do not expose or alter hidden work."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/matter-work.json"]
+      }
     },
     {
       "id": "V-C25",
@@ -529,7 +654,12 @@
         "Stage/Status moves and other reserved legal actions remain unavailable; removing Ravi's reach stops access."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/contributor-guide.json"]
+      }
     },
     {
       "id": "V-C26",
@@ -550,7 +680,12 @@
         "Unsupported corrections, failed uploads, and insufficient access do not silently alter a Version or its provenance."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/document-versions.json"]
+      }
     },
     {
       "id": "V-C27",
@@ -571,7 +706,12 @@
         "Unsupported folder actions or uploads are refused for the relevant role without claiming the whole batch succeeded."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/document-folders.json"]
+      }
     },
     {
       "id": "V-C28",
@@ -592,7 +732,12 @@
         "Failure/unsupported states offer the documented download or recovery path; portal file reach is checked separately."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/document-previews.json"]
+      }
     },
     {
       "id": "V-C29",
@@ -613,7 +758,12 @@
         "Pending/failed processing and unauthorized export are handled; a Comparison is not misrepresented as a Version. A plain TXT input is checked as an unsupported extracted-text format."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/compare-versions.json"]
+      }
     },
     {
       "id": "V-C30",
@@ -632,7 +782,12 @@
         "Hidden owners do not leak through results or filters; archived/empty result behavior matches the guide."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/document-repository.json"]
+      }
     },
     {
       "id": "V-C31",
@@ -649,7 +804,12 @@
         "A Contributor cannot use the Member+ Entity destination; duplicate/invalid input has a clear outcome."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/entities-and-counterparties.json"]
+      }
     },
     {
       "id": "V-C32",
@@ -670,7 +830,12 @@
         "Invalid ownership/date values and archived/read-only restrictions are handled without changing unrelated facts."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/entity-records.json"]
+      }
     },
     {
       "id": "V-C33",
@@ -689,7 +854,12 @@
         "Unavailable/archived references and insufficient role permissions have supported outcomes."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/create-knowledge.json"]
+      }
     },
     {
       "id": "V-C34",
@@ -710,7 +880,12 @@
         "Direct links do not bypass publication/audience checks, including links to supporting Documents."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/publish-knowledge.json"]
+      }
     },
     {
       "id": "V-C35",
@@ -729,7 +904,12 @@
         "Validation/retry and resumed onboarding work; no M33 checklist or Review step absent from this build is claimed."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/first-run.json"]
+      }
     },
     {
       "id": "V-C36",
@@ -748,7 +928,12 @@
         "Unauthorized administration, invalid invites, and self/last-Administrator safeguards behave as implemented."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/organisation-and-users.json"]
+      }
     },
     {
       "id": "V-C37",
@@ -769,7 +954,12 @@
         "Invalid issuer/relay, denied domain, and locked environment settings have recoverable outcomes without exposing secrets."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/authentication-and-email.json"]
+      }
     },
     {
       "id": "V-C38",
@@ -790,7 +980,12 @@
         "Immutable Stage/Category mappings and invalid reassignment are refused; non-Administrators cannot edit configuration."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/types-statuses-fields.json"]
+      }
     },
     {
       "id": "V-C39",
@@ -807,7 +1002,12 @@
         "Changing the template does not rewrite already-created work; unavailable templates have a clear outcome."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/matter-templates.json"]
+      }
     },
     {
       "id": "V-C40",
@@ -828,7 +1028,12 @@
         "Invalid/missing required Fields and archived targets do not silently route work to a different module."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/request-forms.json"]
+      }
     },
     {
       "id": "V-C41",
@@ -847,7 +1052,12 @@
         "The audit log is unavailable to other roles; timezone/channel limits and missing events are investigated rather than assumed."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/reminders-and-audit.json"]
+      }
     },
     {
       "id": "V-C42",
@@ -868,7 +1078,12 @@
         "Invalid credentials, disabled connector, webhook/reconciliation recovery, and secret rotation are tested without treating a stand-in as provider setup."
       ],
       "requiredMethods": ["browser-walkthrough", "live-provider-check"],
-      "status": "not-run"
+      "status": "blocked",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Live-provider setup required by #742; stand-ins and technical review do not satisfy it.",
+        "evidence": []
+      }
     },
     {
       "id": "V-C43",
@@ -889,7 +1104,12 @@
         "Invalid key/model/endpoint, provider refusal, and disabling produce the documented behavior without claiming model accuracy."
       ],
       "requiredMethods": ["browser-walkthrough", "live-provider-check"],
-      "status": "not-run"
+      "status": "blocked",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Live-provider setup required by #742; stand-ins and technical review do not satisfy it.",
+        "evidence": []
+      }
     },
     {
       "id": "V-C44",
@@ -910,7 +1130,12 @@
         "Missing secrets, occupied ports, and unavailable dependencies lead to the documented recovery; the authoring lab is not counted as production install evidence."
       ],
       "requiredMethods": ["container-operation"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/install.json"]
+      }
     },
     {
       "id": "V-C45",
@@ -931,7 +1156,12 @@
         "Wrong origin, limits, unavailable storage/engine, and mismatched encryption keys fail as documented and recover after correction."
       ],
       "requiredMethods": ["container-operation"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/deployment-configuration.json"]
+      }
     },
     {
       "id": "V-C46",
@@ -952,7 +1182,12 @@
         "Exercise backup-based recovery in a separate target; do not imply that downgrading a migrated database is supported."
       ],
       "requiredMethods": ["container-operation"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/upgrade.json"]
+      }
     },
     {
       "id": "V-C47",
@@ -973,7 +1208,12 @@
         "Missing/wrong keys or missing files are detected; a backup archive alone never counts as a successful restore."
       ],
       "requiredMethods": ["container-operation"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/backup-and-restore.json"]
+      }
     },
     {
       "id": "V-C48",
@@ -994,7 +1234,12 @@
         "Logs and reports omit credentials/private payloads; no destructive recovery is offered without its actual scope and consequence."
       ],
       "requiredMethods": ["container-operation"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/operator-troubleshooting.json"]
+      }
     },
     {
       "id": "V-C49",
@@ -1015,7 +1260,12 @@
         "The article does not offer an access bypass, invent an unavailable action, or treat a provider stand-in as live-provider evidence."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/troubleshooting.json"]
+      }
     },
     {
       "id": "V-C50",
@@ -1036,7 +1286,12 @@
         "Examples do not equate Entity with Counterparty, Task due dates with Key dates, or Comparison with Document Version."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/reference.json"]
+      }
     },
     {
       "id": "V-C51",
@@ -1057,7 +1312,12 @@
         "An older app does not silently switch to latest; an external-site failure leaves local reading usable."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/versions-and-support.json"]
+      }
     },
     {
       "id": "V-C52",
@@ -1078,7 +1338,12 @@
         "Past-due items do not silently count as filed; invalid dates and unauthorized changes have a clear outcome."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/entity-obligations.json"]
+      }
     },
     {
       "id": "V-C53",
@@ -1099,7 +1364,12 @@
         "Restricted linked records remain protected; a Holding or chart relationship does not grant access."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/entity-structure-and-access.json"]
+      }
     },
     {
       "id": "V-C54",
@@ -1120,7 +1390,12 @@
         "Other roles cannot perform Administrator deletion; consequences and unavailable-file behavior match the guide."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/archive-and-delete-documents.json"]
+      }
     },
     {
       "id": "V-C55",
@@ -1141,7 +1416,12 @@
         "Non-Member+ selections and unauthorized configuration are refused; existing requests retain their recorded identities."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "evidence": ["docs/documentation/evidence/approver-groups.json"]
+      }
     },
     {
       "id": "V-HELP",
@@ -1160,7 +1440,12 @@
         "Unknown or missing article/anchor and unavailable external support/reference destinations preserve useful local navigation."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "blocked",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Final complete-content Help/offline publication scenarios require provider articles and DOC-027 environment; batch and DOC-025 preview observations do not replace this gate.",
+        "evidence": []
+      }
     },
     {
       "id": "V-OFFLINE",
@@ -1181,7 +1466,12 @@
         "With JavaScript disabled or an optional image/search asset missing, the standalone index and prose remain usable; a missing article file is reported as a failed completeness check."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "blocked",
+      "acceptance": {
+        "task": "DOC-025",
+        "basis": "Final complete-content Help/offline publication scenarios require provider articles and DOC-027 environment; batch and DOC-025 preview observations do not replace this gate.",
+        "evidence": []
+      }
     }
   ]
 }

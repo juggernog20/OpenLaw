@@ -1,0 +1,29 @@
+{
+  "name": "independent-external-database-external-retry",
+  "scenario": "V-C45",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:38:15.289Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-install",
+  "articleHashes": [
+    {
+      "articleId": "deployment-configuration",
+      "contentSha256": "d072207628c0589ee14b8d1575f58fdb70b1c8b6f349bd7ea3bdd70d902ac293"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "The selected external database is empty, migrates, and takes a real record",
+      "result": "fail",
+      "startedAt": "2026-09-08T09:38:15.394Z",
+      "error": "expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false",
+      "at": "2026-09-08T09:38:15.404Z"
+    }
+  ],
+  "passed": false,
+  "supersededBy": "independent-external-database-write",
+  "note": "The retry asserted first-run was still pending, but the previous attempt had already created the Administrator on the external database. The origin problem behind both was corrected before the final pass."
+}

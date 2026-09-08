@@ -1,0 +1,64 @@
+{
+  "name": "independent-after-upgrade",
+  "scenario": "V-C46",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:54:57.762Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-upgrade",
+  "articleHashes": [
+    {
+      "articleId": "upgrade",
+      "contentSha256": "96cc17166c77af291161ea34540f2c1c9683d2736cd903c42e2692ba9fe8e94d"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Existing accounts sign in and the records are all present (after-upgrade)",
+      "actual": "The Administrator created before the change signed in with the same password. All 3 Contracts (#1, #2, #3) and 1 Matter(s) are present with their original titles.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:54:58.131Z",
+      "at": "2026-09-08T09:54:58.158Z"
+    },
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Document Version bytes match the pre-change hashes (after-upgrade)",
+      "actual": "Downloaded 4 Document Versions (1/original, 1/later, 2/original, 2/later) and every SHA-256 matched the value recorded on the earlier build.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:54:58.158Z",
+      "at": "2026-09-08T09:54:58.176Z"
+    },
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "The Contributor keeps exactly its earlier reach (after-upgrade)",
+      "actual": "The Contributor signed in and still reads member Contract 1 (HTTP 200) while the Confidential Contract 3 still answers HTTP 404, the same reach as before the change.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:54:58.177Z",
+      "at": "2026-09-08T09:54:58.466Z"
+    },
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "The saved encrypted relay is actually usable (after-upgrade)",
+      "actual": "The relay saved on the earlier build still reads as source \"app\" and a test message actually arrived in this instance's own Mailpit (3 → 4). A stored secret that can be decrypted and used is the proof, not a flag saying one exists.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:54:58.466Z",
+      "at": "2026-09-08T09:54:58.543Z"
+    },
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "A new upload processes on the changed instance (after-upgrade)",
+      "actual": "A new Contract and PDF were created on the changed instance: the worker took the Version to \"ready\" and the download matched the uploaded bytes, so writes and processing work after the change.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:54:58.543Z",
+      "at": "2026-09-08T09:55:00.639Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T09:55:00.639Z"
+}

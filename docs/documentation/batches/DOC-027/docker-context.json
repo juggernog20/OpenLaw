@@ -1,0 +1,437 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-09-08T14:52:43.640303+00:00",
+  "observer": "Codex DOC-027 author",
+  "method": "Actual Docker Buildx local context export, then compiler article evidence validation against the exported metadata and unchanged canonical guide bytes",
+  "baseCommit": "23429bc4e1ab53cff0690e5188a1b6793c803592",
+  "before": {
+    "validArticles": 18,
+    "invalidArticles": 36,
+    "failures": [
+      {
+        "id": "staff-sign-in",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "portal-sign-in",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "find-your-work",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "search-and-views",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "personal-settings",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "roles-and-access",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "comments-and-activity",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "notifications",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "submit-request",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "follow-request",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "portal-knowledge",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "triage-requests",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "convert-request",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "create-contract",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "contract-stages",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "contract-approvals",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "manual-signing",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "electronic-signing",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "terms-and-renewals",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "contract-tasks-and-dates",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "contract-relations-and-ending",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "contract-analysis",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "create-matter",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "matter-status-and-archive",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "matter-work",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "contributor-guide",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "document-versions",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "document-folders",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "document-previews",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "compare-versions",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "document-repository",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "entities-and-counterparties",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "entity-records",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "entity-obligations",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "entity-structure-and-access",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      },
+      {
+        "id": "archive-and-delete-documents",
+        "pass": false,
+        "error": "Documentation: missing file: batches/DOC-025/compatibility.json"
+      }
+    ]
+  },
+  "after": {
+    "validArticles": 54,
+    "invalidArticles": 0,
+    "planningFilesExcluded": true,
+    "articles": [
+      {
+        "id": "staff-sign-in",
+        "pass": true
+      },
+      {
+        "id": "portal-sign-in",
+        "pass": true
+      },
+      {
+        "id": "find-your-work",
+        "pass": true
+      },
+      {
+        "id": "search-and-views",
+        "pass": true
+      },
+      {
+        "id": "personal-settings",
+        "pass": true
+      },
+      {
+        "id": "roles-and-access",
+        "pass": true
+      },
+      {
+        "id": "comments-and-activity",
+        "pass": true
+      },
+      {
+        "id": "notifications",
+        "pass": true
+      },
+      {
+        "id": "submit-request",
+        "pass": true
+      },
+      {
+        "id": "follow-request",
+        "pass": true
+      },
+      {
+        "id": "portal-knowledge",
+        "pass": true
+      },
+      {
+        "id": "triage-requests",
+        "pass": true
+      },
+      {
+        "id": "convert-request",
+        "pass": true
+      },
+      {
+        "id": "create-contract",
+        "pass": true
+      },
+      {
+        "id": "contract-stages",
+        "pass": true
+      },
+      {
+        "id": "contract-approvals",
+        "pass": true
+      },
+      {
+        "id": "manual-signing",
+        "pass": true
+      },
+      {
+        "id": "electronic-signing",
+        "pass": true
+      },
+      {
+        "id": "terms-and-renewals",
+        "pass": true
+      },
+      {
+        "id": "contract-tasks-and-dates",
+        "pass": true
+      },
+      {
+        "id": "contract-relations-and-ending",
+        "pass": true
+      },
+      {
+        "id": "contract-analysis",
+        "pass": true
+      },
+      {
+        "id": "create-matter",
+        "pass": true
+      },
+      {
+        "id": "matter-status-and-archive",
+        "pass": true
+      },
+      {
+        "id": "matter-work",
+        "pass": true
+      },
+      {
+        "id": "contributor-guide",
+        "pass": true
+      },
+      {
+        "id": "document-versions",
+        "pass": true
+      },
+      {
+        "id": "document-folders",
+        "pass": true
+      },
+      {
+        "id": "document-previews",
+        "pass": true
+      },
+      {
+        "id": "compare-versions",
+        "pass": true
+      },
+      {
+        "id": "document-repository",
+        "pass": true
+      },
+      {
+        "id": "entities-and-counterparties",
+        "pass": true
+      },
+      {
+        "id": "entity-records",
+        "pass": true
+      },
+      {
+        "id": "create-knowledge",
+        "pass": true
+      },
+      {
+        "id": "publish-knowledge",
+        "pass": true
+      },
+      {
+        "id": "first-run",
+        "pass": true
+      },
+      {
+        "id": "organisation-and-users",
+        "pass": true
+      },
+      {
+        "id": "authentication-and-email",
+        "pass": true
+      },
+      {
+        "id": "types-statuses-fields",
+        "pass": true
+      },
+      {
+        "id": "matter-templates",
+        "pass": true
+      },
+      {
+        "id": "request-forms",
+        "pass": true
+      },
+      {
+        "id": "reminders-and-audit",
+        "pass": true
+      },
+      {
+        "id": "install",
+        "pass": true
+      },
+      {
+        "id": "deployment-configuration",
+        "pass": true
+      },
+      {
+        "id": "upgrade",
+        "pass": true
+      },
+      {
+        "id": "backup-and-restore",
+        "pass": true
+      },
+      {
+        "id": "operator-troubleshooting",
+        "pass": true
+      },
+      {
+        "id": "troubleshooting",
+        "pass": true
+      },
+      {
+        "id": "reference",
+        "pass": true
+      },
+      {
+        "id": "versions-and-support",
+        "pass": true
+      },
+      {
+        "id": "entity-obligations",
+        "pass": true
+      },
+      {
+        "id": "entity-structure-and-access",
+        "pass": true
+      },
+      {
+        "id": "archive-and-delete-documents",
+        "pass": true
+      },
+      {
+        "id": "approver-groups",
+        "pass": true
+      }
+    ]
+  },
+  "requiredCompatibilityFiles": [
+    "batches/DOC-010/independent-walkthrough.json",
+    "batches/DOC-011/independent-walkthrough.json",
+    "batches/DOC-012/independent-walkthrough.json",
+    "batches/DOC-018/independent-c31.json",
+    "batches/DOC-018/independent-c52.json",
+    "batches/DOC-019/independent-c33.json",
+    "batches/DOC-019/independent-c34.json",
+    "batches/DOC-019/independent-supplement.json",
+    "batches/DOC-025/compatibility.json",
+    "batches/DOC-025/independent-compatibility.json",
+    "batches/DOC-025/source-6a8873db.diff",
+    "batches/DOC-025/source-8539f4cc.diff",
+    "batches/DOC-025/source-a28331f7.diff",
+    "batches/DOC-025/source-d1d098ba.diff"
+  ],
+  "limits": [
+    "This verifies build inputs for the 54 retained guides, not the two provider drafts.",
+    "Catalog states are unchanged. No full normal-edition image, clean install or live publication is claimed.",
+    "Retained batch evidence enters the build stage. The compiler selects reader content and the runtime stage copies compiled app output, not the source documentation tree."
+  ]
+}

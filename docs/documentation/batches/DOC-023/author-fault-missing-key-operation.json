@@ -1,0 +1,10 @@
+{
+  "observedAt": "2026-09-08T08:45:02.932234+00:00",
+  "project": "openlaw-docs-b8e31260-ops-author",
+  "faultPhase": "missing-key",
+  "result": "Compose refused interpolation before changing containers",
+  "diagnostic": "OPENLAW_SECRET_KEY is required",
+  "privateLog": "743-ops-author-missing-key-1788857078309.log",
+  "applicationOutage": false,
+  "correction": "Select retained rotate-retired configuration"
+}

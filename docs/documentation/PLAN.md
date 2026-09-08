@@ -4,6 +4,8 @@ Status: active implementation project. Initial plan prepared 2026-09-06; executi
 
 Project: [#714](https://github.com/juggernog20/OpenLaw/issues/714). See the
 [release audit](AUDIT.md) for the selected build and corrections to the initial inventory.
+Current acceptance is tracked separately in the [G3 essential-journey report](batches/DOC-025/G3.md)
+and [G4 complete-suite report](batches/DOC-025/G4.md); neither gate is passed yet.
 
 Deliver a maintained documentation suite for OpenLaw through a searchable formal
 documentation site and focused in-app Help for the staff app and Business Portal.
@@ -165,6 +167,11 @@ index an organisation's records or Knowledge content. Defer analytics unless use
 feedback cannot be collected through the agreed support channel.
 
 ## Maintenance and measures
+
+Use DOC-026's [maintenance process](MAINTENANCE.md) and
+[release checklist](RELEASE-CHECKLIST.md) for ownership, impact review,
+feedback handling, edition retention and the local coverage report. The following
+requirements remain the basis for that process.
 
 DOC-026 adds a documentation-impact question to feature PR/release work, mapping
 changed behaviour to coverage IDs. Update affected articles in the same release,

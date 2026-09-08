@@ -1,0 +1,68 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-024",
+  "issue": 744,
+  "independentReview": true,
+  "reviewerKind": "agent",
+  "walkthroughReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat), a different agent from the author",
+  "author": "Codex documentation author",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "frontend": "Working documentation preview at 127.0.0.1:43333 over the immutable configuration backend at 127.0.0.1:43332",
+  "browser": "Playwright 1.62.1 Chromium from the workspace, headless, one isolated context per identity; scripts written by the reviewer from the article text",
+  "startedAt": "2026-09-08T11:59:58.640Z",
+  "finishedAt": "2026-09-08T12:00:24.392Z",
+  "articleHashes": [
+    {
+      "articleId": "troubleshooting",
+      "contentSha256": "e2404361abcc621f8ee36fcd03dec23150bdabc0070d30678ba54caaabb9dd1b"
+    },
+    {
+      "articleId": "reference",
+      "contentSha256": "ba4b1b0cc96db761cc19f06fa88d5e4d9625355873cc2a15d8f6deb58193f5d6"
+    },
+    {
+      "articleId": "versions-and-support",
+      "contentSha256": "dee7dab08d34a3a1f7c6828ca2a2a240fd8f2fdba13e710587d52265d7e94ae7"
+    }
+  ],
+  "steps": [
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Entities and Counterparties are separate fields with the app's own labels",
+      "actual": "The Entities module lists our own corporate entities (the Helix group companies) and the Contract overview carries a separate \"Our entity\" field and a \"Counterparties\" field, which reads \"Nobody is recorded on the other side yet.\" on this fixture. The app keeps our corporate entity apart from the organization on the other side, so the reference's Entity and Counterparty rows are not interchangeable.",
+      "startedAt": "2026-09-08T11:59:59.358Z",
+      "at": "2026-09-08T12:00:05.810Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "A download-only type gets no reading panel, and a PDF renders its pages",
+      "actual": "In the same list the SVG is a plain download link (1 link, 0 reading button) while the PDF is a reading button (1) that opens the panel and draws \"Page 1 of 1\" with zoom controls. Downloading the SVG returned its original 99 bytes. Storage acceptance is wider than preview support and an inline SVG is deliberately not drawn, exactly as the reference says.",
+      "startedAt": "2026-09-08T12:00:05.811Z",
+      "at": "2026-09-08T12:00:14.905Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "An over-size upload is refused with the limit named in MB and nothing is stored",
+      "actual": "A 105 MiB file was refused with \"over the 100 MB upload limit\" and nothing was stored on the Contract. The refusal names 100 MB, which is this install's actual ceiling and the number the reference tells a reader to act on. The reference states the default as 100 MiB shown as MB, with MAX_UPLOAD_MB as the operator's control.",
+      "startedAt": "2026-09-08T12:00:14.906Z",
+      "at": "2026-09-08T12:00:24.369Z",
+      "result": "pass"
+    }
+  ],
+  "passed": true,
+  "previousAttempt": "docs/documentation/batches/DOC-024/independent-reference.json",
+  "fixturePreparation": [
+    "Reused the SVG and PDF uploaded for the earlier attempt on C-56, and wrote a 105 MiB filler file to disk for the size refusal because the browser driver cannot pass a buffer that large."
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not feature-owner approval.",
+    "The upload ceiling observed is this lab's default. An operator who sets MAX_UPLOAD_MB gets a different number, which is why the article tells the reader to use the actual refusal."
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "name": "upgrade-extra-ops-restore-restored",
+  "author": "Codex documentation author",
+  "startedAt": "2026-09-08T08:43:30.210Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-ops-restore",
+  "articleHashes": [
+    {
+      "articleId": "upgrade",
+      "contentSha256": "96cc17166c77af291161ea34540f2c1c9683d2736cd903c42e2692ba9fe8e94d"
+    },
+    {
+      "articleId": "backup-and-restore",
+      "contentSha256": "80aea7b8f2ac34dc4892eba848103f283d8424742fa77be34018672618a045a2"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Real account reach and encrypted SMTP restored",
+      "actual": "Existing Contributor signs in, can read shared Contract, and receives 404 on Confidential Contract. Stored SMTP prepared separately as API fixture; its actual delivery is checked in a separate recorded step.",
+      "result": "pass",
+      "startedAt": "2026-09-08T08:43:30.577Z",
+      "at": "2026-09-08T08:43:30.867Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T08:43:30.867Z"
+}

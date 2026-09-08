@@ -167,32 +167,48 @@
     {
       "id": "DOC-022",
       "issue": 742,
-      "status": "in-progress"
+      "status": "blocked",
+      "pullRequest": 783
     },
     {
       "id": "DOC-023",
       "issue": 743,
-      "status": "open"
+      "status": "closed",
+      "pullRequest": 784
     },
     {
       "id": "DOC-024",
       "issue": 744,
-      "status": "open"
+      "status": "closed",
+      "pullRequest": 785
     },
     {
       "id": "DOC-025",
       "issue": 745,
-      "status": "open"
+      "status": "blocked",
+      "pullRequest": 786,
+      "checkpointMergeCommit": "270c7c2e315ff7845dfe4f75f775df1384da0817"
     },
     {
       "id": "DOC-026",
       "issue": 746,
-      "status": "open"
+      "status": "closed",
+      "pullRequest": 787,
+      "mergeCommit": "23429bc4e1ab53cff0690e5188a1b6793c803592"
     },
     {
       "id": "DOC-027",
       "issue": 747,
-      "status": "open"
+      "status": "blocked",
+      "remainingBlockers": [742, 745],
+      "preparation": "docs/documentation/batches/DOC-027/README.md"
     }
-  ]
+  ],
+  "maintenance": {
+    "accountableOwner": "Blair Wentworth",
+    "github": "juggernog20",
+    "process": "docs/documentation/MAINTENANCE.md",
+    "releaseChecklist": "docs/documentation/RELEASE-CHECKLIST.md",
+    "nextFullInventoryReview": "2026-12-08"
+  }
 }

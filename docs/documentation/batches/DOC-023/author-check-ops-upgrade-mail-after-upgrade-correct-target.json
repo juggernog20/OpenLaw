@@ -1,0 +1,30 @@
+{
+  "name": "check-ops-upgrade-mail-after-upgrade-correct-target",
+  "author": "Codex documentation author",
+  "startedAt": "2026-09-08T08:42:42.413Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-ops-upgrade",
+  "articleHashes": [
+    {
+      "articleId": "deployment-configuration",
+      "contentSha256": "06ef91a9774556129c593b0752ae71054c202ed3fb6de1e06dfa9ce29587bfcc"
+    },
+    {
+      "articleId": "operator-troubleshooting",
+      "contentSha256": "d822b7a551c74ce2432d941d26b0303b7e41016404747c35d8427dca5a058b44"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "mail-after-upgrade-correct-target",
+      "actual": "Actual stored encrypted SMTP use delivered new test email to owned Mailpit; source remains app.",
+      "result": "pass",
+      "startedAt": "2026-09-08T08:42:42.903Z",
+      "at": "2026-09-08T08:42:43.000Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T08:42:43.000Z"
+}

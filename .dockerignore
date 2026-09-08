@@ -16,6 +16,9 @@ docs/documentation/**
 !docs/documentation/redirects.json
 !docs/documentation/evidence
 !docs/documentation/evidence/**
+# Hash-bound compatibility reviews read retained batch evidence during compilation.
+!docs/documentation/batches
+!docs/documentation/batches/**
 .scratch
 .documentation-labs
 .documentation-output

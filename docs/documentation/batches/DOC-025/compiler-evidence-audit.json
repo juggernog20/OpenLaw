@@ -1,0 +1,10 @@
+{
+  "at": "2026-09-08T13:42:59.350Z",
+  "method": "automated-test",
+  "reviewer": "Independent DOC-025 acceptance seat (Opus 5 agent), separate from the documentation author",
+  "checkedArticles": 54,
+  "result": "pass",
+  "actual": "Re-run by the independent seat after the compatibility corrections. The compiler validated the current article hashes, the required independent role/method records and every compatibility artifact for all 54 merged articles in an isolated metadata copy, then refused the expected unpublished provider link. Each article compatibility review now names a reviewer other than the article author, so the compiler independence guard passes in substance and not only on unequal strings.",
+  "expectedPublicationRefusal": "Documentation: link to unpublished article configure-signing from electronic-signing",
+  "repositoryCatalogChanged": false
+}

@@ -1,0 +1,202 @@
+{
+  "articleId": "reference",
+  "contentSha256": "ba4b1b0cc96db761cc19f06fa88d5e4d9625355873cc2a15d8f6deb58193f5d6",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration (immutable backend); working documentation preview at 127.0.0.1:43333",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "walkthroughReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-08T12:21:35.382Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "apps/api/src/lib/render-family.ts",
+    "apps/api/src/lib/uploads.ts",
+    "apps/api/src/modules/contracts/routes.ts",
+    "apps/web/src/components/approvals/approvals-signing-card.tsx",
+    "apps/web/src/components/documentation/documentation-reader.tsx",
+    "docs/documentation/PUBLISHING.md",
+    "docs/documentation/edition.json",
+    "packages/db/src/schema/auth.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C50",
+      "coverage": ["C50"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Reference matches role limits, configured versus fixed concepts and actual file behavior.",
+      "actual": "Compared the permissions row with the app. The Administrator read the organization's configured contract types and opened a Confidential Contract created by the Legal Team Member, which is the row's reach. The account roles actually in use are administrator, business_user, contributor and legal_team_member, with no deployment-operator account role, so the operator row's \"not an additional app account role\" is accurate.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-024/README.md",
+        "docs/documentation/batches/DOC-024/independent-discovery.json",
+        "docs/documentation/batches/DOC-024/independent-reference.json",
+        "docs/documentation/batches/DOC-024/independent-reference-retry.json",
+        "docs/documentation/batches/DOC-024/independent-comparison-and-roles.json",
+        "docs/documentation/batches/DOC-024/independent-operator-reference.json",
+        "docs/documentation/batches/DOC-024/independent-operator-reference-retry.json",
+        "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
+        "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
+      ],
+      "verifiedAt": "2026-09-08T12:19:57.373Z"
+    },
+    {
+      "id": "V-C50",
+      "coverage": ["C50"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Reference matches role limits, configured versus fixed concepts and actual file behavior.",
+      "actual": "Checked the reference against the actual controls. Organization settings answered 403 \"You do not have permission to perform this action.\" for this role while her own preference pane opened, which is the row's Administrator-only sentence. The Move to list showed each configured Status label beside its fixed Stage, including the seed's renamed \"Signed, awaiting countersignature\" against Signature. The key date form offers Date, Event and an optional Note with no assignee, while the task form offers Title, Assignee and an optional Due date, so Task due dates and Key dates are not equated. The Entities module lists our own Helix companies while the Contract overview carries separate \"Our entity\" and \"Counterparties\" fields. An actual Comparison was then computed and read on the seeded three-Version Word Document on C-21: \"Compare with previous\" on version 2 reached the ready state for the pair v1 → v2 and showed the counterparty's inserted wording, the chain still held v1, v2 and v3 afterwards, and reopening the same pair read it again without adding a Version. An SVG was offered as a plain download link with no reading panel while a PDF opened the panel and drew \"Page 1 of 1\"; a seeded Word document rendered as a converted PDF and Download returned the original .docx. A 105 MiB upload was refused with \"over the 100 MB upload limit\" and nothing was stored.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-024/README.md",
+        "docs/documentation/batches/DOC-024/independent-discovery.json",
+        "docs/documentation/batches/DOC-024/independent-reference.json",
+        "docs/documentation/batches/DOC-024/independent-reference-retry.json",
+        "docs/documentation/batches/DOC-024/independent-comparison-and-roles.json",
+        "docs/documentation/batches/DOC-024/independent-operator-reference.json",
+        "docs/documentation/batches/DOC-024/independent-operator-reference-retry.json",
+        "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
+        "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
+      ],
+      "verifiedAt": "2026-09-08T12:19:52.328Z"
+    },
+    {
+      "id": "V-C50",
+      "coverage": ["C50"],
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "expected": "Reference matches role limits, configured versus fixed concepts and actual file behavior.",
+      "actual": "Read the Contributor row against the shared Confidential Contract. Business controls on the overview were editable and the Upload control for supporting Documents was present, with no primary-Document management action offered and no legal action available. Help listed the reference for this reader and its representative queries found it.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-024/README.md",
+        "docs/documentation/batches/DOC-024/independent-discovery.json",
+        "docs/documentation/batches/DOC-024/independent-reference.json",
+        "docs/documentation/batches/DOC-024/independent-reference-retry.json",
+        "docs/documentation/batches/DOC-024/independent-comparison-and-roles.json",
+        "docs/documentation/batches/DOC-024/independent-operator-reference.json",
+        "docs/documentation/batches/DOC-024/independent-operator-reference-retry.json",
+        "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
+        "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
+      ],
+      "verifiedAt": "2026-09-08T11:57:12.852Z"
+    },
+    {
+      "id": "V-C50",
+      "coverage": ["C50"],
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "expected": "Reference matches role limits, configured versus fixed concepts and actual file behavior.",
+      "actual": "Read the Business User row from the Portal. This reader saw only his own Requests and was refused the staff Contract workspace, which is the row's sentence that conversion does not open the staff workspace to the requester. Portal Help found the reference by title and by representative query.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-024/README.md",
+        "docs/documentation/batches/DOC-024/independent-discovery.json",
+        "docs/documentation/batches/DOC-024/independent-reference.json",
+        "docs/documentation/batches/DOC-024/independent-reference-retry.json",
+        "docs/documentation/batches/DOC-024/independent-comparison-and-roles.json",
+        "docs/documentation/batches/DOC-024/independent-operator-reference.json",
+        "docs/documentation/batches/DOC-024/independent-operator-reference-retry.json",
+        "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
+        "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
+      ],
+      "verifiedAt": "2026-09-08T11:57:19.566Z"
+    },
+    {
+      "id": "V-C50",
+      "coverage": ["C50"],
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "expected": "Reference matches role limits, configured versus fixed concepts and actual file behavior.",
+      "actual": "Read the reference as an operator would, signed out and with no app account: the formal reader opened /documentation/reference with all six sections, an On this page outline, the operator's own MAX_UPLOAD_MB fact, and the Deployment operator row of the permissions table reading \"Maintains the installation and service configuration. This is an operational responsibility, not an additional app account role.\" Anonymous reading issued no app API calls, and the closing links reached \"Configure a deployment\" without a session. The row's claim about account roles was corroborated two ways, each labelled for what it is: the Administrator's actual role control offers only Administrator, Legal team member, Contributor and Business user, recorded as a browser walkthrough, and packages/db/src/schema/auth.ts declares the same four values in USER_ROLES, recorded as a source inspection. The earlier attempt listed the roles existing users happen to hold, which cannot establish the permitted set; that record is retained and superseded.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-024/README.md",
+        "docs/documentation/batches/DOC-024/independent-discovery.json",
+        "docs/documentation/batches/DOC-024/independent-reference.json",
+        "docs/documentation/batches/DOC-024/independent-reference-retry.json",
+        "docs/documentation/batches/DOC-024/independent-comparison-and-roles.json",
+        "docs/documentation/batches/DOC-024/independent-operator-reference.json",
+        "docs/documentation/batches/DOC-024/independent-operator-reference-retry.json",
+        "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
+        "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
+      ],
+      "verifiedAt": "2026-09-08T12:21:35.382Z"
+    }
+  ],
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-024/README.md",
+    "docs/documentation/batches/DOC-024/author-approval-first.json",
+    "docs/documentation/batches/DOC-024/author-approval.json",
+    "docs/documentation/batches/DOC-024/author-discovery-first.json",
+    "docs/documentation/batches/DOC-024/author-discovery.json",
+    "docs/documentation/batches/DOC-024/author-discovery-second.json",
+    "docs/documentation/batches/DOC-024/author-files.json",
+    "docs/documentation/batches/DOC-024/author-files-retry.json",
+    "docs/documentation/batches/DOC-024/author-offline.json",
+    "docs/documentation/batches/DOC-024/author-recovery.json",
+    "docs/documentation/batches/DOC-024/author-reference-first.json",
+    "docs/documentation/batches/DOC-024/author-reference.json",
+    "docs/documentation/batches/DOC-024/author-symptoms.json"
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; it is not a human user study and not the feature owner's approval.",
+    "Articles were read from the working documentation preview over the immutable configuration backend, so the intended development-preview and Unverified article notices were visible throughout.",
+    "Real provider configuration C42/C43 stays blocked under #742. Signing and Analysis were observed unconfigured; that is not evidence that any live provider works.",
+    "Full-suite compatibility and publication acceptance remain DOC-025/027 work.",
+    "The user will proofread the assembled full suite; no human feature-owner sign-off is claimed."
+  ],
+  "authorCopyUpdate": "After author walkthroughs, copy-only review clarified target Document/source Document Version, assigned person and internal record-sharing wording. Review then corrected the title spelling to en-US, from \"file behaviour\" to \"file behavior\", to match EDITORIAL.md and this article's own heading. Historical records retain the bytes observed; that sentence was written while independent acceptance was still pending, and it is kept as the historical note it was. Independent acceptance has since been recorded; see sourceReview and the scenario results above.",
+  "independentEvidence": [
+    "docs/documentation/batches/DOC-024/README.md",
+    "docs/documentation/batches/DOC-024/independent-discovery.json",
+    "docs/documentation/batches/DOC-024/independent-reference.json",
+    "docs/documentation/batches/DOC-024/independent-reference-retry.json",
+    "docs/documentation/batches/DOC-024/independent-comparison-and-roles.json",
+    "docs/documentation/batches/DOC-024/independent-operator-reference.json",
+    "docs/documentation/batches/DOC-024/independent-operator-reference-retry.json",
+    "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
+    "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
+  ],
+  "verifiedAtBasis": "Each scenario's verifiedAt is the recorded time of that role's last passing observation for this article, taken from the independent records listed in its evidence. The article-level verifiedAt is the latest of those scenario times. It is not a single acceptance ceremony and no finer time is claimed.",
+  "sourceReview": {
+    "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+    "reviewerKind": "agent",
+    "method": "source-inspection",
+    "completedAt": "2026-09-08T11:28:16Z",
+    "recordedIn": "commit 2570232af33f8f0a4e77e90cb69c70a04898fae9 on docs/744-support-reference",
+    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+    "scope": [
+      "messages/en-US.json for every quoted UI label",
+      "apps/api/src/lib/uploads.ts for the upload ceiling, its MAX_UPLOAD_MB control and the 255-character filename bound",
+      "apps/api/src/lib/render-family.ts for the stored-type and preview families, including SVG as download-only",
+      "apps/api/src/lib/notifications/notifier.ts and catalog.ts for the in-app and email rule",
+      "apps/api/src/modules/contract-analysis/routes.ts and contract-envelopes/routes.ts for the Analysis target and the single live Envelope",
+      "CONTEXT.md and the canonical guides for the glossary, permission and Document rows",
+      "every internal link and heading anchor in the three articles"
+    ],
+    "outcome": "One correction was needed and applied: the reference article's title read \"file behaviour\", against the en-US rule in EDITORIAL.md and against the article's own \"File behavior and limits\" heading. Every other claim checked held. The same commit linked the batch record from WRITING-BATCHES.md and noted the aborted-run record shape.",
+    "note": "This source review is separate from the browser walkthroughs recorded in the scenarios below. Its completion time is the commit time of 2570232a converted to UTC, and that commit is the identity of this review's own correction. It does not cover any source read later in the session; those are recorded in sourceReviewAddendum or in the independent records that carry them, and none of them is backdated into this object."
+  },
+  "sourceReviewAddendum": {
+    "reason": "The reference's Deployment operator row says the role is not an app account role. The first operator observation listed the roles existing users hold, which cannot establish the set of roles the app permits, so the account-role enum was read during the audit.",
+    "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+    "reviewerKind": "agent",
+    "method": "source-inspection",
+    "scope": ["packages/db/src/schema/auth.ts for the USER_ROLES account-role enum"],
+    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+    "firstReadAt": "2026-09-08T12:18:42.809Z",
+    "observationsAt": ["2026-09-08T12:20:40.513Z", "2026-09-08T12:21:35.382Z"],
+    "completedAt": "2026-09-08T12:21:35.382Z",
+    "recordedIn": [
+      "docs/documentation/batches/DOC-024/independent-operator-reference.json",
+      "docs/documentation/batches/DOC-024/independent-operator-reference-retry.json"
+    ],
+    "outcome": "USER_ROLES declares administrator, legal_team_member, contributor and business_user, and the users table role column is typed to that enum. The matching browser evidence is the Administrator's role control in independent-comparison-and-roles.json.",
+    "note": "This addendum happened after the cold review and after commit 2570232a. It is dated by its own observations and is not folded into that commit's identity."
+  }
+}

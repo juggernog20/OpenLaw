@@ -1,0 +1,67 @@
+diff --git a/apps/api/src/modules/documents/routes.ts b/apps/api/src/modules/documents/routes.ts
+index 8d779ec3..71f638de 100644
+--- a/apps/api/src/modules/documents/routes.ts
++++ b/apps/api/src/modules/documents/routes.ts
+@@ -1773,11 +1773,16 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
+         .select({
+           id: knowledgeItems.id,
+           primaryDocumentId: knowledgeItems.primaryDocumentId,
+-          archivedAt: knowledgeItems.archivedAt,
+         })
+         .from(knowledgeItems)
+         .where(eq(knowledgeItems.id, request.params.id))
+         .limit(1);
++      // An archived item still reads, as an archived contract does
++      // (#776). Archiving is a soft delete, the record read already
++      // answers an archived item, and restore is offered on the page
++      // this list feeds, so a 404 here only broke the way back. Writes
++      // stay frozen, because every document write asserts a live
++      // owner, and the portal gate is untouched.
+       if (!item) throw httpError(404, "No Knowledge Item exists with this id.");
+       return paperOf(
+         app.db,
+diff --git a/apps/api/src/modules/knowledge/documents.test.ts b/apps/api/src/modules/knowledge/documents.test.ts
+index 8287a678..6f6fdcc3 100644
+--- a/apps/api/src/modules/knowledge/documents.test.ts
++++ b/apps/api/src/modules/knowledge/documents.test.ts
+@@ -2,6 +2,7 @@
+ 
+ /** M28's file-first Knowledge HTTP contract (#598). */
+ import { afterAll, beforeAll, describe, expect, it } from "vitest";
++import { z } from "zod";
+ import { eq, knowledgeTypes, users } from "@openlaw/db";
+ import { provisionUser } from "../../auth/instance.js";
+ import {
+@@ -95,7 +96,11 @@ describe("file-first Knowledge", () => {
+       ]),
+     });
+     expect(created.statusCode, created.body).toBe(201);
+-    const item = created.json().knowledgeItems[0] as { id: string; primaryDocumentId: string };
++    const [item] = z
++      .object({
++        knowledgeItems: z.tuple([z.object({ id: z.string(), primaryDocumentId: z.string() })]),
++      })
++      .parse(created.json()).knowledgeItems;
+     const base = `/api/v1/knowledge/${item.id}`;
+     for (const [method, url, payload] of [
+       ["PATCH", base, { audience: "everyone" }],
+@@ -132,7 +137,7 @@ describe("file-first Knowledge", () => {
+     }
+     for (const cookies of [contributorCookies, businessCookies]) {
+       const paper = await harness.app.inject({ method: "GET", url: `${base}/documents`, cookies });
+-      expect(paper.statusCode).toBe(403);
++      expect(paper.statusCode, paper.body).toBe(403);
+     }
+     for (const url of [portalUrl, downloadUrl]) {
+       const response = await harness.app.inject({ method: "GET", url, cookies: businessCookies });
+@@ -161,6 +166,10 @@ describe("file-first Knowledge", () => {
+     });
+     expect(download.statusCode, download.body).toBe(200);
+     expect(download.body).toBe("%PDF retained");
++    // Archived again on the way out, and not only for tidiness: this
++    // item's primary is a PDF, and the next case asserts the exact
++    // rows `format=pdf` answers. The library listing leaves archived
++    // items out, so putting it back is what keeps that list to one.
+     const cleanup = await harness.app.inject({
+       method: "POST",
+       url: `${base}/archive`,

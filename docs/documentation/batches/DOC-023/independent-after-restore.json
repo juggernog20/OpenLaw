@@ -1,0 +1,64 @@
+{
+  "name": "independent-after-restore",
+  "scenario": "V-C47",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:57:05.014Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-restore",
+  "articleHashes": [
+    {
+      "articleId": "backup-and-restore",
+      "contentSha256": "0237339f91484b7a46623e1753c67ccbb376ae341ac8b40cb5d81237967a891a"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Existing accounts sign in and the records are all present (after-restore)",
+      "actual": "The Administrator created before the change signed in with the same password. All 3 Contracts (#1, #2, #3) and 1 Matter(s) are present with their original titles.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:57:05.389Z",
+      "at": "2026-09-08T09:57:05.410Z"
+    },
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Document Version bytes match the pre-change hashes (after-restore)",
+      "actual": "Downloaded 4 Document Versions (1/original, 1/later, 2/original, 2/later) and every SHA-256 matched the value recorded on the earlier build.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:57:05.411Z",
+      "at": "2026-09-08T09:57:05.432Z"
+    },
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "The Contributor keeps exactly its earlier reach (after-restore)",
+      "actual": "The Contributor signed in and still reads member Contract 1 (HTTP 200) while the Confidential Contract 3 still answers HTTP 404, the same reach as before the change.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:57:05.432Z",
+      "at": "2026-09-08T09:57:05.720Z"
+    },
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "The saved encrypted relay is actually usable (after-restore)",
+      "actual": "The relay saved on the earlier build still reads as source \"app\" and a test message actually arrived in this instance's own Mailpit (0 → 1). A stored secret that can be decrypted and used is the proof, not a flag saying one exists.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:57:05.721Z",
+      "at": "2026-09-08T09:57:05.796Z"
+    },
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "A new upload processes on the changed instance (after-restore)",
+      "actual": "A new Contract and PDF were created on the changed instance: the worker took the Version to \"ready\" and the download matched the uploaded bytes, so writes and processing work after the change.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:57:05.796Z",
+      "at": "2026-09-08T09:57:07.880Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T09:57:07.880Z"
+}

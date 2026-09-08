@@ -22,7 +22,7 @@ See [Create and maintain a Contract](create-contract.md) for the optional Matter
 
 ## End or reopen a Contract
 
-Use the Stage control to choose a Status mapped to **Ended**, such as Expired or Terminated if your organisation uses those names. Check the Status and Activity. Ending records the lifecycle change; the Contract remains editable for later paper and notes.
+Use the Stage control to choose a Status mapped to **Ended**, such as Expired or Terminated if your organization uses those names. Check the Status and Activity. Ending records the lifecycle change; the Contract remains editable for later paper and notes.
 
 The default Contracts view excludes ended work. Open **Filter** and enable **Show ended**. Review any other active filters or saved view if the Contract remains hidden. To reopen it, select the appropriate non-ended Status. This is another recorded Status change; it does not delete the earlier history. [Change a Contract Status](contract-stages.md) covers the control and approval warning.
 

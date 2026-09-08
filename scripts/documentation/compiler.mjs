@@ -13,7 +13,7 @@ import { Marked } from "marked";
 import sanitizeHtml from "sanitize-html";
 import { normalizeSearch, searchDocumentation, resolveDocumentationLink } from "./reader.mjs";
 
-const ID = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
+export const ID = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 const SHA = /^[a-f0-9]{40}$/;
 const HASH = /^[a-f0-9]{64}$/;
 const AUDIENCES = [
@@ -73,7 +73,7 @@ function strings(value, message, allowed) {
   );
   unique(value, message);
 }
-function readOwned(root, name) {
+export function readOwned(root, name) {
   const path = resolve(root, name),
     parent = resolve(root);
   requireThat(path.startsWith(parent + sep), `path outside source tree: ${name}`);
@@ -110,10 +110,18 @@ function anchor(text) {
     .replace(/^-|-$/g, "");
 }
 function validDate(value) {
-  return nonempty(value) && Number.isFinite(Date.parse(value)) && Date.parse(value) <= Date.now();
+  if (!nonempty(value)) return false;
+  const parts =
+    /^(\d{4})-(\d{2})-(\d{2})(?:T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2}))?$/.exec(value);
+  if (!parts) return false;
+  const [, year, month, day] = parts.map(Number);
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (month < 1 || month > 12 || day < 1 || day > days[month - 1]) return false;
+  return Number.isFinite(Date.parse(value)) && Date.parse(value) <= Date.now();
 }
 
-function validateCatalog(catalog, scenarios, bindings) {
+export function validateCatalog(catalog, scenarios, bindings) {
   requireThat(catalog.schemaVersion === 1, "unsupported catalog schema");
   array(catalog.sections, "sections required");
   array(catalog.articles, "articles required");
@@ -209,17 +217,62 @@ function validateCatalog(catalog, scenarios, bindings) {
   return contexts;
 }
 
-function verifyEvidence(a, source, metadataRoot, edition, scenarios) {
+export function verifyApplicationCompatibility(edition, build) {
+  const c = edition.compatibilityReview;
+  requireThat(SHA.test(build.commit), "verified content needs a recorded app build");
+  requireThat(
+    c &&
+      c.testedAppCommit === edition.supportedAppCommit &&
+      c.applicationSha256 === build.applicationSha256 &&
+      nonempty(c.reviewer) &&
+      validDate(c.reviewedAt) &&
+      nonempty(c.summary),
+    "application compatibility review is missing or stale",
+  );
+}
+
+export function verifyArticleEvidence(a, source, metadataRoot, edition, scenarios) {
   const e = json(metadataRoot, `evidence/${a.id}.json`);
   requireThat(
     e.articleId === a.id && e.contentSha256 === sha256(source),
     `evidence hash mismatch: ${a.id}`,
   );
   requireThat(e.status === "pass" && validDate(e.verifiedAt), `unverified evidence: ${a.id}`);
-  requireThat(
-    SHA.test(e.appCommit) && e.appCommit === edition.supportedAppCommit,
-    `evidence app build mismatch: ${a.id}`,
-  );
+  requireThat(SHA.test(e.appCommit), `invalid evidence app build: ${a.id}`);
+  if (e.appCommit !== edition.supportedAppCommit) {
+    const c = e.compatibilityReview;
+    requireThat(c, `evidence app build mismatch: ${a.id}`);
+    requireThat(
+      c.fromAppCommit === e.appCommit &&
+        SHA.test(c.toAppCommit) &&
+        c.toAppCommit === edition.supportedAppCommit &&
+        c.contentSha256 === e.contentSha256 &&
+        HASH.test(c.applicationSha256) &&
+        c.applicationSha256 === edition.compatibilityReview?.applicationSha256 &&
+        nonempty(c.reviewer) &&
+        ["agent", "human"].includes(c.reviewerKind) &&
+        validDate(c.reviewedAt) &&
+        Date.parse(c.reviewedAt) >= Date.parse(e.verifiedAt) &&
+        nonempty(c.summary) &&
+        Array.isArray(c.evidence) &&
+        c.evidence.length > 0,
+      `missing or stale article compatibility review: ${a.id}`,
+    );
+    requireThat(
+      nonempty(e.author) && normalizeSearch(c.reviewer) !== normalizeSearch(e.author),
+      `independent compatibility review required: ${a.id}`,
+    );
+    for (const record of c.evidence) {
+      requireThat(
+        record && nonempty(record.path) && HASH.test(record.sha256),
+        `invalid compatibility evidence: ${a.id}`,
+      );
+      requireThat(
+        sha256(readOwned(metadataRoot, record.path)) === record.sha256,
+        `compatibility evidence hash mismatch: ${a.id}`,
+      );
+    }
+  }
   for (const key of [
     "author",
     "technicalReviewer",
@@ -375,25 +428,13 @@ export function compileDocumentation({
       (preview && ["draft", "review"].includes(a.status)),
   );
   const verified = eligible.filter((a) => ["verified", "published"].includes(a.status));
-  if (verified.length) {
-    const c = edition.compatibilityReview;
-    requireThat(SHA.test(build.commit), "verified content needs a recorded app build");
-    requireThat(
-      c &&
-        c.testedAppCommit === edition.supportedAppCommit &&
-        c.applicationSha256 === build.applicationSha256 &&
-        nonempty(c.reviewer) &&
-        validDate(c.reviewedAt) &&
-        nonempty(c.summary),
-      "application compatibility review is missing or stale",
-    );
-  }
+  if (verified.length) verifyApplicationCompatibility(edition, build);
   const parser = new Marked({ gfm: true });
   for (const a of eligible) {
     const bytes = readOwned(contentRoot, `${a.id}.md`),
       source = bytes.toString("utf8");
     const unverified = !["verified", "published"].includes(a.status);
-    if (!unverified) verifyEvidence(a, bytes, metadataRoot, edition, scenarios);
+    if (!unverified) verifyArticleEvidence(a, bytes, metadataRoot, edition, scenarios);
     const tokens = parser.lexer(source),
       outline = [],
       assets = [];
