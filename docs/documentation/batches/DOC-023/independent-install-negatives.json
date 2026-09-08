@@ -12,7 +12,7 @@
       "role": "operator",
       "method": "container-operation",
       "action": "A missing key is refused before any container changes",
-      "actual": "Blanking AUTH_SECRET in .env made both docker compose config --quiet and docker compose up -d exit 1 with \"required variable AUTH_SECRET is missing a value: AUTH_SECRET is required — generate one with `openssl rand -base64 32` and set it in .env\". docker compose ps still showed app, worker, postgres and doc-engine up, so Compose refused the command without touching the running installation.",
+      "actual": "Blanking AUTH_SECRET in .env made both docker compose config --quiet and docker compose up -d exit 1 with \"required variable AUTH_SECRET is missing a value: AUTH_SECRET is required \u2014 generate one with `openssl rand -base64 32` and set it in .env\". docker compose ps still showed app, worker, postgres and doc-engine up, so Compose refused the command without touching the running installation.",
       "result": "pass",
       "startedAt": "2026-09-08T09:23:37.960Z",
       "at": "2026-09-08T09:23:38.110Z"
@@ -46,5 +46,6 @@
     }
   ],
   "passed": true,
-  "completedAt": "2026-09-08T09:23:52.148Z"
+  "completedAt": "2026-09-08T09:23:52.148Z",
+  "timingBasis": "Assembled by hand from logs/install-negatives.log; every startedAt and at here is a timestamp that log wrote as the commands ran."
 }

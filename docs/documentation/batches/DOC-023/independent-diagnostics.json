@@ -41,27 +41,30 @@
       "method": "automated-test",
       "action": "An unreachable retained storage reader leaves readiness untouched",
       "result": "pass",
-      "startedAt": "2026-09-08T09:42:14.483Z",
-      "at": "2026-09-08T09:42:52.000Z",
-      "actual": "With S3_ENDPOINT pointed at a name that does not resolve while azure-blob took new writes, /readyz still answered {\"status\":\"ok\"} and the download of the Document stored on the S3 driver failed with HTTP 500, while Documents on the local and azure-blob stores downloaded with matching SHA-256 values. Correcting the endpoint restored all three stores. Recorded in full in independent-storage-fault-wrong-endpoint and independent-storage-fault-corrected."
+      "startedAt": "2026-09-08T09:42:27.772Z",
+      "at": "2026-09-08T09:42:49.489Z",
+      "actual": "With S3_ENDPOINT pointed at a name that does not resolve while azure-blob took new writes, /readyz still answered {\"status\":\"ok\"} and the download of the Document stored on the S3 driver failed with HTTP 500, while Documents on the local and azure-blob stores downloaded with matching SHA-256 values. Correcting the endpoint restored all three stores. Recorded in full in independent-storage-fault-wrong-endpoint and independent-storage-fault-corrected.",
+      "timingBasis": "Bounded by the two checker records this step summarises: independent-storage-fault-wrong-endpoint began at 09:42:27.772Z and independent-storage-fault-corrected completed at 09:42:49.489Z."
     },
     {
       "role": "operator",
       "method": "automated-test",
       "action": "A stopped worker leaves an upload pending and resumes it",
       "result": "pass",
-      "startedAt": "2026-09-08T09:43:15.780Z",
-      "at": "2026-09-08T09:43:24.792Z",
-      "actual": "With the worker stopped the API accepted a new PDF and its Version stayed \"pending\"; the original file still downloaded byte-identical. Starting the worker again took a new upload to \"ready\". Recorded in independent-processing-worker-stopped and independent-processing-worker-resumed."
+      "startedAt": "2026-09-08T09:43:16.356Z",
+      "at": "2026-09-08T09:43:24.763Z",
+      "actual": "With the worker stopped the API accepted a new PDF and its Version stayed \"pending\"; the original file still downloaded byte-identical. Starting the worker again took a new upload to \"ready\". Recorded in independent-processing-worker-stopped and independent-processing-worker-resumed.",
+      "timingBasis": "Bounded by independent-processing-worker-stopped and independent-processing-worker-resumed, whose own recorded times these are."
     },
     {
       "role": "operator",
       "method": "automated-test",
       "action": "An unreachable document engine fails processing while the API stays ready",
       "result": "pass",
-      "startedAt": "2026-09-08T09:43:35.000Z",
-      "at": "2026-09-08T09:49:10.000Z",
-      "actual": "With DOC_ENGINE_URL pointed at an address that does not answer, a real PDF reached the terminal state \"failed\" under the normal queue retry timings while /readyz stayed {\"status\":\"ok\"}. Removing the override took a new PDF to \"ready\" with its uploaded words and a byte-identical download. Recorded in independent-processing-engine-failed and independent-processing-engine-recovered."
+      "startedAt": "2026-09-08T09:43:52.554Z",
+      "at": "2026-09-08T09:50:05.868Z",
+      "actual": "With DOC_ENGINE_URL pointed at an address that does not answer, a real PDF reached the terminal state \"failed\" under the normal queue retry timings while /readyz stayed {\"status\":\"ok\"}. Removing the override took a new PDF to \"ready\" with its uploaded words and a byte-identical download. Recorded in independent-processing-engine-failed and independent-processing-engine-recovered.",
+      "timingBasis": "Bounded by independent-processing-engine-failed, which began at 09:43:52.554Z, and independent-processing-engine-recovered, which completed at 09:50:05.868Z."
     },
     {
       "role": "operator",
@@ -77,5 +80,6 @@
   "limitations": [
     "Every fault was induced on the reviewer's own disposable installation, one at a time, and reversed before the next.",
     "Signing and AI connector diagnostics were not exercised: C42/C43 provider access is still blocked, so those paragraphs of the article remain unverified here."
-  ]
+  ],
+  "timingBasis": "This record was assembled by hand from the diagnostics command log and the checker records it points at. Every interval is the log's own timestamp or the bounds of the named record; no per-action timing finer than those sources was recorded."
 }

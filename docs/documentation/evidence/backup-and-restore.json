@@ -8,7 +8,7 @@
   "technicalReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
   "walkthroughReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-08T10:05:10Z",
+  "verifiedAt": "2026-09-08T10:04:19.834Z",
   "status": "pass",
   "sources": [
     "compose.yml",
@@ -39,7 +39,7 @@
         "docs/documentation/batches/DOC-023/independent-pre-upgrade-recovery.json",
         "docs/documentation/batches/DOC-023/independent-corrections-confirmed.json"
       ],
-      "verifiedAt": "2026-09-08T10:05:10Z"
+      "verifiedAt": "2026-09-08T10:04:19.834Z"
     }
   ],
   "authorEvidence": ["docs/documentation/batches/DOC-023/README.md"],
@@ -65,7 +65,7 @@
     "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
     "reviewerKind": "agent",
     "method": "source-inspection",
-    "completedAt": "2026-09-08T08:05:00Z",
+    "completedAt": "2026-09-08T09:15:18.163Z",
     "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
     "scope": "Read the release under test for the behaviour the operator guides claim: the credential-key floor and the absence of one on AUTH_SECRET (packages/db/src/secrets.ts, apps/api/src/index.ts, apps/worker/src/index.ts), the doc-engine bounds and their boot-time refusal (apps/api/src/lib/doc-engine/config.ts, apps/api/src/lib/doc-engine/http.ts), the upload ceiling's silent fallback (apps/api/src/lib/uploads.ts), where outbound email is resolved and tested (apps/api/src/modules/email-settings/routes.ts), the event stream's frames and headers (apps/api/src/modules/events/routes.ts), the journal guard and its messages (packages/db/src/migration-journal.ts), the two refusals of 0060_account_issuer (packages/db/migrations/0060_account_issuer.sql), and the deployment topology and defaults (compose.yml, Dockerfile, .env.example, docs/DEPLOYMENT.md). This reading produced the five corrections in the first review commit. It is recorded separately from the container-operation walkthroughs and does not close a scenario on its own.",
     "files": [
@@ -83,9 +83,10 @@
       "Dockerfile",
       ".env.example",
       "docs/DEPLOYMENT.md"
-    ]
+    ],
+    "completedAtBasis": "The completion of this session's source-review report, the reading that produced the corrections in commit 18b93c11 (committed 2026-09-08T09:14:37Z). The review ran across this session before that report; only its delivery time is separately recorded, so that is the time given rather than an invented finer one."
   },
-  "verifiedAtBasis": "The completion of the last passing independent walkthrough step covering this article, recorded in the independent-* records listed under independentEvidence.",
+  "verifiedAtBasis": "The latest observation in the independent records that cover this article: independent-corrections-confirmed, whose last recorded action is 2026-09-08T10:04:19.834Z. Each article carries its own time rather than one batch-wide maximum. That record's last step is bounded rather than logged to the millisecond: its own timingBasis names the command log and the target .env modification time it sits between.",
   "independentBuild": {
     "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
     "note": "Images the reviewer built from the same sources with the installation article's own commands. They are not the author's images: the same source builds to a different digest here.",
