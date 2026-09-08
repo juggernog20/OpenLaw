@@ -1023,6 +1023,7 @@ type SsoProviderPayloads = {
  */
 type SigningConnectorPayloads = {
   "signing_connector.configured": {
+    updateMode?: "polling" | "webhook";
     provider: string;
     environment: string;
     integrationKey: string;

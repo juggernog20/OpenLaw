@@ -447,3 +447,43 @@ docker compose run --rm --no-deps --entrypoint sh -v "$PWD:/out" app \
 That command archives the files volume through the `app` service, so it picks up whatever volume and `STORAGE_PATH` your stack declares — no volume name to keep in step. It writes the archive into the current directory as the container's `node` user (uid 1000).
 
 On the **s3** driver, do not run it — the volume is empty. Back the bucket up with your store's own tooling: versioning, replication, or a scheduled sync. Keep the old volume too if the install ever ran on the local driver; the files it wrote are still read from it.
+
+## Signing updates on private networks
+
+Sign in as an Administrator and open
+**Settings → Organization → Integrations → E-signature**. Choose a mode in
+**Signing updates**, then select **Save connector**. The app and worker need
+outbound HTTPS access to DocuSign in either mode. Documents selected for signature
+are sent to DocuSign even when OpenLaw has no inbound internet access.
+
+| Mode    | Network setup                                                        | Update behavior                                                                                                                                   |
+| ------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Polling | Outbound access only. No public callback or Connect secret required. | OpenLaw checks each outstanding Envelope periodically. Later checks are about 15 to 20 minutes apart while the worker and provider are available. |
+| Webhook | Public HTTPS gateway, DocuSign Connect subscription and HMAC secret. | OpenLaw receives status changes when DocuSign delivers them. Periodic reconciliation recovers missed updates.                                     |
+
+New connectors default to Polling. Existing connectors retain Webhook on upgrade.
+In Polling mode, OpenLaw refuses inbound webhook deliveries, even if a secret was
+saved earlier. Switching modes keeps outstanding Envelopes and credentials.
+Disabling the connector stops both update paths until it is enabled again.
+
+For Webhook, enter the gateway's HTTPS address in **Public callback URL** if it
+differs from the app address. For example, a gateway can forward
+`https://signing.example.com/docusign` to
+`http://openlaw:3000/api/v1/signing/docusign/webhook` on your internal network.
+Use the internal host and port of your deployment. Forward POST requests without
+changing their bodies or `X-DocuSign-Signature-*` headers. Keep other app routes
+private. A browser login page at the gateway will prevent DocuSign deliveries.
+OpenLaw verifies the delivery signature with the saved Connect secret.
+
+Save the connector, then copy the displayed **Webhook URL** to an account-level
+DocuSign Connect subscription for the sending user. Use JSON notifications with
+Envelope data and HMAC signing. OpenLaw does not create this subscription or the
+gateway. Leaving **Public callback URL** blank uses the app's base address, which
+must then be reachable by DocuSign over HTTPS. A private or localhost address will
+not work for Connect. See [DocuSign's listener guidance](https://www.docusign.com/blog/developers/dsdev-webhook-listeners-part-3).
+
+**Test connection** checks provider authentication. It does not test callback
+reachability or executed-copy filing. Complete a test Envelope and check its Signed
+status and Executed copy. For Polling, allow the next reconciliation check to run.
+A provider outage or stopped worker can delay completion beyond the normal interval.
+Both modes use the same completion and executed-copy filing paths.

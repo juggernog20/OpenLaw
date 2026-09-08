@@ -2228,6 +2228,13 @@
                             }
                           ]
                         },
+                        "updateMode": {
+                          "type": "string",
+                          "enum": ["polling", "webhook"]
+                        },
+                        "webhookUrlOverride": {
+                          "type": ["string", "null"]
+                        },
                         "integrationKey": {
                           "type": ["string", "null"]
                         },
@@ -2262,6 +2269,8 @@
                         "enabled",
                         "disabledAt",
                         "environment",
+                        "updateMode",
+                        "webhookUrlOverride",
                         "integrationKey",
                         "apiUserId",
                         "hasPrivateKey",
@@ -2292,7 +2301,7 @@
       },
       "put": {
         "operationId": "saveSigningConnector",
-        "summary": "Save the e-signature connector (CTR-013, TECH-013). The RSA key and the Connect secret are write-only: blank keeps the stored value, a value rotates it. A first save without the Connect secret is refused — the webhook must never answer unsigned deliveries",
+        "summary": "Save the e-signature connector (CTR-013, TECH-013). The RSA key and the Connect secret are write-only: blank keeps the stored value, a value rotates it. Webhook mode requires a Connect secret. New connectors default to polling",
         "tags": ["signing-connector"],
         "requestBody": {
           "required": true,
@@ -2304,6 +2313,22 @@
                   "environment": {
                     "type": "string",
                     "enum": ["demo", "production"]
+                  },
+                  "updateMode": {
+                    "type": "string",
+                    "enum": ["polling", "webhook"]
+                  },
+                  "webhookUrl": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 2000,
+                        "format": "uri"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   },
                   "integrationKey": {
                     "type": "string",
@@ -2384,6 +2409,13 @@
                             }
                           ]
                         },
+                        "updateMode": {
+                          "type": "string",
+                          "enum": ["polling", "webhook"]
+                        },
+                        "webhookUrlOverride": {
+                          "type": ["string", "null"]
+                        },
                         "integrationKey": {
                           "type": ["string", "null"]
                         },
@@ -2418,6 +2450,8 @@
                         "enabled",
                         "disabledAt",
                         "environment",
+                        "updateMode",
+                        "webhookUrlOverride",
                         "integrationKey",
                         "apiUserId",
                         "hasPrivateKey",
@@ -2505,6 +2539,13 @@
                             }
                           ]
                         },
+                        "updateMode": {
+                          "type": "string",
+                          "enum": ["polling", "webhook"]
+                        },
+                        "webhookUrlOverride": {
+                          "type": ["string", "null"]
+                        },
                         "integrationKey": {
                           "type": ["string", "null"]
                         },
@@ -2539,6 +2580,8 @@
                         "enabled",
                         "disabledAt",
                         "environment",
+                        "updateMode",
+                        "webhookUrlOverride",
                         "integrationKey",
                         "apiUserId",
                         "hasPrivateKey",
@@ -2685,6 +2728,13 @@
                             }
                           ]
                         },
+                        "updateMode": {
+                          "type": "string",
+                          "enum": ["polling", "webhook"]
+                        },
+                        "webhookUrlOverride": {
+                          "type": ["string", "null"]
+                        },
                         "integrationKey": {
                           "type": ["string", "null"]
                         },
@@ -2719,6 +2769,8 @@
                         "enabled",
                         "disabledAt",
                         "environment",
+                        "updateMode",
+                        "webhookUrlOverride",
                         "integrationKey",
                         "apiUserId",
                         "hasPrivateKey",
@@ -2808,6 +2860,13 @@
                             }
                           ]
                         },
+                        "updateMode": {
+                          "type": "string",
+                          "enum": ["polling", "webhook"]
+                        },
+                        "webhookUrlOverride": {
+                          "type": ["string", "null"]
+                        },
                         "integrationKey": {
                           "type": ["string", "null"]
                         },
@@ -2842,6 +2901,8 @@
                         "enabled",
                         "disabledAt",
                         "environment",
+                        "updateMode",
+                        "webhookUrlOverride",
                         "integrationKey",
                         "apiUserId",
                         "hasPrivateKey",

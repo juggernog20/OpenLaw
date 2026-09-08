@@ -48,6 +48,9 @@ export type SigningProviderKey = (typeof SIGNING_PROVIDERS)[number];
 export const SIGNING_ENVIRONMENTS = ["demo", "production"] as const;
 export type SigningEnvironment = (typeof SIGNING_ENVIRONMENTS)[number];
 
+export const SIGNING_UPDATE_MODES = ["polling", "webhook"] as const;
+export type SigningUpdateMode = (typeof SIGNING_UPDATE_MODES)[number];
+
 export const signingConnectors = pgTable(
   "signing_connectors",
   {
@@ -55,6 +58,9 @@ export const signingConnectors = pgTable(
     /** The adapter this row configures; one row per adapter. */
     provider: text("provider", { enum: SIGNING_PROVIDERS }).notNull(),
     environment: text("environment", { enum: SIGNING_ENVIRONMENTS }).notNull(),
+    updateMode: text("update_mode", { enum: SIGNING_UPDATE_MODES }).notNull().default("polling"),
+    /** Optional public gateway address. It need not share the app base URL. */
+    webhookUrl: text("webhook_url"),
     /** DocuSign's integration key — the OAuth client id of the app. */
     integrationKey: text("integration_key").notNull(),
     /**
@@ -69,13 +75,7 @@ export const signingConnectors = pgTable(
      * Write-only through the API and encrypted at rest (TECH-022).
      */
     privateKey: encryptedText("private_key").notNull(),
-    /**
-     * The DocuSign Connect HMAC secret. Encrypted at rest (TECH-022),
-     * write-only, and **not nullable**: the webhook is the install's
-     * first unauthenticated inbound write path, so a connector without
-     * this secret is refused at save time and no install ever answers
-     * unsigned deliveries.
-     */
+    /** Empty in polling mode until a secret is supplied. Webhook mode requires it. */
     webhookSecret: encryptedText("webhook_secret").notNull(),
     /**
      * When an Administrator turned the connector off, or NULL while it
@@ -103,6 +103,10 @@ export const signingConnectors = pgTable(
   },
   (table) => [
     uniqueIndex("signing_connectors_provider_idx").on(table.provider),
+    check(
+      "signing_connectors_update_mode_check",
+      sql`${table.updateMode} in ('polling', 'webhook')`,
+    ),
     check("signing_connectors_provider_check", sql`${table.provider} in ('docusign')`),
     check(
       "signing_connectors_environment_check",

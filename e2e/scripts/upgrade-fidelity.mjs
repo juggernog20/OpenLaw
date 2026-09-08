@@ -662,6 +662,7 @@ async function seed() {
   // them — so this row is the one that proves the boot pass works
   // against real data rather than only against a fixture.
   await put("/api/v1/signing-connectors/docusign", {
+    updateMode: "webhook",
     environment: "demo",
     integrationKey: "upgrade-fidelity-integration-key",
     apiUserId: randomUUID(),

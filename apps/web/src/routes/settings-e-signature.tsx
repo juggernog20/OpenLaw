@@ -8,11 +8,9 @@
  * It follows the Authentication pane's credential anatomy (TECH-008):
  * one form, write-only secret fields that keep on blank and rotate on
  * paste, a save that applies immediately (SET-003), and a test
- * affordance that answers in place. Two things are its own — the
- * webhook URL the Administrator pastes into DocuSign Connect, shown
- * read-only, and the Connect secret being required rather than
- * optional, because the webhook is this install's first unauthenticated
- * inbound write path.
+ * affordance that answers in place. The Administrator selects Polling
+ * or Webhook. Webhook mode adds the public callback URL and requires
+ * a Connect secret.
  *
  * The API's 403 is the real refusal behind the loader's SET-002 bounce.
  */
@@ -87,6 +85,8 @@ export function SettingsESignaturePage() {
   const [connector, setConnector] = useState<Connector>(loaded.connector);
   const [environment, setEnvironment] = useState(connector.environment ?? "demo");
   const [integrationKey, setIntegrationKey] = useState(connector.integrationKey ?? "");
+  const [updateMode, setUpdateMode] = useState(connector.updateMode);
+  const [webhookUrl, setWebhookUrl] = useState(connector.webhookUrlOverride ?? "");
   const [apiUserId, setApiUserId] = useState(connector.apiUserId ?? "");
   // Both secrets are write-only and start blank: an empty field means
   // "keep the stored one", which is the only thing the pane can mean —
@@ -155,13 +155,15 @@ export function SettingsESignaturePage() {
         params: { path: { provider: PROVIDER } },
         body: {
           environment,
+          updateMode,
+          webhookUrl: webhookUrl.trim() || null,
           integrationKey,
           apiUserId,
           // Blank is omitted rather than sent: the API reads both the
           // same way, and not sending is the honest wire shape for
           // "this pane has nothing to say about that secret".
           ...(privateKey === "" ? {} : { privateKey }),
-          ...(webhookSecret === "" ? {} : { webhookSecret }),
+          ...(updateMode !== "webhook" || webhookSecret === "" ? {} : { webhookSecret }),
         },
       });
       const { data } = result;
@@ -273,6 +275,8 @@ export function SettingsESignaturePage() {
       // no connector — leaving the old key in the boxes would invite
       // saving it again by reflex.
       setEnvironment("demo");
+      setUpdateMode("polling");
+      setWebhookUrl("");
       setIntegrationKey("");
       setApiUserId("");
       setPrivateKey("");
@@ -355,6 +359,49 @@ export function SettingsESignaturePage() {
             </select>
           </FormField>
           <FormField
+            id="ds-update-mode"
+            label={
+              <FormattedMessage
+                id="settings.eSignature.updateMode"
+                defaultMessage="Signing updates"
+              />
+            }
+          >
+            <select
+              id="ds-update-mode"
+              value={updateMode}
+              onChange={(event) => setUpdateMode(event.target.value as "polling" | "webhook")}
+              aria-describedby="ds-update-mode-hint"
+              className="h-8 w-80 max-w-full rounded-button border border-border-default bg-raised px-2 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
+            >
+              <option value="polling">
+                {intl.formatMessage({
+                  id: "settings.eSignature.updateMode.polling",
+                  defaultMessage: "Polling",
+                })}
+              </option>
+              <option value="webhook">
+                {intl.formatMessage({
+                  id: "settings.eSignature.updateMode.webhook",
+                  defaultMessage: "Webhook",
+                })}
+              </option>
+            </select>
+            <p id="ds-update-mode-hint" className="text-xs text-muted">
+              {updateMode === "polling" ? (
+                <FormattedMessage
+                  id="settings.eSignature.polling.hint"
+                  defaultMessage="Keeps OpenLaw private. Only outbound access to DocuSign is needed. Updates can take about 15 to 20 minutes while the worker is running. Documents are still sent to DocuSign for signing."
+                />
+              ) : (
+                <FormattedMessage
+                  id="settings.eSignature.webhook.hint"
+                  defaultMessage="Receives updates as DocuSign delivers them. Requires a public HTTPS gateway and a signed Connect subscription. OpenLaw also checks periodically to recover missed updates."
+                />
+              )}
+            </p>
+          </FormField>
+          <FormField
             id="ds-integration-key"
             label={
               <FormattedMessage
@@ -419,43 +466,71 @@ export function SettingsESignaturePage() {
               </p>
             )}
           </FormField>
-          <FormField
-            id="ds-webhook-secret"
-            label={
-              <FormattedMessage
-                id="settings.eSignature.webhookSecret"
-                defaultMessage="Connect HMAC secret"
-              />
-            }
-          >
-            <Input
-              id="ds-webhook-secret"
-              className="w-80"
-              type="password"
-              required={!connector.hasWebhookSecret}
-              value={webhookSecret}
-              onChange={(event) => setWebhookSecret(event.target.value)}
-              placeholder={intl.formatMessage({
-                id: "settings.eSignature.secretPlaceholder",
-                // A visual mask, not copy — but it still rides the
-                // catalog so a locale can swap the glyph.
-                defaultMessage: "••••••••••••••••",
-              })}
-            />
-            <p className="text-xs text-muted">
-              {connector.hasWebhookSecret ? (
-                <FormattedMessage
-                  id="settings.eSignature.secret.hint"
-                  defaultMessage="Leave blank to keep the current value. Paste a new one to rotate."
+          {updateMode === "webhook" && (
+            <>
+              <FormField
+                id="ds-public-callback"
+                label={
+                  <FormattedMessage
+                    id="settings.eSignature.publicCallback"
+                    defaultMessage="Public callback URL"
+                  />
+                }
+              >
+                <Input
+                  id="ds-public-callback"
+                  className="w-80"
+                  type="url"
+                  value={webhookUrl}
+                  onChange={(event) => setWebhookUrl(event.target.value)}
+                  placeholder={connector.webhookUrl}
                 />
-              ) : (
-                <FormattedMessage
-                  id="settings.eSignature.webhookSecret.hint"
-                  defaultMessage="Required. OpenLaw checks it on every delivery, so nothing unsigned can change a record."
+                <p className="text-xs text-muted">
+                  <FormattedMessage
+                    id="settings.eSignature.publicCallback.hint"
+                    defaultMessage="Enter the gateway's HTTPS address if it differs from OpenLaw's address. Forward POST requests to /api/v1/signing/docusign/webhook and preserve the body and signature headers. Leave blank to use the app address, which must then be publicly reachable over HTTPS."
+                  />
+                </p>
+              </FormField>
+              <FormField
+                id="ds-webhook-secret"
+                label={
+                  <FormattedMessage
+                    id="settings.eSignature.webhookSecret"
+                    defaultMessage="Connect HMAC secret"
+                  />
+                }
+              >
+                <Input
+                  id="ds-webhook-secret"
+                  className="w-80"
+                  type="password"
+                  required={!connector.hasWebhookSecret}
+                  value={webhookSecret}
+                  onChange={(event) => setWebhookSecret(event.target.value)}
+                  placeholder={intl.formatMessage({
+                    id: "settings.eSignature.secretPlaceholder",
+                    // A visual mask, not copy — but it still rides the
+                    // catalog so a locale can swap the glyph.
+                    defaultMessage: "••••••••••••••••",
+                  })}
                 />
-              )}
-            </p>
-          </FormField>
+                <p className="text-xs text-muted">
+                  {connector.hasWebhookSecret ? (
+                    <FormattedMessage
+                      id="settings.eSignature.secret.hint"
+                      defaultMessage="Leave blank to keep the current value. Paste a new one to rotate."
+                    />
+                  ) : (
+                    <FormattedMessage
+                      id="settings.eSignature.webhookSecret.hint"
+                      defaultMessage="Required. OpenLaw checks it on every delivery, so nothing unsigned can change a record."
+                    />
+                  )}
+                </p>
+              </FormField>
+            </>
+          )}
           <div className="flex items-center gap-2">
             <Button
               type="submit"
@@ -507,32 +582,34 @@ export function SettingsESignaturePage() {
           </p>
         </form>
 
-        <div className="flex flex-col gap-1.5 border-t border-border-default pt-4">
-          <Label htmlFor="ds-webhook-url">
-            <FormattedMessage id="settings.eSignature.webhookUrl" defaultMessage="Webhook URL" />
-          </Label>
-          <div className="flex gap-2">
-            <Input id="ds-webhook-url" className="w-80" readOnly value={connector.webhookUrl} />
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => void copyWebhookUrl()}
-            >
-              {copied ? (
-                <FormattedMessage id="action.copied" defaultMessage="Copied" />
-              ) : (
-                <FormattedMessage id="action.copy" defaultMessage="Copy" />
-              )}
-            </Button>
+        {connector.updateMode === "webhook" && (
+          <div className="flex flex-col gap-1.5 border-t border-border-default pt-4">
+            <Label htmlFor="ds-webhook-url">
+              <FormattedMessage id="settings.eSignature.webhookUrl" defaultMessage="Webhook URL" />
+            </Label>
+            <div className="flex gap-2">
+              <Input id="ds-webhook-url" className="w-80" readOnly value={connector.webhookUrl} />
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => void copyWebhookUrl()}
+              >
+                {copied ? (
+                  <FormattedMessage id="action.copied" defaultMessage="Copied" />
+                ) : (
+                  <FormattedMessage id="action.copy" defaultMessage="Copy" />
+                )}
+              </Button>
+            </div>
+            <p className="text-xs text-muted">
+              <FormattedMessage
+                id="settings.eSignature.webhookUrl.hint"
+                defaultMessage="Paste this into a DocuSign Connect configuration so envelope status reaches this install."
+              />
+            </p>
           </div>
-          <p className="text-xs text-muted">
-            <FormattedMessage
-              id="settings.eSignature.webhookUrl.hint"
-              defaultMessage="Paste this into a DocuSign Connect configuration so envelope status reaches this install."
-            />
-          </p>
-        </div>
+        )}
 
         {/* The connector's own lifecycle. Drawn only on a configured
             install, the DES-035 absence rule: there is nothing to turn

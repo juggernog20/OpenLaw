@@ -301,6 +301,20 @@ The addendum above gave the reconciliation sweep an in-process interval loop on 
 
 **Alternatives considered.** _Document a single worker replica and pin it in `compose.yml`_ — cheaper, and it makes correct scaling a thing an operator can silently break with no error and no sign. _A leader-election flag of our own_ — a second source of the truth pg-boss already holds, and TECH-007's own M12/6 note declines exactly that reasoning for the backfill sweep.
 
+### Addendum, 2026-09-08, #789: limit each Envelope's provider checks
+
+The worker still checks for due Envelopes every five minutes. Each Envelope now
+stores `next_reconcile_at`. An atomic claim prevents overlapping workers from
+checking the same Envelope. The claim reserves 20 minutes, including time for
+bounded authentication and status requests if the process stops during a call.
+After each attempt, successful or failed, the next check is due in 15 minutes.
+A restart or connector mode change retains that timestamp. The normal delay for
+later checks is about 15 to 20 minutes. An outage can make it longer.
+
+This supersedes the earlier five-minute provider polling interval, while retaining
+the single pg-boss schedule. DocuSign requires at least 15 minutes between polls of
+one resource. See [DocuSign's API limits](https://www.docusign.com/blog/developers/dsdev-from-the-trenches-api-rate-limits).
+
 ### Addendum (2026-08-18) — settled in M18/1: the first queue that leaves the building
 
 The immediate notification email (NOT-002 group 1) is the pipeline's fifth queue, and it is the first one whose product is a message to a person rather than a row or a blob. It takes a queue of its own on the M12/4 line — **what a job produces, not what it reads** — and it is the clearest case of it so far: nothing else in the pipeline hands anything to a third party's relay.
@@ -520,6 +534,12 @@ DocuSign **JWT grant**: org admin creates the DocuSign app, one-time consent; Op
 ### Addendum (2026-08-16, M15/1)
 
 The surface shipped in **Settings → Organization → Integrations → E-signature** (SET-007), and it asks for one field more than this decision listed: the **DocuSign Connect HMAC secret**, without which a connector cannot be saved. The account is **discovered, not configured** — `/oauth/userinfo` answers the integration user's default account — so the pane asks for three plain values — environment, integration key, and user ID — plus two secrets, rather than for an account id. The assertion is RS256, scoped `signature impersonation`, and lives ten minutes.
+
+### Addendum, 2026-09-08, #789: optional Connect setup
+
+CTR-013 now allows Polling without a Connect subscription or secret. This supersedes
+the unconditional Connect-secret requirement above. Webhook mode still requires
+HMAC verification. JWT authentication and consent are unchanged in both modes.
 
 ### Alternatives considered
 

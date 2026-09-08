@@ -105,6 +105,7 @@ const RSA_KEY = [
 ].join("\n"); // NOSONAR — inert fixture, not a credential
 
 const CONNECTOR = {
+  updateMode: "webhook",
   environment: "demo",
   integrationKey: FAKE_VALID_INTEGRATION_KEY,
   apiUserId: "99999999-8888-7777-6666-555555555555",
