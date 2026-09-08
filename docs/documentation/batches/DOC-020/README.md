@@ -91,6 +91,8 @@ The second question was the promotion explanation, which asserted that a Busines
 
 The fixture policy was restored at the end of the run: both allowed domains present, the provider scoped back to `helix.example`, and the mode back to Built-in.
 
+One wording clarification followed, with no new walkthrough. The retained-link and single sign-on statements are now scoped explicitly to existing accounts, since `user.create.before` still applies the allowlist to a never-created identity redeeming its first link, so a reader cannot carry the existing-account observation over to first-time entry. The closing instruction now separates the two controls the offboarding record already distinguishes: archival prevents new sign-ins and revokes existing sessions, while **Revoke all sessions** ends sessions and leaves the account able to sign in again. It is recorded as `copyOnlyReview` on the authentication evidence with the prior content hash, not as a fresh scenario.
+
 ### Independent limits
 
 Onboarding completion is instance-wide and irreversible, so one instance allows exactly one finishing action. This seat exercised **Set up later** on the final invitation step, the claim a reader is most likely to misread as a skip. **Finish** and the Welcome-step **Set up later** were not independently exercised here. Single sign-on was verified against a dedicated local OpenID Connect fixture with real discovery, authorization, token, JWKS and userinfo endpoints and a real callback; it is not certification of an external provider's client-secret handling or account policy, and it does not satisfy the real DocuSign and AI-provider verification DOC-022 requires. Evidence was taken on fixture commit `6a8873db` rather than the final app candidate, which DOC-025 reconciles.
