@@ -1,15 +1,15 @@
 {
   "articleId": "contract-tasks-and-dates",
-  "contentSha256": "29654cec933cf7b62d1c87e2d75293f920de3f1f51b6859aae5a44e09356c43e",
-  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
-  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
-  "environment": "openlaw-docs-b8e31260-conversations",
-  "author": "Codex documentation author",
-  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
-  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "contentSha256": "05701bf7e4daa6099cca5ced8e61e360dbef0641fd53aa93c031bbcb29a59d67",
+  "appCommit": "67dbe788c73641a02218e2c0a0cbcdd5a0682a87",
+  "buildId": "Source integration only; no walkthrough build recorded for this article revision",
+  "environment": "dev integration source review",
+  "author": "Codex integration author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-07T13:57:41.545Z",
-  "status": "pass",
+  "verifiedAt": null,
+  "status": "blocked",
   "sources": [
     "CONTEXT.md",
     "apps/web/src/components/contracts/tasks-card.tsx",
@@ -27,12 +27,9 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "expected": "Task and Key date updates persist and affect their distinct supported surfaces. Read-only/archived restrictions and missing recipients do not produce misleading reminder promises. The current Contract Task screen exposes no reorder control; verify that limit rather than crediting an API reorder as a user workflow.",
-      "actual": "Blank Title was refused with \"Name what needs doing.\"; the assignee picker offered DO\nDaniel Okafor, NH\nNadia Haddad, RM\nRavi Menon (team and Owner Daniel Okafor; Priya Raman only via Add someone to the team…); after Use this person the form said membership is saved with the task; Cancel left no Task, Priya Raman off the team and refused (404). Two Tasks listed in append order (first assigned to Nadia Haddad, due Sep 8, 2026 typed into Due date (optional); second Unassigned); the checkbox completed the first (\"1 of 2 done\") and reopened it; no reorder, drag or move control on the screen; the Contract's expiry did not change. Row picker offered DO\nDaniel Okafor, NH\nNadia Haddad, RM\nRavi Menon (team members and Owner Daniel Okafor); Add to team and assign made Priya Raman a team member (Priya Raman:member) with access (200) and the assignee; Unassigned cleared the Task while she stayed on the team. Cancel kept \"Rev second task 20260907135717\"; Save renamed it; Remove task removed only it, leaving the first Task. Empty form refused with \"Pick a date.\"; two Key dates on Sep 9, 2026 listed with source Key date beside the two Derived rows (Oct 7 Renewal notice deadline — 10 days before exp | Oct 17 Current term expires Derived ) which have no actions; the Task due on Sep 8, 2026 is not in the list. Cancel kept \"Rev site visit 20260907135717\"; a controlled 503 on Save showed \"The change could not be saved. Try again.\" and left Sep 9, 2026; the retry moved it to Sep 10, 2026; Remove date deleted only that Key date, leaving \"Rev board update\". Home → Tasks assigned to you (the Home card) linked \"Rev first task\" to /contracts/241/tasks where its checkbox is shown; Dates approaching listed the Key date in the card. Ravi Menon saw the Task with a disabled checkbox and the Key date, with no Add task or Add date, and both writes answered 403; archived C-241 showed no Add task and answered 409 for a Task and a Key date; one Task and one Key date remain.",
-      "result": "pass",
-      "evidence": [
-        "docs/documentation/batches/DOC-014/independent-walkthrough.json",
-        "docs/documentation/batches/DOC-014/independent-discovery.json"
-      ]
+      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/dev-integration/README.md"]
     },
     {
       "id": "V-C19",
@@ -40,101 +37,21 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "expected": "Task and Key date updates persist and affect their distinct supported surfaces. Read-only/archived restrictions and missing recipients do not produce misleading reminder promises. The current Contract Task screen exposes no reorder control; verify that limit rather than crediting an API reorder as a user workflow.",
-      "actual": "Blank Title was refused with \"Name what needs doing.\"; the assignee picker offered DO\nDaniel Okafor, NH\nNadia Haddad, RM\nRavi Menon (team and Owner Nadia Haddad; Priya Raman only via Add someone to the team…); after Use this person the form said membership is saved with the task; Cancel left no Task, Priya Raman off the team and refused (404). Two Tasks listed in append order (first assigned to Daniel Okafor, due Sep 8, 2026 typed into Due date (optional); second Unassigned); the checkbox completed the first (\"1 of 2 done\") and reopened it; no reorder, drag or move control on the screen; the Contract's expiry did not change. Row picker offered DO\nDaniel Okafor, NH\nNadia Haddad, RM\nRavi Menon (team members and Owner Nadia Haddad); Add to team and assign made Priya Raman a team member (Priya Raman:member) with access (200) and the assignee; Unassigned cleared the Task while she stayed on the team. Cancel kept \"Rev second task 20260907135717\"; Save renamed it; Remove task removed only it, leaving the first Task. Empty form refused with \"Pick a date.\"; two Key dates on Sep 9, 2026 listed with source Key date beside the two Derived rows (Oct 7 Renewal notice deadline — 10 days before exp | Oct 17 Current term expires Derived ) which have no actions; the Task due on Sep 8, 2026 is not in the list. Cancel kept \"Rev site visit 20260907135717\"; a controlled 503 on Save showed \"The change could not be saved. Try again.\" and left Sep 9, 2026; the retry moved it to Sep 10, 2026; Remove date deleted only that Key date, leaving \"Rev board update\". Home → Tasks assigned to you (View all → /home/tasks) linked \"Rev first task\" to /contracts/240/tasks where its checkbox is shown; Dates approaching did not list it among its first rows; View all opened the \"Your dates\" calendar dialog, which listed it. Ravi Menon saw the Task with a disabled checkbox and the Key date, with no Add task or Add date, and both writes answered 403; archived C-240 showed no Add task and answered 409 for a Task and a Key date; one Task and one Key date remain.",
-      "result": "pass",
-      "evidence": [
-        "docs/documentation/batches/DOC-014/independent-walkthrough.json",
-        "docs/documentation/batches/DOC-014/independent-discovery.json"
-      ]
+      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/dev-integration/README.md"]
     }
   ],
-  "authorEvidence": [
-    "docs/documentation/batches/DOC-014/README.md",
-    "docs/documentation/batches/DOC-014/author-tasks.json"
-  ],
+  "authorEvidence": [],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
-    "Browser contexts were 1280×1800 CSS px so the crowded Stage menu of the disposable labs stayed reachable (issue #768); the ordinary-height crowded menu is not claimed to pass."
+    "This article changed during the dev integration and requires fresh technical and walkthrough acceptance. Its earlier hash, reviewers, timestamps and observations are preserved in previousEvidence.",
+    "No full-suite acceptance, human proofreading or publication is claimed. DOC-025 must verify the combined candidate."
   ],
-  "previousEvidence": null,
+  "previousEvidence": "docs/documentation/batches/dev-integration/previous-contract-tasks-and-dates.json",
   "copyOnlyReview": null,
   "publicationBlockers": [
     "DOC-025 complete-suite acceptance and DOC-027 publication remain pending; live-provider C42/C43 are blocked under #742. Linked non-provider guides now exist with passing article evidence and remain in catalog review."
   ],
-  "compatibilityReview": {
-    "fromAppCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
-    "toAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "contentSha256": "29654cec933cf7b62d1c87e2d75293f920de3f1f51b6859aae5a44e09356c43e",
-    "applicationSha256": "b7bc6323f8e3d95a4ee006eab289f434502dccfdb7aee4c5fcb2026e7c41cd30",
-    "reviewer": "Independent DOC-025 acceptance seat (Opus 5 agent), separate from the documentation author",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-08T13:42:44.735Z",
-    "summary": "This seat re-checked the source ranges, the four saved diffs and the cited independent walkthroughs, and corrected the a28331f7 conversations attribution from DOC-010 to DOC-011 with DOC-012 added for the Portal Request thread. The recorded walkthrough for this article keeps its own app build, timestamps and observations; nothing was replayed at the target. See batches/DOC-025/independent-compatibility.json, which is separate from the authored source audit it re-checked.",
-    "evidence": [
-      {
-        "path": "batches/DOC-025/compatibility.json",
-        "sha256": "0ff7f7cfa20fe6d4b7cdeb768f6bd2ae0965ac50e88c3e2e2f8dc5f3e274e9c8"
-      },
-      {
-        "path": "batches/DOC-025/independent-compatibility.json",
-        "sha256": "c925d3f1ce3e04c3ff3b7044c634655a90351136324be7614ccd7cc02b23b4ca"
-      },
-      {
-        "path": "batches/DOC-011/independent-walkthrough.json",
-        "sha256": "63d36cf23af169046d54d342b1aecda43a64339f6fa36bd75ac2cc026c69dc12"
-      },
-      {
-        "path": "batches/DOC-012/independent-walkthrough.json",
-        "sha256": "f327834cc56aeae3ab6fe3e04257ee93cd113ddfd8d387a24b47965b11a023aa"
-      },
-      {
-        "path": "batches/DOC-025/source-6a8873db.diff",
-        "sha256": "8cd083e289202edabcb0b747783c0935d2a6be17e8db533990b400ee3306c77a"
-      },
-      {
-        "path": "batches/DOC-025/source-8539f4cc.diff",
-        "sha256": "84e4ce0b6f4d9df8b7472cd18f37ca0a66425ad75035e936ccd5632b05c06161"
-      },
-      {
-        "path": "batches/DOC-025/source-a28331f7.diff",
-        "sha256": "2612e70d9c4c033ae157606a1dff357e5ce90120137993408e0dd8d82585af63"
-      },
-      {
-        "path": "batches/DOC-025/source-d1d098ba.diff",
-        "sha256": "4b461123d37fc1e0aea0dc197f7c1461143c84c9acb4ca606a35b8f2247e8840"
-      },
-      {
-        "path": "batches/DOC-010/independent-walkthrough.json",
-        "sha256": "1b5f0c18e22708eb763b5eaac87abc889777f0ac28b343082597214db385fe22"
-      },
-      {
-        "path": "batches/DOC-018/independent-c31.json",
-        "sha256": "0b645d4e404761df17bcca0ed4ebbdfd4f52608c648f7ee07b62f8ce23795a77"
-      },
-      {
-        "path": "batches/DOC-018/independent-c52.json",
-        "sha256": "fbd026728c9fda605e50b741300b1189bff7d88ecba59aa7afdf6ffd1720c871"
-      },
-      {
-        "path": "batches/DOC-019/independent-c33.json",
-        "sha256": "6f1cf40b5b56805d79e92ebf39de90be67bcf60b2e2f87954c93f426c60d1922"
-      },
-      {
-        "path": "batches/DOC-019/independent-c34.json",
-        "sha256": "7f3dbee20dab93cf3624c83dd57c2fda2cba5dce99ec67a7fac6afcaf0d5b645"
-      },
-      {
-        "path": "batches/DOC-019/independent-supplement.json",
-        "sha256": "6228340ea7202ff7f0b814d8aa502b72a9669204b64e7f30c4c410305e242b4a"
-      }
-    ],
-    "authoredSourceAudit": {
-      "path": "batches/DOC-025/compatibility.json",
-      "reviewer": "Codex DOC-025 source compatibility audit (agent)",
-      "reviewedAt": "2026-09-08T12:56:21.570227Z",
-      "note": "Authored source inspection, retained with its original identity and time. It shares its root author with this article, which is why an independent seat re-checked it."
-    }
-  },
   "publicationBlockersBeforeDOC025": [
     "notifications, roles-and-access and terms-and-renewals are in review; reminder delivery evidence belongs to the notifications guide."
   ],

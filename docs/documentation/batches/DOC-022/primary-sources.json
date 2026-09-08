@@ -1,0 +1,80 @@
+{
+  "recordedAt": "2026-09-08T06:52:12.854320+00:00",
+  "consultedOn": "2026-09-08",
+  "purpose": "Primary provider instructions consulted for DOC-022 drafts; source inspection does not verify an account.",
+  "liveProviderChecks": "not-run; no disposable account configuration supplied",
+  "sources": [
+    {
+      "id": "docusign-consent",
+      "url": "https://www.docusign.com/blog/developers/oauth-jwt-granting-consent",
+      "method": "source-inspection",
+      "note": "JWT consent needs signature and impersonation; individual consent uses a registered, encoded redirect URI, distinct from the Connect webhook."
+    },
+    {
+      "id": "docusign-hmac",
+      "url": "https://www.docusign.com/blog/developers/event-notifications-using-json-sim-and-hmac",
+      "method": "source-inspection",
+      "note": "JSON SIM, shared HMAC keys, and signed Connect messages; do not copy the envelope-level integratorManaged example into OpenLaw setup."
+    },
+    {
+      "id": "docusign-connect",
+      "url": "https://www.docusign.com/blog/developers/common-api-tasks-add-custom-connect-configuration-programmatically",
+      "method": "source-inspection",
+      "note": "Account-level Connect configuration uses an internet-reachable HTTPS listener and JSON restv2.1 data."
+    },
+    {
+      "id": "openai-key",
+      "url": "https://developers.openai.com/api/docs/quickstart",
+      "method": "source-inspection",
+      "note": "Create a standard application API key in the provider dashboard; OpenLaw accepts the key through Administrator Settings."
+    },
+    {
+      "id": "openai-auth",
+      "url": "https://developers.openai.com/api/reference/overview",
+      "method": "source-inspection",
+      "note": "Bearer credentials, standard application keys distinct from Admin keys; no unsupported retention guarantees."
+    },
+    {
+      "id": "openai-model",
+      "url": "https://developers.openai.com/api/docs/models/gpt-5.6-luna",
+      "method": "source-inspection",
+      "note": "This build default model is listed and supports Chat Completions. This is not verification of a particular account entitlement."
+    },
+    {
+      "id": "anthropic-auth",
+      "url": "https://platform.claude.com/docs/en/manage-claude/authentication",
+      "method": "source-inspection",
+      "note": "Use a single-workspace-scoped personal/service account API key: OpenLaw sends x-api-key, still supported, but has no workspace-header control. Multi-workspace keys require that header."
+    },
+    {
+      "id": "gemini-api",
+      "url": "https://ai.google.dev/gemini-api/docs/generate-content/get-started?hl=en",
+      "method": "source-inspection",
+      "note": "Getting started for the Generate Content API implemented by this build; provider page now labels it Legacy."
+    },
+    {
+      "id": "azure-chat",
+      "url": "https://learn.microsoft.com/en-us/rest/api/microsoft-foundry/azureopenai/chat",
+      "method": "source-inspection",
+      "note": "Current v1 chat completions endpoint supports api-key; OpenLaw sends the entire configured Deployment endpoint unchanged, so it must be the complete chat URL."
+    },
+    {
+      "id": "openrouter",
+      "url": "https://openrouter.ai/docs/quickstart",
+      "method": "source-inspection",
+      "note": "Provider API key and model identifier for its OpenAI-compatible endpoint."
+    },
+    {
+      "id": "ollama-compatible",
+      "url": "https://docs.ollama.com/api/openai-compatibility",
+      "method": "source-inspection",
+      "note": "Local /v1/chat/completions compatibility, model must be pulled/available."
+    },
+    {
+      "id": "ollama-auth",
+      "url": "https://docs.ollama.com/api/authentication",
+      "method": "source-inspection",
+      "note": "Local Ollama does not require authentication. The OpenLaw Ollama preset has fixed localhost:11434, which is each app/worker container loopback in Compose."
+    }
+  ]
+}

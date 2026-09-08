@@ -23,18 +23,18 @@ See [Entities and Counterparties](entities-and-counterparties.md), [Entity recor
 
 ## Workflow and dates
 
-| Term             | Fixed meaning or distinction                                                                                                     |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Stage            | A Contract's fixed lifecycle backbone: Draft, Review, Approval, Signature, Active, Ended. Its Status determines its Stage.       |
-| Status           | A configurable label mapped to one Contract Stage or one Matter Category. Renaming the label does not change the mapping.        |
-| Category         | A Matter Status maps to Open or Closed.                                                                                          |
-| Task             | Checklist work with an optional assigned person and due date. Task due dates are separate from Key dates.                        |
-| Key date         | A named Contract or Matter deadline, with an optional note; it has no assignee or individual reminder schedule.                  |
-| Obligation       | An Entity filing or compliance requirement, with its own cycle and filing history.                                               |
-| Approval Request | A named colleague's internal decision on a Contract. It is separate from signature.                                              |
-| Envelope         | One electronic-signature round on one Version of a Contract's primary Document. A Contract has at most one live Envelope.        |
-| Analysis run     | A recorded reading of a Contract's target Document Version using the configured AI target Fields.                                |
-| Unverified value | A saved value written by Analysis with its evidence still attached. It is already usable; confirmation records a person's check. |
+| Term             | Fixed meaning or distinction                                                                                                                                                        |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Stage            | A Contract's fixed lifecycle backbone: Draft, Review, Approval, Signature, Active, Ended. Its Status determines its Stage.                                                          |
+| Status           | A configurable label mapped to one Contract Stage or one Matter Category. Renaming the label does not change the mapping.                                                           |
+| Category         | A Matter Status maps to Open or Closed.                                                                                                                                             |
+| Task             | Checklist work with an optional description, assigned person and due date, plus its own conversation. Due dates remain separate from Key dates but can contribute to Next deadline. |
+| Key date         | A named Contract or Matter deadline, with an optional note; it has no assignee or individual reminder schedule.                                                                     |
+| Obligation       | An Entity filing or compliance requirement, with its own cycle and filing history.                                                                                                  |
+| Approval Request | A named colleague's internal decision on a Contract. It is separate from signature.                                                                                                 |
+| Envelope         | One electronic-signature round on one Version of a Contract's primary Document. A Contract has at most one live Envelope.                                                           |
+| Analysis run     | A recorded reading of a Contract's target Document Version using the configured AI target Fields.                                                                                   |
+| Unverified value | A saved value written by Analysis with its evidence still attached. It is already usable; confirmation records a person's check.                                                    |
 
 [Contract Status changes](contract-stages.md), [Matter Status](matter-status-and-archive.md), [Tasks and Key dates](contract-tasks-and-dates.md), and [Entity Obligations](entity-obligations.md) explain the actions and their effects. An archived record is a separate condition from a Contract being Ended or a Matter being Closed.
 

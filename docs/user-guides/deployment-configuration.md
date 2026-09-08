@@ -70,7 +70,7 @@ Set both `SMTP_URL` and `SMTP_FROM` to pin email to the deployment environment. 
 
 An Administrator can initially save and test the relay in the welcome wizard. This build has no separate email Settings page after that wizard is finished. Use [authentication and email](authentication-and-email.md) for the Administrator steps. Verify real delivery to an intended test recipient, including the link's origin; a successful SMTP connection alone is insufficient.
 
-Configure [Signing](configure-signing.md) and [AI analysis](configure-analysis.md) in their Administrator Settings pages. Allow the required outbound provider traffic from both the app and worker. AI connection probes run in the app; Contract extraction runs in the worker. Signing also needs provider access to the public webhook. Provider credentials and models are runtime Settings, not substitute environment variables.
+Configure [Signing](configure-signing.md) and [AI analysis](configure-analysis.md) in their Administrator Settings pages. Allow the required outbound provider traffic from both the app and worker. AI model discovery and connection probes run in the app; Contract extraction runs in the worker. Signing in Polling mode uses outbound calls. Webhook mode also needs a publicly reachable HTTPS callback, which can use a separate gateway. Provider credentials and models are runtime Settings, not substitute environment variables.
 
 ## Preserve and rotate encryption keys
 

@@ -1,0 +1,90 @@
+{
+  "articleId": "configure-signing",
+  "contentSha256": "13d8d4eab928e2b2a9ecc1c82865b4c4577f262416211aadf712d6cfb97042cc",
+  "appCommit": "67dbe788c73641a02218e2c0a0cbcdd5a0682a87",
+  "buildId": "Source integration only; no walkthrough build recorded for this article revision",
+  "environment": "dev integration source review",
+  "author": "Codex integration author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "blocked",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-SETTINGS.md",
+    "apps/web/src/routes/settings-e-signature.tsx",
+    "apps/api/src/modules/signing-connector/routes.ts",
+    "apps/api/src/lib/signing/docusign.ts",
+    "apps/api/src/lib/signing/resolver.ts",
+    "apps/api/src/modules/signing-webhook/routes.ts",
+    "docs/documentation/batches/DOC-022/primary-sources.json"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C42",
+      "coverage": ["C42"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "A real disposable DocuSign developer account, consent/configuration access, and fictional paper."
+      ],
+      "expected": "The actual provider account is reached and OpenLaw receives the intended status and executed paper. Invalid credentials, disabled connector, webhook/reconciliation recovery, and secret rotation are tested without treating a stand-in as provider setup.",
+      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/dev-integration/README.md"]
+    },
+    {
+      "id": "V-C42",
+      "coverage": ["C42"],
+      "role": "administrator",
+      "method": "live-provider-check",
+      "prerequisites": [
+        "A real disposable DocuSign developer account, consent/configuration access, and fictional paper."
+      ],
+      "expected": "The actual provider account is reached and OpenLaw receives the intended status and executed paper. Invalid credentials, disabled connector, webhook/reconciliation recovery, and secret rotation are tested without treating a stand-in as provider setup.",
+      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/dev-integration/README.md"]
+    },
+    {
+      "id": "V-C42",
+      "coverage": ["C42"],
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "A real disposable DocuSign developer account, consent/configuration access, and fictional paper."
+      ],
+      "expected": "The actual provider account is reached and OpenLaw receives the intended status and executed paper. Invalid credentials, disabled connector, webhook/reconciliation recovery, and secret rotation are tested without treating a stand-in as provider setup.",
+      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/dev-integration/README.md"]
+    },
+    {
+      "id": "V-C42",
+      "coverage": ["C42"],
+      "role": "operator",
+      "method": "live-provider-check",
+      "prerequisites": [
+        "A real disposable DocuSign developer account, consent/configuration access, and fictional paper."
+      ],
+      "expected": "The actual provider account is reached and OpenLaw receives the intended status and executed paper. Invalid credentials, disabled connector, webhook/reconciliation recovery, and secret rotation are tested without treating a stand-in as provider setup.",
+      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/dev-integration/README.md"]
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/dev-integration/author-signing-modes.json"],
+  "limitations": [
+    "This article changed during the dev integration and requires fresh technical and walkthrough acceptance. Its earlier hash, reviewers, timestamps and observations are preserved in previousEvidence.",
+    "No full-suite acceptance, human proofreading or publication is claimed. DOC-025 must verify the combined candidate.",
+    "No real AI inference or DocuSign Envelope lifecycle was completed. DOC-022 remains open. Model-list fixture and real signing authentication checks are author observations only."
+  ],
+  "previousEvidence": "docs/documentation/batches/dev-integration/previous-configure-signing.json",
+  "copyOnlyReview": null,
+  "providerProgress": {
+    "status": "partial-author-validation",
+    "record": "docs/documentation/batches/DOC-022/author-live-signing-setup.json",
+    "endToEndAccepted": false
+  }
+}

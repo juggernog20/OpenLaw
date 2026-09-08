@@ -49,7 +49,7 @@ A Contributor cannot append to a Contract's primary Document, make a Document pr
 
 ## Know which work stays with Legal
 
-You can read the permitted Tasks, Key dates, and relationships on a shared record. A Task assigned to you does not let you edit the checklist or mark it done in OpenLaw. Tell the responsible Legal Team Member when your work is ready.
+You can read the permitted Tasks, Key dates, and relationships on a shared record. A Task assigned to you does not let you edit the checklist or mark it done in OpenLaw. Select the Task title to read its details and use its permitted Working team conversation to tell the responsible Legal Team Member when your work is ready. The Task conversation stays separate from the record conversation.
 
 Ask Legal to change Status, end or close work, change the Owner or Matter Manager, manage teams, edit legal Fields, manage relationships, request Approvals, or send for signature. Contributors cannot create a new Contract or Matter from the Contracts or Matters lists or promote their own access.
 

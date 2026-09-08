@@ -8,13 +8,17 @@ Use a Legal Team Member or Administrator account that can read the Matter. The M
 
 ## Maintain Tasks
 
-Open **Tasks** and select **Add Task**. Enter **Title**, optionally choose an **Assignee** and **Due date (optional)**, then select **Add Task**. The assignee normally comes from the Matter team or its Matter Manager.
+Open **Tasks** and select **Add Task**. Enter **Title**, optionally add **Description**, choose an **Assignee** and set **Due date**. Under **Comments & attachments**, you can add an initial note and files. Select **Add Task** to save. The assignee normally comes from the Matter team or its Matter Manager.
 
-If you need another person, use the assignee picker's **Add someone to the team…** flow. In an add/edit dialog, stage the person with **Use this person** and save the Task to save both membership and assignment. **Cancel** does neither. On an existing row, **Add to team and assign** saves that explicit change immediately. The available audience-management permissions still apply, especially on Confidential work.
+If you need another person, use the assignee picker's **Add someone to the team…** flow. In an add/edit dialog, stage the person with **Use this person** and save the Task to save both membership and assignment. **Cancel** before saving does neither. On an existing row, **Add to team and assign** saves that explicit change immediately. The available audience-management permissions still apply, especially on Confidential work.
 
-Use the row's completion control to mark a Task done or reopen it. Its actions offer **Edit Task**, **Move up**, **Move down**, and **Remove Task**. Save an edit with **Save**; check the updated row and completed/total count. Removing a Task removes the row rather than marking it done. Clearing or changing the assignee leaves any team membership intact.
+Use the row's completion control to mark a Task done or reopen it. Select its title or **Edit Task** to open **Task details**. **Remove Task** is available for Tasks with no conversation history. Save an edit with **Save**; check the updated row and completed/total count. Removing an empty Task removes the row rather than marking it done. Clearing or changing the assignee leaves any team membership intact.
 
-Task due dates are internal targets. They do not become the Matter's Next deadline or create Key-date reminders. Discuss the work in the Matter's [comments](comments-and-activity.md); a Task has no separate discussion thread.
+Select a Task title to open **Task details**. Its **Comments & attachments** conversation belongs to that Task and stays separate from the record conversation. Use the permitted **Legal only** or **Working team** audience; originating Requesters do not receive Task comments. A Task with conversation history cannot be removed, including when its comments were deleted or redacted. Mark it done instead. An empty Task remains removable.
+
+If the Task saves but its initial note or files fail, keep the dialog open and select **Retry note & attachments**. This retries the pending comment without creating another Task. Closing the dialog after a partial save keeps the Task that already saved.
+
+Tasks are listed by due date, with undated Tasks last and saved display order breaking ties. An open, unarchived Matter's **Next deadline** chooses the earliest unfinished Task due date, including overdue Tasks, or upcoming Key date. A Task due date does not create a Key-date reminder.
 
 ## Maintain Key dates
 
@@ -36,6 +40,6 @@ These links do not copy the Matter Manager, team, Confidential flag, Documents, 
 
 On Overview, find **Linked Contracts** and select **Link Contract**. Search for the intended standalone Contract, select it, and confirm the link. You must be able to change both unarchived records. A Contract can link to one Matter at a time; use **Unlink** on its existing relationship before moving it to another Matter.
 
-If one record is Confidential and the other is not, **Confidentiality differs** explains that the flags stay independent. Select **Leave them as they are** to dismiss this information. Linking changes neither flag; review each record separately if its audience needs changing. The link itself does not grant access or copy the Contract's contents. An inaccessible linked Contract is shown as **Restricted contract**. See [Contract relationships](contract-relations-and-ending.md).
+If one record is Confidential and the other is not, **Confidentiality differs** explains that the flags stay independent. Select **Leave them as they are** to dismiss this information. Linking changes neither flag; review each record separately if its audience needs changing. The link itself does not grant access or copy the Contract's contents. Archived Contracts are excluded from this list while their Matter link is retained. An inaccessible, non-archived linked Contract is shown as **Restricted contract**. See [Contract relationships](contract-relations-and-ending.md).
 
 Check **History** after changes. If a save or relationship change fails, read the refusal, refresh the relevant record, and confirm the intended state before trying again. For paper that belongs to the Matter, use **Documents** and follow [uploading Documents and Versions](document-versions.md) and [reading Documents](document-previews.md).

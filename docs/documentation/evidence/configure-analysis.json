@@ -1,0 +1,91 @@
+{
+  "articleId": "configure-analysis",
+  "contentSha256": "28bf804aa38a3559571e3251eddbfb1b52d5ca03897f372fac920c478ba01740",
+  "appCommit": "67dbe788c73641a02218e2c0a0cbcdd5a0682a87",
+  "buildId": "Source integration only; no walkthrough build recorded for this article revision",
+  "environment": "dev integration source review",
+  "author": "Codex integration author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "blocked",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-SETTINGS.md",
+    "apps/web/src/routes/settings-ai-analysis.tsx",
+    "apps/web/src/components/ai-field-prompts-card.tsx",
+    "apps/web/src/routes/settings-contract-fields.tsx",
+    "apps/api/src/modules/ai-connector/routes.ts",
+    "apps/api/src/lib/ai/presets.ts",
+    "apps/api/src/lib/ai/openai-compatible.ts",
+    "apps/api/src/lib/ai/anthropic.ts",
+    "apps/api/src/lib/ai/gemini.ts",
+    "apps/api/src/lib/analysis-targets.ts",
+    "apps/api/src/pipeline/automatic-contract-analysis.ts",
+    "apps/api/src/pipeline/contract-analysis.ts",
+    "docs/documentation/batches/DOC-022/primary-sources.json"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C43",
+      "coverage": ["C43"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "A real disposable supported AI-provider account and a small fictional document with a bounded test input."
+      ],
+      "expected": "The actual configured provider receives the intended input and OpenLaw records its supported output/evidence. Invalid key/model/endpoint, provider refusal, and disabling produce the documented behavior without claiming model accuracy.",
+      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/dev-integration/README.md"]
+    },
+    {
+      "id": "V-C43",
+      "coverage": ["C43"],
+      "role": "administrator",
+      "method": "live-provider-check",
+      "prerequisites": [
+        "A real disposable supported AI-provider account and a small fictional document with a bounded test input."
+      ],
+      "expected": "The actual configured provider receives the intended input and OpenLaw records its supported output/evidence. Invalid key/model/endpoint, provider refusal, and disabling produce the documented behavior without claiming model accuracy.",
+      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/dev-integration/README.md"]
+    },
+    {
+      "id": "V-C43",
+      "coverage": ["C43"],
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "A real disposable supported AI-provider account and a small fictional document with a bounded test input."
+      ],
+      "expected": "The actual configured provider receives the intended input and OpenLaw records its supported output/evidence. Invalid key/model/endpoint, provider refusal, and disabling produce the documented behavior without claiming model accuracy.",
+      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/dev-integration/README.md"]
+    },
+    {
+      "id": "V-C43",
+      "coverage": ["C43"],
+      "role": "operator",
+      "method": "live-provider-check",
+      "prerequisites": [
+        "A real disposable supported AI-provider account and a small fictional document with a bounded test input."
+      ],
+      "expected": "The actual configured provider receives the intended input and OpenLaw records its supported output/evidence. Invalid key/model/endpoint, provider refusal, and disabling produce the documented behavior without claiming model accuracy.",
+      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
+      "result": "blocked",
+      "evidence": ["docs/documentation/batches/dev-integration/README.md"]
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/dev-integration/author-model-selector.json"],
+  "limitations": [
+    "This article changed during the dev integration and requires fresh technical and walkthrough acceptance. Its earlier hash, reviewers, timestamps and observations are preserved in previousEvidence.",
+    "No full-suite acceptance, human proofreading or publication is claimed. DOC-025 must verify the combined candidate.",
+    "No real AI inference or DocuSign Envelope lifecycle was completed. DOC-022 remains open. Model-list fixture and real signing authentication checks are author observations only."
+  ],
+  "previousEvidence": "docs/documentation/batches/dev-integration/previous-configure-analysis.json",
+  "copyOnlyReview": null
+}

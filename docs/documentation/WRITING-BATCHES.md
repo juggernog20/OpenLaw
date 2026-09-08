@@ -122,6 +122,8 @@ See the [batch verification record](batches/DOC-021/README.md) for the tested bu
 
 ## DOC-022 [#742](https://github.com/juggernog20/OpenLaw/issues/742)
 
+Both articles have complete prose drafts and local author checks. [Batch evidence](batches/DOC-022/README.md) retains the real-provider account blocker; these items remain unchecked until the required provider and independent walkthrough checks pass.
+
 - [ ] `configure-signing`: Configure the Signing connector (C42; P0).
 - [ ] `configure-analysis`: Configure the AI connector and Field prompts (C43; P0).
 

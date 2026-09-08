@@ -1,0 +1,50 @@
+{
+  "name": "discovery",
+  "startedAt": "2026-09-08T07:03:38.657Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "configure-signing",
+      "contentSha256": "a546be9c0cd8d6f5ee15c1a8dc93341252d2fe84fb892e363a5d199c3c78dbeb"
+    },
+    {
+      "articleId": "configure-analysis",
+      "contentSha256": "e56ce6961416fccb30d360f661d425f23636fea5ceffe79d9dc5a2426d024654"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "configure-signing contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes\u00d73 widths; keyboard focus and emulated 200 percent zoom remained usable",
+      "result": "pass",
+      "startedAt": "2026-09-08T07:03:39.591Z",
+      "at": "2026-09-08T07:03:41.425Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "configure-analysis contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes\u00d73 widths; keyboard focus and emulated 200 percent zoom remained usable",
+      "result": "pass",
+      "startedAt": "2026-09-08T07:03:41.426Z",
+      "at": "2026-09-08T07:03:42.807Z"
+    },
+    {
+      "role": "signed-out",
+      "method": "browser-walkthrough",
+      "action": "two guides are discoverable in formal preview without application API calls",
+      "actual": "Two formal guide titles discoverable anonymously; zero application API requests",
+      "result": "pass",
+      "startedAt": "2026-09-08T07:03:42.813Z",
+      "at": "2026-09-08T07:03:43.901Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T07:03:43.902Z",
+  "author": "Codex documentation author",
+  "providerMode": "No live provider: fictional signing credentials and a closed loopback AI endpoint for local failure handling only."
+}

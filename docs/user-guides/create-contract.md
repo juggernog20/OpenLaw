@@ -9,7 +9,7 @@ Sign in as a Legal Team Member or Administrator with access to the intended work
 ## Create the record
 
 1. Open **Contracts** and select **Create contract**.
-2. Enter **Title** and select **Contract type**. Complete the required Fields that appear for that type.
+2. Enter **Title** and select **Contract type**. Complete the required Fields and any optional Fields you want to supply. All attached Fields appear for that type.
 3. Set **Confidential** before creating sensitive work. If the Contract belongs to broader Matter work, use the optional Matter search and select the intended Matter. A link does not copy access or other record details.
 4. Select **Create**. When the dialog closes, open the new Contract from the list. Check its title, type, and new C- reference. **Cancel** creates nothing.
 

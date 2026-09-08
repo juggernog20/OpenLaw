@@ -1,0 +1,88 @@
+{
+  "name": "local",
+  "startedAt": "2026-09-08T07:02:27.172Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "configure-signing",
+      "contentSha256": "a546be9c0cd8d6f5ee15c1a8dc93341252d2fe84fb892e363a5d199c3c78dbeb"
+    },
+    {
+      "articleId": "configure-analysis",
+      "contentSha256": "e56ce6961416fccb30d360f661d425f23636fea5ceffe79d9dc5a2426d024654"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Signing prerequisites and required secrets are visible with no configured connector",
+      "actual": "All five named inputs visible; initial Test connection disabled; both initial secrets required. Webhook is the owned localhost lab address, unsuitable for real provider callbacks.",
+      "result": "pass",
+      "startedAt": "2026-09-08T07:02:28.110Z",
+      "at": "2026-09-08T07:02:28.739Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Save fictional signing configuration, retain blank secrets, disable and remove without any provider call",
+      "actual": "Fictional Demo configuration enabled on first Save; both secrets blank on reload and retained by blank Save; disable persisted through Save; disabled Test refused locally; removal returned configured=false. No DocuSign connection, consent, webhook or Envelope tested.",
+      "result": "pass",
+      "startedAt": "2026-09-08T07:02:28.739Z",
+      "at": "2026-09-08T07:02:29.454Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "All AI provider choices expose their documented controls",
+      "actual": "Seven presets checked, default Model matches each server preset, Custom alone exposes Protocol/Base URL, Azure alone exposes Deployment endpoint, Ollama has no URL control. No provider called.",
+      "result": "pass",
+      "startedAt": "2026-09-08T07:02:29.455Z",
+      "at": "2026-09-08T07:02:30.115Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Save a custom loopback endpoint, observe local connection failure, retain and delete its fictional key",
+      "actual": "First Save enabled; local closed-loopback endpoint Test returned HTTP 502, with visible failure; blank key after reload; disable prevents Test and persists across Save; removal clears connector/key. This is network failure handling, not an actual AI provider refusal or successful Analysis.",
+      "result": "pass",
+      "startedAt": "2026-09-08T07:02:30.115Z",
+      "at": "2026-09-08T07:02:30.815Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Core prompt Enter save, Escape revert and Reset to default persist",
+      "actual": "Seven core prompts present; notice prompt limit 2000; Enter persisted an override, Escape reverted unsaved text, Reset restored original default. No Contract Analysis was run.",
+      "result": "pass",
+      "startedAt": "2026-09-08T07:02:30.816Z",
+      "at": "2026-09-08T07:02:31.150Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "automated-test",
+      "action": "Non-Administrator connector configuration requests are refused",
+      "actual": "Both connector Settings APIs and core prompts returned 403; no credential state disclosed.",
+      "result": "pass",
+      "startedAt": "2026-09-08T07:02:31.974Z",
+      "at": "2026-09-08T07:02:31.989Z",
+      "methodCorrection": "Recorded checks issued API requests from an authenticated Playwright context; they did not navigate the browser to Settings. Classified as automated-test without changing the observed result or timestamps."
+    },
+    {
+      "role": "contributor",
+      "method": "automated-test",
+      "action": "Non-Administrator connector configuration requests are refused",
+      "actual": "Both connector Settings APIs and core prompts returned 403; no credential state disclosed.",
+      "result": "pass",
+      "startedAt": "2026-09-08T07:02:32.778Z",
+      "at": "2026-09-08T07:02:32.791Z",
+      "methodCorrection": "Recorded checks issued API requests from an authenticated Playwright context; they did not navigate the browser to Settings. Classified as automated-test without changing the observed result or timestamps."
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T07:02:32.794Z",
+  "author": "Codex documentation author",
+  "providerMode": "No live provider: fictional signing credentials and a closed loopback AI endpoint for local failure handling only."
+}
