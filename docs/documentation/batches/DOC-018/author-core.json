@@ -1,0 +1,102 @@
+{
+  "name": "core",
+  "startedAt": "2026-09-07T22:46:43.143Z",
+  "appCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
+  "buildId": "app sha256:800689bba1e0bd183d33760b14e4775a593d23d1cf9ded4ad752e788e60bd818; engine sha256:b69fd318f42ddbb78e8531a4b7151bcd58d9788b367a26d528d41c5bebfa792f",
+  "environment": "openlaw-docs-b8e31260-entities",
+  "articleHashes": [
+    {
+      "articleId": "entities-and-counterparties",
+      "contentSha256": "7313af8226fa554a32c4e86919d581a972fd574654e4b8559ccd8df591fe177e"
+    },
+    {
+      "articleId": "entity-records",
+      "contentSha256": "19db877e377abd54e296538831f9a87d8aceb1cac35d72ca8fdf27292c2ebb53"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C31 register an Entity with identity details, then save individual Overview edits",
+      "actual": "Register saved legal name, live type, formation date, jurisdiction and registration number; Tax ID saved on blur; Dormant Status saved without archiving",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:46:44.124Z",
+      "at": "2026-09-07T22:46:45.744Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C31 duplicate names create distinct Entities; missing legal name is refused",
+      "actual": "A second browser registration with the same legal name created a distinct Entity; blank-name request was refused, so no deduplication or merge is claimed",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:46:45.745Z",
+      "at": "2026-09-07T22:46:46.500Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C31 choose Our entity and create, reuse, promote and remove Counterparties",
+      "actual": "Our entity saved the internal Entity; inline create added two external Counterparties, Primary moved, removing it promoted the remaining party, and reuse returned the same shared Counterparty without a duplicate",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:46:46.501Z",
+      "at": "2026-09-07T22:46:48.233Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32 archive and restore an in-use Entity without losing identity or its Contract reference",
+      "actual": "In-use Entity archived immediately, disabled editing and refused direct edits without removing its Contract reference; Show archived exposed it and Restore retained Dormant status and returned editing",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:46:48.234Z",
+      "at": "2026-09-07T22:46:50.212Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C31 register an Entity with identity details, then save individual Overview edits",
+      "actual": "Register saved legal name, live type, formation date, jurisdiction and registration number; Tax ID saved on blur; Dormant Status saved without archiving",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:46:51.038Z",
+      "at": "2026-09-07T22:46:52.653Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C31 duplicate names create distinct Entities; missing legal name is refused",
+      "actual": "A second browser registration with the same legal name created a distinct Entity; blank-name request was refused, so no deduplication or merge is claimed",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:46:52.653Z",
+      "at": "2026-09-07T22:46:53.371Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C31 choose Our entity and create, reuse, promote and remove Counterparties",
+      "actual": "Our entity saved the internal Entity; inline create added two external Counterparties, Primary moved, removing it promoted the remaining party, and reuse returned the same shared Counterparty without a duplicate",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:46:53.372Z",
+      "at": "2026-09-07T22:46:55.073Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32 archive and restore an in-use Entity without losing identity or its Contract reference",
+      "actual": "In-use Entity archived immediately, disabled editing and refused direct edits without removing its Contract reference; Show archived exposed it and Restore retained Dormant status and returned editing",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:46:55.073Z",
+      "at": "2026-09-07T22:46:57.047Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C31 Entity destination and API are unavailable",
+      "actual": "Contributor redirected from Entities to Home; Entity registry API refused with 403",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:46:57.853Z",
+      "at": "2026-09-07T22:46:58.432Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T22:46:58.435Z"
+}

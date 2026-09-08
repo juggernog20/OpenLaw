@@ -25,7 +25,8 @@
     },
     {
       "id": "DOC-E4",
-      "issue": 718
+      "issue": 718,
+      "status": "closed"
     },
     {
       "id": "DOC-E5",
@@ -136,12 +137,13 @@
     {
       "id": "DOC-017",
       "issue": 737,
-      "status": "in-progress"
+      "status": "closed",
+      "pullRequest": 772
     },
     {
       "id": "DOC-018",
       "issue": 738,
-      "status": "open"
+      "status": "in-progress"
     },
     {
       "id": "DOC-019",

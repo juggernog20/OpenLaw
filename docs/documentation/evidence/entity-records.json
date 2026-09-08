@@ -1,0 +1,109 @@
+{
+  "articleId": "entity-records",
+  "contentSha256": "9d8b0ae49f2d38291393c876d0851ec3811a5d6dd3d24add2631615ade6db0bc",
+  "appCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
+  "buildId": "app sha256:800689bba1e0bd183d33760b14e4775a593d23d1cf9ded4ad752e788e60bd818; engine sha256:b69fd318f42ddbb78e8531a4b7151bcd58d9788b367a26d528d41c5bebfa792f",
+  "environment": "openlaw-docs-b8e31260-entities",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Independent review seat (agent)",
+  "walkthroughReviewer": "Independent review seat (agent)",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-08T01:14:28.623Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-ENTITIES.md",
+    "apps/web/src/components/entities/officers-card.tsx",
+    "apps/web/src/components/entities/registrations-card.tsx",
+    "apps/web/src/components/entities/ownership-card.tsx",
+    "apps/api/src/modules/entities/record-routes.ts",
+    "apps/api/src/modules/entities/holding-routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C32",
+      "coverage": ["C32"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "The entered corporate facts and files persist with their supported dates and relationships. Invalid ownership/date values and archived/read-only restrictions are handled without changing unrelated facts.",
+      "actual": "Add officer saved \"Rev Ines Duarte LRXRCLO\" as Director appointed 2022-05-09 with Ravi Menon as the linked user; all four survived a reload. Typing \"Rev Ines Duarte LRXRCLO Jr\" into the Officer name and clicking the Officers heading to move focus away saved it with no further confirmation; the same transition restored \"Rev Ines Duarte LRXRCLO\". Resigned on 2021-01-01 against an appointment of 2022-05-09 was refused with \"The resignation date cannot be before the appointment date.\" shown beside the card; after a reload the appointment was still 2022-05-09 and no resignation was stored. Resigned on 2024-08-31 saved when focus left the field and took the Officer out of the current list; Show former brought the row back carrying that resignation date. \"Remove Rev Ines Duarte LRXRCLO\" deleted the Officer entry; it was absent even with Show former turned on. Add registration saved Nordvik LRXRCLO / NV-LRXRCLO / Nordvik Agents AS with Status Lapsed, and the Entity's own Formation jurisdiction stayed \"Rev C32 LRXRCLO\". Choosing Withdrawn saved without any further confirmation and survived a reload. Removing Nordvik LRXRCLO left the Obligation \"Rev C32 licence renewal LRXRCLO\" on the Entity with its Registration cleared to \"None\", so the link was detached rather than the Obligation deleted. \"This Entity owns Rev C32 owned LRXRCLO\" at 60% listed Rev C32 owned LRXRCLO under Rev C32 main LRXRCLO's Owned Entities and listed Rev C32 main LRXRCLO at 60% under Rev C32 owned LRXRCLO's Owners. the Entity is not offered in its own Holding picker (the list answered []), so it cannot be chosen as its own owner; an Entity already in a Holding with this one is left out of the picker (the list answered []), so the same directional Holding cannot be repeated; closing the loop through Rev C32 owned LRXRCLO refused with \"This holding would create a loop: Rev C32 cycle tail LRXRCLO → Rev C32 main LRXRCLO → Rev C32 owned LRXRCLO → Rev C32 cycle tail LRXRCLO.\"; afterwards the one recorded Holding was still the only one. Two owners at 60% each both saved and produced the \"Ownership totals 120%\" warning; correcting one row to 30% and moving focus away persisted and cleared the warning. \"Remove Rev C32 owned LRXRCLO\" deleted only the Holding; both \"Rev C32 main LRXRCLO\" and \"Rev C32 owned LRXRCLO\" still opened as their own records. Upload filed the fictional \"rev-c32-certificate.txt\" as Executed on Rev C32 main LRXRCLO at Version v1; it did not appear on Rev C32 other owner LRXRCLO, so the Document stayed owned by the Entity it was filed against. Archive saved at once, put an Archived mark on the record with \"This entity is archived. Restore it to edit.\", disabled its Legal name and withdrew Add officer, and took the Entity out of the ordinary registry results. Show archived brought \"Rev C32 main LRXRCLO\" back into the registry; Restore returned its editing controls, its Obligation \"Rev C32 licence renewal LRXRCLO\" was still recorded, and its Document \"rev-c32-certificate.txt\" was still filed at v1.",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:33:08.318Z",
+      "completedAt": "2026-09-08T00:34:16.251Z",
+      "stepsSummarized": "15 of this role's 17 recorded steps; the linked records hold every step",
+      "evidence": ["docs/documentation/batches/DOC-018/independent-c32.json"]
+    },
+    {
+      "id": "V-C32",
+      "coverage": ["C32"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "The entered corporate facts and files persist with their supported dates and relationships. Invalid ownership/date values and archived/read-only restrictions are handled without changing unrelated facts.",
+      "actual": "Add officer saved \"Rev Ines Duarte ARXRCLO\" as Director appointed 2022-05-09 with Ravi Menon as the linked user; all four survived a reload. Typing \"Rev Ines Duarte ARXRCLO Jr\" into the Officer name and clicking the Officers heading to move focus away saved it with no further confirmation; the same transition restored \"Rev Ines Duarte ARXRCLO\". Resigned on 2021-01-01 against an appointment of 2022-05-09 was refused with \"The resignation date cannot be before the appointment date.\" shown beside the card; after a reload the appointment was still 2022-05-09 and no resignation was stored. Resigned on 2024-08-31 saved when focus left the field and took the Officer out of the current list; Show former brought the row back carrying that resignation date. \"Remove Rev Ines Duarte ARXRCLO\" deleted the Officer entry; it was absent even with Show former turned on. Add registration saved Nordvik ARXRCLO / NV-ARXRCLO / Nordvik Agents AS with Status Lapsed, and the Entity's own Formation jurisdiction stayed \"Rev C32 ARXRCLO\". Choosing Withdrawn saved without any further confirmation and survived a reload. Removing Nordvik ARXRCLO left the Obligation \"Rev C32 licence renewal ARXRCLO\" on the Entity with its Registration cleared to \"None\", so the link was detached rather than the Obligation deleted. \"This Entity owns Rev C32 owned ARXRCLO\" at 60% listed Rev C32 owned ARXRCLO under Rev C32 main ARXRCLO's Owned Entities and listed Rev C32 main ARXRCLO at 60% under Rev C32 owned ARXRCLO's Owners. the Entity is not offered in its own Holding picker (the list answered []), so it cannot be chosen as its own owner; an Entity already in a Holding with this one is left out of the picker (the list answered []), so the same directional Holding cannot be repeated; closing the loop through Rev C32 owned ARXRCLO refused with \"This holding would create a loop: Rev C32 cycle tail ARXRCLO → Rev C32 main ARXRCLO → Rev C32 owned ARXRCLO → Rev C32 cycle tail ARXRCLO.\"; afterwards the one recorded Holding was still the only one. Two owners at 60% each both saved and produced the \"Ownership totals 120%\" warning; correcting one row to 30% and moving focus away persisted and cleared the warning. \"Remove Rev C32 owned ARXRCLO\" deleted only the Holding; both \"Rev C32 main ARXRCLO\" and \"Rev C32 owned ARXRCLO\" still opened as their own records. Upload filed the fictional \"rev-c32-certificate.txt\" as Executed on Rev C32 main ARXRCLO at Version v1; it did not appear on Rev C32 other owner ARXRCLO, so the Document stayed owned by the Entity it was filed against. Archive saved at once, put an Archived mark on the record with \"This entity is archived. Restore it to edit.\", disabled its Legal name and withdrew Add officer, and took the Entity out of the ordinary registry results. Show archived brought \"Rev C32 main ARXRCLO\" back into the registry; Restore returned its editing controls, its Obligation \"Rev C32 licence renewal ARXRCLO\" was still recorded, and its Document \"rev-c32-certificate.txt\" was still filed at v1.",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:34:16.516Z",
+      "completedAt": "2026-09-08T00:35:24.244Z",
+      "stepsSummarized": "15 of this role's 17 recorded steps; the linked records hold every step",
+      "evidence": ["docs/documentation/batches/DOC-018/independent-c32.json"]
+    },
+    {
+      "id": "DOC-018-discovery",
+      "coverage": ["C32"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "This guide is listed in Help for this reader's audience and found by its exact title; its outline and the shell's skip link work by keyboard; it links out to itself in the formal reader; and it holds in Light, Dark and Warm at 320, 720 and 1440 CSS pixels and at an emulated 200 percent zoom.",
+      "actual": "The Entities destination offered a Help link, and the Help index headed \"Guides for Legal Team Member\" listed all four Entity guides by their exact titles. Each exact title was found by the Help search and resolved to its own article (Maintain Entities and Counterparties -> /help/entities-and-counterparties; Manage Holdings, Officers, and Registrations -> /help/entity-records; Track and file Entity obligations -> /help/entity-obligations; Manage Entity structure and access -> /help/entity-structure-and-access). Selecting \"Read the calendar and Home\" moved to #read-the-calendar-and-home; the focused element was H2#read-the-calendar-and-home and the section heading was in view. \"Read this article in the full documentation\" opened /documentation/entity-structure-and-access and showed the same guide, \"Manage Entity structure and access\", in the formal reader. The Help article kept its title and produced no horizontal overflow in every theme and width combination (light@320px:0px, light@720px:0px, light@1440px:0px, dark@320px:0px, dark@720px:0px, dark@1440px:0px, warm@320px:0px, warm@720px:0px, warm@1440px:0px). At an emulated 200 percent zoom (a 1440px layout halved to a 720x450 CSS viewport) the article kept its title with no horizontal overflow. Arriving at the article put focus on its H1 \"track-and-file-entity-obligations\"; Shift+Tab reached the outline link for the filing section with a visible focus indicator (outline: solid) and Enter followed it to #mark-a-filing-and-check-the-next-cycle; the shell's \"Skip to content\" link was present and targets #main. All four guides kept their titles with no horizontal overflow across every theme and width combination (36 checks: 4 guides x light/dark/warm x 320/720/1440 CSS pixels). All four guides kept their titles with no horizontal overflow at an emulated 200 percent zoom, a 1440px layout halved to a 720x450 CSS viewport (entities-and-counterparties, entity-records, entity-obligations, entity-structure-and-access). On every guide, arrival focus landed on the article H1, Shift+Tab reached its outline link with a visible focus indicator, and Enter followed it to the section (entities-and-counterparties#recover-from-an-unavailable-choice-or-refused-change; entity-records#archive-and-restore-an-entity; entity-obligations#mark-a-filing-and-check-the-next-cycle; entity-structure-and-access#grant-access-to-a-confidential-entity). Tabbing reached the \"Skip to content\" link and pressing Enter moved focus to MAIN#main with the address at \"#main\", so the skip link activates rather than merely being present. Each guide's \"Read this article in the full documentation\" opened its own formal page showing the same title (entities-and-counterparties -> /documentation/entities-and-counterparties; entity-records -> /documentation/entity-records; entity-obligations -> /documentation/entity-obligations; entity-structure-and-access -> /documentation/entity-structure-and-access).",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:55:05.569Z",
+      "completedAt": "2026-09-08T01:13:09.750Z",
+      "evidence": [
+        "docs/documentation/batches/DOC-018/independent-discovery.json",
+        "docs/documentation/batches/DOC-018/independent-discovery-coverage.json"
+      ]
+    },
+    {
+      "id": "DOC-018-discovery",
+      "coverage": ["C32"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "This guide is listed in Help for this reader's audience and found by its exact title; its outline and the shell's skip link work by keyboard; it links out to itself in the formal reader; and it holds in Light, Dark and Warm at 320, 720 and 1440 CSS pixels and at an emulated 200 percent zoom.",
+      "actual": "The Entities destination offered a Help link, and the Help index headed \"Guides for Administrator\" listed all four Entity guides by their exact titles. Each exact title was found by the Help search and resolved to its own article (Maintain Entities and Counterparties -> /help/entities-and-counterparties; Manage Holdings, Officers, and Registrations -> /help/entity-records; Track and file Entity obligations -> /help/entity-obligations; Manage Entity structure and access -> /help/entity-structure-and-access). Selecting \"Read the calendar and Home\" moved to #read-the-calendar-and-home; the focused element was H2#read-the-calendar-and-home and the section heading was in view. \"Read this article in the full documentation\" opened /documentation/entity-structure-and-access and showed the same guide, \"Manage Entity structure and access\", in the formal reader. The Help article kept its title and produced no horizontal overflow in every theme and width combination (light@320px:0px, light@720px:0px, light@1440px:0px, dark@320px:0px, dark@720px:0px, dark@1440px:0px, warm@320px:0px, warm@720px:0px, warm@1440px:0px). At an emulated 200 percent zoom (a 1440px layout halved to a 720x450 CSS viewport) the article kept its title with no horizontal overflow. Arriving at the article put focus on its H1 \"track-and-file-entity-obligations\"; Shift+Tab reached the outline link for the filing section with a visible focus indicator (outline: solid) and Enter followed it to #mark-a-filing-and-check-the-next-cycle; the shell's \"Skip to content\" link was present and targets #main. All four guides kept their titles with no horizontal overflow across every theme and width combination (36 checks: 4 guides x light/dark/warm x 320/720/1440 CSS pixels). All four guides kept their titles with no horizontal overflow at an emulated 200 percent zoom, a 1440px layout halved to a 720x450 CSS viewport (entities-and-counterparties, entity-records, entity-obligations, entity-structure-and-access). On every guide, arrival focus landed on the article H1, Shift+Tab reached its outline link with a visible focus indicator, and Enter followed it to the section (entities-and-counterparties#recover-from-an-unavailable-choice-or-refused-change; entity-records#archive-and-restore-an-entity; entity-obligations#mark-a-filing-and-check-the-next-cycle; entity-structure-and-access#grant-access-to-a-confidential-entity). Tabbing reached the \"Skip to content\" link and pressing Enter moved focus to MAIN#main with the address at \"#main\", so the skip link activates rather than merely being present. Each guide's \"Read this article in the full documentation\" opened its own formal page showing the same title (entities-and-counterparties -> /documentation/entities-and-counterparties; entity-records -> /documentation/entity-records; entity-obligations -> /documentation/entity-obligations; entity-structure-and-access -> /documentation/entity-structure-and-access).",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:55:40.813Z",
+      "completedAt": "2026-09-08T01:14:14.640Z",
+      "evidence": [
+        "docs/documentation/batches/DOC-018/independent-discovery.json",
+        "docs/documentation/batches/DOC-018/independent-discovery-coverage.json"
+      ]
+    },
+    {
+      "id": "DOC-018-discovery",
+      "coverage": ["C32"],
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "expected": "The formal reader lists and serves this guide without a sign-in and asks the application for nothing.",
+      "actual": "Without any sign-in the formal index listed all four Entity guides behind a \"Skip to content\" link, offered no sign-in form or password field, and issued no /api/v1 request (0 application calls observed). A fresh anonymous context visited the formal index and all four guide pages (/documentation/, /documentation/entities-and-counterparties, /documentation/entity-records, /documentation/entity-obligations, /documentation/entity-structure-and-access) and issued no request under /api/ at all — none to /api/v1/ and none to /api/auth/ — with no password field anywhere.",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:56:15.724Z",
+      "completedAt": "2026-09-08T01:14:28.623Z",
+      "evidence": [
+        "docs/documentation/batches/DOC-018/independent-discovery.json",
+        "docs/documentation/batches/DOC-018/independent-discovery-coverage.json"
+      ]
+    }
+  ],
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-018/README.md",
+    "docs/documentation/batches/DOC-018/independent-c32.json",
+    "docs/documentation/batches/DOC-018/independent-discovery.json",
+    "docs/documentation/batches/DOC-018/independent-discovery-coverage.json"
+  ],
+  "limitations": [
+    "Agent walkthroughs by an independent review seat, not human user studies or feature-owner approval.",
+    "The types and Fields guide remains a publication dependency for the guides that link it.",
+    "Recorded against lab app source 8539f4cc, which is ahead of edition.json's supportedAppCommit; the whole suite is re-pinned to one build at DOC-025 acceptance.",
+    "The catalog stays in feature review: DOC-025 whole-suite acceptance and DOC-027 publication are still ahead."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

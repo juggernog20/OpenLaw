@@ -1,0 +1,108 @@
+{
+  "articleId": "entities-and-counterparties",
+  "contentSha256": "7313af8226fa554a32c4e86919d581a972fd574654e4b8559ccd8df591fe177e",
+  "appCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
+  "buildId": "app sha256:800689bba1e0bd183d33760b14e4775a593d23d1cf9ded4ad752e788e60bd818; engine sha256:b69fd318f42ddbb78e8531a4b7151bcd58d9788b367a26d528d41c5bebfa792f",
+  "environment": "openlaw-docs-b8e31260-entities",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Independent review seat (agent)",
+  "walkthroughReviewer": "Independent review seat (agent)",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-08T01:14:28.623Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-ENTITIES.md",
+    "apps/web/src/routes/entities.tsx",
+    "apps/web/src/routes/entity-record.tsx",
+    "apps/web/src/routes/contract-record.tsx",
+    "apps/api/src/modules/entities/routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C31",
+      "coverage": ["C31"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "Our Entity and external Counterparty retain their distinct roles and labels. A Contributor cannot use the Member+ Entity destination; duplicate/invalid input has a clear outcome.",
+      "actual": "Status defaulted to Active; Register saved \"Rev C31 legal_team_member RVVZOT\" and its jurisdiction, registration no., tax ID, agent and address, and the registry link opened the new record. Registered agent saved when focus left the field and Status saved on selection; both survived a reload. After Status Dormant the record carried no Archived mark and still offered Archive, so the corporate Status did not archive it. Registering \"Rev C31 legal_team_member RVVZOT\" a second time was accepted; the filtered registry showed 2 rows with that name pointing at 2 different records, so the first was not updated or merged (first row: Rev C31 legal_team_member RVVZOT Corporation Republic of Aldoria ALD-RVVZOT Dormant — ). Our entity saved \"Rev C31 legal_team_member RVVZOT\" and the choice survived a reload, keeping our own Entity distinct from the other side. Create \"Rev Cedar Supply LRVVZOT\" added the new Counterparty to the Contract and the first one carried the Primary mark. Added Rev Birch Logistics LRVVZOT, made it Primary, then \"Take Rev Birch Logistics LRVVZOT off the contract\" removed it; Rev Cedar Supply LRVVZOT remained and took the Primary mark back, and Rev Birch Logistics LRVVZOT's shared record still existed. Typing \"REV CEDAR SUPPLY LRVVZOT\" offered no Create row, and the Counterparty already on the Contract was not offered again. Register with a blank Legal name kept the dialog open and showed \"Name the entity — its registered legal name.\"; no Entity was created.",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:40:45.675Z",
+      "completedAt": "2026-09-07T23:41:20.220Z",
+      "stepsSummarized": "9 of this role's 12 recorded steps; the linked records hold every step",
+      "evidence": ["docs/documentation/batches/DOC-018/independent-c31.json"]
+    },
+    {
+      "id": "V-C31",
+      "coverage": ["C31"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Our Entity and external Counterparty retain their distinct roles and labels. A Contributor cannot use the Member+ Entity destination; duplicate/invalid input has a clear outcome.",
+      "actual": "Status defaulted to Active; Register saved \"Rev C31 administrator RVVZOT\" and its jurisdiction, registration no., tax ID, agent and address, and the registry link opened the new record. Registered agent saved when focus left the field and Status saved on selection; both survived a reload. After Status Dormant the record carried no Archived mark and still offered Archive, so the corporate Status did not archive it. Registering \"Rev C31 administrator RVVZOT\" a second time was accepted; the filtered registry showed 2 rows with that name pointing at 2 different records, so the first was not updated or merged (first row: Rev C31 administrator RVVZOT Corporation Republic of Aldoria ALD-RVVZOT Dormant — ). Our entity saved \"Rev C31 administrator RVVZOT\" and the choice survived a reload, keeping our own Entity distinct from the other side. Create \"Rev Cedar Supply ARVVZOT\" added the new Counterparty to the Contract and the first one carried the Primary mark. Added Rev Birch Logistics ARVVZOT, made it Primary, then \"Take Rev Birch Logistics ARVVZOT off the contract\" removed it; Rev Cedar Supply ARVVZOT remained and took the Primary mark back, and Rev Birch Logistics ARVVZOT's shared record still existed. Typing \"REV CEDAR SUPPLY ARVVZOT\" offered no Create row, and the Counterparty already on the Contract was not offered again. Register with a blank Legal name kept the dialog open and showed \"Name the entity — its registered legal name.\"; no Entity was created.",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:41:20.483Z",
+      "completedAt": "2026-09-07T23:41:54.945Z",
+      "stepsSummarized": "9 of this role's 12 recorded steps; the linked records hold every step",
+      "evidence": ["docs/documentation/batches/DOC-018/independent-c31.json"]
+    },
+    {
+      "id": "DOC-018-discovery",
+      "coverage": ["C31"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "This guide is listed in Help for this reader's audience and found by its exact title; its outline and the shell's skip link work by keyboard; it links out to itself in the formal reader; and it holds in Light, Dark and Warm at 320, 720 and 1440 CSS pixels and at an emulated 200 percent zoom.",
+      "actual": "The Entities destination offered a Help link, and the Help index headed \"Guides for Legal Team Member\" listed all four Entity guides by their exact titles. Each exact title was found by the Help search and resolved to its own article (Maintain Entities and Counterparties -> /help/entities-and-counterparties; Manage Holdings, Officers, and Registrations -> /help/entity-records; Track and file Entity obligations -> /help/entity-obligations; Manage Entity structure and access -> /help/entity-structure-and-access). Selecting \"Read the calendar and Home\" moved to #read-the-calendar-and-home; the focused element was H2#read-the-calendar-and-home and the section heading was in view. \"Read this article in the full documentation\" opened /documentation/entity-structure-and-access and showed the same guide, \"Manage Entity structure and access\", in the formal reader. The Help article kept its title and produced no horizontal overflow in every theme and width combination (light@320px:0px, light@720px:0px, light@1440px:0px, dark@320px:0px, dark@720px:0px, dark@1440px:0px, warm@320px:0px, warm@720px:0px, warm@1440px:0px). At an emulated 200 percent zoom (a 1440px layout halved to a 720x450 CSS viewport) the article kept its title with no horizontal overflow. Arriving at the article put focus on its H1 \"track-and-file-entity-obligations\"; Shift+Tab reached the outline link for the filing section with a visible focus indicator (outline: solid) and Enter followed it to #mark-a-filing-and-check-the-next-cycle; the shell's \"Skip to content\" link was present and targets #main. All four guides kept their titles with no horizontal overflow across every theme and width combination (36 checks: 4 guides x light/dark/warm x 320/720/1440 CSS pixels). All four guides kept their titles with no horizontal overflow at an emulated 200 percent zoom, a 1440px layout halved to a 720x450 CSS viewport (entities-and-counterparties, entity-records, entity-obligations, entity-structure-and-access). On every guide, arrival focus landed on the article H1, Shift+Tab reached its outline link with a visible focus indicator, and Enter followed it to the section (entities-and-counterparties#recover-from-an-unavailable-choice-or-refused-change; entity-records#archive-and-restore-an-entity; entity-obligations#mark-a-filing-and-check-the-next-cycle; entity-structure-and-access#grant-access-to-a-confidential-entity). Tabbing reached the \"Skip to content\" link and pressing Enter moved focus to MAIN#main with the address at \"#main\", so the skip link activates rather than merely being present. Each guide's \"Read this article in the full documentation\" opened its own formal page showing the same title (entities-and-counterparties -> /documentation/entities-and-counterparties; entity-records -> /documentation/entity-records; entity-obligations -> /documentation/entity-obligations; entity-structure-and-access -> /documentation/entity-structure-and-access).",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:55:05.569Z",
+      "completedAt": "2026-09-08T01:13:09.750Z",
+      "evidence": [
+        "docs/documentation/batches/DOC-018/independent-discovery.json",
+        "docs/documentation/batches/DOC-018/independent-discovery-coverage.json"
+      ]
+    },
+    {
+      "id": "DOC-018-discovery",
+      "coverage": ["C31"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "This guide is listed in Help for this reader's audience and found by its exact title; its outline and the shell's skip link work by keyboard; it links out to itself in the formal reader; and it holds in Light, Dark and Warm at 320, 720 and 1440 CSS pixels and at an emulated 200 percent zoom.",
+      "actual": "The Entities destination offered a Help link, and the Help index headed \"Guides for Administrator\" listed all four Entity guides by their exact titles. Each exact title was found by the Help search and resolved to its own article (Maintain Entities and Counterparties -> /help/entities-and-counterparties; Manage Holdings, Officers, and Registrations -> /help/entity-records; Track and file Entity obligations -> /help/entity-obligations; Manage Entity structure and access -> /help/entity-structure-and-access). Selecting \"Read the calendar and Home\" moved to #read-the-calendar-and-home; the focused element was H2#read-the-calendar-and-home and the section heading was in view. \"Read this article in the full documentation\" opened /documentation/entity-structure-and-access and showed the same guide, \"Manage Entity structure and access\", in the formal reader. The Help article kept its title and produced no horizontal overflow in every theme and width combination (light@320px:0px, light@720px:0px, light@1440px:0px, dark@320px:0px, dark@720px:0px, dark@1440px:0px, warm@320px:0px, warm@720px:0px, warm@1440px:0px). At an emulated 200 percent zoom (a 1440px layout halved to a 720x450 CSS viewport) the article kept its title with no horizontal overflow. Arriving at the article put focus on its H1 \"track-and-file-entity-obligations\"; Shift+Tab reached the outline link for the filing section with a visible focus indicator (outline: solid) and Enter followed it to #mark-a-filing-and-check-the-next-cycle; the shell's \"Skip to content\" link was present and targets #main. All four guides kept their titles with no horizontal overflow across every theme and width combination (36 checks: 4 guides x light/dark/warm x 320/720/1440 CSS pixels). All four guides kept their titles with no horizontal overflow at an emulated 200 percent zoom, a 1440px layout halved to a 720x450 CSS viewport (entities-and-counterparties, entity-records, entity-obligations, entity-structure-and-access). On every guide, arrival focus landed on the article H1, Shift+Tab reached its outline link with a visible focus indicator, and Enter followed it to the section (entities-and-counterparties#recover-from-an-unavailable-choice-or-refused-change; entity-records#archive-and-restore-an-entity; entity-obligations#mark-a-filing-and-check-the-next-cycle; entity-structure-and-access#grant-access-to-a-confidential-entity). Tabbing reached the \"Skip to content\" link and pressing Enter moved focus to MAIN#main with the address at \"#main\", so the skip link activates rather than merely being present. Each guide's \"Read this article in the full documentation\" opened its own formal page showing the same title (entities-and-counterparties -> /documentation/entities-and-counterparties; entity-records -> /documentation/entity-records; entity-obligations -> /documentation/entity-obligations; entity-structure-and-access -> /documentation/entity-structure-and-access).",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:55:40.813Z",
+      "completedAt": "2026-09-08T01:14:14.640Z",
+      "evidence": [
+        "docs/documentation/batches/DOC-018/independent-discovery.json",
+        "docs/documentation/batches/DOC-018/independent-discovery-coverage.json"
+      ]
+    },
+    {
+      "id": "DOC-018-discovery",
+      "coverage": ["C31"],
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "expected": "The formal reader lists and serves this guide without a sign-in and asks the application for nothing.",
+      "actual": "Without any sign-in the formal index listed all four Entity guides behind a \"Skip to content\" link, offered no sign-in form or password field, and issued no /api/v1 request (0 application calls observed). A fresh anonymous context visited the formal index and all four guide pages (/documentation/, /documentation/entities-and-counterparties, /documentation/entity-records, /documentation/entity-obligations, /documentation/entity-structure-and-access) and issued no request under /api/ at all — none to /api/v1/ and none to /api/auth/ — with no password field anywhere.",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:56:15.724Z",
+      "completedAt": "2026-09-08T01:14:28.623Z",
+      "evidence": [
+        "docs/documentation/batches/DOC-018/independent-discovery.json",
+        "docs/documentation/batches/DOC-018/independent-discovery-coverage.json"
+      ]
+    }
+  ],
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-018/README.md",
+    "docs/documentation/batches/DOC-018/independent-c31.json",
+    "docs/documentation/batches/DOC-018/independent-discovery.json",
+    "docs/documentation/batches/DOC-018/independent-discovery-coverage.json"
+  ],
+  "limitations": [
+    "Agent walkthroughs by an independent review seat, not human user studies or feature-owner approval.",
+    "The types and Fields guide remains a publication dependency for the guides that link it.",
+    "Recorded against lab app source 8539f4cc, which is ahead of edition.json's supportedAppCommit; the whole suite is re-pinned to one build at DOC-025 acceptance.",
+    "The catalog stays in feature review: DOC-025 whole-suite acceptance and DOC-027 publication are still ahead."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}
