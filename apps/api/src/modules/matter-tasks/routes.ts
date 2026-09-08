@@ -23,6 +23,7 @@ import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import { matterTeamScope, NO_MATTER, reachedMatter } from "../../lib/matter-access.js";
 import { prepareTaskAssignee } from "../../lib/task-assignment.js";
+import { removeTaskThread } from "../comments/audience.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { assertValidMatterTaskAssignee, createMatterTask } from "./create.js";
 
@@ -377,7 +378,8 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireMember,
       schema: {
         operationId: "removeMatterTask",
-        summary: "Remove one Task from a reached, non-archived Matter",
+        summary:
+          "Remove one Task from a reached, non-archived Matter. A Task carrying any comment, deleted and redacted ones included, answers 409 and is marked done instead of removed",
         tags: ["matter-tasks"],
         params: TaskParams,
         response: { 200: TasksEnvelope, default: problemResponse },
@@ -387,6 +389,17 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
       app.db.transaction(async (tx) => {
         const task = await reachedTask(tx, request.user, request.params.taskId);
         assertTaskWritable(task);
+        // The Task's own row, held while its thread is counted: a post
+        // resolving this Task waits here, so the count and the delete
+        // are one decision (CMT-006).
+        await tx
+          .select({ id: matterTasks.id })
+          .from(matterTasks)
+          .where(eq(matterTasks.id, task.id))
+          .limit(1)
+          .for("update");
+        await removeTaskThread(tx, "matter_task", task.id);
+
         await tx.delete(matterTasks).where(eq(matterTasks.id, task.id));
         await recordActivity(tx, {
           entityType: "matter",

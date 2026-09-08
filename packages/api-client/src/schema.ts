@@ -1289,7 +1289,7 @@ export interface paths {
     get?: never;
     put?: never;
     post?: never;
-    /** Remove one Task from a reached, non-archived Matter */
+    /** Remove one Task from a reached, non-archived Matter. A Task carrying any comment, deleted and redacted ones included, answers 409 and is marked done instead of removed */
     delete: operations["removeMatterTask"];
     options?: never;
     head?: never;
@@ -2713,7 +2713,7 @@ export interface paths {
     get?: never;
     put?: never;
     post?: never;
-    /** Take a task off a contract's checklist (CTR-017). The row is deleted and the task.removed activity entry is the durable record of it, which is why that entry carries the title. A task on a contract this viewer cannot reach answers 404; an archived contract takes no removal until it is restored */
+    /** Take a task off a contract's checklist (CTR-017). The row is deleted and the task.removed activity entry is the durable record of it, which is why that entry carries the title. A task carrying any comment, deleted and redacted ones included, answers 409 and is marked done instead of removed. A task on a contract this viewer cannot reach answers 404; an archived contract takes no removal until it is restored */
     delete: operations["removeContractTask"];
     options?: never;
     head?: never;

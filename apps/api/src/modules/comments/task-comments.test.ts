@@ -1,7 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { eq, users, matterTeam, contractTeam, notifications } from "@openlaw/db";
+import {
+  and,
+  eq,
+  users,
+  comments,
+  commentLastRead,
+  contractTasks,
+  matterTasks,
+  matterTeam,
+  contractTeam,
+  notifications,
+} from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   startHarness,
@@ -15,6 +26,7 @@ let admin: Record<string, string>;
 let contributor: Record<string, string>;
 let outsider: Record<string, string>;
 let teammateId: string;
+let adminId: string;
 beforeAll(async () => {
   harness = await startHarness();
   expect(
@@ -22,6 +34,12 @@ beforeAll(async () => {
       .statusCode,
   ).toBe(201);
   admin = await signInCookies(harness.app, TEST_ADMIN.email, TEST_ADMIN.password);
+  const [administrator] = await harness.db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, TEST_ADMIN.email))
+    .limit(1);
+  adminId = administrator!.id;
   for (const [name, role] of [
     ["Teammate", "contributor"],
     ["Outsider", "legal_team_member"],
@@ -171,5 +189,234 @@ describe.each(["matter", "contract"] as const)("%s Task details", (module) => {
       payload: { description: null },
     });
     expect(clear.json().tasks[0].description).toBeNull();
+  });
+});
+
+/**
+ * Removing a Task and the conversation on it (CMT-006 Task addendum).
+ *
+ * A Task row is deleted outright, and its comments hang off its id with
+ * no foreign key to follow them. So the removal is refused while
+ * anything is on the thread rather than taking somebody else's words
+ * with it, and the refusal names the way out: mark the Task done. The
+ * cases below are the whole rule — a live comment, each of the two
+ * tombstones, the empty Task that still goes, and the post that arrives
+ * while the removal is deciding.
+ */
+describe.each(["matter", "contract"] as const)("%s Task removal", (module) => {
+  const taskPath = module === "matter" ? "matter-tasks" : "tasks";
+  const entityType = `${module}_task` as "matter_task" | "contract_task";
+  const table = module === "matter" ? matterTasks : contractTasks;
+
+  /** One record of this module with one Task on it, made through the API. */
+  async function seedTask(title: string): Promise<string> {
+    const options = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/${module}s/options`,
+      cookies: admin,
+    });
+    const created = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/${module}s`,
+      cookies: admin,
+      payload: { title, [`${module}TypeId`]: options.json()[`${module}Types`][0].id },
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const added = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/${module}s/${created.json()[module].number}/tasks`,
+      cookies: admin,
+      payload: { title: "Draft the position" },
+    });
+    expect(added.statusCode, added.body).toBe(201);
+    return added.json().createdTaskId;
+  }
+
+  const post = async (taskId: string, body: string) =>
+    harness.app.inject({
+      method: "POST",
+      url: "/api/v1/comments",
+      cookies: admin,
+      payload: { entityType, entityId: taskId, body, visibility: "working_team" },
+    });
+  const remove = async (taskId: string) =>
+    harness.app.inject({ method: "DELETE", url: `/api/v1/${taskPath}/${taskId}`, cookies: admin });
+  const commentRows = async (taskId: string) =>
+    harness.db
+      .select({ id: comments.id })
+      .from(comments)
+      .where(and(eq(comments.entityType, entityType), eq(comments.entityId, taskId)));
+
+  it.each(["live", "deleted", "redacted"] as const)(
+    "keeps a Task carrying a %s comment and says to mark it done instead",
+    async (state) => {
+      const taskId = await seedTask(`Removal with a ${state} comment`);
+      const said = await post(taskId, "The counterparty answered on Tuesday.");
+      expect(said.statusCode, said.body).toBe(201);
+      const commentId = said.json().comment.id;
+      if (state === "deleted")
+        expect(
+          (
+            await harness.app.inject({
+              method: "DELETE",
+              url: `/api/v1/comments/${commentId}`,
+              cookies: admin,
+            })
+          ).statusCode,
+        ).toBe(200);
+      if (state === "redacted")
+        expect(
+          (
+            await harness.app.inject({
+              method: "POST",
+              url: `/api/v1/comments/${commentId}/redact`,
+              cookies: admin,
+            })
+          ).statusCode,
+        ).toBe(200);
+
+      const refused = await remove(taskId);
+      expect(refused.statusCode, refused.body).toBe(409);
+      expect(refused.json().detail).toBe(
+        "This Task has a conversation on it, so it cannot be removed. Mark it done instead.",
+      );
+      // Neither the Task nor the words it carries moved.
+      expect(await commentRows(taskId)).toHaveLength(1);
+      expect(
+        await harness.db.select({ id: table.id }).from(table).where(eq(table.id, taskId)),
+      ).toHaveLength(1);
+      // The way out the refusal names is open.
+      expect(
+        (
+          await harness.app.inject({
+            method: "POST",
+            url: `/api/v1/${taskPath}/${taskId}/toggle`,
+            cookies: admin,
+          })
+        ).statusCode,
+      ).toBe(200);
+    },
+  );
+
+  it("removes a Task nobody said anything on and takes its read marks with it", async () => {
+    const taskId = await seedTask("Removal with an empty thread");
+    // Opening the panel writes a watermark. A bookmark into a thread
+    // with nothing in it must not hold the Task hostage, and must not
+    // outlive it either.
+    expect(
+      (
+        await harness.app.inject({
+          method: "POST",
+          url: "/api/v1/comments/read",
+          cookies: admin,
+          payload: { entityType, entityId: taskId },
+        })
+      ).statusCode,
+    ).toBe(200);
+    expect(
+      await harness.db
+        .select({ userId: commentLastRead.userId })
+        .from(commentLastRead)
+        .where(
+          and(eq(commentLastRead.entityType, entityType), eq(commentLastRead.entityId, taskId)),
+        ),
+    ).toHaveLength(1);
+
+    const gone = await remove(taskId);
+    expect(gone.statusCode, gone.body).toBe(200);
+    expect(gone.json().tasks.some((row: { id: string }) => row.id === taskId)).toBe(false);
+    expect(
+      await harness.db
+        .select({ userId: commentLastRead.userId })
+        .from(commentLastRead)
+        .where(
+          and(eq(commentLastRead.entityType, entityType), eq(commentLastRead.entityId, taskId)),
+        ),
+    ).toEqual([]);
+  });
+
+  it("waits for a comment already in flight and then refuses the removal", async () => {
+    const taskId = await seedTask("Removal racing a post");
+    // A post that has taken the Task's share lock and written its row,
+    // as the comment seam does, and has not committed yet.
+    let posted!: () => void;
+    let commit!: () => void;
+    const holding = new Promise<void>((resolve) => (posted = resolve));
+    const release = new Promise<void>((resolve) => (commit = resolve));
+    const posting = harness.db.transaction(async (tx) => {
+      await tx
+        .select({ id: table.id })
+        .from(table)
+        .where(eq(table.id, taskId))
+        .limit(1)
+        .for("share");
+      await tx.insert(comments).values({
+        entityType,
+        entityId: taskId,
+        authorId: adminId,
+        body: "Landed while the removal was deciding.",
+        visibility: "working_team",
+      });
+      posted();
+      await release;
+    });
+    await holding;
+
+    const removal = remove(taskId);
+    // Long enough for the removal to reach the Task row and wait there.
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    commit();
+    await posting;
+
+    const refused = await removal;
+    expect(refused.statusCode, refused.body).toBe(409);
+    expect(await commentRows(taskId)).toHaveLength(1);
+    expect(
+      await harness.db.select({ id: table.id }).from(table).where(eq(table.id, taskId)),
+    ).toHaveLength(1);
+  });
+
+  it("makes a post wait for a removal already deciding, and land nowhere", async () => {
+    const taskId = await seedTask("A post racing a removal");
+    // The other order: the removal has the Task row and has not
+    // finished. The post resolves the thread under a share lock, so it
+    // waits here rather than reading a Task that is about to go and
+    // inserting after it went.
+    let holding!: () => void;
+    let commit!: () => void;
+    const held = new Promise<void>((resolve) => (holding = resolve));
+    const release = new Promise<void>((resolve) => (commit = resolve));
+    const removing = harness.db.transaction(async (tx) => {
+      await tx
+        .select({ id: table.id })
+        .from(table)
+        .where(eq(table.id, taskId))
+        .limit(1)
+        .for("update");
+      holding();
+      await release;
+      await tx.delete(table).where(eq(table.id, taskId));
+    });
+    await held;
+
+    const posting = post(taskId, "Sent while the Task was being taken off.");
+    let answered = false;
+    void posting.then(() => (answered = true));
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    expect(answered, "the post did not wait for the Task row").toBe(false);
+    commit();
+    await removing;
+
+    const late = await posting;
+    expect(late.statusCode, late.body).toBe(404);
+    expect(await commentRows(taskId)).toEqual([]);
+  });
+
+  it("answers no thread at all once the Task is gone, so late words cannot land", async () => {
+    const taskId = await seedTask("Removal then a late post");
+    expect((await remove(taskId)).statusCode).toBe(200);
+    const late = await post(taskId, "Sent after the Task was taken off.");
+    expect(late.statusCode, late.body).toBe(404);
+    expect(await commentRows(taskId)).toEqual([]);
   });
 });

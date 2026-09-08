@@ -52,6 +52,8 @@
 import {
   and,
   asc,
+  commentLastRead,
+  comments,
   contracts,
   contractTasks,
   matterTasks,
@@ -584,8 +586,52 @@ async function taskParent(db: Executor, module: "matter" | "contract", id: strin
     .select({ id: table.id, parentId: owner })
     .from(table)
     .where(eq(table.id, id))
-    .limit(1);
+    .limit(1)
+    // Held in share mode, for the same reason the `request` arm holds
+    // its row: removing a Task takes this row FOR UPDATE while it
+    // checks the thread is empty. Without a lock here a post could
+    // resolve the Task just before the removal commits and insert just
+    // after it, leaving words and files on an id nothing answers for.
+    // Under this lock the post either commits first, and the removal is
+    // refused for the comment it now finds, or it waits and is told the
+    // Task is gone. A plain read takes the lock for one statement and
+    // gives it straight back.
+    .for("share");
   return task;
+}
+
+/** What a Task whose thread has something in it is told (CMT-006). */
+export const TASK_HOLDS_A_CONVERSATION =
+  "This Task has a conversation on it, so it cannot be removed. Mark it done instead.";
+
+/**
+ * Clears what a Task's empty thread left behind, or refuses to let the
+ * Task go.
+ *
+ * A Task row is deleted outright, unlike every other thing a comment
+ * hangs off. CMT-006 says a comment leaves a tombstone rather than a
+ * hole, and nobody may erase words that are not theirs — so a Task
+ * carrying any comment, tombstones included, is kept and marked done
+ * instead. That leaves only the read watermarks of a thread nobody ever
+ * said anything on, and those go with the Task.
+ *
+ * The caller holds the Task row FOR UPDATE before asking. That is what
+ * makes the count and the delete one decision rather than two.
+ */
+export async function removeTaskThread(
+  tx: Executor,
+  entityType: "matter_task" | "contract_task",
+  taskId: string,
+): Promise<void> {
+  const [held] = await tx
+    .select({ id: comments.id })
+    .from(comments)
+    .where(and(eq(comments.entityType, entityType), eq(comments.entityId, taskId)))
+    .limit(1);
+  if (held) throw httpError(409, TASK_HOLDS_A_CONVERSATION);
+  await tx
+    .delete(commentLastRead)
+    .where(and(eq(commentLastRead.entityType, entityType), eq(commentLastRead.entityId, taskId)));
 }
 
 export async function commentActivityRef(

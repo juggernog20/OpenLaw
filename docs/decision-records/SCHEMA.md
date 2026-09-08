@@ -1302,3 +1302,6 @@ Closed/ended or archived records return null. See MTR-016 and CTR-005 UX addenda
 `entity_id` is the Task id. Existing `comment_attachments` and `comment_revisions` store
 Task files and corrected notes. Parent record reach is checked on every operation.
 Migration 0094 adds the descriptions and extends the two comment target constraints.
+`entity_id` carries no foreign key, so a Task with any comment on it is refused removal
+rather than leaving those rows behind; the two sides serialize on the Task row. See the
+CMT-001 Task conversations addendum.

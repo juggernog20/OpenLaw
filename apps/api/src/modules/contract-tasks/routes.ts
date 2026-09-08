@@ -54,6 +54,7 @@ import {
   type ReachedContract,
 } from "../../lib/contract-access.js";
 import { prepareTaskAssignee } from "../../lib/task-assignment.js";
+import { removeTaskThread } from "../comments/audience.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
 /** The contract read floor (CTR-021): a Contributor on the team reads the
@@ -549,7 +550,9 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
           "Take a task off a contract's checklist (CTR-017). The row " +
           "is deleted and the task.removed activity entry is the " +
           "durable record of it, which is why that entry carries the " +
-          "title. A task on a contract this viewer cannot reach " +
+          "title. A task carrying any comment, deleted and redacted " +
+          "ones included, answers 409 and is marked done instead of " +
+          "removed. A task on a contract this viewer cannot reach " +
           "answers 404; an archived contract takes no removal until " +
           "it is restored",
         tags: ["tasks"],
@@ -562,6 +565,17 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         const task = await reachedTask(tx, request.user, request.params.taskId);
         if (!task) throw httpError(404, NO_TASK);
         if (task.contract.archivedAt) throw httpError(409, FROZEN);
+
+        // The Task's own row, held while its thread is counted: a post
+        // resolving this Task waits here, so the count and the delete
+        // are one decision (CMT-006).
+        await tx
+          .select({ id: contractTasks.id })
+          .from(contractTasks)
+          .where(eq(contractTasks.id, task.id))
+          .limit(1)
+          .for("update");
+        await removeTaskThread(tx, "contract_task", task.id);
 
         await tx.delete(contractTasks).where(eq(contractTasks.id, task.id));
 
