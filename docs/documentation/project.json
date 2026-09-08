@@ -185,18 +185,26 @@
     {
       "id": "DOC-025",
       "issue": 745,
-      "status": "in-progress",
-      "pullRequest": 786
+      "status": "blocked",
+      "pullRequest": 786,
+      "checkpointMergeCommit": "270c7c2e315ff7845dfe4f75f775df1384da0817"
     },
     {
       "id": "DOC-026",
       "issue": 746,
-      "status": "open"
+      "status": "in-progress"
     },
     {
       "id": "DOC-027",
       "issue": 747,
       "status": "open"
     }
-  ]
+  ],
+  "maintenance": {
+    "accountableOwner": "Blair Wentworth",
+    "github": "juggernog20",
+    "process": "docs/documentation/MAINTENANCE.md",
+    "releaseChecklist": "docs/documentation/RELEASE-CHECKLIST.md",
+    "nextFullInventoryReview": "2026-12-08"
+  }
 }
