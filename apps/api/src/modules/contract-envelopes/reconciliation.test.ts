@@ -34,7 +34,7 @@
  */
 
 import { PgBoss } from "pg-boss";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   activityLog,
   and,
@@ -87,6 +87,7 @@ const RSA_KEY = [
 const HMAC_SECRET = "connect-hmac-fixture-secret"; // NOSONAR — inert fixture
 
 const CONNECTOR = {
+  updateMode: "webhook",
   environment: "demo",
   integrationKey: FAKE_VALID_INTEGRATION_KEY,
   apiUserId: "99999999-8888-7777-6666-555555555555",
@@ -614,6 +615,11 @@ describe("a provider outage during a round", () => {
       provider().online();
     }
 
+    // Advance only the persisted due time, as if the next interval elapsed.
+    await harness.db
+      .update(contractEnvelopes)
+      .set({ nextReconcileAt: new Date(0) })
+      .where(eq(contractEnvelopes.id, out.envelope.id));
     const { summary } = await sweep();
     expect(summary.converged).toBe(1);
     const settled = await settledFetch(out.contract.number, out.envelope.id);
@@ -629,6 +635,76 @@ describe("a provider outage during a round", () => {
  * this file asserts against a hand-run round, reached the way production
  * reaches it.
  */
+describe("polling mode and the durable provider interval", () => {
+  it("rejects callbacks and files the executed copy through reconciliation", async () => {
+    const out = await recordWithEnvelopeOut("Private deployment signing check");
+    const save = await harness.app.inject({
+      method: "PUT",
+      url: "/api/v1/signing-connectors/docusign",
+      cookies: as(ADMIN),
+      payload: { ...CONNECTOR, updateMode: "polling" },
+    });
+    try {
+      expect(save.statusCode, save.body).toBe(200);
+      await harness.resolveSigningProvider();
+      provider().complete(out.providerId);
+      const delivery = provider().signedDelivery({
+        providerEnvelopeId: out.providerId,
+        status: "signed",
+      });
+      const refused = await harness.app.inject({
+        method: "POST",
+        url: WEBHOOK_URL,
+        headers: delivery.headers,
+        payload: delivery.body,
+      });
+      expect(refused.statusCode).toBe(401);
+      expect((await envelopeRow(out.contract.number, out.envelope.id)).status).toBe("sent");
+      expect((await sweep()).summary.converged).toBe(1);
+      expect((await settledFetch(out.contract.number, out.envelope.id)).executedFetch).toBe(
+        "ready",
+      );
+    } finally {
+      const restored = await harness.app.inject({
+        method: "PUT",
+        url: "/api/v1/signing-connectors/docusign",
+        cookies: as(ADMIN),
+        payload: CONNECTOR,
+      });
+      expect(restored.statusCode).toBe(200);
+    }
+  });
+
+  it("limits concurrent rounds and later calls until the stored interval expires", async () => {
+    const out = await recordWithEnvelopeOut("Durable signing interval");
+    const read = vi.spyOn(provider(), "readEnvelope");
+    try {
+      await Promise.all([sweep(), sweep()]);
+      expect(read).toHaveBeenCalledTimes(1);
+      const [held] = await harness.db
+        .select()
+        .from(contractEnvelopes)
+        .where(eq(contractEnvelopes.id, out.envelope.id));
+      expect(held!.nextReconcileAt!.getTime() - Date.now()).toBeGreaterThan(14 * 60_000);
+      provider().complete(out.providerId);
+      expect((await sweep()).summary.converged).toBe(0);
+      expect(read).toHaveBeenCalledTimes(1);
+      await harness.db
+        .update(contractEnvelopes)
+        .set({ nextReconcileAt: new Date(0) })
+        .where(eq(contractEnvelopes.id, out.envelope.id));
+      expect((await sweep()).summary.converged).toBe(1);
+      expect(read).toHaveBeenCalledTimes(2);
+      expect((await settledFetch(out.contract.number, out.envelope.id)).executedFetch).toBe(
+        "ready",
+      );
+      expect(await entriesFor(out.contract.id, "envelope.signed")).toHaveLength(1);
+    } finally {
+      read.mockRestore();
+    }
+  });
+});
+
 describe("the scheduled shape", () => {
   it("leaves one schedule and one singleton queue however many workers boot", async () => {
     // A second worker against the same database — a replica, which is

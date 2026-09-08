@@ -70,7 +70,18 @@
  * straight back on every rolling deploy.
  */
 
-import { and, asc, contractEnvelopes, eq, gt, type Db, type SigningProviderKey } from "@openlaw/db";
+import {
+  and,
+  asc,
+  contractEnvelopes,
+  eq,
+  gt,
+  isNull,
+  or,
+  sql,
+  type Db,
+  type SigningProviderKey,
+} from "@openlaw/db";
 import { requestExecutedCopy } from "../lib/signing/completion.js";
 import {
   isTerminalSigningError,
@@ -103,24 +114,15 @@ export const RECONCILIATION_PAGE_SIZE = 100;
  */
 export const RECONCILIATION_REFUSAL_LIMIT = 5;
 
-/**
- * How often a round runs.
- *
- * Five minutes is chosen from what it is for. It is the fallback feed,
- * so it is measured against "somebody signed and nobody has told us",
- * not against Connect's seconds — and an install that has Connect never
- * notices it at all, because the webhook gets there first and every
- * round then finds nothing to do. Shorter would ask a third party for
- * the same answer more often; longer would leave a firewalled install
- * watching a stale record over a coffee.
- *
- * It is a cron rather than a timer because the round belongs to the
- * install and not to a process: pg-boss elects one cron worker, so two
- * worker replicas produce one round's worth of provider requests rather
- * than two. Read in UTC, which is pg-boss's default and the only
- * timezone this install agrees on.
- */
+/** The worker checks for due Envelopes every five minutes. Each Envelope
+ * has a durable 15-minute minimum between provider calls. */
 export const RECONCILIATION_SWEEP_CRON = "*/5 * * * *";
+
+const reconciliationDue = () =>
+  or(
+    isNull(contractEnvelopes.nextReconcileAt),
+    sql`${contractEnvelopes.nextReconcileAt} <= clock_timestamp()`,
+  );
 
 /** What the sweep is built from: the rows, the connector, somewhere to
  * ask for follow-on work, and somewhere to say what it did. */
@@ -238,6 +240,7 @@ export async function runReconciliationSweep(
           // ending (see `transitions.ts`), so a finished envelope has
           // nothing left for this sweep to learn.
           eq(contractEnvelopes.status, "sent"),
+          reconciliationDue(),
           after === undefined ? undefined : gt(contractEnvelopes.id, after),
         ),
       )
@@ -294,6 +297,22 @@ export async function runReconciliationSweep(
         continue;
       }
 
+      // Claim before calling the provider. A concurrent or restarted worker
+      // must respect the same limit even if this process dies during the call.
+      // Five extra minutes cover the bounded authentication and status requests.
+      const [claimed] = await deps.db
+        .update(contractEnvelopes)
+        .set({ nextReconcileAt: sql`clock_timestamp() + interval '20 minutes'` })
+        .where(
+          and(
+            eq(contractEnvelopes.id, envelope.id),
+            eq(contractEnvelopes.status, "sent"),
+            reconciliationDue(),
+          ),
+        )
+        .returning({ id: contractEnvelopes.id });
+      if (!claimed) continue;
+
       let state: EnvelopeState;
       try {
         state = await signing.readEnvelope(envelope.providerEnvelopeId);
@@ -349,6 +368,13 @@ export async function runReconciliationSweep(
           return summary;
         }
         continue;
+      } finally {
+        // Start the full gap after the attempt, including authentication and
+        // provider delays. Failed attempts also consume the interval.
+        await deps.db
+          .update(contractEnvelopes)
+          .set({ nextReconcileAt: sql`clock_timestamp() + interval '15 minutes'` })
+          .where(eq(contractEnvelopes.id, envelope.id));
       }
 
       // Still out. The record already says so, and the funnel is for

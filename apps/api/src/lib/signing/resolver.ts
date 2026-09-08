@@ -75,7 +75,7 @@ export type SigningDriverFactory = (config: SigningConnectorConfig) => SigningPr
  * The app's signing composition point: the configured provider, or null
  * when this install has no connector.
  */
-export type SigningResolver = () => Promise<SigningProvider | null>;
+export type SigningResolver = (purpose?: "webhook") => Promise<SigningProvider | null>;
 
 /**
  * Reads the stored connector on every call and builds a provider from
@@ -89,7 +89,7 @@ export function createSigningResolver(
   /** The driver last built, and the row state it was built from. */
   let cached: { key: string; driver: SigningProvider } | null = null;
 
-  return async () => {
+  return async (purpose) => {
     // Keyed on the adapter, not "whatever row is first": a second
     // provider's row must never be handed to the DocuSign driver.
     const [row] = await db
@@ -105,6 +105,11 @@ export function createSigningResolver(
       cached = null;
       return null;
     }
+    // A delivery is answered only by a connector that asked for one.
+    // Polling keeps the secret it was configured with, so the mode is
+    // checked beside it. Neither an old secret nor a mode change alone
+    // may leave an install verifying deliveries it no longer expects.
+    if (purpose === "webhook" && (row.updateMode !== "webhook" || !row.webhookSecret)) return null;
     const key = `${row.id}:${row.updatedAt.getTime()}`;
     if (cached?.key === key) return cached.driver;
     const driver = buildDriver({

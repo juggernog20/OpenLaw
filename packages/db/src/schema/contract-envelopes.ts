@@ -86,6 +86,8 @@ export const contractEnvelopes = pgTable(
     /** The provider's own id for the envelope — the correlation key for
      * every later call and for every inbound webhook delivery. */
     providerEnvelopeId: text("provider_envelope_id").notNull(),
+    /** Next permitted provider status check, shared by all worker replicas. */
+    nextReconcileAt: timestamp("next_reconcile_at", { withTimezone: true }),
     status: text("status", { enum: ENVELOPE_STATUSES }).notNull().default("sent"),
     /**
      * Which version of the primary document went out (CTR-014).

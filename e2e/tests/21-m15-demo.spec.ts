@@ -953,6 +953,15 @@ test.describe("M15 demo path", () => {
       const docusign = page.getByRole("button", { name: "DocuSign", exact: true });
       if ((await docusign.getAttribute("aria-expanded")) === "false") await docusign.click();
       await page.getByLabel("Environment").selectOption("demo");
+      // The polling default is what a virgin install opens on (SET-009).
+      // A rerun that could not remove a connector with a round still out
+      // opens on the mode that run saved, so the check is asked only when
+      // this install has no connector yet.
+      if (!(await readConnector(page.request)).configured) {
+        await expect(page.getByLabel("Signing updates")).toHaveValue("polling");
+        await expect(page.getByLabel("Connect HMAC secret")).toHaveCount(0);
+      }
+      await page.getByLabel("Signing updates").selectOption("webhook");
       await page.getByLabel("Integration key").fill(integrationKey);
       await page.getByLabel("User ID").fill(apiUserId);
       await page.getByLabel("RSA private key").fill(privateKey);

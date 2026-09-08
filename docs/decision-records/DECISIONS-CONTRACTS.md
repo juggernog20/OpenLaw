@@ -215,6 +215,22 @@ _None — queue cleared 2026-08-04 (CTR-001 through CTR-019). New questions from
 
 - **Addendum (2026-08-16, [#259](https://github.com/juggernog20/OpenLaw/issues/259))** — **The connector's two secrets are encrypted at rest.** The M15/1 addendum above recorded them as stored plaintext, the accepted v1 posture, and named this table as the second entry on a future pass. That pass happened (**TECH-022**): `private_key` and `webhook_secret` are declared with `encryptedText`, so they are sealed on the way to Postgres and opened on the way back with a key held outside the database. The exposure this closes is **impersonation, not disclosure** — whoever holds the RSA key mints JWT assertions as the install's integration user, and whoever holds the Connect secret forges a delivery saying a contract was signed when it was not. A `pg_dump` is a routine artefact and a much lower bar than a live database. **Nothing above changes.** The credentials are still org data read live per use, the resolver still reads the row on every resolution, and a rotation still applies to the next call with no restart — the seal sits below all of that, in the schema, where no caller can forget it. Two seams did move, both small and both for the same reason: an unopenable value reads as an unset credential rather than throwing, so the pane an Administrator recovers in still draws; and a save that keeps the stored secrets now leaves those columns **out** of the `UPDATE` instead of writing them back, so saving the estate while the key is wrong cannot overwrite a credential the install could still recover.
 
+### Addendum, 2026-09-08, #789: select how signing updates arrive
+
+An Administrator chooses **Polling** or **Webhook** in the Signing connector settings.
+New connectors default to Polling. Existing connectors keep Webhook on upgrade.
+Polling requires outbound access to DocuSign. It requires no public callback or
+Connect secret, and OpenLaw refuses inbound status deliveries in this mode.
+This supersedes the M15/1 requirement that every connector must have a Connect secret.
+Webhook mode still requires that secret and verifies every delivery.
+
+Webhook mode can use a separate public HTTPS callback URL. A gateway can forward
+only the signing route while the app keeps its private base URL. OpenLaw stores
+that URL for setup and display. It does not create a gateway or a Connect subscription.
+The reconciliation sweep runs in both modes, as the status feed in Polling mode and
+as recovery in Webhook mode. Mode changes keep outstanding Envelopes and stored
+credentials. Disable and removal retain their existing behavior.
+
 ## CTR-014 — Documents: primary version chain, executed pin, generate-redline capability
 
 - **Status** — Accepted

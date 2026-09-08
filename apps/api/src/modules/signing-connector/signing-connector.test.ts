@@ -72,6 +72,7 @@ const ROTATED_HMAC_SECRET = "connect-hmac-fixture-rotated"; // NOSONAR — inert
 const URL_BASE = "/api/v1/signing-connectors/docusign";
 
 const CONNECTOR = {
+  updateMode: "webhook",
   environment: "demo",
   integrationKey: FAKE_VALID_INTEGRATION_KEY,
   apiUserId: "99999999-8888-7777-6666-555555555555",
@@ -337,6 +338,7 @@ describe("what the audit log says (DD-017)", () => {
       visibility: "admin_only",
     });
     expect(rows[0]!.payload).toEqual({
+      updateMode: "webhook",
       provider: "docusign",
       environment: "demo",
       integrationKey: FAKE_VALID_INTEGRATION_KEY,
@@ -649,3 +651,76 @@ async function putEnvelopeOut(): Promise<string> {
     .returning();
   return envelope!.id;
 }
+
+describe("selecting signing updates", () => {
+  beforeAll(clearConnector);
+
+  it("defaults a new connector to polling without a Connect secret", async () => {
+    const res = await save({ ...CONNECTOR, updateMode: undefined, webhookSecret: undefined });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().connector).toMatchObject({ updateMode: "polling", hasWebhookSecret: false });
+    expect(await harness.resolveSigningProvider()).not.toBeNull();
+    expect(await harness.resolveSigningProvider("webhook")).toBeNull();
+  });
+
+  it("requires a secret when switching to webhook and leaves the previous mode intact", async () => {
+    const res = await save({ ...CONNECTOR, webhookSecret: "" });
+    expect(res.statusCode, res.body).toBe(400);
+    const read = await harness.app.inject({ method: "GET", url: URL_BASE, cookies: adminCookies });
+    expect(read.json().connector.updateMode).toBe("polling");
+  });
+
+  it("uses a separate HTTPS gateway and retains the mode on an older client's save", async () => {
+    const webhookUrl = "https://signing.example.com/docusign";
+    const saved = await save({ ...CONNECTOR, webhookUrl });
+    expect(saved.statusCode, saved.body).toBe(200);
+    const kept = await save({
+      environment: "demo",
+      integrationKey: CONNECTOR.integrationKey,
+      apiUserId: CONNECTOR.apiUserId,
+    });
+    expect(kept.json().connector).toMatchObject({ updateMode: "webhook", webhookUrl });
+    expect(await harness.resolveSigningProvider("webhook")).not.toBeNull();
+  });
+
+  it("refuses insecure or credential-bearing gateway addresses", async () => {
+    for (const webhookUrl of [
+      "not-a-url",
+      "http://gateway.example/callback",
+      "https://user:secret@gateway.example/callback",
+      "https://gateway.example/callback?secret=value",
+      "https://gateway.example/callback#fragment",
+    ]) {
+      const res = await save({ ...CONNECTOR, webhookUrl });
+      expect(res.statusCode, webhookUrl).toBe(400);
+    }
+  });
+
+  it("refuses an unsupported update mode", async () => {
+    expect((await save({ ...CONNECTOR, updateMode: "other" })).statusCode).toBe(400);
+  });
+
+  it("refuses inbound updates in polling mode while retaining the stored secret", async () => {
+    const saved = await save({ ...CONNECTOR, updateMode: "polling", webhookSecret: "" });
+    expect(saved.statusCode, saved.body).toBe(200);
+    expect(saved.json().connector.hasWebhookSecret).toBe(true);
+    expect(await harness.resolveSigningProvider()).not.toBeNull();
+    expect(await harness.resolveSigningProvider("webhook")).toBeNull();
+    const delivery = harness.signing!.signedDelivery({
+      providerEnvelopeId: "not-held",
+      status: "signed",
+    });
+    const res = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/signing/docusign/webhook",
+      headers: delivery.headers,
+      payload: delivery.body,
+    });
+    expect(res.statusCode).toBe(401);
+    const rows = await connectorAuditRows(harness.db);
+    expect(
+      rows.some((row) => row.payload?.field === "updateMode" && row.payload?.new === "polling"),
+    ).toBe(true);
+    expect(JSON.stringify(rows)).not.toContain(HMAC_SECRET);
+  });
+});

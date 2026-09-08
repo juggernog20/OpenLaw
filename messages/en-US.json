@@ -330,7 +330,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -6419,11 +6419,20 @@
   "settings.eSignature.intro": {
     "defaultMessage": "Connect your DocuSign account so contracts are sent for signature from their records. Without a connector, the manual path still works: upload the executed PDF and pin it by hand."
   },
+  "settings.eSignature.polling.hint": {
+    "defaultMessage": "Keeps OpenLaw private. Only outbound access to DocuSign is needed. Updates can take about 15 to 20 minutes while the worker is running. Documents are still sent to DocuSign for signing."
+  },
   "settings.eSignature.privateKey": {
     "defaultMessage": "RSA private key"
   },
   "settings.eSignature.privateKey.placeholder": {
     "defaultMessage": "-----BEGIN RSA PRIVATE KEY-----"
+  },
+  "settings.eSignature.publicCallback": {
+    "defaultMessage": "Public callback URL"
+  },
+  "settings.eSignature.publicCallback.hint": {
+    "defaultMessage": "Enter the gateway's HTTPS address if it differs from OpenLaw's address. Forward POST requests to /api/v1/signing/docusign/webhook and preserve the body and signature headers. Leave blank to use the app address, which must then be publicly reachable over HTTPS."
   },
   "settings.eSignature.remove": {
     "defaultMessage": "Remove connector"
@@ -6458,11 +6467,23 @@
   "settings.eSignature.title": {
     "defaultMessage": "E-signature"
   },
+  "settings.eSignature.updateMode": {
+    "defaultMessage": "Signing updates"
+  },
+  "settings.eSignature.updateMode.polling": {
+    "defaultMessage": "Polling"
+  },
+  "settings.eSignature.updateMode.webhook": {
+    "defaultMessage": "Webhook"
+  },
   "settings.eSignature.userId": {
     "defaultMessage": "User ID"
   },
   "settings.eSignature.userId.hint": {
     "defaultMessage": "The DocuSign user envelopes are sent as. Grant that user consent to the integration once, from the DocuSign console."
+  },
+  "settings.eSignature.webhook.hint": {
+    "defaultMessage": "Receives updates as DocuSign delivers them. Requires a public HTTPS gateway and a signed Connect subscription. OpenLaw also checks periodically to recover missed updates."
   },
   "settings.eSignature.webhookSecret": {
     "defaultMessage": "Connect HMAC secret"

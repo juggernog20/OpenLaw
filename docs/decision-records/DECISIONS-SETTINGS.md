@@ -169,6 +169,17 @@ Every authenticated portal page shows Member+ staff a **Viewing as business user
 - **Alternatives considered** — Keep the Integrations tab and add a rail deep-link (declined: two addresses for one pane). Split the pane, credentials under Integrations and prompts under Contracts (declined: the prompts are useless without the AI connector, and CTR-008 already keeps catalog Field prompts under Contracts → Fields; a third home would scatter one feature across three sections). A redirect from the old address (declined: nothing shipped to anyone at the old address, and the rail is the only door).
 - **Consequences** — The Organization rail gains an **AI analysis** entry. Every Organization pane rule applies unchanged: Administrator-only (SET-002), immediate apply (SET-003), activity-logged at `admin_only`. The old address `/settings/integrations/ai-analysis` no longer resolves. `CONTEXT.md`, `DEPLOYMENT.md`, `SCHEMA.md`, CTR-008, TECH-024, and DES-070 are amended in place. The ST7 redraw already owed by `SETTINGS-INVENTORY.md` now also owes the new rail entry and a frame of its own for the pane.
 
+## SET-009: select the Signing connector's update mode
+
+- **Status:** Accepted
+- **Date:** 2026-09-08
+- **Decision:** The Administrator selects Polling or Webhook under E-signature. The form explains outbound access and delayed updates for Polling, and the public HTTPS gateway and signed Connect subscription for Webhook. The Connect secret and public callback fields appear for Webhook. A separate callback URL leaves the app base URL unchanged. The saved mode takes effect after Save connector without a restart.
+- **Migration:** Existing connectors keep Webhook. New connectors default to Polling. API saves that omit the mode keep the current value. Switching modes keeps the credentials and outstanding Envelopes. Changes are recorded in the Audit log.
+- **Rationale:** Private installations need outbound-only updates. Teams that need prompt updates can configure a gateway and signed Connect subscription. Polling trades latency for simpler network setup.
+- **Alternatives:** Requiring a public app address excludes private deployments. Removing reconciliation from Webhook mode would leave missed deliveries unresolved. Operating a hosted relay is outside this change.
+- **Consequences:** Operators choose and test their update path. Both modes send selected Documents to DocuSign. Webhook requires gateway and subscription maintenance.
+- **Source:** User request, issue #789. Extends SET-007 and CTR-013.
+
 ## Index of decisions
 
 | #       | Decision                                                                   | Status                                                                             |
@@ -181,3 +192,4 @@ Every authenticated portal page shows Member+ staff a **Viewing as business user
 | SET-006 | Personal profile scope; email change deferred                              | Accepted                                                                           |
 | SET-007 | E-signature lives in Organization → Integrations, not in Contracts         | Accepted; the AI-pane sentence superseded by SET-008                               |
 | SET-008 | AI analysis is an Organization section of its own, not an Integrations tab | Accepted                                                                           |
+| SET-009 | Select the Signing connector update mode                                   | Accepted                                                                           |

@@ -445,7 +445,7 @@ export interface paths {
     };
     /** The e-signature connector's state (CTR-013): whether it is configured, which estate and credentials it names, and the webhook URL to paste into the provider's console. Never the RSA key or the Connect secret */
     get: operations["getSigningConnector"];
-    /** Save the e-signature connector (CTR-013, TECH-013). The RSA key and the Connect secret are write-only: blank keeps the stored value, a value rotates it. A first save without the Connect secret is refused — the webhook must never answer unsigned deliveries */
+    /** Save the e-signature connector (CTR-013, TECH-013). The RSA key and the Connect secret are write-only: blank keeps the stored value, a value rotates it. Webhook mode requires a Connect secret. New connectors default to polling */
     put: operations["saveSigningConnector"];
     post?: never;
     /** Take the e-signature connector out (CTR-013). The row and both secrets go, and the install is back to the zero-config manual hand-off. Refused while any envelope is still out: deleting the credentials strands that round for good — nothing left to void it with, and nothing for the reconciliation sweep to ask. Turn the connector off instead if the sending has to stop before the paper comes back */
@@ -5985,6 +5985,9 @@ export interface operations {
               enabled: boolean;
               disabledAt: string | null;
               environment: ("demo" | "production") | null;
+              /** @enum {string} */
+              updateMode: "polling" | "webhook";
+              webhookUrlOverride: string | null;
               integrationKey: string | null;
               apiUserId: string | null;
               hasPrivateKey: boolean;
@@ -6020,6 +6023,9 @@ export interface operations {
         "application/json": {
           /** @enum {string} */
           environment: "demo" | "production";
+          /** @enum {string} */
+          updateMode?: "polling" | "webhook";
+          webhookUrl?: string | null;
           integrationKey: string;
           apiUserId: string;
           privateKey?: string;
@@ -6042,6 +6048,9 @@ export interface operations {
               enabled: boolean;
               disabledAt: string | null;
               environment: ("demo" | "production") | null;
+              /** @enum {string} */
+              updateMode: "polling" | "webhook";
+              webhookUrlOverride: string | null;
               integrationKey: string | null;
               apiUserId: string | null;
               hasPrivateKey: boolean;
@@ -6088,6 +6097,9 @@ export interface operations {
               enabled: boolean;
               disabledAt: string | null;
               environment: ("demo" | "production") | null;
+              /** @enum {string} */
+              updateMode: "polling" | "webhook";
+              webhookUrlOverride: string | null;
               integrationKey: string | null;
               apiUserId: string | null;
               hasPrivateKey: boolean;
@@ -6171,6 +6183,9 @@ export interface operations {
               enabled: boolean;
               disabledAt: string | null;
               environment: ("demo" | "production") | null;
+              /** @enum {string} */
+              updateMode: "polling" | "webhook";
+              webhookUrlOverride: string | null;
               integrationKey: string | null;
               apiUserId: string | null;
               hasPrivateKey: boolean;
@@ -6217,6 +6232,9 @@ export interface operations {
               enabled: boolean;
               disabledAt: string | null;
               environment: ("demo" | "production") | null;
+              /** @enum {string} */
+              updateMode: "polling" | "webhook";
+              webhookUrlOverride: string | null;
               integrationKey: string | null;
               apiUserId: string | null;
               hasPrivateKey: boolean;
