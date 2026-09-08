@@ -1,0 +1,156 @@
+{
+  "name": "independent-discovery",
+  "kind": "independent-review-walkthrough",
+  "scenario": "DOC-018 discovery",
+  "articles": [
+    "entities-and-counterparties",
+    "entity-records",
+    "entity-obligations",
+    "entity-structure-and-access"
+  ],
+  "appCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
+  "buildId": "app sha256:800689bba1e0bd183d33760b14e4775a593d23d1cf9ded4ad752e788e60bd818; engine sha256:b69fd318f42ddbb78e8531a4b7151bcd58d9788b367a26d528d41c5bebfa792f",
+  "environment": "openlaw-docs-b8e31260-entities",
+  "reviewer": "Independent review seat (agent)",
+  "helpPreview": "http://127.0.0.1:43318",
+  "startedAt": "2026-09-08T00:55:05.216Z",
+  "steps": [
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Discovery: the Entity destination leads to Help, which lists all four guides for this reader",
+      "actual": "The Entities destination offered a Help link, and the Help index headed \"Guides for Legal Team Member\" listed all four Entity guides by their exact titles",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:55:05.569Z",
+      "at": "2026-09-08T00:55:06.785Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Discovery: searching each exact title finds its guide",
+      "actual": "Each exact title was found by the Help search and resolved to its own article (Maintain Entities and Counterparties -> /help/entities-and-counterparties; Manage Holdings, Officers, and Registrations -> /help/entity-records; Track and file Entity obligations -> /help/entity-obligations; Manage Entity structure and access -> /help/entity-structure-and-access)",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:55:06.786Z",
+      "at": "2026-09-08T00:55:16.280Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Discovery: an outline link moves the reader to the section and focuses its heading",
+      "actual": "Selecting \"Read the calendar and Home\" moved to #read-the-calendar-and-home; the focused element was H2#read-the-calendar-and-home and the section heading was in view",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:55:16.281Z",
+      "at": "2026-09-08T00:55:18.930Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Discovery: the article links out to the same guide in the formal reader",
+      "actual": "\"Read this article in the full documentation\" opened /documentation/entity-structure-and-access and showed the same guide, \"Manage Entity structure and access\", in the formal reader",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:55:18.931Z",
+      "at": "2026-09-08T00:55:22.290Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Discovery: the Help article holds at 320, 720 and 1440 CSS pixels in Light, Dark and Warm",
+      "actual": "The Help article kept its title and produced no horizontal overflow in every theme and width combination (light@320px:0px, light@720px:0px, light@1440px:0px, dark@320px:0px, dark@720px:0px, dark@1440px:0px, warm@320px:0px, warm@720px:0px, warm@1440px:0px)",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:55:22.291Z",
+      "at": "2026-09-08T00:55:35.731Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Discovery: the Help article holds at an emulated 200 percent zoom",
+      "actual": "At an emulated 200 percent zoom (a 1440px layout halved to a 720x450 CSS viewport) the article kept its title with no horizontal overflow",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:55:35.731Z",
+      "at": "2026-09-08T00:55:38.023Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Discovery: the article is reachable and readable by keyboard alone",
+      "actual": "Arriving at the article put focus on its H1 \"track-and-file-entity-obligations\"; Shift+Tab reached the outline link for the filing section with a visible focus indicator (outline: solid) and Enter followed it to #mark-a-filing-and-check-the-next-cycle; the shell's \"Skip to content\" link was present and targets #main",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:55:38.023Z",
+      "at": "2026-09-08T00:55:40.513Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Discovery: the Entity destination leads to Help, which lists all four guides for this reader",
+      "actual": "The Entities destination offered a Help link, and the Help index headed \"Guides for Administrator\" listed all four Entity guides by their exact titles",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:55:40.813Z",
+      "at": "2026-09-08T00:55:42.042Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Discovery: searching each exact title finds its guide",
+      "actual": "Each exact title was found by the Help search and resolved to its own article (Maintain Entities and Counterparties -> /help/entities-and-counterparties; Manage Holdings, Officers, and Registrations -> /help/entity-records; Track and file Entity obligations -> /help/entity-obligations; Manage Entity structure and access -> /help/entity-structure-and-access)",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:55:42.042Z",
+      "at": "2026-09-08T00:55:51.432Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Discovery: an outline link moves the reader to the section and focuses its heading",
+      "actual": "Selecting \"Read the calendar and Home\" moved to #read-the-calendar-and-home; the focused element was H2#read-the-calendar-and-home and the section heading was in view",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:55:51.432Z",
+      "at": "2026-09-08T00:55:54.224Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Discovery: the article links out to the same guide in the formal reader",
+      "actual": "\"Read this article in the full documentation\" opened /documentation/entity-structure-and-access and showed the same guide, \"Manage Entity structure and access\", in the formal reader",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:55:54.224Z",
+      "at": "2026-09-08T00:55:57.574Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Discovery: the Help article holds at 320, 720 and 1440 CSS pixels in Light, Dark and Warm",
+      "actual": "The Help article kept its title and produced no horizontal overflow in every theme and width combination (light@320px:0px, light@720px:0px, light@1440px:0px, dark@320px:0px, dark@720px:0px, dark@1440px:0px, warm@320px:0px, warm@720px:0px, warm@1440px:0px)",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:55:57.574Z",
+      "at": "2026-09-08T00:56:10.923Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Discovery: the Help article holds at an emulated 200 percent zoom",
+      "actual": "At an emulated 200 percent zoom (a 1440px layout halved to a 720x450 CSS viewport) the article kept its title with no horizontal overflow",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:56:10.924Z",
+      "at": "2026-09-08T00:56:13.199Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Discovery: the article is reachable and readable by keyboard alone",
+      "actual": "Arriving at the article put focus on its H1 \"track-and-file-entity-obligations\"; Shift+Tab reached the outline link for the filing section with a visible focus indicator (outline: solid) and Enter followed it to #mark-a-filing-and-check-the-next-cycle; the shell's \"Skip to content\" link was present and targets #main",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:56:13.199Z",
+      "at": "2026-09-08T00:56:15.702Z"
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Discovery: the formal index lists all four guides and asks the application for nothing",
+      "actual": "Without any sign-in the formal index listed all four Entity guides behind a \"Skip to content\" link, offered no sign-in form or password field, and issued no /api/v1 request (0 application calls observed)",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:56:15.724Z",
+      "at": "2026-09-08T00:56:19.243Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T00:56:19.268Z"
+}

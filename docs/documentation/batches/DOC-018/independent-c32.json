@@ -1,0 +1,321 @@
+{
+  "name": "independent-c32",
+  "kind": "independent-review-walkthrough",
+  "scenario": "V-C32",
+  "article": "entity-records",
+  "appCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
+  "buildId": "app sha256:800689bba1e0bd183d33760b14e4775a593d23d1cf9ded4ad752e788e60bd818; engine sha256:b69fd318f42ddbb78e8531a4b7151bcd58d9788b367a26d528d41c5bebfa792f",
+  "environment": "openlaw-docs-b8e31260-entities",
+  "reviewer": "Independent review seat (agent)",
+  "startedAt": "2026-09-08T00:33:07.980Z",
+  "steps": [
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32 prerequisite: four Entities built by clearly-labelled API fixtures",
+      "actual": "API fixtures created \"Rev C32 main LRXRCLO\", \"Rev C32 owned LRXRCLO\", \"Rev C32 other owner LRXRCLO\" and \"Rev C32 cycle tail LRXRCLO\"; every reader step below is performed in the browser",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:33:08.318Z",
+      "at": "2026-09-08T00:33:08.371Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32 guide steps 1-3: Add officer saves the name, Role, Appointed on and Linked user",
+      "actual": "Add officer saved \"Rev Ines Duarte LRXRCLO\" as Director appointed 2022-05-09 with Ravi Menon as the linked user; all four survived a reload",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:33:08.371Z",
+      "at": "2026-09-08T00:33:10.317Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32 guide step 4: an Officer row's text saves when focus leaves the field",
+      "actual": "Typing \"Rev Ines Duarte LRXRCLO Jr\" into the Officer name and clicking the Officers heading to move focus away saved it with no further confirmation; the same transition restored \"Rev Ines Duarte LRXRCLO\"",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:33:10.317Z",
+      "at": "2026-09-08T00:33:12.841Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32 negative: a resignation before the appointment is refused and leaves the row unchanged",
+      "actual": "Resigned on 2021-01-01 against an appointment of 2022-05-09 was refused with \"The resignation date cannot be before the appointment date.\" shown beside the card; after a reload the appointment was still 2022-05-09 and no resignation was stored",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:33:12.841Z",
+      "at": "2026-09-08T00:33:14.116Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32 guide step 5: a valid resignation moves the Officer behind Show former",
+      "actual": "Resigned on 2024-08-31 saved when focus left the field and took the Officer out of the current list; Show former brought the row back carrying that resignation date",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:33:14.116Z",
+      "at": "2026-09-08T00:33:17.911Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32 guide note: Remove deletes the Officer entry",
+      "actual": "\"Remove Rev Ines Duarte LRXRCLO\" deleted the Officer entry; it was absent even with Show former turned on",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:33:17.911Z",
+      "at": "2026-09-08T00:33:21.691Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32 guide steps 1-3: Add registration saves its facts and leaves Formation jurisdiction alone",
+      "actual": "Add registration saved Nordvik LRXRCLO / NV-LRXRCLO / Nordvik Agents AS with Status Lapsed, and the Entity's own Formation jurisdiction stayed \"Rev C32 LRXRCLO\"",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:33:21.691Z",
+      "at": "2026-09-08T00:33:23.612Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32 guide step 3: a Registration Status selection saves immediately",
+      "actual": "Choosing Withdrawn saved without any further confirmation and survived a reload",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:33:23.612Z",
+      "at": "2026-09-08T00:33:24.835Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32 guide note: removing a Registration detaches its Obligation without deleting it",
+      "actual": "Removing Nordvik LRXRCLO left the Obligation \"Rev C32 licence renewal LRXRCLO\" on the Entity with its Registration cleared to \"None\", so the link was detached rather than the Obligation deleted",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:33:24.835Z",
+      "at": "2026-09-08T00:33:31.062Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32 guide steps 1-4: Add Holding records the ownership on both Entities",
+      "actual": "\"This Entity owns Rev C32 owned LRXRCLO\" at 60% listed Rev C32 owned LRXRCLO under Rev C32 main LRXRCLO's Owned Entities and listed Rev C32 main LRXRCLO at 60% under Rev C32 owned LRXRCLO's Owners",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:33:31.063Z",
+      "at": "2026-09-08T00:33:33.599Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32 negative: an Entity cannot own itself, repeat a Holding, or close an ownership loop",
+      "actual": "the Entity is not offered in its own Holding picker (the list answered []), so it cannot be chosen as its own owner; an Entity already in a Holding with this one is left out of the picker (the list answered []), so the same directional Holding cannot be repeated; closing the loop through Rev C32 owned LRXRCLO refused with \"This holding would create a loop: Rev C32 cycle tail LRXRCLO → Rev C32 main LRXRCLO → Rev C32 owned LRXRCLO → Rev C32 cycle tail LRXRCLO.\"; afterwards the one recorded Holding was still the only one",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:33:33.599Z",
+      "at": "2026-09-08T00:33:45.168Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32 guide note: a total over 100% warns but still saves, and a percentage corrects on blur",
+      "actual": "Two owners at 60% each both saved and produced the \"Ownership totals 120%\" warning; correcting one row to 30% and moving focus away persisted and cleared the warning",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:33:45.168Z",
+      "at": "2026-09-08T00:33:48.326Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32 guide step 5: Remove takes the Holding away and keeps both Entities",
+      "actual": "\"Remove Rev C32 owned LRXRCLO\" deleted only the Holding; both \"Rev C32 main LRXRCLO\" and \"Rev C32 owned LRXRCLO\" still opened as their own records",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:33:48.326Z",
+      "at": "2026-09-08T00:33:51.360Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32 guide section: a new Entity's Documents start empty, with no pre-created statutory folders",
+      "actual": "The Entity's Documents tab opened on \"No documents on this Entity yet.\" with New folder and Upload offered and no pre-created statutory folders",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:33:51.361Z",
+      "at": "2026-09-08T00:33:51.963Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32 required action: upload Entity-owned paper and confirm it is owned by this Entity",
+      "actual": "Upload filed the fictional \"rev-c32-certificate.txt\" as Executed on Rev C32 main LRXRCLO at Version v1; it did not appear on Rev C32 other owner LRXRCLO, so the Document stayed owned by the Entity it was filed against",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:33:51.963Z",
+      "at": "2026-09-08T00:34:01.465Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32 guide steps 1-3: Archive marks the Entity and hides it from the ordinary registry",
+      "actual": "Archive saved at once, put an Archived mark on the record with \"This entity is archived. Restore it to edit.\", disabled its Legal name and withdrew Add officer, and took the Entity out of the ordinary registry results",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:34:01.466Z",
+      "at": "2026-09-08T00:34:08.217Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32 guide steps 2-3: Show archived finds it and Restore returns its controls, Document and Obligation",
+      "actual": "Show archived brought \"Rev C32 main LRXRCLO\" back into the registry; Restore returned its editing controls, its Obligation \"Rev C32 licence renewal LRXRCLO\" was still recorded, and its Document \"rev-c32-certificate.txt\" was still filed at v1",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:34:08.218Z",
+      "at": "2026-09-08T00:34:16.251Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32 prerequisite: four Entities built by clearly-labelled API fixtures",
+      "actual": "API fixtures created \"Rev C32 main ARXRCLO\", \"Rev C32 owned ARXRCLO\", \"Rev C32 other owner ARXRCLO\" and \"Rev C32 cycle tail ARXRCLO\"; every reader step below is performed in the browser",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:34:16.516Z",
+      "at": "2026-09-08T00:34:16.568Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32 guide steps 1-3: Add officer saves the name, Role, Appointed on and Linked user",
+      "actual": "Add officer saved \"Rev Ines Duarte ARXRCLO\" as Director appointed 2022-05-09 with Ravi Menon as the linked user; all four survived a reload",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:34:16.568Z",
+      "at": "2026-09-08T00:34:18.473Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32 guide step 4: an Officer row's text saves when focus leaves the field",
+      "actual": "Typing \"Rev Ines Duarte ARXRCLO Jr\" into the Officer name and clicking the Officers heading to move focus away saved it with no further confirmation; the same transition restored \"Rev Ines Duarte ARXRCLO\"",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:34:18.473Z",
+      "at": "2026-09-08T00:34:20.973Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32 negative: a resignation before the appointment is refused and leaves the row unchanged",
+      "actual": "Resigned on 2021-01-01 against an appointment of 2022-05-09 was refused with \"The resignation date cannot be before the appointment date.\" shown beside the card; after a reload the appointment was still 2022-05-09 and no resignation was stored",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:34:20.974Z",
+      "at": "2026-09-08T00:34:22.243Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32 guide step 5: a valid resignation moves the Officer behind Show former",
+      "actual": "Resigned on 2024-08-31 saved when focus left the field and took the Officer out of the current list; Show former brought the row back carrying that resignation date",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:34:22.243Z",
+      "at": "2026-09-08T00:34:26.042Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32 guide note: Remove deletes the Officer entry",
+      "actual": "\"Remove Rev Ines Duarte ARXRCLO\" deleted the Officer entry; it was absent even with Show former turned on",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:34:26.042Z",
+      "at": "2026-09-08T00:34:29.825Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32 guide steps 1-3: Add registration saves its facts and leaves Formation jurisdiction alone",
+      "actual": "Add registration saved Nordvik ARXRCLO / NV-ARXRCLO / Nordvik Agents AS with Status Lapsed, and the Entity's own Formation jurisdiction stayed \"Rev C32 ARXRCLO\"",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:34:29.826Z",
+      "at": "2026-09-08T00:34:31.710Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32 guide step 3: a Registration Status selection saves immediately",
+      "actual": "Choosing Withdrawn saved without any further confirmation and survived a reload",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:34:31.711Z",
+      "at": "2026-09-08T00:34:32.929Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32 guide note: removing a Registration detaches its Obligation without deleting it",
+      "actual": "Removing Nordvik ARXRCLO left the Obligation \"Rev C32 licence renewal ARXRCLO\" on the Entity with its Registration cleared to \"None\", so the link was detached rather than the Obligation deleted",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:34:32.930Z",
+      "at": "2026-09-08T00:34:39.156Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32 guide steps 1-4: Add Holding records the ownership on both Entities",
+      "actual": "\"This Entity owns Rev C32 owned ARXRCLO\" at 60% listed Rev C32 owned ARXRCLO under Rev C32 main ARXRCLO's Owned Entities and listed Rev C32 main ARXRCLO at 60% under Rev C32 owned ARXRCLO's Owners",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:34:39.156Z",
+      "at": "2026-09-08T00:34:41.683Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32 negative: an Entity cannot own itself, repeat a Holding, or close an ownership loop",
+      "actual": "the Entity is not offered in its own Holding picker (the list answered []), so it cannot be chosen as its own owner; an Entity already in a Holding with this one is left out of the picker (the list answered []), so the same directional Holding cannot be repeated; closing the loop through Rev C32 owned ARXRCLO refused with \"This holding would create a loop: Rev C32 cycle tail ARXRCLO → Rev C32 main ARXRCLO → Rev C32 owned ARXRCLO → Rev C32 cycle tail ARXRCLO.\"; afterwards the one recorded Holding was still the only one",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:34:41.683Z",
+      "at": "2026-09-08T00:34:53.234Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32 guide note: a total over 100% warns but still saves, and a percentage corrects on blur",
+      "actual": "Two owners at 60% each both saved and produced the \"Ownership totals 120%\" warning; correcting one row to 30% and moving focus away persisted and cleared the warning",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:34:53.234Z",
+      "at": "2026-09-08T00:34:56.411Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32 guide step 5: Remove takes the Holding away and keeps both Entities",
+      "actual": "\"Remove Rev C32 owned ARXRCLO\" deleted only the Holding; both \"Rev C32 main ARXRCLO\" and \"Rev C32 owned ARXRCLO\" still opened as their own records",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:34:56.412Z",
+      "at": "2026-09-08T00:34:59.408Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32 guide section: a new Entity's Documents start empty, with no pre-created statutory folders",
+      "actual": "The Entity's Documents tab opened on \"No documents on this Entity yet.\" with New folder and Upload offered and no pre-created statutory folders",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:34:59.408Z",
+      "at": "2026-09-08T00:35:00.009Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32 required action: upload Entity-owned paper and confirm it is owned by this Entity",
+      "actual": "Upload filed the fictional \"rev-c32-certificate.txt\" as Executed on Rev C32 main ARXRCLO at Version v1; it did not appear on Rev C32 other owner ARXRCLO, so the Document stayed owned by the Entity it was filed against",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:35:00.009Z",
+      "at": "2026-09-08T00:35:09.531Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32 guide steps 1-3: Archive marks the Entity and hides it from the ordinary registry",
+      "actual": "Archive saved at once, put an Archived mark on the record with \"This entity is archived. Restore it to edit.\", disabled its Legal name and withdrew Add officer, and took the Entity out of the ordinary registry results",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:35:09.532Z",
+      "at": "2026-09-08T00:35:16.285Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32 guide steps 2-3: Show archived finds it and Restore returns its controls, Document and Obligation",
+      "actual": "Show archived brought \"Rev C32 main ARXRCLO\" back into the registry; Restore returned its editing controls, its Obligation \"Rev C32 licence renewal ARXRCLO\" was still recorded, and its Document \"rev-c32-certificate.txt\" was still filed at v1",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:35:16.285Z",
+      "at": "2026-09-08T00:35:24.244Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T00:35:24.265Z"
+}

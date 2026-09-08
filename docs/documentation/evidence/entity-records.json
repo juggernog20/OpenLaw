@@ -5,11 +5,11 @@
   "buildId": "app sha256:800689bba1e0bd183d33760b14e4775a593d23d1cf9ded4ad752e788e60bd818; engine sha256:b69fd318f42ddbb78e8531a4b7151bcd58d9788b367a26d528d41c5bebfa792f",
   "environment": "openlaw-docs-b8e31260-entities",
   "author": "Codex documentation author",
-  "technicalReviewer": null,
-  "walkthroughReviewer": null,
+  "technicalReviewer": "Independent review seat (agent)",
+  "walkthroughReviewer": "Independent review seat (agent)",
   "reviewerKind": "agent",
-  "verifiedAt": null,
-  "status": "not-run",
+  "verifiedAt": "2026-09-08T00:35:24.265Z",
+  "status": "pass",
   "sources": [
     "CONTEXT.md",
     "docs/decision-records/DECISIONS-ENTITIES.md",
@@ -26,9 +26,11 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "expected": "The entered corporate facts and files persist with their supported dates and relationships. Invalid ownership/date values and archived/read-only restrictions are handled without changing unrelated facts.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "API fixtures created \"Rev C32 main LRXRCLO\", \"Rev C32 owned LRXRCLO\", \"Rev C32 other owner LRXRCLO\" and \"Rev C32 cycle tail LRXRCLO\"; every reader step below is performed in the browser; Add officer saved \"Rev Ines Duarte LRXRCLO\" as Director appointed 2022-05-09 with Ravi Menon as the linked user; all four survived a reload; Typing \"Rev Ines Duarte LRXRCLO Jr\" into the Officer name and clicking the Officers heading to move focus away saved it with no further confirmation; the same transition restored \"Rev Ines Duarte LRXRCLO\"; Resigned on 2021-01-01 against an appointment of 2022-05-09 was refused with \"The resignation date cannot be before the appointment date.\" shown beside the card; after a reload the appointment was still 2022-05-09 and no resignation was stored; the Entity is not offered in its own Holding picker (the list answered []), so it cannot be chosen as its own owner; an Entity already in a Holding with this one is left out of the picker (the list answered []), so the same directional Holding cannot be repeated; closing the loop through Rev C32 owned LRXRCLO refused with \"This holding would create a loop: Rev C32 cycle tail LRXRCLO → Rev C32 main LRXRCLO → Rev C32 owned LRXRCLO → Rev C32 cycle tail LRXRCLO.\"; afterwards the one recorded Holding was still the only one.",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:33:08.318Z",
+      "completedAt": "2026-09-08T00:34:16.251Z",
+      "evidence": ["docs/documentation/batches/DOC-018/independent-c32.json"]
     },
     {
       "id": "V-C32",
@@ -36,17 +38,59 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "expected": "The entered corporate facts and files persist with their supported dates and relationships. Invalid ownership/date values and archived/read-only restrictions are handled without changing unrelated facts.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "API fixtures created \"Rev C32 main ARXRCLO\", \"Rev C32 owned ARXRCLO\", \"Rev C32 other owner ARXRCLO\" and \"Rev C32 cycle tail ARXRCLO\"; every reader step below is performed in the browser; Add officer saved \"Rev Ines Duarte ARXRCLO\" as Director appointed 2022-05-09 with Ravi Menon as the linked user; all four survived a reload; Typing \"Rev Ines Duarte ARXRCLO Jr\" into the Officer name and clicking the Officers heading to move focus away saved it with no further confirmation; the same transition restored \"Rev Ines Duarte ARXRCLO\"; Resigned on 2021-01-01 against an appointment of 2022-05-09 was refused with \"The resignation date cannot be before the appointment date.\" shown beside the card; after a reload the appointment was still 2022-05-09 and no resignation was stored; the Entity is not offered in its own Holding picker (the list answered []), so it cannot be chosen as its own owner; an Entity already in a Holding with this one is left out of the picker (the list answered []), so the same directional Holding cannot be repeated; closing the loop through Rev C32 owned ARXRCLO refused with \"This holding would create a loop: Rev C32 cycle tail ARXRCLO → Rev C32 main ARXRCLO → Rev C32 owned ARXRCLO → Rev C32 cycle tail ARXRCLO.\"; afterwards the one recorded Holding was still the only one.",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:34:16.516Z",
+      "completedAt": "2026-09-08T00:35:24.244Z",
+      "evidence": ["docs/documentation/batches/DOC-018/independent-c32.json"]
+    },
+    {
+      "id": "DOC-018-discovery",
+      "coverage": ["C32"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "The guide is found from the Entity destination's Help and by its exact title, its outline and skip link work by keyboard, and it holds in Light, Dark and Warm at 320, 720 and 1440 CSS pixels and at 200 percent zoom.",
+      "actual": "The Entities destination offered a Help link, and the Help index headed \"Guides for Legal Team Member\" listed all four Entity guides by their exact titles; Each exact title was found by the Help search and resolved to its own article (Maintain Entities and Counterparties -> /help/entities-and-counterparties; Manage Holdings, Officers, and Registrations -> /help/entity-records; Track and file Entity obligations -> /help/entity-obligations; Manage Entity structure and access -> /help/entity-structure-and-access); Selecting \"Read the calendar and Home\" moved to #read-the-calendar-and-home; the focused element was H2#read-the-calendar-and-home and the section heading was in view; \"Read this article in the full documentation\" opened /documentation/entity-structure-and-access and showed the same guide, \"Manage Entity structure and access\", in the formal reader; The Help article kept its title and produced no horizontal overflow in every theme and width combination (light@320px:0px, light@720px:0px, light@1440px:0px, dark@320px:0px, dark@720px:0px, dark@1440px:0px, warm@320px:0px, warm@720px:0px, warm@1440px:0px); At an emulated 200 percent zoom (a 1440px layout halved to a 720x450 CSS viewport) the article kept its title with no horizontal overflow; Arriving at the article put focus on its H1 \"track-and-file-entity-obligations\"; Shift+Tab reached the outline link for the filing section with a visible focus indicator (outline: solid) and Enter followed it to #mark-a-filing-and-check-the-next-cycle; the shell's \"Skip to content\" link was present and targets #main.",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:55:05.569Z",
+      "completedAt": "2026-09-08T00:55:40.513Z",
+      "evidence": ["docs/documentation/batches/DOC-018/independent-discovery.json"]
+    },
+    {
+      "id": "DOC-018-discovery",
+      "coverage": ["C32"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "The guide is found from the Entity destination's Help and by its exact title, its outline and skip link work by keyboard, and it holds in Light, Dark and Warm at 320, 720 and 1440 CSS pixels and at 200 percent zoom.",
+      "actual": "The Entities destination offered a Help link, and the Help index headed \"Guides for Administrator\" listed all four Entity guides by their exact titles; Each exact title was found by the Help search and resolved to its own article (Maintain Entities and Counterparties -> /help/entities-and-counterparties; Manage Holdings, Officers, and Registrations -> /help/entity-records; Track and file Entity obligations -> /help/entity-obligations; Manage Entity structure and access -> /help/entity-structure-and-access); Selecting \"Read the calendar and Home\" moved to #read-the-calendar-and-home; the focused element was H2#read-the-calendar-and-home and the section heading was in view; \"Read this article in the full documentation\" opened /documentation/entity-structure-and-access and showed the same guide, \"Manage Entity structure and access\", in the formal reader; The Help article kept its title and produced no horizontal overflow in every theme and width combination (light@320px:0px, light@720px:0px, light@1440px:0px, dark@320px:0px, dark@720px:0px, dark@1440px:0px, warm@320px:0px, warm@720px:0px, warm@1440px:0px); At an emulated 200 percent zoom (a 1440px layout halved to a 720x450 CSS viewport) the article kept its title with no horizontal overflow; Arriving at the article put focus on its H1 \"track-and-file-entity-obligations\"; Shift+Tab reached the outline link for the filing section with a visible focus indicator (outline: solid) and Enter followed it to #mark-a-filing-and-check-the-next-cycle; the shell's \"Skip to content\" link was present and targets #main.",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:55:40.813Z",
+      "completedAt": "2026-09-08T00:56:15.702Z",
+      "evidence": ["docs/documentation/batches/DOC-018/independent-discovery.json"]
+    },
+    {
+      "id": "DOC-018-discovery",
+      "coverage": ["C32"],
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "expected": "The formal index lists the guide without a sign-in and asks the application for nothing.",
+      "actual": "Without any sign-in the formal index listed all four Entity guides behind a \"Skip to content\" link, offered no sign-in form or password field, and issued no /api/v1 request (0 application calls observed)",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:56:15.724Z",
+      "completedAt": "2026-09-08T00:56:19.243Z",
+      "evidence": ["docs/documentation/batches/DOC-018/independent-discovery.json"]
     }
   ],
-  "authorEvidence": ["docs/documentation/batches/DOC-018/README.md"],
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-018/README.md",
+    "docs/documentation/batches/DOC-018/independent-c32.json",
+    "docs/documentation/batches/DOC-018/independent-discovery.json"
+  ],
   "limitations": [
-    "Author browser checks passed; independent technical review and required role walkthroughs are pending.",
-    "Agent walkthroughs are not human user studies or feature-owner approval.",
+    "Agent walkthroughs by an independent review seat, not human user studies or feature-owner approval.",
     "The types and Fields guide remains a publication dependency.",
-    "Author runs retain their actual earlier hash; the added Officer role configuration link awaits independent review and fresh required walkthroughs."
+    "Recorded against lab app source 8539f4cc, which is ahead of edition.json's supportedAppCommit; the whole suite is re-pinned to one build at DOC-025 acceptance.",
+    "The catalog stays in feature review: DOC-025 whole-suite acceptance and DOC-027 publication are still ahead."
   ],
   "previousEvidence": null,
   "copyOnlyReview": null

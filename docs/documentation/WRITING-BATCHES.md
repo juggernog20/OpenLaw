@@ -88,12 +88,12 @@ See the [batch verification record](batches/DOC-017/README.md) for the tested bu
 
 ## DOC-018 [#738](https://github.com/juggernog20/OpenLaw/issues/738)
 
-See the [author verification record](batches/DOC-018/README.md). Independent review and eight scenario/role walkthroughs remain pending.
+See the [batch verification record](batches/DOC-018/README.md) for the tested build, author outcomes, the independent walkthrough of all eight scenario/role combinations, the discovery pass, and publication dependencies. Every per-article evidence record reads `pass`. The two unchecked boxes wait on a guide in a later batch that they link to, not on verification.
 
-- [ ] `entities-and-counterparties`: Maintain Entities and Counterparties (C31; P1).
-- [ ] `entity-records`: Manage Holdings, Officers, and Registrations (C32; P1).
-- [ ] `entity-obligations`: Track and file Entity obligations (C52; P0).
-- [ ] `entity-structure-and-access`: Manage Entity structure and access (C53; P1).
+- [ ] `entities-and-counterparties`: Maintain Entities and Counterparties (C31; P1). Links `types-statuses-fields` (DOC-021).
+- [ ] `entity-records`: Manage Holdings, Officers, and Registrations (C32; P1). Links `types-statuses-fields` (DOC-021).
+- [x] `entity-obligations`: Track and file Entity obligations (C52; P0).
+- [x] `entity-structure-and-access`: Manage Entity structure and access (C53; P1).
 
 ## DOC-019 [#739](https://github.com/juggernog20/OpenLaw/issues/739)
 

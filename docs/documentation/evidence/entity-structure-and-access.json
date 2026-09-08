@@ -5,11 +5,11 @@
   "buildId": "app sha256:800689bba1e0bd183d33760b14e4775a593d23d1cf9ded4ad752e788e60bd818; engine sha256:b69fd318f42ddbb78e8531a4b7151bcd58d9788b367a26d528d41c5bebfa792f",
   "environment": "openlaw-docs-b8e31260-entities",
   "author": "Codex documentation author",
-  "technicalReviewer": null,
-  "walkthroughReviewer": null,
+  "technicalReviewer": "Independent review seat (agent)",
+  "walkthroughReviewer": "Independent review seat (agent)",
   "reviewerKind": "agent",
-  "verifiedAt": null,
-  "status": "not-run",
+  "verifiedAt": "2026-09-08T00:49:09.320Z",
+  "status": "pass",
   "sources": [
     "CONTEXT.md",
     "docs/decision-records/DECISIONS-ENTITIES.md",
@@ -27,9 +27,11 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "expected": "Corporate facts and graph edges are accurate and explicit Grants control the intended reach. Restricted linked records remain protected; a Holding or chart relationship does not grant access.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "Authorized shares 10000, Issued shares 7500 and Par value (minor units) 1 each saved when focus left the field and survived a reload; Typing 999 into Issued shares and pressing Escape returned the control to 7500 and left 7500 stored; The chart drew Rev C53 parent RYAG0T, Rev C53 secret sub RYAG0T and Rev C53 minor owner RYAG0T with their 75% and 25% edges; with the chart focused the arrow key panned and plus zoomed (translate(0 0) scale(1) to translate(40 0) scale(1.15)), zero fitted it back and Fit to window reset it the same way; \"-5\" and \"12.5\" were both refused with \"Enter a whole number of zero or more.\" and the saved 10000 was untouched after each; From Rev C53 parent RYAG0T's Ownership the reader saw \"Restricted Entity\" with no legal name and no navigation link; typing the record's own address in the browser did not open it either, so the Holding carried no access; After the Grant was removed the record's address no longer opened for the reader and Rev C53 parent RYAG0T's Ownership showed \"Restricted Entity\" again, so the recorded relationship survived while the access was withdrawn.",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:47:59.583Z",
+      "completedAt": "2026-09-08T00:49:09.297Z",
+      "evidence": ["docs/documentation/batches/DOC-018/independent-c53.json"]
     },
     {
       "id": "V-C53",
@@ -37,17 +39,59 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "expected": "Corporate facts and graph edges are accurate and explicit Grants control the intended reach. Restricted linked records remain protected; a Holding or chart relationship does not grant access.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "Authorized shares 10000, Issued shares 7500 and Par value (minor units) 1 each saved when focus left the field and survived a reload; Typing 999 into Issued shares and pressing Escape returned the control to 7500 and left 7500 stored; The chart drew Rev C53 parent RYAG0T, Rev C53 secret sub RYAG0T and Rev C53 minor owner RYAG0T with their 75% and 25% edges; with the chart focused the arrow key panned and plus zoomed (translate(0 0) scale(1) to translate(40 0) scale(1.15)), zero fitted it back and Fit to window reset it the same way; \"-5\" and \"12.5\" were both refused with \"Enter a whole number of zero or more.\" and the saved 10000 was untouched after each.",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:48:20.669Z",
+      "completedAt": "2026-09-08T00:49:08.690Z",
+      "evidence": ["docs/documentation/batches/DOC-018/independent-c53.json"]
+    },
+    {
+      "id": "DOC-018-discovery",
+      "coverage": ["C53"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "The guide is found from the Entity destination's Help and by its exact title, its outline and skip link work by keyboard, and it holds in Light, Dark and Warm at 320, 720 and 1440 CSS pixels and at 200 percent zoom.",
+      "actual": "The Entities destination offered a Help link, and the Help index headed \"Guides for Legal Team Member\" listed all four Entity guides by their exact titles; Each exact title was found by the Help search and resolved to its own article (Maintain Entities and Counterparties -> /help/entities-and-counterparties; Manage Holdings, Officers, and Registrations -> /help/entity-records; Track and file Entity obligations -> /help/entity-obligations; Manage Entity structure and access -> /help/entity-structure-and-access); Selecting \"Read the calendar and Home\" moved to #read-the-calendar-and-home; the focused element was H2#read-the-calendar-and-home and the section heading was in view; \"Read this article in the full documentation\" opened /documentation/entity-structure-and-access and showed the same guide, \"Manage Entity structure and access\", in the formal reader; The Help article kept its title and produced no horizontal overflow in every theme and width combination (light@320px:0px, light@720px:0px, light@1440px:0px, dark@320px:0px, dark@720px:0px, dark@1440px:0px, warm@320px:0px, warm@720px:0px, warm@1440px:0px); At an emulated 200 percent zoom (a 1440px layout halved to a 720x450 CSS viewport) the article kept its title with no horizontal overflow; Arriving at the article put focus on its H1 \"track-and-file-entity-obligations\"; Shift+Tab reached the outline link for the filing section with a visible focus indicator (outline: solid) and Enter followed it to #mark-a-filing-and-check-the-next-cycle; the shell's \"Skip to content\" link was present and targets #main.",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:55:05.569Z",
+      "completedAt": "2026-09-08T00:55:40.513Z",
+      "evidence": ["docs/documentation/batches/DOC-018/independent-discovery.json"]
+    },
+    {
+      "id": "DOC-018-discovery",
+      "coverage": ["C53"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "The guide is found from the Entity destination's Help and by its exact title, its outline and skip link work by keyboard, and it holds in Light, Dark and Warm at 320, 720 and 1440 CSS pixels and at 200 percent zoom.",
+      "actual": "The Entities destination offered a Help link, and the Help index headed \"Guides for Administrator\" listed all four Entity guides by their exact titles; Each exact title was found by the Help search and resolved to its own article (Maintain Entities and Counterparties -> /help/entities-and-counterparties; Manage Holdings, Officers, and Registrations -> /help/entity-records; Track and file Entity obligations -> /help/entity-obligations; Manage Entity structure and access -> /help/entity-structure-and-access); Selecting \"Read the calendar and Home\" moved to #read-the-calendar-and-home; the focused element was H2#read-the-calendar-and-home and the section heading was in view; \"Read this article in the full documentation\" opened /documentation/entity-structure-and-access and showed the same guide, \"Manage Entity structure and access\", in the formal reader; The Help article kept its title and produced no horizontal overflow in every theme and width combination (light@320px:0px, light@720px:0px, light@1440px:0px, dark@320px:0px, dark@720px:0px, dark@1440px:0px, warm@320px:0px, warm@720px:0px, warm@1440px:0px); At an emulated 200 percent zoom (a 1440px layout halved to a 720x450 CSS viewport) the article kept its title with no horizontal overflow; Arriving at the article put focus on its H1 \"track-and-file-entity-obligations\"; Shift+Tab reached the outline link for the filing section with a visible focus indicator (outline: solid) and Enter followed it to #mark-a-filing-and-check-the-next-cycle; the shell's \"Skip to content\" link was present and targets #main.",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:55:40.813Z",
+      "completedAt": "2026-09-08T00:56:15.702Z",
+      "evidence": ["docs/documentation/batches/DOC-018/independent-discovery.json"]
+    },
+    {
+      "id": "DOC-018-discovery",
+      "coverage": ["C53"],
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "expected": "The formal index lists the guide without a sign-in and asks the application for nothing.",
+      "actual": "Without any sign-in the formal index listed all four Entity guides behind a \"Skip to content\" link, offered no sign-in form or password field, and issued no /api/v1 request (0 application calls observed)",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:56:15.724Z",
+      "completedAt": "2026-09-08T00:56:19.243Z",
+      "evidence": ["docs/documentation/batches/DOC-018/independent-discovery.json"]
     }
   ],
-  "authorEvidence": ["docs/documentation/batches/DOC-018/README.md"],
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-018/README.md",
+    "docs/documentation/batches/DOC-018/independent-c53.json",
+    "docs/documentation/batches/DOC-018/independent-discovery.json"
+  ],
   "limitations": [
-    "Author browser checks passed; independent technical review and required role walkthroughs are pending.",
-    "Agent walkthroughs are not human user studies or feature-owner approval.",
+    "Agent walkthroughs by an independent review seat, not human user studies or feature-owner approval.",
     "The types and Fields guide remains a publication dependency.",
-    "Author runs retain their actual earlier hashes; subsequent terminology and dynamic-label copy corrections await independent review and fresh required walkthroughs."
+    "Recorded against lab app source 8539f4cc, which is ahead of edition.json's supportedAppCommit; the whole suite is re-pinned to one build at DOC-025 acceptance.",
+    "The catalog stays in feature review: DOC-025 whole-suite acceptance and DOC-027 publication are still ahead."
   ],
   "previousEvidence": null,
   "copyOnlyReview": null

@@ -1,0 +1,240 @@
+{
+  "name": "independent-c31",
+  "kind": "independent-review-walkthrough",
+  "scenario": "V-C31",
+  "article": "entities-and-counterparties",
+  "appCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
+  "buildId": "app sha256:800689bba1e0bd183d33760b14e4775a593d23d1cf9ded4ad752e788e60bd818; engine sha256:b69fd318f42ddbb78e8531a4b7151bcd58d9788b367a26d528d41c5bebfa792f",
+  "environment": "openlaw-docs-b8e31260-entities",
+  "reviewer": "Independent review seat (agent)",
+  "startedAt": "2026-09-07T23:40:45.292Z",
+  "steps": [
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C31 guide step 1: Entities opens on Calendar; List shows the registry",
+      "actual": "Entities opened on Calendar with the Calendar link marked current; List reached the registry table with its Legal name column",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:40:45.675Z",
+      "at": "2026-09-07T23:40:45.901Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C31 guide step 2: Type filter narrows the registry and Clear all restores it",
+      "actual": "Type=Branch narrowed the registry from 50 to 1 rows; Clear all restored 50 rows",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:40:45.902Z",
+      "at": "2026-09-07T23:40:48.353Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C31 negative: Register refuses a blank Legal name with a visible outcome",
+      "actual": "Register with a blank Legal name kept the dialog open and showed \"Name the entity — its registered legal name.\"; no Entity was created",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:40:48.353Z",
+      "at": "2026-09-07T23:40:49.657Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C31 guide steps 3-5: register an Entity with identity details, Status defaulting to Active",
+      "actual": "Status defaulted to Active; Register saved \"Rev C31 legal_team_member RVVZOT\" and its jurisdiction, registration no., tax ID, agent and address, and the registry link opened the new record",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:40:49.657Z",
+      "at": "2026-09-07T23:40:53.877Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C31 guide step 5: an Overview text field saves on blur and a selection saves on choice",
+      "actual": "Registered agent saved when focus left the field and Status saved on selection; both survived a reload",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:40:53.877Z",
+      "at": "2026-09-07T23:40:58.513Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C31 guide note: corporate Status Dormant does not archive the Entity",
+      "actual": "After Status Dormant the record carried no Archived mark and still offered Archive, so the corporate Status did not archive it",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:40:58.513Z",
+      "at": "2026-09-07T23:40:58.517Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C31 guide note: registering the same legal name again creates a distinct record",
+      "actual": "Registering \"Rev C31 legal_team_member RVVZOT\" a second time was accepted; the filtered registry showed 2 rows with that name pointing at 2 different records, so the first was not updated or merged (first row: Rev C31 legal_team_member RVVZOT Corporation Republic of Aldoria ALD-RVVZOT Dormant — )",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:40:58.517Z",
+      "at": "2026-09-07T23:41:03.301Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C31 prerequisite: create a disposable Contract to carry the parties",
+      "actual": "Created disposable Contract 45 to run the party steps against",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:41:03.302Z",
+      "at": "2026-09-07T23:41:07.388Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C31 guide step 1: Our entity records which of our Entities signs",
+      "actual": "Our entity saved \"Rev C31 legal_team_member RVVZOT\" and the choice survived a reload, keeping our own Entity distinct from the other side",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:41:07.388Z",
+      "at": "2026-09-07T23:41:09.568Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C31 guide steps 2-3: a new Counterparty is created from the picker and marked Primary",
+      "actual": "Create \"Rev Cedar Supply LRVVZOT\" added the new Counterparty to the Contract and the first one carried the Primary mark",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:41:09.568Z",
+      "at": "2026-09-07T23:41:11.840Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C31 guide note: the picker refuses a second record for an existing name, ignoring case",
+      "actual": "Typing \"REV CEDAR SUPPLY LRVVZOT\" offered no Create row, and the Counterparty already on the Contract was not offered again",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:41:11.840Z",
+      "at": "2026-09-07T23:41:13.383Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C31 guide steps 4-5: add a second party, Make primary, then take one off the Contract",
+      "actual": "Added Rev Birch Logistics LRVVZOT, made it Primary, then \"Take Rev Birch Logistics LRVVZOT off the contract\" removed it; Rev Cedar Supply LRVVZOT remained and took the Primary mark back, and Rev Birch Logistics LRVVZOT's shared record still existed",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:41:13.383Z",
+      "at": "2026-09-07T23:41:20.220Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C31 guide step 1: Entities opens on Calendar; List shows the registry",
+      "actual": "Entities opened on Calendar with the Calendar link marked current; List reached the registry table with its Legal name column",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:41:20.483Z",
+      "at": "2026-09-07T23:41:20.698Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C31 guide step 2: Type filter narrows the registry and Clear all restores it",
+      "actual": "Type=Branch narrowed the registry from 50 to 1 rows; Clear all restored 50 rows",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:41:20.698Z",
+      "at": "2026-09-07T23:41:23.154Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C31 negative: Register refuses a blank Legal name with a visible outcome",
+      "actual": "Register with a blank Legal name kept the dialog open and showed \"Name the entity — its registered legal name.\"; no Entity was created",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:41:23.154Z",
+      "at": "2026-09-07T23:41:24.455Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C31 guide steps 3-5: register an Entity with identity details, Status defaulting to Active",
+      "actual": "Status defaulted to Active; Register saved \"Rev C31 administrator RVVZOT\" and its jurisdiction, registration no., tax ID, agent and address, and the registry link opened the new record",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:41:24.455Z",
+      "at": "2026-09-07T23:41:28.638Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C31 guide step 5: an Overview text field saves on blur and a selection saves on choice",
+      "actual": "Registered agent saved when focus left the field and Status saved on selection; both survived a reload",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:41:28.638Z",
+      "at": "2026-09-07T23:41:33.282Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C31 guide note: corporate Status Dormant does not archive the Entity",
+      "actual": "After Status Dormant the record carried no Archived mark and still offered Archive, so the corporate Status did not archive it",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:41:33.282Z",
+      "at": "2026-09-07T23:41:33.286Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C31 guide note: registering the same legal name again creates a distinct record",
+      "actual": "Registering \"Rev C31 administrator RVVZOT\" a second time was accepted; the filtered registry showed 2 rows with that name pointing at 2 different records, so the first was not updated or merged (first row: Rev C31 administrator RVVZOT Corporation Republic of Aldoria ALD-RVVZOT Dormant — )",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:41:33.286Z",
+      "at": "2026-09-07T23:41:38.085Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C31 prerequisite: create a disposable Contract to carry the parties",
+      "actual": "Created disposable Contract 46 to run the party steps against",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:41:38.085Z",
+      "at": "2026-09-07T23:41:42.159Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C31 guide step 1: Our entity records which of our Entities signs",
+      "actual": "Our entity saved \"Rev C31 administrator RVVZOT\" and the choice survived a reload, keeping our own Entity distinct from the other side",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:41:42.159Z",
+      "at": "2026-09-07T23:41:44.324Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C31 guide steps 2-3: a new Counterparty is created from the picker and marked Primary",
+      "actual": "Create \"Rev Cedar Supply ARVVZOT\" added the new Counterparty to the Contract and the first one carried the Primary mark",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:41:44.324Z",
+      "at": "2026-09-07T23:41:46.588Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C31 guide note: the picker refuses a second record for an existing name, ignoring case",
+      "actual": "Typing \"REV CEDAR SUPPLY ARVVZOT\" offered no Create row, and the Counterparty already on the Contract was not offered again",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:41:46.588Z",
+      "at": "2026-09-07T23:41:48.134Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C31 guide steps 4-5: add a second party, Make primary, then take one off the Contract",
+      "actual": "Added Rev Birch Logistics ARVVZOT, made it Primary, then \"Take Rev Birch Logistics ARVVZOT off the contract\" removed it; Rev Cedar Supply ARVVZOT remained and took the Primary mark back, and Rev Birch Logistics ARVVZOT's shared record still existed",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:41:48.134Z",
+      "at": "2026-09-07T23:41:54.945Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C31 negative: a Contributor cannot use the Member+ Entities destination",
+      "actual": "Opening /entities as a Contributor left the destination for http://127.0.0.1:43306/, no Entities item appeared in the navigation, and the API answered 403",
+      "result": "pass",
+      "startedAt": "2026-09-07T23:41:55.195Z",
+      "at": "2026-09-07T23:41:57.738Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T23:41:57.757Z"
+}

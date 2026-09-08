@@ -103,7 +103,7 @@
     },
     {
       "role": "contributor",
-      "method": "browser-walkthrough",
+      "method": "automated-test",
       "action": "C52 unauthorized Obligation reads and writes are refused",
       "actual": "Contributor could neither read Entity Obligations nor add a schedule",
       "result": "pass",

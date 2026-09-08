@@ -1,0 +1,204 @@
+{
+  "name": "independent-c53",
+  "kind": "independent-review-walkthrough",
+  "scenario": "V-C53",
+  "article": "entity-structure-and-access",
+  "appCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
+  "buildId": "app sha256:800689bba1e0bd183d33760b14e4775a593d23d1cf9ded4ad752e788e60bd818; engine sha256:b69fd318f42ddbb78e8531a4b7151bcd58d9788b367a26d528d41c5bebfa792f",
+  "environment": "openlaw-docs-b8e31260-entities",
+  "reviewer": "Independent review seat (agent)",
+  "startedAt": "2026-09-08T00:47:58.877Z",
+  "steps": [
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C53 guide steps 1-3: share capital saves each value when focus leaves it",
+      "actual": "Authorized shares 10000, Issued shares 7500 and Par value (minor units) 1 each saved when focus left the field and survived a reload",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:47:59.583Z",
+      "at": "2026-09-08T00:48:07.606Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C53 guide step 3: Escape abandons an unsaved share-capital edit",
+      "actual": "Typing 999 into Issued shares and pressing Escape returned the control to 7500 and left 7500 stored",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:48:07.606Z",
+      "at": "2026-09-08T00:48:09.731Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C53 negative: a negative or fractional value is refused without replacing the saved value",
+      "actual": "\"-5\" and \"12.5\" were both refused with \"Enter a whole number of zero or more.\" and the saved 10000 was untouched after each",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:48:09.732Z",
+      "at": "2026-09-08T00:48:16.008Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C53 guide steps 1-3: the chart draws the recorded Holdings and answers its keyboard controls",
+      "actual": "The chart drew Rev C53 parent RYAG0T, Rev C53 secret sub RYAG0T and Rev C53 minor owner RYAG0T with their 75% and 25% edges; with the chart focused the arrow key panned and plus zoomed (translate(0 0) scale(1) to translate(40 0) scale(1.15)), zero fitted it back and Fit to window reset it the same way",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:48:16.008Z",
+      "at": "2026-09-08T00:48:19.362Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C53 guide step 4: a chart node opens the named Entity",
+      "actual": "Selecting the chart node for Rev C53 secret sub RYAG0T opened that Entity's own record",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:48:19.362Z",
+      "at": "2026-09-08T00:48:19.466Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C53 guide section: linked Contracts show only what this reader reaches",
+      "actual": "The Entity's Contracts tab showed neither a row nor a count for the Confidential Contract this reader cannot reach (tab reads \"Contracts\"), so linking it to a reachable Entity did not widen its audience",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:48:19.467Z",
+      "at": "2026-09-08T00:48:20.056Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C53 guide step 1: a Legal Team Member is not offered the Confidential flag or Grants",
+      "actual": "The Legal Team Member saw the Confidentiality card with its switch disabled and no Manage access control, and the write behind it was refused with \"Only an Administrator can change Entity confidentiality.\", so only an Administrator changes the flag or its Grants",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:48:20.057Z",
+      "at": "2026-09-08T00:48:20.669Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C53 guide steps 1-3: share capital saves each value when focus leaves it",
+      "actual": "Authorized shares 10000, Issued shares 7500 and Par value (minor units) 1 each saved when focus left the field and survived a reload",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:48:20.669Z",
+      "at": "2026-09-08T00:48:28.623Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C53 guide step 3: Escape abandons an unsaved share-capital edit",
+      "actual": "Typing 999 into Issued shares and pressing Escape returned the control to 7500 and left 7500 stored",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:48:28.623Z",
+      "at": "2026-09-08T00:48:30.740Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C53 negative: a negative or fractional value is refused without replacing the saved value",
+      "actual": "\"-5\" and \"12.5\" were both refused with \"Enter a whole number of zero or more.\" and the saved 10000 was untouched after each",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:48:30.740Z",
+      "at": "2026-09-08T00:48:37.010Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C53 guide steps 1-3: the chart draws the recorded Holdings and answers its keyboard controls",
+      "actual": "The chart drew Rev C53 parent RYAG0T, Rev C53 secret sub RYAG0T and Rev C53 minor owner RYAG0T with their 75% and 25% edges; with the chart focused the arrow key panned and plus zoomed (translate(0 0) scale(1) to translate(40 0) scale(1.15)), zero fitted it back and Fit to window reset it the same way",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:48:37.011Z",
+      "at": "2026-09-08T00:48:40.331Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C53 guide step 4: a chart node opens the named Entity",
+      "actual": "Selecting the chart node for Rev C53 secret sub RYAG0T opened that Entity's own record",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:48:40.331Z",
+      "at": "2026-09-08T00:48:40.423Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C53 guide section: linked Contracts show only what this reader reaches",
+      "actual": "The Entity's Contracts tab listed the Confidential Contract \"Rev C53 confidential deed RYAG0T\" for the Administrator who reaches it (tab reads \"Contracts\")",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:48:40.424Z",
+      "at": "2026-09-08T00:48:41.015Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C53 guide steps 1-2: turning on Confidential restricts the Entity to its grant list",
+      "actual": "Turning on \"Confidential — restrict to the grant list\" saved and the Administrator kept access to \"Rev C53 secret sub RYAG0T\" without any Grant",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:48:41.260Z",
+      "at": "2026-09-08T00:48:45.499Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C53 negative: a Holding to a Confidential Entity shows Restricted Entity and does not open it",
+      "actual": "From Rev C53 parent RYAG0T's Ownership the reader saw \"Restricted Entity\" with no legal name and no navigation link; typing the record's own address in the browser did not open it either, so the Holding carried no access",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:48:45.499Z",
+      "at": "2026-09-08T00:48:49.146Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C53 guide steps 2-3: Manage access grants one named Legal Team Member",
+      "actual": "Choosing Nadia Haddad in Confidential access and selecting Grant access put that person in the list on \"Rev C53 secret sub RYAG0T\"",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:48:49.146Z",
+      "at": "2026-09-08T00:48:52.244Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C53 guide step 3: the granted reader now reaches the Confidential Entity",
+      "actual": "With the Grant in place the reader opened \"Rev C53 secret sub RYAG0T\" and saw it named under Rev C53 parent RYAG0T's Holdings; opening the linked Confidential Contract's own address still did not show it, so the Grant covered this Entity only",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:48:52.245Z",
+      "at": "2026-09-08T00:48:56.477Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C53 guide step 4: Remove withdraws the exception",
+      "actual": "\"Remove Nadia Haddad\" took that person out of the Confidential access list, which returned to \"No grants yet.\"",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:48:56.478Z",
+      "at": "2026-09-08T00:49:00.003Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C53 negative: removing the Grant restores the restriction and keeps the relationship",
+      "actual": "After the Grant was removed the record's address no longer opened for the reader and Rev C53 parent RYAG0T's Ownership showed \"Restricted Entity\" again, so the recorded relationship survived while the access was withdrawn",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:49:00.004Z",
+      "at": "2026-09-08T00:49:03.627Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C53 guide step 4: turning the flag off opens the Entity to Legal Team Members again",
+      "actual": "Turning the Confidential switch off saved on \"Rev C53 secret sub RYAG0T\"",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:49:03.628Z",
+      "at": "2026-09-08T00:49:08.690Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C53 guide step 4: with the flag off the reader needs no Grant",
+      "actual": "With the flag off and no Grant in the list, the Legal Team Member opened \"Rev C53 secret sub RYAG0T\" directly",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:49:08.691Z",
+      "at": "2026-09-08T00:49:09.297Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T00:49:09.320Z"
+}
