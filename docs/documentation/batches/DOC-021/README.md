@@ -1,6 +1,6 @@
 # Configuration guide verification
 
-Five canonical articles cover C38–C41 and C55 for [#741](https://github.com/juggernog20/OpenLaw/issues/741). Four are new; `request-forms` extends the existing Contract pilot to Matter targets, form variants, guidance and conversion gaps. There are now 46 authored articles of 56 planned. This is feature-review content. The five Administrator walkthrough scenarios V-C38, V-C39, V-C40, V-C41 and V-C55 have now been run independently and each per-article record reads `pass`. Feature-owner technical review is still unrecorded, and the catalog stays at `review`: it does not claim publication or final-candidate acceptance. The user will proofread once the full suite is assembled.
+Five canonical articles cover C38–C41 and C55 for [#741](https://github.com/juggernog20/OpenLaw/issues/741). Four are new; `request-forms` extends the existing Contract pilot to Matter targets, form variants, guidance and conversion gaps. There are now 46 authored articles of 56 planned. This is feature-review content. The five Administrator walkthrough scenarios V-C38, V-C39, V-C40, V-C41 and V-C55 have now been run independently and each per-article record reads `pass`. The same independent agent also performed the technical review by source inspection, so each record names it under both `technicalReviewer` and `walkthroughReviewer`: two methods, one reviewer, not two people. No human feature owner has signed off behaviour accuracy. The catalog stays at `review`: it does not claim publication or final-candidate acceptance, and the user's proofreading of the assembled suite has not happened.
 
 ## Build and method
 
@@ -140,9 +140,17 @@ Three `request-forms` sentences did not match the release and were rewritten, th
 
 The `approver-groups` correction from the cold pass was also confirmed against the running app. An archived member and an already-pending member are skipped, but a member who has lost Member+ standing, or who sits outside a Confidential Contract's audience, is refused by name and the whole apply creates nothing — the Pending count was identical before and after each refusal, so no partial roster is left behind.
 
+### Technical review
+
+The independent agent performed the technical review as source inspection against the release under test, `6a8873db`, and each per-article record carries its own `technicalReview` block naming the reviewer, the method, the completion time and the files read. The two source findings that changed prose are described above under corrections; the reading also confirmed the parts of each guide that the walkthrough could only observe from the outside — that request types are registered without a usage counter, so an in-use count can never be anything but zero; that the Portal filters archived request types out of both its cards and its per-slug form; that one predicate backs the audit page, its count and its export, so the CSV holds the whole filtered set rather than the loaded page; and that the morning round reaches 08:00 in the reader's saved zone rather than firing at a fixed hour.
+
+One omission is recorded rather than fixed here. Taking an audit export appends its own `export.performed` entry at the Administrator-only tier, and the guide does not mention it. Nothing the guide says about the export is wrong, so the prose is unchanged and its hash stands; a later batch can add the sentence and reverify.
+
+This is an agent review of the implementation, not a feature owner's sign-off and not the user's proofreading. Both remain open.
+
 ### Not established here
 
-No feature owner has reviewed these guides for behaviour accuracy; this pass observed the release's own settings and is not a sign-off. The lab is the owned local fixture at source `6a8873db`, so it says nothing about a real provider account, and DOC-025 still owns reconciliation against the final app candidate and the aggregate coverage report. Issues [#770](https://github.com/juggernog20/OpenLaw/issues/770) and [#774](https://github.com/juggernog20/OpenLaw/issues/774) remain open and are documented as limits, not fixed.
+Technical review and the walkthrough were done by the same agent, so they are two methods rather than two independent people, and neither is a human feature owner's sign-off on behaviour accuracy. The lab is the owned local fixture at source `6a8873db`, so it says nothing about a real provider account, and DOC-025 still owns reconciliation against the final app candidate and the aggregate coverage report. Issues [#770](https://github.com/juggernog20/OpenLaw/issues/770) and [#774](https://github.com/juggernog20/OpenLaw/issues/774) remain open and are documented as limits, not fixed.
 
 ## History and remaining work
 

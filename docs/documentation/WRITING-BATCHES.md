@@ -112,7 +112,7 @@ See the [batch verification record](batches/DOC-020/README.md) for the tested bu
 
 ## DOC-021 [#741](https://github.com/juggernog20/OpenLaw/issues/741)
 
-See the [batch verification record](batches/DOC-021/README.md) for the tested build, the author outcomes and the independent walkthrough of V-C38, V-C39, V-C40, V-C41 and V-C55. Every per-article evidence record reads `pass`, so all five boxes are checked here. The independent pass corrected three `request-forms` sentences about No target, request-type archiving and the Matter carry-through label, and reverified them. Feature-owner technical review and DOC-025 acceptance are still open, so the catalog stays in feature review.
+See the [batch verification record](batches/DOC-021/README.md) for the tested build, the author outcomes and the independent walkthrough of V-C38, V-C39, V-C40, V-C41 and V-C55. Every per-article evidence record reads `pass`, so all five boxes are checked here. The independent pass corrected three `request-forms` sentences about No target, request-type archiving and the Matter carry-through label, and reverified them. Technical review was source inspection by that same independent agent, recorded per article; a human feature owner's sign-off and DOC-025 acceptance are still open, so the catalog stays in feature review and the user's proofreading is still to come.
 
 - [x] `types-statuses-fields`: Configure types, Statuses, and Fields (C38; P1).
 - [x] `matter-templates`: Configure Matter templates (C39; P1).
