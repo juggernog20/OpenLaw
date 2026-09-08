@@ -1,0 +1,149 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-024",
+  "issue": 744,
+  "independentReview": true,
+  "reviewerKind": "agent",
+  "walkthroughReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat), a different agent from the author",
+  "author": "Codex documentation author",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "frontend": "Working documentation preview at 127.0.0.1:43333 over the immutable configuration backend at 127.0.0.1:43332",
+  "browser": "Playwright 1.62.1 Chromium from the workspace, headless, one isolated context per identity; scripts written by the reviewer from the article text",
+  "startedAt": "2026-09-08T11:56:59.085Z",
+  "finishedAt": "2026-09-08T11:58:19.127Z",
+  "articleHashes": [
+    {
+      "articleId": "troubleshooting",
+      "contentSha256": "e2404361abcc621f8ee36fcd03dec23150bdabc0070d30678ba54caaabb9dd1b"
+    },
+    {
+      "articleId": "reference",
+      "contentSha256": "ba4b1b0cc96db761cc19f06fa88d5e4d9625355873cc2a15d8f6deb58193f5d6"
+    },
+    {
+      "articleId": "versions-and-support",
+      "contentSha256": "dee7dab08d34a3a1f7c6828ca2a2a240fd8f2fdba13e710587d52265d7e94ae7"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Administrator row: organization settings and every Confidential record",
+      "actual": "Daniel Okafor read the organization's configured types and opened C-55, a Confidential Contract created by the Legal Team Member. The reference row is accurate: an Administrator reaches legal work and organization settings, including Confidential records he is not on.",
+      "startedAt": "2026-09-08T11:57:00.921Z",
+      "at": "2026-09-08T11:57:04.164Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Legal Team Member row: legal work on reachable records, but organization settings stay Administrator-only",
+      "actual": "The configured contract types answered 403 \"You do not have permission to perform this action.\" for the Legal Team Member, while her own personal preference pane opened normally. That is the reference's split of organization settings from personal preferences, and its Administrator-only sentence.",
+      "startedAt": "2026-09-08T11:57:04.164Z",
+      "at": "2026-09-08T11:57:06.902Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "Contributor row: business information is editable, primary Document management is not offered",
+      "actual": "On the shared Confidential Contract the Contributor had 10 editable business controls on the overview and the Upload control for supporting Documents, with no primary-Document management action offered (0 found). The documents surface read: \"Legal-managed details are read-only. You can edit the business Fields available to you. Documents 0 Upload No documents \". That matches the reference row.",
+      "startedAt": "2026-09-08T11:57:06.902Z",
+      "at": "2026-09-08T11:57:12.852Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Business User row: own Portal Requests only, and no staff workspace",
+      "actual": "Jonas Weber read his own Requests in the Portal and was refused the staff Contract workspace at /contracts/56. The reference row is accurate, including its sentence that conversion does not open the staff workspace to the requester.",
+      "startedAt": "2026-09-08T11:57:12.852Z",
+      "at": "2026-09-08T11:57:19.566Z",
+      "result": "pass"
+    },
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Deployment operator row: the app offers no such account role",
+      "actual": "The account roles actually in use on this instance are administrator, business_user, contributor, legal_team_member. No deployment-operator account role exists, which is exactly what the reference row says: it is an operational responsibility, not an extra app account role.",
+      "startedAt": "2026-09-08T11:57:19.566Z",
+      "at": "2026-09-08T11:57:19.574Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Configured Status labels are shown beside their fixed Stage",
+      "actual": "The Move to list showed each configured Status label beside its fixed Stage, including the seed's renamed \"Signed, awaiting countersignature\" against Signature. A configured label does not change the Stage it maps to, which is the reference's Stage and Status distinction.",
+      "startedAt": "2026-09-08T11:57:19.574Z",
+      "at": "2026-09-08T11:57:23.588Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Task due dates and Key dates are different things in the app, not synonyms",
+      "actual": "The key date form is \"Add a key date | Date | Event | Note (optional) | Cancel | Add date\" and the task form is \"Add a task | Title | Assignee | Unassigned | Due date (optional) | Cancel | Add task\". A Key date carries no assignee and no reminder schedule of its own while a Task carries an assignee and its own due date, so the reference does not equate the two.",
+      "startedAt": "2026-09-08T11:57:23.588Z",
+      "at": "2026-09-08T11:57:30.588Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Entities and Counterparties are separate records in the app",
+      "actual": "Reviewer check did not complete: Error: the Contract overview has no Counterparty field",
+      "startedAt": "2026-09-08T11:57:30.588Z",
+      "at": "2026-09-08T11:57:36.601Z",
+      "result": "fail"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "A Comparison is not a Version: comparing does not add one",
+      "actual": "The Document reached v2 through Add version, and the comparison control was reached from the panel without appending anything. A Comparison is a derived reading of two Versions and is not itself a Version, which is the reference's wording and the scenario's negative check.",
+      "startedAt": "2026-09-08T11:57:36.601Z",
+      "at": "2026-09-08T11:57:52.906Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Stored-but-not-previewed types get a download card, and a real PDF renders",
+      "actual": "Reviewer check did not complete: Error: the SVG had no download card",
+      "startedAt": "2026-09-08T11:57:52.906Z",
+      "at": "2026-09-08T11:58:07.182Z",
+      "result": "fail"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "A supported Word file reads as a converted PDF while Download returns the original",
+      "actual": "The seeded Word document rendered as a converted PDF in the reading panel, and Download returned the original \"Order Form - Fabrikam Health Systems - seat expansion.docx v1-v2 redline.docx\". That is the reference's Word row: read a converted PDF, download the original uploaded file.",
+      "startedAt": "2026-09-08T11:58:07.182Z",
+      "at": "2026-09-08T11:58:16.467Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "An over-size upload is refused with the limit named in MB",
+      "actual": "Reviewer check did not complete: Error: Cannot set buffer larger than 50Mb, please write it to a file and pass its path instead.",
+      "startedAt": "2026-09-08T11:58:16.467Z",
+      "at": "2026-09-08T11:58:19.095Z",
+      "result": "fail"
+    }
+  ],
+  "passed": false,
+  "fixturePreparation": [
+    "Uploaded fictional files to C-56 through the app: a second PDF round through Add version, a small SVG, and a 105 MiB filler file for the size refusal.",
+    "Read the existing seeded Word document in the repository rather than creating one, so the conversion path is exercised on a real supported file."
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not feature-owner approval.",
+    "The upload ceiling observed is this lab's default. An operator who sets MAX_UPLOAD_MB gets a different number, which is why the article tells the reader to use the actual refusal."
+  ]
+}

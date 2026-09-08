@@ -1015,7 +1015,7 @@
         "The article does not offer an access bypass, invent an unavailable action, or treat a provider stand-in as live-provider evidence."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "id": "V-C50",
@@ -1036,7 +1036,7 @@
         "Examples do not equate Entity with Counterparty, Task due dates with Key dates, or Comparison with Document Version."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "id": "V-C51",
@@ -1057,7 +1057,7 @@
         "An older app does not silently switch to latest; an external-site failure leaves local reading usable."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "id": "V-C52",

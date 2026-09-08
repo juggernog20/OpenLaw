@@ -1,6 +1,6 @@
 # Troubleshooting, reference, and support verification
 
-Three canonical articles cover C49–C51 for [#744](https://github.com/juggernog20/OpenLaw/issues/744). They complete the writing inventory: 54 articles are on this task branch, with the remaining two integration drafts on PR #783. This is development review content. Technical review and independent walkthroughs remain pending. The user will proofread the assembled suite; no human feature-owner sign-off or publication is claimed.
+Three canonical articles cover C49–C51 for [#744](https://github.com/juggernog20/OpenLaw/issues/744). They complete the writing inventory: 54 articles are on this task branch, with the remaining two integration drafts on PR #783. This is development review content. An independent agent reviewer has now recorded the V-C49, V-C50 and V-C51 walkthroughs; see [Independent review](#independent-review). The user will proofread the assembled suite; no human feature-owner sign-off or publication is claimed.
 
 ## Build and method
 
@@ -8,7 +8,7 @@ Author browser actions used app source `6a8873dbda333fd9992eb77525d4bfa3f47af20d
 
 Separate authenticated browser contexts use Daniel Okafor as Administrator, Nadia Haddad as Legal Team Member, Ravi Menon as Contributor, and Jonas Weber as Business User. Operator reading uses the signed-out formal reader and a copied export. All data is fictional. API calls prepare a new Confidential Contract, supply team entries as the Administrator for the access-recovery fixture, and upload intentionally damaged Word content into a new Document. Actual visible states, recovery controls, Approval decisions, file downloads and their bytes are checked in the browser. No provider is contacted; disabled controls lead to the documented configuration escalation.
 
-Each record captures its source article hashes and timestamps around awaited actions. These are author observations, not independent or human studies. A record that stops at a failed step keeps no completion time and no overall flag, so read its steps for the outcome. Failed helper attempts remain, including ambiguous Edition details/Supported app locators, the Portal notification link mistaken for a button, the named Approval action's accessible label, and the Status list mistaken for a table. The first attempted damaged-file fixture was plain text with a Word filename; the engine converted it successfully, so the expected failure timed out. A later damaged ZIP archive produced the actual failure and completed the download recovery. The reference record checks the configured Status and opens Tasks; its action label also mentions Key dates, whose distinction was source-reviewed rather than separately exercised in that record. Successful later records retain the narrower meaning of the earlier observations rather than relabeling them.
+Each record captures its source article hashes and timestamps around awaited actions. These are author observations, not independent or human studies. An author record that stops at a failed step keeps no completion time and no overall flag, so read its steps for the outcome; the independent records below carry `passed` either way. Failed helper attempts remain, including ambiguous Edition details/Supported app locators, the Portal notification link mistaken for a button, the named Approval action's accessible label, and the Status list mistaken for a table. The first attempted damaged-file fixture was plain text with a Word filename; the engine converted it successfully, so the expected failure timed out. A later damaged ZIP archive produced the actual failure and completed the download recovery. The reference record checks the configured Status and opens Tasks; its action label also mentions Key dates, whose distinction was source-reviewed rather than separately exercised in that record. Successful later records retain the narrower meaning of the earlier observations rather than relabeling them.
 
 ## Author observations
 
@@ -35,9 +35,33 @@ Access checks first observe the generic refusal as two roles, then supply a qual
 
 The author compared the reference to CONTEXT.md, verified canonical role, Contributor, Document, workflow, notification and configuration guides, the fixed roles/Stage/Category vocabulary, the upload limit and filename validation in `apps/api/src/lib/uploads.ts`, and MIME/extension routing in `apps/api/src/lib/render-family.ts`. The version instructions were checked against `documentation-reader.tsx`, `edition.json` and the accepted publishing/support policy. The declared supported build, distribution commit and content digest have different meanings and are described separately. No support email, SLA, implicit latest-version redirect, sequential approval chain or provider assurance is invented.
 
+## Independent review
+
+A second agent, working from the article text rather than the author's scripts, reviewed the source and then followed each article in the browser. It runs the review seat for this task and is not the author. Its source pass corrected one thing before the walkthroughs began: the reference article's title read "file behaviour", against the en-US rule in EDITORIAL.md and against the article's own "File behavior and limits" heading. That correction landed in commit `2570232a` together with the batch-record link and this record's note about aborted runs. Every other claim it checked against `messages/en-US.json`, `apps/api/src/lib/uploads.ts`, `apps/api/src/lib/render-family.ts`, the notifier, `CONTEXT.md` and the canonical guides held.
+
+The walkthroughs used the same immutable backend at 43332 and the working documentation preview at 43333, one isolated browser context per identity, and Playwright 1.62.1 Chromium. Article bytes were the current ones, hashed in each record.
+
+| Record                                                  | Passing observations | Failed attempts |
+| ------------------------------------------------------- | -------------------: | --------------: |
+| [discovery](independent-discovery.json)                 |                   28 |               0 |
+| [symptoms](independent-symptoms.json)                   |                    7 |               0 |
+| [symptoms-second](independent-symptoms-second.json)     |                    6 |               4 |
+| [symptoms-retry](independent-symptoms-retry.json)       |                    4 |               1 |
+| [approval-decision](independent-approval-decision.json) |                    1 |               0 |
+| [reference](independent-reference.json)                 |                    9 |               3 |
+| [reference-retry](independent-reference-retry.json)     |                    3 |               0 |
+| [versions](independent-versions.json)                   |                    4 |              12 |
+| [versions-retry](independent-versions-retry.json)       |                   17 |               0 |
+
+Every failed attempt in those records is a reviewer harness fault, not an article defect, and each was corrected and rerun on unchanged article bytes. The reviewer read the article title by the wrong link text, expected an Approve control on the row instead of inside the row's actions menu and its confirmation dialog, expected a Counterparty field where the app says "Counterparties" and "Our entity", read the article's own prose where it meant the Edition details panel, and first built a damaged Word fixture out of prose text, which the document engine converted successfully. A real ZIP container with random content produced the failure the article describes. One further observation is search behavior rather than content: local documentation search is a strict all-words match, so a query carrying a function word the article does not use, such as "which version", finds nothing while "version information" and "report a defect" both reach the guide. That behavior is shared by every article and Help still lists the guide by title.
+
+What the walkthroughs actually reached: the four app roles found all three guides through their own header Help and through representative queries, followed the full-documentation link, and reached the named recovery guides. Signed-out formal reading needed no app session. The Contributor was refused a Confidential Contract with the article's generic "Something went wrong." and Reload, and the same link opened after the Administrator added the team entry the article tells the reader to ask for. An over-long filename and a 105 MiB file were both refused with copy a reader can act on, the second naming "over the 100 MB upload limit". A damaged archive reached the pending and then the failed preparation message while its original still downloaded byte for byte. The named approver decided once, through a dialog that itself says "A decision is final. To change it, ask for a new approval.", and an unresolved request raised the "Move past approval" warning. Edition details gave the edition, supported app, distribution commit, content digest and publication target; an unknown edition was reported rather than silently replaced; missing articles and missing sections each offered their named recovery. With the external tracker blocked the support article stayed readable, and the downloaded standalone edition opened from disk in an offline browser context with and without JavaScript.
+
+Signing and Analysis were observed unconfigured. That is the state the articles send the reader to escalate, and it is not evidence about any live provider.
+
 ## Remaining acceptance
 
-Independent technical review and V-C49/V-C50/V-C51 walkthroughs must be recorded before this task merges. Full-suite tests and exact final-head CI are also required. C42/C43 remain blocked on PR #783 and are not waived by this navigation/reference batch. Final compatibility, whole-suite human proof and publication remain later gates.
+C42/C43 real-provider checks remain blocked on [#742](https://github.com/juggernog20/OpenLaw/issues/742) and PR #783 and are not waived by this batch. Final whole-suite compatibility, the user's proofread of the assembled suite, and publication remain DOC-025 and DOC-027 gates, so the three articles stay at catalog status `review`.
 
 ## Author automated validation
 

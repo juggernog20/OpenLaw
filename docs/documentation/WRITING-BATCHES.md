@@ -140,6 +140,6 @@ Continue this independent operator batch while DOC-022 waits for disposable prov
 See [the batch verification record](batches/DOC-024/README.md) for the tested build,
 author outcomes, and the acceptance still outstanding.
 
-- [ ] `troubleshooting`: Resolve common problems (C49; P0).
-- [ ] `reference`: Look up terms, permissions, and file behavior (C50; P1).
-- [ ] `versions-and-support`: Find version information and get help (C51; P0).
+- [x] `troubleshooting`: Resolve common problems (C49; P0).
+- [x] `reference`: Look up terms, permissions, and file behavior (C50; P1).
+- [x] `versions-and-support`: Find version information and get help (C51; P0).

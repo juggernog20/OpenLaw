@@ -695,7 +695,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P0",
       "contexts": ["errors"],
-      "status": "draft"
+      "status": "review"
     },
     {
       "id": "reference",
@@ -714,7 +714,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P1",
       "contexts": ["reference"],
-      "status": "draft"
+      "status": "review"
     },
     {
       "id": "versions-and-support",
@@ -733,7 +733,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P0",
       "contexts": ["support"],
-      "status": "draft"
+      "status": "review"
     },
     {
       "id": "entity-obligations",
