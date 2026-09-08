@@ -1,0 +1,42 @@
+{
+  "articleId": "organisation-and-users",
+  "contentSha256": "026ae5738934bf6ee92166df46c98eeba3489106b967c9ccdd5237e4103dcebe",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-admin-onboarding",
+  "author": "Codex documentation author",
+  "technicalReviewer": null,
+  "walkthroughReviewer": null,
+  "reviewerKind": "agent",
+  "verifiedAt": null,
+  "status": "not-run",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-SETTINGS.md",
+    "apps/web/src/routes/settings-general.tsx",
+    "apps/web/src/routes/settings-users.tsx",
+    "apps/api/src/modules/auth/routes.ts",
+    "apps/api/src/modules/users/routes.ts",
+    "docs/DEPLOYMENT.md"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C36",
+      "coverage": ["C36"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "Changes apply to the intended account and revoked sessions cease granting access. Unauthorized administration, invalid invites, and self/last-Administrator safeguards behave as implemented.",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    }
+  ],
+  "authorEvidence": ["docs/documentation/batches/DOC-020/README.md"],
+  "limitations": [
+    "Independent technical review and scenario walkthroughs remain pending.",
+    "Agent walkthroughs are not human user studies or feature-owner approval.",
+    "Operator and module configuration guides remain forward publication dependencies."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

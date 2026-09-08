@@ -513,11 +513,11 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["setup", "welcome"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "organisation-and-users",
-      "title": "Manage your organisation and users",
+      "title": "Manage your organization and users",
       "section": "administration",
       "kind": "how-to",
       "coverage": ["C36"],
@@ -526,7 +526,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["settings.general", "settings.users"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "authentication-and-email",
@@ -539,7 +539,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["settings.authentication", "settings.email"],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "types-statuses-fields",

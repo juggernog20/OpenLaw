@@ -1,0 +1,35 @@
+{
+  "name": "author-auth-complete",
+  "startedAt": "2026-09-08T03:04:01.151Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-admin-onboarding",
+  "articleHashes": [
+    {
+      "articleId": "authentication-and-email",
+      "contentSha256": "bbb092098d1b8932cfdc35d741042f9cfdbec82935fc9f30902c5caf88d25df9"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "OIDC allows magic-link shutdown while existing Business User can still enter using SSO",
+      "actual": "Turning magic links off showed the closed-link Portal entry; its Sign in link allowed Quinn’s existing Business User to complete SSO and reach Portal; magic links were restored.",
+      "result": "pass",
+      "startedAt": "2026-09-08T03:04:01.857Z",
+      "at": "2026-09-08T03:04:02.356Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Administrator password recovery remains available and switching back restores built-in sign-in",
+      "actual": "Administrator sign-in accepted Avery’s password while OIDC was active; choosing Built-in immediately restored password mode.",
+      "result": "pass",
+      "startedAt": "2026-09-08T03:04:02.357Z",
+      "at": "2026-09-08T03:04:02.788Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T03:04:02.789Z"
+}

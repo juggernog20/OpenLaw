@@ -1,0 +1,35 @@
+{
+  "name": "author-offboard-complete",
+  "startedAt": "2026-09-08T03:10:58.096Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-admin-onboarding",
+  "articleHashes": [
+    {
+      "articleId": "organisation-and-users",
+      "contentSha256": "bfd9aa1cbbd569bdcb105acfd357cb0ee52e210d87272408eecd99dd7020eb2d"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Archive does not transfer existing Contract or Matter ownership",
+      "actual": "Browser archival left prepared Contract Owner and Matter Manager assigned to Rowan; restoring allowed explicit reassignment before the next archival.",
+      "result": "pass",
+      "startedAt": "2026-09-08T03:10:58.179Z",
+      "at": "2026-09-08T03:10:59.060Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Explicitly reassign Contract Owner and Matter Manager before archiving the departing user",
+      "actual": "Owner and Matter Manager were changed through their record controls to Avery; subsequent archival of Rowan retained those deliberate assignments; Rowan was restored for later independent fixtures.",
+      "result": "pass",
+      "startedAt": "2026-09-08T03:10:59.060Z",
+      "at": "2026-09-08T03:11:01.276Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T03:11:01.276Z"
+}
