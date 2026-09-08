@@ -1,0 +1,85 @@
+{
+  "name": "independent-taxonomies",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C38"],
+  "authorRecordName": "ind-taxonomies",
+  "startedAt": "2026-09-08T05:21:12.039Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "types-statuses-fields",
+      "contentSha256": "6e3fa892dc9b2bb23d05bd7b3125a187cdd1cbafb384cdf2d248064a1bcd1abe"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Reach Matters Types by the guide route",
+      "actual": "Profile menu > Settings > Organization > Matters > Types reached http://127.0.0.1:43332/settings/matters/types",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:21:12.975Z",
+      "at": "2026-09-08T05:21:13.215Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Add two fictional Matter types",
+      "actual": "Added \"Ind supplier assessment IND81T2F\" and \"Ind replacement type IND81T2F\"; both rows visible in the Types list.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:21:13.215Z",
+      "at": "2026-09-08T05:21:13.337Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Rename the type with its row control",
+      "actual": "Rename saved \"Ind supplier assessment IND81T2F\" as \"Ind supplier assessment IND81T2F revised\" and survived a reload.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:21:13.338Z",
+      "at": "2026-09-08T05:21:14.011Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Reorder the type with the keyboard",
+      "actual": "Grip label moved from \"Reorder Ind supplier assessment IND81T2F revised, position 16 of 17. Use the arrow keys to move it.\" to \"Reorder Ind supplier assessment IND81T2F revised, position 15 of 17. Use the arrow keys to move it.\" using ArrowUp alone.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:21:14.011Z",
+      "at": "2026-09-08T05:21:14.876Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Open Edit and check the immutable Slug",
+      "actual": "Editor shows Slug \"ind_supplier_assessment_ind81t2f\" (editable=false) with the note \"Slug is immutable \u2014 it keys templates, reporting, and the API.\". Display name was renamed; the slug still carries the original name.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:21:14.876Z",
+      "at": "2026-09-08T05:21:14.938Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Create a Global single-select Field",
+      "actual": "Created \"Ind coverage region IND81T2F\" as Single select / Global / Business with options Nordics, Benelux (open dialogs after save: 0).",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:21:14.938Z",
+      "at": "2026-09-08T05:21:15.217Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Confirm the immutable field type in the editor",
+      "actual": "Reopened editor: Type control disabled=null, note \"The field type is immutable after creation.\". API corroborates fieldType=single_select, moduleScope=global.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:21:15.236Z",
+      "at": "2026-09-08T05:21:25.313Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T05:21:25.313Z"
+}

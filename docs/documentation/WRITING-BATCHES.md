@@ -112,13 +112,13 @@ See the [batch verification record](batches/DOC-020/README.md) for the tested bu
 
 ## DOC-021 [#741](https://github.com/juggernog20/OpenLaw/issues/741)
 
-See the [author verification record](batches/DOC-021/README.md). Five Administrator scenarios await independent review.
+See the [batch verification record](batches/DOC-021/README.md) for the tested build, the author outcomes and the independent walkthrough of V-C38, V-C39, V-C40, V-C41 and V-C55. Every per-article evidence record reads `pass`, so all five boxes are checked here. The independent pass corrected three `request-forms` sentences about No target, request-type archiving and the Matter carry-through label, and reverified them. Feature-owner technical review and DOC-025 acceptance are still open, so the catalog stays in feature review.
 
-- [ ] `types-statuses-fields`: Configure types, Statuses, and Fields (C38; P1).
-- [ ] `matter-templates`: Configure Matter templates (C39; P1).
-- [ ] `request-forms`: Configure request types and forms (C40; P0).
-- [ ] `reminders-and-audit`: Configure reminders and use the Audit log (C41; P1).
-- [ ] `approver-groups`: Configure reusable Approver groups (C55; P1).
+- [x] `types-statuses-fields`: Configure types, Statuses, and Fields (C38; P1).
+- [x] `matter-templates`: Configure Matter templates (C39; P1).
+- [x] `request-forms`: Configure request types and forms (C40; P0).
+- [x] `reminders-and-audit`: Configure reminders and use the Audit log (C41; P1).
+- [x] `approver-groups`: Configure reusable Approver groups (C55; P1).
 
 ## DOC-022 [#742](https://github.com/juggernog20/OpenLaw/issues/742)
 

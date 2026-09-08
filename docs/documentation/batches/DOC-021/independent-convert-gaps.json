@@ -1,0 +1,49 @@
+{
+  "name": "independent-convert-gaps",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C40"],
+  "authorRecordName": "ind-convert-gaps",
+  "startedAt": "2026-09-08T05:45:35.105Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "request-forms",
+      "contentSha256": "9cc8ffec262de2a13e3472cc2518ca4a203898038208798f30fc2d6082461a7c"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A module-only form leaves the type to Legal at conversion",
+      "actual": "R-27 used the module-only form. Triage offered [\"Convert to contract\",\"Convert to matter\",\"Resolve request without converting\"] and the dialog explained \"This request type left the matter type to conversion.\" with a real Matter type picker (options start [\"Type\u2026\",\"Employment\",\"Litigation\",\"Regulatory\"]). Choosing \"Ind template type IND81T2F\" created Matter 32 of that type.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:45:36.021Z",
+      "at": "2026-09-08T05:45:38.478Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A No target form is answered in the thread, and converting one is a deliberate re-target",
+      "actual": "R-28 used the No target form. Its Request page reads Converts to \"No target\" and Triage offers [\"Convert to contract\",\"Convert to matter\",\"Resolve request without converting\"]. The Settings explanation is \"Converting a request of this type creates no record. It is answered in the thread and resolved there.\". Opening Convert to matter shows the re-target note \"This request type does not target a matter. Converting it to one is a re-target, and the request itself is kept.\" and a Matter type picker (1), so a destination is chosen only by a deliberate re-target rather than by the form leaving a module open.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:45:38.478Z",
+      "at": "2026-09-08T05:45:41.984Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "An archived configured target needs a deliberate live choice at conversion",
+      "actual": "After archiving the bound Contract type \"NDA\", the request type's Target control still names it as \"NDA (archived)\" (value contract:019ff1f5-301d-7795-a5af-e4339c76d4ce). Converting R-29 no longer confirms a bound type: the dialog now shows a live Contract type picker (1) with the note \"This request type left the contract type to conversion.\" and its confirm control disabled=false until a live type is chosen. Nothing switched module on its own. Restore returned the type to the live list.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:45:41.985Z",
+      "at": "2026-09-08T05:45:47.375Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T05:45:47.376Z"
+}

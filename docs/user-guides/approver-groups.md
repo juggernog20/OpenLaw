@@ -19,7 +19,9 @@ As an Administrator or Legal Team Member with access to an unarchived Contract:
 2. Select **Apply group** and choose the **Approver group**.
 3. Review the named people and any already-pending requests that will be skipped. Confirm the action and check the resulting **Pending** rows.
 
-Applying the group creates individual Approval Requests for its current eligible members. Everyone can respond in any order. The group does not grant access to a Confidential Contract. Resolve access or membership problems before applying it.
+Applying the group creates one Approval Request for each person it asks. Everyone can respond in any order. A member who has been archived is left out. A member who already has a pending request on this Contract is skipped.
+
+Other conditions refuse the whole action instead. A member who is no longer an Administrator or Legal Team Member is refused by name. On a Confidential Contract, a member outside the record's audience is refused by name as well; the group does not grant access to that Contract. A refused action creates no Approval Request at all. Correct the group's members, or the record's audience, and apply the group again. The app also refuses the action when the group has no members, or when every member already has a pending request here.
 
 See [Request and give approval](contract-approvals.md) for decisions, cancellation, and moving beyond the Approval Stage.
 

@@ -1,0 +1,49 @@
+{
+  "name": "independent-reminders-config-retry",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C41"],
+  "authorRecordName": "ind-reminders-config-retry",
+  "startedAt": "2026-09-08T05:50:29.234Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "reminders-and-audit",
+      "contentSha256": "91583fda511a5d75941af7d8b919de5db42298846ee2b9dad65fcd6f43a4565c"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Reach the organization Reminder lead times and tell it from the Personal pane",
+      "actual": "Both rail entries read \"Notifications\" (true). The Organization one at /settings/reminders is headed \"Reminder lead times\" and explains \"Drag a row, or focus its handle and use the arrow keys, to reorder. One list covers every tracked date \u2014 key dates, notice deadlines, and expiries \u2014 and the reminders arrive in the daily digest. Keep at least one lead time.\". The Personal one at /settings/notifications is headed [\"Settings\",\"Personal\",\"Organization\",\"Notification preferences\",\"Briefing\"] and holds only this person's switches. The organization list started as [2].",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:50:30.155Z",
+      "at": "2026-09-08T05:50:31.022Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Add, refuse, remove and reorder lead times",
+      "actual": "Adding 0, 4 and 11 gave [2,0,4,11]; zero renders as \"On the day\". A duplicate 4 was refused with \"4 days before is already on the list.\" and 731 with \"Enter a whole number of days between 0 and 730.\" (the input declares {\"min\":\"0\",\"max\":\"730\"}). Removing the 11-day row took the list from [2,0,4,11] to [2,0,4]. Moving \"Reorder 4 days before, position 3 of 3. Use the arrow keys to move it.\" with ArrowUp saved the order [2,4,0], which survived a reload as [2,4,0].",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:50:31.022Z",
+      "at": "2026-09-08T05:50:39.862Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "The last remaining lead time cannot be removed",
+      "actual": "Reduced to a single entry [2]. That row offers no Remove control (0) and shows the lock \"2 days before is the only lead time and can't be removed\". Saving an empty list directly answered 400: {\"type\":\"about:blank\",\"title\":\"Request validation failed\",\"status\":400,\"detail\":\"One or more request fields are invalid.\",\"instance\":\"/api/v1/org/reminder-offsets\",\"errors\":[{\"path\":\"offsets\",\"message. The list was rebuilt to [2,4,0] for the delivery check.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:50:39.862Z",
+      "at": "2026-09-08T05:50:44.848Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T05:50:44.848Z"
+}

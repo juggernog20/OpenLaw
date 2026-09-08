@@ -1,0 +1,48 @@
+{
+  "name": "independent-audit",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C41"],
+  "authorRecordName": "ind-audit",
+  "startedAt": "2026-09-08T05:52:08.781Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "reminders-and-audit",
+      "contentSha256": "91583fda511a5d75941af7d8b919de5db42298846ee2b9dad65fcd6f43a4565c"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Reach the Audit log under Security and combine the three filters",
+      "actual": "Settings > Security > Audit log opened as \"Audit log\" with columns [\"Event\",\"Record\",\"Audience\",\"When\"] (the security group needed expanding). The three filters combine and narrow in turn: unfiltered 50 entries, Person=\"Daniel Okafor\" 50, plus Action=\"contract_type.archived\" 2, plus Record=\"Contract\" -1.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:52:09.770Z",
+      "at": "2026-09-08T05:52:13.701Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "The From and To bounds use the browser\u2019s local calendar days",
+      "actual": "The browser runs in Asia/Dubai, so its calendar day is 2026-09-08. Bounding From and To to that day left 50 entries and the query sent [\"?from=2019-12-31T20:00:00.000Z&to=2020-01-01T19:59:59.999Z\"] \u2014 the civil dates become that day's first and last instants in this browser's zone. Bounding to 2020-01-01 matched nothing and the log said \"No entry matches these filters.\". Clear filters recovered 50 entries.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:52:13.702Z",
+      "at": "2026-09-08T05:52:19.207Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Search narrows the audit text and is not a search of record content",
+      "result": "fail",
+      "startedAt": "2026-09-08T05:52:19.208Z",
+      "error": "locator.fill: Error: strict mode violation: getByLabel('Search', { exact: true }) resolved to 2 elements:\n    1) <input value=\"\" type=\"search\" role=\"combobox\" aria-busy=\"false\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"Search\" aria-expanded=\"false\" aria-controls=\"_r_i_\" aria-autocomplete=\"list\" placeholder=\"Search contracts, matters, documents\u2026\" class=\"h-7.5 w-full rounded-button border border-border-on-inverted bg-(--chrome-search-bg) pe-10 ps-3 text-base text-on-inverted placeholder:text-subtle\"/> aka getByRole('combobox', { name: 'Search' })\n    2) <input value=\"\" type=\"search\" id=\"auditSearch\" class=\"h-8 w-full rounded-button border border-border-default bg-raised px-2.5 text-sm text-primary placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link disabled:pointer-events-none disabled:opacity-50\"/> aka getByRole('searchbox', { name: 'Search' })\n\nCall log:\n\u001b[2m  - waiting for getByLabel('Search', { exact: true })\u001b[22m\n",
+      "at": "2026-09-08T05:52:19.215Z"
+    }
+  ],
+  "passed": false
+}

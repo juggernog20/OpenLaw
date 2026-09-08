@@ -1,0 +1,67 @@
+{
+  "name": "independent-forms-retry2",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C40"],
+  "authorRecordName": "ind-forms-retry2",
+  "startedAt": "2026-09-08T05:36:38.051Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "request-forms",
+      "contentSha256": "9cc8ffec262de2a13e3472cc2518ca4a203898038208798f30fc2d6082461a7c"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Create four request types by the guide route",
+      "actual": "Profile menu > Settings > Intake > Request types created \"Ind contract review IND81T2F\", \"Ind advisory intake IND81T2F\", \"Ind module only IND81T2F\", \"Ind no target IND81T2F\".",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:36:38.999Z",
+      "at": "2026-09-08T05:36:39.336Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Set the four Target states and read each explanation",
+      "actual": "Targets saved as {\"Ind contract review IND81T2F\":\"contract/type set\",\"Ind advisory intake IND81T2F\":\"matter/type set\",\"Ind module only IND81T2F\":\"matter/no type\",\"Ind no target IND81T2F\":\"none/no type\"}. The control's explanations read: \"Ind contract review IND81T2F\" -> Converting a request of this type creates a contract of the NDA type. | \"Ind advisory intake IND81T2F\" -> Converting a request of this type creates a matter of the Ind template type IND81T2F type. | \"Ind module only IND81T2F\" -> Converting a request of this type creates a matter; the reviewer picks the matter type at conversion. | \"Ind no target IND81T2F\" -> Converting a request of this type creates no record. It is answered in the thread and resolved there..",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:36:39.336Z",
+      "at": "2026-09-08T05:36:45.601Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Attachable Fields follow the target, and No target offers Global only",
+      "actual": "The Contract-targeted form offers 11 module, 8 global fields; the Matter-targeted form offers 5 module, 8 global; the No target form offers 8 global \u2014 every entry global, as the guide says. Sample No target entries: [\"Region Single select \u00b7 global\",\"Counterparty name Text \u00b7 global\",\"Needed by Date \u00b7 global\"].",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:36:45.602Z",
+      "at": "2026-09-08T05:36:47.703Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A User or Entity Field can sit on a Portal form but cannot be required",
+      "actual": "Attached the user Field \"Ind requester contact IND81T2F\" to the Matter form. Its Required box is disabled=true (aria-label \"Ind requester contact IND81T2F required\") and the pane explains: \"Ind requester contact IND81T2F can be on the form, but it can't be required. A requester picks no person and no entity in the portal.\".",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:36:47.704Z",
+      "at": "2026-09-08T05:36:48.505Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Attach and require a form answer, then detach one",
+      "actual": "\"Ind coverage region IND81T2F\" is attached and Required on the Matter form and attached on the Contract form. Detaching \"Ind requester contact IND81T2F\" removed the form attachment while the catalog definition survived (true). The Matter form now carries [].",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:36:48.505Z",
+      "at": "2026-09-08T05:36:50.905Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T05:36:50.905Z"
+}

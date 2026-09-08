@@ -16,9 +16,9 @@ Configure forms that collect the information Legal needs for a Contract or Matte
 4. Enter a **Description** that helps a Business User choose this form. Leave the field to save it, and check that the save succeeds.
 5. In **Target**, choose the intended type under **Contract**, such as **MSA**. Check the explanation below the control: it should say that conversion creates a Contract of that type. Changes save as you make them.
 
-Choose **Matter** and a specific Matter type for a Matter form. Choose **Contract** or **Matter** without a specific type when Legal should select that module's type at conversion. **No target** leaves the destination choice to Legal and offers only Global Fields for new attachments. Every submission creates a Request first; the target does not create a Contract or Matter automatically.
+Choose **Matter** and a specific Matter type for a Matter form. Choose **Contract** or **Matter** without a specific type when Legal should select that module's type at conversion; the explanation then says that the reviewer picks the type. **No target** is for work Legal answers in the thread. Its explanation says that conversion creates no record, and Triage resolves such a Request without converting it. Converting one anyway is a deliberate re-target, and the Request is kept. A **No target** form offers only Global Fields for new attachments. Every submission creates a Request first; the target does not create a Contract or Matter automatically.
 
-The **Display name** can change; **Slug** stays fixed. Rename or reorder request types from the list. Archiving an in-use request type asks for a replacement for its Requests. Review the replacement's target and form before confirming. **Show archived** and **Restore** make the old type available again without reversing reassignment.
+The **Display name** can change; **Slug** stays fixed. Rename or reorder request types from the list. Archiving a request type takes it out of the Portal's choices and closes its form. In this version the archive dialog reports no usage and offers no replacement, even when Requests still name the type. Those Requests keep that type and stay readable, so check what is still open before you archive. Use **Show archived**, then **Restore**, to offer the type again.
 
 ## Choose the form fields
 
@@ -54,7 +54,7 @@ Attaching a Field to the form does not attach it to the destination type. Check 
 
 If the form is missing from the Portal, check that its request type is active. If the target is marked archived, choose a live target and test the form again. If a save reports an error, correct it and check the saved value before sharing the form.
 
-If an answer appears under **Does not carry into the contract** or the corresponding Matter section during conversion, check whether the Field is attached to the selected destination type. That answer remains on the Request. Review any missing required destination Fields before confirming conversion.
+If an answer appears under **Does not carry into the contract**, or **Does not carry into the matter**, during conversion, check whether the Field is attached to the selected destination type. That answer remains on the Request. Review any missing required destination Fields before confirming conversion.
 
 An archived configured target needs a deliberate live choice; do not rely on a silent switch to another module. Correct the target in Settings and reload the form. Guidance that disappears may have an unpublished, archived, or unavailable Knowledge Item, or a placement on a different form. Test the Business User view after correcting it.
 

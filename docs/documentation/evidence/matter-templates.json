@@ -6,10 +6,10 @@
   "environment": "openlaw-docs-b8e31260-configuration",
   "author": "Codex documentation author",
   "technicalReviewer": null,
-  "walkthroughReviewer": null,
+  "walkthroughReviewer": "Opus 5 independent review agent",
   "reviewerKind": "agent",
-  "verifiedAt": null,
-  "status": "not-run",
+  "verifiedAt": "2026-09-08T06:05:00Z",
+  "status": "pass",
   "sources": [
     "CONTEXT.md",
     "docs/decision-records/DECISIONS-SETTINGS.md",
@@ -31,9 +31,29 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "expected": "Each path creates the intended defaults using its actual date anchor. Changing the template does not rewrite already-created work; unavailable templates have a clear outcome.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "Created a Matter template through Settings > Matters > Templates and filled all four areas; every value survived a reopen. An offset of 3651 was refused with \"Give every row a name and use whole-number offsets from 0 to 3650 days.\" and the stored offset was unchanged. Direct creation seeded the title prefix, Priority, Risk and the Field default, and anchored relative content on the Matter's own UTC creation date: a Task at offset 3 landed on creation+3 and a Key date at offset 7 on creation+7, with the Manager-targeted Task assigned to the chosen Matter Manager and the undated Task left with no due date. Creating without a Manager left that Task unassigned. Editing the template left an earlier Matter's Tasks, assignments and Key dates untouched while the next Matter took the new definition. Archiving removed it from the creation dialog and Restore recovered the full edited definition. A template named on another Matter type was refused, and an archived Matter type left the creation dialog and refused creation. An injected 503 on the Tasks write reproduced the guide's partial save: the Description had already saved, the Tasks list had not, the reload showed exactly that mixed state, and the retry saved. Request conversion applied the template and anchored its Key date on the new Matter's creation date, not the Request's; Risk and Matter Manager stayed unset and the Manager-targeted Task was unassigned.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-021/independent-discovery-final.json",
+        "docs/documentation/batches/DOC-021/independent-discovery.json",
+        "docs/documentation/batches/DOC-021/independent-submit-retry.json",
+        "docs/documentation/batches/DOC-021/independent-submit-retry2.json",
+        "docs/documentation/batches/DOC-021/independent-submit-retry3.json",
+        "docs/documentation/batches/DOC-021/independent-submit-retry4.json",
+        "docs/documentation/batches/DOC-021/independent-submit-retry5.json",
+        "docs/documentation/batches/DOC-021/independent-submit.json",
+        "docs/documentation/batches/DOC-021/independent-template-create-retry.json",
+        "docs/documentation/batches/DOC-021/independent-template-create.json",
+        "docs/documentation/batches/DOC-021/independent-template-record-retry.json",
+        "docs/documentation/batches/DOC-021/independent-template-record-retry2.json",
+        "docs/documentation/batches/DOC-021/independent-template-record-retry3.json",
+        "docs/documentation/batches/DOC-021/independent-template-record.json",
+        "docs/documentation/batches/DOC-021/independent-template-recovery-retry.json",
+        "docs/documentation/batches/DOC-021/independent-template-recovery.json",
+        "docs/documentation/batches/DOC-021/independent-templates-retry.json",
+        "docs/documentation/batches/DOC-021/independent-templates-retry2.json",
+        "docs/documentation/batches/DOC-021/independent-templates.json"
+      ]
     }
   ],
   "authorEvidence": [
@@ -48,9 +68,10 @@
     "docs/documentation/batches/DOC-021/author-templates-retry.json"
   ],
   "limitations": [
-    "Independent agent walkthrough pending; user proofreading waits for the full suite.",
-    "Evidence uses immutable source 6a8873db; final candidate compatibility belongs to DOC-025.",
-    "Known #774 blank Matter Entity-valued Field picker and #770 template-default clear behavior are documented, not claimed fixed."
+    "Independent agent walkthrough, not a human user study; the author and the reviewer are different agents.",
+    "Verified on the owned lab at immutable source 6a8873db; final candidate compatibility belongs to DOC-025.",
+    "Known #774 blank Matter Entity-valued Field picker and #770 template-default clear behaviour remain open and are described as limits, not fixed.",
+    "Technical review by a feature owner is still unrecorded; this is behaviour observed against the release's own settings, not a feature-owner sign-off."
   ],
   "previousEvidence": null,
   "copyOnlyReview": null

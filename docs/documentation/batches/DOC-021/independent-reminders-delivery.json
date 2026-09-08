@@ -1,0 +1,49 @@
+{
+  "name": "independent-reminders-delivery",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C41"],
+  "authorRecordName": "ind-reminders-delivery",
+  "startedAt": "2026-09-08T05:51:22.394Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "reminders-and-audit",
+      "contentSha256": "91583fda511a5d75941af7d8b919de5db42298846ee2b9dad65fcd6f43a4565c"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Prepare a new eligible colleague with a saved timezone and dated Contract",
+      "actual": "Invited a brand-new Legal Team Member \"Ind Rowan Vale 1788846683344\" (no earlier briefing history), set their saved timezone to Asia/Dubai (local hour 9 against UTC 2026-09-08T05:51:25.822Z), and turned on Dates approaching In-app and the Dates briefing switch. Contract 50 carries Key dates \"Ind same-day checkpoint 1788846683344\" on 2026-09-08, \"Ind four-day checkpoint 1788846683344\" on 2026-09-12 and \"Ind eleven-day checkpoint 1788846683344\" on 2026-09-19. The saved organization lead times are [2,4,0].",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:51:23.344Z",
+      "at": "2026-09-08T05:51:25.822Z"
+    },
+    {
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "Run the real morning round in the owned worker",
+      "actual": "Queued notification.morning-round in openlaw-docs-b8e31260-configuration-worker-1 at 2026-09-08T05:51:25.823Z and it finished by 2026-09-08T05:51:26.469Z. Job 63bf740e-e96c-402a-8325-b1f3e7ff4429 state \"completed\" completedOn 2026-09-08T05:51:26.200Z, output null. This is the real queued worker on the real clock, not a simulated run.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:51:25.823Z",
+      "at": "2026-09-08T05:51:26.469Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "The new colleague gets the bell item and the real briefing email",
+      "actual": "Mailpit delivered a real briefing to ind.reminders.1788846683344@helix.example. It names \"Ind four-day checkpoint 1788846683344\" (true) for the 4-day lead and \"Ind same-day checkpoint 1788846683344\" (true) for the On the day entry, and leaves out \"Ind eleven-day checkpoint 1788846683344\" (true) because 11 is not on the list [2,4,0]. The bell reads \"Notifications | Mark all read\" and links to the record's Key dates page 2 time(s) \u2014 the bell names the record, not the Key date label. Local hour at delivery was 9 in Asia/Dubai.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:51:26.470Z",
+      "at": "2026-09-08T05:51:27.122Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T05:51:27.122Z"
+}

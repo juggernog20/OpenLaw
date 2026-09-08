@@ -1,0 +1,40 @@
+{
+  "name": "independent-requiredness-retry5",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C38"],
+  "authorRecordName": "ind-requiredness-retry5",
+  "startedAt": "2026-09-08T05:25:47.105Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "types-statuses-fields",
+      "contentSha256": "6e3fa892dc9b2bb23d05bd7b3125a187cdd1cbafb384cdf2d248064a1bcd1abe"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Narrowing a Global Field is refused in Edit while another module attaches it",
+      "actual": "With Contract type \"NDA\" also attaching it, saving Scope=Matter in Edit was refused: \"Ind coverage region IND81T2F is attached outside the matter module \u2014 detach it there first, then narrow the scope.\". The catalog still reads moduleScope=global.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:25:48.062Z",
+      "at": "2026-09-08T05:25:48.837Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Narrowing succeeds after the other module detaches, and values are retained",
+      "actual": "After detaching the Contract-type attachment the same Edit save narrowed it to moduleScope=matter; Matter 24 still held \"Nordics\". Promoting it back in Edit returned moduleScope=global.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:25:48.837Z",
+      "at": "2026-09-08T05:25:49.653Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T05:25:49.653Z"
+}
