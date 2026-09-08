@@ -137,7 +137,7 @@ describe("file-first Knowledge", () => {
     }
     for (const cookies of [contributorCookies, businessCookies]) {
       const paper = await harness.app.inject({ method: "GET", url: `${base}/documents`, cookies });
-      expect(paper.statusCode).toBe(403);
+      expect(paper.statusCode, paper.body).toBe(403);
     }
     for (const url of [portalUrl, downloadUrl]) {
       const response = await harness.app.inject({ method: "GET", url, cookies: businessCookies });
@@ -166,6 +166,10 @@ describe("file-first Knowledge", () => {
     });
     expect(download.statusCode, download.body).toBe(200);
     expect(download.body).toBe("%PDF retained");
+    // Archived again on the way out, and not only for tidiness: this
+    // item's primary is a PDF, and the next case asserts the exact
+    // rows `format=pdf` answers. The library listing leaves archived
+    // items out, so putting it back is what keeps that list to one.
     const cleanup = await harness.app.inject({
       method: "POST",
       url: `${base}/archive`,
