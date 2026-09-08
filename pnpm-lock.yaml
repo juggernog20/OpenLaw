@@ -29,9 +29,15 @@ importers:
       eslint-plugin-react-hooks:
         specifier: ^7.1.1
         version: 7.1.1(eslint@10.10.0(jiti@2.7.0))
+      marked:
+        specifier: 18.0.11
+        version: 18.0.11
       prettier:
         specifier: ^3.9.6
         version: 3.9.6
+      sanitize-html:
+        specifier: 2.17.7
+        version: 2.17.7
       secretlint:
         specifier: ^13.0.5
         version: 13.0.5
@@ -4064,6 +4070,11 @@ packages:
 
   magic-string@1.2.3:
     resolution: {integrity: sha512-Bpb0W2TbLKOZ7vJnOUnVRGq3WL2p+ISV29M6hYPL1AFCpyKZpdr5ytiXoTSSxRVhg8YW7f65+6gbG8WG6PCa/g==}
+
+  marked@18.0.11:
+    resolution: {integrity: sha512-HnslJfsZkRPBDJRHvVtAaWlZHEpSu7u8LgQuJCELjRKuWR+hpq4A7sLq3p8HaI9ypVoXDXxV34CsQJEe1+J5Aw==}
+    engines: {node: '>= 20'}
+    hasBin: true
 
   mdn-data@2.27.1:
     resolution: {integrity: sha512-9Yubnt3e8A0OKwxYSXyhLymGW4sCufcLG6VdiDdUGVkPhpqLxlvP5vl1983gQjJl3tqbrM731mjaZaP68AgosQ==}
@@ -8592,6 +8603,8 @@ snapshots:
   magic-string@1.2.3:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.6.0
+
+  marked@18.0.11: {}
 
   mdn-data@2.27.1: {}
 

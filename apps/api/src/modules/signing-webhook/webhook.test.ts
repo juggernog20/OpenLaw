@@ -75,6 +75,7 @@ const HMAC_SECRET = "connect-hmac-fixture-secret"; // NOSONAR — inert fixture
 const WRONG_SECRET = "connect-hmac-fixture-imposter"; // NOSONAR — inert fixture
 
 const CONNECTOR = {
+  updateMode: "webhook",
   environment: "demo",
   integrationKey: FAKE_VALID_INTEGRATION_KEY,
   apiUserId: "99999999-8888-7777-6666-555555555555",

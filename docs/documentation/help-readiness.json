@@ -1,0 +1,155 @@
+{
+  "kind": "help-fixture-validation",
+  "articleVerification": false,
+  "checkedAt": "2026-09-07T00:58:01.400Z",
+  "sourceBaseCommit": "5b33161c2135c48aa5ef8d839fd9acd03161bbc6",
+  "sourceState": "working-tree",
+  "backendSourceCommit": "a3ce2501dab2b33e8598b7ae31da597a6ed26564",
+  "checks": [
+    {
+      "role": "administrator",
+      "result": "pass",
+      "checks": [
+        "Header and article discovery",
+        "Audience and destination boundaries",
+        "Local search and browser navigation",
+        "Light/Dark/Warm at 1440/720/375/320 CSS pixels",
+        "CSS zoom 200%",
+        "Missing article and edition states",
+        "Existing keyboard shortcuts preserved",
+        "Intake contextual entry points"
+      ]
+    },
+    {
+      "role": "legal_team_member",
+      "result": "pass",
+      "checks": [
+        "Header and article discovery",
+        "Audience and destination boundaries",
+        "Local search and browser navigation",
+        "Light/Dark/Warm at 1440/720/375/320 CSS pixels",
+        "CSS zoom 200%",
+        "Missing article and edition states",
+        "Existing keyboard shortcuts preserved",
+        "Intake contextual entry points"
+      ]
+    },
+    {
+      "role": "contributor",
+      "result": "pass",
+      "checks": [
+        "Header and article discovery",
+        "Audience and destination boundaries",
+        "Local search and browser navigation",
+        "Light/Dark/Warm at 1440/720/375/320 CSS pixels",
+        "CSS zoom 200%",
+        "Missing article and edition states",
+        "Existing keyboard shortcuts preserved"
+      ]
+    },
+    {
+      "role": "business_user",
+      "result": "pass",
+      "checks": [
+        "Header and article discovery",
+        "Audience and destination boundaries",
+        "Local search and browser navigation",
+        "Light/Dark/Warm at 1440/720/375/320 CSS pixels",
+        "CSS zoom 200%",
+        "Missing article and edition states",
+        "Intake contextual entry points"
+      ]
+    },
+    {
+      "check": "External reference fails in a modified-click tab while staff and Portal Help remain readable and keyboard-navigable",
+      "result": "pass",
+      "checkedAt": "2026-09-07T00:59:25.009Z"
+    },
+    {
+      "check": "Help-link axe checks in both shells, three themes, 1440px and 320px; targets meet 24px minimum and pages do not overflow",
+      "result": "pass",
+      "sourceState": "working-tree",
+      "checkedAt": "2026-09-07T01:35:38.642Z",
+      "checks": [
+        {
+          "path": "/help",
+          "width": 1440,
+          "theme": "light",
+          "result": "pass"
+        },
+        {
+          "path": "/help",
+          "width": 1440,
+          "theme": "dark",
+          "result": "pass"
+        },
+        {
+          "path": "/help",
+          "width": 1440,
+          "theme": "warm",
+          "result": "pass"
+        },
+        {
+          "path": "/help",
+          "width": 320,
+          "theme": "light",
+          "result": "pass"
+        },
+        {
+          "path": "/help",
+          "width": 320,
+          "theme": "dark",
+          "result": "pass"
+        },
+        {
+          "path": "/help",
+          "width": 320,
+          "theme": "warm",
+          "result": "pass"
+        },
+        {
+          "path": "/portal/help",
+          "width": 1440,
+          "theme": "light",
+          "result": "pass"
+        },
+        {
+          "path": "/portal/help",
+          "width": 1440,
+          "theme": "dark",
+          "result": "pass"
+        },
+        {
+          "path": "/portal/help",
+          "width": 1440,
+          "theme": "warm",
+          "result": "pass"
+        },
+        {
+          "path": "/portal/help",
+          "width": 320,
+          "theme": "light",
+          "result": "pass"
+        },
+        {
+          "path": "/portal/help",
+          "width": 320,
+          "theme": "dark",
+          "result": "pass"
+        },
+        {
+          "path": "/portal/help",
+          "width": 320,
+          "theme": "warm",
+          "result": "pass"
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Validation fixtures, not user article verification or a human study.",
+    "Browser uses the working Help frontend with the isolated authoring lab API.",
+    "Zoom check uses CSS zoom.",
+    "Help-link Axe checks target the new control. Existing Warm avatar-initial contrast is tracked separately in issue #756."
+  ]
+}

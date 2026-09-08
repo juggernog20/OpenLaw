@@ -1,0 +1,67 @@
+{
+  "name": "independent-statuses-retry",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C38"],
+  "authorRecordName": "ind-statuses-retry",
+  "startedAt": "2026-09-08T05:26:49.105Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "types-statuses-fields",
+      "contentSha256": "6e3fa892dc9b2bb23d05bd7b3125a187cdd1cbafb384cdf2d248064a1bcd1abe"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Create a Contract Status on a chosen Stage",
+      "actual": "Added \"Ind counsel review IND81T2F\" on the Review Stage; the row reads \"Ind counsel review IND81T2F / Stage: / Review / 0 contracts\".",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:26:50.071Z",
+      "at": "2026-09-08T05:26:50.456Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Renaming a Status keeps its Stage",
+      "actual": "Renamed to \"Ind counsel review IND81T2F revised\"; the row still reads \"Ind counsel review IND81T2F revised / Stage: / Review / 0 contracts\" and the saved stage is still \"review\". No control offers a different Stage on an existing row.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:26:50.457Z",
+      "at": "2026-09-08T05:26:51.104Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "The protected built-in Statuses cannot be archived",
+      "actual": "The three seeds show a lock instead of an archive control \u2014 Draft (slug draft, stage draft): archive control absent, protected lock shown; Active (slug active, stage active): archive control absent, protected lock shown; Expired (slug expired, stage ended): archive control absent, protected lock shown.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:26:51.104Z",
+      "at": "2026-09-08T05:26:51.122Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A Contract Status in use blocks its own archive and is not reassigned by the dialog",
+      "actual": "While Contract 43 sat on it the dialog read \"Archive Ind counsel review IND81T2F revised Ind counsel review IND81T2F revised is the status of 1 contract. Move it to another status first. The change applies immediately and is recorded in the audit log. Cancel Archive status\" and offered 0 reassignment control(s); the archive answered 409 {\"type\":\"about:blank\",\"title\":\"Ind counsel review IND81T2F revised is the status of 1 contract. Move them to another status first.\",\"status\":409,\"detail\":\"Ind counsel review IND81T2F revised is the status of 1 contract. . After moving that Contract back to Draft by hand the archive answered 200.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:26:51.122Z",
+      "at": "2026-09-08T05:26:51.841Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A Matter Status in use asks for a same-Category replacement",
+      "actual": "Matter 25 sat on \"Ind triage IND81T2F\". The dialog read \"Archive Ind triage IND81T2F Ind triage IND81T2F is the status of 1 matter. Pick its replacement below. Reassign 1 matter to Choose a status\u2026 Open In progress On hold Awaiting the business With external counsel Docs otherMatter 1788842089553 The change applies \" and offered only same-Category replacements: Open (open), In progress (open), On hold (open), Awaiting the business (open), With external counsel (open), Docs otherMatter 1788842089553 (open). Confirming moved the Matter to \"Open\" (category open).",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:26:51.841Z",
+      "at": "2026-09-08T05:26:53.270Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T05:26:53.270Z"
+}

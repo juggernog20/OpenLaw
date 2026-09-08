@@ -1,0 +1,50 @@
+{
+  "name": "independent-repair-audit",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C41"],
+  "authorRecordName": "ind-repair-audit",
+  "purpose": "Evidence repair: re-establishes a claim an earlier record recorded unreliably. Every step asserts and throws if its outcome is not observed.",
+  "startedAt": "2026-09-08T06:30:19.156Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "reminders-and-audit",
+      "contentSha256": "91583fda511a5d75941af7d8b919de5db42298846ee2b9dad65fcd6f43a4565c"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "From and To send this browser\u2019s civil day as its own first and last instants",
+      "actual": "The browser reports Asia/Dubai and its civil day is 2026-09-08. Setting both date controls to 2026-09-08 sent exactly one matching read: expected from 2026-09-07T20:00:00.000Z and to 2026-09-08T19:59:59.999Z; the awaited response carried from 2026-09-07T20:00:00.000Z and to 2026-09-08T19:59:59.999Z and answered 200. All 50 returned entries fall inside those instants and the table showed 50 rows. Both bounds are this browser's own first and last instants of that civil day.",
+      "result": "pass",
+      "startedAt": "2026-09-08T06:30:20.110Z",
+      "at": "2026-09-08T06:30:20.760Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A civil day with no entries reports the empty state, and Clear filters recovers",
+      "actual": "Bounding both controls to 2020-01-01 sent from 2019-12-31T20:00:00.000Z and to 2020-01-01T19:59:59.999Z, again this browser's own instants for that civil day. The response held 0 entries, the table showed 0 rows and the log read \"No entry matches these filters.\". Clear filters emptied both date controls and recovered 50 rows.",
+      "result": "pass",
+      "startedAt": "2026-09-08T06:30:20.760Z",
+      "at": "2026-09-08T06:30:20.935Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Combining Person, Action and Record narrows to a real count, empty included",
+      "actual": "Unfiltered 50 rows; Person=\"Daniel Okafor\" 50; plus Action=\"contract_type.archived\" 2; plus Record=\"Contract\" 0 with the log reading \"No entry matches these filters.\". Counts are data rows with the header excluded, so an empty result is 0 and never negative, and each filter narrows or holds.",
+      "result": "pass",
+      "startedAt": "2026-09-08T06:30:20.935Z",
+      "at": "2026-09-08T06:30:26.072Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T06:30:26.072Z"
+}

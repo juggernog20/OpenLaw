@@ -1,0 +1,30 @@
+{
+  "name": "independent-requiredness",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C38"],
+  "authorRecordName": "ind-requiredness",
+  "startedAt": "2026-09-08T05:22:24.859Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "types-statuses-fields",
+      "contentSha256": "6e3fa892dc9b2bb23d05bd7b3125a187cdd1cbafb384cdf2d248064a1bcd1abe"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Attach the Global Field and mark it Required",
+      "result": "fail",
+      "startedAt": "2026-09-08T05:22:25.805Z",
+      "error": "locator.check: Clicking the checkbox did not change its state\nCall log:\n\u001b[2m  - waiting for getByRole('checkbox', { name: 'Ind coverage region IND81T2F required', exact: true })\u001b[22m\n\u001b[2m    - locator resolved to <button value=\"on\" type=\"button\" role=\"checkbox\" aria-checked=\"false\" data-state=\"unchecked\" aria-label=\"Ind coverage region IND81T2F required\" class=\"relative flex size-4 shrink-0 items-center justify-center rounded-chip border border-border-default bg-raised transition-colors duration-150 before:absolute before:-inset-1 before:content-[''] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link disabled:pointer-events-none disabled:opacity-50 data-[state=checked]:border-tra\u2026></button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m    - element is visible, enabled and stable\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n\u001b[2m    - done scrolling\u001b[22m\n\u001b[2m    - performing click action\u001b[22m\n\u001b[2m    - click action done\u001b[22m\n\u001b[2m    - waiting for scheduled navigations to finish\u001b[22m\n\u001b[2m    - navigations have finished\u001b[22m\n",
+      "at": "2026-09-08T05:22:26.547Z"
+    }
+  ],
+  "passed": false
+}

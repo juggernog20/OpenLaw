@@ -11,6 +11,7 @@
  * cluster.
  */
 
+import { HelpLink } from "../documentation/help-link";
 import { Scale } from "lucide-react";
 import { FormattedMessage } from "react-intl";
 import { useLocation } from "react-router";
@@ -59,6 +60,7 @@ export function AppHeader({
       {/* 16px between the trailing controls, as the AppHeader frame
           spaces its own cluster. */}
       <div className="flex shrink-0 items-center gap-4">
+        <HelpLink surface="staff" audience={user.role} />
         <NotificationBell surface="staff" />
         <UserMenu user={user} onSignOut={onSignOut} />
       </div>

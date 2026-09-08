@@ -39,6 +39,8 @@ function connector(overrides: Record<string, unknown> = {}) {
   return {
     provider: "docusign",
     configured: true,
+    updateMode: "webhook",
+    webhookUrlOverride: null,
     environment: "demo",
     integrationKey: "the-integration-key",
     apiUserId: "the-user-id",
@@ -56,6 +58,7 @@ function connector(overrides: Record<string, unknown> = {}) {
 function unconfigured() {
   return connector({
     configured: false,
+    updateMode: "polling",
     environment: null,
     integrationKey: null,
     apiUserId: null,
@@ -88,6 +91,9 @@ function connectorApi(
         const body = call.body as Record<string, string>;
         stored = connector({
           configured: true,
+          updateMode: body.updateMode,
+          webhookUrlOverride: body.webhookUrl ?? null,
+          webhookUrl: body.webhookUrl || WEBHOOK_URL,
           environment: body.environment,
           integrationKey: body.integrationKey,
           apiUserId: body.apiUserId,
@@ -247,6 +253,8 @@ describe("the E-signature pane (#245)", () => {
       expect(calls.saves).toEqual([
         {
           environment: "production",
+          updateMode: "webhook",
+          webhookUrl: null,
           integrationKey: "the-integration-key",
           apiUserId: "the-user-id",
         },
@@ -269,6 +277,8 @@ describe("the E-signature pane (#245)", () => {
       expect(calls.saves).toEqual([
         {
           environment: "demo",
+          updateMode: "webhook",
+          webhookUrl: null,
           integrationKey: "the-integration-key",
           apiUserId: "the-user-id",
           webhookSecret: "rotated-secret",
@@ -280,19 +290,120 @@ describe("the E-signature pane (#245)", () => {
     expect(screen.getByLabelText("Connect HMAC secret")).toHaveValue("");
   });
 
-  it("requires both secrets on an install with no connector", async () => {
+  it("defaults to polling and requires the Connect secret only after choosing webhook", async () => {
     const user = userEvent.setup();
     stubApi({ signedIn: ADMIN, extra: connectorApi({ connector: unconfigured() }, newCalls()) });
     renderAt("/settings/integrations/e-signature");
 
     await openDocusign(user);
     expect(await screen.findByLabelText("RSA private key")).toBeRequired();
+    expect(screen.getByLabelText("Signing updates")).toHaveValue("polling");
+    expect(screen.queryByLabelText("Connect HMAC secret")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Public callback URL")).not.toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText("Signing updates"), "webhook");
     expect(screen.getByLabelText("Connect HMAC secret")).toBeRequired();
     expect(
       screen.getByText(
         "Required. OpenLaw checks it on every delivery, so nothing unsigned can change a record.",
       ),
     ).toBeVisible();
+  });
+
+  it("saves polling without a Connect secret and hides webhook setup", async () => {
+    const user = userEvent.setup();
+    const calls = newCalls();
+    stubApi({ signedIn: ADMIN, extra: connectorApi({ connector: unconfigured() }, calls) });
+    renderAt("/settings/integrations/e-signature");
+    await openDocusign(user);
+    await user.type(screen.getByLabelText("Integration key"), "key");
+    await user.type(screen.getByLabelText("User ID"), "user");
+    await user.type(screen.getByLabelText("RSA private key"), "fixture-key");
+    await user.click(screen.getByRole("button", { name: "Save connector" }));
+    await waitFor(() =>
+      expect(calls.saves).toEqual([
+        {
+          environment: "demo",
+          integrationKey: "key",
+          apiUserId: "user",
+          privateKey: "fixture-key",
+          updateMode: "polling",
+          webhookUrl: null,
+        },
+      ]),
+    );
+    expect(await screen.findByText("Saved")).toBeVisible();
+    expect(screen.queryByLabelText("Webhook URL")).not.toBeInTheDocument();
+  });
+
+  it("saves a separate public callback and switches back without erasing credentials", async () => {
+    const user = userEvent.setup();
+    const calls = newCalls();
+    stubApi({ signedIn: ADMIN, extra: connectorApi({}, calls) });
+    renderAt("/settings/integrations/e-signature");
+    await openDocusign(user);
+    await user.type(
+      screen.getByLabelText("Public callback URL"),
+      "https://gateway.example/signing",
+    );
+    await user.click(screen.getByRole("button", { name: "Save connector" }));
+    await waitFor(() =>
+      expect(screen.getByLabelText("Webhook URL")).toHaveValue("https://gateway.example/signing"),
+    );
+    await user.selectOptions(screen.getByLabelText("Signing updates"), "polling");
+    await user.click(screen.getByRole("button", { name: "Save connector" }));
+    await waitFor(() => expect(screen.queryByLabelText("Webhook URL")).not.toBeInTheDocument());
+    expect(calls.saves.at(-1)).toEqual({
+      environment: "demo",
+      integrationKey: "the-integration-key",
+      apiUserId: "the-user-id",
+      updateMode: "polling",
+      webhookUrl: "https://gateway.example/signing",
+    });
+    expect(screen.getByLabelText("RSA private key")).not.toBeRequired();
+  });
+
+  it("sends the stored callback, not a half-typed one, when Polling hides the box", async () => {
+    const user = userEvent.setup();
+    const calls = newCalls();
+    stubApi({ signedIn: ADMIN, extra: connectorApi({}, calls) });
+    renderAt("/settings/integrations/e-signature");
+    await openDocusign(user);
+
+    // A stored address to fall back to.
+    await user.type(
+      screen.getByLabelText("Public callback URL"),
+      "https://gateway.example/signing",
+    );
+    await user.click(screen.getByRole("button", { name: "Save connector" }));
+    await waitFor(() =>
+      expect(screen.getByLabelText("Webhook URL")).toHaveValue("https://gateway.example/signing"),
+    );
+
+    // The Administrator starts a second address, forgets the scheme, and
+    // changes the mode instead of finishing it. Polling does not draw the
+    // box, so the half-typed value has no way back on screen.
+    await user.clear(screen.getByLabelText("Public callback URL"));
+    await user.type(screen.getByLabelText("Public callback URL"), "gateway.example/signing");
+    await user.selectOptions(screen.getByLabelText("Signing updates"), "polling");
+    expect(screen.queryByLabelText("Public callback URL")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Save connector" }));
+    // The save carries the stored address, which the API accepts. Sending
+    // the half-typed one would come back refused, naming a field the pane
+    // is no longer showing.
+    await waitFor(() => expect(screen.getByText("Saved")).toBeVisible());
+    expect(calls.saves.at(-1)).toEqual({
+      environment: "demo",
+      integrationKey: "the-integration-key",
+      apiUserId: "the-user-id",
+      updateMode: "polling",
+      webhookUrl: "https://gateway.example/signing",
+    });
+    // Not sent is not the same as thrown away. Webhook draws the box
+    // again with the half-typed address in it, where the Administrator
+    // can finish it and where a refusal would name a field they can see.
+    await user.selectOptions(screen.getByLabelText("Signing updates"), "webhook");
+    expect(screen.getByLabelText("Public callback URL")).toHaveValue("gateway.example/signing");
   });
 
   it("offers no connection test until something is configured", async () => {
@@ -378,6 +489,7 @@ describe("the E-signature pane (#245)", () => {
     await user.type(await screen.findByLabelText("Integration key"), "a-key");
     await user.type(screen.getByLabelText("User ID"), "a-user");
     await user.type(screen.getByLabelText("RSA private key"), "-----BEGIN RSA PRIVATE KEY-----");
+    await user.selectOptions(screen.getByLabelText("Signing updates"), "webhook");
     await user.type(screen.getByLabelText("Connect HMAC secret"), "a-secret");
     await user.click(screen.getByRole("button", { name: "Save connector" }));
 

@@ -163,10 +163,10 @@ export async function entitiesLoader({ request }: LoaderFunctionArgs) {
   const view: "calendar" | "list" | "chart" =
     requestedView === "chart" ? "chart" : requestedView === "list" ? "list" : "calendar";
   const query = {
-    entity: url.searchParams.get("entity") ?? undefined,
-    assignee: url.searchParams.get("assignee") ?? undefined,
-    from: url.searchParams.get("from") ?? undefined,
-    to: url.searchParams.get("to") ?? undefined,
+    entity: url.searchParams.get("entity") || undefined,
+    assignee: url.searchParams.get("assignee") || undefined,
+    from: url.searchParams.get("from") || undefined,
+    to: url.searchParams.get("to") || undefined,
     includeCompleted:
       url.searchParams.get("includeCompleted") === "true" ? ("true" as const) : undefined,
   };

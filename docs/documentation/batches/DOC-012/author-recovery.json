@@ -1,0 +1,52 @@
+{
+  "name": "recovery",
+  "startedAt": "2026-09-07T09:25:27.866Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "follow-request",
+      "contentSha256": "b77a14c08ea129691c6c1e9a237ed21ffa17a2a55acaac436cada24b6f648f00"
+    }
+  ],
+  "steps": [
+    {
+      "role": "business_user",
+      "action": "failed reply preserves text and files and retry posts once",
+      "actual": "Controlled 503 retained words/paper; real retry produced one visible reply with its file",
+      "result": "pass",
+      "at": "2026-09-07T09:25:30.541Z"
+    },
+    {
+      "role": "business_user",
+      "action": "conversation read failure retains submitted details and reload recovers",
+      "actual": "Interrupted conversation read retained submitted details; reload restored real conversation",
+      "result": "pass",
+      "at": "2026-09-07T09:25:31.260Z"
+    },
+    {
+      "role": "business_user",
+      "action": "earlier replies load after a failed attempt",
+      "actual": "Known earlier reply absent from newest page; failed load retained page; retry retrieved marker",
+      "result": "pass",
+      "at": "2026-09-07T09:25:32.709Z"
+    },
+    {
+      "role": "business_user",
+      "action": "contract later Document Version does not replace original Request attachment",
+      "actual": "Promoted Document received later Version; original Request filename and exact downloaded bytes unchanged",
+      "result": "pass",
+      "at": "2026-09-07T09:25:33.402Z"
+    },
+    {
+      "role": "business_user",
+      "action": "matter later Document Version does not replace original Request attachment",
+      "actual": "Promoted Document received later Version; original Request filename and exact downloaded bytes unchanged",
+      "result": "pass",
+      "at": "2026-09-07T09:25:34.051Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T09:25:34.051Z"
+}

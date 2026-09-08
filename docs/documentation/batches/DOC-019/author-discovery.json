@@ -1,0 +1,66 @@
+{
+  "name": "discovery",
+  "startedAt": "2026-09-08T01:48:55.999Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-knowledge",
+  "articleHashes": [
+    {
+      "articleId": "create-knowledge",
+      "contentSha256": "958db5b200781b75af77a88e26bfd83912b8e1d0862ff82922ffa9685b3aa61c"
+    },
+    {
+      "articleId": "publish-knowledge",
+      "contentSha256": "b406433d5da8bedf14b847e6f70c9fdbf213760700cbf7498bfecd054a3f6c52"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths; keyboard focus and emulated 200 percent zoom remained usable",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:48:56.924Z",
+      "at": "2026-09-08T01:48:59.248Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "publish-knowledge contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths; keyboard focus and emulated 200 percent zoom remained usable",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:48:59.249Z",
+      "at": "2026-09-08T01:49:00.620Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths; keyboard focus and emulated 200 percent zoom remained usable",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:49:01.437Z",
+      "at": "2026-09-08T01:49:03.158Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "publish-knowledge contextual Help, title search, heading focus and formal reader",
+      "actual": "Contextual page Help exposed title, exact-title search opened article with focused heading, section link focused heading, formal link worked; no horizontal overflow in 3 themes×3 widths; keyboard focus and emulated 200 percent zoom remained usable",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:49:03.158Z",
+      "at": "2026-09-08T01:49:04.540Z"
+    },
+    {
+      "role": "signed-out",
+      "method": "browser-walkthrough",
+      "action": "both guides are discoverable in formal preview without application API calls",
+      "actual": "Both formal guide titles discoverable anonymously; zero application API requests",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:49:05.346Z",
+      "at": "2026-09-08T01:49:06.387Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T01:49:06.387Z"
+}

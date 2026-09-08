@@ -32,6 +32,13 @@ describe("SPA serving", () => {
     mkdirSync(join(webDist, "assets"));
     writeFileSync(join(webDist, "assets", "app-abc123.js"), "console.log('openlaw');");
 
+    mkdirSync(join(webDist, "documentation-export", "assets"), { recursive: true });
+    writeFileSync(
+      join(webDist, "documentation-export", "index.html"),
+      "<h1>Documentation fixture</h1>",
+    );
+    writeFileSync(join(webDist, "documentation-export", "assets", "example.png"), "fixture");
+
     // pg pools connect lazily; these suites never touch the database.
     db = createDb(UNUSED_DATABASE_URL);
     app = await buildApp({ ...testDeps({ db }), webDist });
@@ -66,6 +73,30 @@ describe("SPA serving", () => {
     const res = await app.inject({ method: "GET", url: "/assets/app-abc123.js" });
     expect(res.statusCode).toBe(200);
     expect(res.headers["cache-control"]).toContain("immutable");
+  });
+
+  it("serves formal routes and standalone files without touching the database", async () => {
+    const formal = await app.inject({ method: "GET", url: "/documentation/a-guide" });
+    expect(formal.statusCode).toBe(200);
+    expect(formal.body).toContain(SHELL_MARKER);
+    const standalone = await app.inject({ method: "GET", url: "/documentation-export/index.html" });
+    expect(standalone.statusCode).toBe(200);
+    expect(standalone.body).toContain("Documentation fixture");
+  });
+
+  it("revalidates stable documentation asset names after an upgrade", async () => {
+    const res = await app.inject({
+      method: "GET",
+      url: "/documentation-export/assets/example.png",
+    });
+    expect(res.headers["cache-control"]).toBe("no-cache");
+  });
+
+  it("reports a missing export file without serving the SPA in its place", async () => {
+    const res = await app.inject({ method: "GET", url: "/documentation-export/missing.html" });
+    expect(res.statusCode).toBe(404);
+    expect(res.body).toContain("Documentation file unavailable");
+    expect(res.body).not.toContain(SHELL_MARKER);
   });
 
   it("keeps unknown API routes as problem+json, not the shell", async () => {

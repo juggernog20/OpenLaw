@@ -1,0 +1,30 @@
+{
+  "articleId": "replace-with-catalog-id",
+  "contentSha256": "replace-with-hash-of-tested-article",
+  "appCommit": "replace-with-tested-app-source-commit",
+  "buildId": "replace-with-build-identity",
+  "environment": "replace-with-disposable-environment-name",
+  "author": "replace-with-author",
+  "technicalReviewer": "replace-with-reviewer",
+  "walkthroughReviewer": "replace-with-independent-reviewer",
+  "reviewerKind": "agent-or-human",
+  "verifiedAt": null,
+  "status": "not-run",
+  "sources": [],
+  "scenarios": [
+    {
+      "id": "replace-with-scenario-id",
+      "coverage": [],
+      "role": "replace-with-app-role-or-operator",
+      "method": "browser-walkthrough",
+      "prerequisites": [],
+      "expected": "replace-with-observable-result",
+      "actual": null,
+      "result": "not-run",
+      "evidence": []
+    }
+  ],
+  "limitations": [],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

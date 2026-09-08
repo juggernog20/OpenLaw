@@ -26,6 +26,10 @@ COPY packages/shared/package.json packages/shared/
 RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile
 COPY . .
+# Release builds supply the source identity because .git is outside the context.
+ARG OPENLAW_BUILD_COMMIT
+ARG OPENLAW_BUILD_DIRTY
+ENV OPENLAW_BUILD_COMMIT=$OPENLAW_BUILD_COMMIT OPENLAW_BUILD_DIRTY=$OPENLAW_BUILD_DIRTY
 RUN pnpm run build
 
 # --- Production dependencies only, for the runtime layer ---

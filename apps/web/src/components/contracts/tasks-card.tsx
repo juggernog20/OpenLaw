@@ -229,7 +229,7 @@ export function TasksCard({
                   result.detail ??
                   intl.formatMessage({
                     id: "tasks.writeFailed",
-                    defaultMessage: "The Task change could not be saved. Try again.",
+                    defaultMessage: "The change could not be saved. Try again.",
                   }),
               };
             onTasksChange(result);

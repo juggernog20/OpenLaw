@@ -1,0 +1,41 @@
+{
+  "assembledAt": "2026-09-08T08:55:21.834917+00:00",
+  "author": "Codex documentation author",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "verificationScriptSha256": "917185a4dac5029fdc334574f0a4198f606215f86e4467f4861532ae79f97453",
+  "fixtureFingerprintSha256": "2a6d24ee8ceb0e347331f3c8160b89d2f5ebe9ff8576edae443b97ef73b27821",
+  "checks": [
+    {
+      "check": "populated-upgrade",
+      "project": "openlaw-docs-b8e31260-ops-upgrade",
+      "method": "automated-test",
+      "result": "pass",
+      "actual": "the upgraded install still reads back every seeded record",
+      "logLastWrittenAt": "2026-09-08T08:40:23.059933+00:00",
+      "logSha256": "c45895eb23440907069872b6f81a6fddef9027b7bb2a095e7ab6551c4e567637"
+    },
+    {
+      "check": "isolated-restore",
+      "project": "openlaw-docs-b8e31260-ops-restore",
+      "method": "automated-test",
+      "result": "pass",
+      "actual": "the upgraded install still reads back every seeded record",
+      "logLastWrittenAt": "2026-09-08T08:43:29.953590+00:00",
+      "logSha256": "c45895eb23440907069872b6f81a6fddef9027b7bb2a095e7ab6551c4e567637"
+    },
+    {
+      "check": "original-database-return",
+      "project": "openlaw-docs-b8e31260-ops-upgrade",
+      "method": "automated-test",
+      "result": "pass",
+      "actual": "the upgraded install still reads back every seeded record",
+      "logLastWrittenAt": "2026-09-08T08:52:33.406908+00:00",
+      "logSha256": "c45895eb23440907069872b6f81a6fddef9027b7bb2a095e7ab6551c4e567637"
+    }
+  ],
+  "limitations": [
+    "Retrospective index of completed private command logs, not newly run checks; logLastWrittenAt is filesystem provenance, not a claimed browser action time.",
+    "Fixture preparation uses API calls and inert signing configuration. Separate actual Mailpit delivery establishes SMTP decryption; no live signing provider claim.",
+    "The three checks carry one `actual` sentence and one logSha256 because that sentence is the fixed success line e2e/scripts/upgrade-fidelity.mjs prints on a passing verify. It is not a per-check description; each check ran against the project named beside it."
+  ]
+}

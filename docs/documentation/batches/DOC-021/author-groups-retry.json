@@ -1,0 +1,53 @@
+{
+  "name": "groups-retry",
+  "startedAt": "2026-09-08T04:45:27.502Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "approver-groups",
+      "contentSha256": "858db239d62e952a01c8f7d588b9dc2b25d59e75677cd811277807186d11bbf8"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "create Approver group with two eligible people, exclude Contributor and refuse direct invalid member",
+      "actual": "Created group naming Nadia and Priya; Contributor absent and direct membership422.",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:45:28.405Z",
+      "at": "2026-09-08T04:45:29.581Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "apply group to Contract and read individual Pending requests",
+      "actual": "Applied group to C-38 after named-person preview; two individual Pending requests present.",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:45:29.581Z",
+      "at": "2026-09-08T04:45:30.284Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "edit members and archive group without rewriting existing Approval Requests; restore retains edited membership",
+      "actual": "Membership changed to Nadia/Daniel, but existing Nadia/Priya requests byte-equivalent; archive removed picker entry without replacement, restore recovered edited membership.",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:45:30.284Z",
+      "at": "2026-09-08T04:45:32.669Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "group configuration unavailable and direct group write refused",
+      "actual": "Legal settings redirected; direct create403.",
+      "result": "pass",
+      "startedAt": "2026-09-08T04:45:32.669Z",
+      "at": "2026-09-08T04:45:34.104Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T04:45:34.104Z"
+}

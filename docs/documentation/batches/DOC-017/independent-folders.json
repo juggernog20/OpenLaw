@@ -1,0 +1,164 @@
+{
+  "name": "folders",
+  "reviewer": "Independent review seat (Opus 5 agent)",
+  "startedAt": "2026-09-07T21:17:07.069Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "document-folders",
+      "contentSha256": "1844521ab7ef07fc40fe8e0c01aaeb7df5022acf1e8059b2b24716f809838fec"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C27 step 1-3: New folder, a folder inside it, Rename, and the refusals the guide lists",
+      "actual": "New folder created the parent, New folder inside nested a child, and Rename changed that child's name in place without moving it; a case-only duplicate, a blank name, a slash, \".\" and \"..\" were each refused in the dialog with a visible message and created nothing",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:17:08.672Z",
+      "at": "2026-09-07T21:17:10.033Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C27 step 3: Move refuses a folder into itself or its own descendant",
+      "actual": "The Move into picker offered the record root and unrelated folders but neither the folder itself nor its descendant, so the cycle the guide describes cannot be chosen",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:17:10.033Z",
+      "at": "2026-09-07T21:17:10.202Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C27 step 4: Move to folder files a Document, then moves it back out to the record",
+      "actual": "Move to folder > File in filed the Document into the folder and then, choosing \"The contract itself\", moved it back to the record root, which is the guide's way out of folders",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:17:10.202Z",
+      "at": "2026-09-07T21:17:10.897Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C27: Delete dissolves the folder and its contents move up, with nothing deleted",
+      "actual": "Delete on the child folder stated where its contents would go, dissolved only the folder, and left the Document live in the parent. Folder deletion is not Document deletion, as the guide separates them",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:17:10.897Z",
+      "at": "2026-09-07T21:17:11.888Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C27 step 20-26: a two-file import with one induced failure keeps the good file and retries only the bad one",
+      "actual": "With one file answered 503 once by a browser-network fixture, the import reported \"Imported 1 of 2 files\" and named the failed row; the good file was already a v1 Document, Retry 1 file resent only the failed one, and Done closed on \"Imported 2 of 2 files\". The single Version kind applied to both and the dialog collected no per-file Note",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:17:11.888Z",
+      "at": "2026-09-07T21:17:12.316Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C27 step 40: Cancel remaining stops queued work and the finished files stay",
+      "actual": "Cancel remaining stopped the queue part way: 3 of 4 files were already on the record as v1 Documents and the rest read \"Cancelled before it was uploaded.\"; the final counts named exactly what landed",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:17:12.316Z",
+      "at": "2026-09-07T21:17:14.330Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C27 step 30-34: Choose folder imports the tree, keeps nested paths, and drops empty folders",
+      "actual": "Choose folder carried the selected top-level folder and its Nested child into the record with the file paths intact; the Empty directory did not survive the picker, exactly as the guide warns",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:17:14.330Z",
+      "at": "2026-09-07T21:17:16.346Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C27 step 1-3: New folder, a folder inside it, Rename, and the refusals the guide lists",
+      "actual": "New folder created the parent, New folder inside nested a child, and Rename changed that child's name in place without moving it; a case-only duplicate, a blank name, a slash, \".\" and \"..\" were each refused in the dialog with a visible message and created nothing",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:17:17.869Z",
+      "at": "2026-09-07T21:17:19.131Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C27 step 3: Move refuses a folder into itself or its own descendant",
+      "actual": "The Move into picker offered the record root and unrelated folders but neither the folder itself nor its descendant, so the cycle the guide describes cannot be chosen",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:17:19.132Z",
+      "at": "2026-09-07T21:17:19.280Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C27 step 4: Move to folder files a Document, then moves it back out to the record",
+      "actual": "Move to folder > File in filed the Document into the folder and then, choosing \"The contract itself\", moved it back to the record root, which is the guide's way out of folders",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:17:19.280Z",
+      "at": "2026-09-07T21:17:19.911Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C27: Delete dissolves the folder and its contents move up, with nothing deleted",
+      "actual": "Delete on the child folder stated where its contents would go, dissolved only the folder, and left the Document live in the parent. Folder deletion is not Document deletion, as the guide separates them",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:17:19.911Z",
+      "at": "2026-09-07T21:17:20.862Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C27 step 20-26: a two-file import with one induced failure keeps the good file and retries only the bad one",
+      "actual": "With one file answered 503 once by a browser-network fixture, the import reported \"Imported 1 of 2 files\" and named the failed row; the good file was already a v1 Document, Retry 1 file resent only the failed one, and Done closed on \"Imported 2 of 2 files\". The single Version kind applied to both and the dialog collected no per-file Note",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:17:20.862Z",
+      "at": "2026-09-07T21:17:21.191Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C27 step 40: Cancel remaining stops queued work and the finished files stay",
+      "actual": "Cancel remaining stopped the queue part way: 3 of 4 files were already on the record as v1 Documents and the rest read \"Cancelled before it was uploaded.\"; the final counts named exactly what landed",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:17:21.192Z",
+      "at": "2026-09-07T21:17:23.199Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C27 step 30-34: Choose folder imports the tree, keeps nested paths, and drops empty folders",
+      "actual": "Choose folder carried the selected top-level folder and its Nested child into the record with the file paths intact; the Empty directory did not survive the picker, exactly as the guide warns",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:17:23.199Z",
+      "at": "2026-09-07T21:17:25.179Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C27: a Contributor imports several files at the record root and gets no folder controls",
+      "actual": "The Contributor imported two files at the record root as two separate v1 Documents; the section offered no New folder button and the composer no Choose folder, so no folder could be created or chosen",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:17:26.598Z",
+      "at": "2026-09-07T21:17:26.860Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C27 negative: a Contributor cannot create a folder or move a Document through the seam either",
+      "actual": "Creating a folder answered 403 and the move route answered 404; no folder appeared and the Contributor's own paper stayed where it was, so nothing claimed success",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:17:26.860Z",
+      "at": "2026-09-07T21:17:26.874Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T21:17:26.877Z",
+  "reviewerKind": "agent",
+  "note": "Independent review seat. Fresh fictional \"Rev\" records and this seat's own steps and assertions; the author records are supporting evidence only. Each step's \"at\" is written when that awaited step settled, and \"startedAt\" when it began; these are automated browser checks against a local instance, not measured human task times."
+}

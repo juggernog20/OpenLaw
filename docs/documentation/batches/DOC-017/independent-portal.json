@@ -1,0 +1,56 @@
+{
+  "name": "portal",
+  "reviewer": "Independent review seat (Opus 5 agent)",
+  "startedAt": "2026-09-07T21:24:12.210Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "document-previews",
+      "contentSha256": "12cf5181a1b0c37788c1cd3d07ce04d8ac6c41efc68fed4188d47074307bd24a"
+    }
+  ],
+  "steps": [
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "C28 step 42: a thread attachment downloads and offers no Version history",
+      "actual": "On their own Request thread the Business User supplied a file and downloaded it back byte for byte; the page offered no reader, no v… indicator and no Version-history control, and the attachment never appeared in the staff Documents repository. The guide's requester/managed distinction held",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:24:14.236Z",
+      "at": "2026-09-07T21:24:15.868Z"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "C28 negative: the portal grants no staff Documents repository or record reach",
+      "actual": "The repository answered 403, the /documents address did not open for this reader, and a staff Document download answered 403. The portal reaches neither, exactly as the guide's prerequisites state",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:24:15.868Z",
+      "at": "2026-09-07T21:24:16.455Z"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "C28 step 44: published Knowledge lists its primary Document first and downloads it",
+      "actual": "The published item listed the primary Document above the second file, each with its own Download; the download matched the uploaded bytes and the page drew no in-app preview and no Version-history picker",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:24:16.456Z",
+      "at": "2026-09-07T21:24:17.087Z"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "C28 negative: an archived Knowledge Item is no longer available in the portal",
+      "actual": "Archiving the item sent the same portal link back to the portal home with no guidance shown; restoring it made the item readable again. The guide's \"may no longer be available\" wording matches what a requester actually sees",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:24:17.088Z",
+      "at": "2026-09-07T21:24:18.302Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T21:24:18.313Z",
+  "reviewerKind": "agent",
+  "note": "Independent review seat. Fresh fictional \"Rev\" records and this seat's own steps and assertions; the author records are supporting evidence only. Each step's \"at\" is written when that awaited step settled, and \"startedAt\" when it began; these are automated browser checks against a local instance, not measured human task times."
+}

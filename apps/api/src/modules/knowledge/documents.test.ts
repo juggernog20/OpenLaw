@@ -2,6 +2,7 @@
 
 /** M28's file-first Knowledge HTTP contract (#598). */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { z } from "zod";
 import { eq, knowledgeTypes, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
@@ -85,6 +86,99 @@ beforeAll(async () => {
 afterAll(async () => harness.stop());
 
 describe("file-first Knowledge", () => {
+  it("keeps archived item paper readable for staff restoration without restoring Portal reach", async () => {
+    const created = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/knowledge/from-files",
+      cookies: memberCookies,
+      ...multipart({ knowledgeTypeId: templateId }, [
+        { filename: "Restore guide.pdf", contentType: "application/pdf", content: "%PDF retained" },
+      ]),
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const [item] = z
+      .object({
+        knowledgeItems: z.tuple([z.object({ id: z.string(), primaryDocumentId: z.string() })]),
+      })
+      .parse(created.json()).knowledgeItems;
+    const base = `/api/v1/knowledge/${item.id}`;
+    for (const [method, url, payload] of [
+      ["PATCH", base, { audience: "everyone" }],
+      ["POST", `${base}/publish`, {}],
+    ] as const) {
+      const response = await harness.app.inject({ method, url, payload, cookies: memberCookies });
+      expect(response.statusCode, response.body).toBe(200);
+    }
+    const portalUrl = `/api/v1/portal/knowledge/${item.id}`;
+    const before = await harness.app.inject({
+      method: "GET",
+      url: portalUrl,
+      cookies: businessCookies,
+    });
+    expect(before.statusCode, before.body).toBe(200);
+    const downloadUrl = before.json().knowledgeItem.documents[0].currentVersion
+      .downloadUrl as string;
+    const archived = await harness.app.inject({
+      method: "POST",
+      url: `${base}/archive`,
+      cookies: memberCookies,
+      payload: {},
+    });
+    expect(archived.statusCode, archived.body).toBe(200);
+    const adminCookies = await signInCookies(harness.app, TEST_ADMIN.email, TEST_ADMIN.password);
+    for (const cookies of [memberCookies, adminCookies]) {
+      const record = await harness.app.inject({ method: "GET", url: base, cookies });
+      expect(record.statusCode, record.body).toBe(200);
+      expect(record.json().knowledgeItem.archivedAt).not.toBeNull();
+      const paper = await harness.app.inject({ method: "GET", url: `${base}/documents`, cookies });
+      expect(paper.statusCode, paper.body).toBe(200);
+      expect(paper.json().documents[0].id).toBe(item.primaryDocumentId);
+      expect(paper.json().documents[0].versions).toHaveLength(1);
+    }
+    for (const cookies of [contributorCookies, businessCookies]) {
+      const paper = await harness.app.inject({ method: "GET", url: `${base}/documents`, cookies });
+      expect(paper.statusCode, paper.body).toBe(403);
+    }
+    for (const url of [portalUrl, downloadUrl]) {
+      const response = await harness.app.inject({ method: "GET", url, cookies: businessCookies });
+      expect(response.statusCode, response.body).toBe(404);
+    }
+    const upload = await harness.app.inject({
+      method: "POST",
+      url: `${base}/documents`,
+      cookies: memberCookies,
+      ...multipart({}, [
+        { filename: "Blocked.pdf", contentType: "application/pdf", content: "%PDF blocked" },
+      ]),
+    });
+    expect(upload.statusCode, upload.body).toBe(409);
+    const restored = await harness.app.inject({
+      method: "POST",
+      url: `${base}/restore`,
+      cookies: memberCookies,
+      payload: {},
+    });
+    expect(restored.statusCode, restored.body).toBe(200);
+    const download = await harness.app.inject({
+      method: "GET",
+      url: downloadUrl,
+      cookies: businessCookies,
+    });
+    expect(download.statusCode, download.body).toBe(200);
+    expect(download.body).toBe("%PDF retained");
+    // Archived again on the way out, and not only for tidiness: this
+    // item's primary is a PDF, and the next case asserts the exact
+    // rows `format=pdf` answers. The library listing leaves archived
+    // items out, so putting it back is what keeps that list to one.
+    const cleanup = await harness.app.inject({
+      method: "POST",
+      url: `${base}/archive`,
+      cookies: memberCookies,
+      payload: {},
+    });
+    expect(cleanup.statusCode, cleanup.body).toBe(200);
+  });
+
   it("creates one draft per file and exposes the primary format and owner in the repository", async () => {
     const created = await harness.app.inject({
       method: "POST",

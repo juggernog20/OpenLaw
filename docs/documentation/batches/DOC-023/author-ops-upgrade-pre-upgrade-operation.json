@@ -1,0 +1,13 @@
+{
+  "startedAt": "2026-09-08T08:39:22.459211+00:00",
+  "completedAt": "2026-09-08T08:39:33.737346+00:00",
+  "project": "openlaw-docs-b8e31260-ops-upgrade",
+  "action": "backup",
+  "phase": "stored-mail",
+  "backupHashes": {
+    "database.dump": "6985af866996c636705bc95f26388e31b48f00f9ed03670583a929fa72cc8ac2",
+    "files.tar.gz": "a5046b0b72405478bd9938690e5a9d5bb56a21b892c9ed61cd1955696108aba3"
+  },
+  "archiveEntries": 11,
+  "writersStopped": true
+}

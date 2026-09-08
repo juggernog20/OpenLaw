@@ -1,0 +1,170 @@
+{
+  "kind": "independent-help-accessibility",
+  "task": "DOC-016",
+  "issue": 736,
+  "independentReview": true,
+  "reviewerKind": "agent",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "startedAt": "2026-09-07T19:21:27.731Z",
+  "finishedAt": "2026-09-07T19:22:19.461Z",
+  "frontend": "Vite preview reader at port 43312 serving the working canonical Markdown, proxied to the conversations lab at port 43302; both reader roles signed in",
+  "keyboard": "Keyboard only: Tab from page load through the Help index to the guide link and Enter; Tab to an outline section link and Enter; Tab to the documentation search box, type the exact title and Enter, Tab to the result and Enter; Tab to the full documentation link and Enter. The focused element and its computed focus ring were read after every stop.",
+  "zoomMechanism": "200% zoom was emulated as a 640×450 CSS-pixel viewport at devicePixelRatio 2, which is the layout Chromium produces for a 1280×900 window at its 200% browser zoom setting. Playwright exposes no browser zoom menu, so the browser's own zoom control was not operated; text sizes are the computed CSS pixel sizes at that layout.",
+  "articleHashesTested": [
+    {
+      "articleId": "create-matter",
+      "contentSha256": ["078e5ac72d41fa7ed55e02131b55dcdb86cb26d646485e64f5a494969e1aef73"]
+    },
+    {
+      "articleId": "matter-status-and-archive",
+      "contentSha256": ["7b4f1d4b77f4979d273e68ffcefe9be849c7e371cd518b256e466a6ba2df60cf"]
+    },
+    {
+      "articleId": "matter-work",
+      "contentSha256": ["621ed4366708c7b55defb625733358b565eef3a0bd443e500a1f24352e875ffd"]
+    }
+  ],
+  "articleHashesCurrent": [
+    {
+      "articleId": "create-matter",
+      "contentSha256": "078e5ac72d41fa7ed55e02131b55dcdb86cb26d646485e64f5a494969e1aef73"
+    },
+    {
+      "articleId": "matter-status-and-archive",
+      "contentSha256": "7b4f1d4b77f4979d273e68ffcefe9be849c7e371cd518b256e466a6ba2df60cf"
+    },
+    {
+      "articleId": "matter-work",
+      "contentSha256": "621ed4366708c7b55defb625733358b565eef3a0bd443e500a1f24352e875ffd"
+    }
+  ],
+  "limitations": [
+    "Emulated zoom as described above; not the browser zoom menu and not assistive technology acceptance.",
+    "Keyboard checks cover the Help index, article outline, search and the full documentation link; the application pages themselves were not walked by keyboard.",
+    "The 14px paragraph size at the zoomed layout is the reader's base size; readability is recorded as the computed size and the absence of overflow, not a human judgement."
+  ],
+  "passed": true,
+  "steps": [
+    {
+      "article": "create-matter",
+      "role": "administrator",
+      "step": "create-matter: keyboard-only operation of Help — Tab to the guide in the Help index and Enter, Tab to an outline section and Enter, Tab to the search box and search by title, Tab to the full documentation link and Enter",
+      "result": "pass",
+      "actual": "index: 20 Tabs reached the guide link (focus ring solid 3px), Enter opened it with the title focused; Tab to outline \"Use a template\" (29 more Tabs), Enter moved to #use-a-template with the section heading focused; search: 41 Tabs reached the search box, typing the title and Enter listed it, 1 Tabs and Enter opened it with the title focused; Tab to the full documentation link (24 Tabs), Enter opened /documentation/create-matter with the title focused",
+      "at": "2026-09-07T19:21:29.198Z",
+      "ms": 5004,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "matter-status-and-archive",
+      "role": "administrator",
+      "step": "matter-status-and-archive: keyboard-only operation of Help — Tab to the guide in the Help index and Enter, Tab to an outline section and Enter, Tab to the search box and search by title, Tab to the full documentation link and Enter",
+      "result": "pass",
+      "actual": "index: 19 Tabs reached the guide link (focus ring solid 3px), Enter opened it with the title focused; Tab to outline \"Close or reopen the Matter\" (24 more Tabs), Enter moved to #close-or-reopen-the-matter with the section heading focused; search: 40 Tabs reached the search box, typing the title and Enter listed it, 1 Tabs and Enter opened it with the title focused; Tab to the full documentation link (19 Tabs), Enter opened /documentation/matter-status-and-archive with the title focused",
+      "at": "2026-09-07T19:21:34.203Z",
+      "ms": 4782,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "matter-work",
+      "role": "administrator",
+      "step": "matter-work: keyboard-only operation of Help — Tab to the guide in the Help index and Enter, Tab to an outline section and Enter, Tab to the search box and search by title, Tab to the full documentation link and Enter",
+      "result": "pass",
+      "actual": "index: 21 Tabs reached the guide link (focus ring solid 3px), Enter opened it with the title focused; Tab to outline \"Maintain Key dates\" (29 more Tabs), Enter moved to #maintain-key-dates with the section heading focused; search: 41 Tabs reached the search box, typing the title and Enter listed it, 1 Tabs and Enter opened it with the title focused; Tab to the full documentation link (24 Tabs), Enter opened /documentation/matter-work with the title focused",
+      "at": "2026-09-07T19:21:38.985Z",
+      "ms": 4901,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "create-matter",
+      "role": "administrator",
+      "step": "create-matter: 200% zoom — the Help article keeps readable text, no horizontal overflow, and usable search, outline and full documentation controls",
+      "result": "pass",
+      "actual": "emulated 200% zoom as a 640×450 CSS-px viewport at devicePixelRatio 2 (what Chromium's 200% browser zoom yields in a 1280×900 window; Playwright exposes no zoom menu): Help article scrollWidth 640 ≤ 640, body 14px, title 32px, paragraph 14px, 15 links in main; outline click focused the section heading, title search listed the guide, the full documentation page fit at 640 ≤ 640",
+      "at": "2026-09-07T19:21:44.046Z",
+      "ms": 3522,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "matter-status-and-archive",
+      "role": "administrator",
+      "step": "matter-status-and-archive: 200% zoom — the Help article keeps readable text, no horizontal overflow, and usable search, outline and full documentation controls",
+      "result": "pass",
+      "actual": "emulated 200% zoom as a 640×450 CSS-px viewport at devicePixelRatio 2 (what Chromium's 200% browser zoom yields in a 1280×900 window; Playwright exposes no zoom menu): Help article scrollWidth 640 ≤ 640, body 14px, title 32px, paragraph 14px, 10 links in main; outline click focused the section heading, title search listed the guide, the full documentation page fit at 640 ≤ 640",
+      "at": "2026-09-07T19:21:47.568Z",
+      "ms": 3119,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "matter-work",
+      "role": "administrator",
+      "step": "matter-work: 200% zoom — the Help article keeps readable text, no horizontal overflow, and usable search, outline and full documentation controls",
+      "result": "pass",
+      "actual": "emulated 200% zoom as a 640×450 CSS-px viewport at devicePixelRatio 2 (what Chromium's 200% browser zoom yields in a 1280×900 window; Playwright exposes no zoom menu): Help article scrollWidth 640 ≤ 640, body 14px, title 32px, paragraph 14px, 16 links in main; outline click focused the section heading, title search listed the guide, the full documentation page fit at 640 ≤ 640",
+      "at": "2026-09-07T19:21:50.687Z",
+      "ms": 3093,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "create-matter",
+      "role": "legal_team_member",
+      "step": "create-matter: keyboard-only operation of Help — Tab to the guide in the Help index and Enter, Tab to an outline section and Enter, Tab to the search box and search by title, Tab to the full documentation link and Enter",
+      "result": "pass",
+      "actual": "index: 20 Tabs reached the guide link (focus ring solid 3px), Enter opened it with the title focused; Tab to outline \"Use a template\" (29 more Tabs), Enter moved to #use-a-template with the section heading focused; search: 40 Tabs reached the search box, typing the title and Enter listed it, 1 Tabs and Enter opened it with the title focused; Tab to the full documentation link (24 Tabs), Enter opened /documentation/create-matter with the title focused",
+      "at": "2026-09-07T19:21:55.104Z",
+      "ms": 4913,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "matter-status-and-archive",
+      "role": "legal_team_member",
+      "step": "matter-status-and-archive: keyboard-only operation of Help — Tab to the guide in the Help index and Enter, Tab to an outline section and Enter, Tab to the search box and search by title, Tab to the full documentation link and Enter",
+      "result": "pass",
+      "actual": "index: 19 Tabs reached the guide link (focus ring solid 3px), Enter opened it with the title focused; Tab to outline \"Close or reopen the Matter\" (24 more Tabs), Enter moved to #close-or-reopen-the-matter with the section heading focused; search: 39 Tabs reached the search box, typing the title and Enter listed it, 1 Tabs and Enter opened it with the title focused; Tab to the full documentation link (19 Tabs), Enter opened /documentation/matter-status-and-archive with the title focused",
+      "at": "2026-09-07T19:22:00.018Z",
+      "ms": 4720,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "matter-work",
+      "role": "legal_team_member",
+      "step": "matter-work: keyboard-only operation of Help — Tab to the guide in the Help index and Enter, Tab to an outline section and Enter, Tab to the search box and search by title, Tab to the full documentation link and Enter",
+      "result": "pass",
+      "actual": "index: 21 Tabs reached the guide link (focus ring solid 3px), Enter opened it with the title focused; Tab to outline \"Maintain Key dates\" (29 more Tabs), Enter moved to #maintain-key-dates with the section heading focused; search: 40 Tabs reached the search box, typing the title and Enter listed it, 1 Tabs and Enter opened it with the title focused; Tab to the full documentation link (24 Tabs), Enter opened /documentation/matter-work with the title focused",
+      "at": "2026-09-07T19:22:04.738Z",
+      "ms": 4867,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "create-matter",
+      "role": "legal_team_member",
+      "step": "create-matter: 200% zoom — the Help article keeps readable text, no horizontal overflow, and usable search, outline and full documentation controls",
+      "result": "pass",
+      "actual": "emulated 200% zoom as a 640×450 CSS-px viewport at devicePixelRatio 2 (what Chromium's 200% browser zoom yields in a 1280×900 window; Playwright exposes no zoom menu): Help article scrollWidth 640 ≤ 640, body 14px, title 32px, paragraph 14px, 15 links in main; outline click focused the section heading, title search listed the guide, the full documentation page fit at 640 ≤ 640",
+      "at": "2026-09-07T19:22:09.751Z",
+      "ms": 3486,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "matter-status-and-archive",
+      "role": "legal_team_member",
+      "step": "matter-status-and-archive: 200% zoom — the Help article keeps readable text, no horizontal overflow, and usable search, outline and full documentation controls",
+      "result": "pass",
+      "actual": "emulated 200% zoom as a 640×450 CSS-px viewport at devicePixelRatio 2 (what Chromium's 200% browser zoom yields in a 1280×900 window; Playwright exposes no zoom menu): Help article scrollWidth 640 ≤ 640, body 14px, title 32px, paragraph 14px, 10 links in main; outline click focused the section heading, title search listed the guide, the full documentation page fit at 640 ≤ 640",
+      "at": "2026-09-07T19:22:13.237Z",
+      "ms": 3133,
+      "reader": "preview 43312"
+    },
+    {
+      "article": "matter-work",
+      "role": "legal_team_member",
+      "step": "matter-work: 200% zoom — the Help article keeps readable text, no horizontal overflow, and usable search, outline and full documentation controls",
+      "result": "pass",
+      "actual": "emulated 200% zoom as a 640×450 CSS-px viewport at devicePixelRatio 2 (what Chromium's 200% browser zoom yields in a 1280×900 window; Playwright exposes no zoom menu): Help article scrollWidth 640 ≤ 640, body 14px, title 32px, paragraph 14px, 16 links in main; outline click focused the section heading, title search listed the guide, the full documentation page fit at 640 ≤ 640",
+      "at": "2026-09-07T19:22:16.370Z",
+      "ms": 3068,
+      "reader": "preview 43312"
+    }
+  ]
+}

@@ -371,7 +371,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "clientSecret {Client secret} " +
         "environment {Environment} integrationKey {Integration key} " +
         "apiUserId {User ID} privateKey {RSA private key} " +
-        "webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} " +
+        "updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} " +
         "baseUrl {Base URL} model {Model} apiKey {API key} " +
         "legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} " +
         "jurisdiction {Jurisdiction} formedOn {Formed on} " +

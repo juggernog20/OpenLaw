@@ -9,6 +9,7 @@
  * drifting apart.
  */
 
+import { HelpLink } from "../components/documentation/help-link";
 import { useLayoutEffect, type ReactNode } from "react";
 import { Outlet } from "react-router";
 import { FormattedMessage } from "react-intl";
@@ -33,6 +34,9 @@ export function AuthLayout({ children }: Readonly<{ children?: ReactNode }>) {
             <FormattedMessage id="auth.brand" defaultMessage="OpenLaw" />
           </p>
           {children ?? <Outlet />}
+          <div className="mt-6 text-center">
+            <HelpLink surface="formal" contextual />
+          </div>
         </div>
       </main>
     </div>

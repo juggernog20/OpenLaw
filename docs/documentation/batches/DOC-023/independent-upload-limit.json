@@ -1,0 +1,32 @@
+{
+  "name": "independent-upload-limit",
+  "scenario": "V-C45",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:28:27.617Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-install",
+  "articleHashes": [
+    {
+      "articleId": "deployment-configuration",
+      "contentSha256": "d072207628c0589ee14b8d1575f58fdb70b1c8b6f349bd7ea3bdd70d902ac293"
+    },
+    {
+      "articleId": "operator-troubleshooting",
+      "contentSha256": "a41ec1326ba60de8e8d03037ad4e7c3f4d3e946df2afadae8fa18214859b2b9f"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "MAX_UPLOAD_MB=1 refuses an oversized upload and accepts a smaller one",
+      "actual": "With MAX_UPLOAD_MB=1 a 1,100,000-byte file was refused with HTTP 413 and the message \"{\\\"type\\\":\\\"about:blank\\\",\\\"title\\\":\\\"That file is over the 1 MB upload limit.\\\",\\\"status\\\":413,\\\"detail\\\":\\\"That file is over the 1 \", while a smaller file was stored and downloaded back byte-identical.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:28:28.037Z",
+      "at": "2026-09-08T09:28:28.163Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T09:28:28.163Z"
+}

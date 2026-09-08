@@ -1,0 +1,20 @@
+{
+  "observedAt": "2026-09-08T09:00:38.817539+00:00",
+  "articleId": "install",
+  "contentSha256": "35b1bd584e291c4b42741097c9aa66ebd9db95092d293ed80821d3e7eee01b0f",
+  "method": "automated-test",
+  "checks": [
+    {
+      "shell": "bash",
+      "freshFile": "created with distinct sufficiently long keys",
+      "existingFile": "refused before edits; bytes unchanged",
+      "result": "pass"
+    },
+    {
+      "shell": "zsh",
+      "freshFile": "created with distinct sufficiently long keys",
+      "existingFile": "refused before edits; bytes unchanged",
+      "result": "pass"
+    }
+  ]
+}

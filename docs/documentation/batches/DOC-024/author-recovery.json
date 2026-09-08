@@ -1,0 +1,60 @@
+{
+  "startedAt": "2026-09-08T10:54:48.157Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "troubleshooting",
+      "contentSha256": "0b5c8a359c24faa4a2c97d557b23a4ad4c37939a8cb919e0b63d2130c628779b"
+    },
+    {
+      "articleId": "reference",
+      "contentSha256": "9ec760d76d77a25e047c71f896e0961e1a7afcf6fab06e3e8c942c7770bdf7c0"
+    },
+    {
+      "articleId": "versions-and-support",
+      "contentSha256": "157906267e63b29066d1835dcda7de6c69d8c83338da745d340a8ded3e06ed0b"
+    }
+  ],
+  "steps": [
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Portal notification settings and staff record refusal recovery",
+      "actual": "Staff link returned to Portal; the header link, not a button, opens Request updates. Earlier locator failure was helper-only.",
+      "startedAt": "2026-09-08T10:54:49.947Z",
+      "at": "2026-09-08T10:54:51.561Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Request named Approval and inspect who can answer",
+      "actual": "Administrator requested Nadia; Pending row persisted and named member can inspect it. Decision check follows separately.",
+      "startedAt": "2026-09-08T10:54:51.561Z",
+      "at": "2026-09-08T10:54:52.941Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Refused upload corrected before retry, no duplicate Document",
+      "actual": "Actual API refused overlong filename; corrected shorter name uploaded once. No simulated upload response.",
+      "startedAt": "2026-09-08T10:54:52.941Z",
+      "at": "2026-09-08T10:54:53.778Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Missing notification checks reach saved personal preferences",
+      "actual": "Personal event groups and Briefing available as described; preference visibility does not prove external mail delivery.",
+      "startedAt": "2026-09-08T10:54:53.778Z",
+      "at": "2026-09-08T10:54:54.340Z",
+      "result": "pass"
+    }
+  ],
+  "completedAt": "2026-09-08T10:54:54.340Z",
+  "passed": true
+}

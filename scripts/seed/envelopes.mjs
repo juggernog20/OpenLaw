@@ -67,6 +67,7 @@ async function configureConnector(admin, stub, log) {
   // real one. Minted per run and never written down.
   const { privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
   await admin.put("/api/v1/signing-connectors/docusign", {
+    updateMode: "webhook",
     environment: "demo",
     integrationKey: stub.integrationKey,
     apiUserId: "9f3b1c40-7e2a-4d15-9c8b-51a0e6d24f77",

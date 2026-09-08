@@ -1,0 +1,42 @@
+{
+  "name": "erasure",
+  "reviewer": "Independent review seat (Opus 5 agent)",
+  "startedAt": "2026-09-07T22:00:04.406Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "archive-and-delete-documents",
+      "contentSha256": "f00bcd882a961a9944be0aed0bc83a991a29870eb318dbdfe8ef66c52c2c4551"
+    },
+    {
+      "articleId": "document-versions",
+      "contentSha256": "e7d0286c6eefad20fd0e0a08df2dc6c530d5c3fa517e1b65e17e9f338e5f147d"
+    }
+  ],
+  "steps": [
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C54 step 7: the exact row-menu items a Contributor is offered, and the refusals behind them",
+      "actual": "Observed in the browser: on a one-Version Document the Contributor's row menu held exactly [\"Add version\"], and once the chain had a predecessor it held exactly [\"Compare with previous\", \"Add version\"]. Compare is a read, so it is offered; no kind editor and no Show archived control appeared. Observed through this Contributor's own API session: archive, restore and delete each answered 403, and the Document stayed live with both Versions",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:00:05.354Z",
+      "at": "2026-09-07T22:00:06.839Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C54 step 29: permanent deletion removes the stored files, checked in the lab volume itself",
+      "actual": "Observed in the owned lab's storage volume by a read-only listing: before the erasure 3 stored files existed under this Document's key, one for each of its three Versions. Observed in the browser: the typed confirmation removed the row. Observed in the volume again: no file remains under that key. Observed through the API: all three Version downloads answer 404 and the Contract's activity feed still names the erased Document",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:00:07.728Z",
+      "at": "2026-09-07T22:00:08.799Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T22:00:08.801Z",
+  "reviewerKind": "agent",
+  "note": "Independent review seat. Fresh fictional \"Rev\" records and this seat's own steps and assertions; the author records are supporting evidence only. Each step's \"at\" is written when that awaited step settled, and \"startedAt\" when it began; these are automated browser checks against a local instance, not measured human task times."
+}

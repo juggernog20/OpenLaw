@@ -160,6 +160,29 @@ function KeyedByParam({ name, children }: { name: string; children: ReactNode })
 }
 
 export const routes: RouteObject[] = [
+  ...["/help/*", "/portal/help/*"].map((path): RouteObject => ({
+    path,
+    // The loader checks the session before first paint, as every guarded
+    // route does; without a fallback the cold load warns in development.
+    hydrateFallbackElement: <></>,
+    lazy: async () => {
+      const help = await import("./routes/help");
+      return {
+        Component: help.HelpPage,
+        loader: help.helpLoader,
+        ErrorBoundary: help.HelpErrorPage,
+      };
+    },
+  })),
+  {
+    // The compiled manual ships every article's HTML. Loading it on demand
+    // keeps that bundle out of the chunk every signed-in screen downloads.
+    path: "/documentation/*",
+    lazy: async () => ({
+      Component: (await import("./components/documentation/documentation-reader"))
+        .FormalDocumentationPage,
+    }),
+  },
   {
     path: "/home/tasks",
     loader: homeTasksLoader,

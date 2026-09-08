@@ -1,0 +1,47 @@
+{
+  "name": "folders-supplement",
+  "reviewer": "Independent review seat (Opus 5 agent)",
+  "startedAt": "2026-09-07T21:58:41.433Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "document-folders",
+      "contentSha256": "1844521ab7ef07fc40fe8e0c01aaeb7df5022acf1e8059b2b24716f809838fec"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C27 step 13: Move relocates a folder and its contents keep their place inside it",
+      "actual": "Move into \"Rev sup destination administrator-1788818321486\" relocated the whole folder: its parent is now the destination folder, it kept its own name, and the destination stayed at the record root. The Document filed inside it still names the same folder and still holds its single Version. On the record the folder is no longer at the root and reads at Rev sup destination administrator-1788818321486/Rev sup source administrator-1788818321486, with its paper inside",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:58:43.023Z",
+      "at": "2026-09-07T21:58:44.855Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C27 step 13: Move relocates a folder and its contents keep their place inside it",
+      "actual": "Move into \"Rev sup destination legal_team_member-1788818321486\" relocated the whole folder: its parent is now the destination folder, it kept its own name, and the destination stayed at the record root. The Document filed inside it still names the same folder and still holds its single Version. On the record the folder is no longer at the root and reads at Rev sup destination legal_team_member-1788818321486/Rev sup source legal_team_member-1788818321486, with its paper inside",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:58:46.308Z",
+      "at": "2026-09-07T21:58:48.081Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "C27 step 36-38: a Contributor recovers a partial import and retries only the failed file",
+      "actual": "As a Contributor, one file of a two-file root import was answered 503 once. The dialog read \"Imported 1 of 2 files\", named the failed row with its reason and a per-row Retry, and said the other file was already on the contract. The good file was a v1 Document at that moment and the failed one did not exist. The row Retry resent only the failed file, the dialog closed on \"Imported 2 of 2 files\", and the good Document kept the same id and a single Version, so it was never uploaded twice",
+      "result": "pass",
+      "startedAt": "2026-09-07T21:58:49.501Z",
+      "at": "2026-09-07T21:58:49.819Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T21:58:49.822Z",
+  "reviewerKind": "agent",
+  "note": "Independent review seat. Fresh fictional \"Rev\" records and this seat's own steps and assertions; the author records are supporting evidence only. Each step's \"at\" is written when that awaited step settled, and \"startedAt\" when it began; these are automated browser checks against a local instance, not measured human task times."
+}

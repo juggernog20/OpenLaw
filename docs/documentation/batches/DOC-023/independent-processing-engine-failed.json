@@ -1,0 +1,32 @@
+{
+  "name": "independent-processing-engine-failed",
+  "scenario": "V-C48",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:43:52.554Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-install",
+  "articleHashes": [
+    {
+      "articleId": "operator-troubleshooting",
+      "contentSha256": "a41ec1326ba60de8e8d03037ad4e7c3f4d3e946df2afadae8fa18214859b2b9f"
+    },
+    {
+      "articleId": "deployment-configuration",
+      "contentSha256": "d072207628c0589ee14b8d1575f58fdb70b1c8b6f349bd7ea3bdd70d902ac293"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Document processing with mode engine-failed",
+      "actual": "With DOC_ENGINE_URL pointing at an address that does not answer, a real PDF reached the terminal processing state \"failed\" under the normal queue retry timings, while /readyz still answered {\"status\":\"ok\"}.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:43:52.982Z",
+      "at": "2026-09-08T09:46:03.656Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T09:46:03.656Z"
+}

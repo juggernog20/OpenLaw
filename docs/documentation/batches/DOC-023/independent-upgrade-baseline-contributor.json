@@ -1,0 +1,28 @@
+{
+  "name": "independent-upgrade-baseline-contributor",
+  "scenario": "V-C46",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:49:40.384Z",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "environment": "openlaw-docs-b8e31260-rev-upgrade",
+  "articleHashes": [
+    {
+      "articleId": "upgrade",
+      "contentSha256": "96cc17166c77af291161ea34540f2c1c9683d2736cd903c42e2692ba9fe8e94d"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Give the activated Contributor membership and record its reach",
+      "actual": "The activated Contributor Rowan Reader signed in with its own password, read member Contract 1 (HTTP 200) and was refused the Confidential Contract 3 with HTTP 404. This reach is the baseline for the post-upgrade and post-restore comparison.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:49:40.785Z",
+      "at": "2026-09-08T09:49:41.169Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T09:49:41.170Z"
+}

@@ -1,0 +1,240 @@
+{
+  "record": "review-users",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-admin-review",
+  "fixture": {
+    "appUrl": "http://127.0.0.1:43328",
+    "mailUrl": "http://127.0.0.1:48435",
+    "draftPreview": "http://127.0.0.1:43331",
+    "providerMode": "dedicated local OpenID Connect fixture; full browser authorization and callback; no external identity-provider account",
+    "frozenConfigurationHashes": {
+      "source/.env": "47286908f614d1cd4cf769b7fe4168dac3db2d536faebfe4a4481312ad7868e2",
+      "overlay.json": "a37da4d9df42ec8c176757e063e8fc33f0cd5addfac8c774396f2140c91425cd",
+      "fixture/server.mjs": "b91a17c780f3f816a2eb4a5968a43fba405085743f9b174cbc7cf69528738363"
+    }
+  },
+  "successfulChecks": 10,
+  "failedAttempts": 5,
+  "runs": [
+    {
+      "run": "users",
+      "startedAt": "2026-09-08T03:37:06.016Z",
+      "completedAt": "2026-09-08T03:37:11.029Z",
+      "articleHashes": [
+        {
+          "articleId": "first-run",
+          "contentSha256": "0f87bd0fce3032d84fbfe3a4c8056826879effd86102e19f8c61efa0f62e3b59"
+        },
+        {
+          "articleId": "organisation-and-users",
+          "contentSha256": "416f94a4d22154dab1cb62841c8ac7e1b9856ecde5378a763c6ca375279c7ddf"
+        }
+      ],
+      "steps": [
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Set up later on the final invitation step ends onboarding and cannot be reopened",
+          "actual": "On Invite your team both Finish and Set up later were present. Set up later ended onboarding and entered the app, the onboarding record flipped to completed true, and a later visit to /welcome redirected to Home, so the wizard cannot be reopened. Completion is instance-wide and irreversible, so Finish and the Welcome-step Set up later could not also be exercised here.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:37:06.053Z",
+          "at": "2026-09-08T03:37:08.223Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Organization name saves on Enter, restores on Escape, and survives a reload",
+          "actual": "The name field started as \"\". Typing Helix Legal Group and pressing Enter showed the Saved status and survived a reload. Typing Discarded Draft Name then pressing Escape restored Helix Legal Group, and a reload confirmed the discarded text was never saved.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:37:08.223Z",
+          "at": "2026-09-08T03:37:10.998Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Default locale offers only English (United States) and the default timezone saves",
+          "result": "fail",
+          "startedAt": "2026-09-08T03:37:10.999Z",
+          "error": "locator.selectOption: Error: Element is not a <select> element\nCall log:\n\u001b[2m  - waiting for getByLabel('Default timezone', { exact: true })\u001b[22m\n\u001b[2m    - locator resolved to <input value=\"UTC\" role=\"combobox\" id=\"org-timezone\" autocomplete=\"off\" spellcheck=\"false\" aria-expanded=\"false\" aria-controls=\"_r_8_\" aria-autocomplete=\"list\" placeholder=\"Search timezones\" class=\"h-8 w-full rounded-button ",
+          "at": "2026-09-08T03:37:11.029Z"
+        }
+      ]
+    },
+    {
+      "run": "users2",
+      "startedAt": "2026-09-08T03:38:37.390Z",
+      "completedAt": "2026-09-08T03:38:40.550Z",
+      "articleHashes": [
+        {
+          "articleId": "organisation-and-users",
+          "contentSha256": "416f94a4d22154dab1cb62841c8ac7e1b9856ecde5378a763c6ca375279c7ddf"
+        }
+      ],
+      "steps": [
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Default locale offers only English (United States) and the default timezone saves",
+          "actual": "Default locale exposed exactly one option, English (United States), matching the guide. Default timezone is a searchable combobox that started at UTC; choosing its option, labelled \"Europe/London (GMT+01:00)\", showed Saved and held after a reload.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:38:37.431Z",
+          "at": "2026-09-08T03:38:39.572Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Logo upload accepts a supported image and rejects an unsupported file",
+          "actual": "A one-pixel PNG set through the Upload control beside Logo reported Saved. A text/plain file was refused with the field error, so the guide instruction to correct format or size and retry matches the behavior.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:38:39.573Z",
+          "at": "2026-09-08T03:38:39.654Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Invite user offers exactly the three staff roles with their visible labels",
+          "result": "fail",
+          "startedAt": "2026-09-08T03:38:39.654Z",
+          "error": "expect(received).toEqual(expected) // deep equality\n\n- Expected  - 5\n+ Received  + 1\n\n- Array [\n-   \"Legal team member\",\n-   \"Contributor\",\n-   \"Administrator\",\n- ]\n+ Array []",
+          "at": "2026-09-08T03:38:40.550Z"
+        }
+      ]
+    },
+    {
+      "run": "users3",
+      "startedAt": "2026-09-08T03:39:19.533Z",
+      "completedAt": "2026-09-08T03:39:36.513Z",
+      "articleHashes": [
+        {
+          "articleId": "organisation-and-users",
+          "contentSha256": "416f94a4d22154dab1cb62841c8ac7e1b9856ecde5378a763c6ca375279c7ddf"
+        }
+      ],
+      "steps": [
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Invite user offers exactly the three staff roles with their visible labels",
+          "actual": "The Invite user dialog Role control is a radio group whose choices were exactly Legal team member, Contributor and Administrator. The visible label is sentence case \"Legal team member\", which the corrected guide now quotes; Business user is not offered here.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:39:19.575Z",
+          "at": "2026-09-08T03:39:20.687Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "An invitation reaches the mailbox, activates through its link, and turns the row Active",
+          "result": "fail",
+          "startedAt": "2026-09-08T03:39:20.688Z",
+          "error": "locator.fill: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByLabel('Password', { exact: true })\u001b[22m\n",
+          "at": "2026-09-08T03:39:36.513Z"
+        }
+      ]
+    },
+    {
+      "run": "users4",
+      "startedAt": "2026-09-08T03:40:21.573Z",
+      "completedAt": "2026-09-08T03:40:38.708Z",
+      "articleHashes": [
+        {
+          "articleId": "organisation-and-users",
+          "contentSha256": "416f94a4d22154dab1cb62841c8ac7e1b9856ecde5378a763c6ca375279c7ddf"
+        }
+      ],
+      "steps": [
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "An invitation reaches the mailbox, activates through its link, and turns the row Active",
+          "result": "fail",
+          "startedAt": "2026-09-08T03:40:21.605Z",
+          "error": "page.waitForURL: Timeout 15000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation to \"http://127.0.0.1:43331/\" until \"load\"\n  navigated to \"http://127.0.0.1:43328/\"\n============================================================",
+          "at": "2026-09-08T03:40:38.707Z"
+        }
+      ]
+    },
+    {
+      "run": "users5",
+      "startedAt": "2026-09-08T03:40:55.465Z",
+      "completedAt": "2026-09-08T03:41:01.557Z",
+      "articleHashes": [
+        {
+          "articleId": "organisation-and-users",
+          "contentSha256": "416f94a4d22154dab1cb62841c8ac7e1b9856ecde5378a763c6ca375279c7ddf"
+        }
+      ],
+      "steps": [
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "An invitation reaches the mailbox, activates through its link, and turns the row Active",
+          "result": "fail",
+          "startedAt": "2026-09-08T03:40:55.503Z",
+          "error": "expect(locator).toContainText(expected) failed\n\nLocator: getByRole('row', { name: /priya.raman@helix.example/ })\nExpected substring: \"Invited\"\nReceived string:    \"PRPriya Ramanpriya.raman@helix.exampleLegal team memberActive1m ago\"\nTimeout: 5000ms\n\nCall log:\n  - Expect \"to.have.text\" with timeout 5000ms\n  - waiting for getByRole('row', { name: /priya.raman@helix.example/ })\n    14 \u00d7 locator resol",
+          "at": "2026-09-08T03:41:01.557Z"
+        }
+      ]
+    },
+    {
+      "run": "users6",
+      "startedAt": "2026-09-08T03:41:39.884Z",
+      "completedAt": "2026-09-08T03:41:56.394Z",
+      "articleHashes": [
+        {
+          "articleId": "organisation-and-users",
+          "contentSha256": "416f94a4d22154dab1cb62841c8ac7e1b9856ecde5378a763c6ca375279c7ddf"
+        }
+      ],
+      "steps": [
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "The activated colleague is Active and can sign in with the password set from the invitation",
+          "actual": "After following her emailed invitation and choosing a password, Priya Raman shows as Active with role Legal team member. She signed in with that password in a separate browser context, and Settings then Users offered her no Invite user control, so the role limits organisation administration as the guide says.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:41:39.922Z",
+          "at": "2026-09-08T03:41:42.535Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Re-inviting a pending address with the same role resends instead of adding a duplicate row",
+          "actual": "Inviting tomas.novak@helix.example a second time as Contributor, the same role, sent a further set-password email and left exactly one user row. This is the same-role resend the corrected guide describes.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:41:42.535Z",
+          "at": "2026-09-08T03:41:43.916Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Re-inviting the same pending address with a different role is refused, not resent",
+          "actual": "Inviting the same pending address as Legal team member instead of Contributor was refused with \"This user already exists with a different role.\" No further email was sent and no second row appeared, so only a same-role re-invite resends. The corrected guide now states this refusal.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:41:43.916Z",
+          "at": "2026-09-08T03:41:50.107Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "An invitation for an already activated account is refused",
+          "actual": "Inviting Priya Raman again after activation was refused with \"This user has already activated their account.\" and produced no email, matching the guide statement that invitations for already activated accounts are rejected.",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:41:50.107Z",
+          "at": "2026-09-08T03:41:55.292Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Resend invite and Revoke invite act on the pending rows",
+          "actual": "Resend invite delivered a replacement link for a row whose original invitation was created while outbound email was unavailable, so a failed delivery still leaves a recoverable pending row. Revoke invite then removed both unused invitations from the list. These row actions are icon buttons whose accessible names are \"Resend the invite to <address>\" and \"Revoke the invite to <address>\".",
+          "result": "pass",
+          "startedAt": "2026-09-08T03:41:55.292Z",
+          "at": "2026-09-08T03:41:56.394Z"
+        }
+      ]
+    }
+  ]
+}

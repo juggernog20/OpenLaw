@@ -1,0 +1,171 @@
+{
+  "name": "conversion",
+  "startedAt": "2026-09-07T11:02:52.393Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "convert-request",
+      "contentSha256": "78e63862575dba04aad2449bf41830a6e47c7c3f6a3660c5bb5d00cd2766fcb3"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "contract prepare visible and internal conversations before conversion",
+      "actual": "Three real UI posts with paper; Requester sees Full thread only before conversion",
+      "result": "pass",
+      "at": "2026-09-07T11:02:56.874Z"
+    },
+    {
+      "role": "administrator",
+      "action": "contract confirm type, required gaps and archived carry before committing",
+      "actual": "Bound live type fixed, Summary and High prefilled, carry/stay sections visible, missing required and archived Entity refused; Cancel created no work",
+      "result": "pass",
+      "at": "2026-09-07T11:02:57.699Z"
+    },
+    {
+      "role": "administrator",
+      "action": "contract convert and verify values on resulting record",
+      "actual": "C-50 created once; edited Title, High Priority, Risk/Owner/Description unset, carry+repair values saved, unmatched field and original Entity retained on Request",
+      "result": "pass",
+      "at": "2026-09-07T11:02:58.161Z"
+    },
+    {
+      "role": "administrator",
+      "action": "contract original paper promoted into separate Documents and comment paper stays in thread",
+      "actual": "Exactly two Documents at Version1 downloaded through reader; primary is first original on Contract only; all three conversation posts/files moved with their tiers without extra Documents",
+      "result": "pass",
+      "at": "2026-09-07T11:02:58.527Z"
+    },
+    {
+      "role": "business_user",
+      "action": "administrator-contract converted Portal retains own paper and Full thread without record access",
+      "actual": "Same R-reference In progress, both originals and Full thread file reachable, narrower paper404, later reply read on record, Business staff address redirected and Amara own-sessionRequest404",
+      "result": "pass",
+      "at": "2026-09-07T11:03:00.474Z"
+    },
+    {
+      "role": "administrator",
+      "action": "matter prepare visible and internal conversations before conversion",
+      "actual": "Three real UI posts with paper; Requester sees Full thread only before conversion",
+      "result": "pass",
+      "at": "2026-09-07T11:03:02.167Z"
+    },
+    {
+      "role": "administrator",
+      "action": "matter confirm type, required gaps and archived carry and template choices before committing",
+      "actual": "Bound live type fixed, Summary and High prefilled, carry/stay sections visible, missing required and archived Entity refused, single Matter template auto-selected/No template/restored; Cancel created no work",
+      "result": "pass",
+      "at": "2026-09-07T11:03:03.037Z"
+    },
+    {
+      "role": "administrator",
+      "action": "matter convert and verify values on resulting record",
+      "actual": "M-33 created once; edited Title, High Priority, Risk/Matter Manager/Description unset, carry+repair values saved, unmatched field and original Entity retained on Request",
+      "result": "pass",
+      "at": "2026-09-07T11:03:03.371Z"
+    },
+    {
+      "role": "administrator",
+      "action": "matter original paper promoted into separate Documents and comment paper stays in thread",
+      "actual": "Exactly two Documents at Version1 downloaded through reader; primary is first original on Contract only; all three conversation posts/files moved with their tiers without extra Documents",
+      "result": "pass",
+      "at": "2026-09-07T11:03:03.734Z"
+    },
+    {
+      "role": "business_user",
+      "action": "administrator-matter converted Portal retains own paper and Full thread without record access",
+      "actual": "Same R-reference In progress, both originals and Full thread file reachable, narrower paper404, later reply read on record, Business staff address redirected and Amara own-sessionRequest404",
+      "result": "pass",
+      "at": "2026-09-07T11:03:05.635Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Matter template creates defaults, unassigned Task and relative Key date",
+      "actual": "Template optional default filled; Request/triager values took precedence; one unassigned Task at creationUTCdate+3 and one Keydate+5 visible on new Matter",
+      "result": "pass",
+      "at": "2026-09-07T11:03:06.836Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "contract prepare visible and internal conversations before conversion",
+      "actual": "Three real UI posts with paper; Requester sees Full thread only before conversion",
+      "result": "pass",
+      "at": "2026-09-07T11:03:09.300Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "contract confirm type, required gaps and archived carry before committing",
+      "actual": "Bound live type fixed, Summary and High prefilled, carry/stay sections visible, missing required and archived Entity refused; Cancel created no work",
+      "result": "pass",
+      "at": "2026-09-07T11:03:10.150Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "contract convert and verify values on resulting record",
+      "actual": "C-51 created once; edited Title, High Priority, Risk/Owner/Description unset, carry+repair values saved, unmatched field and original Entity retained on Request",
+      "result": "pass",
+      "at": "2026-09-07T11:03:10.584Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "contract original paper promoted into separate Documents and comment paper stays in thread",
+      "actual": "Exactly two Documents at Version1 downloaded through reader; primary is first original on Contract only; all three conversation posts/files moved with their tiers without extra Documents",
+      "result": "pass",
+      "at": "2026-09-07T11:03:10.972Z"
+    },
+    {
+      "role": "business_user",
+      "action": "legal_team_member-contract converted Portal retains own paper and Full thread without record access",
+      "actual": "Same R-reference In progress, both originals and Full thread file reachable, narrower paper404, later reply read on record, Business staff address redirected and Amara own-sessionRequest404",
+      "result": "pass",
+      "at": "2026-09-07T11:03:12.935Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "matter prepare visible and internal conversations before conversion",
+      "actual": "Three real UI posts with paper; Requester sees Full thread only before conversion",
+      "result": "pass",
+      "at": "2026-09-07T11:03:14.596Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "matter confirm type, required gaps and archived carry and template choices before committing",
+      "actual": "Bound live type fixed, Summary and High prefilled, carry/stay sections visible, missing required and archived Entity refused, single Matter template auto-selected/No template/restored; Cancel created no work",
+      "result": "pass",
+      "at": "2026-09-07T11:03:15.434Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "matter convert and verify values on resulting record",
+      "actual": "M-34 created once; edited Title, High Priority, Risk/Matter Manager/Description unset, carry+repair values saved, unmatched field and original Entity retained on Request",
+      "result": "pass",
+      "at": "2026-09-07T11:03:15.789Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "matter original paper promoted into separate Documents and comment paper stays in thread",
+      "actual": "Exactly two Documents at Version1 downloaded through reader; primary is first original on Contract only; all three conversation posts/files moved with their tiers without extra Documents",
+      "result": "pass",
+      "at": "2026-09-07T11:03:16.151Z"
+    },
+    {
+      "role": "business_user",
+      "action": "legal_team_member-matter converted Portal retains own paper and Full thread without record access",
+      "actual": "Same R-reference In progress, both originals and Full thread file reachable, narrower paper404, later reply read on record, Business staff address redirected and Amara own-sessionRequest404",
+      "result": "pass",
+      "at": "2026-09-07T11:03:18.045Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Matter template creates defaults, unassigned Task and relative Key date",
+      "actual": "Template optional default filled; Request/triager values took precedence; one unassigned Task at creationUTCdate+3 and one Keydate+5 visible on new Matter",
+      "result": "pass",
+      "at": "2026-09-07T11:03:19.225Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T11:03:19.228Z"
+}

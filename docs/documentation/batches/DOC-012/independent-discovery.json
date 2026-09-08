@@ -1,0 +1,115 @@
+{
+  "kind": "independent-help-discovery",
+  "task": "DOC-012",
+  "issue": 732,
+  "independentReview": true,
+  "reviewerKind": "agent",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "startedAt": "2026-09-07T10:09:13.091Z",
+  "finishedAt": "2026-09-07T10:09:47.984Z",
+  "frontend": "Vite preview reader at port 43312 serving the working canonical Markdown, proxied to the committed lab at port 43302; the lab's own Help at port 43302 for the exclusion check",
+  "articleHashesTested": [
+    {
+      "articleId": "submit-request",
+      "contentSha256": [
+        "addff933bea86d2a220723624202824c6245af0f3ddb76b56dd63a2ba4a89964",
+        "29e285e98a77548c08f8958fed91f0200db47c8188ef90619dab061925059f90"
+      ]
+    },
+    {
+      "articleId": "follow-request",
+      "contentSha256": ["ca5dff1ef7d999e36d8655c3d00ffb6b5a2136427e86f2be168889ca417dbca3"]
+    },
+    {
+      "articleId": "portal-knowledge",
+      "contentSha256": ["f44331f28896c6fbdebed9d636bb937d06330e9a52e850bb0b755f987aacb559"]
+    }
+  ],
+  "articleHashesCurrent": [
+    {
+      "articleId": "submit-request",
+      "contentSha256": "29e285e98a77548c08f8958fed91f0200db47c8188ef90619dab061925059f90"
+    },
+    {
+      "articleId": "follow-request",
+      "contentSha256": "ca5dff1ef7d999e36d8655c3d00ffb6b5a2136427e86f2be168889ca417dbca3"
+    },
+    {
+      "articleId": "portal-knowledge",
+      "contentSha256": "f44331f28896c6fbdebed9d636bb937d06330e9a52e850bb0b755f987aacb559"
+    }
+  ],
+  "themes": ["light", "warm", "dark"],
+  "widths": [320, 720, 1440],
+  "limitations": [
+    "Independent agent check on the Vite preview reader, which includes review articles; the committed lab's normal Help excludes them and was checked for that.",
+    "Layout checks are CSS-pixel measurements, not browser zoom or assistive technology acceptance.",
+    "The first discovery run passed on the pre-correction submission bytes; this record is the rerun on the final bytes."
+  ],
+  "steps": [
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "step": "Help with this page from the request form lists the submission guide; the article opens, focuses, outlines, and links to the formal edition",
+      "result": "pass",
+      "actual": "Help href /portal/help?topic=portal.form; opened /portal/help/submit-request with h1; focus after open: H1 Submit a Request to Legal; outline link set #if-it-does-not-work and focused H2 If it does not work; final text present; formal link /documentation/submit-request#if-it-does-not-work",
+      "at": "2026-09-07T10:09:15.638Z",
+      "ms": 1564
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "Help with this page from a Request lists the follow-up guide and shows the final text",
+      "result": "pass",
+      "actual": "Help href /portal/help?topic=portal.request; listed [\"Follow a Request and reply to Legal\"]; article shows the Send precondition and the status list; Notification preferences link /portal/help/notifications#change-portal-preferences landed on the Change Portal preferences heading; no horizontal overflow in light/warm/dark at 320/720/1440 CSS px",
+      "at": "2026-09-07T10:09:24.275Z",
+      "ms": 8637
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "the Portal header Help from a Knowledge page lists the Knowledge guide",
+      "result": "pass",
+      "actual": "Header Help href /portal/help?topic=portal.knowledge&topic=notifications listed and opened the Knowledge guide; no overflow for portal-knowledge or submit-request in three themes at three widths",
+      "at": "2026-09-07T10:09:38.872Z",
+      "ms": 14597
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "search finds the guides by their words and says when nothing matches",
+      "result": "pass",
+      "actual": "\"Attach new files\" -> Follow a Request and reply to Legal; \"Download\" -> Follow a Request and reply to Legal, Read Knowledge shared with the business; \"Show earlier replies\" -> Follow a Request and reply to Legal; nonsense -> No matching articles",
+      "at": "2026-09-07T10:09:42.045Z",
+      "ms": 3173
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "Portal notification settings are reachable as the guides describe",
+      "result": "pass",
+      "actual": "Notification settings opened /portal/settings with Request updates and 2 switches; header Help /portal/help?topic=notifications lists [\"Manage notifications and reminders\"]",
+      "at": "2026-09-07T10:09:43.469Z",
+      "ms": 1424
+    },
+    {
+      "article": "submit-request",
+      "role": "anonymous",
+      "step": "the formal edition lists and serves the three guides to a signed-out reader without app API calls",
+      "result": "pass",
+      "actual": "Index listed 3/3 guides; each /documentation/<id> rendered its h1; API paths requested: []; notice \"Development preview: draft and validation content is unverified.\"",
+      "at": "2026-09-07T10:09:46.791Z",
+      "ms": 3322
+    },
+    {
+      "article": "follow-request",
+      "role": "business_user",
+      "step": "the committed lab's normal Help excludes the review articles",
+      "result": "pass",
+      "actual": "Normal Help at port 43302 lists none of the three; Help with this page on a Request there links to /portal/help?topic=portal.request",
+      "at": "2026-09-07T10:09:47.984Z",
+      "ms": 1193
+    }
+  ]
+}

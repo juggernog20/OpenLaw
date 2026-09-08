@@ -1,0 +1,18 @@
+{
+  "recordedAt": "2026-09-08T13:12:49.076545Z",
+  "method": "container-operation",
+  "reviewer": "Codex DOC-025 author (agent)",
+  "sourceAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "beforeAppImage": "sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb",
+  "afterAppImage": "sha256:c585d8683816050bdf00568a6f4e1983f14fb3b364ac8202f4f4e40dab9ef52c",
+  "engineImage": "sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "command": "node scripts/documentation/lab.mjs up configuration",
+  "reason": "The lab helper up rebuilds the owned app and engine from its sealed archived source before Compose up --no-build. The first offline restart produced the new app image, as the retained build-log excerpt records. The second restart reused it. No source/configuration snapshot was edited. Observations retain the actual image at their start; later query/context/zoom checks use the rebuilt image.",
+  "firstRestartCompletedAt": "2026-09-08T13:00:33.269Z",
+  "secondRestartCompletedAt": "2026-09-08T13:02:38.418Z",
+  "evidence": ["author-offline.json", "author-offline-retry.json", "lab-rebuild-excerpt.txt"],
+  "limitations": [
+    "This records a rebuild from the same sealed app source, not byte-identical image reproducibility."
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "name": "supplement",
+  "startedAt": "2026-09-08T01:49:09.403Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-knowledge",
+  "articleHashes": [
+    {
+      "articleId": "create-knowledge",
+      "contentSha256": "958db5b200781b75af77a88e26bfd83912b8e1d0862ff82922ffa9685b3aa61c"
+    },
+    {
+      "articleId": "publish-knowledge",
+      "contentSha256": "b406433d5da8bedf14b847e6f70c9fdbf213760700cbf7498bfecd054a3f6c52"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Archive and restore primary paper with its designation and Versions retained",
+      "actual": "Archive hid the primary row from the ordinary list and Show archived exposed it; its saved primary designation remained. Restore returned the same Document and Version chain without selecting another primary",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:49:11.752Z",
+      "at": "2026-09-08T01:49:12.287Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Archived types are unavailable and a blank title cannot create an item",
+      "actual": "Create item stayed disabled without Title; the separately prepared archived Knowledge type was absent from the reader-facing picker",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:49:12.288Z",
+      "at": "2026-09-08T01:49:13.053Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Move and reorder a Knowledge Folder while retaining its items",
+      "actual": "Parent folder moved the whole child tree under a new parent; Move up changed that parent by one sibling position; its descendant Knowledge Item remained visible",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:49:13.053Z",
+      "at": "2026-09-08T01:49:13.567Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Archive and restore primary paper with its designation and Versions retained",
+      "actual": "Archive hid the primary row from the ordinary list and Show archived exposed it; its saved primary designation remained. Restore returned the same Document and Version chain without selecting another primary",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:49:15.096Z",
+      "at": "2026-09-08T01:49:15.583Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Archived types are unavailable and a blank title cannot create an item",
+      "actual": "Create item stayed disabled without Title; the separately prepared archived Knowledge type was absent from the reader-facing picker",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:49:15.583Z",
+      "at": "2026-09-08T01:49:16.333Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Move and reorder a Knowledge Folder while retaining its items",
+      "actual": "Parent folder moved the whole child tree under a new parent; Move up changed that parent by one sibling position; its descendant Knowledge Item remained visible",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:49:16.333Z",
+      "at": "2026-09-08T01:49:16.837Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T01:49:16.839Z"
+}

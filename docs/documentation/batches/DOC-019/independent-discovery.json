@@ -1,0 +1,143 @@
+{
+  "name": "independent-discovery",
+  "kind": "independent-review-walkthrough",
+  "scenario": "V-C33/V-C34 discovery",
+  "articles": ["create-knowledge", "publish-knowledge"],
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-knowledge",
+  "reviewer": "Independent review seat (agent)",
+  "articleHashes": [
+    {
+      "articleId": "create-knowledge",
+      "contentSha256": "295001ee071b093a3d66f72fb1faf23a81a959d13c08fbaba19e3062a738d34f"
+    },
+    {
+      "articleId": "publish-knowledge",
+      "contentSha256": "cae7b9ef9551242ef7b502892e4a9f63fa0229caf44e1578ec684490b793ffa5"
+    }
+  ],
+  "articleHashesNote": "Article hashes were captured from the working tree at run start, before the first step of this record; they are the bytes committed on this branch.",
+  "startedAt": "2026-09-08T02:27:02.064Z",
+  "completedAt": "2026-09-08T02:27:24.151Z",
+  "passed": true,
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "contextual Help offers create-knowledge on the Knowledge list and both guides on a Knowledge record",
+      "actual": "Help on /knowledge offered \"Create and organize Knowledge Items\" (Publish Knowledge for the right audience listed 0 times there) and Help on a Knowledge record offered both guides, matching their knowledge.list, knowledge.overview and knowledge.publishing contexts",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:27:03.879Z",
+      "at": "2026-09-08T02:27:06.271Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge: title search opens the article with its heading focused, section links move focus, and the formal link opens the full documentation",
+      "actual": "Searching the exact title opened create-knowledge with its h1 focused; the outline links for Before you start, Start with files, Start with guidance each focused their heading; the formal link reached /documentation/create-knowledge",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:27:06.271Z",
+      "at": "2026-09-08T02:27:07.841Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "publish-knowledge: title search opens the article with its heading focused, section links move focus, and the formal link opens the full documentation",
+      "actual": "Searching the exact title opened publish-knowledge with its h1 focused; the outline links for Before you start, Publish and check the Portal, Withdraw or restrict an item each focused their heading; the formal link reached /documentation/publish-knowledge",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:27:07.842Z",
+      "at": "2026-09-08T02:27:09.439Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "both guides stay readable in three themes, at 320/720/1440 widths and at emulated 200 percent zoom",
+      "actual": "Both guides were read in light, dark and warm themes at 320, 720 and 1440 CSS pixels and at emulated 200 percent zoom with no horizontal overflow in any of the 20 combinations",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:27:09.439Z",
+      "at": "2026-09-08T02:27:11.027Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "the Help panel is usable from the keyboard alone",
+      "actual": "Tabbing from the top of the Help panel reached the \"Publish Knowledge for the right audience\" link and Enter opened it, leaving focus on the article heading",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:27:11.027Z",
+      "at": "2026-09-08T02:27:12.037Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Help search does not answer with the organization’s Knowledge Items",
+      "actual": "Searching Help for the fictional Knowledge Item title \"Rev discovery 9BB976 fictional pack\" answered No matching articles, so product Help did not reach the organization’s Knowledge, exactly as create-knowledge says",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:27:12.037Z",
+      "at": "2026-09-08T02:27:13.106Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "contextual Help offers create-knowledge on the Knowledge list and both guides on a Knowledge record",
+      "actual": "Help on /knowledge offered \"Create and organize Knowledge Items\" (Publish Knowledge for the right audience listed 0 times there) and Help on a Knowledge record offered both guides, matching their knowledge.list, knowledge.overview and knowledge.publishing contexts",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:27:13.923Z",
+      "at": "2026-09-08T02:27:16.401Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "create-knowledge: title search opens the article with its heading focused, section links move focus, and the formal link opens the full documentation",
+      "actual": "Searching the exact title opened create-knowledge with its h1 focused; the outline links for Before you start, Start with files, Start with guidance each focused their heading; the formal link reached /documentation/create-knowledge",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:27:16.401Z",
+      "at": "2026-09-08T02:27:17.839Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "publish-knowledge: title search opens the article with its heading focused, section links move focus, and the formal link opens the full documentation",
+      "actual": "Searching the exact title opened publish-knowledge with its h1 focused; the outline links for Before you start, Publish and check the Portal, Withdraw or restrict an item each focused their heading; the formal link reached /documentation/publish-knowledge",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:27:17.839Z",
+      "at": "2026-09-08T02:27:19.365Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "both guides stay readable in three themes, at 320/720/1440 widths and at emulated 200 percent zoom",
+      "actual": "Both guides were read in light, dark and warm themes at 320, 720 and 1440 CSS pixels and at emulated 200 percent zoom with no horizontal overflow in any of the 20 combinations",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:27:19.366Z",
+      "at": "2026-09-08T02:27:20.971Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "the Help panel is usable from the keyboard alone",
+      "actual": "Tabbing from the top of the Help panel reached the \"Publish Knowledge for the right audience\" link and Enter opened it, leaving focus on the article heading",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:27:20.972Z",
+      "at": "2026-09-08T02:27:22.029Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Help search does not answer with the organization’s Knowledge Items",
+      "actual": "Searching Help for the fictional Knowledge Item title \"Rev discovery 9BB976 fictional pack\" answered No matching articles, so product Help did not reach the organization’s Knowledge, exactly as create-knowledge says",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:27:22.029Z",
+      "at": "2026-09-08T02:27:23.056Z"
+    },
+    {
+      "role": "signed-out",
+      "method": "browser-walkthrough",
+      "action": "both guides are discoverable in the formal documentation without any application API call",
+      "actual": "A browser with no session listed both guide titles in /documentation and opened publish-knowledge with zero requests to the application API",
+      "result": "pass",
+      "startedAt": "2026-09-08T02:27:23.058Z",
+      "at": "2026-09-08T02:27:24.148Z"
+    }
+  ]
+}

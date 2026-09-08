@@ -30,10 +30,8 @@
  * this module gives ever carries either. That is the authentication
  * pane's own credential anatomy (TECH-008), applied here.
  *
- * **The Connect secret is required, not optional.** A connector saved
- * without one would leave the install answering unsigned webhook
- * deliveries on its first internet-facing write path, so the first save
- * refuses without it.
+ * Webhook mode requires a Connect secret. Polling mode needs none and
+ * refuses all inbound status deliveries.
  *
  * **Every mutation is audited, with the secrets redacted at the call
  * site.** `activity_log` is append-only (DD-017 forbids UPDATE and
@@ -50,6 +48,7 @@ import {
   eq,
   signingConnectors,
   SIGNING_ENVIRONMENTS,
+  SIGNING_UPDATE_MODES,
   SIGNING_PROVIDERS,
   type Executor,
   type SigningConnector,
@@ -92,6 +91,8 @@ const ConnectorSchema = z.object({
   /** When it was turned off, or null while it is on. */
   disabledAt: z.iso.datetime().nullable(),
   environment: z.enum(SIGNING_ENVIRONMENTS).nullable(),
+  updateMode: z.enum(SIGNING_UPDATE_MODES),
+  webhookUrlOverride: z.string().nullable(),
   integrationKey: z.string().nullable(),
   apiUserId: z.string().nullable(),
   /** Presence only — the key itself is write-only. */
@@ -112,6 +113,19 @@ const ConnectorEnvelope = z.object({ connector: ConnectorSchema });
  */
 const ConnectorBodySchema = z.object({
   environment: z.enum(SIGNING_ENVIRONMENTS),
+  updateMode: z.enum(SIGNING_UPDATE_MODES).optional(),
+  webhookUrl: z
+    .url()
+    .max(2000)
+    .refine((value) => {
+      if (!URL.canParse(value)) return false;
+      const url = new URL(value);
+      return (
+        url.protocol === "https:" && !url.username && !url.password && !url.search && !url.hash
+      );
+    }, "Use an HTTPS callback URL without credentials, query parameters or fragments.")
+    .nullable()
+    .optional(),
   integrationKey: z.string().trim().min(1).max(200),
   apiUserId: z.string().trim().min(1).max(200),
   /** Omitted or blank keeps the stored key; a value rotates it. */
@@ -132,7 +146,7 @@ function readConnector(
   row: SigningConnector | undefined,
   baseUrl: string,
 ): z.infer<typeof ConnectorSchema> {
-  const webhookUrl = new URL(webhookPath(provider), baseUrl).toString();
+  const webhookUrl = row?.webhookUrl ?? new URL(webhookPath(provider), baseUrl).toString();
   if (!row) {
     return {
       provider,
@@ -140,6 +154,8 @@ function readConnector(
       enabled: false,
       disabledAt: null,
       environment: null,
+      updateMode: "polling",
+      webhookUrlOverride: null,
       integrationKey: null,
       apiUserId: null,
       hasPrivateKey: false,
@@ -154,6 +170,8 @@ function readConnector(
     enabled: row.disabledAt === null,
     disabledAt: row.disabledAt?.toISOString() ?? null,
     environment: row.environment,
+    updateMode: row.updateMode,
+    webhookUrlOverride: row.webhookUrl,
     integrationKey: row.integrationKey,
     apiUserId: row.apiUserId,
     hasPrivateKey: row.privateKey !== "",
@@ -209,9 +227,8 @@ export const signingConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "Save the e-signature connector (CTR-013, TECH-013). The RSA " +
           "key and the Connect secret are write-only: blank keeps the " +
-          "stored value, a value rotates it. A first save without the " +
-          "Connect secret is refused — the webhook must never answer " +
-          "unsigned deliveries",
+          "stored value, a value rotates it. Webhook mode requires a Connect secret. " +
+          "New connectors default to polling",
         tags: ["signing-connector"],
         params: ParamsSchema,
         body: ConnectorBodySchema,
@@ -235,19 +252,14 @@ export const signingConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
           .limit(1)
           .for("update");
 
+        const updateMode = body.updateMode ?? current?.updateMode ?? "polling";
+        if (updateMode === "webhook" && !(webhookSecret ?? current?.webhookSecret)) {
+          throw httpError(400, "Paste the DocuSign Connect HMAC secret before selecting Webhook.");
+        }
+
         if (!current) {
-          // A first save has nothing to keep, so both secrets have to
-          // be pasted. The Connect secret is named separately because
-          // its absence is a security posture, not a missing field.
           if (!privateKey) {
             throw httpError(400, "Paste the RSA private key DocuSign issued for the integration.");
-          }
-          if (!webhookSecret) {
-            throw httpError(
-              400,
-              "Paste the DocuSign Connect HMAC secret. Without it this install would " +
-                "answer unsigned webhook deliveries, so a connector cannot be saved without one.",
-            );
           }
           const [row] = await tx
             .insert(signingConnectors)
@@ -257,7 +269,9 @@ export const signingConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
               integrationKey: body.integrationKey,
               apiUserId: body.apiUserId,
               privateKey,
-              webhookSecret,
+              webhookSecret: webhookSecret ?? "",
+              updateMode,
+              webhookUrl: body.webhookUrl ?? null,
             })
             .returning();
           if (!row) throw httpError(500, "The connector could not be saved.");
@@ -271,6 +285,7 @@ export const signingConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
             payload: {
               provider,
               environment: row.environment,
+              updateMode: row.updateMode,
               integrationKey: row.integrationKey,
             },
           });
@@ -281,6 +296,8 @@ export const signingConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
           .update(signingConnectors)
           .set({
             environment: body.environment,
+            updateMode,
+            ...(body.webhookUrl !== undefined ? { webhookUrl: body.webhookUrl } : {}),
             integrationKey: body.integrationKey,
             apiUserId: body.apiUserId,
             // Blank keeps, and keeping means leaving the column out of
@@ -303,6 +320,12 @@ export const signingConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
         // to be able to filter the audit log on it rather than read
         // every save's payload.
         const changes: { field: string; old: unknown; new: unknown }[] = [];
+        if (row.updateMode !== current.updateMode) {
+          changes.push({ field: "updateMode", old: current.updateMode, new: row.updateMode });
+        }
+        if (row.webhookUrl !== current.webhookUrl) {
+          changes.push({ field: "webhookUrl", old: current.webhookUrl, new: row.webhookUrl });
+        }
         if (row.environment !== current.environment) {
           changes.push({ field: "environment", old: current.environment, new: row.environment });
         }

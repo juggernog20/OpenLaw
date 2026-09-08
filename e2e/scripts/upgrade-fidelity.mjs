@@ -667,7 +667,12 @@ async function seed() {
   // TECH-022 these land in the clear, and the upgrade is what seals
   // them — so this row is the one that proves the boot pass works
   // against real data rather than only against a fixture.
+  // `updateMode` is a field the baseline does not know, so it drops it and
+  // the row lands in the only mode that release had. A build that does know
+  // it saves the same mode, which is what lets the verify half below assert
+  // one answer whichever release seeded.
   await put("/api/v1/signing-connectors/docusign", {
+    updateMode: "webhook",
     environment: "demo",
     integrationKey: "upgrade-fidelity-integration-key",
     apiUserId: randomUUID(),
@@ -1199,6 +1204,10 @@ async function verify(fingerprint) {
     connector.hasPrivateKey && connector.hasWebhookSecret,
     "the signing connector lost its credentials across the upgrade — they were readable before it",
   );
+  // SET-009 gives new connectors the polling default. A connector that
+  // existed before the upgrade keeps answering deliveries, which is a
+  // promise only populated data can check.
+  same(connector.updateMode, "webhook", "connector update mode");
 
   const feed = await get(
     `/api/v1/activity?entityType=contract&entityId=${encodeURIComponent(fingerprint.comment.contractId)}`,

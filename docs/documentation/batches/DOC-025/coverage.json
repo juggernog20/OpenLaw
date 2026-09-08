@@ -1,0 +1,1569 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-08T12:57:56.488859Z",
+  "kind": "evidence-reconciliation",
+  "reviewer": "Codex DOC-025 author audit (agent)",
+  "supportedAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "articleCount": 56,
+  "coverageGroupCount": 55,
+  "passedArticles": 54,
+  "passedCoverageGroups": 53,
+  "requiredArticleRoleMethodCount": 124,
+  "passedArticleRoleMethodCount": 116,
+  "scenarioCounts": { "pass": 54, "blocked": 4 },
+  "articles": [
+    {
+      "articleId": "staff-sign-in",
+      "coverage": ["C01"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 3,
+      "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+      "verifiedAt": "2026-09-07T04:52:33.264Z",
+      "contentSha256": "3c7ed38f6e42d021121f8566c99a6f9a45e3ec63cebe90e28a957ee20c575651",
+      "evidence": "docs/documentation/evidence/staff-sign-in.json",
+      "evidenceSha256": "a8d64fa02eed24e7875700c156c7bd04ff4d98eee64ed52fd9317d1047bde663",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "portal-sign-in",
+      "coverage": ["C02"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 1,
+      "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+      "verifiedAt": "2026-09-07T04:12:15.835Z",
+      "contentSha256": "9d419eb6c397fcaca5aac93331cb5dd06905f8152446485705714e07995adf7d",
+      "evidence": "docs/documentation/evidence/portal-sign-in.json",
+      "evidenceSha256": "c7020ba1bdf94d46fa461b9affa26cec84b60a62faf176e34624271f0d33c88d",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "find-your-work",
+      "coverage": ["C03"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 3,
+      "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+      "verifiedAt": "2026-09-07T05:06:42.050Z",
+      "contentSha256": "6fa8eb3a4f1302279ec5419435fbeeb34596a17d1897bc90d62c52037f8ac8d0",
+      "evidence": "docs/documentation/evidence/find-your-work.json",
+      "evidenceSha256": "dd73e20985c5f269bf00da7aa2e378e286698b30eed2fe24c15faf6af954224a",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "search-and-views",
+      "coverage": ["C04"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 3,
+      "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+      "verifiedAt": "2026-09-07T05:08:47.123Z",
+      "contentSha256": "e303479e3b19bde3f34d5131d4f5c59de37b6feab2ef9b50bacdb97cb5478b23",
+      "evidence": "docs/documentation/evidence/search-and-views.json",
+      "evidenceSha256": "f81a061510dbc6b2f8e00545ecf2432afe989317aeb45e8f0edd59820c255540",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "personal-settings",
+      "coverage": ["C05"],
+      "priority": "P1",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 3,
+      "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+      "verifiedAt": "2026-09-07T04:50:31.333Z",
+      "contentSha256": "155c97620d4f7999fa850eb2923f73ee797df09b2e62bf61cf0e5b292c16b2b8",
+      "evidence": "docs/documentation/evidence/personal-settings.json",
+      "evidenceSha256": "0c24c62ac0593ee5d07b14a2a93b1a3a91816ef030f7a62166e6eeae95dc61f5",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "roles-and-access",
+      "coverage": ["C06"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 4,
+      "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+      "verifiedAt": "2026-09-07T06:43:31.726Z",
+      "contentSha256": "d3fcc8fc2ea63b5fb1b5b55e33cceb1c9b1cd8b0ce6d059b61accb6189998e91",
+      "evidence": "docs/documentation/evidence/roles-and-access.json",
+      "evidenceSha256": "ee2a44213807b879b8b1634bda7622f43063eacf11bc9c902f399b94d817d48e",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "comments-and-activity",
+      "coverage": ["C07"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 4,
+      "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "verifiedAt": "2026-09-07T08:53:41.841Z",
+      "contentSha256": "91b235629a33bd9e798fc887f6d92226d007ed7673ec767d55f65f04c85ab67f",
+      "evidence": "docs/documentation/evidence/comments-and-activity.json",
+      "evidenceSha256": "44250cc1bc92840a1585fd262f0c8ff4b991e6e23e074cdad457a923d574dc4d",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "notifications",
+      "coverage": ["C08"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 4,
+      "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "verifiedAt": "2026-09-07T08:53:41.841Z",
+      "contentSha256": "7f0a7503cf875f644ef8642f7d5d6ac0c67e335c319d023faff93a30cd42f294",
+      "evidence": "docs/documentation/evidence/notifications.json",
+      "evidenceSha256": "c3990d2786fc664e3717bfdaabe78b245eeaede90673d71a2260e7f93f42e302",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "submit-request",
+      "coverage": ["C09"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 1,
+      "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "verifiedAt": "2026-09-07T10:07:20.254Z",
+      "contentSha256": "29e285e98a77548c08f8958fed91f0200db47c8188ef90619dab061925059f90",
+      "evidence": "docs/documentation/evidence/submit-request.json",
+      "evidenceSha256": "a33bfd20b87d5b2b25e96c5f76502ce90fb4c0e6b6395685530701232e9507f8",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "follow-request",
+      "coverage": ["C10"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 1,
+      "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "verifiedAt": "2026-09-07T10:07:20.254Z",
+      "contentSha256": "ca5dff1ef7d999e36d8655c3d00ffb6b5a2136427e86f2be168889ca417dbca3",
+      "evidence": "docs/documentation/evidence/follow-request.json",
+      "evidenceSha256": "c321f8befeb52312ba68197e407bd66e9031504337aa8909906b45cab271c57f",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "portal-knowledge",
+      "coverage": ["C11"],
+      "priority": "P1",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 1,
+      "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "verifiedAt": "2026-09-07T10:07:20.254Z",
+      "contentSha256": "f44331f28896c6fbdebed9d636bb937d06330e9a52e850bb0b755f987aacb559",
+      "evidence": "docs/documentation/evidence/portal-knowledge.json",
+      "evidenceSha256": "da9f39d0bf4c027ef6f1c7c21d6b1ba14a389c7a9be59cf06c16c2a62d4192d2",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "triage-requests",
+      "coverage": ["C12"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 2,
+      "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "verifiedAt": "2026-09-07T11:33:34.068Z",
+      "contentSha256": "b28fe6456b9259168173d057309994db811044beac40c09dcafd96ea7da36eea",
+      "evidence": "docs/documentation/evidence/triage-requests.json",
+      "evidenceSha256": "c11235e8a17ac3793db90a8d15b906f230e23a683419424788328fa37fd978dc",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "convert-request",
+      "coverage": ["C13"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 2,
+      "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "verifiedAt": "2026-09-07T11:33:34.068Z",
+      "contentSha256": "09ba1d034467e55a18a1b06c5942e0485d9282afbfe6b31676e239b470809abe",
+      "evidence": "docs/documentation/evidence/convert-request.json",
+      "evidenceSha256": "557c8cbf47debc15792389c63cdd900c04962961119cca5762875e178576cbc0",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "create-contract",
+      "coverage": ["C14"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 2,
+      "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "verifiedAt": "2026-09-07T14:11:42.202Z",
+      "contentSha256": "63aaa9717afffaacbb0b91b64de6e741162912ea00fd3b945798dc746b6e1cac",
+      "evidence": "docs/documentation/evidence/create-contract.json",
+      "evidenceSha256": "36ac22f6e115871f72ace8fdcf97a6ea634326fa969d27e4f7bdc7573901b68c",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "contract-stages",
+      "coverage": ["C15"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 2,
+      "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "verifiedAt": "2026-09-07T13:32:50.763Z",
+      "contentSha256": "a01d92cc6adf974978b91b9ff543402472ed5bd4300755e5a78a02370465854b",
+      "evidence": "docs/documentation/evidence/contract-stages.json",
+      "evidenceSha256": "0c2fcd17603436ee45a2c74c2a71dab8802485c076074e646a281c4a87092413",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "contract-approvals",
+      "coverage": ["C16"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 2,
+      "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "verifiedAt": "2026-09-07T13:41:10.505Z",
+      "contentSha256": "e3b7b6ee7e2b8b121c8be45203099d69331e09d5d55d374b577d5fe81bcf67f6",
+      "evidence": "docs/documentation/evidence/contract-approvals.json",
+      "evidenceSha256": "982bf1664ec1bf30a5e3275234baaaf86542a329ffd0ded08c993f09651aa988",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "manual-signing",
+      "coverage": ["C17"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 2,
+      "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "verifiedAt": "2026-09-07T13:44:06.138Z",
+      "contentSha256": "2415ba7d5c22ff900dd3b3fd67a5012f86fd276dfc4eb7f299e59e3419e3d5ae",
+      "evidence": "docs/documentation/evidence/manual-signing.json",
+      "evidenceSha256": "eec482036ef03a3a14421d88557d55e49b86a0df2276bdef5aef35b13aa27bb8",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "electronic-signing",
+      "coverage": ["C17"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 2,
+      "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "verifiedAt": "2026-09-07T14:10:51.241Z",
+      "contentSha256": "df172df43d2efc94cbd2daa7f03cc1161332885578c353e5137b1e0ffe4c90fc",
+      "evidence": "docs/documentation/evidence/electronic-signing.json",
+      "evidenceSha256": "dc2c6cd53fdc4146b9190efc7de1fcca6d59c6a6aee56b8d2af9a3500aef6212",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "terms-and-renewals",
+      "coverage": ["C18"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 2,
+      "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "verifiedAt": "2026-09-07T13:51:32.114Z",
+      "contentSha256": "d5af58d3f6934b6b5730e8e100c31ffc21e08640347b82750c9b39c24b085c6e",
+      "evidence": "docs/documentation/evidence/terms-and-renewals.json",
+      "evidenceSha256": "74f39e83b714e895b90cafec826928a7ae5730da3ad94aca167400c7467a5181",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "contract-tasks-and-dates",
+      "coverage": ["C19"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 2,
+      "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "verifiedAt": "2026-09-07T13:57:41.545Z",
+      "contentSha256": "29654cec933cf7b62d1c87e2d75293f920de3f1f51b6859aae5a44e09356c43e",
+      "evidence": "docs/documentation/evidence/contract-tasks-and-dates.json",
+      "evidenceSha256": "d9ebd1378d37ff995b126f0525cff00fab2064ff28610b82e1736ab415ec302b",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "contract-relations-and-ending",
+      "coverage": ["C20"],
+      "priority": "P1",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 2,
+      "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "verifiedAt": "2026-09-07T14:23:06.814Z",
+      "contentSha256": "ca10c84a725573c1e32fdae19502056cfd0075a0223131a3dc54d32d75272b47",
+      "evidence": "docs/documentation/evidence/contract-relations-and-ending.json",
+      "evidenceSha256": "1a6d60f3329fcf00eb8907b0a00e9fb6887ac1779f01cdde7ad04ff1caadcfa0",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "contract-analysis",
+      "coverage": ["C21"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 2,
+      "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "verifiedAt": "2026-09-07T17:20:09.933Z",
+      "contentSha256": "24e4375567bdf273873018732f93743584b71b260a07890f4f4719f257050243",
+      "evidence": "docs/documentation/evidence/contract-analysis.json",
+      "evidenceSha256": "fd241c45945fdeac2b2be8b76ef7d901551eee7959db49fc97eb3ab10eb72393",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "create-matter",
+      "coverage": ["C22"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 2,
+      "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "verifiedAt": "2026-09-07T19:22:19.461Z",
+      "contentSha256": "078e5ac72d41fa7ed55e02131b55dcdb86cb26d646485e64f5a494969e1aef73",
+      "evidence": "docs/documentation/evidence/create-matter.json",
+      "evidenceSha256": "7c350840dded01fc13b577ddb9e90928adc9ecfa41a4c33f7c9c9e378f37ed82",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "matter-status-and-archive",
+      "coverage": ["C23"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 2,
+      "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "verifiedAt": "2026-09-07T19:22:19.461Z",
+      "contentSha256": "7b4f1d4b77f4979d273e68ffcefe9be849c7e371cd518b256e466a6ba2df60cf",
+      "evidence": "docs/documentation/evidence/matter-status-and-archive.json",
+      "evidenceSha256": "d2bdd799f7f50a4a61fb73ad6df42b33c28b59c5344121770bf10f59393cad40",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "matter-work",
+      "coverage": ["C24"],
+      "priority": "P1",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 2,
+      "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "verifiedAt": "2026-09-07T19:22:19.461Z",
+      "contentSha256": "621ed4366708c7b55defb625733358b565eef3a0bd443e500a1f24352e875ffd",
+      "evidence": "docs/documentation/evidence/matter-work.json",
+      "evidenceSha256": "8e242f4df502692b31ce92691a3f9e496b84698b482f6a43fc3e43acfec6f101",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "contributor-guide",
+      "coverage": ["C25"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 1,
+      "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+      "verifiedAt": "2026-09-07T06:43:31.726Z",
+      "contentSha256": "c3badc50235831daa34056e22dd2e260142e71f5020cd972b9bc868fbf339397",
+      "evidence": "docs/documentation/evidence/contributor-guide.json",
+      "evidenceSha256": "7acbe352b589b4ea533e0267b32338b528b630839aa776adf2e1c79f975e52a2",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "document-versions",
+      "coverage": ["C26"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 3,
+      "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "verifiedAt": "2026-09-07T21:37:46.034Z",
+      "contentSha256": "e7d0286c6eefad20fd0e0a08df2dc6c530d5c3fa517e1b65e17e9f338e5f147d",
+      "evidence": "docs/documentation/evidence/document-versions.json",
+      "evidenceSha256": "53fe2af5d91bf07eeda0d1717507ac86e291b882eb89df05741644e3067234f3",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "document-folders",
+      "coverage": ["C27"],
+      "priority": "P1",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 3,
+      "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "verifiedAt": "2026-09-07T21:17:26.874Z",
+      "contentSha256": "1844521ab7ef07fc40fe8e0c01aaeb7df5022acf1e8059b2b24716f809838fec",
+      "evidence": "docs/documentation/evidence/document-folders.json",
+      "evidenceSha256": "23e1ae96cf11001327a833dab4faed66464046a38e0d57563759dcbb16566703",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "document-previews",
+      "coverage": ["C28"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 4,
+      "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "verifiedAt": "2026-09-07T21:37:09.916Z",
+      "contentSha256": "12cf5181a1b0c37788c1cd3d07ce04d8ac6c41efc68fed4188d47074307bd24a",
+      "evidence": "docs/documentation/evidence/document-previews.json",
+      "evidenceSha256": "31a97a2521c72a26007186eece94f898bcdec638ec7384b15a5684428def44ca",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "compare-versions",
+      "coverage": ["C29"],
+      "priority": "P1",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 3,
+      "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "verifiedAt": "2026-09-07T17:32:59.448Z",
+      "contentSha256": "2bfbd81cb149cd8bed215e1ada5736bf85fe9e4445241fea4307f2c36dae09df",
+      "evidence": "docs/documentation/evidence/compare-versions.json",
+      "evidenceSha256": "e6310d7c1900d77e5051b4c0f66ffaaff61e438bd49fdd8b24482053d4c242a4",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "document-repository",
+      "coverage": ["C30"],
+      "priority": "P1",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 3,
+      "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "verifiedAt": "2026-09-07T21:28:12.634Z",
+      "contentSha256": "59f88467c3a576764b212e36ebf5cb8bd49ff84a146a1ec3321d3d0a3da19969",
+      "evidence": "docs/documentation/evidence/document-repository.json",
+      "evidenceSha256": "28d1d0852ac44f104235ef90baafb9ea1a91cfb472c03765561e617298622517",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "entities-and-counterparties",
+      "coverage": ["C31"],
+      "priority": "P1",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 2,
+      "appCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
+      "verifiedAt": "2026-09-08T01:14:28.623Z",
+      "contentSha256": "7313af8226fa554a32c4e86919d581a972fd574654e4b8559ccd8df591fe177e",
+      "evidence": "docs/documentation/evidence/entities-and-counterparties.json",
+      "evidenceSha256": "9194e37b14f341c838375fc75c66eb5fa247a902c54fdf9a88dfe5cce765f04f",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "entity-records",
+      "coverage": ["C32"],
+      "priority": "P1",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 2,
+      "appCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
+      "verifiedAt": "2026-09-08T01:14:28.623Z",
+      "contentSha256": "9d8b0ae49f2d38291393c876d0851ec3811a5d6dd3d24add2631615ade6db0bc",
+      "evidence": "docs/documentation/evidence/entity-records.json",
+      "evidenceSha256": "a39108579d04c7f8ce53976e3f499eebbc8f2d73b9fc50fc1aac71ee58646b5f",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "create-knowledge",
+      "coverage": ["C33"],
+      "priority": "P1",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 2,
+      "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "verifiedAt": "2026-09-08T02:40:18.418Z",
+      "contentSha256": "295001ee071b093a3d66f72fb1faf23a81a959d13c08fbaba19e3062a738d34f",
+      "evidence": "docs/documentation/evidence/create-knowledge.json",
+      "evidenceSha256": "8b7e0c788c5b72d4a7d630dcfb7497b45fed23d47ce1888a566fef695064b31f",
+      "compatibility": "same-target-build",
+      "issues": []
+    },
+    {
+      "articleId": "publish-knowledge",
+      "coverage": ["C34"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 2,
+      "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "verifiedAt": "2026-09-08T02:40:18.418Z",
+      "contentSha256": "cae7b9ef9551242ef7b502892e4a9f63fa0229caf44e1578ec684490b793ffa5",
+      "evidence": "docs/documentation/evidence/publish-knowledge.json",
+      "evidenceSha256": "b74d2ed8a0e0828961ecb25026dc9fa8cd7867240057fe22be0bd03d95460783",
+      "compatibility": "same-target-build",
+      "issues": []
+    },
+    {
+      "articleId": "first-run",
+      "coverage": ["C35"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 1,
+      "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "verifiedAt": "2026-09-08T04:13:42Z",
+      "contentSha256": "17a32bd77a5673364e11c7ff3906b3e657a90c6750e8df6ff60e2611391bf3e4",
+      "evidence": "docs/documentation/evidence/first-run.json",
+      "evidenceSha256": "3bd00de6eaff10e5402ec689be01c1ea0f7ac61d17fba41db73b70aa3ae17af5",
+      "compatibility": "same-target-build",
+      "issues": []
+    },
+    {
+      "articleId": "organisation-and-users",
+      "coverage": ["C36"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 1,
+      "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "verifiedAt": "2026-09-08T04:13:42Z",
+      "contentSha256": "2d28269f8c2f22700cab66cdba067f377fbc5477e6a6f4365650241e3a0adc5a",
+      "evidence": "docs/documentation/evidence/organisation-and-users.json",
+      "evidenceSha256": "56f0f22a2e0fadf8457feedd23faf763642dfa5480f3b1e04977c5bedb9592f9",
+      "compatibility": "same-target-build",
+      "issues": []
+    },
+    {
+      "articleId": "authentication-and-email",
+      "coverage": ["C37"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 2,
+      "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "verifiedAt": "2026-09-08T04:13:42Z",
+      "contentSha256": "a47a3665df8e885bd034226de107c182564f6048ea74aa6707f2f1eaff6df8db",
+      "evidence": "docs/documentation/evidence/authentication-and-email.json",
+      "evidenceSha256": "bd21c05cb0abc96d4070a4d415d879f7f13de26bd330ba5b8e8abb0ae776dca1",
+      "compatibility": "same-target-build",
+      "issues": []
+    },
+    {
+      "articleId": "types-statuses-fields",
+      "coverage": ["C38"],
+      "priority": "P1",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 1,
+      "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "verifiedAt": "2026-09-08T06:33:02Z",
+      "contentSha256": "6e3fa892dc9b2bb23d05bd7b3125a187cdd1cbafb384cdf2d248064a1bcd1abe",
+      "evidence": "docs/documentation/evidence/types-statuses-fields.json",
+      "evidenceSha256": "decf7f73799d9c32628734382293e58be2bf08cd773a7f9e2194195bfeb4938f",
+      "compatibility": "same-target-build",
+      "issues": []
+    },
+    {
+      "articleId": "matter-templates",
+      "coverage": ["C39"],
+      "priority": "P1",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 1,
+      "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "verifiedAt": "2026-09-08T06:33:42Z",
+      "contentSha256": "c458f44480e167baf2930bdad0f03a944b0f10b890c7ff10468543328016f9e9",
+      "evidence": "docs/documentation/evidence/matter-templates.json",
+      "evidenceSha256": "b1676913598711779ac9e7808a8eea1d898ddc0a22df6d73d1b31300333a664a",
+      "compatibility": "same-target-build",
+      "issues": []
+    },
+    {
+      "articleId": "request-forms",
+      "coverage": ["C40"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 1,
+      "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "verifiedAt": "2026-09-08T06:41:52Z",
+      "contentSha256": "5981f17a9afc7dc219cf98d35d603f7c5491eed8c253b7fbd9e5fab294bd873b",
+      "evidence": "docs/documentation/evidence/request-forms.json",
+      "evidenceSha256": "052bc2c316804f86e977bacf2e1dec73dc7937e64030be87ecee75f503056ebb",
+      "compatibility": "same-target-build",
+      "issues": []
+    },
+    {
+      "articleId": "reminders-and-audit",
+      "coverage": ["C41"],
+      "priority": "P1",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 1,
+      "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "verifiedAt": "2026-09-08T06:33:00Z",
+      "contentSha256": "91583fda511a5d75941af7d8b919de5db42298846ee2b9dad65fcd6f43a4565c",
+      "evidence": "docs/documentation/evidence/reminders-and-audit.json",
+      "evidenceSha256": "c936d7a7d3ad34d60b6ef12b290f231e615f78c8a7b7f6e6d3fb3b309fed0cfe",
+      "compatibility": "same-target-build",
+      "issues": []
+    },
+    {
+      "articleId": "configure-signing",
+      "coverage": ["C42"],
+      "priority": "P0",
+      "catalogStatus": "scoped",
+      "recordedBuildEvidence": "blocked",
+      "requiredRoleMethodCount": 4,
+      "appCommit": null,
+      "verifiedAt": null,
+      "contentSha256": null,
+      "evidence": null,
+      "evidenceSha256": null,
+      "compatibility": "blocked",
+      "issues": [
+        "No merged article evidence; provider draft and technical review are in PR #783, live checks blocked by #742."
+      ]
+    },
+    {
+      "articleId": "configure-analysis",
+      "coverage": ["C43"],
+      "priority": "P0",
+      "catalogStatus": "scoped",
+      "recordedBuildEvidence": "blocked",
+      "requiredRoleMethodCount": 4,
+      "appCommit": null,
+      "verifiedAt": null,
+      "contentSha256": null,
+      "evidence": null,
+      "evidenceSha256": null,
+      "compatibility": "blocked",
+      "issues": [
+        "No merged article evidence; provider draft and technical review are in PR #783, live checks blocked by #742."
+      ]
+    },
+    {
+      "articleId": "install",
+      "coverage": ["C44"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 1,
+      "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "verifiedAt": "2026-09-08T09:23:52.148Z",
+      "contentSha256": "35b1bd584e291c4b42741097c9aa66ebd9db95092d293ed80821d3e7eee01b0f",
+      "evidence": "docs/documentation/evidence/install.json",
+      "evidenceSha256": "65747e36113a0f2f3d240bd797c1647a1107ca805ce65ee2c1295c92ab5d84b6",
+      "compatibility": "same-target-build",
+      "issues": []
+    },
+    {
+      "articleId": "deployment-configuration",
+      "coverage": ["C45"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 1,
+      "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "verifiedAt": "2026-09-08T10:21:38.430Z",
+      "contentSha256": "d61044fe1f237dfaa0d4087d576a39434e2d5b57a30a8ac5816808daf2fe335b",
+      "evidence": "docs/documentation/evidence/deployment-configuration.json",
+      "evidenceSha256": "1c3e14d0e61eeb3c75e240e123c3e79aa9cce9104c32f9f309e12643730d8f72",
+      "compatibility": "same-target-build",
+      "issues": []
+    },
+    {
+      "articleId": "upgrade",
+      "coverage": ["C46"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 1,
+      "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "verifiedAt": "2026-09-08T10:04:19.834Z",
+      "contentSha256": "96cc17166c77af291161ea34540f2c1c9683d2736cd903c42e2692ba9fe8e94d",
+      "evidence": "docs/documentation/evidence/upgrade.json",
+      "evidenceSha256": "7c9f8a7f6396fcfb0c56cf01945a38c99eabbd58b5a8a1b9536677081d373005",
+      "compatibility": "same-target-build",
+      "issues": []
+    },
+    {
+      "articleId": "backup-and-restore",
+      "coverage": ["C47"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 1,
+      "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "verifiedAt": "2026-09-08T10:04:19.834Z",
+      "contentSha256": "3a36f9794df340c90d415b20578e8cc58b97ee1972ccdec4c09913358a308361",
+      "evidence": "docs/documentation/evidence/backup-and-restore.json",
+      "evidenceSha256": "e28915e43cf546c72022fcc7b4432a34ed3aaac2f68504d7bad8ca653b06e220",
+      "compatibility": "same-target-build",
+      "issues": []
+    },
+    {
+      "articleId": "operator-troubleshooting",
+      "coverage": ["C48"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 1,
+      "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "verifiedAt": "2026-09-08T10:04:19.834Z",
+      "contentSha256": "4f5920cb683a58e59e590a6ab7bc756bab31080345b6936baccfcadf0e5e1aab",
+      "evidence": "docs/documentation/evidence/operator-troubleshooting.json",
+      "evidenceSha256": "a58ba5406c691fdfcad0c9af94f870f28d07ec66c23c1cf3c620b2f3638a170d",
+      "compatibility": "same-target-build",
+      "issues": []
+    },
+    {
+      "articleId": "troubleshooting",
+      "coverage": ["C49"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 4,
+      "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "verifiedAt": "2026-09-08T11:54:09.727Z",
+      "contentSha256": "e2404361abcc621f8ee36fcd03dec23150bdabc0070d30678ba54caaabb9dd1b",
+      "evidence": "docs/documentation/evidence/troubleshooting.json",
+      "evidenceSha256": "51fc6e149e5556f948ba6473f856cd960be5467d5ca13a16118672a431aa49cb",
+      "compatibility": "same-target-build",
+      "issues": []
+    },
+    {
+      "articleId": "reference",
+      "coverage": ["C50"],
+      "priority": "P1",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 5,
+      "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "verifiedAt": "2026-09-08T12:21:35.382Z",
+      "contentSha256": "ba4b1b0cc96db761cc19f06fa88d5e4d9625355873cc2a15d8f6deb58193f5d6",
+      "evidence": "docs/documentation/evidence/reference.json",
+      "evidenceSha256": "180168b834c855aeba81e8a964729f74a4979c4ec3cac3e1eb0c1134995585a4",
+      "compatibility": "same-target-build",
+      "issues": []
+    },
+    {
+      "articleId": "versions-and-support",
+      "coverage": ["C51"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 5,
+      "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "verifiedAt": "2026-09-08T12:04:42.974Z",
+      "contentSha256": "7d9c38056ec82206d5cab8f13b7940c960c18ab0d337a77dfc0ca81dd08e013e",
+      "evidence": "docs/documentation/evidence/versions-and-support.json",
+      "evidenceSha256": "a81584a5c7863c47998f6e866b0a69d546efc1788d2acd89b30ea06db3a5c872",
+      "compatibility": "same-target-build",
+      "issues": []
+    },
+    {
+      "articleId": "entity-obligations",
+      "coverage": ["C52"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 2,
+      "appCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
+      "verifiedAt": "2026-09-08T01:14:28.623Z",
+      "contentSha256": "b4a8ade34e728a7cb4de68a659779fe45d68781028d899b97c580771c1d0f604",
+      "evidence": "docs/documentation/evidence/entity-obligations.json",
+      "evidenceSha256": "c3003e14fd5f53bc18cc0f8ca7ce8fca6283893b3a1aa787fe6438b26eabfb04",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "entity-structure-and-access",
+      "coverage": ["C53"],
+      "priority": "P1",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 2,
+      "appCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
+      "verifiedAt": "2026-09-08T01:14:28.623Z",
+      "contentSha256": "95e5fbe88de8dcba1a417dada7ce078459a39aa633fa3f8e72d1ccc3a7295953",
+      "evidence": "docs/documentation/evidence/entity-structure-and-access.json",
+      "evidenceSha256": "f787f968e9f0b30f617b4b6fc06fcc7adbd65a5118747539047aa25fc52b8c99",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "archive-and-delete-documents",
+      "coverage": ["C54"],
+      "priority": "P0",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 3,
+      "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+      "verifiedAt": "2026-09-07T21:30:10.766Z",
+      "contentSha256": "f00bcd882a961a9944be0aed0bc83a991a29870eb318dbdfe8ef66c52c2c4551",
+      "evidence": "docs/documentation/evidence/archive-and-delete-documents.json",
+      "evidenceSha256": "620211e606fbedf0bdcf0bb191c2fe3286f8036216c805fd34b4d82efc69c0ea",
+      "compatibility": "hash-bound-source-review",
+      "issues": []
+    },
+    {
+      "articleId": "approver-groups",
+      "coverage": ["C55"],
+      "priority": "P1",
+      "catalogStatus": "review",
+      "recordedBuildEvidence": "pass",
+      "requiredRoleMethodCount": 1,
+      "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "verifiedAt": "2026-09-08T06:32:12Z",
+      "contentSha256": "baffd87c46ad0bfa7d084348f14bf7334da24590d99ca4c50a04cb870b7bdbb9",
+      "evidence": "docs/documentation/evidence/approver-groups.json",
+      "evidenceSha256": "2548ad200928d9439f9e49bdbeda2bb10980e002b855f56011bb7ade77b689be",
+      "compatibility": "same-target-build",
+      "issues": []
+    }
+  ],
+  "coverage": [
+    {
+      "id": "C01",
+      "priority": "P0",
+      "articles": ["staff-sign-in"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C02",
+      "priority": "P0",
+      "articles": ["portal-sign-in"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C03",
+      "priority": "P0",
+      "articles": ["find-your-work"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C04",
+      "priority": "P0",
+      "articles": ["search-and-views"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C05",
+      "priority": "P1",
+      "articles": ["personal-settings"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C06",
+      "priority": "P0",
+      "articles": ["roles-and-access"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C07",
+      "priority": "P0",
+      "articles": ["comments-and-activity"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C08",
+      "priority": "P0",
+      "articles": ["notifications"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C09",
+      "priority": "P0",
+      "articles": ["submit-request"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C10",
+      "priority": "P0",
+      "articles": ["follow-request"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C11",
+      "priority": "P1",
+      "articles": ["portal-knowledge"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C12",
+      "priority": "P0",
+      "articles": ["triage-requests"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C13",
+      "priority": "P0",
+      "articles": ["convert-request"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C14",
+      "priority": "P0",
+      "articles": ["create-contract"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C15",
+      "priority": "P0",
+      "articles": ["contract-stages"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C16",
+      "priority": "P0",
+      "articles": ["contract-approvals"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C17",
+      "priority": "P0",
+      "articles": ["manual-signing", "electronic-signing"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C18",
+      "priority": "P0",
+      "articles": ["terms-and-renewals"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C19",
+      "priority": "P0",
+      "articles": ["contract-tasks-and-dates"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C20",
+      "priority": "P1",
+      "articles": ["contract-relations-and-ending"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C21",
+      "priority": "P0",
+      "articles": ["contract-analysis"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C22",
+      "priority": "P0",
+      "articles": ["create-matter"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C23",
+      "priority": "P0",
+      "articles": ["matter-status-and-archive"],
+      "recordedBuildEvidence": "pass"
+    },
+    { "id": "C24", "priority": "P1", "articles": ["matter-work"], "recordedBuildEvidence": "pass" },
+    {
+      "id": "C25",
+      "priority": "P0",
+      "articles": ["contributor-guide"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C26",
+      "priority": "P0",
+      "articles": ["document-versions"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C27",
+      "priority": "P1",
+      "articles": ["document-folders"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C28",
+      "priority": "P0",
+      "articles": ["document-previews"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C29",
+      "priority": "P1",
+      "articles": ["compare-versions"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C30",
+      "priority": "P1",
+      "articles": ["document-repository"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C31",
+      "priority": "P1",
+      "articles": ["entities-and-counterparties"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C32",
+      "priority": "P1",
+      "articles": ["entity-records"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C33",
+      "priority": "P1",
+      "articles": ["create-knowledge"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C34",
+      "priority": "P0",
+      "articles": ["publish-knowledge"],
+      "recordedBuildEvidence": "pass"
+    },
+    { "id": "C35", "priority": "P0", "articles": ["first-run"], "recordedBuildEvidence": "pass" },
+    {
+      "id": "C36",
+      "priority": "P0",
+      "articles": ["organisation-and-users"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C37",
+      "priority": "P0",
+      "articles": ["authentication-and-email"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C38",
+      "priority": "P1",
+      "articles": ["types-statuses-fields"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C39",
+      "priority": "P1",
+      "articles": ["matter-templates"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C40",
+      "priority": "P0",
+      "articles": ["request-forms"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C41",
+      "priority": "P1",
+      "articles": ["reminders-and-audit"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C42",
+      "priority": "P0",
+      "articles": ["configure-signing"],
+      "recordedBuildEvidence": "blocked"
+    },
+    {
+      "id": "C43",
+      "priority": "P0",
+      "articles": ["configure-analysis"],
+      "recordedBuildEvidence": "blocked"
+    },
+    { "id": "C44", "priority": "P0", "articles": ["install"], "recordedBuildEvidence": "pass" },
+    {
+      "id": "C45",
+      "priority": "P0",
+      "articles": ["deployment-configuration"],
+      "recordedBuildEvidence": "pass"
+    },
+    { "id": "C46", "priority": "P0", "articles": ["upgrade"], "recordedBuildEvidence": "pass" },
+    {
+      "id": "C47",
+      "priority": "P0",
+      "articles": ["backup-and-restore"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C48",
+      "priority": "P0",
+      "articles": ["operator-troubleshooting"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C49",
+      "priority": "P0",
+      "articles": ["troubleshooting"],
+      "recordedBuildEvidence": "pass"
+    },
+    { "id": "C50", "priority": "P1", "articles": ["reference"], "recordedBuildEvidence": "pass" },
+    {
+      "id": "C51",
+      "priority": "P0",
+      "articles": ["versions-and-support"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C52",
+      "priority": "P0",
+      "articles": ["entity-obligations"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C53",
+      "priority": "P1",
+      "articles": ["entity-structure-and-access"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C54",
+      "priority": "P0",
+      "articles": ["archive-and-delete-documents"],
+      "recordedBuildEvidence": "pass"
+    },
+    {
+      "id": "C55",
+      "priority": "P1",
+      "articles": ["approver-groups"],
+      "recordedBuildEvidence": "pass"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "V-C01",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/staff-sign-in.json"]
+    },
+    {
+      "id": "V-C02",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/portal-sign-in.json"]
+    },
+    {
+      "id": "V-C03",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/find-your-work.json"]
+    },
+    {
+      "id": "V-C04",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/search-and-views.json"]
+    },
+    {
+      "id": "V-C05",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/personal-settings.json"]
+    },
+    {
+      "id": "V-C06",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/roles-and-access.json"]
+    },
+    {
+      "id": "V-C07",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/comments-and-activity.json"]
+    },
+    {
+      "id": "V-C08",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/notifications.json"]
+    },
+    {
+      "id": "V-C09",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/submit-request.json"]
+    },
+    {
+      "id": "V-C10",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/follow-request.json"]
+    },
+    {
+      "id": "V-C11",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/portal-knowledge.json"]
+    },
+    {
+      "id": "V-C12",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/triage-requests.json"]
+    },
+    {
+      "id": "V-C13",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/convert-request.json"]
+    },
+    {
+      "id": "V-C14",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/create-contract.json"]
+    },
+    {
+      "id": "V-C15",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/contract-stages.json"]
+    },
+    {
+      "id": "V-C16",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/contract-approvals.json"]
+    },
+    {
+      "id": "V-C17-manual",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/manual-signing.json"]
+    },
+    {
+      "id": "V-C17-electronic",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/electronic-signing.json"]
+    },
+    {
+      "id": "V-C18",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/terms-and-renewals.json"]
+    },
+    {
+      "id": "V-C19",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/contract-tasks-and-dates.json"]
+    },
+    {
+      "id": "V-C20",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/contract-relations-and-ending.json"]
+    },
+    {
+      "id": "V-C21",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/contract-analysis.json"]
+    },
+    {
+      "id": "V-C22",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/create-matter.json"]
+    },
+    {
+      "id": "V-C23",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/matter-status-and-archive.json"]
+    },
+    {
+      "id": "V-C24",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/matter-work.json"]
+    },
+    {
+      "id": "V-C25",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/contributor-guide.json"]
+    },
+    {
+      "id": "V-C26",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/document-versions.json"]
+    },
+    {
+      "id": "V-C27",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/document-folders.json"]
+    },
+    {
+      "id": "V-C28",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/document-previews.json"]
+    },
+    {
+      "id": "V-C29",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/compare-versions.json"]
+    },
+    {
+      "id": "V-C30",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/document-repository.json"]
+    },
+    {
+      "id": "V-C31",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/entities-and-counterparties.json"]
+    },
+    {
+      "id": "V-C32",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/entity-records.json"]
+    },
+    {
+      "id": "V-C33",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/create-knowledge.json"]
+    },
+    {
+      "id": "V-C34",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/publish-knowledge.json"]
+    },
+    {
+      "id": "V-C35",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/first-run.json"]
+    },
+    {
+      "id": "V-C36",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/organisation-and-users.json"]
+    },
+    {
+      "id": "V-C37",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/authentication-and-email.json"]
+    },
+    {
+      "id": "V-C38",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/types-statuses-fields.json"]
+    },
+    {
+      "id": "V-C39",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/matter-templates.json"]
+    },
+    {
+      "id": "V-C40",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/request-forms.json"]
+    },
+    {
+      "id": "V-C41",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/reminders-and-audit.json"]
+    },
+    {
+      "id": "V-C42",
+      "status": "blocked",
+      "basis": "Live-provider setup required by #742; stand-ins and technical review do not satisfy it.",
+      "evidence": []
+    },
+    {
+      "id": "V-C43",
+      "status": "blocked",
+      "basis": "Live-provider setup required by #742; stand-ins and technical review do not satisfy it.",
+      "evidence": []
+    },
+    {
+      "id": "V-C44",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/install.json"]
+    },
+    {
+      "id": "V-C45",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/deployment-configuration.json"]
+    },
+    {
+      "id": "V-C46",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/upgrade.json"]
+    },
+    {
+      "id": "V-C47",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/backup-and-restore.json"]
+    },
+    {
+      "id": "V-C48",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/operator-troubleshooting.json"]
+    },
+    {
+      "id": "V-C49",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/troubleshooting.json"]
+    },
+    {
+      "id": "V-C50",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/reference.json"]
+    },
+    {
+      "id": "V-C51",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/versions-and-support.json"]
+    },
+    {
+      "id": "V-C52",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/entity-obligations.json"]
+    },
+    {
+      "id": "V-C53",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/entity-structure-and-access.json"]
+    },
+    {
+      "id": "V-C54",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/archive-and-delete-documents.json"]
+    },
+    {
+      "id": "V-C55",
+      "status": "pass",
+      "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+      "evidence": ["docs/documentation/evidence/approver-groups.json"]
+    },
+    {
+      "id": "V-HELP",
+      "status": "blocked",
+      "basis": "Final complete-content Help/offline publication scenarios require provider articles and DOC-027 environment; batch and DOC-025 preview observations do not replace this gate.",
+      "evidence": []
+    },
+    {
+      "id": "V-OFFLINE",
+      "status": "blocked",
+      "basis": "Final complete-content Help/offline publication scenarios require provider articles and DOC-027 environment; batch and DOC-025 preview observations do not replace this gate.",
+      "evidence": []
+    }
+  ],
+  "gates": { "G3": "blocked", "G4": "blocked" },
+  "releaseExceptions": [],
+  "humanProofreading": "Pending full assembled suite; no human approval claimed.",
+  "updatedAt": "2026-09-08T13:54:12.667Z",
+  "independentAcceptance": {
+    "reviewer": "Independent DOC-025 acceptance seat (Opus 5 agent), separate from the documentation author",
+    "reviewerKind": "agent",
+    "completedAt": "2026-09-08T13:41:00.000Z",
+    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+    "buildId": "app sha256:c585d8683816050bdf00568a6f4e1983f14fb3b364ac8202f4f4e40dab9ef52c; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+    "environment": "openlaw-docs-b8e31260-configuration",
+    "scope": "Representative independent preview acceptance of the available 54-article scope, plus an independent re-check of the compatibility conclusions.",
+    "records": [
+      "batches/DOC-025/independent-compatibility.json",
+      "batches/DOC-025/independent-acceptance.json",
+      "batches/DOC-025/independent-zoom.json",
+      "batches/DOC-025/independent-contextual-help.json",
+      "batches/DOC-025/independent-contextual-help-first.json",
+      "batches/DOC-025/independent-contextual-help-retry.json",
+      "batches/DOC-025/independent-offline.json",
+      "batches/DOC-025/compiler-evidence-audit.json"
+    ],
+    "covered": [
+      "Full eligible index for Administrator, Legal Team Member, Contributor, Business User and the anonymous formal reader: 44, 36, 17, 11 and 54 guides, each matching the catalog.",
+      "Sampled reading with a focused H1, three themes at 320px and CSS zoom 2 at 1280px, with no overflow.",
+      "Actual Chromium browser zoom 200% for all five readers: chrome.tabs.getZoom 2, device pixel ratio 2, 1280px reflowed to 640 CSS pixels, CSS zoom still 1.",
+      "The original DOC-024 which version query reached the support guide for all five readers.",
+      "Keyboard search, result focus, focused article title and Back/Forward history for all five readers.",
+      "Recovery for no matches, an unavailable article, an unbundled edition and a missing anchor.",
+      "Audience boundaries for Contributor and Business User, including the in-place notice and the public formal link.",
+      "Public reading and search sent no application API request.",
+      "Portal and staff contextual Help narrow the same index, and no record identifier reaches a Help address.",
+      "A retained standalone copy outside the instance, read with the owned app stopped and the network refused, with JavaScript on and off, with the optional search script removed, and with one copied article deliberately withheld and then restored."
+    ],
+    "notCovered": [
+      "The 124 article/role/method combinations were not replayed. The 116 passing combinations stand on their own recorded builds.",
+      "C42 and C43 need real provider access under #742.",
+      "The same independent preview review still has to run over the complete 56-article suite; final complete-content V-HELP and V-OFFLINE acceptance and DOC-027 publication remain outstanding.",
+      "No human proofreading and no human sign-off."
+    ],
+    "failedAttempts": [
+      "Staff contextual Help: first looked for the link on a Contract record, which DES-073 does not give one, then read the address before the client route settled. Two harness mistakes, no application change; recorded in independent-contextual-help-first.json and independent-contextual-help-retry.json and retested in independent-contextual-help.json."
+    ],
+    "validation": {
+      "staticAndTooling": "Documentation and CI tooling 34 tests passed; Prettier and ESLint clean; normal and preview documentation builds passed.",
+      "compilerAudit": "batches/DOC-025/compiler-evidence-audit.json: 54 merged articles passed in an isolated metadata copy, then the expected unpublished provider-link refusal.",
+      "applicationSuite": "Uncached, 5 of 5 tasks in 4m6.489s. Web 97 test files and 1704 tests; API 176 test files and 2890 tests. No failures. No browser ran alongside it.",
+      "catalogUnchanged": "54 articles review, 2 scoped (configure-signing, configure-analysis, drafts on PR #783). No catalog status was changed to fit any report."
+    }
+  },
+  "gateNote": "G3 and G4 stay blocked. Independent acceptance of the available scope is complete and is recorded separately from release acceptance.",
+  "catalogStatusCounts": { "review": 54, "scoped": 2 }
+}

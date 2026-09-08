@@ -1,0 +1,28 @@
+{
+  "name": "independent-restore-key-restored",
+  "scenario": "V-C47",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:58:29.286Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-restore",
+  "articleHashes": [
+    {
+      "articleId": "backup-and-restore",
+      "contentSha256": "0237339f91484b7a46623e1753c67ccbb376ae341ac8b40cb5d81237967a891a"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "The retained key restores use of the saved relay",
+      "actual": "Putting the retained OPENLAW_SECRET_KEY back made the saved relay readable again: source \"app\" and a real test message arrived in the target's own controlled mailbox. The stored credential was retained through the wrong-key start rather than lost.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:58:29.731Z",
+      "at": "2026-09-08T09:58:29.811Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T09:58:29.811Z"
+}

@@ -1,0 +1,76 @@
+{
+  "startedAt": "2026-09-08T10:53:37.065Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "troubleshooting",
+      "contentSha256": "0b5c8a359c24faa4a2c97d557b23a4ad4c37939a8cb919e0b63d2130c628779b"
+    },
+    {
+      "articleId": "reference",
+      "contentSha256": "9ec760d76d77a25e047c71f896e0961e1a7afcf6fab06e3e8c942c7770bdf7c0"
+    },
+    {
+      "articleId": "versions-and-support",
+      "contentSha256": "157906267e63b29066d1835dcda7de6c69d8c83338da745d340a8ded3e06ed0b"
+    }
+  ],
+  "steps": [
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Missing Confidential record, permission correction, next-read recovery",
+      "actual": "Direct link refused before team entry; Administrator API supplied fixture team correction; reader Reload then opened same Contract. No access bypass.",
+      "startedAt": "2026-09-08T10:53:39.722Z",
+      "at": "2026-09-08T10:53:40.451Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "Missing Confidential record, permission correction, next-read recovery",
+      "actual": "Direct link refused before team entry; Administrator API supplied fixture team correction; reader Reload then opened same Contract. No access bypass.",
+      "startedAt": "2026-09-08T10:53:40.452Z",
+      "at": "2026-09-08T10:53:41.189Z",
+      "result": "pass"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "Business controls and legal action boundary",
+      "actual": "Reached Contributor sees read-only legal-details explanation and has neither Add approver nor Send for signature.",
+      "startedAt": "2026-09-08T10:53:41.189Z",
+      "at": "2026-09-08T10:53:42.369Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Approval belongs to named approver; disabled Signing and Analysis",
+      "actual": "Entered actual Add approver dialog; next action recorded separately.",
+      "startedAt": "2026-09-08T10:53:42.370Z",
+      "at": "2026-09-08T10:53:43.053Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Unavailable signing and Analysis lead to configuration checks",
+      "actual": "Signing API corroborated unconfigured connector and browser had no Send action; Analysis absent on fresh Contract with disabled AI. Live provider success/failure is not tested.",
+      "startedAt": "2026-09-08T10:53:43.063Z",
+      "at": "2026-09-08T10:53:44.292Z",
+      "result": "pass"
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Portal support route and staff record boundary",
+      "startedAt": "2026-09-08T10:53:44.293Z",
+      "at": "2026-09-08T10:53:55.817Z",
+      "result": "fail",
+      "error": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Notification settings', exact: true })\u001b[22m\n"
+    }
+  ]
+}

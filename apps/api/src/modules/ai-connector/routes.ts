@@ -20,6 +20,7 @@ import {
 } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
 import { AI_PRESET_DEFINITIONS, AI_PRESET_OPTIONS } from "../../lib/ai/presets.js";
+import { listAiModels } from "../../lib/ai/models.js";
 import { AiProviderError } from "../../lib/ai/provider.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
@@ -51,11 +52,14 @@ const ConnectorEnvelope = z.object({
   presets: z.array(PresetOptionSchema),
 });
 
-const ConnectorBodySchema = z.object({
+const ProviderBodySchema = z.object({
   preset: z.enum(AI_PRESETS),
   protocol: z.enum(AI_PROTOCOLS).optional(),
   baseUrl: z.string().trim().max(2_000).optional(),
   apiKey: z.string().max(20_000).optional(),
+});
+
+const ConnectorBodySchema = ProviderBodySchema.extend({
   model: z.string().trim().min(1).max(300),
 });
 
@@ -112,17 +116,32 @@ function checkedBaseUrl(value: string | undefined): string {
   return url.toString();
 }
 
-function resolvedConfig(body: z.infer<typeof ConnectorBodySchema>): {
+function resolvedConfig(body: z.infer<typeof ProviderBodySchema>): {
   preset: AiPreset;
   protocol: AiProtocol;
   baseUrl: string;
-  model: string;
 } {
   const definition = AI_PRESET_DEFINITIONS[body.preset];
   const protocol = body.preset === "custom" ? body.protocol : definition.protocol;
   if (!protocol) throw httpError(400, "Choose the protocol used by the custom endpoint.");
   const baseUrl = definition.baseUrl ?? checkedBaseUrl(body.baseUrl);
-  return { preset: body.preset, protocol, baseUrl, model: body.model.trim() };
+  return { preset: body.preset, protocol, baseUrl };
+}
+
+function sameDestination(
+  current: AiConnector | undefined,
+  config: ReturnType<typeof resolvedConfig>,
+): boolean {
+  if (!current || current.preset !== config.preset || current.protocol !== config.protocol)
+    return false;
+  const normalize = (value: string) => {
+    const url = new URL(value);
+    url.hash = "";
+    url.pathname = url.pathname.replace(/\/$/, "");
+    url.searchParams.sort();
+    return url.toString();
+  };
+  return normalize(current.baseUrl) === normalize(config.baseUrl);
 }
 
 async function lockedConnector(tx: Executor): Promise<AiConnector> {
@@ -164,7 +183,7 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
-      const config = resolvedConfig(request.body);
+      const config = { ...resolvedConfig(request.body), model: request.body.model };
       const apiKey = pasted(request.body.apiKey);
       const saved = await app.db.transaction(async (tx) => {
         const [current] = await tx.select().from(aiConnector).limit(1).for("update");
@@ -187,14 +206,18 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
           return row;
         }
 
-        if (config.preset !== "ollama" && !apiKey && !current.apiKey) {
+        if (
+          config.preset !== "ollama" &&
+          !apiKey &&
+          (!current.apiKey || !sameDestination(current, config))
+        ) {
           throw httpError(400, "Paste the API key for this provider.");
         }
         const [row] = await tx
           .update(aiConnector)
           .set({
             ...config,
-            ...(apiKey ? { apiKey } : {}),
+            apiKey: apiKey ?? (sameDestination(current, config) ? current.apiKey : null),
             updatedAt: new Date(),
           })
           .where(eq(aiConnector.id, current.id))
@@ -217,7 +240,7 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
             });
           }
         }
-        if (apiKey) {
+        if (apiKey || current.apiKey !== row.apiKey) {
           await recordActivity(tx, {
             entityType: "system",
             actorId: request.user.id,
@@ -234,6 +257,46 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
         return row;
       });
       return envelope(saved);
+    },
+  );
+
+  app.post(
+    "/ai-connector/models",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "listAiConnectorModels",
+        summary: "List models for pending connector settings without saving them",
+        tags: ["ai-connector"],
+        body: ProviderBodySchema,
+        response: {
+          200: z.object({
+            models: z.array(z.object({ id: z.string(), label: z.string() })),
+            truncated: z.boolean(),
+          }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request) => {
+      const config = resolvedConfig(request.body);
+      if (config.preset === "azure_openai")
+        throw httpError(
+          400,
+          "Enter the deployment name from Azure manually. This endpoint does not list deployments.",
+        );
+      const current = await stored();
+      const apiKey =
+        pasted(request.body.apiKey) ??
+        (sameDestination(current, config) ? (current?.apiKey ?? null) : null);
+      if (AI_PRESET_DEFINITIONS[config.preset].requiresApiKey && !apiKey)
+        throw httpError(400, "Paste the API key for this provider and endpoint to load models.");
+      try {
+        return await listAiModels({ ...config, apiKey });
+      } catch (error) {
+        if (error instanceof AiProviderError) throw httpError(502, error.message, { expose: true });
+        throw error;
+      }
     },
   );
 

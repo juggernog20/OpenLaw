@@ -1,0 +1,72 @@
+{
+  "name": "independent-groups-retry",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C55"],
+  "authorRecordName": "ind-groups-retry",
+  "startedAt": "2026-09-08T05:47:10.805Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "approver-groups",
+      "contentSha256": "baffd87c46ad0bfa7d084348f14bf7334da24590d99ca4c50a04cb870b7bdbb9"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Create a group by the guide route and refuse an ineligible member",
+      "actual": "Created \"Ind sign-off panel IND81T2F\" with members [\"Nadia Haddad\",\"Priya Raman\"]. The member picker offers only Member+ people ([\"Blair Wentworth blair@helix.example\",\"Daniel Okafor daniel.okafor@helix.example\",\"Ellis Marlow 1788842858292 docs.reminders.1788842858292@helix.example\",\"Ines Duarte ines.duarte@helix.example\",\"Marcus Oyelaran marcus.oyelaran@helix.example\",\"Nadia Haddad nadia.haddad@helix.example\"]) and the dialog says \"\". Adding the Contributor Ravi Menon answered 400: {\"type\":\"about:blank\",\"title\":\"Request validation failed\",\"status\":400,\"detail\":\"One or more request fields are invalid.\",\"instance\":\"/api/v1/approver-groups/01a07f8e-5fbb-7931-929b-1d9d1bcd717c/members\",\"errors\":[{\"path.",
+      "result": "fail",
+      "startedAt": "2026-09-08T05:47:11.729Z",
+      "at": "2026-09-08T05:47:22.230Z",
+      "error": "The captured refusal does not establish what the step claims. The member write used a userIds key where the route takes memberIds, so the 400 is request validation and says nothing about role eligibility, and the problem body is truncated mid-errors. The picker list was also a six-name sample presented as the whole offer, and it omits Priya Raman even though the group included them.",
+      "supersededBy": ["docs/documentation/batches/DOC-021/independent-repair-groups.json"]
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Applying the group asks each member once, and a second apply is refused as a no-op",
+      "actual": "The dialog previewed \"Apply approver group | Approver group | Pick a group | Docs assessment approvers 1788842701361 | Docs assessment approvers 1788842728405 | Executive committee | Finance sign-off | Ind sign-off panel IND81T2F | Privacy re\" and warned \"Applying a group asks the people it names now. A later edit to the group leaves these requests as they are.\". Applying created 2 Pending rows for [\"Nadia Haddad\",\"Priya Raman\"], each stamped source [\"group\"] from group [\"Ind sign-off panel IND81T2F\"]. A second apply answered 422: {\"type\":\"about:blank\",\"title\":\"Everybody in Ind sign-off panel IND81T2F already has a pending approval request on this contract.\",\"status\":422,\"detail\":\"Everybody in Ind sign-off panel IND81T2F already has a pending appr and the roster still holds 2 Pending rows.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:47:22.230Z",
+      "at": "2026-09-08T05:47:23.019Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A member who already has a pending request is skipped, not refused",
+      "actual": "Contract 45 already had a manual Pending request for . The dialog said \"Asks Priya Raman.\" and \"Skips 1 person who already has a request open.\". Applying succeeded and left 2 Pending rows for [[null,\"manual\"],[null,\"group\"]] \u2014 the overlapping person was skipped rather than refused, and no duplicate row was made.",
+      "result": "fail",
+      "startedAt": "2026-09-08T05:47:23.019Z",
+      "at": "2026-09-08T05:47:23.773Z",
+      "error": "Unusable identities, not product behaviour: the roster was read as approverName, a key the endpoint does not answer, so the before state reads \"for \" and the after rows read [[null,\"manual\"],[null,\"group\"]]. The step cannot show which person was skipped.",
+      "supersededBy": ["docs/documentation/batches/DOC-021/independent-repair-groups.json"]
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A member who has lost Member+ standing refuses the whole apply and creates no partial roster",
+      "actual": "With Priya Raman demoted to Contributor, applying the two-member group was refused by name: \"Priya Raman is not an Administrator or a Legal Team Member, so they can't approve a contract.\". Contract 46 held 0 Pending rows before and 0 after \u2014 the refusal created no partial roster, not even for the still-eligible member. Restoring their Legal role and applying again created 2 Pending rows for [null,null].",
+      "result": "fail",
+      "startedAt": "2026-09-08T05:47:23.774Z",
+      "at": "2026-09-08T05:47:25.272Z",
+      "error": "Unusable identities, not product behaviour: the same wrong roster key left the restored apply recorded as \"2 Pending rows for [null,null]\", so the people asked after the refusal are not established.",
+      "supersededBy": ["docs/documentation/batches/DOC-021/independent-repair-groups.json"]
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "On a Confidential Contract an out-of-audience member refuses the whole apply",
+      "result": "fail",
+      "startedAt": "2026-09-08T05:47:25.272Z",
+      "error": "expect(locator).toBeHidden() failed\n\nLocator:  getByRole('dialog')\nExpected: hidden\nReceived: visible\nTimeout:  15000ms\n\nCall log:\n  - Expect \"to.be.hidden\" with timeout 15000ms\n  - waiting for getByRole('dialog')\n    34 \u00d7 locator resolved to <div role=\"dialog\" tabindex=\"-1\" id=\"radix-_r_j_\" data-state=\"open\" aria-labelledby=\"radix-_r_k_\" class=\"@container/dialog fixed inset-0 z-50 overflow-y-auto bg-raised p-6 text-base text-primary md:inset-auto md:start-1/2 md:top-1/2 md:max-h-[calc(100dvh-4rem)] md:w-[calc(100%-2rem)] md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-card md:border md:border-border-default md:shadow-md md:max-w-lg\">\u2026</div>\n       - unexpected value \"visible\"\n",
+      "at": "2026-09-08T05:47:40.956Z"
+    }
+  ],
+  "passed": false
+}

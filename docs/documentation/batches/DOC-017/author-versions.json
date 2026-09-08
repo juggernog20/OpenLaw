@@ -1,0 +1,126 @@
+{
+  "name": "versions",
+  "startedAt": "2026-09-07T20:30:58.502Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "document-versions",
+      "contentSha256": "b39e52e71277824890a02ec9d8432bbb57dc4da4a974c085a5d727035ba20699"
+    },
+    {
+      "articleId": "archive-and-delete-documents",
+      "contentSha256": "f00bcd882a961a9944be0aed0bc83a991a29870eb318dbdfe8ef66c52c2c4551"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "C26 upload one PDF on reached Contract; inspect first Version and immutable source",
+      "actual": "Browser single upload created one Document at v1 with uploaded provenance",
+      "result": "pass",
+      "at": "2026-09-07T20:31:01.295Z"
+    },
+    {
+      "role": "administrator",
+      "action": "C26 append a Version and read prior round",
+      "actual": "v2 appended to same chain; earlier v1 retained source/note and opened in its reader",
+      "result": "pass",
+      "at": "2026-09-07T20:31:01.656Z"
+    },
+    {
+      "role": "administrator",
+      "action": "C26 correct hand-set kind separately from executed pin and preserve pin across new upload",
+      "actual": "Kind correction did not set pin; manual pin remained on v2 after kind correction and v3 upload; Generated redline not offered",
+      "result": "pass",
+      "at": "2026-09-07T20:31:02.107Z"
+    },
+    {
+      "role": "administrator",
+      "action": "C26 edit Document details without altering chain",
+      "actual": "Renamed logical Document and saved description; three immutable Versions retained",
+      "result": "pass",
+      "at": "2026-09-07T20:31:02.265Z"
+    },
+    {
+      "role": "administrator",
+      "action": "C54 archive, read archived row, restore and retain Versions/designations",
+      "actual": "Archive removed normal row; Show archived exposed it; Restore preserved all Versions and executed/primary designations",
+      "result": "pass",
+      "at": "2026-09-07T20:31:02.541Z"
+    },
+    {
+      "role": "administrator",
+      "action": "C54 typed deletion refuses mismatch; Cancel preserves; confirm removes whole chain and downloads",
+      "actual": "Incorrect name disabled Delete; Cancel kept Document; correct name deleted all three Version downloads and removed row",
+      "result": "pass",
+      "at": "2026-09-07T20:31:02.936Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "C26 upload one PDF on reached Contract; inspect first Version and immutable source",
+      "actual": "Browser single upload created one Document at v1 with uploaded provenance",
+      "result": "pass",
+      "at": "2026-09-07T20:31:04.568Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "C26 append a Version and read prior round",
+      "actual": "v2 appended to same chain; earlier v1 retained source/note and opened in its reader",
+      "result": "pass",
+      "at": "2026-09-07T20:31:04.961Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "C26 correct hand-set kind separately from executed pin and preserve pin across new upload",
+      "actual": "Kind correction did not set pin; manual pin remained on v2 after kind correction and v3 upload; Generated redline not offered",
+      "result": "pass",
+      "at": "2026-09-07T20:31:05.407Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "C26 edit Document details without altering chain",
+      "actual": "Renamed logical Document and saved description; three immutable Versions retained",
+      "result": "pass",
+      "at": "2026-09-07T20:31:05.571Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "C54 archive, read archived row, restore and retain Versions/designations",
+      "actual": "Archive removed normal row; Show archived exposed it; Restore preserved all Versions and executed/primary designations",
+      "result": "pass",
+      "at": "2026-09-07T20:31:05.856Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "C54 Legal Team Member has no Delete action and direct deletion is refused",
+      "actual": "Legal reader can archive/restore but has no Delete control; API confirms refusal",
+      "result": "pass",
+      "at": "2026-09-07T20:31:05.904Z"
+    },
+    {
+      "role": "contributor",
+      "action": "C26 upload one PDF on reached Contract; inspect first Version and immutable source",
+      "actual": "Browser single upload created one Document at v1 with uploaded provenance",
+      "result": "pass",
+      "at": "2026-09-07T20:31:07.500Z"
+    },
+    {
+      "role": "contributor",
+      "action": "C26 append a Version and read prior round",
+      "actual": "v2 appended to same chain; earlier v1 retained source/note and opened in its reader",
+      "result": "pass",
+      "at": "2026-09-07T20:31:07.837Z"
+    },
+    {
+      "role": "contributor",
+      "action": "C26/C54 Contributor cannot correct kind, set designations or archive/restore/delete",
+      "actual": "Supporting upload available; management actions and kind editor absent; archive/restore/delete API refusals verified",
+      "result": "pass",
+      "at": "2026-09-07T20:31:07.906Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T20:31:07.908Z"
+}

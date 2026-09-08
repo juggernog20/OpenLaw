@@ -1,0 +1,140 @@
+{
+  "articleId": "create-matter",
+  "contentSha256": "078e5ac72d41fa7ed55e02131b55dcdb86cb26d646485e64f5a494969e1aef73",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-07T19:22:19.461Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-MATTERS.md",
+    "apps/web/src/components/matters/create-matter-dialog.tsx",
+    "apps/web/src/routes/matter-record.tsx",
+    "apps/web/src/components/matters/team-tray.tsx",
+    "apps/api/src/modules/matters/create.ts",
+    "apps/api/src/modules/matters/routes.ts",
+    "apps/api/src/modules/matter-templates/routes.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C22",
+      "coverage": ["C22"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "The Matter has its intended Manager, team, references, and template defaults. Missing required values and unavailable templates produce the supported validation or selection behavior.",
+      "actual": "Create with an empty Title and then with the required text Field empty kept the dialog open (message: \"Fill Docs Matter required 1788804353434, Docs Matter entity 1788804353434.\"); Manager list excludes Contributors and Business Users; Cancel closed the dialog; highest M-number stayed 92. M-93 opened after Create: Status Open (open Category), Priority Medium, Risk Not assessed, Manager Priya Raman, team roster shows Priya as Matter Manager and Nadia Haddad as Creator; saved required text, Entity \"Docs Matter live Entity 1788804353434\" and person Ravi Menon; Ravi's direct read answered 404; renaming kept M-93. Priority High and Risk Medium saved; clearing the required text was refused (\"Fill Docs Matter required 1788804353434 first — the type requires it.\") and the value stayed; choosing \"Docs Matter retype 1788804353434\" opened \"Change matter type\" (Change matter type to Docs Matter retype 1788804353434 Complete the new type's required fi…), Cancel kept the type, Change type saved it with {\"docs_matter_extra_1788804353434\":42,\"docs_matter_entity_1788804353434\":\"01a07d0c-5382-7025-baa9-afe41b6c8d92\",\"docs_matter_person_1788804353434\":\"01a07ac6-5983-71e0-bd2e-7e29e6163e60\",\"docs_matter_required_1788804353434\":\"Rev fictional scope\"}; switching back to \"Docs Matter required 1788804353434\" kept the extra value in the record but Overview no longer shows it. As Manager of M-93 Priya could already read it (200); on the new Confidential M-94 her read answered 404 until Nadia Haddad added her as Member and Watcher; she then read it, edited the Description, had Add team member disabled/absent and her direct team write answered 403; removing her Watcher role left Member; making her Manager did not change her team roles. \"Docs Matter single 1788804353434\" auto-selected its only live template (title \"Fictional single review\", Priority High, Risk Critical, legal Field \"Legal single default\", \"Template adds 2 tasks and 2 key dates.\"); No template cleared them to Medium/Not assessed; \"Docs Matter multi 1788804353434\" offered No template, Docs Matter alpha playbook 1788804353434, Docs Matter beta playbook 1788804353434 with No template selected; alpha set \"Fictional alpha review\", and after typing a title beta kept it while switching Priority/Risk to Low/Low. M-95 created 2026-09-07T18:52:30.859Z (UTC date 2026-09-07): Tasks \"Review single evidence\" due 2026-09-10 (+3) unassigned because no Manager was chosen and \"Arrange single discussion\" without a date; Key dates 2026-09-07 (+0) and 2026-09-14 (+7); Status Open; legal Field kept the typed \"Rev override\"; the optional Field cleared in the dialog came back as \"Optional single default\" (issue #770) and Overview showed \"Optional single default\"; clearing it on Overview persisted; a template description edit and a Manager change to Priya left the copied rows unchanged. Create with the beta template archived after the form opened was refused (\"The template must be live and belong to the selected matter type.\") and the highest M-number stayed 95; a fresh form listed No template, Docs Matter alpha playbook 1788804353434; Ravi Menon saw no New matter button and his direct create answered 403.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-016/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-016/independent-discovery.json",
+        "docs/documentation/batches/DOC-016/independent-accessibility.json",
+        "docs/documentation/batches/DOC-016/independent-template-content.json"
+      ]
+    },
+    {
+      "id": "V-C22",
+      "coverage": ["C22"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "The Matter has its intended Manager, team, references, and template defaults. Missing required values and unavailable templates produce the supported validation or selection behavior.",
+      "actual": "Create with an empty Title and then with the required text Field empty kept the dialog open (message: \"Fill Docs Matter required 1788804353434, Docs Matter entity 1788804353434.\"); Manager list excludes Contributors and Business Users; Cancel closed the dialog; highest M-number stayed 89. M-90 opened after Create: Status Open (open Category), Priority Medium, Risk Not assessed, Manager Priya Raman, team roster shows Priya as Matter Manager and Daniel Okafor as Creator; saved required text, Entity \"Docs Matter live Entity 1788804353434\" and person Ravi Menon; Ravi's direct read answered 404; renaming kept M-90. Priority High and Risk Medium saved; clearing the required text was refused (\"Fill Docs Matter required 1788804353434 first — the type requires it.\") and the value stayed; choosing \"Docs Matter retype 1788804353434\" opened \"Change matter type\" (Change matter type to Docs Matter retype 1788804353434 Complete the new type's required fi…), Cancel kept the type, Change type saved it with {\"docs_matter_extra_1788804353434\":42,\"docs_matter_entity_1788804353434\":\"01a07d0c-5382-7025-baa9-afe41b6c8d92\",\"docs_matter_person_1788804353434\":\"01a07ac6-5983-71e0-bd2e-7e29e6163e60\",\"docs_matter_required_1788804353434\":\"Rev fictional scope\"}; switching back to \"Docs Matter required 1788804353434\" kept the extra value in the record but Overview no longer shows it. As Manager of M-90 Priya could already read it (200); on the new Confidential M-91 her read answered 404 until Daniel Okafor added her as Member and Watcher; she then read it, edited the Description, had Add team member disabled/absent and her direct team write answered 403; removing her Watcher role left Member; making her Manager did not change her team roles. \"Docs Matter single 1788804353434\" auto-selected its only live template (title \"Fictional single review\", Priority High, Risk Critical, legal Field \"Legal single default\", \"Template adds 2 tasks and 2 key dates.\"); No template cleared them to Medium/Not assessed; \"Docs Matter multi 1788804353434\" offered No template, Docs Matter alpha playbook 1788804353434, Docs Matter beta playbook 1788804353434 with No template selected; alpha set \"Fictional alpha review\", and after typing a title beta kept it while switching Priority/Risk to Low/Low. M-92 created 2026-09-07T18:51:50.894Z (UTC date 2026-09-07): Tasks \"Review single evidence\" due 2026-09-10 (+3) assigned to Daniel Okafor and \"Arrange single discussion\" without a date; Key dates 2026-09-07 (+0) and 2026-09-14 (+7); Status Open; legal Field kept the typed \"Rev override\"; the optional Field cleared in the dialog came back as \"Optional single default\" (issue #770) and Overview showed \"Optional single default\"; clearing it on Overview persisted; a template description edit and a Manager change to Priya left the copied rows unchanged. Create with the beta template archived after the form opened was refused (\"The template must be live and belong to the selected matter type.\") and the highest M-number stayed 92; a fresh form listed No template, Docs Matter alpha playbook 1788804353434; Ravi Menon saw no New matter button and his direct create answered 403.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-016/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-016/independent-discovery.json",
+        "docs/documentation/batches/DOC-016/independent-accessibility.json",
+        "docs/documentation/batches/DOC-016/independent-template-content.json"
+      ]
+    }
+  ],
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-016/README.md",
+    "docs/documentation/batches/DOC-016/author-create.json"
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "Optional template Field clear behavior is tracked in #770; the walkthrough reproduced it in both roles and verified the Overview workaround the article documents.",
+    "Linked guides remain unpublished; the article stays in review."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null,
+  "compatibilityReview": {
+    "fromAppCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+    "toAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+    "contentSha256": "078e5ac72d41fa7ed55e02131b55dcdb86cb26d646485e64f5a494969e1aef73",
+    "applicationSha256": "b7bc6323f8e3d95a4ee006eab289f434502dccfdb7aee4c5fcb2026e7c41cd30",
+    "reviewer": "Independent DOC-025 acceptance seat (Opus 5 agent), separate from the documentation author",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-08T13:42:44.735Z",
+    "summary": "This seat re-checked the source ranges, the four saved diffs and the cited independent walkthroughs, and corrected the a28331f7 conversations attribution from DOC-010 to DOC-011 with DOC-012 added for the Portal Request thread. The recorded walkthrough for this article keeps its own app build, timestamps and observations; nothing was replayed at the target. See batches/DOC-025/independent-compatibility.json, which is separate from the authored source audit it re-checked.",
+    "evidence": [
+      {
+        "path": "batches/DOC-025/compatibility.json",
+        "sha256": "0ff7f7cfa20fe6d4b7cdeb768f6bd2ae0965ac50e88c3e2e2f8dc5f3e274e9c8"
+      },
+      {
+        "path": "batches/DOC-025/independent-compatibility.json",
+        "sha256": "c925d3f1ce3e04c3ff3b7044c634655a90351136324be7614ccd7cc02b23b4ca"
+      },
+      {
+        "path": "batches/DOC-011/independent-walkthrough.json",
+        "sha256": "63d36cf23af169046d54d342b1aecda43a64339f6fa36bd75ac2cc026c69dc12"
+      },
+      {
+        "path": "batches/DOC-012/independent-walkthrough.json",
+        "sha256": "f327834cc56aeae3ab6fe3e04257ee93cd113ddfd8d387a24b47965b11a023aa"
+      },
+      {
+        "path": "batches/DOC-025/source-6a8873db.diff",
+        "sha256": "8cd083e289202edabcb0b747783c0935d2a6be17e8db533990b400ee3306c77a"
+      },
+      {
+        "path": "batches/DOC-025/source-8539f4cc.diff",
+        "sha256": "84e4ce0b6f4d9df8b7472cd18f37ca0a66425ad75035e936ccd5632b05c06161"
+      },
+      {
+        "path": "batches/DOC-025/source-a28331f7.diff",
+        "sha256": "2612e70d9c4c033ae157606a1dff357e5ce90120137993408e0dd8d82585af63"
+      },
+      {
+        "path": "batches/DOC-025/source-d1d098ba.diff",
+        "sha256": "4b461123d37fc1e0aea0dc197f7c1461143c84c9acb4ca606a35b8f2247e8840"
+      },
+      {
+        "path": "batches/DOC-010/independent-walkthrough.json",
+        "sha256": "1b5f0c18e22708eb763b5eaac87abc889777f0ac28b343082597214db385fe22"
+      },
+      {
+        "path": "batches/DOC-018/independent-c31.json",
+        "sha256": "0b645d4e404761df17bcca0ed4ebbdfd4f52608c648f7ee07b62f8ce23795a77"
+      },
+      {
+        "path": "batches/DOC-018/independent-c52.json",
+        "sha256": "fbd026728c9fda605e50b741300b1189bff7d88ecba59aa7afdf6ffd1720c871"
+      },
+      {
+        "path": "batches/DOC-019/independent-c33.json",
+        "sha256": "6f1cf40b5b56805d79e92ebf39de90be67bcf60b2e2f87954c93f426c60d1922"
+      },
+      {
+        "path": "batches/DOC-019/independent-c34.json",
+        "sha256": "7f3dbee20dab93cf3624c83dd57c2fda2cba5dce99ec67a7fac6afcaf0d5b645"
+      },
+      {
+        "path": "batches/DOC-019/independent-supplement.json",
+        "sha256": "6228340ea7202ff7f0b814d8aa502b72a9669204b64e7f30c4c410305e242b4a"
+      }
+    ],
+    "authoredSourceAudit": {
+      "path": "batches/DOC-025/compatibility.json",
+      "reviewer": "Codex DOC-025 source compatibility audit (agent)",
+      "reviewedAt": "2026-09-08T12:56:21.570227Z",
+      "note": "Authored source inspection, retained with its original identity and time. It shares its root author with this article, which is why an independent seat re-checked it."
+    }
+  }
+}

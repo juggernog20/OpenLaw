@@ -1,0 +1,122 @@
+{
+  "name": "independent-c53-linked-work",
+  "kind": "independent-review-walkthrough",
+  "scenario": "V-C53",
+  "article": "entity-structure-and-access",
+  "supplements": "independent-c53.json",
+  "appCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
+  "buildId": "app sha256:800689bba1e0bd183d33760b14e4775a593d23d1cf9ded4ad752e788e60bd818; engine sha256:b69fd318f42ddbb78e8531a4b7151bcd58d9788b367a26d528d41c5bebfa792f",
+  "environment": "openlaw-docs-b8e31260-entities",
+  "reviewer": "Independent review seat (agent)",
+  "startedAt": "2026-09-08T01:11:11.012Z",
+  "steps": [
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C53 guide section: Matters appear on the Entity through their saved Entity-valued Field",
+      "actual": "The Entity's Matters tab rolled up M-29 \"Rev C53b open matter RZ4A78\" and showed no row for the Confidential M-30 this reader cannot reach",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:11:11.806Z",
+      "at": "2026-09-08T01:11:12.432Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C53 guide section: opening a rolled-up Matter reaches that Matter's own record",
+      "actual": "Selecting the rolled-up Matter opened 29 showing \"Rev C53b open matter RZ4A78\"",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:11:12.432Z",
+      "at": "2026-09-08T01:11:12.512Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C53 guide section: the Entity tab counts report only what this reader reaches",
+      "actual": "On the Entity record the Contracts tab badge read \"1 linked Contract\" (1) and the Matters tab badge read \"1 linked Matter\" (1); the counts endpoint corroborated {\"contracts\":1,\"matters\":1}",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:11:12.512Z",
+      "at": "2026-09-08T01:11:13.117Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C53 guide section: linked Contracts show only the rows this reader reaches",
+      "actual": "The Entity's Contracts tab listed C-49 only; the Confidential C-50 contributed no row for this reader",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:11:13.118Z",
+      "at": "2026-09-08T01:11:13.709Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C53 guide section: Matters appear on the Entity through their saved Entity-valued Field",
+      "actual": "The Entity's Matters tab rolled up both M-29 \"Rev C53b open matter RZ4A78\" and the Confidential M-30 for the Administrator who reaches both",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:11:13.714Z",
+      "at": "2026-09-08T01:11:14.322Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C53 guide section: opening a rolled-up Matter reaches that Matter's own record",
+      "actual": "Selecting the rolled-up Matter opened 29 showing \"Rev C53b open matter RZ4A78\"",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:11:14.323Z",
+      "at": "2026-09-08T01:11:14.396Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C53 guide section: the Entity tab counts report only what this reader reaches",
+      "actual": "On the Entity record the Contracts tab badge read \"2 linked Contracts\" (2) and the Matters tab badge read \"2 linked Matters\" (2); the counts endpoint corroborated {\"contracts\":2,\"matters\":2}",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:11:14.396Z",
+      "at": "2026-09-08T01:11:15.016Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C53 guide section: linked Contracts show only the rows this reader reaches",
+      "actual": "The Entity's Contracts tab listed both C-49 and the Confidential C-50, which the Administrator reaches",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:11:15.016Z",
+      "at": "2026-09-08T01:11:15.603Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C53 negative: Administrator and Legal counts differ by exactly the inaccessible records",
+      "actual": "Against the same Entity the Administrator's badges read \"2 linked Contracts\" and \"2 linked Matters\" while the Legal Team Member's read \"1 linked Contract\" and \"1 linked Matter\" — each short by exactly the one Confidential record that reader cannot reach",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:11:15.604Z",
+      "at": "2026-09-08T01:11:17.112Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C53 guide section: a saved Entity value keeps the roll-up after its Field is detached",
+      "actual": "After an Administrator fixture detached \"Rev C53b signing entity RZ4A78\" from the Employment Matter type, the Entity's Matters tab still listed M-29 and its badge still read \"2 linked Matters\", so the saved value kept the link",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:11:17.112Z",
+      "at": "2026-09-08T01:11:17.716Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C53 guide section: the detached Field's saved link still reads for a Legal Team Member",
+      "actual": "With the Field detached the Legal Team Member still saw M-29 under the Entity with a badge of \"1 linked Matter\", still saw no Confidential row, and opened the Matter at http://127.0.0.1:43306/matters/29",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:11:17.716Z",
+      "at": "2026-09-08T01:11:18.670Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T01:11:18.691Z",
+  "articleHashes": [
+    {
+      "articleId": "entity-structure-and-access",
+      "contentSha256": "95e5fbe88de8dcba1a417dada7ce078459a39aa633fa3f8e72d1ccc3a7295953"
+    }
+  ],
+  "articleHashesNote": "Associated after the runs, not captured at run start. These are the sha256 digests of the guides as committed; git shows the last content change was bab4d21f at 2026-09-07T23:11:00Z, before the earliest run here began at 2026-09-07T23:40:45.292Z, so every run exercised exactly these bytes."
+}

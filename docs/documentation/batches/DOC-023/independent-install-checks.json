@@ -1,0 +1,55 @@
+{
+  "name": "independent-install-checks",
+  "scenario": "V-C44",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:23:01.165Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-install",
+  "articleHashes": [
+    {
+      "articleId": "install",
+      "contentSha256": "35b1bd584e291c4b42741097c9aa66ebd9db95092d293ed80821d3e7eee01b0f"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Sign in through the intended origin and create a fictional Contract",
+      "actual": "Signed in at the installed origin as the first Administrator and created Contract 1 using the Contract type \"undefined\".",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:23:01.543Z",
+      "at": "2026-09-08T09:23:01.576Z"
+    },
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Upload a small supported Document, download it again, and compare bytes",
+      "actual": "Uploaded a 1-page PDF to the Contract and downloaded it again; the returned bytes hash to the uploaded SHA-256 eab9971a640e647d… (full value retained privately).",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:23:01.576Z",
+      "at": "2026-09-08T09:23:01.619Z"
+    },
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Check the Document processing result",
+      "actual": "The worker and document engine took the new Version to processing state \"ready\" and the extracted text carries the uploaded words.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:23:01.619Z",
+      "at": "2026-09-08T09:23:02.648Z"
+    },
+    {
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Confirm the worker processes new work after a restart",
+      "actual": "Restarted the worker container with docker compose restart worker, then uploaded a second PDF: it reached \"ready\" and its download matched the uploaded bytes. Services before the restart: app Up 3 minutes (healthy); doc-engine Up 3 minutes (healthy); postgres Up 3 minutes (healthy); worker Up 3 minutes.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:23:02.648Z",
+      "at": "2026-09-08T09:23:04.123Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T09:23:04.123Z"
+}

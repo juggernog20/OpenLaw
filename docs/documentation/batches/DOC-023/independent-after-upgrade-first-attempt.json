@@ -1,0 +1,38 @@
+{
+  "name": "independent-after-upgrade-first-attempt",
+  "scenario": "V-C46",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:54:04.200Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-upgrade",
+  "articleHashes": [
+    {
+      "articleId": "upgrade",
+      "contentSha256": "96cc17166c77af291161ea34540f2c1c9683d2736cd903c42e2692ba9fe8e94d"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Existing accounts sign in and the records are all present (after-upgrade)",
+      "actual": "The Administrator created before the change signed in with the same password. All 3 Contracts (#1, #2, #3) and 1 Matter(s) are present with their original titles.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:54:04.594Z",
+      "at": "2026-09-08T09:54:04.617Z"
+    },
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Document Version bytes match the pre-change hashes (after-upgrade)",
+      "result": "fail",
+      "startedAt": "2026-09-08T09:54:04.617Z",
+      "error": "Byte mismatch on the later Version of Document 01a0806b-8355-7e2b-abbd-edbb2474e91c",
+      "at": "2026-09-08T09:54:04.626Z"
+    }
+  ],
+  "passed": false,
+  "supersededBy": "independent-after-upgrade",
+  "note": "The byte-mismatch failure recorded here was a fault in the reviewer's own fixture record, not in the upgraded instance: the version-upload response is a document envelope whose versions[0] is the original, so the later file's hash had been paired with the original Version's id. Both files were then downloaded from the upgraded instance and hashed: each matched its own recorded value, and the fixture ids were corrected before the check was run again."
+}

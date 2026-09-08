@@ -1,0 +1,197 @@
+{
+  "kind": "independent-template-content-check",
+  "task": "DOC-016",
+  "issue": 736,
+  "coverage": ["C22"],
+  "article": "create-matter",
+  "independentReview": true,
+  "reviewerKind": "agent",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "method": "browser-walkthrough",
+  "startedAt": "2026-09-07T19:21:04.851Z",
+  "finishedAt": "2026-09-07T19:21:27.494Z",
+  "purpose": "Supplements the C22 walkthrough, whose template-edit check only changed the template description and the Matter Manager. This run edits the template's actual content and shows that an already-created Matter keeps its copied rows while a fresh Matter receives the new content.",
+  "fixture": {
+    "templateId": "01a07d0c-53aa-74ea-bd56-7190de43b1d1",
+    "templateName": "Docs Matter single playbook 1788804353434",
+    "matterType": "Docs Matter single 1788804353434",
+    "owned": "Author-created lab fixture in the conversations lab; not an immutable deployment input",
+    "savedContentBeforeRun": {
+      "tasks": [
+        {
+          "title": "Review single evidence",
+          "dueOffsetDays": 3,
+          "assigneeRole": "matter_manager",
+          "displayOrder": 1
+        },
+        {
+          "title": "Arrange single discussion",
+          "dueOffsetDays": null,
+          "assigneeRole": "none",
+          "displayOrder": 2
+        }
+      ],
+      "keyDates": [
+        {
+          "label": "Fictional single start",
+          "offsetDays": 0,
+          "note": "Creation-day fixture date",
+          "displayOrder": 1
+        },
+        {
+          "label": "Fictional single checkpoint",
+          "offsetDays": 7,
+          "note": "Seven-day fixture date",
+          "displayOrder": 2
+        }
+      ]
+    },
+    "editsApplied": "Task 1 title → 'Rev edited evidence <stamp>' and dueOffsetDays 3 → 5; Key date 2 label → 'Rev edited checkpoint <stamp>' and offsetDays 7 → 9; counts unchanged",
+    "restoration": "After each role's run the Administrator's API session replaced the Tasks and Key dates with the saved content; the read-back equalled the saved copy on title, offset, assignee role, label, note and display order. Row identifiers were reissued by the replace endpoints. The same restoration ran again in the script's final step."
+  },
+  "frontend": "The conversations lab at port 43302; each reader role's own browser session for the Create dialog and the Tasks and Key dates tabs; the Administrator's API session only for the template edit and its restoration, recorded as separate fixture steps",
+  "browser": "Playwright 1.62.1 driving the installed Chromium 1243 build, headless, one isolated context per role at 1280×1800 CSS px; scripts written by the reviewer",
+  "articleHashesTested": [
+    {
+      "articleId": "create-matter",
+      "contentSha256": ["078e5ac72d41fa7ed55e02131b55dcdb86cb26d646485e64f5a494969e1aef73"]
+    }
+  ],
+  "articleHashesCurrent": [
+    {
+      "articleId": "create-matter",
+      "contentSha256": "078e5ac72d41fa7ed55e02131b55dcdb86cb26d646485e64f5a494969e1aef73"
+    }
+  ],
+  "limitations": [
+    "The template edit and restoration were made through the API by the Administrator as reviewer fixture setup; this is not acceptance of the DOC-021 administrator guide on Matter templates.",
+    "Independent agent walkthrough; not a human user study and not the feature owner's approval.",
+    "Only the single-template type was exercised; the alpha/beta templates of the multi type were not edited."
+  ],
+  "passed": true,
+  "steps": [
+    {
+      "article": "create-matter",
+      "scenario": "V-C22",
+      "role": "administrator",
+      "kind": "walkthrough",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Use a template: a Matter created from the single template before any template edit copies the current Task and Key date content",
+      "result": "pass",
+      "actual": "M-132 created from \"Docs Matter single playbook 1788804353434\" (\"Template adds 2 tasks and 2 key dates.\"): Tasks \"Review single evidence\" due 2026-09-10, \"Arrange single discussion\" due none; Key dates \"Fictional single start\" 2026-09-07, \"Fictional single checkpoint\" 2026-09-14",
+      "at": "2026-09-07T19:21:06.050Z",
+      "ms": 4135
+    },
+    {
+      "article": "create-matter",
+      "scenario": "V-C22",
+      "role": "administrator",
+      "kind": "fixture-setup",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Fixture setup by the Administrator's API session for the administrator run: replace the single template's Tasks and Key dates with an edited Task title/offset and an edited Key date label/offset",
+      "result": "pass",
+      "actual": "PUT /matter-templates/01a07d0c-53aa-74ea-bd56-7190de43b1d1/tasks and /key-dates answered 200/200; the template now has Task 1 \"Rev edited evidence 1788808864851\" at +5 (was \"Review single evidence\" at +3) and Key date 2 \"Rev edited checkpoint 1788808864851\" at +9 (was \"Fictional single checkpoint\" at +7); counts still 2 and 2. This is reviewer fixture setup through the owned lab template, not DOC-021 administrator-guide acceptance.",
+      "at": "2026-09-07T19:21:10.185Z",
+      "ms": 33
+    },
+    {
+      "article": "create-matter",
+      "scenario": "V-C22",
+      "role": "administrator",
+      "kind": "walkthrough",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Use a template: after the template content edit, the earlier Matter's Tasks and Key dates tabs and API rows are unchanged",
+      "result": "pass",
+      "actual": "M-132 still shows \"Review single evidence\" due 2026-09-10 and \"Fictional single checkpoint\" 2026-09-14; the API rows equal the pre-edit copy field for field and neither edited title appears",
+      "at": "2026-09-07T19:21:10.219Z",
+      "ms": 1914
+    },
+    {
+      "article": "create-matter",
+      "scenario": "V-C22",
+      "role": "administrator",
+      "kind": "walkthrough",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Use a template: a fresh Matter created after the edit copies the edited Task title and +5 offset and the edited Key date label and +9 offset",
+      "result": "pass",
+      "actual": "M-133 (\"Template adds 2 tasks and 2 key dates.\"): Tasks \"Rev edited evidence 1788808864851\" due 2026-09-12, \"Arrange single discussion\" due none; Key dates \"Fictional single start\" 2026-09-07, \"Rev edited checkpoint 1788808864851\" 2026-09-16; created 2026-09-07T19:21:13.339Z",
+      "at": "2026-09-07T19:21:12.133Z",
+      "ms": 4108
+    },
+    {
+      "article": "create-matter",
+      "scenario": "V-C22",
+      "role": "administrator",
+      "kind": "fixture-setup",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Fixture restoration by the Administrator's API session after the administrator run: put back the template's saved Tasks and Key dates and compare with the pre-run copy",
+      "result": "pass",
+      "actual": "PUT tasks/key-dates answered 200/200; the template's title, offset, assignee role, label, note and order fields equal the pre-run copy saved before the first edit ({\"tasks\":[{\"title\":\"Review single evidence\",\"dueOffsetDays\":3,\"assigneeRole\":\"matter_manager\",\"displayOrder\":1},{\"title\":\"Arrange single discussion\",\"dueOffsetDays\":null,\"assigneeRole\":\"none\",\"displayOrder\":2}],\"keyDates\":[{\"label\":\"Fictional single start\",\"offsetDays\":0,\"note\":\"Creation-day fixture date\",\"displayOrder\":1},{\"label\":\"Fictional single checkpoint\",\"offsetDays\":7,\"note\":\"Seven-day fixture date\",\"displayOrder\":2}]}); row identifiers were reissued by the replace endpoints",
+      "at": "2026-09-07T19:21:16.241Z",
+      "ms": 36
+    },
+    {
+      "article": "create-matter",
+      "scenario": "V-C22",
+      "role": "legal_team_member",
+      "kind": "walkthrough",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Use a template: a Matter created from the single template before any template edit copies the current Task and Key date content",
+      "result": "pass",
+      "actual": "M-134 created from \"Docs Matter single playbook 1788804353434\" (\"Template adds 2 tasks and 2 key dates.\"): Tasks \"Review single evidence\" due 2026-09-10, \"Arrange single discussion\" due none; Key dates \"Fictional single start\" 2026-09-07, \"Fictional single checkpoint\" 2026-09-14",
+      "at": "2026-09-07T19:21:17.223Z",
+      "ms": 4153
+    },
+    {
+      "article": "create-matter",
+      "scenario": "V-C22",
+      "role": "administrator",
+      "kind": "fixture-setup",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Fixture setup by the Administrator's API session for the legal_team_member run: replace the single template's Tasks and Key dates with an edited Task title/offset and an edited Key date label/offset",
+      "result": "pass",
+      "actual": "PUT /matter-templates/01a07d0c-53aa-74ea-bd56-7190de43b1d1/tasks and /key-dates answered 200/200; the template now has Task 1 \"Rev edited evidence 1788808864851\" at +5 (was \"Review single evidence\" at +3) and Key date 2 \"Rev edited checkpoint 1788808864851\" at +9 (was \"Fictional single checkpoint\" at +7); counts still 2 and 2. This is reviewer fixture setup through the owned lab template, not DOC-021 administrator-guide acceptance.",
+      "at": "2026-09-07T19:21:21.376Z",
+      "ms": 19
+    },
+    {
+      "article": "create-matter",
+      "scenario": "V-C22",
+      "role": "legal_team_member",
+      "kind": "walkthrough",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Use a template: after the template content edit, the earlier Matter's Tasks and Key dates tabs and API rows are unchanged",
+      "result": "pass",
+      "actual": "M-134 still shows \"Review single evidence\" due 2026-09-10 and \"Fictional single checkpoint\" 2026-09-14; the API rows equal the pre-edit copy field for field and neither edited title appears",
+      "at": "2026-09-07T19:21:21.396Z",
+      "ms": 1908
+    },
+    {
+      "article": "create-matter",
+      "scenario": "V-C22",
+      "role": "legal_team_member",
+      "kind": "walkthrough",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Use a template: a fresh Matter created after the edit copies the edited Task title and +5 offset and the edited Key date label and +9 offset",
+      "result": "pass",
+      "actual": "M-135 (\"Template adds 2 tasks and 2 key dates.\"): Tasks \"Rev edited evidence 1788808864851\" due 2026-09-12, \"Arrange single discussion\" due none; Key dates \"Fictional single start\" 2026-09-07, \"Rev edited checkpoint 1788808864851\" 2026-09-16; created 2026-09-07T19:21:24.540Z",
+      "at": "2026-09-07T19:21:23.304Z",
+      "ms": 4142
+    },
+    {
+      "article": "create-matter",
+      "scenario": "V-C22",
+      "role": "administrator",
+      "kind": "fixture-setup",
+      "environment": "openlaw-docs-b8e31260-conversations",
+      "step": "Fixture restoration by the Administrator's API session after the legal_team_member run: put back the template's saved Tasks and Key dates and compare with the pre-run copy",
+      "result": "pass",
+      "actual": "PUT tasks/key-dates answered 200/200; the template's title, offset, assignee role, label, note and order fields equal the pre-run copy saved before the first edit ({\"tasks\":[{\"title\":\"Review single evidence\",\"dueOffsetDays\":3,\"assigneeRole\":\"matter_manager\",\"displayOrder\":1},{\"title\":\"Arrange single discussion\",\"dueOffsetDays\":null,\"assigneeRole\":\"none\",\"displayOrder\":2}],\"keyDates\":[{\"label\":\"Fictional single start\",\"offsetDays\":0,\"note\":\"Creation-day fixture date\",\"displayOrder\":1},{\"label\":\"Fictional single checkpoint\",\"offsetDays\":7,\"note\":\"Seven-day fixture date\",\"displayOrder\":2}]}); row identifiers were reissued by the replace endpoints",
+      "at": "2026-09-07T19:21:27.446Z",
+      "ms": 21
+    }
+  ]
+}

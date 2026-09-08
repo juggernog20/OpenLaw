@@ -1,0 +1,124 @@
+{
+  "name": "supplement",
+  "startedAt": "2026-09-07T22:51:21.461Z",
+  "appCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
+  "buildId": "app sha256:800689bba1e0bd183d33760b14e4775a593d23d1cf9ded4ad752e788e60bd818; engine sha256:b69fd318f42ddbb78e8531a4b7151bcd58d9788b367a26d528d41c5bebfa792f",
+  "environment": "openlaw-docs-b8e31260-entities",
+  "articleHashes": [
+    {
+      "articleId": "entity-records",
+      "contentSha256": "19db877e377abd54e296538831f9a87d8aceb1cac35d72ca8fdf27292c2ebb53"
+    },
+    {
+      "articleId": "entity-obligations",
+      "contentSha256": "06a9fb534a057650efd71047df54fc74979411e4abae9d83266fa3db3dcf5f1d"
+    },
+    {
+      "articleId": "entity-structure-and-access",
+      "contentSha256": "8d899e10da28af6d4e9d70dad737995e7603f4e7eb712c48d6a67af6511a4da0"
+    }
+  ],
+  "steps": [
+    {
+      "role": "contributor",
+      "method": "automated-test",
+      "action": "C32 an Officer user link does not grant Entity access",
+      "actual": "Contributor remained unable to read the Entity; role boundary is not changed by an Officer user link",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:51:22.337Z",
+      "at": "2026-09-07T22:51:22.353Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32 clear a mistaken resignation then remove the Officer entry",
+      "actual": "Clearing the resignation restored the current Officer row; Remove deleted that entry while leaving the Entity",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:51:23.212Z",
+      "at": "2026-09-07T22:51:24.234Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32/C52 remove a linked Registration and preserve its recurring Obligation",
+      "actual": "Remove Registration left the recurring Obligation and confirmed next due date intact; its browser Registration selection became blank",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:51:24.234Z",
+      "at": "2026-09-07T22:51:24.994Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C32 remove a Holding without deleting its owner or owned Entity",
+      "actual": "Browser Remove deleted only the Holding; both Entity records remained reachable",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:51:24.994Z",
+      "at": "2026-09-07T22:51:25.730Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C52 correct an open date then delete a disposable schedule without filing it",
+      "actual": "A disposable API fixture supplied an open schedule; browser date correction saved on blur, then Delete removed only that schedule and retained the Entity Document",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:51:25.730Z",
+      "at": "2026-09-07T22:51:26.653Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C53 clear an unknown capital value",
+      "actual": "Clearing Par value saved null and left the displayed value blank",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:51:26.654Z",
+      "at": "2026-09-07T22:51:27.282Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32 clear a mistaken resignation then remove the Officer entry",
+      "actual": "Clearing the resignation restored the current Officer row; Remove deleted that entry while leaving the Entity",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:51:28.133Z",
+      "at": "2026-09-07T22:51:29.129Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32/C52 remove a linked Registration and preserve its recurring Obligation",
+      "actual": "Remove Registration left the recurring Obligation and confirmed next due date intact; its browser Registration selection became blank",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:51:29.130Z",
+      "at": "2026-09-07T22:51:29.881Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C32 remove a Holding without deleting its owner or owned Entity",
+      "actual": "Browser Remove deleted only the Holding; both Entity records remained reachable",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:51:29.881Z",
+      "at": "2026-09-07T22:51:30.636Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C52 correct an open date then delete a disposable schedule without filing it",
+      "actual": "A disposable API fixture supplied an open schedule; browser date correction saved on blur, then Delete removed only that schedule and retained the Entity Document",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:51:30.636Z",
+      "at": "2026-09-07T22:51:31.539Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C53 clear an unknown capital value",
+      "actual": "Clearing Par value saved null and left the displayed value blank",
+      "result": "pass",
+      "startedAt": "2026-09-07T22:51:31.539Z",
+      "at": "2026-09-07T22:51:32.257Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T22:51:32.259Z"
+}

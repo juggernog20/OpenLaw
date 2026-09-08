@@ -25,6 +25,7 @@
  * wizard never shows again.
  */
 
+import { HelpLink } from "../components/documentation/help-link";
 import {
   useId,
   useRef,
@@ -1043,6 +1044,9 @@ export function WelcomePage() {
               values={{ current: stepIndex + 1, total: STEPS.length }}
             />
           </p>
+          <div className="mb-4 flex justify-center">
+            <HelpLink surface="formal" contextual />
+          </div>
           <Card>
             <CardHeader>
               <CardTitle id={stepTitleId}>{stepTitles[step]}</CardTitle>

@@ -1,0 +1,149 @@
+{
+  "articleId": "create-contract",
+  "contentSha256": "63aaa9717afffaacbb0b91b64de6e741162912ea00fd3b945798dc746b6e1cac",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "author": "Codex documentation author",
+  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "reviewerKind": "agent",
+  "verifiedAt": "2026-09-07T14:11:42.202Z",
+  "status": "pass",
+  "sources": [
+    "CONTEXT.md",
+    "apps/web/src/components/contracts/create-contract-dialog.tsx",
+    "apps/web/src/routes/contract-record.tsx",
+    "apps/web/src/routes/contracts.tsx",
+    "apps/web/src/components/contracts/team-applet.tsx",
+    "apps/web/src/components/counterparty-picker.tsx",
+    "apps/api/src/modules/contracts/routes.ts",
+    "apps/api/src/modules/counterparties/routes.ts",
+    "apps/api/src/lib/contract-access.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C14",
+      "coverage": ["C14"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "expected": "The Contract stores the intended parties, accountability, and values and is reached by the expected people. Required/invalid values and archived references are handled without creating an unintended Contract.",
+      "actual": "Blank submit said \"Name the contract.\"; without a type \"Pick a contract type.\"; the required type showed its required Field and refused \"Fill … this contract type requires it.\"; option lists omitted Docs Contract archived 1788782207651 and Docs Contract archived Entity 1788782207651; Cancel on a complete draft sent no POST and left no \"Rev C14 refusal\" Contract. C-333 created; the list row opened it; Status Draft, Owner select \"Unassigned\", Confidential true; linked Matter 45; Priya Raman (Legal, not on the team) got 404 on the Contract while the Matter answered 200; after a rename the reference C-333 stayed. Owner Nadia Haddad (after Unassigned cleared it), Our entity Docs Contract live Entity 1788782207651 (after Not known yet left it unset), Priority high, Risk low, Description saved; Value 12500 EUR annually (stored as 1250000 minor units) saved as one group on Enter; an emptied amount removed the value; manager=Nadia Haddad, priority=high, risk=low. Typing \"Rev Counterparty A 20260907141112\" offered \"Rev Counterparty A 20260907141112\"; the first linked party was primary; Make primary moved it to Alpine Ski House GmbH; taking Rev Counterparty A 20260907141112 off left one Counterparty on the Contract while the Counterparty record still exists. Priya Raman added as member and watcher; taking her off as Watcher left her \"member\" (the Member control stayed); panel shows Owner tag true and Creator tag true; Nadia Haddad is creator. Blur saved \"blur value 20260907141112\", Enter saved \"enter value 20260907141112\", Escape restored \"enter value 20260907141112\" without a save; legal-tagged Field saved; selecting Docs Contract retype 1788782207651 in the Overview Contract card opened Change contract type, refused a blank required number with \"Fill … — the new type requires it.\", Cancel kept Docs Contract required 1788782207651; 42 changed the type and the new Field shows 42; C-333 unchanged. Ravi Menon (Contributor on the team) saw the read-only notice, a disabled Owner select, no Create contract button, and 403 on create, Owner assignment, and a legal Field; Priya Raman read the Confidential record (200) while a Member and got 404 once taken off the team; her page read \"Something went wrong. The page could not load. Reload to try again. Reload\"; archived C-333 showed the archived notice, disabled Owner, and PATCH 409; Restore re-enabled editing.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-014/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-014/independent-discovery.json"
+      ]
+    },
+    {
+      "id": "V-C14",
+      "coverage": ["C14"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "expected": "The Contract stores the intended parties, accountability, and values and is reached by the expected people. Required/invalid values and archived references are handled without creating an unintended Contract.",
+      "actual": "Blank submit said \"Name the contract.\"; without a type \"Pick a contract type.\"; the required type showed its required Field and refused \"Fill … this contract type requires it.\"; option lists omitted Docs Contract archived 1788782207651 and Docs Contract archived Entity 1788782207651; Cancel on a complete draft sent no POST and left no \"Rev C14 refusal\" Contract. C-332 created; the list row opened it; Status Draft, Owner select \"Unassigned\", Confidential true; linked Matter 45; Priya Raman (Legal, not on the team) got 404 on the Contract while the Matter answered 200; after a rename the reference C-332 stayed. Owner Daniel Okafor (after Unassigned cleared it), Our entity Docs Contract live Entity 1788782207651 (after Not known yet left it unset), Priority high, Risk low, Description saved; Value 12500 EUR annually (stored as 1250000 minor units) saved as one group on Enter; an emptied amount removed the value; manager=Daniel Okafor, priority=high, risk=low. Typing \"Rev Counterparty A 20260907141112\" offered \"Create \"Rev Counterparty A 20260907141112\"\"; the first linked party was primary; Make primary moved it to Alpine Ski House GmbH; taking Rev Counterparty A 20260907141112 off left one Counterparty on the Contract while the Counterparty record still exists. Priya Raman added as member and watcher; taking her off as Watcher left her \"member\" (the Member control stayed); panel shows Owner tag true and Creator tag true; Daniel Okafor is creator. Blur saved \"blur value 20260907141112\", Enter saved \"enter value 20260907141112\", Escape restored \"enter value 20260907141112\" without a save; legal-tagged Field saved; selecting Docs Contract retype 1788782207651 in the Overview Contract card opened Change contract type, refused a blank required number with \"Fill … — the new type requires it.\", Cancel kept Docs Contract required 1788782207651; 42 changed the type and the new Field shows 42; C-332 unchanged. Ravi Menon (Contributor on the team) saw the read-only notice, a disabled Owner select, no Create contract button, and 403 on create, Owner assignment, and a legal Field; Priya Raman read the Confidential record (200) while a Member and got 404 once taken off the team; her page read \"Something went wrong. The page could not load. Reload to try again. Reload\"; archived C-332 showed the archived notice, disabled Owner, and PATCH 409; Restore re-enabled editing.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-014/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-014/independent-discovery.json"
+      ]
+    }
+  ],
+  "authorEvidence": [
+    "docs/documentation/batches/DOC-014/README.md",
+    "docs/documentation/batches/DOC-014/author-create.json"
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
+    "Browser contexts were 1280×1800 CSS px so the crowded Stage menu of the disposable labs stayed reachable (issue #768); the ordinary-height crowded menu is not claimed to pass.",
+    "The guide changed after the author walkthrough (author record hash 92e03bb50f11e209417fcd45471707c2221e3d2d3f137865e0c6135fb93dd36a): the Contract type control is now placed on Overview. The independent two-role walkthrough ran on the current bytes."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null,
+  "publicationBlockers": [
+    "DOC-025 complete-suite acceptance and DOC-027 publication remain pending; live-provider C42/C43 are blocked under #742. Linked non-provider guides now exist with passing article evidence and remain in catalog review."
+  ],
+  "compatibilityReview": {
+    "fromAppCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+    "toAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+    "contentSha256": "63aaa9717afffaacbb0b91b64de6e741162912ea00fd3b945798dc746b6e1cac",
+    "applicationSha256": "b7bc6323f8e3d95a4ee006eab289f434502dccfdb7aee4c5fcb2026e7c41cd30",
+    "reviewer": "Independent DOC-025 acceptance seat (Opus 5 agent), separate from the documentation author",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-08T13:42:44.735Z",
+    "summary": "This seat re-checked the source ranges, the four saved diffs and the cited independent walkthroughs, and corrected the a28331f7 conversations attribution from DOC-010 to DOC-011 with DOC-012 added for the Portal Request thread. The recorded walkthrough for this article keeps its own app build, timestamps and observations; nothing was replayed at the target. See batches/DOC-025/independent-compatibility.json, which is separate from the authored source audit it re-checked.",
+    "evidence": [
+      {
+        "path": "batches/DOC-025/compatibility.json",
+        "sha256": "0ff7f7cfa20fe6d4b7cdeb768f6bd2ae0965ac50e88c3e2e2f8dc5f3e274e9c8"
+      },
+      {
+        "path": "batches/DOC-025/independent-compatibility.json",
+        "sha256": "c925d3f1ce3e04c3ff3b7044c634655a90351136324be7614ccd7cc02b23b4ca"
+      },
+      {
+        "path": "batches/DOC-011/independent-walkthrough.json",
+        "sha256": "63d36cf23af169046d54d342b1aecda43a64339f6fa36bd75ac2cc026c69dc12"
+      },
+      {
+        "path": "batches/DOC-012/independent-walkthrough.json",
+        "sha256": "f327834cc56aeae3ab6fe3e04257ee93cd113ddfd8d387a24b47965b11a023aa"
+      },
+      {
+        "path": "batches/DOC-025/source-6a8873db.diff",
+        "sha256": "8cd083e289202edabcb0b747783c0935d2a6be17e8db533990b400ee3306c77a"
+      },
+      {
+        "path": "batches/DOC-025/source-8539f4cc.diff",
+        "sha256": "84e4ce0b6f4d9df8b7472cd18f37ca0a66425ad75035e936ccd5632b05c06161"
+      },
+      {
+        "path": "batches/DOC-025/source-a28331f7.diff",
+        "sha256": "2612e70d9c4c033ae157606a1dff357e5ce90120137993408e0dd8d82585af63"
+      },
+      {
+        "path": "batches/DOC-025/source-d1d098ba.diff",
+        "sha256": "4b461123d37fc1e0aea0dc197f7c1461143c84c9acb4ca606a35b8f2247e8840"
+      },
+      {
+        "path": "batches/DOC-010/independent-walkthrough.json",
+        "sha256": "1b5f0c18e22708eb763b5eaac87abc889777f0ac28b343082597214db385fe22"
+      },
+      {
+        "path": "batches/DOC-018/independent-c31.json",
+        "sha256": "0b645d4e404761df17bcca0ed4ebbdfd4f52608c648f7ee07b62f8ce23795a77"
+      },
+      {
+        "path": "batches/DOC-018/independent-c52.json",
+        "sha256": "fbd026728c9fda605e50b741300b1189bff7d88ecba59aa7afdf6ffd1720c871"
+      },
+      {
+        "path": "batches/DOC-019/independent-c33.json",
+        "sha256": "6f1cf40b5b56805d79e92ebf39de90be67bcf60b2e2f87954c93f426c60d1922"
+      },
+      {
+        "path": "batches/DOC-019/independent-c34.json",
+        "sha256": "7f3dbee20dab93cf3624c83dd57c2fda2cba5dce99ec67a7fac6afcaf0d5b645"
+      },
+      {
+        "path": "batches/DOC-019/independent-supplement.json",
+        "sha256": "6228340ea7202ff7f0b814d8aa502b72a9669204b64e7f30c4c410305e242b4a"
+      }
+    ],
+    "authoredSourceAudit": {
+      "path": "batches/DOC-025/compatibility.json",
+      "reviewer": "Codex DOC-025 source compatibility audit (agent)",
+      "reviewedAt": "2026-09-08T12:56:21.570227Z",
+      "note": "Authored source inspection, retained with its original identity and time. It shares its root author with this article, which is why an independent seat re-checked it."
+    }
+  },
+  "publicationBlockersBeforeDOC025": [
+    "document-versions (DOC-017) does not exist yet; convert-request, roles-and-access, notifications and the sibling Contract guides are in review."
+  ],
+  "publicationBlockerReconciliation": {
+    "reviewer": "Codex DOC-025 evidence audit (agent)",
+    "reviewedAt": "2026-09-08T13:10:20.947051Z",
+    "priorEvidenceCommit": "d6df148c2d6a94fa0b8f053aa5e2494f697c65f5",
+    "summary": "Preserves earlier blocker notes separately and identifies current suite gates. No walkthrough date, build, result or catalog status changed."
+  }
+}

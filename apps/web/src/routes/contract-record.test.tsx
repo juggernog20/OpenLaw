@@ -4454,6 +4454,46 @@ describe("the contract record's comment applet (M9/2)", () => {
   });
 
   describe("live comment prompts", () => {
+    it("keeps one comment when a live read arrives before the posting response", async () => {
+      const user = userEvent.setup();
+      const sources = stubEventSource();
+      const posted = comment("c-posted", "The signed copy is ready.", "working_team");
+      const comments = commentsApi();
+      const record = pageApi(comments);
+      let finishPost!: (response: Response) => void;
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call) => {
+          if (call.url.pathname === "/api/v1/comments" && call.method === "POST") {
+            comments.setThread([posted]);
+            return new Promise<Response>((resolve) => {
+              finishPost = resolve;
+            });
+          }
+          return record(call);
+        },
+      });
+      renderAt("/contracts/42");
+      await openChat(user);
+      const box = screen.getByRole("textbox", { name: "New comment" });
+      await user.type(box, posted.body);
+      await user.click(screen.getByRole("button", { name: "Comment" }));
+      await waitFor(() => expect(finishPost).toBeTypeOf("function"));
+      sources[0]!.emit({
+        kind: "record",
+        action: "comment.posted",
+        entityType: "contract",
+        entityId: "c1",
+        entryId: "activity-posted-before-response",
+        visibility: "working_team",
+      });
+      expect(await screen.findByText(posted.body)).toBeInTheDocument();
+      await act(async () => finishPost(json(201, { comment: posted })));
+      await waitFor(() => expect(box).toHaveValue(""));
+      expect(screen.getAllByText(posted.body)).toHaveLength(1);
+      expect(screen.getByRole("img", { name: "1 comment" })).toBeInTheDocument();
+    });
+
     it("adds a new server row to an open thread without reopening it", async () => {
       const user = userEvent.setup();
       const sources = stubEventSource();

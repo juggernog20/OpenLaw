@@ -1,0 +1,92 @@
+{
+  "name": "publishing",
+  "startedAt": "2026-09-08T01:46:56.360Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-knowledge",
+  "articleHashes": [
+    {
+      "articleId": "publish-knowledge",
+      "contentSha256": "b406433d5da8bedf14b847e6f70c9fdbf213760700cbf7498bfecd054a3f6c52"
+    },
+    {
+      "articleId": "create-knowledge",
+      "contentSha256": "409e97a76d12be895cf7a182fac6e6c16ad3dba60c76910803dfcc1e2e7e8360"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Draft and published Legal Only items stay unavailable to Portal readers",
+      "actual": "Publish removed Draft but Legal Only still redirected the Portal article to home and returned API404",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:47:00.504Z",
+      "at": "2026-09-08T01:47:01.801Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Set Everyone and read both primary and supporting files from a separate Business Portal account",
+      "actual": "Everyone exposed the item to a separately signed-in Business User, primary DOCX first and supporting PDF second; both browser downloads matched original bytes and guidance rendered without editing controls",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:47:01.801Z",
+      "at": "2026-09-08T01:47:02.579Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Configure and follow an internal Before you submit link with an Administrator actor",
+      "actual": "Administrator used Settings / Intake / Deflection links to add a Knowledge item link on Portal home; Business User followed it in the same tab",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:47:02.580Z",
+      "at": "2026-09-08T01:47:04.004Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Cancel and confirm audience removal; check retained configuration and blocked saved file links",
+      "actual": "Cancel retained Everyone; Continue saved Legal Only, hid the configured Portal link, and blocked the saved article plus both old download URLs with404 while the Settings row remained",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:47:04.004Z",
+      "at": "2026-09-08T01:47:05.456Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Unpublish and republish with Everyone retained",
+      "actual": "Unpublish returned Draft, preserved Everyone, and blocked the article and saved primary/supporting URLs; Publish restored the item and existing Portal link",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:47:05.457Z",
+      "at": "2026-09-08T01:47:07.441Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Edit published guidance in place and observe it without another Publish action",
+      "actual": "Blur saved a guidance edit while state stayed published; a fresh Portal read displayed it immediately",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:47:07.441Z",
+      "at": "2026-09-08T01:47:08.065Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Archive with a replacement and restore with publication, Documents, and audience retained",
+      "actual": "Archive retained a live replacement reference and disabled edits/uploads; old Portal item/file links were denied without redirecting to the replacement. Saved staff link exposed Restore; restoration retained two Documents and immediately reinstated published Everyone access",
+      "result": "pass",
+      "startedAt": "2026-09-08T01:47:08.065Z",
+      "at": "2026-09-08T01:47:10.372Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Archive and restore a primary Document without silently selecting it again",
+      "result": "fail",
+      "startedAt": "2026-09-08T01:47:10.372Z",
+      "error": "expect(received).toBeNull()\n\nReceived: {\"currentVersion\": {\"id\": \"01a07eb2-4a1d-75da-ae48-a826cac1c2af\", \"mimeType\": \"application/vnd.openxmlformats-officedocument.wordprocessingml.document\", \"originalFilename\": \"plain.docx\", \"renderFamily\": \"word\"}, \"id\": \"01a07eb2-4a1d-75da-ae48-a82528b55b33\", \"title\": \"plain.docx\"}\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+      "at": "2026-09-08T01:47:15.559Z"
+    }
+  ],
+  "passed": false
+}

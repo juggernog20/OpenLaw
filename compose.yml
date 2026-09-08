@@ -69,7 +69,11 @@ x-openlaw-environment: &openlaw-environment
 services:
   app:
     image: ghcr.io/juggernog20/openlaw:latest
-    build: .
+    build:
+      context: .
+      args:
+        OPENLAW_BUILD_COMMIT: ${OPENLAW_BUILD_COMMIT:-}
+        OPENLAW_BUILD_DIRTY: ${OPENLAW_BUILD_DIRTY:-}
     env_file: .env
     environment:
       <<: *openlaw-environment

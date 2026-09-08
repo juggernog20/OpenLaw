@@ -1,0 +1,216 @@
+{
+  "name": "comments",
+  "startedAt": "2026-09-07T07:33:41.305Z",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
+  "environment": "openlaw-docs-b8e31260-conversations",
+  "articleHashes": [
+    {
+      "articleId": "comments-and-activity",
+      "contentSha256": "1fdb1f7a545c7b5e2ffd2bd90bc832be95d5b26f87f1204324c5e6f6a19f536b"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "action": "contract post at available audiences with paper",
+      "actual": [
+        "Legal only post and PDF retrieval passed",
+        "Working team post and PDF retrieval passed",
+        "Full thread post and PDF retrieval passed"
+      ],
+      "result": "pass",
+      "at": "2026-09-07T07:33:46.072Z"
+    },
+    {
+      "role": "administrator",
+      "action": "matter post at available audiences with paper",
+      "actual": [
+        "Legal only post and PDF retrieval passed",
+        "Working team post and PDF retrieval passed",
+        "Full thread post and PDF retrieval passed"
+      ],
+      "result": "pass",
+      "at": "2026-09-07T07:33:47.204Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "contract post at available audiences with paper",
+      "actual": [
+        "Legal only post and PDF retrieval passed",
+        "Working team post and PDF retrieval passed",
+        "Full thread post and PDF retrieval passed"
+      ],
+      "result": "pass",
+      "at": "2026-09-07T07:33:48.363Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "matter post at available audiences with paper",
+      "actual": [
+        "Legal only post and PDF retrieval passed",
+        "Working team post and PDF retrieval passed",
+        "Full thread post and PDF retrieval passed"
+      ],
+      "result": "pass",
+      "at": "2026-09-07T07:33:49.550Z"
+    },
+    {
+      "role": "contributor",
+      "action": "contract post at available audiences with paper",
+      "actual": [
+        "Working team post and PDF retrieval passed",
+        "Full thread post and PDF retrieval passed"
+      ],
+      "result": "pass",
+      "at": "2026-09-07T07:33:50.604Z"
+    },
+    {
+      "role": "contributor",
+      "action": "matter post at available audiences with paper",
+      "actual": [
+        "Working team post and PDF retrieval passed",
+        "Full thread post and PDF retrieval passed"
+      ],
+      "result": "pass",
+      "at": "2026-09-07T07:33:51.574Z"
+    },
+    {
+      "role": "business_user",
+      "action": "contract converted Request shows only Full thread and its paper",
+      "actual": "Full thread posts and PDFs present; both narrower tiers and their PDFs absent/refused; no audience or correction menu",
+      "result": "pass",
+      "at": "2026-09-07T07:33:52.226Z"
+    },
+    {
+      "role": "business_user",
+      "action": "matter converted Request shows only Full thread and its paper",
+      "actual": "Full thread posts and PDFs present; both narrower tiers and their PDFs absent/refused; no audience or correction menu",
+      "result": "pass",
+      "at": "2026-09-07T07:33:52.866Z"
+    },
+    {
+      "role": "business_user",
+      "action": "unconverted Portal reply with paper reaches Legal",
+      "actual": "Reply under You with PDF; same Full thread reply and paper read by all permitted Legal/Contributor contexts; stable Request address",
+      "result": "pass",
+      "at": "2026-09-07T07:33:54.830Z"
+    },
+    {
+      "role": "business_user",
+      "action": "contract Portal reply with paper reaches Legal",
+      "actual": "Reply under You with PDF; same Full thread reply and paper read by all permitted Legal/Contributor contexts; stable Request address",
+      "result": "pass",
+      "at": "2026-09-07T07:33:57.555Z"
+    },
+    {
+      "role": "business_user",
+      "action": "matter Portal reply with paper reaches Legal",
+      "actual": "Reply under You with PDF; same Full thread reply and paper read by all permitted Legal/Contributor contexts; stable Request address",
+      "result": "pass",
+      "at": "2026-09-07T07:34:00.256Z"
+    },
+    {
+      "role": "administrator",
+      "action": "mention a candidate and confirm the intended audience",
+      "actual": "Ravi Menon selected; Cancel preserved draft; Widen and post produced Working team comment",
+      "result": "pass",
+      "at": "2026-09-07T07:34:01.327Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "mention a candidate and confirm the intended audience",
+      "actual": "Ravi Menon selected; Cancel preserved draft; Widen and post produced Working team comment",
+      "result": "pass",
+      "at": "2026-09-07T07:34:02.372Z"
+    },
+    {
+      "role": "contributor",
+      "action": "mention a candidate and confirm the intended audience",
+      "actual": "Daniel Okafor selected; posted at Working team without widening",
+      "result": "pass",
+      "at": "2026-09-07T07:34:03.227Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "mention the Requester from an unconverted Request",
+      "actual": "Requester chosen, Full thread confirmed, resulting post visible in own Portal Request",
+      "result": "pass",
+      "at": "2026-09-07T07:34:04.623Z"
+    },
+    {
+      "role": "administrator",
+      "action": "edit and delete own comment while preserving tier and recipient limits",
+      "actual": "Own text saved with edited marker and same tier; Delete confirmed irreversible and retained author-deleted marker",
+      "result": "pass",
+      "at": "2026-09-07T07:34:05.843Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "edit and delete own comment while preserving tier and recipient limits",
+      "actual": "Own text saved with edited marker and same tier; Delete confirmed irreversible and retained author-deleted marker",
+      "result": "pass",
+      "at": "2026-09-07T07:34:06.987Z"
+    },
+    {
+      "role": "contributor",
+      "action": "edit and delete own comment while preserving tier and recipient limits",
+      "actual": "Own text saved with edited marker and same tier; Delete confirmed irreversible and retained author-deleted marker",
+      "result": "pass",
+      "at": "2026-09-07T07:34:08.140Z"
+    },
+    {
+      "role": "administrator",
+      "action": "redact another author without editing their words",
+      "actual": "Administrator had Redact but no Edit for Nadia post; confirmed removal replaced text and attachment, old attachment download now404",
+      "result": "pass",
+      "at": "2026-09-07T07:34:08.985Z"
+    },
+    {
+      "role": "administrator",
+      "action": "contract History reads permitted changes",
+      "actual": "History opened beside the record and showed comment Activity entries",
+      "result": "pass",
+      "at": "2026-09-07T07:34:09.664Z"
+    },
+    {
+      "role": "administrator",
+      "action": "matter History reads permitted changes",
+      "actual": "History opened beside the record and showed comment Activity entries",
+      "result": "pass",
+      "at": "2026-09-07T07:34:10.317Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "contract History reads permitted changes",
+      "actual": "History opened beside the record and showed comment Activity entries",
+      "result": "pass",
+      "at": "2026-09-07T07:34:10.999Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "matter History reads permitted changes",
+      "actual": "History opened beside the record and showed comment Activity entries",
+      "result": "pass",
+      "at": "2026-09-07T07:34:11.655Z"
+    },
+    {
+      "role": "contributor",
+      "action": "contract History reads permitted changes",
+      "actual": "History opened beside the record and showed comment Activity entries",
+      "result": "pass",
+      "at": "2026-09-07T07:34:12.339Z"
+    },
+    {
+      "role": "contributor",
+      "action": "matter History reads permitted changes",
+      "actual": "History opened beside the record and showed comment Activity entries",
+      "result": "pass",
+      "at": "2026-09-07T07:34:12.972Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-07T07:34:12.973Z",
+  "author": "Codex documentation author",
+  "independentReview": false
+}

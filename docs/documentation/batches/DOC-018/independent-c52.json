@@ -1,0 +1,256 @@
+{
+  "name": "independent-c52",
+  "kind": "independent-review-walkthrough",
+  "scenario": "V-C52",
+  "article": "entity-obligations",
+  "appCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
+  "buildId": "app sha256:800689bba1e0bd183d33760b14e4775a593d23d1cf9ded4ad752e788e60bd818; engine sha256:b69fd318f42ddbb78e8531a4b7151bcd58d9788b367a26d528d41c5bebfa792f",
+  "environment": "openlaw-docs-b8e31260-entities",
+  "reviewer": "Independent review seat (agent)",
+  "startedAt": "2026-09-08T00:40:29.638Z",
+  "steps": [
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C52 prerequisite: an Entity built by a clearly-labelled API fixture",
+      "actual": "API fixture created \"Rev C52 entity LRY0TDY\"; every reader step below is performed in the browser",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:40:29.993Z",
+      "at": "2026-09-08T00:40:30.019Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C52 guide steps 1-4: Add obligation saves a recurring schedule and a one-off",
+      "actual": "Add obligation saved \"Rev C52 annual return LRY0TDY\" due 2025-09-30 repeating every 12 months and \"Rev C52 one-off licence LRY0TDY\" due 2026-11-20 with a blank recurrence, both assigned to Nadia Haddad",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:40:30.019Z",
+      "at": "2026-09-08T00:40:38.027Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C52 negative: an out-of-range recurrence and a blank Label are refused with a clear outcome",
+      "actual": "a 1,201-month recurrence kept the dialog open (Repeat every (months) One or more request fields are invalid.); a zero-month recurrence was refused the same way; a blank Label was refused and the dialog stayed open; no refused Obligation reached the Entity",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:40:38.027Z",
+      "at": "2026-09-08T00:40:47.723Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C52 guide step 5: an open Obligation's note saves on blur and its assignee saves on choice",
+      "actual": "Typing a note and moving focus away saved it; choosing Unassigned saved at once. Both survived a reload and the assignee was set back to Nadia Haddad",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:40:47.723Z",
+      "at": "2026-09-08T00:40:50.833Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C52 guide steps 1-4: the calendar lists overdue first, filters, and keeps them across Month",
+      "actual": "The due-date list led with overdue rows carrying the severe treatment (11 of 119 rows, none out of order); the Entity filter and Apply narrowed it to \"Rev C52 entity LRY0TDY\"; Month, Previous month, Next month, Today and Due-date list all kept that filter in the address",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:40:50.833Z",
+      "at": "2026-09-08T00:41:05.074Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C52 negative: reading the calendar and Home does not file or advance a past-due item",
+      "actual": "Home's Entity obligations section listed \"Rev C52 annual return LRY0TDY\" as overdue and assigned to Nadia Haddad; after reading the calendar and Home its due date was still 2025-09-30 and it still offered Mark filed, so reading neither filed nor advanced it",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:41:05.075Z",
+      "at": "2026-09-08T00:41:07.004Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C52 guide steps 1-3: Mark filed advances a recurring cycle past the missed years",
+      "actual": "Mark filed opened with Filed on defaulting to 2026-09-08; filing the 2025-09-30 annual schedule on 2026-10-05 advanced it once past the missed cycle to 2027-09-30, exactly the guide's worked example",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:41:07.004Z",
+      "at": "2026-09-08T00:41:11.187Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C52 guide step 3: History records the filing and its cycle",
+      "actual": "History listed the filing against \"Rev C52 annual return LRY0TDY\" (Nadia Haddad marked Rev C52 annual return LRY0TDY filed on Rev C52 entity LRY0TDY | Nadia Haddad changed the obligation Rev C52 annual return LRY0TDY on Rev C52 entity LRY0TDY)",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:41:11.187Z",
+      "at": "2026-09-08T00:41:14.730Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C52 guide step 4: a filed one-off keeps its due date, locks its row and refuses a second filing",
+      "actual": "Filing \"Rev C52 one-off licence LRY0TDY\" kept its due date at 2026-11-20, marked it Filed, disabled its row controls and withdrew Mark filed, so it cannot be filed again",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:41:14.730Z",
+      "at": "2026-09-08T00:41:19.517Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C52 guide step 2: Include completed brings the filed one-off back into the calendar",
+      "actual": "The filed one-off left the open results and came back once Include completed was turned on and applied",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:41:19.518Z",
+      "at": "2026-09-08T00:41:25.726Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C52 guide step 4: when no results match, the calendar offers Clear all",
+      "actual": "A 2035 window against \"Rev C52 entity LRY0TDY\" matched nothing and the calendar explained \"Change or clear the filters to see other due dates.\"; Clear all dropped every filter from the address and returned the whole calendar",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:41:25.727Z",
+      "at": "2026-09-08T00:41:31.406Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C52 guide recovery: Delete removes an Obligation and its future schedule",
+      "actual": "\"Delete Rev C52 disposable schedule LRY0TDY\" removed that Obligation and its six-month schedule and left \"Rev C52 annual return LRY0TDY\" untouched",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:41:31.406Z",
+      "at": "2026-09-08T00:41:36.999Z"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "C52 negative: archiving the Entity takes its Obligations out of the calendar and Home",
+      "actual": "Archiving \"Rev C52 entity LRY0TDY\" removed \"Rev C52 annual return LRY0TDY\" from the compliance calendar and Home; Restore brought it back to the calendar",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:41:36.999Z",
+      "at": "2026-09-08T00:41:44.555Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C52 prerequisite: an Entity built by a clearly-labelled API fixture",
+      "actual": "API fixture created \"Rev C52 entity ARY0TDY\"; every reader step below is performed in the browser",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:41:44.810Z",
+      "at": "2026-09-08T00:41:44.828Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C52 guide steps 1-4: Add obligation saves a recurring schedule and a one-off",
+      "actual": "Add obligation saved \"Rev C52 annual return ARY0TDY\" due 2025-09-30 repeating every 12 months and \"Rev C52 one-off licence ARY0TDY\" due 2026-11-20 with a blank recurrence, both assigned to Daniel Okafor",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:41:44.828Z",
+      "at": "2026-09-08T00:41:52.843Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C52 negative: an out-of-range recurrence and a blank Label are refused with a clear outcome",
+      "actual": "a 1,201-month recurrence kept the dialog open (Repeat every (months) One or more request fields are invalid.); a zero-month recurrence was refused the same way; a blank Label was refused and the dialog stayed open; no refused Obligation reached the Entity",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:41:52.843Z",
+      "at": "2026-09-08T00:42:02.541Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C52 guide step 5: an open Obligation's note saves on blur and its assignee saves on choice",
+      "actual": "Typing a note and moving focus away saved it; choosing Unassigned saved at once. Both survived a reload and the assignee was set back to Daniel Okafor",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:42:02.542Z",
+      "at": "2026-09-08T00:42:05.633Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C52 guide steps 1-4: the calendar lists overdue first, filters, and keeps them across Month",
+      "actual": "The due-date list led with overdue rows carrying the severe treatment (11 of 124 rows, none out of order); the Entity filter and Apply narrowed it to \"Rev C52 entity ARY0TDY\"; Month, Previous month, Next month, Today and Due-date list all kept that filter in the address",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:42:05.633Z",
+      "at": "2026-09-08T00:42:19.867Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C52 negative: reading the calendar and Home does not file or advance a past-due item",
+      "actual": "Home's Entity obligations section listed \"Rev C52 annual return ARY0TDY\" as overdue and assigned to Daniel Okafor; after reading the calendar and Home its due date was still 2025-09-30 and it still offered Mark filed, so reading neither filed nor advanced it",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:42:19.868Z",
+      "at": "2026-09-08T00:42:21.778Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C52 guide steps 1-3: Mark filed advances a recurring cycle past the missed years",
+      "actual": "Mark filed opened with Filed on defaulting to 2026-09-08; filing the 2025-09-30 annual schedule on 2026-10-05 advanced it once past the missed cycle to 2027-09-30, exactly the guide's worked example",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:42:21.778Z",
+      "at": "2026-09-08T00:42:25.948Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C52 guide step 3: History records the filing and its cycle",
+      "actual": "History listed the filing against \"Rev C52 annual return ARY0TDY\" (Daniel Okafor marked Rev C52 annual return ARY0TDY filed on Rev C52 entity ARY0TDY | Daniel Okafor changed the obligation Rev C52 annual return ARY0TDY on Rev C52 entity ARY0TDY)",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:42:25.948Z",
+      "at": "2026-09-08T00:42:29.489Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C52 guide step 4: a filed one-off keeps its due date, locks its row and refuses a second filing",
+      "actual": "Filing \"Rev C52 one-off licence ARY0TDY\" kept its due date at 2026-11-20, marked it Filed, disabled its row controls and withdrew Mark filed, so it cannot be filed again",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:42:29.490Z",
+      "at": "2026-09-08T00:42:34.289Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C52 guide step 2: Include completed brings the filed one-off back into the calendar",
+      "actual": "The filed one-off left the open results and came back once Include completed was turned on and applied",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:42:34.290Z",
+      "at": "2026-09-08T00:42:40.490Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C52 guide step 4: when no results match, the calendar offers Clear all",
+      "actual": "A 2035 window against \"Rev C52 entity ARY0TDY\" matched nothing and the calendar explained \"Change or clear the filters to see other due dates.\"; Clear all dropped every filter from the address and returned the whole calendar",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:42:40.490Z",
+      "at": "2026-09-08T00:42:46.171Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C52 guide recovery: Delete removes an Obligation and its future schedule",
+      "actual": "\"Delete Rev C52 disposable schedule ARY0TDY\" removed that Obligation and its six-month schedule and left \"Rev C52 annual return ARY0TDY\" untouched",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:42:46.171Z",
+      "at": "2026-09-08T00:42:51.723Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "C52 negative: archiving the Entity takes its Obligations out of the calendar and Home",
+      "actual": "Archiving \"Rev C52 entity ARY0TDY\" removed \"Rev C52 annual return ARY0TDY\" from the compliance calendar and Home; Restore brought it back to the calendar",
+      "result": "pass",
+      "startedAt": "2026-09-08T00:42:51.723Z",
+      "at": "2026-09-08T00:42:59.287Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T00:42:59.307Z",
+  "articleHashes": [
+    {
+      "articleId": "entity-obligations",
+      "contentSha256": "b4a8ade34e728a7cb4de68a659779fe45d68781028d899b97c580771c1d0f604"
+    }
+  ],
+  "articleHashesNote": "Associated after the runs, not captured at run start. These are the sha256 digests of the guides as committed; git shows the last content change was bab4d21f at 2026-09-07T23:11:00Z, before the earliest run here began at 2026-09-07T23:40:45.292Z, so every run exercised exactly these bytes."
+}

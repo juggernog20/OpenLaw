@@ -410,7 +410,10 @@ export function useCommentApplet({
         // what is here" into a one-row conversation, under a load error
         // that is still on screen and beside a count claiming 1.
         onPosted={(posted) =>
-          setComments((current) => (current === null ? null : [...current, posted]))
+          setComments((current) =>
+            // A live read may already include this post, or a later edit of it.
+            current === null ? null : mergeCommentWindow([posted], current),
+          )
         }
         // A correction answers with the row as it now stands, so the
         // thread takes the server's word for it rather than guessing at

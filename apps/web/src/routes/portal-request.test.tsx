@@ -591,6 +591,46 @@ describe("the conversation", () => {
     expect(within(card).getByText("Legal")).toBeInTheDocument();
   });
 
+  it("keeps one reply when a live read arrives before the posting response", async () => {
+    const user = userEvent.setup();
+    const sources = stubEventSource();
+    const posted = comment({ id: "c-posted", body: "The signed copy is ready." });
+    const liveThread = { comments: [] as Comment[] };
+    let finishPost!: (response: Response) => void;
+    stubApi({
+      signedIn: REQUESTER,
+      extra: stubs(
+        (call) => {
+          if (call.url.pathname === "/api/v1/comments" && call.method === "POST") {
+            liveThread.comments = [posted];
+            return new Promise<Response>((resolve) => {
+              finishPost = resolve;
+            });
+          }
+          return undefined;
+        },
+        detailRead(detail(), 200, liveThread),
+      ),
+    });
+    renderAt("/portal/requests/45");
+    const box = await screen.findByRole("textbox", { name: "Reply to Legal" });
+    await user.type(box, posted.body);
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    await waitFor(() => expect(finishPost).toBeTypeOf("function"));
+    sources[0]!.emit({
+      kind: "record",
+      action: "comment.posted",
+      entityType: "request",
+      entityId: "rq1",
+      entryId: "activity-posted-before-response",
+      visibility: "full_thread",
+    });
+    expect(await screen.findByText(posted.body)).toBeInTheDocument();
+    finishPost(json(201, { comment: posted }));
+    await waitFor(() => expect(box).toHaveValue(""));
+    expect(screen.getAllByText(posted.body)).toHaveLength(1);
+  });
+
   it("adds and replaces Full Thread replies from live comment prompts", async () => {
     const sources = stubEventSource();
     const liveThread = {

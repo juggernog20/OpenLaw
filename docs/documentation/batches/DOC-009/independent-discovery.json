@@ -1,0 +1,165 @@
+{
+  "kind": "independent-discovery",
+  "task": "DOC-009",
+  "independentReview": true,
+  "reviewerKind": "agent",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "startedAt": "2026-09-07T04:50:31.559Z",
+  "finishedAt": "2026-09-07T04:51:27.317Z",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "frontend": "Vite draft reader at port 43310, API proxied to the committed lab",
+  "articleHashesCurrent": {
+    "staff-sign-in": "3c7ed38f6e42d021121f8566c99a6f9a45e3ec63cebe90e28a957ee20c575651",
+    "portal-sign-in": "9d419eb6c397fcaca5aac93331cb5dd06905f8152446485705714e07995adf7d",
+    "find-your-work": "6fa8eb3a4f1302279ec5419435fbeeb34596a17d1897bc90d62c52037f8ac8d0",
+    "search-and-views": "e303479e3b19bde3f34d5131d4f5c59de37b6feab2ef9b50bacdb97cb5478b23",
+    "personal-settings": "155c97620d4f7999fa850eb2923f73ee797df09b2e62bf61cf0e5b292c16b2b8"
+  },
+  "steps": [
+    {
+      "article": "all",
+      "role": "signed-out",
+      "step": "formal index lists all five guides without an API request; search finds sign-in guides",
+      "result": "pass",
+      "actual": "Index listed the five titles; non-session API calls before search: 0; \"backup codes\" found the staff guide and its two-factor section anchor exists (1); \"sign-in link expired\" found the Portal guide; its Profile settings link opened personal-settings at the Portal view section",
+      "at": "2026-09-07T04:50:31.607Z",
+      "ms": 3397
+    },
+    {
+      "article": "find-your-work",
+      "role": "administrator",
+      "step": "Help from / reaches the guide, Help search \"keyboard shortcuts\" finds it, full-documentation link works",
+      "result": "pass",
+      "actual": "/help?topic=home listed the guide; search \"keyboard shortcuts\" listed it; opened /help/find-your-work; full documentation link -> /documentation/find-your-work",
+      "at": "2026-09-07T04:50:35.265Z",
+      "ms": 3236
+    },
+    {
+      "article": "search-and-views",
+      "role": "administrator",
+      "step": "Help from /search?q=cobalt reaches the guide, Help search \"saved view\" finds it, full-documentation link works",
+      "result": "pass",
+      "actual": "/help?topic=lists&topic=search listed the guide; search \"saved view\" listed it; opened /help/search-and-views; full documentation link -> /documentation/search-and-views",
+      "at": "2026-09-07T04:50:38.502Z",
+      "ms": 3083
+    },
+    {
+      "article": "search-and-views",
+      "role": "administrator",
+      "step": "Help from /contracts reaches the guide, Help search \"filter\" finds it, full-documentation link works",
+      "result": "pass",
+      "actual": "/help?topic=lists&topic=search listed the guide; search \"filter\" listed it; opened /help/search-and-views; full documentation link -> /documentation/search-and-views",
+      "at": "2026-09-07T04:50:41.585Z",
+      "ms": 3116
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Help from /settings/profile reaches the guide, Help search \"timezone\" finds it, full-documentation link works",
+      "result": "pass",
+      "actual": "/help?topic=settings.personal listed the guide; search \"timezone\" listed it; opened /help/personal-settings; full documentation link -> /documentation/personal-settings",
+      "at": "2026-09-07T04:50:44.701Z",
+      "ms": 3151
+    },
+    {
+      "article": "find-your-work",
+      "role": "legal_team_member",
+      "step": "Help from / reaches the guide, Help search \"keyboard shortcuts\" finds it, full-documentation link works",
+      "result": "pass",
+      "actual": "/help?topic=home listed the guide; search \"keyboard shortcuts\" listed it; opened /help/find-your-work; full documentation link -> /documentation/find-your-work",
+      "at": "2026-09-07T04:50:48.091Z",
+      "ms": 3227
+    },
+    {
+      "article": "search-and-views",
+      "role": "legal_team_member",
+      "step": "Help from /search?q=cobalt reaches the guide, Help search \"saved view\" finds it, full-documentation link works",
+      "result": "pass",
+      "actual": "/help?topic=lists&topic=search listed the guide; search \"saved view\" listed it; opened /help/search-and-views; full documentation link -> /documentation/search-and-views",
+      "at": "2026-09-07T04:50:51.319Z",
+      "ms": 3116
+    },
+    {
+      "article": "search-and-views",
+      "role": "legal_team_member",
+      "step": "Help from /contracts reaches the guide, Help search \"filter\" finds it, full-documentation link works",
+      "result": "pass",
+      "actual": "/help?topic=lists&topic=search listed the guide; search \"filter\" listed it; opened /help/search-and-views; full documentation link -> /documentation/search-and-views",
+      "at": "2026-09-07T04:50:54.435Z",
+      "ms": 3099
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Help from /settings/profile reaches the guide, Help search \"timezone\" finds it, full-documentation link works",
+      "result": "pass",
+      "actual": "/help?topic=settings.personal listed the guide; search \"timezone\" listed it; opened /help/personal-settings; full documentation link -> /documentation/personal-settings",
+      "at": "2026-09-07T04:50:57.535Z",
+      "ms": 3084
+    },
+    {
+      "article": "find-your-work",
+      "role": "contributor",
+      "step": "Help from / reaches the guide, Help search \"keyboard shortcuts\" finds it, full-documentation link works",
+      "result": "pass",
+      "actual": "/help?topic=home listed the guide; search \"keyboard shortcuts\" listed it; opened /help/find-your-work; full documentation link -> /documentation/find-your-work",
+      "at": "2026-09-07T04:51:00.871Z",
+      "ms": 3296
+    },
+    {
+      "article": "search-and-views",
+      "role": "contributor",
+      "step": "Help from /search?q=cobalt reaches the guide, Help search \"saved view\" finds it, full-documentation link works",
+      "result": "pass",
+      "actual": "/help?topic=lists&topic=search listed the guide; search \"saved view\" listed it; opened /help/search-and-views; full documentation link -> /documentation/search-and-views",
+      "at": "2026-09-07T04:51:04.168Z",
+      "ms": 3083
+    },
+    {
+      "article": "search-and-views",
+      "role": "contributor",
+      "step": "Help from /contracts reaches the guide, Help search \"filter\" finds it, full-documentation link works",
+      "result": "pass",
+      "actual": "/help?topic=lists&topic=search listed the guide; search \"filter\" listed it; opened /help/search-and-views; full documentation link -> /documentation/search-and-views",
+      "at": "2026-09-07T04:51:07.252Z",
+      "ms": 3064
+    },
+    {
+      "article": "personal-settings",
+      "role": "contributor",
+      "step": "Help from /settings/profile reaches the guide, Help search \"timezone\" finds it, full-documentation link works",
+      "result": "pass",
+      "actual": "/help?topic=settings.personal listed the guide; search \"timezone\" listed it; opened /help/personal-settings; full documentation link -> /documentation/personal-settings",
+      "at": "2026-09-07T04:51:10.316Z",
+      "ms": 3101
+    },
+    {
+      "article": "portal-sign-in",
+      "role": "business_user",
+      "step": "Portal Help index lists the Portal sign-in guide; topic-scoped search does not, unscoped search does",
+      "result": "pass",
+      "actual": "Help from the Portal home opened /portal/help?topic=portal.home listing the guide as a link 0 time(s); search there for \"sign-in link\" gave \"No matching articles.\"; the Help index (/portal/help) listed it (1); unscoped search found it and it opened at /portal/help/portal-sign-in with a working full-documentation link",
+      "at": "2026-09-07T04:51:13.421Z",
+      "ms": 5079
+    },
+    {
+      "article": "all",
+      "role": "signed-out",
+      "step": "three themes fit 320, 720, and 1440 CSS pixels without horizontal overflow",
+      "result": "pass",
+      "actual": "45 article/theme/width combinations had no horizontal overflow",
+      "at": "2026-09-07T04:51:18.501Z",
+      "ms": 8815
+    }
+  ],
+  "signedOutHelpLinks": {
+    "/auth/login": "/documentation?topic=auth listing Set up your account and sign in",
+    "/auth/set-password": "/documentation?topic=auth",
+    "/auth/link-expired": "/documentation?topic=auth",
+    "/portal/enter": "/documentation?topic=portal.entry listing Sign in to the Business Portal"
+  },
+  "notes": [
+    "Help with this page on the signed-out authentication and Portal entry pages opens the formal reader filtered to that page's topic.",
+    "Portal Help opened from the Portal home is scoped to portal.home; its search does not list the entry guide, while the Help index and an unscoped search do."
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "name": "taxonomies-retry3",
+  "startedAt": "2026-09-08T04:36:40.869Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "types-statuses-fields",
+      "contentSha256": "7da7433f34e03c926021864f3cc53d35fccbb62a9aa86e8fde9abbe4d6f59b3c"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "archive in-use Matter type requires replacement; restore does not reverse reassignment",
+      "result": "fail",
+      "startedAt": "2026-09-08T04:36:41.772Z",
+      "error": "expect(locator).toContainText(expected) failed\n\nLocator: getByRole('dialog').getByRole('alert')\nExpected pattern: /replacement|reassign/i\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.have.text\" with timeout 5000ms\n  - waiting for getByRole('dialog').getByRole('alert')\n",
+      "at": "2026-09-08T04:36:47.441Z"
+    }
+  ],
+  "passed": false
+}

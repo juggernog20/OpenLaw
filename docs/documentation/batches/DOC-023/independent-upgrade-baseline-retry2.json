@@ -1,0 +1,51 @@
+{
+  "name": "independent-upgrade-baseline-retry2",
+  "scenario": "V-C46",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:48:44.267Z",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "environment": "openlaw-docs-b8e31260-rev-upgrade",
+  "articleHashes": [
+    {
+      "articleId": "upgrade",
+      "contentSha256": "96cc17166c77af291161ea34540f2c1c9683d2736cd903c42e2692ba9fe8e94d"
+    },
+    {
+      "articleId": "backup-and-restore",
+      "contentSha256": "0237339f91484b7a46623e1753c67ccbb376ae341ac8b40cb5d81237967a891a"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Save an encrypted relay on the earlier build and send a real test",
+      "actual": "The earlier build d1d098ba9f4b holds the fictional Administrator Morgan Baseline. An SMTP relay was saved in the app, encrypted under this deployment's OPENLAW_SECRET_KEY (source \"app\"), and a test message actually arrived in the owned Mailpit.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:48:44.633Z",
+      "at": "2026-09-08T09:48:44.700Z"
+    },
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Populate fictional Contracts, a Matter, Documents and Versions",
+      "actual": "Created 3 Contracts (one Confidential), 1 Matter(s) and 2 Documents, each carrying an original and a later Version. Every Version's SHA-256 is recorded privately for the post-upgrade comparison.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:48:44.700Z",
+      "at": "2026-09-08T09:48:44.854Z"
+    },
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Activate a Contributor from a real invitation and record its reach",
+      "result": "fail",
+      "startedAt": "2026-09-08T09:48:44.854Z",
+      "error": "post /contracts/1/members returned 404: {\"type\":\"about:blank\",\"title\":\"Not found\",\"status\":404,\"detail\":\"Route POST /api/v1/contracts/1/members does not exist.\",\"instance\":\"/api/v1/contracts/1/members\"}",
+      "at": "2026-09-08T09:48:49.111Z"
+    }
+  ],
+  "passed": false,
+  "supersededBy": "independent-upgrade-baseline-contributor",
+  "note": "The relay and the records were created here. Adding the Contributor used /contracts/:number/members, which does not exist; the route is /contracts/:number/team with a userId and a role."
+}

@@ -1,0 +1,128 @@
+{
+  "kind": "author-pilot-walkthrough",
+  "independentReview": false,
+  "startedAt": "2026-09-07T02:30:15.075Z",
+  "finishedAt": "2026-09-07T02:30:19.480Z",
+  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "environment": "openlaw-docs-b8e31260-pilot",
+  "records": {
+    "typeId": "01a079b3-b5db-7386-bf6a-9535bd5e5c26",
+    "slug": "docs_contract_review_1788748215075",
+    "requestNumber": 29,
+    "converted": {
+      "module": "contract",
+      "number": 41
+    }
+  },
+  "steps": [
+    {
+      "article": "request-forms",
+      "role": "administrator",
+      "actual": "Created a live Request type through Add/Edit, saved Description and Contract MSA target, attached Owning department and required it; reload retained all settings.",
+      "result": "pass",
+      "at": "2026-09-07T02:30:16.213Z",
+      "elapsedSeconds": 1
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "actual": "Missing required basics and the configured Field refused submission. Filled the form, submitted one PDF, opened the saved Request and saw Procurement and the attachment; posted a comment.",
+      "result": "pass",
+      "at": "2026-09-07T02:30:17.018Z",
+      "elapsedSeconds": 2
+    },
+    {
+      "article": "triage-requests",
+      "role": "business_user",
+      "actual": "Before conversion, the Portal shows the Full Thread reply and omits both Working Team and Legal Only notes.",
+      "result": "pass",
+      "at": "2026-09-07T02:30:18.233Z",
+      "elapsedSeconds": 3
+    },
+    {
+      "article": "triage-requests",
+      "role": "legal_team_member",
+      "actual": "Opened the Inbox Request, reviewed its answers and attachment, assigned Nadia through the searchable dialog, and posted Full Thread, Working Team and Legal Only comments before conversion.",
+      "result": "pass",
+      "at": "2026-09-07T02:30:18.233Z",
+      "elapsedSeconds": 3
+    },
+    {
+      "article": "convert-request",
+      "role": "legal_team_member",
+      "actual": "Confirmed the MSA target, Summary-to-Title, Urgency-to-Priority and Procurement carry; the Contract Description is empty while the source Request retains its Description; opened the Contract Fields and Documents sections, downloaded the promoted Version and compared its bytes to the original PDF. The Contract thread contains both Full Thread replies, the Working Team note and the Legal Only note; its Owner remains unset after triage assignment.",
+      "result": "pass",
+      "at": "2026-09-07T02:30:18.985Z",
+      "elapsedSeconds": 4
+    },
+    {
+      "article": "convert-request",
+      "role": "business_user",
+      "actual": "The original Portal Request now says In progress; its Full Thread reply is visible and both Working Team and Legal Only notes are absent.",
+      "result": "pass",
+      "at": "2026-09-07T02:30:19.042Z",
+      "elapsedSeconds": 4
+    },
+    {
+      "article": "convert-request",
+      "role": "legal_team_member",
+      "actual": "The converted Request is absent from the undecided Inbox, and a Business User following the staff Contract address is returned to the Portal.",
+      "result": "pass",
+      "at": "2026-09-07T02:30:19.480Z",
+      "elapsedSeconds": 4
+    }
+  ],
+  "articleHashes": {
+    "request-forms": "3b674df25d4c3aa6a0b3feec3a6cd91f91725a7c289760639b166d0221ef3a6c",
+    "submit-request": "a76db796fa3dd246e0c42fc4b32324af19c96281a372daccf4aa9a440a98625b",
+    "triage-requests": "e593909b8792e8622aad7214b38e605f0544c48348edec47d003c9526bca2337",
+    "convert-request": "393898f5eea37000401ad1b7c90e3a427955073a9c091e8cb46d35b1e412d54b"
+  },
+  "author": "Codex",
+  "fullCoverageVerified": false,
+  "limitations": [
+    "Only the Contract pilot subset was exercised, not all C09/C12/C13/C40 scenarios.",
+    "The role checks are an author agent walkthrough, not independent acceptance or a human user study.",
+    "The final replay timing excludes prose reading, source inspection, fixture preparation and script corrections."
+  ],
+  "sources": {
+    "request-forms": [
+      "docs/decision-records/DECISIONS-INTAKE.md",
+      "apps/web/src/routes/settings-request-type-editor.tsx",
+      "apps/web/src/components/taxonomy-types-pane.tsx",
+      "apps/web/src/components/type-editor-screen.tsx"
+    ],
+    "submit-request": [
+      "apps/web/src/routes/portal-request-form.tsx",
+      "apps/web/src/components/portal/request-thread.tsx",
+      "apps/api/src/modules/requests/routes.ts"
+    ],
+    "triage-requests": [
+      "docs/decision-records/DECISIONS-INTAKE.md",
+      "apps/web/src/routes/inbox-request.tsx",
+      "apps/web/src/components/inbox/request-assignment.tsx",
+      "apps/api/src/modules/requests/assignment.ts"
+    ],
+    "convert-request": [
+      "apps/web/src/components/intake/convert-dialog.tsx",
+      "apps/api/src/modules/requests/convert.ts",
+      "apps/api/src/modules/requests/promote-paper.ts",
+      "apps/api/src/modules/requests/move-thread.ts",
+      "apps/web/src/routes/contract-record.tsx",
+      "apps/web/src/routes/portal-request.tsx"
+    ]
+  },
+  "decisions": [
+    "INT-002 and built addenda",
+    "INT-007 UX review addenda dated September 5, 2026",
+    "DD-013",
+    "DD-016"
+  ],
+  "buildId": "sha256:69c7cd47338eff05c787e985743dd45b2229792827d82fd5f54a50a9c63d8757",
+  "engineBuildId": "sha256:1dce5b67898cc8ae720231fa66e049208ed207e69053a2cf4c1bd0e172cea401",
+  "paperSha256": {
+    "input": "ee8d6a689f8831acbe128d2000956568cbfe2664f4cc587b2ccade62be328e1a",
+    "requestDownload": "ee8d6a689f8831acbe128d2000956568cbfe2664f4cc587b2ccade62be328e1a",
+    "contractDownload": "ee8d6a689f8831acbe128d2000956568cbfe2664f4cc587b2ccade62be328e1a"
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "kind": "independent-help-discovery",
+  "task": "DOC-011",
+  "issue": 731,
+  "independentReview": true,
+  "reviewerKind": "agent",
+  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+  "startedAt": "2026-09-07T08:55:01.766Z",
+  "finishedAt": "2026-09-07T08:55:31.452Z",
+  "frontend": "Vite draft reader at port 43312 serving the working canonical Markdown with unchanged app source, proxied to the committed lab at port 43302; the committed lab's own Help at port 43302 for the exclusion check",
+  "articleHashesCurrent": [
+    {
+      "articleId": "comments-and-activity",
+      "contentSha256": "91b235629a33bd9e798fc887f6d92226d007ed7673ec767d55f65f04c85ab67f"
+    },
+    {
+      "articleId": "notifications",
+      "contentSha256": "7f0a7503cf875f644ef8642f7d5d6ac0c67e335c319d023faff93a30cd42f294"
+    }
+  ],
+  "themes": ["light", "dark", "warm"],
+  "widths": [320, 720, 1440],
+  "limitations": [
+    "Layout checks are CSS-pixel width and horizontal-overflow measurements in headless Chromium, not browser zoom or assistive-technology acceptance.",
+    "Both articles appear only in the draft preview; the committed lab's normal Help excludes them while they are in review."
+  ],
+  "steps": [
+    {
+      "article": "comments-and-activity",
+      "role": "administrator",
+      "step": "Contextual Help from the Contract page lists the comments guide; search, focus, layout, and formal link pass",
+      "result": "pass",
+      "actual": "Help from /contracts/33 -> /help?topic=access&topic=comments&topic=activity&topic=notifications; search \"Widen the audience\" listed the article; title focused on open; \"Mention a person\" focused from the outline; final text present (Matter and Request conversations do not \u2026); no horizontal overflow across light/dark/warm at 320/720/1440 CSS px; formal link opened /documentation/comments-and-activity.",
+      "at": "2026-09-07T08:55:05.309Z",
+      "ms": 2661
+    },
+    {
+      "article": "notifications",
+      "role": "administrator",
+      "step": "Contextual Help from Personal Notifications lists the notifications guide; search, focus, layout, and formal link pass",
+      "result": "pass",
+      "actual": "Help from /settings/notifications -> /help?topic=notifications&topic=settings.personal; search \"daily briefing\" listed the article; title focused on open; \"Understand reminder timing\" focused from the outline; final text present (Check the record's full Key dates list\u2026); no horizontal overflow across light/dark/warm at 320/720/1440 CSS px; formal link opened /documentation/notifications.",
+      "at": "2026-09-07T08:55:07.654Z",
+      "ms": 2344
+    },
+    {
+      "article": "notifications",
+      "role": "administrator",
+      "step": "Committed normal Help at the lab excludes both review articles",
+      "result": "pass",
+      "actual": "Normal Help index and search at port 43302 list neither review article.",
+      "at": "2026-09-07T08:55:08.818Z",
+      "ms": 1163
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "step": "Contextual Help from the Contract page lists the comments guide; search, focus, layout, and formal link pass",
+      "result": "pass",
+      "actual": "Help from /contracts/33 -> /help?topic=access&topic=comments&topic=activity&topic=notifications; search \"Widen the audience\" listed the article; title focused on open; \"Mention a person\" focused from the outline; final text present (Matter and Request conversations do not \u2026); no horizontal overflow across light/dark/warm at 320/720/1440 CSS px; formal link opened /documentation/comments-and-activity.",
+      "at": "2026-09-07T08:55:12.335Z",
+      "ms": 2684
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "step": "Contextual Help from Personal Notifications lists the notifications guide; search, focus, layout, and formal link pass",
+      "result": "pass",
+      "actual": "Help from /settings/notifications -> /help?topic=notifications&topic=settings.personal; search \"daily briefing\" listed the article; title focused on open; \"Understand reminder timing\" focused from the outline; final text present (Check the record's full Key dates list\u2026); no horizontal overflow across light/dark/warm at 320/720/1440 CSS px; formal link opened /documentation/notifications.",
+      "at": "2026-09-07T08:55:14.569Z",
+      "ms": 2234
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "step": "Committed normal Help at the lab excludes both review articles",
+      "result": "pass",
+      "actual": "Normal Help index and search at port 43302 list neither review article.",
+      "at": "2026-09-07T08:55:15.717Z",
+      "ms": 1147
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "contributor",
+      "step": "Contextual Help from the Contract page lists the comments guide; search, focus, layout, and formal link pass",
+      "result": "pass",
+      "actual": "Help from /contracts/33 -> /help?topic=access&topic=contributor&topic=comments&topic=activity&topic=notifications; search \"Widen the audience\" listed the article; title focused on open; \"Mention a person\" focused from the outline; final text present (Matter and Request conversations do not \u2026); no horizontal overflow across light/dark/warm at 320/720/1440 CSS px; formal link opened /documentation/comments-and-activity.",
+      "at": "2026-09-07T08:55:19.100Z",
+      "ms": 2585
+    },
+    {
+      "article": "notifications",
+      "role": "contributor",
+      "step": "Contextual Help from Personal Notifications lists the notifications guide; search, focus, layout, and formal link pass",
+      "result": "pass",
+      "actual": "Help from /settings/notifications -> /help?topic=notifications&topic=settings.personal; search \"daily briefing\" listed the article; title focused on open; \"Understand reminder timing\" focused from the outline; final text present (Check the record's full Key dates list\u2026); no horizontal overflow across light/dark/warm at 320/720/1440 CSS px; formal link opened /documentation/notifications.",
+      "at": "2026-09-07T08:55:21.279Z",
+      "ms": 2178
+    },
+    {
+      "article": "notifications",
+      "role": "contributor",
+      "step": "Committed normal Help at the lab excludes both review articles",
+      "result": "pass",
+      "actual": "Normal Help index and search at port 43302 list neither review article.",
+      "at": "2026-09-07T08:55:22.418Z",
+      "ms": 1140
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "business_user",
+      "step": "Portal header Help from the Request lists the comments guide; Help with this page opens the unwritten Request topic; search, focus, layout, and formal link pass",
+      "result": "pass",
+      "actual": "Help with this page -> /portal/help?topic=portal.request listed the comments guide 0 times (its portal.request article is still scoped, DOC-012). Header Help -> /portal/help?topic=comments&topic=activity&topic=notifications listed it; search \"Widen the audience\" listed the article; title focused on open; \"Mention a person\" focused from the outline; final text present (Matter and Request conversations do not \u2026); no horizontal overflow across light/dark/warm at 320/720/1440 CSS px; formal link opened /documentation/comments-and-activity.",
+      "at": "2026-09-07T08:55:26.786Z",
+      "ms": 3418
+    },
+    {
+      "article": "notifications",
+      "role": "business_user",
+      "step": "Portal Help from Notification settings lists the notifications guide; search, focus, layout, and formal link pass",
+      "result": "pass",
+      "actual": "Help -> /portal/help?topic=notifications; search \"daily briefing\" listed the article; title focused on open; \"Understand reminder timing\" focused from the outline; final text present (Check the record's full Key dates list\u2026); no horizontal overflow across light/dark/warm at 320/720/1440 CSS px; formal link opened /documentation/notifications.",
+      "at": "2026-09-07T08:55:28.943Z",
+      "ms": 2157
+    },
+    {
+      "article": "notifications",
+      "role": "signed-out",
+      "step": "The formal reader serves both articles anonymously without application API calls",
+      "result": "pass",
+      "actual": "Signed-out /documentation index lists both titles; each article opened with the final text; 0 /api/v1 calls.",
+      "at": "2026-09-07T08:55:31.451Z",
+      "ms": 2484
+    }
+  ]
+}

@@ -330,7 +330,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -2296,6 +2296,144 @@
   },
   "docpanel.find.previous": {
     "defaultMessage": "Previous match"
+  },
+  "docs.all": {
+    "defaultMessage": "All documentation"
+  },
+  "docs.allReaders": {
+    "defaultMessage": "All readers"
+  },
+  "docs.audience": {
+    "defaultMessage": "Audience"
+  },
+  "docs.brand": {
+    "defaultMessage": "OpenLaw documentation"
+  },
+  "docs.channel.development": {
+    "defaultMessage": "Development"
+  },
+  "docs.channel.release": {
+    "defaultMessage": "Release"
+  },
+  "docs.digest": {
+    "defaultMessage": "Content digest"
+  },
+  "docs.dirty": {
+    "defaultMessage": "Working changes"
+  },
+  "docs.distribution": {
+    "defaultMessage": "Distribution commit"
+  },
+  "docs.distributionIdentity": {
+    "defaultMessage": "{commit} ({state})"
+  },
+  "docs.download": {
+    "defaultMessage": "Download standalone edition"
+  },
+  "docs.edition": {
+    "defaultMessage": "Edition details"
+  },
+  "docs.editionIdentity": {
+    "defaultMessage": "{id} ({channel})"
+  },
+  "docs.empty": {
+    "defaultMessage": "No verified articles are available in this edition yet."
+  },
+  "docs.forAudience": {
+    "defaultMessage": "Guides for {audience}"
+  },
+  "docs.formal": {
+    "defaultMessage": "Read this article in the full documentation"
+  },
+  "docs.help": {
+    "defaultMessage": "Help"
+  },
+  "docs.helpWithPage": {
+    "defaultMessage": "Help with this page"
+  },
+  "docs.missingSection": {
+    "defaultMessage": "The requested section is unavailable. Use the page outline to find the current instructions."
+  },
+  "docs.noMatches": {
+    "defaultMessage": "No matching articles. Try another word or return to the full index."
+  },
+  "docs.notRecorded": {
+    "defaultMessage": "Not recorded"
+  },
+  "docs.notVerified": {
+    "defaultMessage": "Not yet verified"
+  },
+  "docs.notice": {
+    "defaultMessage": "Preview build notices"
+  },
+  "docs.outline": {
+    "defaultMessage": "On this page"
+  },
+  "docs.outsideAudience": {
+    "defaultMessage": "This article is available in the full documentation. Check its audience and prerequisites before following the instructions."
+  },
+  "docs.preview": {
+    "defaultMessage": "Development preview: draft and validation content is unverified."
+  },
+  "docs.retention": {
+    "defaultMessage": "Keep an extracted copy outside this instance to read it when the app is unavailable."
+  },
+  "docs.role.admin": {
+    "defaultMessage": "Administrator"
+  },
+  "docs.role.business": {
+    "defaultMessage": "Business User"
+  },
+  "docs.role.contributor": {
+    "defaultMessage": "Contributor"
+  },
+  "docs.role.member": {
+    "defaultMessage": "Legal Team Member"
+  },
+  "docs.role.operator": {
+    "defaultMessage": "Deployment operator"
+  },
+  "docs.search": {
+    "defaultMessage": "Search documentation"
+  },
+  "docs.searchButton": {
+    "defaultMessage": "Search"
+  },
+  "docs.sessionUnavailable": {
+    "defaultMessage": "Help session unavailable"
+  },
+  "docs.sessionUnavailableBody": {
+    "defaultMessage": "The app could not check your session. You can read the full documentation without signing in."
+  },
+  "docs.skip": {
+    "defaultMessage": "Skip to content"
+  },
+  "docs.standalone": {
+    "defaultMessage": "Open standalone edition"
+  },
+  "docs.supported": {
+    "defaultMessage": "Supported app"
+  },
+  "docs.supportedIdentity": {
+    "defaultMessage": "{version} / {commit}"
+  },
+  "docs.target": {
+    "defaultMessage": "Publication target"
+  },
+  "docs.title": {
+    "defaultMessage": "Documentation"
+  },
+  "docs.unavailable": {
+    "defaultMessage": "Article unavailable"
+  },
+  "docs.unavailableBody": {
+    "defaultMessage": "This article is not available in the bundled edition. Search the available guides or return to the index."
+  },
+  "docs.unverified": {
+    "defaultMessage": "Unverified article"
+  },
+  "docs.wrongEdition": {
+    "defaultMessage": "The requested edition is not bundled with this instance. Open the current index or use your retained copy of that edition."
   },
   "documentCompare.changeCount": {
     "defaultMessage": "{count, plural, one {# change} other {# changes}}"
@@ -5603,6 +5741,51 @@
   "settings.aiAnalysis.model": {
     "defaultMessage": "Model"
   },
+  "settings.aiAnalysis.models.absent": {
+    "defaultMessage": "The selected model was not returned in this list. It is kept until you choose another model."
+  },
+  "settings.aiAnalysis.models.azure": {
+    "defaultMessage": "Enter the deployment name from Azure. The deployment endpoint does not provide a list of deployments."
+  },
+  "settings.aiAnalysis.models.choose": {
+    "defaultMessage": "Choose a model"
+  },
+  "settings.aiAnalysis.models.empty": {
+    "defaultMessage": "The provider returned no models for this list. You can enter a model ID manually."
+  },
+  "settings.aiAnalysis.models.failed": {
+    "defaultMessage": "Models could not be loaded. Try again or enter the model ID manually."
+  },
+  "settings.aiAnalysis.models.hint": {
+    "defaultMessage": "Enter the provider key and endpoint, if required, then load models. Loading does not save the connector or send Contract data."
+  },
+  "settings.aiAnalysis.models.load": {
+    "defaultMessage": "Load models"
+  },
+  "settings.aiAnalysis.models.loading": {
+    "defaultMessage": "Loading models…"
+  },
+  "settings.aiAnalysis.models.manual": {
+    "defaultMessage": "Enter model ID manually"
+  },
+  "settings.aiAnalysis.models.ollama": {
+    "defaultMessage": "Load models installed in Ollama. This does not download models."
+  },
+  "settings.aiAnalysis.models.partial": {
+    "defaultMessage": "This is a partial model list. Enter the model ID manually if it is missing."
+  },
+  "settings.aiAnalysis.models.refresh": {
+    "defaultMessage": "Refresh models"
+  },
+  "settings.aiAnalysis.models.search": {
+    "defaultMessage": "Search models"
+  },
+  "settings.aiAnalysis.models.testHint": {
+    "defaultMessage": "A listed model may not support Contract analysis. Save your choice and use Test connection before running an analysis."
+  },
+  "settings.aiAnalysis.models.useList": {
+    "defaultMessage": "Choose from list"
+  },
   "settings.aiAnalysis.pageTitle": {
     "defaultMessage": "AI analysis"
   },
@@ -6269,11 +6452,20 @@
   "settings.eSignature.intro": {
     "defaultMessage": "Connect your DocuSign account so contracts are sent for signature from their records. Without a connector, the manual path still works: upload the executed PDF and pin it by hand."
   },
+  "settings.eSignature.polling.hint": {
+    "defaultMessage": "Keeps OpenLaw private. Only outbound access to DocuSign is needed. Updates can take about 15 to 20 minutes while the worker is running. Documents are still sent to DocuSign for signing."
+  },
   "settings.eSignature.privateKey": {
     "defaultMessage": "RSA private key"
   },
   "settings.eSignature.privateKey.placeholder": {
     "defaultMessage": "-----BEGIN RSA PRIVATE KEY-----"
+  },
+  "settings.eSignature.publicCallback": {
+    "defaultMessage": "Public callback URL"
+  },
+  "settings.eSignature.publicCallback.hint": {
+    "defaultMessage": "Enter the gateway's HTTPS address if it differs from OpenLaw's address. Forward POST requests to /api/v1/signing/docusign/webhook and preserve the body and signature headers. Leave blank to use the app address, which must then be publicly reachable over HTTPS."
   },
   "settings.eSignature.remove": {
     "defaultMessage": "Remove connector"
@@ -6308,11 +6500,23 @@
   "settings.eSignature.title": {
     "defaultMessage": "E-signature"
   },
+  "settings.eSignature.updateMode": {
+    "defaultMessage": "Signing updates"
+  },
+  "settings.eSignature.updateMode.polling": {
+    "defaultMessage": "Polling"
+  },
+  "settings.eSignature.updateMode.webhook": {
+    "defaultMessage": "Webhook"
+  },
   "settings.eSignature.userId": {
     "defaultMessage": "User ID"
   },
   "settings.eSignature.userId.hint": {
     "defaultMessage": "The DocuSign user envelopes are sent as. Grant that user consent to the integration once, from the DocuSign console."
+  },
+  "settings.eSignature.webhook.hint": {
+    "defaultMessage": "Receives updates as DocuSign delivers them. Requires a public HTTPS gateway and a signed Connect subscription. OpenLaw also checks periodically to recover missed updates."
   },
   "settings.eSignature.webhookSecret": {
     "defaultMessage": "Connect HMAC secret"
@@ -8091,7 +8295,7 @@
     "defaultMessage": "{isDone, select, true {Reopen task: {title}} other {Complete task: {title}}}"
   },
   "tasks.writeFailed": {
-    "defaultMessage": "The Task change could not be saved. Try again."
+    "defaultMessage": "The change could not be saved. Try again."
   },
   "theme.dark": {
     "defaultMessage": "Dark"
