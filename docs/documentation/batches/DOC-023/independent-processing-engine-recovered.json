@@ -1,0 +1,32 @@
+{
+  "name": "independent-processing-engine-recovered",
+  "scenario": "V-C48",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:50:03.320Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-install",
+  "articleHashes": [
+    {
+      "articleId": "operator-troubleshooting",
+      "contentSha256": "a41ec1326ba60de8e8d03037ad4e7c3f4d3e946df2afadae8fa18214859b2b9f"
+    },
+    {
+      "articleId": "deployment-configuration",
+      "contentSha256": "d072207628c0589ee14b8d1575f58fdb70b1c8b6f349bd7ea3bdd70d902ac293"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Document processing with mode engine-recovered",
+      "actual": "After the correction the Version reached processing state \"ready\" with the uploaded words in its extracted text, and the original file downloaded byte-identical.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:50:03.746Z",
+      "at": "2026-09-08T09:50:05.867Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T09:50:05.868Z"
+}

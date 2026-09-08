@@ -1,0 +1,30 @@
+{
+  "name": "storage-fault",
+  "author": "Codex documentation author",
+  "startedAt": "2026-09-08T08:46:42.310Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-ops-author",
+  "articleHashes": [
+    {
+      "articleId": "deployment-configuration",
+      "contentSha256": "06ef91a9774556129c593b0752ae71054c202ed3fb6de1e06dfa9ce29587bfcc"
+    },
+    {
+      "articleId": "operator-troubleshooting",
+      "contentSha256": "21f69ca8270969c530342b4c921f892aa64d4833f4edae506461364f2c8c2f65"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "An unavailable retained S3 reader fails actual file access while app remains ready",
+      "actual": "Retained S3 file download returned 500 with configured wrong endpoint; readiness stayed 200. Startup validates configuration, not store reachability.",
+      "result": "pass",
+      "startedAt": "2026-09-08T08:46:42.714Z",
+      "at": "2026-09-08T08:46:42.861Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T08:46:42.862Z"
+}

@@ -1,0 +1,37 @@
+{
+  "name": "independent-proxy-live-update-retry2",
+  "scenario": "V-C45",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T10:21:34.132Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-install",
+  "articleHashes": [
+    {
+      "articleId": "deployment-configuration",
+      "contentSha256": "d61044fe1f237dfaa0d4087d576a39434e2d5b57a30a8ac5816808daf2fe335b"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Prepare a reachable Contract and a second signed-in person",
+      "actual": "Contract 14 (id 01a08089-930d-7c37-88dc-9844bad5b227) was created through the HTTPS origin, and the fictional Legal Team Member Nadia Live holds an activated account reached from a real invitation through the same origin.",
+      "result": "pass",
+      "startedAt": "2026-09-08T10:21:34.531Z",
+      "at": "2026-09-08T10:21:34.873Z"
+    },
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "A change by a second signed-in browser reaches the first without a reload",
+      "actual": "With the first browser holding Contract 14 open through https://openlaw-review.localhost:43372, a comment posted by the second signed-in person arrived on the record-scoped stream after 1808 ms as a named \"record\" frame {\"kind\":\"record\",\"action\":\"comment.posted\",\"entityType\":\"contract\",\"entityId\":\"01a08089-930d-7c37-88dc-9844bad5b227\",\"entryId\":\"01a08089-a0aa-70b5-ac3a-eadf4a9a083a\",\"visibility\":\"working_team\"}, and the first page displayed the new comment without any manual reload. Its performance.timeOrigin was unchanged, so the page did not navigate or reload during the check.",
+      "result": "pass",
+      "startedAt": "2026-09-08T10:21:34.873Z",
+      "at": "2026-09-08T10:21:38.430Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T10:21:38.430Z"
+}

@@ -1,0 +1,29 @@
+{
+  "name": "independent-external-database-external",
+  "scenario": "V-C45",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:37:57.077Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-install",
+  "articleHashes": [
+    {
+      "articleId": "deployment-configuration",
+      "contentSha256": "d072207628c0589ee14b8d1575f58fdb70b1c8b6f349bd7ea3bdd70d902ac293"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "The selected external database is empty, migrates, and takes a real record",
+      "result": "fail",
+      "startedAt": "2026-09-08T09:37:57.172Z",
+      "error": "get /contract-types returned 401: {\"type\":\"about:blank\",\"title\":\"Authentication required.\",\"status\":401,\"detail\":\"Authentication required.\",\"instance\":\"/api/v1/contract-types\"}",
+      "at": "2026-09-08T09:37:57.507Z"
+    }
+  ],
+  "passed": false,
+  "supersededBy": "independent-external-database-write",
+  "note": "BASE_URL still pointed at the proxy origin from the previous phase, so signing in over the direct port was refused with \"Invalid origin\" and the API call had no session. The Administrator on the external database was created by this attempt."
+}

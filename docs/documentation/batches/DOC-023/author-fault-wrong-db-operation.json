@@ -1,0 +1,13 @@
+{
+  "project": "openlaw-docs-b8e31260-ops-author",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "startedAt": "2026-09-08T08:45:02.988533+00:00",
+  "completedAt": "2026-09-08T08:45:21.633803+00:00",
+  "fault": "wrong-db",
+  "diagnosticMatched": "ECONNREFUSED",
+  "faultReadinessAvailable": false,
+  "recoveryReadiness": 200,
+  "phase": "wrong-db",
+  "recoveryPhase": "rotate-retired",
+  "privateLogSha256": "ec29eb63c9a8e443ede670334a73f3e34df9622a0b03910b4ec4d7947cb82d4f"
+}

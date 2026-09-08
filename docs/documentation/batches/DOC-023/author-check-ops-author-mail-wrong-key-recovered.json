@@ -1,0 +1,30 @@
+{
+  "name": "check-ops-author-mail-wrong-key-recovered",
+  "author": "Codex documentation author",
+  "startedAt": "2026-09-08T08:44:24.867Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-ops-author",
+  "articleHashes": [
+    {
+      "articleId": "deployment-configuration",
+      "contentSha256": "06ef91a9774556129c593b0752ae71054c202ed3fb6de1e06dfa9ce29587bfcc"
+    },
+    {
+      "articleId": "operator-troubleshooting",
+      "contentSha256": "341d363ae3d80055b493b46317778e8da651cc772cff0b3b198dc9b354a52b90"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "mail-wrong-key-recovered",
+      "actual": "Actual stored encrypted SMTP use delivered new test email to owned Mailpit; source remains app.",
+      "result": "pass",
+      "startedAt": "2026-09-08T08:44:25.309Z",
+      "at": "2026-09-08T08:44:25.396Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T08:44:25.396Z"
+}

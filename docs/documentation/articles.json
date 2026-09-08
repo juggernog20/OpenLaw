@@ -630,7 +630,7 @@
       "destinations": ["formal"],
       "priority": "P0",
       "contexts": [],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "deployment-configuration",
@@ -643,7 +643,7 @@
       "destinations": ["formal"],
       "priority": "P0",
       "contexts": [],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "upgrade",
@@ -656,7 +656,7 @@
       "destinations": ["formal"],
       "priority": "P0",
       "contexts": [],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "backup-and-restore",
@@ -669,7 +669,7 @@
       "destinations": ["formal"],
       "priority": "P0",
       "contexts": [],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "operator-troubleshooting",
@@ -682,7 +682,7 @@
       "destinations": ["formal"],
       "priority": "P0",
       "contexts": [],
-      "status": "scoped"
+      "status": "review"
     },
     {
       "id": "troubleshooting",

@@ -1,0 +1,54 @@
+{
+  "observedAt": "2026-09-08T08:54:52.535903+00:00",
+  "projects": [
+    {
+      "project": "openlaw-docs-b8e31260-ops-author",
+      "phase": "rotate-retired",
+      "sourceCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "images": {
+        "app": "sha256:2851d6acd05418a0ddc57750ac75908892643af481f2755cb13a46f946d073b6",
+        "worker": "sha256:2851d6acd05418a0ddc57750ac75908892643af481f2755cb13a46f946d073b6",
+        "doc-engine": "sha256:d0997fb7187067bc03f82e04ad45365ca5e3132b872e0b73c3934ceb2d67457a",
+        "postgres": "sha256:8a4b045886180c64f518ca6a4b0791b15fb997f3b3b619bd5ee141914668db55"
+      },
+      "configurationHashes": {
+        "phases/rotate-retired/settings.env": "98e50ba2fa434f8272697aa55d6aafff549f4b9fde5db87c549f17b6dfc5341f",
+        "phases/rotate-retired/compose.yml": "78828c0c1586cc707600260f0d67692dbb790e2fdc339aa5f6d57a5808eb5cf0",
+        "source/.env": "4582ff9a6039049462d42aa82432ca98c794580949b679d24227a7fa7c85c9fe"
+      }
+    },
+    {
+      "project": "openlaw-docs-b8e31260-ops-upgrade",
+      "phase": "candidate",
+      "sourceCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "images": {
+        "app": "sha256:2851d6acd05418a0ddc57750ac75908892643af481f2755cb13a46f946d073b6",
+        "worker": "sha256:2851d6acd05418a0ddc57750ac75908892643af481f2755cb13a46f946d073b6",
+        "doc-engine": "sha256:d0997fb7187067bc03f82e04ad45365ca5e3132b872e0b73c3934ceb2d67457a",
+        "postgres": "sha256:8a4b045886180c64f518ca6a4b0791b15fb997f3b3b619bd5ee141914668db55"
+      },
+      "configurationHashes": {
+        "phases/candidate/settings.env": "6a3646d5157c04e6827eda645491467a826a50fbac334faca90ad87d0a667316",
+        "phases/candidate/compose.yml": "49a65e89b52680f355688076c11e15606b681176ac7bfb8c4378faf6cfa29a6e",
+        "source/.env": "91607a4ff130a0ca17ffbc3911a0d23029979ff90735d2c9a9dd0760ab9f7658",
+        "candidate/.env": "91607a4ff130a0ca17ffbc3911a0d23029979ff90735d2c9a9dd0760ab9f7658"
+      }
+    },
+    {
+      "project": "openlaw-docs-b8e31260-ops-restore",
+      "phase": "restored",
+      "sourceCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "images": {
+        "app": "sha256:2851d6acd05418a0ddc57750ac75908892643af481f2755cb13a46f946d073b6",
+        "worker": "sha256:2851d6acd05418a0ddc57750ac75908892643af481f2755cb13a46f946d073b6",
+        "doc-engine": "sha256:d0997fb7187067bc03f82e04ad45365ca5e3132b872e0b73c3934ceb2d67457a",
+        "postgres": "sha256:8a4b045886180c64f518ca6a4b0791b15fb997f3b3b619bd5ee141914668db55"
+      },
+      "configurationHashes": {
+        "phases/restored/settings.env": "7bd6f2f934a4e4da0109459d610cd68947552f4a2ca83d76775fc1862df15786",
+        "phases/restored/compose.yml": "334938196e826639ff0f88830dd3680e6c3671ae0256553a0348df6d6d44ad24",
+        "source/.env": "2914413308ce5978168ae101a4610d069b0244941b9625dc65e29b1670e5d051"
+      }
+    }
+  ]
+}

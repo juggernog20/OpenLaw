@@ -1,0 +1,41 @@
+{
+  "name": "independent-mail-saved-relay",
+  "scenario": "V-C45",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:29:13.247Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-install",
+  "articleHashes": [
+    {
+      "articleId": "deployment-configuration",
+      "contentSha256": "d072207628c0589ee14b8d1575f58fdb70b1c8b6f349bd7ea3bdd70d902ac293"
+    },
+    {
+      "articleId": "operator-troubleshooting",
+      "contentSha256": "a41ec1326ba60de8e8d03037ad4e7c3f4d3e946df2afadae8fa18214859b2b9f"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Email configuration source and a real send in phase saved-relay",
+      "actual": "Email source is \"app\" with from-address OpenLaw Operator Review <openlaw@helix.example>. The test send returned 200 and a new message actually arrived in the owned Mailpit (3 total).",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:29:13.647Z",
+      "at": "2026-09-08T09:29:13.732Z"
+    },
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Records stay readable in phase saved-relay",
+      "actual": "The Contract list still answered 200 with 5 records, so ordinary record access is independent of the credential key state.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:29:13.732Z",
+      "at": "2026-09-08T09:29:13.747Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T09:29:13.747Z"
+}

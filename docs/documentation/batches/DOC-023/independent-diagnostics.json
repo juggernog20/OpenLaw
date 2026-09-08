@@ -1,0 +1,85 @@
+{
+  "name": "independent-diagnostics",
+  "scenario": "V-C48",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:40:29.354Z",
+  "completedAt": "2026-09-08T09:51:34.427Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-install",
+  "articleHashes": [],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "container-operation",
+      "action": "A short AUTH_SECRET does not stop startup",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:40:29.354Z",
+      "at": "2026-09-08T09:41:02.502Z",
+      "actual": "With AUTH_SECRET set to a 12-character value the app came up healthy, /readyz answered 200 and the sign-in page answered 200. The only sign of the problem was two log lines: \"[better-auth] Warning: your BETTER_AUTH_SECRET should be at least 32 characters long for adequate security\" and a low-entropy warning. Restoring the generated key returned the installation to readiness. This is why the guide's key row now separates the missing-key refusal and the OPENLAW_SECRET_KEY floor from a short AUTH_SECRET, which is only a warning."
+    },
+    {
+      "role": "operator",
+      "method": "container-operation",
+      "action": "An unreachable database endpoint stops startup and recovers",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:41:12.479Z",
+      "at": "2026-09-08T09:41:37.978Z",
+      "actual": "DATABASE_URL pointing at a host that does not resolve put app and worker into a restart loop with \"Error: getaddrinfo ENOTFOUND no-such-db\" and code ENOTFOUND in the app log, and /readyz was unreachable. Removing the setting and recreating the containers returned /readyz 200."
+    },
+    {
+      "role": "operator",
+      "method": "container-operation",
+      "action": "A stopped database separates /healthz from /readyz",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:41:49.696Z",
+      "at": "2026-09-08T09:41:54.234Z",
+      "actual": "With the app process still running and its database container stopped, /healthz answered 200 while /readyz answered 503 with {\"status\":\"unavailable\"}. Starting the database again returned /readyz 200. This is the state the guide's \"/healthz works but /readyz fails\" row describes."
+    },
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "An unreachable retained storage reader leaves readiness untouched",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:42:27.772Z",
+      "at": "2026-09-08T09:42:49.489Z",
+      "actual": "With S3_ENDPOINT pointed at a name that does not resolve while azure-blob took new writes, /readyz still answered {\"status\":\"ok\"} and the download of the Document stored on the S3 driver failed with HTTP 500, while Documents on the local and azure-blob stores downloaded with matching SHA-256 values. Correcting the endpoint restored all three stores. Recorded in full in independent-storage-fault-wrong-endpoint and independent-storage-fault-corrected.",
+      "timingBasis": "Bounded by the two checker records this step summarises: independent-storage-fault-wrong-endpoint began at 09:42:27.772Z and independent-storage-fault-corrected completed at 09:42:49.489Z."
+    },
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "A stopped worker leaves an upload pending and resumes it",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:43:16.356Z",
+      "at": "2026-09-08T09:43:24.763Z",
+      "actual": "With the worker stopped the API accepted a new PDF and its Version stayed \"pending\"; the original file still downloaded byte-identical. Starting the worker again took a new upload to \"ready\". Recorded in independent-processing-worker-stopped and independent-processing-worker-resumed.",
+      "timingBasis": "Bounded by independent-processing-worker-stopped and independent-processing-worker-resumed, whose own recorded times these are."
+    },
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "An unreachable document engine fails processing while the API stays ready",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:43:52.554Z",
+      "at": "2026-09-08T09:50:05.868Z",
+      "actual": "With DOC_ENGINE_URL pointed at an address that does not answer, a real PDF reached the terminal state \"failed\" under the normal queue retry timings while /readyz stayed {\"status\":\"ok\"}. Removing the override took a new PDF to \"ready\" with its uploaded words and a byte-identical download. Recorded in independent-processing-engine-failed and independent-processing-engine-recovered.",
+      "timingBasis": "Bounded by independent-processing-engine-failed, which began at 09:43:52.554Z, and independent-processing-engine-recovered, which completed at 09:50:05.868Z."
+    },
+    {
+      "role": "operator",
+      "method": "container-operation",
+      "action": "A stranded migration journal refuses startup and both documented diagnostics identify it",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:50:28.383Z",
+      "at": "2026-09-08T09:51:34.427Z",
+      "actual": "Writers were stopped and one recorded bookkeeping hash in this disposable fixture was replaced with a marker value, its exact original hash and stamp kept privately first. The app then refused to start with \"This database cannot apply the migrations it is missing.\" and named 0090_request_triage_assignee (stamped 1788637394684), and /readyz was unreachable. Both read-only commands in the guide worked against the refusing installation: the psql query listed the unrecognized hash at the newest stamp, and docker compose run --rm --no-deps app node scripts/lint-migration-journal.mjs --hashes mapped that stamp to 0090_request_triage_assignee and its true hash. Restoring the exact recorded hash returned /readyz 200. Injecting and undoing this fixture fault is reviewer setup, not a repair procedure the guide offers to readers."
+    }
+  ],
+  "passed": true,
+  "limitations": [
+    "Every fault was induced on the reviewer's own disposable installation, one at a time, and reversed before the next.",
+    "Signing and AI connector diagnostics were not exercised: C42/C43 provider access is still blocked, so those paragraphs of the article remain unverified here."
+  ],
+  "timingBasis": "This record was assembled by hand from the diagnostics command log and the checker records it points at. Every interval is the log's own timestamp or the bounds of the named record; no per-action timing finer than those sources was recorded."
+}

@@ -1,0 +1,51 @@
+{
+  "name": "independent-install-negatives",
+  "scenario": "V-C44",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:23:37.960Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-install",
+  "articleHashes": [],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "container-operation",
+      "action": "A missing key is refused before any container changes",
+      "actual": "Blanking AUTH_SECRET in .env made both docker compose config --quiet and docker compose up -d exit 1 with \"required variable AUTH_SECRET is missing a value: AUTH_SECRET is required \u2014 generate one with `openssl rand -base64 32` and set it in .env\". docker compose ps still showed app, worker, postgres and doc-engine up, so Compose refused the command without touching the running installation.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:23:37.960Z",
+      "at": "2026-09-08T09:23:38.110Z"
+    },
+    {
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Restoring the intended key returns the installation to readiness",
+      "actual": "Putting the generated AUTH_SECRET back made docker compose config --quiet exit 0 and /readyz answered 200 again.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:23:38.110Z",
+      "at": "2026-09-08T09:23:38.170Z"
+    },
+    {
+      "role": "operator",
+      "method": "container-operation",
+      "action": "An occupied host port fails the start and names the port",
+      "actual": "Setting PORT=43333, a port an unrelated owned preview server was already listening on, made docker compose up -d exit 1 with \"failed to bind host port 0.0.0.0:43333/tcp: address already in use\". The unrelated listener was left alone. The failed recreate left the installation without its app and worker containers: docker compose ps then listed only doc-engine and postgres.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:23:38.170Z",
+      "at": "2026-09-08T09:23:49.596Z"
+    },
+    {
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Choosing an unused port again recovers the instance",
+      "actual": "Restoring PORT=43360 and running docker compose up -d --no-build --pull never brought app and worker back and /readyz answered 200.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:23:49.596Z",
+      "at": "2026-09-08T09:23:52.148Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T09:23:52.148Z",
+  "timingBasis": "Assembled by hand from logs/install-negatives.log; every startedAt and at here is a timestamp that log wrote as the commands ran."
+}

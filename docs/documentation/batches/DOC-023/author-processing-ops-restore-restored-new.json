@@ -1,0 +1,34 @@
+{
+  "name": "processing-ops-restore-restored-new",
+  "author": "Codex documentation author",
+  "startedAt": "2026-09-08T08:44:25.665Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-ops-restore",
+  "articleHashes": [
+    {
+      "articleId": "deployment-configuration",
+      "contentSha256": "06ef91a9774556129c593b0752ae71054c202ed3fb6de1e06dfa9ce29587bfcc"
+    },
+    {
+      "articleId": "operator-troubleshooting",
+      "contentSha256": "341d363ae3d80055b493b46317778e8da651cc772cff0b3b198dc9b354a52b90"
+    },
+    {
+      "articleId": "backup-and-restore",
+      "contentSha256": "80aea7b8f2ac34dc4892eba848103f283d8424742fa77be34018672618a045a2"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Actual PDF processing restored-new",
+      "actual": "Real PDF extraction reached ready with expected source words; original download exactly matches uploaded bytes.",
+      "result": "pass",
+      "startedAt": "2026-09-08T08:44:26.020Z",
+      "at": "2026-09-08T08:44:26.240Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T08:44:26.240Z"
+}

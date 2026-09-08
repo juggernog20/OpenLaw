@@ -1,0 +1,28 @@
+{
+  "name": "independent-proxy-sse-retry",
+  "scenario": "V-C45",
+  "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "reviewerKind": "agent",
+  "startedAt": "2026-09-08T09:35:36.907Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "environment": "openlaw-docs-b8e31260-rev-install",
+  "articleHashes": [
+    {
+      "articleId": "deployment-configuration",
+      "contentSha256": "d072207628c0589ee14b8d1575f58fdb70b1c8b6f349bd7ea3bdd70d902ac293"
+    }
+  ],
+  "steps": [
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "The event stream stays open through the proxy and frames arrive unbuffered",
+      "actual": "GET /api/events through https://openlaw-review.localhost:43372 answered 200 with content-type text/event-stream; charset=utf-8 and x-accel-buffering no. Frames arrived on the open connection at 15008ms, 30008ms: [\": heartbeat\",\": heartbeat\"]. Both frames were the stream's own heartbeats, which is what shows the connection stays open and unbuffered; a buffering proxy would have withheld them. Contract 8 was created by the same signed-in user while the stream was open and did not itself produce a frame, so this step does not claim a record-change event.",
+      "result": "pass",
+      "startedAt": "2026-09-08T09:35:37.310Z",
+      "at": "2026-09-08T09:36:07.327Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T09:36:07.327Z"
+}
