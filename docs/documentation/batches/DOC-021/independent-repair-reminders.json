@@ -1,0 +1,32 @@
+{
+  "name": "independent-repair-reminders",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C41"],
+  "authorRecordName": "ind-repair-reminders",
+  "purpose": "Evidence repair: re-establishes a claim an earlier record recorded unreliably. Every step asserts and throws if its outcome is not observed.",
+  "startedAt": "2026-09-08T06:32:59.293Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "reminders-and-audit",
+      "contentSha256": "91583fda511a5d75941af7d8b919de5db42298846ee2b9dad65fcd6f43a4565c"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "An empty lead-time list is refused and the saved list is untouched",
+      "actual": "The saved list was [2,4,0]. PUT /org/reminder-offsets with an empty array answered 400 with the complete problem {\"type\":\"about:blank\",\"title\":\"Request validation failed\",\"status\":400,\"detail\":\"One or more request fields are invalid.\",\"instance\":\"/api/v1/org/reminder-offsets\",\"errors\":[{\"path\":\"offsets\",\"message\":\"Too small: expected array to have >=1 items\"}]}. The saved list is still [2,4,0] and the pane still shows [\"2 days before\",\"4 days before\",\"On the day\"], so the reader's normal list was neither emptied nor rebuilt by this check.",
+      "result": "pass",
+      "startedAt": "2026-09-08T06:33:00.209Z",
+      "at": "2026-09-08T06:33:00.817Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T06:33:00.817Z"
+}

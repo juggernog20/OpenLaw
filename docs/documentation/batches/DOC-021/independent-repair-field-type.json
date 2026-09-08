@@ -1,0 +1,32 @@
+{
+  "name": "independent-repair-field-type",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C38"],
+  "authorRecordName": "ind-repair-field-type",
+  "purpose": "Evidence repair: re-establishes a claim an earlier record recorded unreliably. Every step asserts and throws if its outcome is not observed.",
+  "startedAt": "2026-09-08T06:33:00.821Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "types-statuses-fields",
+      "contentSha256": "6e3fa892dc9b2bb23d05bd7b3125a187cdd1cbafb384cdf2d248064a1bcd1abe"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "The field type is shown as text in Edit and a well-formed change is refused",
+      "actual": "In Edit the field type is not a control at all: there is no #field-type element (0 found), only the Type label followed by the static text \"Single select\" and the note \"The field type is immutable after creation.\", while Scope remains an editable control (1). The earlier record's \"disabled=null\" was that absence read as a form control, not a disabled select. PATCH /fields/01a07f76-9db1-7251-888b-1b82b16bb3e2 with a well-formed body naming fieldType answered 400 with the complete problem {\"type\":\"about:blank\",\"title\":\"Request validation failed\",\"status\":400,\"detail\":\"One or more request fields are invalid.\",\"instance\":\"/api/v1/fields/01a07f76-9db1-7251-888b-1b82b16bb3e2\",\"errors\":[{\"path\":\"\",\"message\":\"Unrecognized key: \\\"fieldType\\\"\"}]}, and the stored type is still \"single_select\".",
+      "result": "pass",
+      "startedAt": "2026-09-08T06:33:01.662Z",
+      "at": "2026-09-08T06:33:02.377Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T06:33:02.377Z"
+}

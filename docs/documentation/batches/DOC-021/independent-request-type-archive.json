@@ -1,0 +1,30 @@
+{
+  "name": "independent-request-type-archive",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C40"],
+  "authorRecordName": "ind-request-type-archive",
+  "startedAt": "2026-09-08T05:57:33.624Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "request-forms",
+      "contentSha256": "fa754411d678b893df527b27277505f79bb4b5edfacdf173dac2ae0943c0148c"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Archiving a request type that still carries Requests does not ask for a replacement",
+      "result": "fail",
+      "startedAt": "2026-09-08T05:57:34.542Z",
+      "error": "Cannot read properties of undefined (reading 'archivedAt')",
+      "at": "2026-09-08T05:57:39.145Z"
+    }
+  ],
+  "passed": false
+}

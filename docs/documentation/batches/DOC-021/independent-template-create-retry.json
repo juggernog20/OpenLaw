@@ -1,0 +1,63 @@
+{
+  "name": "independent-template-create-retry",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C39"],
+  "authorRecordName": "ind-template-create-retry",
+  "startedAt": "2026-09-08T05:31:30.461Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "matter-templates",
+      "contentSha256": "c458f44480e167baf2930bdad0f03a944b0f10b890c7ff10468543328016f9e9"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Direct creation applies the template and anchors dates on the UTC creation date",
+      "actual": "The dialog seeded Title \"Onboarding\", Priority \"high\", Risk \"medium\", Field \"Benelux\" and noted \"Template adds 2 tasks and 1 key date.\". Created between 2026-09-08T05:31:32.080Z and 2026-09-08T05:31:32.185Z as Matter 27 (createdAt 2026-09-08T05:31:32.124Z, UTC civil date 2026-09-08). Manager-targeted Task \"Confirm scope with the requester\" is assigned to Nadia Haddad and due 2026-09-11 (anchor+3); the undated Task \"Open the evidence folder\" has dueDate null and assignee null. Key date \"Onboarding review point\" is 2026-09-15 (anchor+7). The record page renders the Tasks card (false). Priority=high, Risk=medium, Field=\"Benelux\".",
+      "result": "fail",
+      "startedAt": "2026-09-08T05:31:31.386Z",
+      "at": "2026-09-08T05:31:32.217Z",
+      "error": "Contradiction inside the step: it records \"The record page renders the Tasks card (false)\" yet passed. The page assertion searched the Overview for a Task title that lives in the record's own Tasks section. The date-anchor, default and assignment values in the same string were read from the API and are corroborated by the linked records.",
+      "supersededBy": [
+        "docs/documentation/batches/DOC-021/independent-template-record-retry3.json",
+        "docs/documentation/batches/DOC-021/independent-repair-anchor.json"
+      ]
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A Manager-targeted Task stays unassigned when the new Matter has no manager",
+      "actual": "Matter 28 was created with Matter Manager left Unassigned (manager=null). Its Manager-targeted Task \"Confirm scope with the requester\" is assigned to null and still carries its due date 2026-09-11.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:31:32.217Z",
+      "at": "2026-09-08T05:31:32.976Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Editing the template leaves earlier Matters, Tasks and Key dates unchanged",
+      "actual": "Renaming Task 1 and moving the Key date offset to 21 left Matter 27 untouched: {\"tasks\":[[\"Confirm scope with the requester\",\"2026-09-11\",\"Nadia Haddad\"],[\"Open the evidence folder\",null,null]],\"dates\":[[\"Onboarding review point\",\"2026-09-15\"]]}. A Matter created afterwards (29, createdAt 2026-09-08T05:31:35.823Z) took the new definition: tasks [[\"Confirm scope with the requester (revised)\",\"2026-09-11\"],[\"Open the evidence folder\",null]], key dates [[\"Onboarding review point\",\"2026-09-29\"]] \u2014 anchor+21 from its own creation date.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:31:32.976Z",
+      "at": "2026-09-08T05:31:35.911Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Archiving removes the template from creation and Restore recovers its definition",
+      "actual": "The archive dialog read \"Archive Ind onboarding playbook IND81T2F? The template leaves new Matter creation. Existing Matters are unchanged, and restoring the template brings its full definition back. Cancel Archive template\". Afterwards the creation dialog offered [\"No template\"] while Matter 27 kept its Key dates [[\"Onboarding review point\",\"2026-09-15\"]]. Restore returned the full edited definition: 2 tasks (Confirm scope with the requester (revised), Open the evidence folder), 1 key date at offset 21, Priority high, Risk medium.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:31:35.911Z",
+      "at": "2026-09-08T05:31:39.165Z"
+    }
+  ],
+  "passed": false,
+  "completedAt": "2026-09-08T05:31:39.165Z"
+}

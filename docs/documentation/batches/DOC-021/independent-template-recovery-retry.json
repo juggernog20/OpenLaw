@@ -1,0 +1,50 @@
+{
+  "name": "independent-template-recovery-retry",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C39"],
+  "authorRecordName": "ind-template-recovery-retry",
+  "startedAt": "2026-09-08T05:33:03.143Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "matter-templates",
+      "contentSha256": "c458f44480e167baf2930bdad0f03a944b0f10b890c7ff10468543328016f9e9"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Read the created Matter\u2019s Overview, Tasks and Key dates as a reader",
+      "actual": "The record's section strip reads \"Overview Documents Key dates 1 Tasks 2\". Overview shows type \"Ind template type IND81T2F\", Priority/Risk and the Field: true. The Tasks section reads \"M-27 | Title | Matter type | Employment | Litigation | Regulatory | Commercial | Corporate | IP | Privacy | Advisory | Other | Product counsel | M&A | Docs replacement 1788842089553 revised | Ind supplier assessment IND81C9L revised | Docs matter 1788842089553 | Ind replacement type IND81C9L | Ind r\". The Key dates section reads \"M-27 | Title | Matter type | Employment | Litigation | Regulatory | Commercial | Corporate | IP | Privacy | Advisory | Other | Product counsel | M&A | Docs replacement 1788842089553 revised | Ind supplier assessment IND81C9L revised | Docs matter 1788842089553 | Ind replacement type IND81C9L | Ind r\".",
+      "result": "fail",
+      "startedAt": "2026-09-08T05:33:04.104Z",
+      "at": "2026-09-08T05:33:04.785Z",
+      "error": "Reviewer helper error, not product behaviour: the section links were clicked without waiting for the URL to change, so the Tasks and Key dates text captured the Overview type picker instead of those sections. Redone in ind-template-record."
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A failed Task write leaves the earlier Description saved and the retry succeeds",
+      "actual": "One injected 503 on the Tasks write produced \"The template Tasks could not be saved. Earlier changes may already be saved.\". The earlier Description had already saved (stored \"Independent partial-save probe IND81T2F\") while the Tasks list still read [\"Confirm scope with the requester (revised)\",\"Open the evidence folder\"]. After a reload the editor showed description=\"Independent partial-save probe IND81T2F\" and Task 2=\"Open the evidence folder\", exactly the mixed state the guide tells the reader to inspect. The retry saved: [\"Confirm scope with the requester (revised)\",\"Open the evidence folder (retry probe)\"].",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:33:04.785Z",
+      "at": "2026-09-08T05:33:07.681Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "An archived Matter type takes its template out of creation, and an invalid template is refused",
+      "actual": "Naming this template on a different Matter type answered 400: {\"type\":\"about:blank\",\"title\":\"The template must be live and belong to the selected matter type.\",\"status\":400,\"detail\":\"The template must be live and belong to the selected matter type.\",\"instance\":\". After archiving \"Ind template type IND81T2F\" the creation dialog no longer offered it (offered=false), and creating on the archived type answered 400: {\"type\":\"about:blank\",\"title\":\"The matter type must be a live matter type.\",\"status\":400,\"detail\":\"The matter type must be a live matter type.\",\"instance\":\"/api/v1/matters\"}. Restore put the type back so a live type and matching template can be chosen again.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:33:07.681Z",
+      "at": "2026-09-08T05:33:10.940Z"
+    }
+  ],
+  "passed": false,
+  "completedAt": "2026-09-08T05:33:10.941Z"
+}

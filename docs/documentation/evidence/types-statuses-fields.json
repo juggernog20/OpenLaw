@@ -5,11 +5,11 @@
   "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
   "environment": "openlaw-docs-b8e31260-configuration",
   "author": "Codex documentation author",
-  "technicalReviewer": null,
-  "walkthroughReviewer": null,
+  "technicalReviewer": "Opus 5 independent review agent",
+  "walkthroughReviewer": "Opus 5 independent review agent",
   "reviewerKind": "agent",
-  "verifiedAt": null,
-  "status": "not-run",
+  "verifiedAt": "2026-09-08T06:33:02Z",
+  "status": "pass",
   "sources": [
     "CONTEXT.md",
     "docs/decision-records/DECISIONS-SETTINGS.md",
@@ -31,9 +31,24 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "expected": "New and existing records reflect the documented configuration and retained-value behavior. Immutable Stage/Category mappings and invalid reassignment are refused; non-Administrators cannot edit configuration.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "Followed the guide as Daniel Okafor on the owned configuration lab. Created and renamed a Matter type, keyboard-reordered it, and confirmed the immutable Slug in Edit. Created a Global single-select Field, confirmed its immutable type, attached it to a Matter type and set Required; creation with the answer empty was refused by name (\"Fill Ind coverage region IND81T2F.\") and succeeded once supplied. Detach kept the catalog definition and the stored value; catalog Archive hid the row while keeping attachments and the stored answer, and Show archived plus Restore recovered it. In Edit, narrowing the Global Field to a module was refused while a Contract type still attached it (\"...is attached outside the matter module \u2014 detach it there first...\") and succeeded after detaching, with stored values retained. Contract Statuses: created on a chosen Stage, renaming kept the Stage, the Draft/Active/Expired seeds show a protected lock instead of an archive control, and an in-use Status was blocked (409) with no reassignment control until the Contract was moved by hand. Matter Statuses: an in-use custom Status offered only same-Category replacements and moved the Matter on confirmation. Archiving an in-use Matter type moved its records to the chosen replacement and Restore did not move them back; Other is protected. Archiving an in-use Officer role moved both a current and a resigned appointment to the replacement, and Restore did not reverse it. Nadia Haddad (Legal) and Ravi Menon (Contributor) saw no Organization rail entries, were redirected to /settings/profile from every configuration pane, and were refused 403 on a direct write. A later evidence review relabelled the field-type observation, which had read a non-control as a disabled select; repair-field-type re-establishes it, showing the type as static text with no control and a well-formed change refused 400 with the stored type unmoved.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-021/independent-discovery.json",
+        "docs/documentation/batches/DOC-021/independent-discovery-final.json",
+        "docs/documentation/batches/DOC-021/independent-repair-field-type.json",
+        "docs/documentation/batches/DOC-021/independent-requiredness.json",
+        "docs/documentation/batches/DOC-021/independent-requiredness-retry.json",
+        "docs/documentation/batches/DOC-021/independent-requiredness-retry2.json",
+        "docs/documentation/batches/DOC-021/independent-requiredness-retry3.json",
+        "docs/documentation/batches/DOC-021/independent-requiredness-retry4.json",
+        "docs/documentation/batches/DOC-021/independent-requiredness-retry5.json",
+        "docs/documentation/batches/DOC-021/independent-roles.json",
+        "docs/documentation/batches/DOC-021/independent-roles-retry.json",
+        "docs/documentation/batches/DOC-021/independent-statuses.json",
+        "docs/documentation/batches/DOC-021/independent-statuses-retry.json",
+        "docs/documentation/batches/DOC-021/independent-taxonomies.json"
+      ]
     }
   ],
   "authorEvidence": [
@@ -49,10 +64,22 @@
     "docs/documentation/batches/DOC-021/author-taxonomies-retry4.json"
   ],
   "limitations": [
-    "Independent agent walkthrough pending; user proofreading waits for the full suite.",
-    "Evidence uses immutable source 6a8873db; final candidate compatibility belongs to DOC-025.",
-    "Known #774 blank Matter Entity-valued Field picker and #770 template-default clear behavior are documented, not claimed fixed."
+    "Technical review and the walkthrough were both performed by the same independent agent; they are separate methods (source inspection and browser walkthrough), not two independent people.",
+    "Independent agent walkthrough, not a human user study; the author and the reviewer are different agents.",
+    "Verified on the owned lab at immutable source 6a8873db; final candidate compatibility belongs to DOC-025.",
+    "Known #774 blank Matter Entity-valued Field picker and #770 template-default clear behaviour remain open and are described as limits, not fixed.",
+    "No human feature owner has signed off behaviour accuracy, and the user's final proofreading of the assembled suite has not happened."
   ],
   "previousEvidence": null,
-  "copyOnlyReview": null
+  "copyOnlyReview": null,
+  "verifiedAtBasis": "Actual completion of the last passing walkthrough covering this article: 2026-09-08T06:33:02.377Z, truncated to the second. Historical action times and article hashes inside the walkthrough records are unchanged, including records taken on earlier draft bytes of the same immutable app build.",
+  "technicalReview": {
+    "reviewer": "Opus 5 independent review agent",
+    "reviewerKind": "agent",
+    "method": "source-inspection",
+    "completedAt": "2026-09-08T06:12:26Z",
+    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+    "scope": "Read the settings rail and its Organization-only guard (apps/web/src/routes/settings.tsx), the four Types panes and the shared archive/reassignment guard (settings-contract-types.tsx, settings-matter-types.tsx, settings-entity-types.tsx, settings-knowledge-types.tsx, components/taxonomy-types-pane.tsx), the Status panes and their fixed backbones (settings-contract-statuses.tsx STAGES and PROTECTED_SLUGS, settings-matter-statuses.tsx categories and same-category reassignment), the Field catalog and its nine types, scope moves and AI-prompt rule (settings-contract-fields.tsx, apps/api/src/modules/fields/routes.ts), the type editors' attachment surface and immutable Slug (settings-contract-type-editor.tsx, settings-matter-type-editor.tsx, components/type-editor-screen.tsx), the hard-required rule and its two deliberate skips (apps/api/src/lib/custom-fields.ts), and Officer-role usage counting resigned appointments (apps/api/src/modules/officer-roles/usage.ts).",
+    "notHeld": "An agent source review of the release under test. It is not a human feature owner's sign-off on behaviour accuracy, and it is not the user's final proofreading of the assembled suite."
+  }
 }

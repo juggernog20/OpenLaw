@@ -1,0 +1,59 @@
+{
+  "name": "independent-repair-groups",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C55"],
+  "authorRecordName": "ind-repair-groups",
+  "purpose": "Evidence repair: re-establishes a claim an earlier record recorded unreliably. Every step asserts and throws if its outcome is not observed.",
+  "startedAt": "2026-09-08T06:32:08.623Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "approver-groups",
+      "contentSha256": "baffd87c46ad0bfa7d084348f14bf7334da24590d99ca4c50a04cb870b7bdbb9"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A well-formed member list naming a Contributor is refused as a role rule",
+      "actual": "PUT /approver-groups/{id}/members with the route's own memberIds key, adding Ravi Menon (01a07f47-2c24-776e-9e13-50e7f979e4e4, role contributor) to the 2 current members, answered 422 with the complete problem {\"type\":\"about:blank\",\"title\":\"Ravi Menon is not an Administrator or a Legal Team Member, so they can't approve a contract.\",\"status\":422,\"detail\":\"Ravi Menon is not an Administrator or a Legal Team Member, so they can't approve a contract.\",\"instance\":\"/api/v1/approver-groups/01a07f8e-5fbb-7931-929b-1d9d1bcd717c/members\"}. The membership was unchanged afterwards ([[\"01a07f47-2b0e-733e-a95b-6dca0c6df361\",\"Daniel Okafor\"],[\"01a07f47-2b1c-76fe-b679-3f141aab9053\",\"Nadia Haddad\"]]), and the identical shape carrying only eligible people answered 200 \u2014 so the refusal is the Member+ role rule, not request validation.",
+      "result": "pass",
+      "startedAt": "2026-09-08T06:32:09.569Z",
+      "at": "2026-09-08T06:32:09.606Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "The member picker offers exactly the live Administrators and Legal Team Members",
+      "actual": "This is the complete picker list, not a sample: it offered 10 people, [\"Blair Wentworth\",\"Daniel Okafor\",\"Ellis Marlow 1788842858292\",\"Ind Rowan Vale 1788846683344\",\"Ines Duarte\",\"Marcus Oyelaran\",\"Nadia Haddad\",\"Priya Raman\",\"Sofia Lindqvist\",\"Tom Iwu\"], which is exactly the 10 live Administrators and Legal Team Members [\"Blair Wentworth\",\"Daniel Okafor\",\"Ellis Marlow 1788842858292\",\"Ind Rowan Vale 1788846683344\",\"Ines Duarte\",\"Marcus Oyelaran\",\"Nadia Haddad\",\"Priya Raman\",\"Sofia Lindqvist\",\"Tom Iwu\"]. None of the 14 live Contributors or Business Users appears. 1 archived Member+ people ([\"Gabriel Santos\"]) are also absent. Every current member of \"Ind sign-off panel IND81T2F\" \u2014 [[\"01a07f47-2b0e-733e-a95b-6dca0c6df361\",\"Daniel Okafor\"],[\"01a07f47-2b1c-76fe-b679-3f141aab9053\",\"Nadia Haddad\"]] \u2014 is listed and checked ([\"Daniel Okafor\",\"Nadia Haddad\"]).",
+      "result": "pass",
+      "startedAt": "2026-09-08T06:32:09.606Z",
+      "at": "2026-09-08T06:32:10.278Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "An already-asked member is skipped by name, with the roster named before and after",
+      "actual": "Contract 51 already held one manual Pending request for Daniel Okafor (01a07f47-2b0e-733e-a95b-6dca0c6df361): [{\"id\":\"01a07f47-2b0e-733e-a95b-6dca0c6df361\",\"name\":\"Daniel Okafor\",\"source\":\"manual\",\"group\":null}]. The dialog said \"Asks Nadia Haddad.\" and \"Skips 1 person who already has a request open.\". Applying left exactly two Pending rows and no duplicate: [{\"id\":\"01a07f47-2b0e-733e-a95b-6dca0c6df361\",\"name\":\"Daniel Okafor\",\"source\":\"manual\",\"group\":null},{\"id\":\"01a07f47-2b1c-76fe-b679-3f141aab9053\",\"name\":\"Nadia Haddad\",\"source\":\"group\",\"group\":\"Ind sign-off panel IND81T2F\"}]. Daniel Okafor's row is still source \"manual\" and Nadia Haddad's new row is source \"group\" from \"Ind sign-off panel IND81T2F\". Both names appear on the record's Approvals page.",
+      "result": "pass",
+      "startedAt": "2026-09-08T06:32:10.278Z",
+      "at": "2026-09-08T06:32:11.049Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A refused apply names the person and creates nothing; restoring the role lets it through",
+      "actual": "\"Ind sign-off panel IND81T2F\" holds [[\"01a07f47-2b0e-733e-a95b-6dca0c6df361\",\"Daniel Okafor\"],[\"01a07f47-2b1c-76fe-b679-3f141aab9053\",\"Nadia Haddad\"]]. With Nadia Haddad (01a07f47-2b1c-76fe-b679-3f141aab9053) demoted from legal_team_member to contributor, Contract 52 held 0 Pending rows; the apply was refused with \"Nadia Haddad is not an Administrator or a Legal Team Member, so they can't approve a contract.\" and the roster was still 0 rows, so nothing partial was written for the other member. Restoring Nadia Haddad to legal_team_member and applying again created 2 rows naming exactly the group's members: [{\"id\":\"01a07f47-2b0e-733e-a95b-6dca0c6df361\",\"name\":\"Daniel Okafor\",\"source\":\"group\",\"group\":\"Ind sign-off panel IND81T2F\"},{\"id\":\"01a07f47-2b1c-76fe-b679-3f141aab9053\",\"name\":\"Nadia Haddad\",\"source\":\"group\",\"group\":\"Ind sign-off panel IND81T2F\"}].",
+      "result": "pass",
+      "startedAt": "2026-09-08T06:32:11.049Z",
+      "at": "2026-09-08T06:32:12.563Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T06:32:12.563Z"
+}

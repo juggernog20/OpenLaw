@@ -1,0 +1,32 @@
+{
+  "name": "independent-repair-submit",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C40"],
+  "authorRecordName": "ind-repair-submit",
+  "purpose": "Evidence repair: re-establishes a claim an earlier record recorded unreliably. Every step asserts and throws if its outcome is not observed.",
+  "startedAt": "2026-09-08T06:33:02.380Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "request-forms",
+      "contentSha256": "5981f17a9afc7dc219cf98d35d603f7c5491eed8c253b7fbd9e5fab294bd873b"
+    }
+  ],
+  "steps": [
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "A refused Portal submission creates no Request at all",
+      "actual": "Submitting \"Ind refusal probe IND81T2F 1788849183213\" with the required Field empty kept the reader on /portal/new/ind_advisory_intake_ind81t2f, marked [\"request-field-ind_coverage_region_ind81t2f\"] aria-invalid and reported [\"Ind coverage region IND81T2F is required.\",\"Fill Ind coverage region IND81T2F first \u2014 the form requires it.\"]. The Request list held 11 rows before and 11 after, and no Request carries that unique summary, so nothing was created. Supplying \"Nordics\" on the same form then submitted R-35, whose stored summary is exactly that string.",
+      "result": "pass",
+      "startedAt": "2026-09-08T06:33:03.213Z",
+      "at": "2026-09-08T06:33:04.964Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T06:33:04.964Z"
+}

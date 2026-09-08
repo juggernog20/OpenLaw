@@ -1,15 +1,15 @@
 {
   "articleId": "request-forms",
-  "contentSha256": "92cb436459e7ee7d48b47904796fb1912aa6c56d34e75ddc5061e0426a761337",
+  "contentSha256": "5981f17a9afc7dc219cf98d35d603f7c5491eed8c253b7fbd9e5fab294bd873b",
   "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
   "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
   "environment": "openlaw-docs-b8e31260-configuration",
   "author": "Codex documentation author",
-  "technicalReviewer": null,
-  "walkthroughReviewer": null,
+  "technicalReviewer": "Opus 5 independent review agent",
+  "walkthroughReviewer": "Opus 5 independent review agent",
   "reviewerKind": "agent",
-  "verifiedAt": null,
-  "status": "not-run",
+  "verifiedAt": "2026-09-08T06:41:52Z",
+  "status": "pass",
   "sources": [
     "CONTEXT.md",
     "docs/decision-records/DECISIONS-SETTINGS.md",
@@ -31,9 +31,36 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "expected": "Each form collects the intended values and conversion follows the configured target. Invalid/missing required Fields and archived targets do not silently route work to a different module.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "Created four request types covering the fixed Contract target, the fixed Matter target, a module-only target and No target, and read each explanation. Attachable Fields followed the target and the No target form offered only Global Fields. A user-valued Field attached to a Portal form with its Required box disabled and the pane's stated reason. Detach removed a form attachment while the catalog definition survived. Deflection links: a Knowledge link placed on the Matter request type and an external address placed on Portal home; \"helix.example/policies\" was refused with \"Enter a full web address that starts with http:// or https://.\", and Remove deleted links immediately with no archive or restore. Jonas Weber saw \"Before you submit\" on Portal home with the home-placed link and on the chosen form with its own link, and the fixed basics with their required markers. Submitting with the required answer empty kept the form open, marked the control aria-invalid and reported \"Fill ... first \u2014 the form requires it.\"; supplying it submitted the Request. Conversion grouped answers under the exact headings \"Carries into the matter\" and \"Does not carry into the matter\", left the non-carrying answer on the Request, and created the Matter with Priority from Urgency and the title from the Summary. A module-only form gave the triager a real type picker; a No target Request read \"Converts to No target\", explained conversion as a deliberate re-target and was resolved in the thread without creating a record. An archived bound Contract type stopped the dialog confirming a bound type and required a live choice, with no silent switch of module. Archiving a request type that still carried a Request reported no usage, offered no replacement, left that Request naming the archived type and readable to its Requester, and took the type out of the Portal's cards; Restore offered it again and the Slug survived a rename. A later evidence review relabelled the form-attachment step, whose list came from an envelope key the endpoint does not answer, and five Portal steps whose \"no Request was created\" clause matched an earlier probe. repair-forms shows the required Field still attached and required, by id, after a different Field is detached, with the detached Field's catalog definition intact; repair-submit proves the refusal creates nothing against a unique summary. A later evidence review also relabelled the archived-target step, which had counted a picker and sampled the confirm control without ever choosing a type; repair-archived-target carries it through on the reviewer's own fictional Contract type, showing the blank picker refused by the inline message \"Pick a contract type.\" with no convert request sent and the Request still new, then an explicit live type converting it into a Contract of exactly that type.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-021/independent-convert-gaps.json",
+        "docs/documentation/batches/DOC-021/independent-discovery.json",
+        "docs/documentation/batches/DOC-021/independent-discovery-final.json",
+        "docs/documentation/batches/DOC-021/independent-forms.json",
+        "docs/documentation/batches/DOC-021/independent-forms-corrections.json",
+        "docs/documentation/batches/DOC-021/independent-forms-corrections-final.json",
+        "docs/documentation/batches/DOC-021/independent-forms-corrections-retry.json",
+        "docs/documentation/batches/DOC-021/independent-forms-retry.json",
+        "docs/documentation/batches/DOC-021/independent-forms-retry2.json",
+        "docs/documentation/batches/DOC-021/independent-guidance.json",
+        "docs/documentation/batches/DOC-021/independent-guidance-retry.json",
+        "docs/documentation/batches/DOC-021/independent-guidance-retry2.json",
+        "docs/documentation/batches/DOC-021/independent-guidance-retry3.json",
+        "docs/documentation/batches/DOC-021/independent-repair-archived-target.json",
+        "docs/documentation/batches/DOC-021/independent-repair-forms.json",
+        "docs/documentation/batches/DOC-021/independent-repair-submit.json",
+        "docs/documentation/batches/DOC-021/independent-request-type-archive.json",
+        "docs/documentation/batches/DOC-021/independent-request-type-archive-retry.json",
+        "docs/documentation/batches/DOC-021/independent-request-type-lifecycle.json",
+        "docs/documentation/batches/DOC-021/independent-request-type-lifecycle-retry.json",
+        "docs/documentation/batches/DOC-021/independent-submit.json",
+        "docs/documentation/batches/DOC-021/independent-submit-retry.json",
+        "docs/documentation/batches/DOC-021/independent-submit-retry2.json",
+        "docs/documentation/batches/DOC-021/independent-submit-retry3.json",
+        "docs/documentation/batches/DOC-021/independent-submit-retry4.json",
+        "docs/documentation/batches/DOC-021/independent-submit-retry5.json"
+      ]
     }
   ],
   "authorEvidence": [
@@ -46,9 +73,11 @@
     "docs/documentation/batches/DOC-021/author-supplement.json"
   ],
   "limitations": [
-    "Independent agent walkthrough pending; user proofreading waits for the full suite.",
-    "Evidence uses immutable source 6a8873db; final candidate compatibility belongs to DOC-025.",
-    "Known #774 blank Matter Entity-valued Field picker and #770 template-default clear behavior are documented, not claimed fixed."
+    "Technical review and the walkthrough were both performed by the same independent agent; they are separate methods (source inspection and browser walkthrough), not two independent people.",
+    "Independent agent walkthrough, not a human user study; the author and the reviewer are different agents.",
+    "Verified on the owned lab at immutable source 6a8873db; final candidate compatibility belongs to DOC-025.",
+    "Known #774 blank Matter Entity-valued Field picker and #770 template-default clear behaviour remain open and are described as limits, not fixed.",
+    "No human feature owner has signed off behaviour accuracy, and the user's final proofreading of the assembled suite has not happened."
   ],
   "previousEvidence": {
     "contentSha256": "e4295dbf1b38bd9895262e46302486926fe21aa51651ddf8438b27c219a218ea",
@@ -60,5 +89,15 @@
     ],
     "scope": "Historical Contract pilot evidence retained unchanged; DOC-021 extends the canonical guide."
   },
-  "copyOnlyReview": null
+  "copyOnlyReview": null,
+  "verifiedAtBasis": "Actual completion of the last passing walkthrough covering this article: 2026-09-08T06:41:52.711Z, truncated to the second. Historical action times and article hashes inside the walkthrough records are unchanged, including records taken on earlier draft bytes of the same immutable app build.",
+  "technicalReview": {
+    "reviewer": "Opus 5 independent review agent",
+    "reviewerKind": "agent",
+    "method": "source-inspection",
+    "completedAt": "2026-09-08T06:12:26Z",
+    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+    "scope": "Read the request-type list and its archive dialog, and confirmed request types are registered through taxonomyRoutes with recordsMilestone rather than a usage counter, so in-use counts stay zero and no replacement is asked for (apps/api/src/modules/request-types/routes.ts, apps/api/src/lib/taxonomy-routes.ts). Read the request-type editor's three target states, its attachable-scope rule and the user/entity required lock (settings-request-type-editor.tsx), the deflection-link pane with its http/https address rule and placements (settings-intake-links.tsx), the Portal's \"Before you submit\" panel (components/portal/deflection-panel.tsx), the Portal request-type queries that filter archived types out of both the cards and the per-slug form (apps/api/src/modules/portal/routes.ts), and the conversion dialog's carry-through headings and re-target copy (components/intake/convert-dialog.tsx) with the server's confirmedTarget rules (apps/api/src/modules/requests/convert.ts).",
+    "notHeld": "An agent source review of the release under test. It is not a human feature owner's sign-off on behaviour accuracy, and it is not the user's final proofreading of the assembled suite."
+  }
 }

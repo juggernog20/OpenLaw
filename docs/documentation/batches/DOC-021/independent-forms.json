@@ -1,0 +1,39 @@
+{
+  "name": "independent-forms",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C40"],
+  "authorRecordName": "ind-forms",
+  "startedAt": "2026-09-08T05:35:42.329Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "request-forms",
+      "contentSha256": "9cc8ffec262de2a13e3472cc2518ca4a203898038208798f30fc2d6082461a7c"
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Create four request types by the guide route",
+      "actual": "Profile menu > Settings > Intake > Request types created \"Ind contract review IND81T2F\", \"Ind advisory intake IND81T2F\", \"Ind module only IND81T2F\", \"Ind no target IND81T2F\".",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:35:43.265Z",
+      "at": "2026-09-08T05:35:43.845Z"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Set the four Target states and read each explanation",
+      "result": "fail",
+      "startedAt": "2026-09-08T05:35:43.845Z",
+      "error": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('link', { name: 'Edit Ind contract review IND81T2F', exact: true })\u001b[22m\n",
+      "at": "2026-09-08T05:35:54.413Z"
+    }
+  ],
+  "passed": false
+}

@@ -5,11 +5,11 @@
   "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
   "environment": "openlaw-docs-b8e31260-configuration",
   "author": "Codex documentation author",
-  "technicalReviewer": null,
-  "walkthroughReviewer": null,
+  "technicalReviewer": "Opus 5 independent review agent",
+  "walkthroughReviewer": "Opus 5 independent review agent",
   "reviewerKind": "agent",
-  "verifiedAt": null,
-  "status": "not-run",
+  "verifiedAt": "2026-09-08T06:33:00Z",
+  "status": "pass",
   "sources": [
     "CONTEXT.md",
     "docs/decision-records/DECISIONS-SETTINGS.md",
@@ -31,9 +31,23 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "expected": "Lead-time changes and audit facts are observable at the documented scope. The audit log is unavailable to other roles; timezone/channel limits and missing events are investigated rather than assumed.",
-      "actual": null,
-      "result": "not-run",
-      "evidence": []
+      "actual": "Both rail entries read \"Notifications\"; the Organization one at /settings/reminders is headed \"Reminder lead times\" and the Personal one holds only that person's switches. Added 0, 4 and 11 to the organization list; a duplicate was refused with \"4 days before is already on the list.\" and 731 with \"Enter a whole number of days between 0 and 730.\"; zero rendered as \"On the day\"; Remove and a keyboard reorder both saved and survived a reload; reduced to one entry the row lost its Remove control, showed the only-lead-time lock, and an empty list was refused by the API. Delivery used a brand-new fictional Legal Team Member with no earlier briefing history, a saved Asia/Dubai timezone and their own preferences. The real queued notification.morning-round completed in the owned worker on the real clock; Mailpit delivered an actual briefing naming the 4-day and On-the-day Key dates and omitting the 11-day one, and the bell linked to the record's Key dates page rather than naming the Key date. Audit log: reached under Security, the Person, Action and Record filters combined and narrowed in turn, the From and To bounds became the browser's local calendar day in Asia/Dubai, an out-of-range window reported \"No entry matches these filters.\", Clear filters recovered, Search matched recorded audit text but not a Request answer's prose, Export CSV downloaded every matching entry, and Show older paged back. Legal and Contributor were redirected from the pane and refused 403 on GET /audit-log. A later evidence review relabelled four audit steps: two negative row counts and two date-bound claims whose captured query did not match the inputs. repair-audit awaits the response whose query carries exactly the instants both controls were set to, in both directions, and re-counts the combined filters with the header row excluded; repair-reminders supplies a complete problem for the empty-list refusal without disturbing the reader's saved list.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-021/independent-audit.json",
+        "docs/documentation/batches/DOC-021/independent-audit-retry.json",
+        "docs/documentation/batches/DOC-021/independent-audit-retry2.json",
+        "docs/documentation/batches/DOC-021/independent-audit-retry3.json",
+        "docs/documentation/batches/DOC-021/independent-discovery.json",
+        "docs/documentation/batches/DOC-021/independent-discovery-final.json",
+        "docs/documentation/batches/DOC-021/independent-reminders-config.json",
+        "docs/documentation/batches/DOC-021/independent-reminders-config-retry.json",
+        "docs/documentation/batches/DOC-021/independent-reminders-delivery.json",
+        "docs/documentation/batches/DOC-021/independent-repair-audit.json",
+        "docs/documentation/batches/DOC-021/independent-repair-reminders.json",
+        "docs/documentation/batches/DOC-021/independent-roles.json",
+        "docs/documentation/batches/DOC-021/independent-roles-retry.json"
+      ]
     }
   ],
   "authorEvidence": [
@@ -46,10 +60,22 @@
     "docs/documentation/batches/DOC-021/author-reminders-retry.json"
   ],
   "limitations": [
-    "Independent agent walkthrough pending; user proofreading waits for the full suite.",
-    "Evidence uses immutable source 6a8873db; final candidate compatibility belongs to DOC-025.",
-    "Known #774 blank Matter Entity-valued Field picker and #770 template-default clear behavior are documented, not claimed fixed."
+    "Technical review and the walkthrough were both performed by the same independent agent; they are separate methods (source inspection and browser walkthrough), not two independent people.",
+    "Independent agent walkthrough, not a human user study; the author and the reviewer are different agents.",
+    "Verified on the owned lab at immutable source 6a8873db; final candidate compatibility belongs to DOC-025.",
+    "Known #774 blank Matter Entity-valued Field picker and #770 template-default clear behaviour remain open and are described as limits, not fixed.",
+    "No human feature owner has signed off behaviour accuracy, and the user's final proofreading of the assembled suite has not happened."
   ],
   "previousEvidence": null,
-  "copyOnlyReview": null
+  "copyOnlyReview": null,
+  "verifiedAtBasis": "Actual completion of the last passing walkthrough covering this article: 2026-09-08T06:33:00.817Z, truncated to the second. Historical action times and article hashes inside the walkthrough records are unchanged, including records taken on earlier draft bytes of the same immutable app build.",
+  "technicalReview": {
+    "reviewer": "Opus 5 independent review agent",
+    "reviewerKind": "agent",
+    "method": "source-inspection",
+    "completedAt": "2026-09-08T06:12:26Z",
+    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+    "scope": "Read the organization lead-time pane with MAX_OFFSET_DAYS 730, MAX_OFFSETS 20 and the last-entry lock (apps/web/src/routes/settings-reminders.tsx), the personal preference switches Dates approaching / In-app and the Briefing Dates and Obligations sections (components/notification-preferences.tsx), the morning round's hourly tick, reached-08:00 local rule, once-per-local-day briefing and its three date sources plus Matter key dates and Entity obligations (apps/api/src/pipeline/morning-round.ts), the audit pane's filters, browser-local day bounds and export control (settings-audit-log.tsx), and the audit API where one predicate backs the page, the count and the export, so the CSV streams the whole filtered set (apps/api/src/modules/audit-log/routes.ts).",
+    "notHeld": "An agent source review of the release under test. It is not a human feature owner's sign-off on behaviour accuracy, and it is not the user's final proofreading of the assembled suite."
+  }
 }

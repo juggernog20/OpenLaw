@@ -1,0 +1,44 @@
+{
+  "name": "independent-roles-retry",
+  "reviewer": "Opus 5 independent review agent",
+  "reviewerKind": "agent",
+  "independentOf": "Codex documentation author",
+  "scenarios": ["V-C38"],
+  "authorRecordName": "ind-roles-retry",
+  "startedAt": "2026-09-08T05:28:16.772Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "articleHashes": [
+    {
+      "articleId": "types-statuses-fields",
+      "contentSha256": "6e3fa892dc9b2bb23d05bd7b3125a187cdd1cbafb384cdf2d248064a1bcd1abe"
+    },
+    {
+      "articleId": "reminders-and-audit",
+      "contentSha256": "91583fda511a5d75941af7d8b919de5db42298846ee2b9dad65fcd6f43a4565c"
+    }
+  ],
+  "steps": [
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Nadia Haddad sees no Organization settings and is refused the panes",
+      "actual": "The settings rail links only [\"/settings/profile\",\"/settings/appearance\",\"/settings/notifications\"] \u2014 0 of the 11 Organization panes. Reader navigation: /settings/matters/types -> /settings/profile; /settings/contracts/statuses -> /settings/profile; /settings/entities/officer-roles -> /settings/profile; /settings/matters/fields -> /settings/profile; /settings/reminders -> /settings/profile; /settings/audit-log -> /settings/profile. POST /officer-roles answered 403 and GET /audit-log answered 403.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:28:16.821Z",
+      "at": "2026-09-08T05:28:21.895Z"
+    },
+    {
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "Ravi Menon sees no Organization settings and is refused the panes",
+      "actual": "The settings rail links only [\"/settings/profile\",\"/settings/appearance\",\"/settings/notifications\"] \u2014 0 of the 11 Organization panes. Reader navigation: /settings/matters/types -> /settings/profile; /settings/contracts/statuses -> /settings/profile; /settings/entities/officer-roles -> /settings/profile; /settings/matters/fields -> /settings/profile; /settings/reminders -> /settings/profile; /settings/audit-log -> /settings/profile. POST /officer-roles answered 403 and GET /audit-log answered 403.",
+      "result": "pass",
+      "startedAt": "2026-09-08T05:28:21.895Z",
+      "at": "2026-09-08T05:28:26.823Z"
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-09-08T05:28:26.823Z"
+}
