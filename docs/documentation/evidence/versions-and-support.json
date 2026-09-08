@@ -1,6 +1,6 @@
 {
   "articleId": "versions-and-support",
-  "contentSha256": "dee7dab08d34a3a1f7c6828ca2a2a240fd8f2fdba13e710587d52265d7e94ae7",
+  "contentSha256": "7d9c38056ec82206d5cab8f13b7940c960c18ab0d337a77dfc0ca81dd08e013e",
   "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
   "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
   "environment": "openlaw-docs-b8e31260-configuration (immutable backend); working documentation preview at 127.0.0.1:43333",
@@ -27,7 +27,7 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "expected": "Edition and support paths are discoverable on both surfaces, older or missing destinations fail honestly and retained reading works offline.",
-      "actual": "Expanded Edition details on the Help reader and read edition documentation-development (Development), Supported app 0.0.1 / a28331f779da3c8b9e9172dee3cc5b58c7170c7b, Distribution commit 2570232af33f8f0a4e77e90cb69c70a04898fae9 (Working changes), Content digest c718030f3c8067b2867fbb17042b1a5fa2742232946ccf9f00f0952510d19358 and Publication target feature-review. The declared supported build and the distribution commit are different values, which is exactly why the article tells the reader to ask for the installed build. An unknown edition answered \"Article unavailable\" with \"The requested edition is not bundled with this instance…\" and kept Help and the documentation search; nothing switched to an external latest manual. A missing article and a missing section were both reported with their named recoveries.",
+      "actual": "Expanded Edition details on the Help reader and read edition documentation-development (Development), Supported app 0.0.1 / a28331f779da3c8b9e9172dee3cc5b58c7170c7b, Distribution commit 2570232af33f8f0a4e77e90cb69c70a04898fae9 (Working changes), Content digest c718030f3c8067b2867fbb17042b1a5fa2742232946ccf9f00f0952510d19358 and Publication target feature-review. The declared supported build and the distribution commit are different values, which is exactly why the article tells the reader to ask for the installed build. An unknown edition answered \"Article unavailable\" with \"The requested edition is not bundled with this instance\u2026\" and kept Help and the documentation search; nothing switched to an external latest manual. A missing article and a missing section were both reported with their named recoveries.",
       "result": "pass",
       "evidence": [
         "docs/documentation/batches/DOC-024/README.md",
@@ -162,5 +162,14 @@
     ],
     "outcome": "One correction was needed and applied: the reference article's title read \"file behaviour\", against the en-US rule in EDITORIAL.md and against the article's own \"File behavior and limits\" heading. Every other claim checked held. The same commit linked the batch record from WRITING-BATCHES.md and noted the aborted-run record shape.",
     "note": "This source review is separate from the browser walkthroughs recorded in the scenarios below. Its completion time is the commit time of 2570232a converted to UTC, and that commit is the identity of this review's own correction. It does not cover any source read later in the session; those are recorded in sourceReviewAddendum or in the independent records that carry them, and none of them is backdated into this object."
+  },
+  "copyOnlyReview": {
+    "reviewer": "Codex DOC-025 editorial audit (agent)",
+    "reviewedAt": "2026-09-08T13:05:21.881027Z",
+    "kind": "findability wording only",
+    "priorContentSha256": "dee7dab08d34a3a1f7c6828ca2a2a240fd8f2fdba13e710587d52265d7e94ae7",
+    "contentSha256": "7d9c38056ec82206d5cab8f13b7940c960c18ab0d337a77dfc0ca81dd08e013e",
+    "priorEvidenceCommit": "d6df148c2d6a94fa0b8f053aa5e2494f697c65f5",
+    "summary": "The opening sentence now includes which version, matching the actual supported-edition task and the failed DOC-024 query. No procedure, heading/anchor, prerequisite or result changes. Previous procedure walkthroughs retain their observed hashes, dates and builds; the query is retested separately."
   }
 }

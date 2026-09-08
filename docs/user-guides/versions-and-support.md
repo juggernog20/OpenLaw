@@ -1,6 +1,6 @@
 # Find version information and get help
 
-Identify the documentation you are reading and give the right person enough information to investigate a problem.
+Check which version of OpenLaw the documentation supports and give the right person enough information to investigate a problem.
 
 ## Find the applicable edition
 

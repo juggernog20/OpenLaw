@@ -4,6 +4,8 @@ Status: active implementation project. Initial plan prepared 2026-09-06; executi
 
 Project: [#714](https://github.com/juggernog20/OpenLaw/issues/714). See the
 [release audit](AUDIT.md) for the selected build and corrections to the initial inventory.
+Current acceptance is tracked separately in the [G3 essential-journey report](batches/DOC-025/G3.md)
+and [G4 complete-suite report](batches/DOC-025/G4.md); neither gate is passed yet.
 
 Deliver a maintained documentation suite for OpenLaw through a searchable formal
 documentation site and focused in-app Help for the staff app and Business Portal.

@@ -266,7 +266,7 @@ navigation after it is keyboard only.
 ## Terminology disposition
 
 Two review findings against `document-versions.md` were checked against
-[CONTEXT.md](../../../CONTEXT.md) and are valid. The glossary defines a **Document
+[CONTEXT.md](../../../../CONTEXT.md) and are valid. The glossary defines a **Document
 Version** as the immutable file snapshot and the **Executed pin** as the explicit pin
 naming the signed copy.
 
@@ -313,7 +313,7 @@ and none of them was restamped.
 | [versions](author-versions.json)                 |     15 | pre-correction `document-versions`                     |
 
 The records that name the current bytes for every guide they touch are the independent
-ones listed above, apart from the three noted under the terminology disposition below.
+ones listed above, apart from the three noted under the terminology disposition above.
 
 ## On the step timestamps
 

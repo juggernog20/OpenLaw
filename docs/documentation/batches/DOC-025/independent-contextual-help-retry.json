@@ -1,0 +1,74 @@
+{
+  "kind": "independent-acceptance",
+  "task": "DOC-025",
+  "issue": 745,
+  "independentReview": true,
+  "reviewer": "Independent DOC-025 acceptance seat (Opus 5 agent), separate from the documentation author",
+  "reviewerKind": "agent",
+  "method": "browser-walkthrough",
+  "startedAt": "2026-09-08T13:38:59.369Z",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "app sha256:c585d8683816050bdf00568a6f4e1983f14fb3b364ac8202f4f4e40dab9ef52c; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "prior": ["independent-contextual-help-first.json"],
+  "correction": "Two of my own mistakes, no application change. First I looked for the contextual link on a Contract record; DES-073 renders 'Help with this page' only on the pilot entries, which on staff are /inbox and /inbox/:number. Then I read the address after waitForLoadState, which returns before the client route settles; the assertion now waits for the address itself. A record page reaches Help through the header, whose address carries the route topics.",
+  "steps": [
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Staff Inbox contextual Help narrows the staff index to its topic",
+      "actual": {
+        "contextHref": "/help?topic=inbox",
+        "topics": ["inbox"],
+        "contextResults": ["Assign and triage Requests"],
+        "indexCount": 36
+      },
+      "startedAt": "2026-09-08T13:39:00.322Z",
+      "at": "2026-09-08T13:39:02.438Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "A Contract record offers header Help, not a contextual link",
+      "actual": {
+        "recordUrl": "/contracts",
+        "contextualLinks": 0,
+        "headerHref": "/help?topic=contracts.list&topic=lists&topic=search&topic=notifications&topic=errors&topic=reference&topic=support",
+        "topics": [
+          "contracts.list",
+          "lists",
+          "search",
+          "notifications",
+          "errors",
+          "reference",
+          "support"
+        ],
+        "results": [
+          "Create and maintain a Contract",
+          "Search, filter, and save views",
+          "Manage notifications and reminders",
+          "Resolve common problems",
+          "Look up terms, permissions, and file behavior",
+          "Find version information and get help"
+        ],
+        "note": "This matches DES-073: contextual Help is a pilot-page entry; record pages reach Help through the header, which still carries the route topics."
+      },
+      "startedAt": "2026-09-08T13:39:02.438Z",
+      "at": "2026-09-08T13:39:03.596Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "No record identifier reaches a Help address",
+      "error": "Cannot read properties of undefined (reading 'split')",
+      "startedAt": "2026-09-08T13:39:03.596Z",
+      "at": "2026-09-08T13:39:04.468Z",
+      "result": "fail"
+    }
+  ],
+  "completedAt": "2026-09-08T13:39:04.493Z",
+  "passed": false,
+  "originalCaptureName": "745-ind-context-retry2-1788874739369.json"
+}

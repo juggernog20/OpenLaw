@@ -1,0 +1,57 @@
+{
+  "startedAt": "2026-09-08T13:00:07.392Z",
+  "reviewer": "Codex DOC-025 author (agent)",
+  "method": "browser-walkthrough",
+  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "buildId": "sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb",
+  "environment": "openlaw-docs-b8e31260-configuration",
+  "edition": {
+    "id": "documentation-development",
+    "channel": "development",
+    "supportedAppVersion": "0.0.1",
+    "supportedAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+    "distributionCommit": "d6df148c2d6a94fa0b8f053aa5e2494f697c65f5",
+    "workingChanges": true,
+    "publicationTarget": "feature-review",
+    "contentDigest": "535dff61e4e9a372b4da91cd52c2215f2c589350d94732bcab24841adcf5034d"
+  },
+  "articleCount": 54,
+  "exportPath": "/tmp/openlaw-doc025-export-AjiO4u",
+  "steps": [
+    {
+      "role": "operator",
+      "action": "Offline retained index/prose/search with app stopped",
+      "startedAt": "2026-09-08T13:00:18.389Z",
+      "at": "2026-09-08T13:00:18.705Z",
+      "result": "pass",
+      "actual": {
+        "articleCount": 54,
+        "externalRequests": 0,
+        "javascript": true
+      }
+    },
+    {
+      "role": "anonymous",
+      "action": "Offline retained complete index/prose without JavaScript",
+      "startedAt": "2026-09-08T13:00:18.709Z",
+      "at": "2026-09-08T13:00:18.923Z",
+      "result": "pass",
+      "actual": {
+        "articleCount": 54,
+        "externalRequests": 0,
+        "javascript": false
+      }
+    },
+    {
+      "role": "operator",
+      "action": "Missing optional search script preserves static index/prose",
+      "at": "2026-09-08T13:00:19.061Z",
+      "result": "pass",
+      "actual": "redirect.js"
+    }
+  ],
+  "instanceStoppedAt": "2026-09-08T13:00:18.381Z",
+  "stopCommand": "node scripts/documentation/lab.mjs stop configuration",
+  "completedAt": "2026-09-08T13:00:19.063Z",
+  "instanceRestartedAt": "2026-09-08T13:00:33.269Z"
+}

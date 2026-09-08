@@ -8,7 +8,7 @@ Sign in as a Legal Team Member or Administrator with access to an unarchived Con
 
 ## Hand off and file the executed copy
 
-1. Use the Stage control to choose your organisation's Signature Status, such as **Out for signature**. Arrange signature through your team's external process.
+1. Use the Stage control to choose your organization's Signature Status, such as **Out for signature**. Arrange signature through your team's external process.
 2. Once signed, open **Documents**. On the intended Document, use **Add version** to upload the executed file. If there is no Document yet, upload it as a new Document first.
 3. Read or download the uploaded Document Version and check that it is the intended executed copy.
 4. Open that Document Version's actions and select **Mark as executed copy**. Check its executed designation. On a Contract with several Documents, also check that the intended contract paper is the primary Document.

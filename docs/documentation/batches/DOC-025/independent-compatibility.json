@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "kind": "independent-compatibility-acceptance",
+  "task": "DOC-025",
+  "issue": 745,
+  "independentReview": true,
+  "reviewer": "Independent DOC-025 acceptance seat (Opus 5 agent), separate from the documentation author",
+  "reviewerKind": "agent",
+  "author": "Codex documentation author",
+  "authoredSourceAudit": "batches/DOC-025/compatibility.json",
+  "authoredSourceAuditNote": "The root source inspection is retained as authored evidence with its own reviewer and its original reviewedAt. This record does not relabel it and does not claim it was independent. The root author and the root compatibility reviewer are one author under two task labels; that is why this seat re-checked the conclusions.",
+  "method": "source-inspection",
+  "reviewedAt": "2026-09-08T13:42:30.383Z",
+  "targetAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "reviewedAtDistributionCommit": "2100ead5a69a9affaa3b338ca29815c7f740923c",
+  "applicationSha256": "b7bc6323f8e3d95a4ee006eab289f434502dccfdb7aee4c5fcb2026e7c41cd30",
+  "checks": [
+    {
+      "check": "Saved range diffs reproduce git output",
+      "how": "For each of the four historical builds, ran git diff <build>..d6df148c over the recorded scope and compared the bytes with the saved .diff file.",
+      "result": "pass",
+      "actual": "source-6a8873db.diff, source-8539f4cc.diff, source-a28331f7.diff and source-d1d098ba.diff are byte-identical to the git output. The per-range file lists match the changed files exactly, so no changed file is omitted from the audit."
+    },
+    {
+      "check": "a28331f7 comment merge",
+      "how": "Read the commit against its parent.",
+      "result": "pass",
+      "actual": "comment-applet.tsx and request-thread.tsx replace an append with mergeCommentWindow, so a live read that already holds the posted row is merged instead of duplicated. No control, label, audience or authorization changed. The recorded behavior statement is correct."
+    },
+    {
+      "check": "a28331f7 supporting walkthroughs",
+      "how": "Read the independent walkthrough of every batch and matched build, articles and timestamps.",
+      "result": "corrected",
+      "actual": "The authored record cited DOC-010. DOC-010/independent-walkthrough.json is app d1d098ba covering roles-and-access and contributor-guide, which is before this fix and is not a conversations run. The conversations walkthrough on a28331f7 is DOC-011/independent-walkthrough.json, 2026-09-07T08:46:35.623Z to 08:53:41.841Z, covering comments-and-activity and notifications as all four app roles. The Portal Request thread on a28331f7 is DOC-012/independent-walkthrough.json, which includes a failed reply whose retry posted once. C10 had no cited walkthrough at all. Both are now cited."
+    },
+    {
+      "check": "8539f4cc Entity calendar filters",
+      "how": "Read the commit against its parent and checked the guide text for any dependence.",
+      "result": "pass",
+      "actual": "entities.tsx changes four ?? to || in the calendar loader, so empty filter strings become absent query values while non-empty values are unchanged. DOC-018/independent-c31.json and independent-c52.json ran on 8539f4cc after the fix. search-and-views.md names no Entity or calendar filter, so C04 carries no dependence on this change."
+    },
+    {
+      "check": "6a8873db archived Knowledge Document read",
+      "how": "Read the commit against its parent and the batch that followed it.",
+      "result": "pass",
+      "actual": "routes.ts drops item.archivedAt from the listKnowledgeItemDocuments refusal, so an archived Item's Documents list instead of 404, and the OpenAPI summary is reworded to say so. DOC-019/independent-c33.json, independent-c34.json and independent-supplement.json ran on 6a8873db and include Show archived and Restore returning the row with its chain and designation, which covers the C26 and C54 reasoning."
+    },
+    {
+      "check": "611a5b93 target-to-distribution range",
+      "how": "Read git diff 6a8873db..d6df148c for the application source.",
+      "result": "pass",
+      "actual": "routes.ts loses only the now-unused selected archivedAt property and gains a comment. The selected id and primaryDocumentId and the paperOf call are unchanged. The remaining files in range are tests and generated OpenAPI wording. No response, condition, authorization, schema or label changed."
+    },
+    {
+      "check": "Distribution range beyond the authored audit",
+      "how": "Compared d6df148c with the commit this review sits on.",
+      "result": "pass",
+      "actual": "d6df148c..2100ead5 touches only docs/ and scripts/documentation/, which are outside the application digest scope, so the recorded applicationSha256 b7bc6323... still names the distribution's application bytes. buildIdentity() at 2100ead5 returns that digest."
+    }
+  ],
+  "conclusion": "The compatibility conclusions hold on the source, with one corrected citation. Historical walkthroughs keep their own app builds, image identities, timestamps and observations. This is source inspection plus a reading of the cited walkthroughs; it is not a replay of any earlier scenario.",
+  "limitations": [
+    "No historical walkthrough was re-run. The 116 passing article/role/method combinations remain evidence on their own recorded builds.",
+    "This does not credit C42 or C43, which need real provider access under #742.",
+    "This is not final complete-content V-HELP or V-OFFLINE acceptance and not a human sign-off."
+  ]
+}

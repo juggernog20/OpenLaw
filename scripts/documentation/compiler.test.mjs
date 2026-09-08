@@ -279,6 +279,71 @@ test("rejects stale, incomplete, and non-independent verification", (t) => {
   );
 });
 
+test("historical walkthroughs require a current, hash-bound compatibility review", (t) => {
+  const f = fixture(t);
+  const e = f.evidence("submit");
+  e.appCommit = "c".repeat(40);
+  f.json("evidence/submit.json", e);
+  assert.throws(() => f.compile(), /app build mismatch/);
+  const report = { summary: "Fixture source comparison; changed actions were rerun." };
+  f.json("evidence/compatibility.json", report);
+  const review = {
+    fromAppCommit: e.appCommit,
+    toAppCommit: commit,
+    contentSha256: e.contentSha256,
+    applicationSha256: digest,
+    reviewer: "Fixture compatibility reviewer",
+    reviewerKind: "agent",
+    reviewedAt: "2026-09-06T01:00:00Z",
+    summary: "Fixture source comparison with referenced affected-action evidence.",
+    evidence: [
+      {
+        path: "evidence/compatibility.json",
+        sha256: createHash("sha256").update(JSON.stringify(report)).digest("hex"),
+      },
+    ],
+  };
+  e.compatibilityReview = review;
+  f.json("evidence/submit.json", e);
+  assert.equal(f.compile().bundle.articles.length, 2);
+  for (const patch of [
+    { fromAppCommit: commit },
+    { toAppCommit: "d".repeat(40) },
+    { contentSha256: "0".repeat(64) },
+    { applicationSha256: "0".repeat(64) },
+    { reviewer: "" },
+    { reviewerKind: "unknown" },
+    { reviewedAt: "2026-09-05T00:00:00Z" },
+    { summary: "" },
+    { evidence: [] },
+    { evidence: [{ path: "../outside.json", sha256: "0".repeat(64) }] },
+  ]) {
+    f.json("evidence/submit.json", { ...e, compatibilityReview: { ...review, ...patch } });
+    assert.throws(() => f.compile(), /compatibility|outside source tree/);
+  }
+  f.json("evidence/submit.json", {
+    ...e,
+    compatibilityReview: { ...review, reviewer: ` ${e.author.toUpperCase()} ` },
+  });
+  assert.throws(() => f.compile(), /independent compatibility review/);
+  f.json("evidence/submit.json", e);
+  f.json("evidence/compatibility.json", { summary: "Changed after review" });
+  assert.throws(() => f.compile(), /compatibility evidence hash/);
+  f.json("evidence/compatibility.json", report);
+  f.json("edition.json", {
+    ...f.edition,
+    supportedAppCommit: null,
+    compatibilityReview: { ...f.edition.compatibilityReview, testedAppCommit: null },
+  });
+  f.json("evidence/submit.json", { ...e, compatibilityReview: { ...review, toAppCommit: null } });
+  assert.throws(() => f.compile(), /article compatibility/);
+  f.json("edition.json", f.edition);
+  e.scenarios[0].method = "automated-test";
+  f.json("evidence/submit.json", e);
+  assert.throws(() => f.compile(), /missing scenario/);
+  assert.throws(() => f.compile({ complete: true }), /missing scenario/);
+});
+
 test("redirects preserve anchors and reject loops, duplicates, and missing targets", (t) => {
   const f = fixture(t);
   f.json("redirects.json", {
