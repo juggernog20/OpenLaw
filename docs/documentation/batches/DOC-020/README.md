@@ -38,6 +38,8 @@ Help checks covered all three titles, focused headings/outline links, formal lin
 
 Some author records predate narrow copy corrections: the explanation of automatic staff provisioning was removed, duplicate pending invitations were distinguished from active accounts, and the offboarding links now point directly to Matter setup and Entity Obligations. The records retain their actual hashes; the independent seat must use the final guide bytes.
 
+Reviewer corrections landed after those records, checked against current app source. The allowed-domain list is read at every magic-link sign-in (`isEmailDomainAllowed` in `apps/api/src/lib/org-settings.ts`), so both guides now state that emptying it or removing a domain also stops existing Business Users, not only new ones. The invite Role choice is quoted as the visible label "Legal team member". The invite refusal for a pending address named with a different role, and for a Business User's address, is now described. The Users table Role control is recorded as offering the fourth `business_user` value that the invitation form withholds, and a role change is stated to apply on the target's next action. The `evidence/*.json` content hashes were recomputed for these bytes; their status stays `not-run`, so no verification is claimed for them.
+
 ## Compatibility and remaining checks
 
 The later feature commits since `6a8873db` contain documentation/evidence and a removed unused Knowledge-read column plus comments/tests. No setup, user, authentication or email behavior changed; these records retain the actual older image identity. DOC-025 will reconcile against the final app candidate.

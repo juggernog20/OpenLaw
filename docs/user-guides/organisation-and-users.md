@@ -13,17 +13,19 @@ Keep your organization details current and give each person the access they need
 ## Invite a colleague
 
 1. Open **Settings → Users**, then **Invite user**.
-2. Enter **Display name** and **Email**. Choose **Legal Team Member**, **Contributor**, or **Administrator** under **Role**. See [roles and access](roles-and-access.md) before granting administration rights.
+2. Enter **Display name** and **Email**. Choose **Legal team member**, **Contributor**, or **Administrator** under **Role**. See [roles and access](roles-and-access.md) before granting administration rights.
 3. Select **Send invite** and check the new **Invited** row. The recipient follows the email link to set a password for built-in sign-in. With OIDC configured, an invited colleague can sign in through the identity provider using the matching email address.
 4. Have the colleague sign in and check their access. The row becomes **Active** after activation/sign-in.
 
 Business Users enter through the [Business Portal](portal-sign-in.md); they are not a fourth staff-invitation choice. An allowed email domain does not grant a staff role.
 
-If delivery fails, check the address and [outbound email](authentication-and-email.md). Use the pending row's **Resend invite** action to send a replacement link. **Revoke invite** withdraws an unused invitation. Use the latest email link after a resend. Invalid addresses and invitations for already activated accounts are rejected. Inviting an already pending address resends its invitation instead of creating a duplicate row. Correct an invalid entry or manage the existing user.
+If delivery fails, check the address and [outbound email](authentication-and-email.md). Use the pending row's **Resend invite** action to send a replacement link. **Revoke invite** withdraws an unused invitation. Use the latest email link after a resend. Invalid addresses and invitations for already activated accounts are rejected. Inviting an already pending address with the same role resends its invitation instead of creating a duplicate row. OpenLaw refuses an invitation that names a different role, and refuses a Business User's address, because that account already exists. Correct an invalid entry, or change the role on the existing row.
 
 ## Change a role or revoke sessions
 
-Select the user's role in the Users table and choose the new role. Check the saved row. Role changes affect what the account can do; they do not transfer its assigned work.
+Select the user's role in the Users table and choose the new role. Check the saved row. The new role applies on that person's next action; they do not have to sign in again. Role changes affect what the account can do; they do not transfer its assigned work.
+
+This control also offers **Business user**, which the invitation form does not. Use it to give an existing Business User a staff role in place, or to return a staff account to Portal-only access.
 
 Use the row's **Revoke all sessions** action when that person should sign in again on every device. Existing sessions stop granting access. The account remains active and can sign in again using its configured method. To prevent further sign-in, archive the account.
 

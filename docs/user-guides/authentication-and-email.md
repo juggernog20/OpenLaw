@@ -22,7 +22,7 @@ To update a registered provider, edit its fields and select **Save provider**. L
 
 ## Control Business Portal entry
 
-Add approved entries under **Allowed email domains** using **Add**; remove an entry with its removal control. Use domains such as `helix.example`, not full addresses. Check the saved list. An empty list admits no new Business Users.
+Add approved entries under **Allowed email domains** using **Add**; remove an entry with its removal control. Use domains such as `helix.example`, not full addresses. Check the saved list. OpenLaw checks this list at every magic-link sign-in, not only the first one. Removing a domain, or leaving the list empty, also stops existing Business Users on that domain from getting a new sign-in link. Tell the affected people before you narrow the list.
 
 In OIDC mode, **Magic-link sign-in** can be turned off to require identity-provider sign-in for requesters. They then need suitable identity-provider accounts. Turning off magic links does not itself disable OIDC Portal entry. Test the intended [Portal sign-in flow](portal-sign-in.md) with an allowed address and confirm that an unapproved address cannot establish a new account. Domain restrictions do not replace staff-role and record-access controls.
 
