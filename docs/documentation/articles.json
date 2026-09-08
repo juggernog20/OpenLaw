@@ -699,7 +699,7 @@
     },
     {
       "id": "reference",
-      "title": "Look up terms, permissions, and file behaviour",
+      "title": "Look up terms, permissions, and file behavior",
       "section": "reference",
       "kind": "reference",
       "coverage": ["C50"],

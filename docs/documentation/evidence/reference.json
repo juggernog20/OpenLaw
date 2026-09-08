@@ -1,6 +1,6 @@
 {
   "articleId": "reference",
-  "contentSha256": "f2a5886caee7e05ea53d3d86519659e5698b94fb1500a2454f14e89c318e48d8",
+  "contentSha256": "ba4b1b0cc96db761cc19f06fa88d5e4d9625355873cc2a15d8f6deb58193f5d6",
   "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
   "buildId": "sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb",
   "environment": "openlaw-docs-b8e31260-configuration",
@@ -93,5 +93,5 @@
     "Full-suite compatibility and publication acceptance remain DOC-025/027 work.",
     "The user will proofread the assembled full suite; no human feature-owner sign-off is claimed."
   ],
-  "authorCopyUpdate": "After author walkthroughs, copy-only review clarified target Document/source Document Version, assigned person and internal record-sharing wording. Historical records retain the bytes observed; current independent acceptance remains pending."
+  "authorCopyUpdate": "After author walkthroughs, copy-only review clarified target Document/source Document Version, assigned person and internal record-sharing wording. Review then corrected the title spelling to en-US, from \"file behaviour\" to \"file behavior\", to match EDITORIAL.md and this article's own heading. Historical records retain the bytes observed; current independent acceptance remains pending."
 }

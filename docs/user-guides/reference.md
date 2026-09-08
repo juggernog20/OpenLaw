@@ -1,4 +1,4 @@
-# Look up terms, permissions, and file behaviour
+# Look up terms, permissions, and file behavior
 
 Use this reference alongside the procedure for your role. Labels and limits can depend on your organization's configuration. Check [Edition details](versions-and-support.md) before applying instructions to a different app build.
 
