@@ -5,9 +5,9 @@
   "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
   "environment": "openlaw-docs-b8e31260-configuration",
   "author": "Codex documentation author",
-  "technicalReviewer": null,
+  "technicalReviewer": "Opus 5 independent review agent",
   "walkthroughReviewer": null,
-  "reviewerKind": null,
+  "reviewerKind": "agent",
   "verifiedAt": null,
   "status": "blocked",
   "sources": [
@@ -88,13 +88,24 @@
   "limitations": [
     "Real disposable provider account configuration has not been supplied. C42/C43 remain blocked, with no release exception or denominator change.",
     "Local browser observations are author checks only and do not establish real provider consent, credentials, callbacks, successful extraction, or secret rotation.",
-    "Independent technical and walkthrough review is pending; final human proofreading is reserved for the assembled suite.",
-    "The owned lab uses immutable app source 6a8873db; final candidate compatibility belongs to DOC-025."
+    "Independent agent technical source review is complete. Required independent browser/live-provider walkthroughs remain blocked; final human proofreading is reserved for the assembled suite.",
+    "The owned lab uses immutable app source 6a8873db; final candidate compatibility belongs to DOC-025.",
+    "SET-008 describes both cards as initially collapsed, while the implemented Field prompts card has no disclosure control. The guide now follows the implemented UI; reconcile the decision wording before final publication."
   ],
   "previousEvidence": null,
   "copyOnlyReview": null,
   "authorCopyClarification": {
     "previousContentSha256": "e56ce6961416fccb30d360f661d425f23636fea5ceffe79d9dc5a2426d024654",
     "scope": "Clarified executed-copy terminology and Analysis run wording; no action, prerequisite or expected result changed. Code review then corrected the Field prompts card description: that card is not collapsible, so the instruction to expand it named a control the pane does not draw. Earlier local author records retain their actual hashes; no live or independent walkthrough claimed."
+  },
+  "technicalReview": {
+    "reviewer": "Opus 5 independent review agent",
+    "reviewerKind": "agent",
+    "method": "source-inspection",
+    "completedAt": "2026-09-08T07:23:33.934Z",
+    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+    "reviewCommit": "bff63ce5",
+    "scope": "Compared both guides against application source, checked evidence consistency, corrected the nonexistent Field prompts expand instruction, and ran the full test suite and documentation checks. No independent browser or live-provider walkthrough was performed.",
+    "evidence": ["docs/documentation/batches/DOC-022/README.md"]
   }
 }

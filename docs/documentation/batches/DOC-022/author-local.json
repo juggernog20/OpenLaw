@@ -62,21 +62,23 @@
     },
     {
       "role": "legal_team_member",
-      "method": "browser-walkthrough",
+      "method": "automated-test",
       "action": "Non-Administrator connector configuration requests are refused",
       "actual": "Both connector Settings APIs and core prompts returned 403; no credential state disclosed.",
       "result": "pass",
       "startedAt": "2026-09-08T07:02:31.974Z",
-      "at": "2026-09-08T07:02:31.989Z"
+      "at": "2026-09-08T07:02:31.989Z",
+      "methodCorrection": "Recorded checks issued API requests from an authenticated Playwright context; they did not navigate the browser to Settings. Classified as automated-test without changing the observed result or timestamps."
     },
     {
       "role": "contributor",
-      "method": "browser-walkthrough",
+      "method": "automated-test",
       "action": "Non-Administrator connector configuration requests are refused",
       "actual": "Both connector Settings APIs and core prompts returned 403; no credential state disclosed.",
       "result": "pass",
       "startedAt": "2026-09-08T07:02:32.778Z",
-      "at": "2026-09-08T07:02:32.791Z"
+      "at": "2026-09-08T07:02:32.791Z",
+      "methodCorrection": "Recorded checks issued API requests from an authenticated Playwright context; they did not navigate the browser to Settings. Classified as automated-test without changing the observed result or timestamps."
     }
   ],
   "passed": true,
