@@ -156,15 +156,24 @@ uncached application suite passed all five tasks in 4m13.793s. The compiler audi
 used a separate copy of the actual metadata with the 54 available articles marked
 verified: all current article hashes, required independent role/method records,
 and compatibility artifacts passed before the expected unpublished provider-link
-refusal. The repository catalog remained in review. Normal and preview builds
+refusal. The audit changed no catalog status: the 54 merged articles stayed in
+review and the two provider guides stayed `scoped`. Normal and preview builds
 passed; the preview retains nine expected links to the two unmerged provider guides.
+
+The independent seat re-ran the same checks after its corrections. Documentation and
+CI tooling passed 34 tests, Prettier and ESLint were clean, and the compiler audit
+passed again with each article compatibility review naming a reviewer other than the
+article author. The uncached application suite passed all five tasks in 4m6.489s:
+97 web test files with 1704 tests and 176 API test files with 2890 tests, no
+failures. No browser ran alongside it.
 
 ## Scope of remaining work
 
-Provider access is the external dependency. Final independent preview review,
-complete-content Help/offline checks, maintenance ownership under DOC-026, and
-publication into the feature review environment under DOC-027 are recorded
-separately. Human proofreading waits for the full assembled suite. Earlier batch
+Provider access is the external dependency. The independent preview review of the
+available 54-article scope is complete and recorded above. What remains is the same
+review over the complete 56-article suite, the complete-content Help/offline checks,
+maintenance ownership under DOC-026, and publication into the feature review
+environment under DOC-027. Human proofreading waits for the full assembled suite. Earlier batch
 limitations remain historical records. The 22 existing publication-blocker lists
 are retained as `publicationBlockersBeforeDOC025`; current `publicationBlockers`
 name the remaining acceptance/provider gates. No old walkthrough metadata is

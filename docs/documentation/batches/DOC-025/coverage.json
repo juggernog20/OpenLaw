@@ -1517,7 +1517,7 @@
   "gates": { "G3": "blocked", "G4": "blocked" },
   "releaseExceptions": [],
   "humanProofreading": "Pending full assembled suite; no human approval claimed.",
-  "updatedAt": "2026-09-08T13:44:37.703Z",
+  "updatedAt": "2026-09-08T13:54:12.667Z",
   "independentAcceptance": {
     "reviewer": "Independent DOC-025 acceptance seat (Opus 5 agent), separate from the documentation author",
     "reviewerKind": "agent",
@@ -1551,12 +1551,19 @@
     "notCovered": [
       "The 124 article/role/method combinations were not replayed. The 116 passing combinations stand on their own recorded builds.",
       "C42 and C43 need real provider access under #742.",
-      "Final complete-content 56-article V-HELP and V-OFFLINE acceptance and DOC-027 publication remain outstanding.",
+      "The same independent preview review still has to run over the complete 56-article suite; final complete-content V-HELP and V-OFFLINE acceptance and DOC-027 publication remain outstanding.",
       "No human proofreading and no human sign-off."
     ],
     "failedAttempts": [
       "Staff contextual Help: first looked for the link on a Contract record, which DES-073 does not give one, then read the address before the client route settled. Two harness mistakes, no application change; recorded in independent-contextual-help-first.json and independent-contextual-help-retry.json and retested in independent-contextual-help.json."
-    ]
+    ],
+    "validation": {
+      "staticAndTooling": "Documentation and CI tooling 34 tests passed; Prettier and ESLint clean; normal and preview documentation builds passed.",
+      "compilerAudit": "batches/DOC-025/compiler-evidence-audit.json: 54 merged articles passed in an isolated metadata copy, then the expected unpublished provider-link refusal.",
+      "applicationSuite": "Uncached, 5 of 5 tasks in 4m6.489s. Web 97 test files and 1704 tests; API 176 test files and 2890 tests. No failures. No browser ran alongside it.",
+      "catalogUnchanged": "54 articles review, 2 scoped (configure-signing, configure-analysis, drafts on PR #783). No catalog status was changed to fit any report."
+    }
   },
-  "gateNote": "G3 and G4 stay blocked. Independent acceptance of the available scope is complete and is recorded separately from release acceptance."
+  "gateNote": "G3 and G4 stay blocked. Independent acceptance of the available scope is complete and is recorded separately from release acceptance.",
+  "catalogStatusCounts": { "review": 54, "scoped": 2 }
 }
