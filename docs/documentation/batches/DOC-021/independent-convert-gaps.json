@@ -39,11 +39,13 @@
       "method": "browser-walkthrough",
       "action": "An archived configured target needs a deliberate live choice at conversion",
       "actual": "After archiving the bound Contract type \"NDA\", the request type's Target control still names it as \"NDA (archived)\" (value contract:019ff1f5-301d-7795-a5af-e4339c76d4ce). Converting R-29 no longer confirms a bound type: the dialog now shows a live Contract type picker (1) with the note \"This request type left the contract type to conversion.\" and its confirm control disabled=false until a live type is chosen. Nothing switched module on its own. Restore returned the type to the live list.",
-      "result": "pass",
+      "result": "fail",
       "startedAt": "2026-09-08T05:45:41.985Z",
-      "at": "2026-09-08T05:45:47.375Z"
+      "at": "2026-09-08T05:45:47.375Z",
+      "error": "The step does not establish what it claims. It counted the Contract type picker, read the note and sampled isDisabled() on the confirm control, then cancelled: no type was ever chosen and no conversion was attempted, so \"its confirm control disabled=false until a live type is chosen\" asserts nothing. A blank selection is refused by inline validation rather than by a disabled control, and the completing choice was never exercised here. The Target and picker observations in the same string were read correctly.",
+      "supersededBy": ["docs/documentation/batches/DOC-021/independent-repair-archived-target.json"]
     }
   ],
-  "passed": true,
+  "passed": false,
   "completedAt": "2026-09-08T05:45:47.376Z"
 }
