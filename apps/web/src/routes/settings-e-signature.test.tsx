@@ -362,6 +362,50 @@ describe("the E-signature pane (#245)", () => {
     expect(screen.getByLabelText("RSA private key")).not.toBeRequired();
   });
 
+  it("sends the stored callback, not a half-typed one, when Polling hides the box", async () => {
+    const user = userEvent.setup();
+    const calls = newCalls();
+    stubApi({ signedIn: ADMIN, extra: connectorApi({}, calls) });
+    renderAt("/settings/integrations/e-signature");
+    await openDocusign(user);
+
+    // A stored address to fall back to.
+    await user.type(
+      screen.getByLabelText("Public callback URL"),
+      "https://gateway.example/signing",
+    );
+    await user.click(screen.getByRole("button", { name: "Save connector" }));
+    await waitFor(() =>
+      expect(screen.getByLabelText("Webhook URL")).toHaveValue("https://gateway.example/signing"),
+    );
+
+    // The Administrator starts a second address, forgets the scheme, and
+    // changes the mode instead of finishing it. Polling does not draw the
+    // box, so the half-typed value has no way back on screen.
+    await user.clear(screen.getByLabelText("Public callback URL"));
+    await user.type(screen.getByLabelText("Public callback URL"), "gateway.example/signing");
+    await user.selectOptions(screen.getByLabelText("Signing updates"), "polling");
+    expect(screen.queryByLabelText("Public callback URL")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Save connector" }));
+    // The save carries the stored address, which the API accepts. Sending
+    // the half-typed one would come back refused, naming a field the pane
+    // is no longer showing.
+    await waitFor(() => expect(screen.getByText("Saved")).toBeVisible());
+    expect(calls.saves.at(-1)).toEqual({
+      environment: "demo",
+      integrationKey: "the-integration-key",
+      apiUserId: "the-user-id",
+      updateMode: "polling",
+      webhookUrl: "https://gateway.example/signing",
+    });
+    // Not sent is not the same as thrown away. Webhook draws the box
+    // again with the half-typed address in it, where the Administrator
+    // can finish it and where a refusal would name a field they can see.
+    await user.selectOptions(screen.getByLabelText("Signing updates"), "webhook");
+    expect(screen.getByLabelText("Public callback URL")).toHaveValue("gateway.example/signing");
+  });
+
   it("offers no connection test until something is configured", async () => {
     const user = userEvent.setup();
     stubApi({ signedIn: ADMIN, extra: connectorApi({ connector: unconfigured() }, newCalls()) });
