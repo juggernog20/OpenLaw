@@ -35,7 +35,7 @@ The **Connected** badge means the connector is saved and enabled, even before a 
 
 ## Set core Field prompts
 
-The **Field prompts** card holds seven prompts for core Contract values. Expand it if needed, then edit the prompt for the value you want to describe. For example, make a notice-period prompt ask for the number of days stated in the fictional paper, without inferring a period when it is absent.
+The **Field prompts** card sits below **Provider** on this page and holds seven prompts for core Contract values. It has no collapse control and is always open. Edit the prompt for the value you want to describe. For example, make a notice-period prompt ask for the number of days stated in the fictional paper, without inferring a period when it is absent.
 
 Press Enter or leave the input to save that prompt, and wait for its save result. Shift+Enter inserts a line break. Escape restores the saved text. Each prompt is required and can contain up to 2,000 characters. For an overridden prompt, **Reset to default** restores that one built-in prompt.
 
