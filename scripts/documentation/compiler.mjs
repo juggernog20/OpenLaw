@@ -13,7 +13,7 @@ import { Marked } from "marked";
 import sanitizeHtml from "sanitize-html";
 import { normalizeSearch, searchDocumentation, resolveDocumentationLink } from "./reader.mjs";
 
-const ID = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
+export const ID = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 const SHA = /^[a-f0-9]{40}$/;
 const HASH = /^[a-f0-9]{64}$/;
 const AUDIENCES = [

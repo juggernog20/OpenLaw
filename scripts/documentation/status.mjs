@@ -3,6 +3,7 @@ import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { buildIdentity, repository } from "./build.mjs";
 import {
+  ID as ARTICLE_ID,
   compileDocumentation,
   readOwned,
   validateCatalog,
@@ -12,6 +13,15 @@ import {
 
 const countBy = (values) =>
   values.reduce((counts, value) => ({ ...counts, [value]: (counts[value] ?? 0) + 1 }), {});
+const isPath = (value) => typeof value === "string" && value.trim().length > 0;
+const retained = (root, scenarios, label) => {
+  for (const scenario of scenarios) {
+    const references = scenario?.evidence;
+    if (!Array.isArray(references) || references.length === 0 || !references.every(isPath))
+      throw new Error(`${label} scenario ${scenario?.id} records no usable evidence reference`);
+    for (const reference of references) readOwned(root, reference.split("#")[0]);
+  }
+};
 const check = (run) => {
   try {
     run();
@@ -37,8 +47,7 @@ export function documentationStatus({ root = repository, build = buildIdentity(r
       0,
     );
     const evidence = check(() => {
-      if (!/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(article.id))
-        throw new Error("Invalid article ID");
+      if (!ARTICLE_ID.test(article.id)) throw new Error("Invalid article ID");
       const record = verifyArticleEvidence(
         article,
         readOwned(contentRoot, `${article.id}.md`),
@@ -46,8 +55,7 @@ export function documentationStatus({ root = repository, build = buildIdentity(r
         edition,
         scenarios,
       );
-      for (const scenario of record.scenarios)
-        for (const reference of scenario.evidence) readOwned(root, reference.split("#")[0]);
+      retained(root, record.scenarios, "Article");
     });
     return {
       id: article.id,
@@ -83,8 +91,9 @@ export function documentationStatus({ root = repository, build = buildIdentity(r
     const incomplete = articles.find((a) => !a.pass);
     if (incomplete) throw new Error(`Article evidence is incomplete: ${incomplete.id}`);
     compileDocumentation({ contentRoot, metadataRoot, build, complete: true });
-    for (const scenario of json("evidence/publication.json").scenarios)
-      for (const reference of scenario.evidence) readOwned(root, reference.split("#")[0]);
+    const publication = json("evidence/publication.json").scenarios;
+    if (!Array.isArray(publication)) throw new Error("Publication scenarios required");
+    retained(root, publication, "Publication");
   });
   return {
     schemaVersion: 1,

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { createHash } from "node:crypto";
@@ -220,6 +220,15 @@ test("publication needs the matching complete-edition record and retained shared
     ],
   });
   assert.equal(f.status().completePublication.pass, true);
+  const record = JSON.parse(readFileSync(join(f.root, f.metadata + "evidence/publication.json")));
+  for (const broken of [undefined, [], "publication-proof.txt", [""]]) {
+    f.put(f.metadata + "evidence/publication.json", {
+      ...record,
+      scenarios: [...record.scenarios, { id: "V-NOTE", evidence: broken }],
+    });
+    assert.match(f.status().completePublication.error, /V-NOTE records no usable/, String(broken));
+  }
+  f.put(f.metadata + "evidence/publication.json", record);
   rmSync(join(f.root, f.metadata + "publication-proof.txt"));
   assert.equal(f.status().completePublication.pass, false);
   assert.match(f.status().completePublication.error, /missing file/);
