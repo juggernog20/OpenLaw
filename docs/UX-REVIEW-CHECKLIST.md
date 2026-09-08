@@ -11,13 +11,13 @@ This document is the working checklist for the initial end-to-end product review
 
 An interaction is complete only after it has been manually tested and any agreed follow-up has been resolved. Page-level checkboxes are roll-ups; check one only when every interaction listed beneath that page is complete.
 
-## Current review checkpoint — 7 September 2026
+## Current review checkpoint — 8 September 2026
 
-- Resume the **Matter record → Key dates** review on M-89. The discussion about record Due date interrupted this area; the current browser page does not determine the review sequence.
-- Next UX interaction: open an existing Key date's Remove confirmation, review its wording and actions, then cancel. The Edit form's UX is approved.
+- Resume at **Matter record → Documents → folder organization** on M-89. The current browser page does not determine the review sequence.
+- Blair approved the expanded Task detail modal (description, attachments, comments), Matter Tasks list, and earlier Add Task modal. Task rows now sort by due date, with undated Tasks last; Move up/down was removed after Blair’s feedback. Key date Edit form UX and canceling/confirming removal are also approved.
 - Keep the Key dates name. The redundant State column was removed. The standalone record Due date was withdrawn in favor of Tasks, Key dates, and derived Next deadline.
-- Continue with Matter Tasks after Key dates, then return to the remaining Matter interactions before starting Contract record review. New contract from Linked Contracts remains unchecked.
-- Guide one UX interaction at a time. Routine persistence and validation checks belong in automated tests; their manual checkboxes remain open unless Blair actually reviewed them. Earlier unchecked items are outstanding, not evidence that an approved component needs to be reviewed again from scratch.
+- Blair approved New contract from Linked Contracts after the shared form was fixed to include all attached Fields and the linked list was fixed to omit archived Contracts. Continue remaining Matter UX components before starting Contract record review; next is organizing Documents into folders. Blair requested dragging saved Documents on Matters, Contracts, and the Documents repository, and replacing “The matter itself” with None in move menus. Drag-and-drop and the None label are ready for UX review. Folder chevrons now appear only for folders with visible Documents or subfolders, following Blair’s next feedback. Unchecked Key date items remain outstanding; the tab is not marked complete.
+- Guide one complete UX component at a time, not individual clicks. Routine persistence and validation checks belong in automated tests; their manual checkboxes remain open unless Blair actually reviewed them. Earlier unchecked items are outstanding, not evidence that an approved component needs to be reviewed again from scratch.
 
 ## Inventory basis
 
@@ -224,6 +224,7 @@ Route: `/matters/:matterNumber`
 - [x] Review linking an existing Contract and the resulting list. Blair approved the search label and tighter spacing; C-108 and C-116 are linked.
 - [ ] Unlink a Contract and inspect any confidentiality mismatch warning.
 - [ ] Use New contract in Linked Contracts; confirm this Matter is preselected, cancel without creating, then create and open the linked Contract.
+  - [x] Review the linked creation form with type-specific Fields and the linked list after archiving a Contract. Blair created and archived a test Contract, then approved both fixes on 8 September. Cancel/open behavior was not separately confirmed.
 
 #### Documents
 
@@ -237,6 +238,7 @@ Route: `/matters/:matterNumber/documents`
 - [ ] Open current and earlier versions in the document reader, download them, and compare eligible versions.
 - [ ] Edit document name/description; review version history without contract-specific Kind tags.
 - [ ] Create, rename, move, nest, and delete folders; move documents between folders and the record root.
+  - [ ] Review dragging a saved Document into a folder and back out; review None in the move menu. Shared with Contracts; the Documents repository reveals the dragged Document’s record folders as drop targets.
 - [ ] Mark or clear document confidentiality where offered; inspect how record access limits visibility.
 - [ ] Show archived documents, archive and restore one, and use the named confirmation to delete one.
 - [ ] Complete the shared document reader, upload, and folder checks below on this Matter.
@@ -249,7 +251,7 @@ Route: `/matters/:matterNumber/key-dates`
 - [ ] Open Add date; choose the date, event label, and optional note, then save or cancel.
 - [ ] Edit a Key date using its actions menu and save or cancel the changes.
   - [x] Review the Edit form's date, event, and note controls. Blair approved its UX on 7 September; save/cancel behavior was not separately confirmed.
-- [ ] Remove a Key date through the confirmation dialog or cancel removal.
+- [x] Remove a Key date through the confirmation dialog or cancel removal. Blair confirmed both Cancel and Remove work on 7 September.
 - [ ] Correct an absent date/label and retry a failed save.
 - [ ] Review date formatting, chronological order, and the upcoming/overdue summary; there is no separate State column.
 
@@ -258,14 +260,14 @@ Route: `/matters/:matterNumber/key-dates`
 Route: `/matters/:matterNumber/tasks`
 
 - [ ] Tab review complete
-- [ ] Open Add Task; enter title, optional due date, and assignee, then save or cancel.
+- [x] Review the entire Add Task modal, including title, due date, assignee, and its actions. Blair confirmed he tested everything in the modal on 7 September.
 - [ ] Click a Task assignee's avatar/name; search current team members or the Matter Manager, reassign, or choose Unassigned.
 - [ ] Choose Add someone to the team…, search outside the team, review the access message, and confirm Add to team and assign; check both the task and Team.
 - [ ] Cancel adding someone; check no membership or assignment changed. In an add/edit form, both changes wait until Save.
 - [ ] On a confidential Matter, verify an ordinary team member can assign within the team but cannot add someone through the picker.
 - [ ] Edit task title, assignee, and due date through the actions menu.
 - [ ] Complete a task and reopen a completed task; check the done/open counts.
-- [ ] Move a task up and down, including first/last row limits.
+- [x] Review the Tasks list ordered by due date, with undated Tasks last and no Move up/down actions. Blair approved the list on 7 September.
 - [ ] Remove a task and correct a failed or invalid edit.
 
 ### Contracts
@@ -1312,3 +1314,8 @@ Applies to the staff Comments applet on Requests, Matters, and Contracts; the po
 
 - [ ] Matters and Contracts: standalone Due date is absent from creation, conversion, and Overview.
 - [ ] List Next deadline shows the earliest unfinished Task or upcoming Key date and opens its source tab.
+
+### Task detail modal — UX review addition
+
+- [x] Review the expanded Task detail modal UX: description, attachments, and comments. Blair approved it; separate manual coverage on both record types was not confirmed.
+- [ ] Review narrow-screen layout and opening a Task from a comment notification.

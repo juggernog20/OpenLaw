@@ -202,7 +202,7 @@ describe("the Matter record's Tasks section", () => {
     });
   });
 
-  it("completes, reorders, edits, and removes Tasks through their routed controls", async () => {
+  it("completes, edits, and removes Tasks through their routed controls", async () => {
     const api = recordApi([
       task(),
       task({ id: "task-2", title: "File response", displayOrder: 1 }),
@@ -215,12 +215,8 @@ describe("the Matter record's Tasks section", () => {
     expect(await card.findByText("1 of 2 done")).toBeInTheDocument();
 
     await user.click(card.getByRole("button", { name: "Actions for Draft response" }));
-    await user.click(await screen.findByRole("menuitem", { name: "Move down" }));
-    await waitFor(() => {
-      expect(card.getAllByRole("listitem")[0] as HTMLElement).toHaveTextContent("File response");
-    });
-
-    await user.click(card.getByRole("button", { name: "Actions for Draft response" }));
+    expect(screen.queryByRole("menuitem", { name: "Move up" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "Move down" })).not.toBeInTheDocument();
     await user.click(await screen.findByRole("menuitem", { name: "Edit Task" }));
     const dialog = within(await screen.findByRole("dialog"));
     await user.clear(dialog.getByLabelText(/^Title\*?$/));
@@ -231,7 +227,7 @@ describe("the Matter record's Tasks section", () => {
     await user.click(card.getByRole("button", { name: "Actions for File response" }));
     await user.click(await screen.findByRole("menuitem", { name: "Remove Task" }));
     await waitFor(() => expect(card.queryByText("File response")).not.toBeInTheDocument());
-    expect(api.writes.map((write) => write.method)).toEqual(["POST", "PUT", "PATCH", "DELETE"]);
+    expect(api.writes.map((write) => write.method)).toEqual(["POST", "PATCH", "DELETE"]);
   });
 
   it("changes and clears a task assignee without changing the Matter Manager", async () => {
@@ -333,4 +329,61 @@ describe("team-first task picker", () => {
       picker.queryByRole("button", { name: "Add someone to the team…" }),
     ).not.toBeInTheDocument();
   });
+});
+
+it("opens a task in a detail modal and saves its description", async () => {
+  const surface = recordApi([task()]);
+  stubApi({ signedIn: MEMBER, extra: surface.handler });
+  renderAt("/matters/12/tasks");
+  const user = userEvent.setup();
+  await user.click((await section()).getByRole("button", { name: "Draft response" }));
+  const modal = within(await screen.findByRole("dialog", { name: "Task details" }));
+  expect(modal.getByRole("heading", { name: "Comments & attachments" })).toBeInTheDocument();
+  await user.type(modal.getByLabelText("Description"), "Start with the governing law position.");
+  await user.click(modal.getByRole("button", { name: "Save" }));
+  await waitFor(() =>
+    expect(screen.queryByRole("dialog", { name: "Task details" })).not.toBeInTheDocument(),
+  );
+  expect(surface.writes[0]?.body).toMatchObject({
+    description: "Start with the governing law position.",
+  });
+});
+
+it("retries an initial note and attachment without creating the Task twice", async () => {
+  const surface = recordApi();
+  let attempts = 0;
+  const forms: FormData[] = [];
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/comments" && call.method === "POST") {
+        attempts++;
+        forms.push(call.body as FormData);
+        return attempts === 1
+          ? json(500, { status: 500, detail: "Upload interrupted" })
+          : json(201, {
+              comment: { id: "comment-new", body: "The business needs an answer this week." },
+            });
+      }
+      return surface.handler(call);
+    },
+  });
+  renderAt("/matters/12/tasks");
+  const user = userEvent.setup();
+  await user.click((await section()).getByRole("button", { name: "Add Task" }));
+  const modal = within(await screen.findByRole("dialog"));
+  await user.type(modal.getByLabelText(/^Title\*?$/), "Draft advice");
+  await user.type(modal.getByLabelText("Description"), "Review the attached instructions.");
+  await user.type(modal.getByLabelText("Add a note"), "The business needs an answer this week.");
+  await user.upload(
+    modal.getByLabelText("Choose files for this comment"),
+    new File(["Instructions"], "brief.txt", { type: "text/plain" }),
+  );
+  await user.click(modal.getByRole("button", { name: "Add Task" }));
+  expect(await modal.findByRole("alert")).toHaveTextContent("Task saved.");
+  await user.click(modal.getByRole("button", { name: "Retry note & attachments" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  expect(surface.writes.filter((write) => write.method === "POST")).toHaveLength(1);
+  expect(attempts).toBe(2);
+  expect(forms[0]?.get("entityType")).toBe("matter_task");
 });

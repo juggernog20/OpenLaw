@@ -250,7 +250,7 @@ The earliest upcoming Key date or unfinished dated Task, including overdue Tasks
 _Avoid_: due date, upcoming date, next date
 
 **Task**:
-A lightweight checklist item with no comments or status beyond done. Unfinished dated Tasks feed Next deadline, including overdue Tasks [MTR-005, CTR-017, superseded by the 2026-09-07 Next deadline addenda].
+A checklist item with a title, optional description, assignee and due date, and no status beyond done. Each Contract or Matter Task has its own comments and attachments under the parent record's access rules. Unfinished dated Tasks feed Next deadline, including overdue Tasks [MTR-005 and CTR-017, amended by the 2026-09-07 Task detail and Next deadline addenda].
 
 **Obligation**:
 A recurring entity-level compliance item — a licence renewal, annual filing, or registered-agent renewal — rolled forward only on human confirmation [ENT-006].

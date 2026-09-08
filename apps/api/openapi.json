@@ -12220,7 +12220,7 @@
     "/api/v1/matters/{number}/tasks": {
       "get": {
         "operationId": "listMatterTasks",
-        "summary": "List a reached Matter's lightweight checklist in stable display order. Contributors on the Matter can read it; Task due dates are internal and never enter deadline surfaces",
+        "summary": "List a reached Matter's lightweight checklist by due date, with undated Tasks last and display order breaking ties. Contributors on the Matter can read it; Task due dates are internal and never enter deadline surfaces",
         "tags": ["matter-tasks"],
         "parameters": [
           {
@@ -12242,6 +12242,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "createdTaskId": {
+                      "type": "string"
+                    },
                     "tasks": {
                       "type": "array",
                       "items": {
@@ -12252,6 +12255,9 @@
                           },
                           "title": {
                             "type": "string"
+                          },
+                          "description": {
+                            "type": ["string", "null"]
                           },
                           "isDone": {
                             "type": "boolean"
@@ -12286,6 +12292,7 @@
                         "required": [
                           "id",
                           "title",
+                          "description",
                           "isDone",
                           "assigneeId",
                           "assigneeName",
@@ -12342,6 +12349,17 @@
                     "minLength": 1,
                     "maxLength": 200
                   },
+                  "description": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 10000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "assigneeId": {
                     "type": ["string", "null"]
                   },
@@ -12387,6 +12405,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "createdTaskId": {
+                      "type": "string"
+                    },
                     "tasks": {
                       "type": "array",
                       "items": {
@@ -12397,6 +12418,9 @@
                           },
                           "title": {
                             "type": "string"
+                          },
+                          "description": {
+                            "type": ["string", "null"]
                           },
                           "isDone": {
                             "type": "boolean"
@@ -12431,6 +12455,7 @@
                         "required": [
                           "id",
                           "title",
+                          "description",
                           "isDone",
                           "assigneeId",
                           "assigneeName",
@@ -12489,6 +12514,17 @@
                     "minLength": 1,
                     "maxLength": 200
                   },
+                  "description": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 10000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "assigneeId": {
                     "type": ["string", "null"]
                   },
@@ -12534,6 +12570,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "createdTaskId": {
+                      "type": "string"
+                    },
                     "tasks": {
                       "type": "array",
                       "items": {
@@ -12544,6 +12583,9 @@
                           },
                           "title": {
                             "type": "string"
+                          },
+                          "description": {
+                            "type": ["string", "null"]
                           },
                           "isDone": {
                             "type": "boolean"
@@ -12578,6 +12620,7 @@
                         "required": [
                           "id",
                           "title",
+                          "description",
                           "isDone",
                           "assigneeId",
                           "assigneeName",
@@ -12641,6 +12684,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "createdTaskId": {
+                      "type": "string"
+                    },
                     "tasks": {
                       "type": "array",
                       "items": {
@@ -12651,6 +12697,9 @@
                           },
                           "title": {
                             "type": "string"
+                          },
+                          "description": {
+                            "type": ["string", "null"]
                           },
                           "isDone": {
                             "type": "boolean"
@@ -12685,6 +12734,7 @@
                         "required": [
                           "id",
                           "title",
+                          "description",
                           "isDone",
                           "assigneeId",
                           "assigneeName",
@@ -12750,6 +12800,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "createdTaskId": {
+                      "type": "string"
+                    },
                     "tasks": {
                       "type": "array",
                       "items": {
@@ -12760,6 +12813,9 @@
                           },
                           "title": {
                             "type": "string"
+                          },
+                          "description": {
+                            "type": ["string", "null"]
                           },
                           "isDone": {
                             "type": "boolean"
@@ -12794,6 +12850,7 @@
                         "required": [
                           "id",
                           "title",
+                          "description",
                           "isDone",
                           "assigneeId",
                           "assigneeName",
@@ -12881,6 +12938,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "createdTaskId": {
+                      "type": "string"
+                    },
                     "tasks": {
                       "type": "array",
                       "items": {
@@ -12891,6 +12951,9 @@
                           },
                           "title": {
                             "type": "string"
+                          },
+                          "description": {
+                            "type": ["string", "null"]
                           },
                           "isDone": {
                             "type": "boolean"
@@ -12925,6 +12988,7 @@
                         "required": [
                           "id",
                           "title",
+                          "description",
                           "isDone",
                           "assigneeId",
                           "assigneeName",
@@ -32138,7 +32202,7 @@
     "/api/v1/matters/{number}/contracts": {
       "get": {
         "operationId": "listMatterContracts",
-        "summary": "Contracts whose one canonical matter_id names this Matter. Any Contract the viewer cannot independently reach is { restricted: true } with no number or title.",
+        "summary": "Non-archived Contracts whose one canonical matter_id names this Matter. Any Contract the viewer cannot independently reach is { restricted: true } with no number or title.",
         "tags": ["contracts", "matters"],
         "parameters": [
           {
@@ -33799,6 +33863,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "createdTaskId": {
+                      "type": "string"
+                    },
                     "tasks": {
                       "type": "array",
                       "items": {
@@ -33809,6 +33876,9 @@
                           },
                           "title": {
                             "type": "string"
+                          },
+                          "description": {
+                            "type": ["string", "null"]
                           },
                           "isDone": {
                             "type": "boolean"
@@ -33843,6 +33913,7 @@
                         "required": [
                           "id",
                           "title",
+                          "description",
                           "isDone",
                           "assigneeId",
                           "assigneeName",
@@ -33899,6 +33970,17 @@
                     "minLength": 1,
                     "maxLength": 200
                   },
+                  "description": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 10000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "assigneeId": {
                     "type": ["string", "null"]
                   },
@@ -33944,6 +34026,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "createdTaskId": {
+                      "type": "string"
+                    },
                     "tasks": {
                       "type": "array",
                       "items": {
@@ -33954,6 +34039,9 @@
                           },
                           "title": {
                             "type": "string"
+                          },
+                          "description": {
+                            "type": ["string", "null"]
                           },
                           "isDone": {
                             "type": "boolean"
@@ -33988,6 +34076,7 @@
                         "required": [
                           "id",
                           "title",
+                          "description",
                           "isDone",
                           "assigneeId",
                           "assigneeName",
@@ -34031,7 +34120,7 @@
     "/api/v1/tasks/{taskId}": {
       "patch": {
         "operationId": "updateContractTask",
-        "summary": "Edit a task's title, assignee, or due date (CTR-017). Every field is optional and only what is sent is read. A request that changes nothing writes nothing and narrates nothing. Appends one task.edited entry naming only what moved, at the working-team tier (DD-017). A task on a contract this viewer cannot reach answers 404; an archived contract takes no edit until it is restored",
+        "summary": "Edit a task's title, description, assignee, or due date (CTR-017). Every field is optional and only what is sent is read. A request that changes nothing writes nothing and narrates nothing. Appends one task.edited entry naming only what moved, at the working-team tier (DD-017). A task on a contract this viewer cannot reach answers 404; an archived contract takes no edit until it is restored",
         "tags": ["tasks"],
         "description": "Assignees must be active staff who manage the record or belong to its team. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.",
         "requestBody": {
@@ -34045,6 +34134,17 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 200
+                  },
+                  "description": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 10000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   },
                   "assigneeId": {
                     "type": ["string", "null"]
@@ -34090,6 +34190,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "createdTaskId": {
+                      "type": "string"
+                    },
                     "tasks": {
                       "type": "array",
                       "items": {
@@ -34100,6 +34203,9 @@
                           },
                           "title": {
                             "type": "string"
+                          },
+                          "description": {
+                            "type": ["string", "null"]
                           },
                           "isDone": {
                             "type": "boolean"
@@ -34134,6 +34240,7 @@
                         "required": [
                           "id",
                           "title",
+                          "description",
                           "isDone",
                           "assigneeId",
                           "assigneeName",
@@ -34197,6 +34304,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "createdTaskId": {
+                      "type": "string"
+                    },
                     "tasks": {
                       "type": "array",
                       "items": {
@@ -34207,6 +34317,9 @@
                           },
                           "title": {
                             "type": "string"
+                          },
+                          "description": {
+                            "type": ["string", "null"]
                           },
                           "isDone": {
                             "type": "boolean"
@@ -34241,6 +34354,7 @@
                         "required": [
                           "id",
                           "title",
+                          "description",
                           "isDone",
                           "assigneeId",
                           "assigneeName",
@@ -34306,6 +34420,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "createdTaskId": {
+                      "type": "string"
+                    },
                     "tasks": {
                       "type": "array",
                       "items": {
@@ -34316,6 +34433,9 @@
                           },
                           "title": {
                             "type": "string"
+                          },
+                          "description": {
+                            "type": ["string", "null"]
                           },
                           "isDone": {
                             "type": "boolean"
@@ -34350,6 +34470,7 @@
                         "required": [
                           "id",
                           "title",
+                          "description",
                           "isDone",
                           "assigneeId",
                           "assigneeName",
@@ -34437,6 +34558,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "createdTaskId": {
+                      "type": "string"
+                    },
                     "tasks": {
                       "type": "array",
                       "items": {
@@ -34447,6 +34571,9 @@
                           },
                           "title": {
                             "type": "string"
+                          },
+                          "description": {
+                            "type": ["string", "null"]
                           },
                           "isDone": {
                             "type": "boolean"
@@ -34481,6 +34608,7 @@
                         "required": [
                           "id",
                           "title",
+                          "description",
                           "isDone",
                           "assigneeId",
                           "assigneeName",
@@ -35415,7 +35543,7 @@
                       "executed",
                       "amendment"
                     ],
-                    "description": "What this version is in the negotiation (CTR-014), or `general` for Matter documents. Defaults to `general` on Matters and `draft_ours` otherwise. Must be sent before the file part."
+                    "description": "What this version is in the negotiation (CTR-014), or `general` for Matter documents. Matter uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part."
                   },
                   "note": {
                     "type": "string",
@@ -35992,7 +36120,7 @@
                       "executed",
                       "amendment"
                     ],
-                    "description": "What this version is in the negotiation (CTR-014), or `general` for Matter documents. Defaults to `general` on Matters and `draft_ours` otherwise. Must be sent before the file part."
+                    "description": "What this version is in the negotiation (CTR-014), or `general` for Matter documents. Matter uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part."
                   },
                   "note": {
                     "type": "string",
@@ -36579,7 +36707,7 @@
                       "executed",
                       "amendment"
                     ],
-                    "description": "What this version is in the negotiation (CTR-014), or `general` for Matter documents. Defaults to `general` on Matters and `draft_ours` otherwise. Must be sent before the file part."
+                    "description": "What this version is in the negotiation (CTR-014), or `general` for Matter documents. Matter uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part."
                   },
                   "note": {
                     "type": "string",
@@ -37166,7 +37294,7 @@
                       "executed",
                       "amendment"
                     ],
-                    "description": "What this version is in the negotiation (CTR-014), or `general` for Matter documents. Defaults to `general` on Matters and `draft_ours` otherwise. Must be sent before the file part."
+                    "description": "What this version is in the negotiation (CTR-014), or `general` for Matter documents. Matter uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part."
                   },
                   "note": {
                     "type": "string",
@@ -37462,7 +37590,7 @@
                       "executed",
                       "amendment"
                     ],
-                    "description": "What this version is in the negotiation (CTR-014), or `general` for Matter documents. Defaults to `general` on Matters and `draft_ours` otherwise. Must be sent before the file part."
+                    "description": "What this version is in the negotiation (CTR-014), or `general` for Matter documents. Matter uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part."
                   },
                   "note": {
                     "type": "string",
@@ -44203,7 +44331,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["matter", "contract", "request"]
+              "enum": ["matter", "contract", "request", "matter_task", "contract_task"]
             },
             "in": "query",
             "name": "entityType",
@@ -44248,7 +44376,13 @@
                           },
                           "entityType": {
                             "type": "string",
-                            "enum": ["matter", "contract", "request"]
+                            "enum": [
+                              "matter",
+                              "contract",
+                              "request",
+                              "matter_task",
+                              "contract_task"
+                            ]
                           },
                           "entityId": {
                             "type": "string"
@@ -44430,7 +44564,7 @@
                 "properties": {
                   "entityType": {
                     "type": "string",
-                    "enum": ["matter", "contract", "request"]
+                    "enum": ["matter", "contract", "request", "matter_task", "contract_task"]
                   },
                   "entityId": {
                     "type": "string",
@@ -44475,7 +44609,7 @@
                 "properties": {
                   "entityType": {
                     "type": "string",
-                    "enum": ["matter", "contract", "request"]
+                    "enum": ["matter", "contract", "request", "matter_task", "contract_task"]
                   },
                   "entityId": {
                     "type": "string",
@@ -44532,7 +44666,7 @@
                         },
                         "entityType": {
                           "type": "string",
-                          "enum": ["matter", "contract", "request"]
+                          "enum": ["matter", "contract", "request", "matter_task", "contract_task"]
                         },
                         "entityId": {
                           "type": "string"
@@ -44707,7 +44841,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["matter", "contract", "request"]
+              "enum": ["matter", "contract", "request", "matter_task", "contract_task"]
             },
             "in": "query",
             "name": "entityType",
@@ -44787,7 +44921,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["matter", "contract", "request"]
+              "enum": ["matter", "contract", "request", "matter_task", "contract_task"]
             },
             "in": "query",
             "name": "entityType",
@@ -44851,7 +44985,7 @@
                 "properties": {
                   "entityType": {
                     "type": "string",
-                    "enum": ["matter", "contract", "request"]
+                    "enum": ["matter", "contract", "request", "matter_task", "contract_task"]
                   },
                   "entityId": {
                     "type": "string",
@@ -44981,7 +45115,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["matter", "contract", "request"]
+              "enum": ["matter", "contract", "request", "matter_task", "contract_task"]
             },
             "in": "query",
             "name": "entityType",
@@ -45034,7 +45168,7 @@
                         },
                         "entityType": {
                           "type": "string",
-                          "enum": ["matter", "contract", "request"]
+                          "enum": ["matter", "contract", "request", "matter_task", "contract_task"]
                         },
                         "entityId": {
                           "type": "string"
@@ -45268,7 +45402,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["matter", "contract", "request"]
+              "enum": ["matter", "contract", "request", "matter_task", "contract_task"]
             },
             "in": "query",
             "name": "entityType",
@@ -45382,7 +45516,7 @@
                         },
                         "entityType": {
                           "type": "string",
-                          "enum": ["matter", "contract", "request"]
+                          "enum": ["matter", "contract", "request", "matter_task", "contract_task"]
                         },
                         "entityId": {
                           "type": "string"
@@ -45579,7 +45713,7 @@
                         },
                         "entityType": {
                           "type": "string",
-                          "enum": ["matter", "contract", "request"]
+                          "enum": ["matter", "contract", "request", "matter_task", "contract_task"]
                         },
                         "entityId": {
                           "type": "string"
@@ -45778,7 +45912,7 @@
                         },
                         "entityType": {
                           "type": "string",
-                          "enum": ["matter", "contract", "request"]
+                          "enum": ["matter", "contract", "request", "matter_task", "contract_task"]
                         },
                         "entityId": {
                           "type": "string"

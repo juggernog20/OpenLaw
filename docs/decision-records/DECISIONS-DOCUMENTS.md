@@ -335,3 +335,21 @@ Supporting uploads on Matters and Contracts mint the same immutable `<driver>:<k
 | DOC-012 | Storage adapter: three operations, and `file_ref` = `<driver>:<key>`           | Accepted |
 | DOC-013 | SharePoint is not a store; the third driver is Azure Blob                      | Accepted |
 | DOC-014 | Two stores per install: source and derived; reads route across drivers         | Accepted |
+
+### DOC-006 UX review addendum — drag saved Documents between folders (2026-09-08)
+
+The shared record Documents table lets Member+ users drag a live Document onto a folder
+or onto the destination for moving out of folders. The flat Documents repository reveals
+the dragged Document's owning record folders, including nested paths and None, as drop
+targets. Moves use the existing Document folder update API and retain the owning record.
+External file drops continue to open the batch upload confirmation. Archived Documents
+and read-only record surfaces cannot initiate moves. Move menus remain the keyboard path;
+their no-folder option is named None rather than “The matter/contract itself”.
+
+### DOC-006 / DES-033 UX review addendum — folder disclosure (2026-09-08)
+
+A folder shows an expand/collapse chevron only when its viewer-scoped document count
+is nonzero or it has subfolders. Empty folders keep their alignment, actions, and drop
+targets. Folders containing only inaccessible Documents appear empty under the same rule.
+The row counts subfolders as well as Documents, so a parent with children does not read Empty.
+This supersedes the earlier always-present folder chevron behavior.

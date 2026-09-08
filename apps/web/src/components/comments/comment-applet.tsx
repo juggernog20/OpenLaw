@@ -532,10 +532,17 @@ function CommentThread({
         )}
         {comments !== null && comments.length === 0 && (
           <p className="px-4 py-3 text-sm text-muted">
-            <FormattedMessage
-              id="comments.empty"
-              defaultMessage="Nothing has been said about this record yet. Add the first comment to keep the conversation on the record."
-            />
+            {entityType === "matter_task" || entityType === "contract_task" ? (
+              <FormattedMessage
+                id="taskDetails.emptyComments"
+                defaultMessage="Add a note, share a file, or mention a teammate."
+              />
+            ) : (
+              <FormattedMessage
+                id="comments.empty"
+                defaultMessage="Nothing has been said about this record yet. Add the first comment to keep the conversation on the record."
+              />
+            )}
           </p>
         )}
         {/* At the head, not the foot: the thread reads oldest to newest,
@@ -1139,7 +1146,10 @@ function Composer({
   onPosted: (comment: Comment) => void;
 }>) {
   const intl = useIntl();
-  const tiers = composerTiers(role);
+  const tiers = composerTiers(role).filter(
+    (tier) =>
+      !(entityType === "matter_task" || entityType === "contract_task") || tier !== "full_thread",
+  );
   // The record's default when this role is in that room, and their
   // widest room when it is not. Seeding the flat default would leave a
   // role without Working Team holding a tier no segment offers: nothing

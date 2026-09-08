@@ -261,6 +261,45 @@ describe("eligible link candidates", () => {
 });
 
 describe("link cardinality, races, and narration", () => {
+  it("hides archived links for all viewers and restores them without losing the Matter link", async () => {
+    const matter = await createMatter("Archive linked contracts");
+    await addToMatter(matter.number);
+    const born = await createContract("Archive linked contract", { matterNumber: matter.number });
+    expect(born.statusCode, born.body).toBe(201);
+    const contract = born.json().contract as { id: string; number: number };
+    const list = async (cookies: Record<string, string>) => {
+      const response = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/matters/${matter.number}/contracts`,
+        cookies,
+      });
+      expect(response.statusCode, response.body).toBe(200);
+      return response.json().contracts;
+    };
+    expect(await list(memberCookies)).toEqual([
+      expect.objectContaining({ number: contract.number }),
+    ]);
+    expect(await list(contributorCookies)).toEqual([{ restricted: true }]);
+    const archived = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/archive`,
+      cookies: memberCookies,
+    });
+    expect(archived.statusCode, archived.body).toBe(200);
+    expect(await list(memberCookies)).toEqual([]);
+    expect(await list(contributorCookies)).toEqual([]);
+    const restored = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/restore`,
+      cookies: memberCookies,
+    });
+    expect(restored.statusCode, restored.body).toBe(200);
+    expect(await list(memberCookies)).toEqual([
+      expect.objectContaining({ number: contract.number }),
+    ]);
+    expect(await list(contributorCookies)).toEqual([{ restricted: true }]);
+  });
+
   it("links and unlinks from the one Contract datum and writes one Activity entry per act", async () => {
     const matter = await createMatter("Canonical Matter");
     const born = await createContract("Canonical Contract");

@@ -10,31 +10,27 @@ import {
 } from "../tasks/assignee-picker";
 import { useRecord } from "../record-context";
 import { FormattedMessage, useIntl } from "react-intl";
-import { ArrowDown, ArrowUp, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
-import { MAX_TASK_TITLE_LENGTH } from "@openlaw/shared";
+import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { TaskDialog } from "../tasks/task-dialog";
+import { useSearchParams } from "react-router";
 import {
   addMatterTask,
   removeMatterTask,
-  reorderMatterTasks,
   toggleMatterTask,
   updateMatterTask,
   type MatterTask,
-  type MatterTaskInput,
   type MatterTasksOutcome,
 } from "../../lib/matter-tasks";
 import { formatShortDate } from "../../lib/format";
 import { StatusNote, type FieldStatus } from "../status-note";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
-import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
 
 export type MatterTaskPerson = TaskAssigneePerson;
 
@@ -60,7 +56,23 @@ export function MatterTasksCard({
   const intl = useIntl();
   const [status, setStatus] = useState<FieldStatus>("idle");
   const [detail, setDetail] = useState<string | null>(null);
-  const [editing, setEditing] = useState<Editing | null>(null);
+  const [manualEditing, setEditing] = useState<Editing | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const linkedTask = tasks.find((task) => task.id === searchParams.get("task"));
+  const editing = manualEditing ?? (linkedTask ? { row: linkedTask } : null);
+  function closeEditing() {
+    setEditing(null);
+    if (searchParams.has("task")) {
+      setSearchParams(
+        (current) => {
+          const next = new URLSearchParams(current);
+          next.delete("task");
+          return next;
+        },
+        { replace: true },
+      );
+    }
+  }
   const busy = status === "saving";
 
   async function run(write: () => Promise<MatterTasksOutcome>, inDialog = false) {
@@ -81,18 +93,6 @@ export function MatterTasksCard({
     onTasksChange(result);
     setStatus("saved");
     return null;
-  }
-
-  function move(index: number, offset: -1 | 1) {
-    const reordered = [...tasks];
-    const target = index + offset;
-    [reordered[index], reordered[target]] = [reordered[target]!, reordered[index]!];
-    void run(() =>
-      reorderMatterTasks(
-        matterNumber,
-        reordered.map((task) => task.id),
-      ),
-    );
   }
 
   return (
@@ -145,7 +145,7 @@ export function MatterTasksCard({
         </p>
       ) : (
         <ul className="divide-y divide-border-muted" role="list">
-          {tasks.map((task, index) => (
+          {tasks.map((task) => (
             <TaskRow
               key={task.id}
               task={task}
@@ -162,12 +162,8 @@ export function MatterTasksCard({
               }}
               frozen={frozen}
               busy={busy}
-              first={index === 0}
-              last={index === tasks.length - 1}
               onToggle={() => void run(() => toggleMatterTask(task.id))}
               onEdit={() => setEditing({ row: task })}
-              onMoveUp={() => move(index, -1)}
-              onMoveDown={() => move(index, 1)}
               onRemove={() => void run(() => removeMatterTask(task.id))}
             />
           ))}
@@ -175,23 +171,36 @@ export function MatterTasksCard({
       )}
       {editing && (
         <TaskDialog
+          key={editing.row?.id ?? "new"}
           row={editing.row}
           assignees={assignees}
           teamExpansion={teamExpansion}
-          busy={busy}
-          onClose={() => setEditing(null)}
-          onConfirm={async (input) => {
-            const refusal = await run(
-              () =>
-                editing.row
-                  ? updateMatterTask(editing.row.id, input)
-                  : addMatterTask(matterNumber, input),
-              true,
-            );
-            if (!refusal && input.addToTeam && input.assigneeId)
-              teamExpansion?.onAdded(input.assigneeId);
-            if (!refusal) setEditing(null);
-            return refusal;
+          onClose={closeEditing}
+          onSave={async (input, taskId) => {
+            const result = taskId
+              ? await updateMatterTask(taskId, input)
+              : await addMatterTask(matterNumber, input);
+            if (!result.ok)
+              return {
+                error:
+                  result.detail ??
+                  intl.formatMessage({
+                    id: "matterTasks.writeFailed",
+                    defaultMessage: "The Task change could not be saved. Try again.",
+                  }),
+              };
+            onTasksChange(result);
+            const saved =
+              result.tasks.find((task) => task.id === (taskId ?? result.createdTaskId)) ??
+              result.tasks.find((task) => !tasks.some((previous) => previous.id === task.id));
+            if (!saved)
+              return {
+                error: intl.formatMessage({
+                  id: "taskDetails.missing",
+                  defaultMessage: "The saved task could not be loaded. Close and reopen it.",
+                }),
+              };
+            return { task: saved };
           }}
         />
       )}
@@ -206,12 +215,8 @@ function TaskRow({
   onAssign,
   frozen,
   busy,
-  first,
-  last,
   onToggle,
   onEdit,
-  onMoveUp,
-  onMoveDown,
   onRemove,
 }: Readonly<{
   task: MatterTask;
@@ -220,12 +225,8 @@ function TaskRow({
   onAssign: (id: string | null, addToTeam?: boolean) => Promise<string | null>;
   frozen: boolean;
   busy: boolean;
-  first: boolean;
-  last: boolean;
   onToggle: () => void;
   onEdit: () => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
   onRemove: () => void;
 }>) {
   const intl = useIntl();
@@ -245,9 +246,13 @@ function TaskRow({
         )}
       />
       <div className="flex min-w-0 flex-1 flex-col">
-        <span className={`text-base ${task.isDone ? "text-muted line-through" : "text-primary"}`}>
+        <button
+          type="button"
+          onClick={onEdit}
+          className={`w-fit max-w-full rounded-button text-left text-base hover:text-link hover:underline focus-visible:outline-2 focus-visible:outline-link ${task.isDone ? "text-muted line-through" : "text-primary"}`}
+        >
           {task.title}
-        </span>
+        </button>
         {task.dueDate && (
           <span className="text-xs text-muted">
             <FormattedMessage
@@ -288,14 +293,6 @@ function TaskRow({
               <Pencil size={16} aria-hidden="true" />
               <FormattedMessage id="matterTasks.edit" defaultMessage="Edit Task" />
             </DropdownMenuItem>
-            <DropdownMenuItem disabled={first} onSelect={onMoveUp}>
-              <ArrowUp size={16} aria-hidden="true" />
-              <FormattedMessage id="matterTasks.up" defaultMessage="Move up" />
-            </DropdownMenuItem>
-            <DropdownMenuItem disabled={last} onSelect={onMoveDown}>
-              <ArrowDown size={16} aria-hidden="true" />
-              <FormattedMessage id="matterTasks.down" defaultMessage="Move down" />
-            </DropdownMenuItem>
             <DropdownMenuItem onSelect={onRemove}>
               <Trash2 size={16} aria-hidden="true" />
               <FormattedMessage id="matterTasks.remove" defaultMessage="Remove Task" />
@@ -304,152 +301,5 @@ function TaskRow({
         </DropdownMenu>
       )}
     </li>
-  );
-}
-
-function TaskDialog({
-  row,
-  assignees,
-  teamExpansion,
-  busy,
-  onClose,
-  onConfirm,
-}: Readonly<{
-  row: MatterTask | null;
-  assignees: readonly MatterTaskPerson[];
-  teamExpansion?: TaskTeamExpansion;
-  busy: boolean;
-  onClose: () => void;
-  onConfirm: (input: MatterTaskInput) => Promise<string | null>;
-}>) {
-  const intl = useIntl();
-  const [addToTeam, setAddToTeam] = useState(false);
-  const allPeople = [...assignees, ...(teamExpansion?.people ?? [])];
-  const [title, setTitle] = useState(row?.title ?? "");
-  const [assigneeId, setAssigneeId] = useState(row?.assigneeId ?? "");
-  const [dueDate, setDueDate] = useState(row?.dueDate ?? "");
-  const [error, setError] = useState<string | null>(null);
-
-  async function submit() {
-    if (!title.trim()) {
-      setError(
-        intl.formatMessage({
-          id: "matterTasks.needTitle",
-          defaultMessage: "Name what needs doing.",
-        }),
-      );
-      return;
-    }
-    setError(
-      await onConfirm({
-        title: title.trim(),
-        ...(row && assigneeId === (row.assigneeId ?? "") ? {} : { assigneeId: assigneeId || null }),
-        ...(addToTeam ? { assigneeId, addToTeam: true } : {}),
-        dueDate: dueDate || null,
-      }),
-    );
-  }
-
-  return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent aria-describedby={undefined}>
-        <DialogTitle>
-          {row ? (
-            <FormattedMessage id="matterTasks.editTitle" defaultMessage="Edit Task" />
-          ) : (
-            <FormattedMessage id="matterTasks.addTitle" defaultMessage="Add a Task" />
-          )}
-        </DialogTitle>
-        <form
-          className="mt-4 flex flex-col gap-4"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void submit();
-          }}
-        >
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="matter-task-title" required>
-              <FormattedMessage id="matterTasks.field.title" defaultMessage="Title" />
-            </Label>
-            <Input
-              id="matter-task-title"
-              aria-required="true"
-              value={title}
-              maxLength={MAX_TASK_TITLE_LENGTH}
-              autoFocus
-              aria-invalid={error ? true : undefined}
-              onChange={(event) => {
-                setTitle(event.target.value);
-                setError(null);
-              }}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="matter-task-assignee">
-              <FormattedMessage id="matterTasks.field.assignee" defaultMessage="Assignee" />
-            </Label>
-            <TaskAssigneePicker
-              id="matter-task-assignee"
-              label={intl.formatMessage({
-                id: "matterTasks.field.assignee",
-                defaultMessage: "Assignee",
-              })}
-              taskTitle={title}
-              value={
-                assigneeId
-                  ? (allPeople.find((person) => person.id === assigneeId) ??
-                    (row ? taskAssignee(row, assignees) : null))
-                  : null
-              }
-              deferred
-              people={assignees}
-              additionalPeople={teamExpansion?.people}
-              disabled={busy}
-              onChange={async (id, adding) => {
-                setAddToTeam(adding ?? false);
-                setAssigneeId(id ?? "");
-                return null;
-              }}
-            />
-            {addToTeam && (
-              <p className="text-sm text-muted">
-                <FormattedMessage
-                  id="taskAssignee.deferred"
-                  defaultMessage="Team membership and assignment are saved when you save the task."
-                />
-              </p>
-            )}
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="matter-task-due">
-              <FormattedMessage id="matterTasks.field.due" defaultMessage="Due date" />
-            </Label>
-            <Input
-              id="matter-task-due"
-              type="date"
-              value={dueDate}
-              onChange={(event) => setDueDate(event.target.value)}
-            />
-          </div>
-          {error && (
-            <p role="alert" className="text-sm text-status-danger-fg">
-              {error}
-            </p>
-          )}
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="secondary" onClick={onClose}>
-              <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
-            </Button>
-            <Button type="submit" disabled={busy}>
-              {row ? (
-                <FormattedMessage id="action.save" defaultMessage="Save" />
-              ) : (
-                <FormattedMessage id="matterTasks.add" defaultMessage="Add Task" />
-              )}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
   );
 }

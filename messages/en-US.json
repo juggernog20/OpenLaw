@@ -1335,10 +1335,10 @@
     "defaultMessage": "Eligible records could not be searched."
   },
   "contractMatter.searchContract": {
-    "defaultMessage": "Search by contract number or title"
+    "defaultMessage": "Search by Contract number or title"
   },
   "contractMatter.searchMatter": {
-    "defaultMessage": "Search by matter number or title"
+    "defaultMessage": "Search by Matter number or title"
   },
   "contractMatter.searching": {
     "defaultMessage": "Searching…"
@@ -2636,6 +2636,24 @@
   "documents.details.title": {
     "defaultMessage": "Edit details"
   },
+  "documents.drag.loading": {
+    "defaultMessage": "Loading folders…"
+  },
+  "documents.drag.moveTo": {
+    "defaultMessage": "Move to folder"
+  },
+  "documents.drag.moved": {
+    "defaultMessage": "Moved {title}."
+  },
+  "documents.drag.noFolder": {
+    "defaultMessage": "None"
+  },
+  "documents.drag.retry": {
+    "defaultMessage": "Retry loading folders"
+  },
+  "documents.drag.root": {
+    "defaultMessage": "Drop here to move out of folders"
+  },
   "documents.empty": {
     "defaultMessage": "No documents on this contract yet."
   },
@@ -2691,13 +2709,16 @@
     "defaultMessage": "Move"
   },
   "documents.folder.action.newInside": {
-    "defaultMessage": "New folder inside"
+    "defaultMessage": "New subfolder"
   },
   "documents.folder.action.rename": {
     "defaultMessage": "Rename"
   },
   "documents.folder.actionsFor": {
     "defaultMessage": "Actions for the {name} folder"
+  },
+  "documents.folder.childCount": {
+    "defaultMessage": "{count, plural, one {# folder} other {# folders}}"
   },
   "documents.folder.count": {
     "defaultMessage": "{count, plural, =0 {Empty} one {# document} other {# documents}}"
@@ -2742,7 +2763,7 @@
     "defaultMessage": "/"
   },
   "documents.folder.recordRoot": {
-    "defaultMessage": "The contract itself"
+    "defaultMessage": "None"
   },
   "documents.folder.renameTitle": {
     "defaultMessage": "Rename folder"
@@ -3036,7 +3057,7 @@
     "defaultMessage": "Anything in it moves onto the Entity itself. Nothing is deleted."
   },
   "entities.documents.folder.recordRoot": {
-    "defaultMessage": "The Entity itself"
+    "defaultMessage": "None"
   },
   "entities.form.formedOn": {
     "defaultMessage": "Formed on"
@@ -4137,7 +4158,7 @@
     "defaultMessage": "No documents on this Knowledge Item yet."
   },
   "knowledge.documents.recordRoot": {
-    "defaultMessage": "The Knowledge Item itself"
+    "defaultMessage": "None"
   },
   "knowledge.draftMarker": {
     "defaultMessage": "Draft"
@@ -4409,16 +4430,10 @@
   "matterTasks.doneCount": {
     "defaultMessage": "{done} of {total} done"
   },
-  "matterTasks.down": {
-    "defaultMessage": "Move down"
-  },
   "matterTasks.due": {
     "defaultMessage": "Due {date}"
   },
   "matterTasks.edit": {
-    "defaultMessage": "Edit Task"
-  },
-  "matterTasks.editTitle": {
     "defaultMessage": "Edit Task"
   },
   "matterTasks.empty": {
@@ -4444,9 +4459,6 @@
   },
   "matterTasks.toggle": {
     "defaultMessage": "{done, select, true {Reopen Task: {title}} other {Complete Task: {title}}}"
-  },
-  "matterTasks.up": {
-    "defaultMessage": "Move up"
   },
   "matterTasks.writeFailed": {
     "defaultMessage": "The Task change could not be saved. Try again."
@@ -4548,7 +4560,7 @@
     "defaultMessage": "Anything in it moves onto the matter itself. Nothing is deleted."
   },
   "matters.documents.folder.recordRoot": {
-    "defaultMessage": "The matter itself"
+    "defaultMessage": "None"
   },
   "matters.edit.error": {
     "defaultMessage": "The change could not be saved."
@@ -8018,6 +8030,33 @@
   "taskAssignee.usePerson": {
     "defaultMessage": "Use this person"
   },
+  "taskDetails.commentFailed": {
+    "defaultMessage": "Task saved. Your note and attachments could not be added. {detail}"
+  },
+  "taskDetails.conversation": {
+    "defaultMessage": "Comments & attachments"
+  },
+  "taskDetails.description": {
+    "defaultMessage": "Description"
+  },
+  "taskDetails.emptyComments": {
+    "defaultMessage": "Add a note, share a file, or mention a teammate."
+  },
+  "taskDetails.missing": {
+    "defaultMessage": "The saved task could not be loaded. Close and reopen it."
+  },
+  "taskDetails.note": {
+    "defaultMessage": "Add a note"
+  },
+  "taskDetails.retry": {
+    "defaultMessage": "Retry note & attachments"
+  },
+  "taskDetails.title": {
+    "defaultMessage": "Task details"
+  },
+  "taskDetails.tryAgain": {
+    "defaultMessage": "Please try again."
+  },
   "tasks.actionsFor": {
     "defaultMessage": "Actions for {title}"
   },
@@ -8039,23 +8078,8 @@
   "tasks.edit": {
     "defaultMessage": "Edit task"
   },
-  "tasks.editTitle": {
-    "defaultMessage": "Edit task"
-  },
   "tasks.empty": {
     "defaultMessage": "No tasks on this contract yet."
-  },
-  "tasks.field.assignee": {
-    "defaultMessage": "Assignee"
-  },
-  "tasks.field.dueDate": {
-    "defaultMessage": "Due date"
-  },
-  "tasks.field.title": {
-    "defaultMessage": "Title"
-  },
-  "tasks.needTitle": {
-    "defaultMessage": "Name what needs doing."
   },
   "tasks.remove": {
     "defaultMessage": "Remove task"
@@ -8067,7 +8091,7 @@
     "defaultMessage": "{isDone, select, true {Reopen task: {title}} other {Complete task: {title}}}"
   },
   "tasks.writeFailed": {
-    "defaultMessage": "The change could not be saved. Try again."
+    "defaultMessage": "The Task change could not be saved. Try again."
   },
   "theme.dark": {
     "defaultMessage": "Dark"

@@ -57,7 +57,21 @@ const GOVERNING_LAW = {
 const OPTIONS = {
   contractTypes: [
     { id: "t-nda", slug: "nda", displayName: "NDA", fields: [] },
-    { id: "t-msa", slug: "msa", displayName: "MSA", fields: [GOVERNING_LAW] },
+    {
+      id: "t-msa",
+      slug: "msa",
+      displayName: "MSA",
+      fields: [
+        GOVERNING_LAW,
+        {
+          ...GOVERNING_LAW,
+          fieldId: "f-notes",
+          slug: "notes",
+          displayName: "Notes",
+          isRequired: false,
+        },
+      ],
+    },
   ],
   contractStatuses: [
     { id: "s-draft", slug: "draft", displayName: "Draft", stage: "draft" },
@@ -481,6 +495,9 @@ describe("the /contracts destination", () => {
     ).toBeInTheDocument();
     expect(api.creates).toEqual([]);
 
+    const notes = screen.getByLabelText("Notes");
+    expect(notes).not.toHaveAttribute("aria-required", "true");
+    await user.type(notes, "Annual review");
     await user.type(law, "England & Wales");
     await user.click(screen.getByRole("button", { name: "Create" }));
     await waitFor(() =>
@@ -488,7 +505,7 @@ describe("the /contracts destination", () => {
         {
           title: "Orion MSA",
           contractTypeId: "t-msa",
-          customFields: { governing_law: "England & Wales" },
+          customFields: { governing_law: "England & Wales", notes: "Annual review" },
           isConfidential: false,
         },
       ]),

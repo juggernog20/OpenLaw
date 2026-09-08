@@ -105,13 +105,9 @@
  * identically — so both are drawn by one component and the only
  * difference between them is how far in they sit.
  *
- * **Every folder takes a chevron, and its count is the viewer's**
- * (DD-014, DES-033). A folder whose count reads "Empty" may be a folder
- * whose contents this viewer cannot see: the seam leaves those documents
- * out of the listing and out of the count together, by the one predicate
- * every document read passes through. So nothing here tells the two
- * apart — no hidden-item hint, no different empty line, and no chevron
- * drawn only on the folders that hold something.
+ * Folder expansion follows the viewer-scoped document count and child
+ * folders. Empty folders and folders containing only hidden documents
+ * both have no chevron.
  *
  * **Dissolving a folder destroys nothing** (DOC-006). Its child folders
  * and the documents filed in it are re-filed into its parent, or into
@@ -129,6 +125,7 @@
  * (CTR-022) — so that item is drawn for those three and nobody else.
  */
 
+import { useDocumentDrag } from "./use-document-drag";
 import { Fragment, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { useRecord } from "../record-context";
 import { defineMessage, FormattedMessage, useIntl, type IntlShape } from "react-intl";
@@ -313,6 +310,7 @@ const FOLDER_SKELETON_ROWS = 3;
  * same fifteen through two call sites is how the two come to differ.
  */
 interface RowContext {
+  documentDrag: ReturnType<typeof useDocumentDrag<ContractDocument>>;
   showKind: boolean;
   designations: boolean;
   executedDesignations: boolean;
@@ -584,6 +582,7 @@ export function DocumentsCard({
    * Null when nothing is over it; a folder's id when the drag is over
    * that folder's row, so the row that will take the drop is the row
    * that lights up. */
+  const documentDrag = useDocumentDrag<ContractDocument>();
   const [dragging, setDragging] = useState(false);
   const [dragFolder, setDragFolder] = useState<string | null>(null);
   const [editing, setEditing] = useState<ContractDocument | null>(null);
@@ -979,6 +978,19 @@ export function DocumentsCard({
     );
   }
 
+  async function dropDocument(transfer: DataTransfer | null, folderId: string | null) {
+    const document = documentDrag.take(transfer);
+    setDragFolder(null);
+    setDragging(false);
+    if (!document || frozen || busy || document.archivedAt || document.folderId === folderId)
+      return;
+    const error = await fileDocument(document, folderId);
+    if (error) {
+      setStatus("error");
+      setDetail(error);
+    }
+  }
+
   /**
    * Names a document the contract's instrument (CTR-014).
    *
@@ -1355,6 +1367,7 @@ export function DocumentsCard({
   /** Everything a document row draws from, built once and handed to
    * every listing — the record root's and each open folder's. */
   const rowContext: RowContext = {
+    documentDrag,
     showKind: record.entityType !== "matter",
     designations: supportsDesignations(record.entityType),
     executedDesignations: record.entityType === "contract",
@@ -1389,6 +1402,11 @@ export function DocumentsCard({
   return (
     <section
       ref={surface}
+      onDragEnd={() => {
+        documentDrag.clear();
+        setDragFolder(null);
+        setDragging(false);
+      }}
       aria-labelledby="contract-documents-heading"
       className={cn(
         "w-full overflow-hidden rounded-card border border-border-default bg-raised",
@@ -1416,13 +1434,39 @@ export function DocumentsCard({
         setDragFolder(null);
       }}
       onDrop={(event) => {
-        if (frozen) return;
+        if (frozen || documentDrag.accepts(event.dataTransfer)) return;
         event.preventDefault();
         setDragging(false);
         setDragFolder(null);
         void openDrop(event.dataTransfer, null);
       }}
     >
+      {documentDrag.source && (
+        <div
+          className="fixed bottom-6 left-6 z-50 max-w-[calc(100vw-3rem)] rounded-card border border-dashed border-link bg-raised px-4 py-3 text-sm font-medium text-link shadow-lg"
+          onDragOver={(event) => {
+            if (
+              busy ||
+              !documentDrag.accepts(event.dataTransfer) ||
+              documentDrag.source?.folderId === null
+            )
+              return;
+            event.preventDefault();
+            event.stopPropagation();
+            event.dataTransfer.dropEffect = "move";
+          }}
+          onDrop={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            void dropDocument(event.dataTransfer, null);
+          }}
+        >
+          <FormattedMessage
+            id="documents.drag.root"
+            defaultMessage="Drop here to move out of folders"
+          />
+        </div>
+      )}
       <header className="flex h-section-header items-center justify-between gap-2 rounded-t-card border-b border-border-default bg-section-header px-4">
         <div className="flex min-w-0 items-center gap-2">
           <h2 id="contract-documents-heading" className="text-base font-semibold">
@@ -1563,7 +1607,8 @@ export function DocumentsCard({
                 onDropOnFolder={(folder, transfer) => {
                   setDragging(false);
                   setDragFolder(null);
-                  void openDrop(transfer, { id: folder.id, name: folder.name });
+                  if (documentDrag.accepts(transfer)) void dropDocument(transfer, folder.id);
+                  else void openDrop(transfer, { id: folder.id, name: folder.name });
                 }}
               />
             )}
@@ -1788,7 +1833,19 @@ function DocumentRows({
               // worse than none (DES-031).
               ref={document.id === rows.appended?.from ? rows.landing : undefined}
               tabIndex={document.id === rows.appended?.from ? -1 : undefined}
-              className="border-t border-border-default"
+              className={cn(
+                "border-t border-border-default",
+                rows.documentDrag.source?.id === document.id && "opacity-50",
+              )}
+              draggable={!rows.frozen && !rows.busy && rows.folders && !document.archivedAt}
+              onDragStart={(event) => {
+                if (rows.frozen || rows.busy || !rows.folders || document.archivedAt) {
+                  event.preventDefault();
+                  return;
+                }
+                rows.documentDrag.start(document, event);
+              }}
+              onDragEnd={() => rows.documentDrag.clear()}
             >
               <td className="px-4 py-2.5">
                 <span className="flex items-start gap-1">
@@ -2114,7 +2171,9 @@ function FolderRows({
   return (
     <>
       {childrenOf(folders, parentId).map((folder) => {
-        const isOpen = open.has(folder.id);
+        const childCount = childrenOf(folders, folder.id).length;
+        const expandable = folder.documentCount > 0 || childCount > 0 || open.has(folder.id);
+        const isOpen = expandable && open.has(folder.id);
         const listing = listings.get(folder.id);
         return (
           <Fragment key={folder.id}>
@@ -2132,13 +2191,23 @@ function FolderRows({
                 // an archived record's paper is frozen and a Contributor
                 // is offered no control anywhere else on the row either.
                 onDragOver={(event) => {
-                  if (rows.frozen || !dragCarriesFiles(event.dataTransfer)) return;
+                  const moving = rows.documentDrag.accepts(event.dataTransfer);
+                  if (
+                    rows.frozen ||
+                    rows.busy ||
+                    (!moving && !dragCarriesFiles(event.dataTransfer))
+                  )
+                    return;
+                  if (moving && rows.documentDrag.source?.folderId === folder.id) {
+                    event.stopPropagation();
+                    return;
+                  }
                   // Without this the section's own handler answers, and
                   // the files would land at the record root instead of
                   // in this folder.
                   event.stopPropagation();
                   event.preventDefault();
-                  event.dataTransfer.dropEffect = "copy";
+                  event.dataTransfer.dropEffect = moving ? "move" : "copy";
                   onDragFolder(folder.id);
                 }}
                 onDragLeave={(event) => {
@@ -2148,7 +2217,7 @@ function FolderRows({
                   onDragFolder(null);
                 }}
                 onDrop={(event) => {
-                  if (rows.frozen) return;
+                  if (rows.frozen || rows.busy) return;
                   event.stopPropagation();
                   event.preventDefault();
                   onDropOnFolder(folder, event.dataTransfer);
@@ -2167,31 +2236,29 @@ function FolderRows({
                         style={{ width: depth * FOLDER_INDENT }}
                       />
                     )}
-                    {/* Every folder takes the chevron, full or empty
-                        (M13/3). A folder that draws "Empty" may be a
-                        folder whose contents this viewer cannot see, so
-                        drawing the control only on the ones with
-                        something in it would be the surface telling the
-                        two apart — which is exactly what DD-014 bars. */}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-expanded={isOpen}
-                      onClick={() => onToggle(folder.id)}
-                      aria-label={rows.intl.formatMessage(
-                        {
-                          id: "documents.folder.toggle",
-                          defaultMessage: "{open, select, true {Collapse} other {Expand}} {name}",
-                        },
-                        { open: isOpen, name: folder.name },
-                      )}
-                    >
-                      {isOpen ? (
-                        <ChevronDown size={16} aria-hidden="true" />
-                      ) : (
-                        <ChevronRight size={16} aria-hidden="true" />
-                      )}
-                    </Button>
+                    {expandable ? (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-expanded={isOpen}
+                        onClick={() => onToggle(folder.id)}
+                        aria-label={rows.intl.formatMessage(
+                          {
+                            id: "documents.folder.toggle",
+                            defaultMessage: "{open, select, true {Collapse} other {Expand}} {name}",
+                          },
+                          { open: isOpen, name: folder.name },
+                        )}
+                      >
+                        {isOpen ? (
+                          <ChevronDown size={16} aria-hidden="true" />
+                        ) : (
+                          <ChevronRight size={16} aria-hidden="true" />
+                        )}
+                      </Button>
+                    ) : (
+                      <span className="size-6 shrink-0" aria-hidden="true" />
+                    )}
                     {isOpen ? (
                       <FolderOpen size={16} aria-hidden="true" className="shrink-0 text-muted" />
                     ) : (
@@ -2208,11 +2275,23 @@ function FolderRows({
                         ambiguity is DD-014's promise held at the pixel
                         level. */}
                     <span className="shrink-0 text-xs text-muted">
-                      <FormattedMessage
-                        id="documents.folder.count"
-                        defaultMessage="{count, plural, =0 {Empty} one {# document} other {# documents}}"
-                        values={{ count: folder.documentCount }}
-                      />
+                      {(folder.documentCount > 0 || childCount === 0) && (
+                        <FormattedMessage
+                          id="documents.folder.count"
+                          defaultMessage="{count, plural, =0 {Empty} one {# document} other {# documents}}"
+                          values={{ count: folder.documentCount }}
+                        />
+                      )}
+                      {childCount > 0 && (
+                        <>
+                          {folder.documentCount > 0 && " · "}
+                          <FormattedMessage
+                            id="documents.folder.childCount"
+                            defaultMessage="{count, plural, one {# folder} other {# folders}}"
+                            values={{ count: childCount }}
+                          />
+                        </>
+                      )}
                     </span>
                   </span>
                 </td>
@@ -2926,7 +3005,7 @@ const RECORD_COPY = {
     }),
     recordRoot: defineMessage({
       id: "documents.folder.recordRoot",
-      defaultMessage: "The contract itself",
+      defaultMessage: "None",
     }),
     deleteIntoRoot: defineMessage({
       id: "documents.folder.deleteIntoRoot",
@@ -2940,7 +3019,7 @@ const RECORD_COPY = {
     }),
     recordRoot: defineMessage({
       id: "matters.documents.folder.recordRoot",
-      defaultMessage: "The matter itself",
+      defaultMessage: "None",
     }),
     deleteIntoRoot: defineMessage({
       id: "matters.documents.folder.deleteIntoRoot",
@@ -2954,7 +3033,7 @@ const RECORD_COPY = {
     }),
     recordRoot: defineMessage({
       id: "entities.documents.folder.recordRoot",
-      defaultMessage: "The Entity itself",
+      defaultMessage: "None",
     }),
     deleteIntoRoot: defineMessage({
       id: "entities.documents.folder.deleteIntoRoot",
@@ -2968,7 +3047,7 @@ const RECORD_COPY = {
     }),
     recordRoot: defineMessage({
       id: "knowledge.documents.recordRoot",
-      defaultMessage: "The Knowledge Item itself",
+      defaultMessage: "None",
     }),
     deleteIntoRoot: defineMessage({
       id: "knowledge.documents.deleteIntoRoot",
@@ -3025,7 +3104,7 @@ const FOLDER_ACTION_LABEL = {
   move: defineMessage({ id: "documents.folder.action.move", defaultMessage: "Move" }),
   newInside: defineMessage({
     id: "documents.folder.action.newInside",
-    defaultMessage: "New folder inside",
+    defaultMessage: "New subfolder",
   }),
   delete: defineMessage({ id: "documents.folder.action.delete", defaultMessage: "Delete" }),
 } as const;

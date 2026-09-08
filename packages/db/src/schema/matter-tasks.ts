@@ -24,6 +24,7 @@ export const matterTasks = pgTable(
       .notNull()
       .references(() => matters.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
+    description: text("description"),
     isDone: boolean("is_done").notNull().default(false),
     assigneeId: text("assignee_id").references(() => users.id, { onDelete: "set null" }),
     /** A Task target, included in Next deadline while the Task is unfinished. */

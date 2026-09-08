@@ -26,6 +26,7 @@ export type ContractTask = ListResponse["tasks"][number];
 /** What one task carries when it is written. */
 export interface TaskInput {
   title: string;
+  description?: string | null;
   assigneeId?: string | null;
   addToTeam?: boolean;
   dueDate?: string | null;
@@ -33,7 +34,13 @@ export interface TaskInput {
 
 /** What a read or a write over the checklist answers. */
 export type TasksOutcome =
-  | { ok: true; tasks: ContractTask[]; doneCount: number; totalCount: number }
+  | {
+      ok: true;
+      createdTaskId?: string;
+      tasks: ContractTask[];
+      doneCount: number;
+      totalCount: number;
+    }
   | ({ ok: false } & Problem);
 
 /** Reads one contract's task checklist, whole. */
@@ -46,6 +53,9 @@ export async function readContractTasks(contractNumber: number): Promise<TasksOu
   return result?.data
     ? {
         ok: true,
+        ...("createdTaskId" in result.data && typeof result.data.createdTaskId === "string"
+          ? { createdTaskId: result.data.createdTaskId }
+          : {}),
         tasks: result.data.tasks,
         doneCount: result.data.doneCount,
         totalCount: result.data.totalCount,
@@ -67,6 +77,9 @@ export async function addContractTask(
   return result?.data
     ? {
         ok: true,
+        ...("createdTaskId" in result.data && typeof result.data.createdTaskId === "string"
+          ? { createdTaskId: result.data.createdTaskId }
+          : {}),
         tasks: result.data.tasks,
         doneCount: result.data.doneCount,
         totalCount: result.data.totalCount,
@@ -88,6 +101,9 @@ export async function updateContractTask(
   return result?.data
     ? {
         ok: true,
+        ...("createdTaskId" in result.data && typeof result.data.createdTaskId === "string"
+          ? { createdTaskId: result.data.createdTaskId }
+          : {}),
         tasks: result.data.tasks,
         doneCount: result.data.doneCount,
         totalCount: result.data.totalCount,
@@ -105,6 +121,9 @@ export async function toggleContractTask(taskId: string): Promise<TasksOutcome> 
   return result?.data
     ? {
         ok: true,
+        ...("createdTaskId" in result.data && typeof result.data.createdTaskId === "string"
+          ? { createdTaskId: result.data.createdTaskId }
+          : {}),
         tasks: result.data.tasks,
         doneCount: result.data.doneCount,
         totalCount: result.data.totalCount,
@@ -122,6 +141,9 @@ export async function removeContractTask(taskId: string): Promise<TasksOutcome> 
   return result?.data
     ? {
         ok: true,
+        ...("createdTaskId" in result.data && typeof result.data.createdTaskId === "string"
+          ? { createdTaskId: result.data.createdTaskId }
+          : {}),
         tasks: result.data.tasks,
         doneCount: result.data.doneCount,
         totalCount: result.data.totalCount,

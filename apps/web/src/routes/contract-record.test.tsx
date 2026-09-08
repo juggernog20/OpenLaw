@@ -8281,17 +8281,17 @@ describe("the folder tree on the contract record (M13/2, DES-033)", () => {
     expect(within(section).queryByText("2026")).toBeNull();
   });
 
-  it("offers the chevron on a folder that reads Empty", async () => {
+  it("omits the chevron on an empty folder while retaining its actions", async () => {
     stubApi({ signedIn: MEMBER, extra: foldersApi([folder("f-1", "Executed")]).handler });
     renderAt("/contracts/42/documents");
-
     const section = await documentsSection();
-    await within(section).findByRole("button", { name: "Expand Executed" });
-    // Every folder opens (M13/3). "Empty" may be a folder whose
-    // contents this viewer cannot see, so a chevron drawn only on the
-    // folders that hold something would be the surface telling the two
-    // apart — which is what DD-014 bars.
-    expect(within(section).getByRole("button", { name: "Expand Executed" })).toBeVisible();
+    expect(await within(section).findByText("Executed")).toBeVisible();
+    expect(
+      within(section).queryByRole("button", { name: "Expand Executed" }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(section).getByRole("button", { name: "Actions for the Executed folder" }),
+    ).toBeVisible();
     expect(within(section).getByText("Empty")).toBeVisible();
   });
 
@@ -8324,7 +8324,7 @@ describe("the folder tree on the contract record (M13/2, DES-033)", () => {
 
     const section = await documentsSection();
     await within(section).findByText("Correspondence");
-    const dialog = await act(user, section, "Correspondence", "New folder inside");
+    const dialog = await act(user, section, "Correspondence", "New subfolder");
     await user.type(within(dialog).getByLabelText("Name"), "2026");
     await user.click(within(dialog).getByRole("button", { name: "Save" }));
 
@@ -8409,7 +8409,7 @@ describe("the folder tree on the contract record (M13/2, DES-033)", () => {
       within(dialog)
         .getAllByRole("option")
         .map((option) => option.textContent),
-    ).toEqual(["The contract itself", "Amendments"]);
+    ).toEqual(["None", "Amendments"]);
   });
 
   it("dissolves a folder after saying where the contents go", async () => {
@@ -9101,6 +9101,74 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
     expect(within(section).getByText("first.pdf")).toBeVisible();
   });
 
+  it("drags a saved document into a folder and back out without uploading a new file", async () => {
+    const api = filingApi([document("doc-1", "signed.pdf")], [folder("f-1", "Executed")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const section = await documentsSection();
+    const row = (await within(section).findByText("signed.pdf")).closest("tr")!;
+    const values = new Map<string, string>();
+    const transfer = {
+      types: ["application/x-openlaw-document"],
+      setData: (key: string, value: string) => values.set(key, value),
+      getData: (key: string) => values.get(key) ?? "",
+      effectAllowed: "",
+      dropEffect: "",
+    };
+    expect(row).toHaveAttribute("draggable", "true");
+    fireEvent.dragStart(row, { dataTransfer: transfer });
+    const target = (
+      await within(section).findByRole("button", { name: "Actions for the Executed folder" })
+    ).closest("tr")!;
+    fireEvent.dragOver(target, { dataTransfer: transfer });
+    expect(transfer.dropEffect).toBe("move");
+    fireEvent.drop(target, { dataTransfer: transfer });
+    await waitFor(() =>
+      expect(api.writes).toEqual([{ url: "/api/v1/documents/doc-1", body: { folderId: "f-1" } }]),
+    );
+    await waitFor(() => expect(within(section).queryByText("signed.pdf")).toBeNull());
+    const user = userEvent.setup();
+    await user.click(within(section).getByRole("button", { name: "Expand Executed" }));
+    const filed = (await within(section).findByText("signed.pdf")).closest("tr")!;
+    fireEvent.dragStart(filed, { dataTransfer: transfer });
+    fireEvent.drop(within(section).getByText("Drop here to move out of folders"), {
+      dataTransfer: transfer,
+    });
+    await waitFor(() =>
+      expect(api.writes.at(-1)).toEqual({
+        url: "/api/v1/documents/doc-1",
+        body: { folderId: null },
+      }),
+    );
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("keeps the document in place and shows a refused drag move", async () => {
+    const api = filingApi([document("doc-1", "signed.pdf")], [folder("f-1", "Executed")], {
+      moveFails: "The folder is unavailable.",
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const section = await documentsSection();
+    const row = (await within(section).findByText("signed.pdf")).closest("tr")!;
+    const transfer = {
+      types: ["application/x-openlaw-document"],
+      setData: () => {},
+      getData: () => "doc-1",
+    };
+    fireEvent.dragStart(row, { dataTransfer: transfer });
+    fireEvent.drop(
+      within(section)
+        .getByRole("button", { name: "Actions for the Executed folder" })
+        .closest("tr")!,
+      {
+        dataTransfer: transfer,
+      },
+    );
+    expect(await within(section).findByText("The folder is unavailable.")).toBeVisible();
+    expect(within(section).getByText("signed.pdf")).toBeVisible();
+  });
+
   it("files a document into a folder from its own menu", async () => {
     const api = filingApi([document("doc-1", "signed.pdf")], [folder("f-1", "Executed")]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
@@ -9175,16 +9243,18 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
   });
 
   it("reads a closed folder fresh after a move filed something into it", async () => {
-    const api = filingApi([document("doc-1", "signed.pdf")], [folder("f-1", "Executed")]);
+    const api = filingApi(
+      [document("doc-1", "signed.pdf"), document("doc-2", "existing.pdf", "f-1")],
+      [folder("f-1", "Executed")],
+    );
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
-    // Open the folder while it is empty, so the section holds a listing
-    // for it, then close it again.
+    // Cache the folder’s existing contents, then close it before filing another document.
     const section = await documentsSection();
     await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
-    await within(section).findByText("Empty");
+    await within(section).findByText("existing.pdf");
     await user.click(within(section).getByRole("button", { name: "Collapse Executed" }));
 
     // File the loose document into the closed folder.
@@ -9225,7 +9295,7 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
       within(dialog)
         .getAllByRole("option")
         .map((option) => option.textContent),
-    ).toEqual(["The contract itself", "Correspondence", "Correspondence / 2026"]);
+    ).toEqual(["None", "Correspondence", "Correspondence / 2026"]);
   });
 
   it("offers a Contributor only Version append inside the tree", async () => {
@@ -10217,7 +10287,9 @@ describe("dropping a folder tree on the contract record (M13/5, DOC-011, DES-033
     const user = userEvent.setup();
 
     const section = await documentsSection();
-    const row = (await within(section).findByText("Executed")).closest("tr")!;
+    const row = (
+      await within(section).findByRole("button", { name: "Actions for the Executed folder" })
+    ).closest("tr")!;
     dropOn(row, [file("signed.pdf"), dir("2019", [file("notice.pdf")])]);
 
     const dialog = await screen.findByRole("dialog");

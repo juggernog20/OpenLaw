@@ -111,7 +111,7 @@ async function linkedContractsEnvelope(
   const links = await db
     .select({ id: contracts.id })
     .from(contracts)
-    .where(eq(contracts.matterId, matterId))
+    .where(and(eq(contracts.matterId, matterId), isNull(contracts.archivedAt)))
     .orderBy(asc(contracts.number));
   if (links.length === 0) return { contracts: [] };
   const reachable = await db
@@ -244,7 +244,7 @@ export const contractMattersRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "listMatterContracts",
         summary:
-          "Contracts whose one canonical matter_id names this Matter. Any Contract the viewer cannot independently reach is { restricted: true } with no number or title.",
+          "Non-archived Contracts whose one canonical matter_id names this Matter. Any Contract the viewer cannot independently reach is { restricted: true } with no number or title.",
         tags: ["contracts", "matters"],
         params: NumberParams,
         response: { 200: ContractsEnvelope, default: problemResponse },

@@ -74,6 +74,7 @@ const TaskParams = z.object({ taskId: RecordIdSchema });
 const TaskSchema = z.object({
   id: z.string(),
   title: z.string(),
+  description: z.string().nullable(),
   isDone: z.boolean(),
   assigneeId: z.string().nullable(),
   assigneeName: z.string().nullable(),
@@ -83,6 +84,7 @@ const TaskSchema = z.object({
 });
 
 const TasksEnvelope = z.object({
+  createdTaskId: z.string().optional(),
   tasks: z.array(TaskSchema),
   doneCount: z.int(),
   totalCount: z.int(),
@@ -93,6 +95,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
   interface ReachedTask {
     id: string;
     title: string;
+    description: string | null;
     isDone: boolean;
     assigneeId: string | null;
     dueDate: string | null;
@@ -116,6 +119,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
       .select({
         id: contractTasks.id,
         title: contractTasks.title,
+        description: contractTasks.description,
         isDone: contractTasks.isDone,
         assigneeId: contractTasks.assigneeId,
         dueDate: contractTasks.dueDate,
@@ -148,6 +152,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
       .select({
         id: contractTasks.id,
         title: contractTasks.title,
+        description: contractTasks.description,
         isDone: contractTasks.isDone,
         assigneeId: contractTasks.assigneeId,
         assigneeName: users.displayName,
@@ -235,6 +240,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         params: NumberParams,
         body: z.strictObject({
           title: TitleSchema,
+          description: z.string().trim().max(10000).nullable().optional(),
           assigneeId: z.string().nullable().optional(),
           addToTeam: z.boolean().optional(),
           dueDate: z.iso.date().nullable().optional(),
@@ -272,6 +278,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
           .values({
             contractId: contract.id,
             title,
+            description: request.body.description || null,
             isDone: false,
             assigneeId,
             dueDate,
@@ -305,7 +312,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
           });
         }
 
-        return checklistOf(tx, contract.id);
+        return { ...(await checklistOf(tx, contract.id)), createdTaskId: created!.id };
       });
       return reply.status(201).send(answer);
     },
@@ -322,7 +329,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         description:
           "Assignees must be active staff who manage the record or belong to its team. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.",
         summary:
-          "Edit a task's title, assignee, or due date (CTR-017). " +
+          "Edit a task's title, description, assignee, or due date (CTR-017). " +
           "Every field is optional and only what is sent is read. A " +
           "request that changes nothing writes nothing and narrates " +
           "nothing. Appends one task.edited entry naming only what " +
@@ -334,12 +341,13 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         body: z
           .strictObject({
             title: TitleSchema.optional(),
+            description: z.string().trim().max(10000).nullable().optional(),
             assigneeId: z.string().nullable().optional(),
             addToTeam: z.boolean().optional(),
             dueDate: z.iso.date().nullable().optional(),
           })
           .refine((body) => Object.keys(body).length > 0, {
-            message: "Send at least one of title, assigneeId, or dueDate.",
+            message: "Send at least one of title, description, assigneeId, or dueDate.",
           }),
         response: { 200: TasksEnvelope, default: problemResponse },
       },
@@ -365,10 +373,16 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
 
         const wanted = {
           title: request.body.title ?? task.title,
+          description:
+            request.body.description === undefined
+              ? task.description
+              : request.body.description || null,
           assigneeId: wantedAssignee,
           dueDate: request.body.dueDate === undefined ? task.dueDate : request.body.dueDate,
         };
         const changed: ChangedFields = {};
+        if (wanted.description !== task.description)
+          changed.description = { from: task.description, to: wanted.description };
         if (wanted.title !== task.title) changed.title = { from: task.title, to: wanted.title };
         if (wanted.assigneeId !== task.assigneeId) {
           changed.assigneeId = { from: task.assigneeId, to: wanted.assigneeId };

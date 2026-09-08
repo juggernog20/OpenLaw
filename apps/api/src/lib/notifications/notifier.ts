@@ -196,6 +196,7 @@ export interface EntityObligationReminderEvent {
 
 /** What every mention carries, whichever record it happened on. */
 interface MentionedOnAnyRecord {
+  taskId?: string;
   actorId: string;
   actorName: string;
   /**
@@ -288,6 +289,7 @@ export interface StatusChangedEvent extends RecordEvent {
 
 /** What one ordinary comment tells the record's people (DD-016). */
 export interface ContractCommentPostedEvent extends RecordEvent {
+  taskId?: string;
   commentId: string;
   /** The comment's DD-016 tier, carried so the fan-out can hold it: a
    * Legal Only comment never reaches a Contributor. */
@@ -303,6 +305,7 @@ export interface ContractCommentPostedEvent extends RecordEvent {
 }
 
 export interface MatterCommentPostedEvent {
+  taskId?: string;
   entityType: typeof MATTER_ENTITY;
   matterId: string;
   actorId: string;
@@ -961,7 +964,9 @@ async function fanOutToMatter(
 ): Promise<void> {
   const audience = await matterRecordAudience(tx, event.matterId);
   if (!audience) return;
-  const origin = await requestConvertedInto(tx, { module: "matter", id: event.matterId });
+  const origin = event.taskId
+    ? null
+    : await requestConvertedInto(tx, { module: "matter", id: event.matterId });
   const named = new Set(event.mentioned ?? []);
   const except = new Set([
     ...named,
@@ -982,6 +987,7 @@ async function fanOutToMatter(
           actorId: event.actorId,
           actorName: event.actorName,
           commentId: event.commentId,
+          ...(event.taskId ? { taskId: event.taskId } : {}),
         },
       })),
     { narrowing: { tier: event.visibility } },
@@ -991,7 +997,7 @@ async function fanOutToMatter(
     tx,
     "request.replied",
     { requestId: origin.requestId, actorId: event.actorId, actorName: event.actorName },
-    { commentId: event.commentId },
+    { commentId: event.commentId, ...(event.taskId ? { taskId: event.taskId } : {}) },
     { narrowing: { tier: event.visibility } },
   );
 }
@@ -1238,7 +1244,9 @@ async function commentOnRecord(
   tx: NotifyingTransaction,
   event: ContractCommentPostedEvent,
 ): Promise<void> {
-  const origin = await requestConvertedInto(tx, { module: "contract", id: event.contractId });
+  const origin = event.taskId
+    ? null
+    : await requestConvertedInto(tx, { module: "contract", id: event.contractId });
   const named = new Set(event.mentioned ?? []);
   await fanOutToRecord(
     tx,
@@ -1247,7 +1255,7 @@ async function commentOnRecord(
     // The words are not here, for the mention's reason: the thread
     // is where DD-016 is enforced and where a redact can still reach
     // the text (CMT-006). The item is a prompt to go and read it.
-    { commentId: event.commentId },
+    { commentId: event.commentId, ...(event.taskId ? { taskId: event.taskId } : {}) },
     {
       except: [
         // The people this comment named: they have just been told,
@@ -1273,7 +1281,7 @@ async function commentOnRecord(
     tx,
     "request.replied",
     { requestId: origin.requestId, actorId: event.actorId, actorName: event.actorName },
-    { commentId: event.commentId },
+    { commentId: event.commentId, ...(event.taskId ? { taskId: event.taskId } : {}) },
     { narrowing: { tier: event.visibility } },
   );
 }
@@ -1516,6 +1524,7 @@ export function createNotifier(deps: NotifierDeps): Notifier {
               matterTitle: event.matterTitle,
               ...who,
               commentId: event.commentId,
+              ...(event.taskId ? { taskId: event.taskId } : {}),
             },
           })),
           { narrowing: { tier: event.visibility } },
@@ -1534,6 +1543,7 @@ export function createNotifier(deps: NotifierDeps): Notifier {
             contractTitle: event.contractTitle,
             ...who,
             commentId: event.commentId,
+            ...(event.taskId ? { taskId: event.taskId } : {}),
           },
         })),
         { narrowing: { tier: event.visibility } },

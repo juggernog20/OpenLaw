@@ -35,7 +35,14 @@
  * a saved view is compared against (DD-019 clause 5).
  */
 
-import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent,
+  type DragEvent,
+  type ReactNode,
+} from "react";
 import { useIntl, FormattedMessage } from "react-intl";
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
 import type { SortDirection } from "@openlaw/shared";
@@ -121,6 +128,7 @@ export function ManagedTable<Row>({
   focusRowKey,
   onRowActivate,
   rowClassName,
+  rowDrag,
   foot,
   actionsColumn,
 }: Readonly<{
@@ -142,6 +150,11 @@ export function ManagedTable<Row>({
   /** Optional row presentation supplied by the surface, such as the
    * subdued treatment of an archived row. */
   rowClassName?: (row: Row) => string | undefined;
+  rowDrag?: {
+    enabled: (row: Row) => boolean;
+    onStart: (row: Row, event: DragEvent<HTMLTableRowElement>) => void;
+    onEnd: () => void;
+  };
   /** The paging foot, under the table's last rule and outside its
    * sideways scroll, so it never slides out of reach (DES-031). */
   foot?: ReactNode;
@@ -336,6 +349,19 @@ export function ManagedTable<Row>({
               return (
                 <tr
                   key={key}
+                  draggable={rowDrag?.enabled(row)}
+                  onDragStart={
+                    rowDrag
+                      ? (event) => {
+                          if (!rowDrag.enabled(row)) {
+                            event.preventDefault();
+                            return;
+                          }
+                          rowDrag.onStart(row, event);
+                        }
+                      : undefined
+                  }
+                  onDragEnd={rowDrag?.onEnd}
                   // Focusable only while it is the landing row: a table of
                   // fifty tab stops nobody asked for is worse than none.
                   ref={key === focusRowKey ? landing : undefined}

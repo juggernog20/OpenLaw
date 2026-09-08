@@ -39,7 +39,9 @@ async function reachedRecord(
 } | null> {
   if (entityType === "contract" || entityType === "matter" || entityType === "request") {
     const audience = await commentAudience(app.db, user, { entityType, entityId });
-    return audience
+    return audience &&
+      audience.entityType !== "matter_task" &&
+      audience.entityType !== "contract_task"
       ? { entityType: audience.entityType, entityId: audience.entityId, tiers: audience.tiers }
       : null;
   }

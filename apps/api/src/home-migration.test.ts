@@ -65,6 +65,12 @@ describe("the M29 Home substrate migration", () => {
       await runMigrations(db);
 
       expect(await existingRows(db)).toEqual(before);
+      const descriptions = await db.execute<{ description: string | null }>(sql`
+        select description from contract_tasks where id = 'home-existing-contract-task'
+        union all
+        select description from matter_tasks where id = 'home-existing-matter-task'
+      `);
+      expect(descriptions.rows).toEqual([{ description: null }, { description: null }]);
 
       for (const group of [
         "briefing.approvals",
@@ -118,13 +124,13 @@ async function existingRows(db: Db): Promise<unknown> {
         where user_id = 'home-existing-user' and event_group = 'assigned_to_you'),
       'contract', (select to_jsonb(c.*) - 'search_vector' - 'ai_unverified' from contracts c
         where id = 'home-existing-contract'),
-      'contractTask', (select to_jsonb(t.*) from contract_tasks t
+      'contractTask', (select to_jsonb(t.*) - 'description' from contract_tasks t
         where id = 'home-existing-contract-task'),
       'approval', (select to_jsonb(a.*) from contract_approvals a
         where id = 'home-existing-approval'),
       'matter', (select to_jsonb(m.*) - 'search_vector' from matters m
         where id = 'home-existing-matter'),
-      'matterTask', (select to_jsonb(t.*) from matter_tasks t
+      'matterTask', (select to_jsonb(t.*) - 'description' from matter_tasks t
         where id = 'home-existing-matter-task')
     ) as rows
   `);

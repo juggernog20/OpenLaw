@@ -1,33 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * The create-contract dialog (M8), drawn from `S10 Overlay` in the C10
- * frame of `designs/contracts.pen`.
- *
- * **Creation is deliberately minimal**: a title, a type, and whatever
- * that type hard-requires (CTR-016/MTR-014 — the dialog grows the
- * required fields as soon as a type is picked, so a contract cannot be
- * born missing data its type demands). The status starts on the
- * protected draft seed, and everything else is set inline on the record
- * afterward (DES-017).
- *
- * **It is also the flow a routed renewal opens** (M16/5, CTR-007,
- * DES-044). The Renew dialog's child and successor vehicles open this
- * same dialog rather than a second create surface: routing a renewal
- * makes an ordinary contract, and a create form that behaved differently
- * for renewals would be a second set of rules to keep in step with this
- * one.
- *
- * **Two things are prefilled here and the rest are prefilled at the
- * seam.** This dialog draws the title and the type, so those two are
- * seeded from the record the renewal was routed from and stay editable
- * until the button is pressed — whatever is in the boxes is what the
- * record is born with. The business facts this dialog does not draw —
- * our entity, the value, the term shape, the counterparties — are copied
- * by the create seam, because it is the one place that can copy them and
- * the one place worth asserting them at. The team, the status, and the
- * Confidential flag are never copied at all (CTR-015).
- */
+/** Shared Contract creation form for standalone, Matter-linked, and renewal flows. */
 
 import { CreateAttachments, useCreateAttachments } from "../documents/create-attachments";
 import { useEffect, useState } from "react";
@@ -85,9 +58,9 @@ export function CreateContractDialog({
   onCreated,
 }: Readonly<{
   contractTypes: ContractTypeOption[];
-  /** What a required `user` field offers. */
+  /** Choices for a `user` field. */
   people: readonly FieldReference[];
-  /** What a required `entity` field offers — the M7 registry. */
+  /** Choices for an `entity` field — the M7 registry. */
   entities: readonly FieldReference[];
   /** The renewal this create is routing, or undefined for the ordinary
    * create the Contracts list opens. */
@@ -103,7 +76,7 @@ export function CreateContractDialog({
   // would take their edit back.
   const [title, setTitle] = useState(renewalOf?.title ?? "");
   const [contractTypeId, setContractTypeId] = useState(renewalOf?.contractTypeId ?? "");
-  /** The required fields' drafts, keyed by slug. They survive switching
+  /** The fields' drafts, keyed by slug. They survive switching
    * types and back — a name typed once should not have to be typed
    * again because someone checked another type on the way. */
   const [fieldDrafts, setFieldDrafts] = useState<Record<string, CustomFieldDraft>>({});
@@ -122,12 +95,8 @@ export function CreateContractDialog({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /** What the picked type demands. Nothing until a type is picked —
-   * the dialog cannot ask for a type's fields before it has a type. */
-  const required =
-    contractTypes
-      .find((contractType) => contractType.id === contractTypeId)
-      ?.fields.filter((field) => field.isRequired) ?? [];
+  const fields =
+    contractTypes.find((contractType) => contractType.id === contractTypeId)?.fields ?? [];
 
   const trimmedMatterQuery = matterQuery.trim();
   useEffect(() => {
@@ -177,7 +146,7 @@ export function CreateContractDialog({
     // The type's own demands, checked where the person can answer them.
     // The seam refuses an empty one too — this only saves a round trip.
     const customFields: Record<string, CustomFieldValue> = {};
-    for (const field of required) {
+    for (const field of fields) {
       const parsed = toValue(field, fieldDrafts[field.slug] ?? emptyDraft(field));
       if ("error" in parsed) {
         setError(
@@ -191,7 +160,7 @@ export function CreateContractDialog({
         );
         return;
       }
-      if (parsed.value === null) {
+      if (field.isRequired && parsed.value === null) {
         setError(
           intl.formatMessage(
             {
@@ -203,7 +172,7 @@ export function CreateContractDialog({
         );
         return;
       }
-      customFields[field.slug] = parsed.value;
+      if (parsed.value !== null) customFields[field.slug] = parsed.value;
     }
     setBusy(true);
     const result = await api
@@ -427,23 +396,19 @@ export function CreateContractDialog({
                 ))}
               </select>
             </div>
-            {/* The type's hard-required fields, grown into the dialog the
-              moment a type is picked (CTR-016/MTR-014). The optional
-              ones are not here: they are set inline on the record, and
-              creation stays the smallest thing that makes a record. */}
-            {required.map((field) => (
+            {fields.map((field) => (
               <div key={field.slug} className="flex flex-col gap-1.5">
                 <Label
                   id={`contract-new-${field.slug}-label`}
                   htmlFor={`contract-new-${field.slug}`}
-                  required
+                  required={field.isRequired}
                 >
                   {field.displayName}
                 </Label>
                 <CustomFieldControl
                   id={`contract-new-${field.slug}`}
                   field={field}
-                  required
+                  required={field.isRequired}
                   draft={fieldDrafts[field.slug] ?? emptyDraft(field)}
                   people={people}
                   entities={entities}
