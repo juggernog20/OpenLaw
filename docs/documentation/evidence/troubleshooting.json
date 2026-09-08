@@ -8,7 +8,7 @@
   "technicalReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
   "walkthroughReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-08T12:04:42.993Z",
+  "verifiedAt": "2026-09-08T11:54:09.727Z",
   "status": "pass",
   "sources": [
     "CONTEXT.md",
@@ -35,9 +35,11 @@
         "docs/documentation/batches/DOC-024/independent-symptoms.json",
         "docs/documentation/batches/DOC-024/independent-symptoms-second.json",
         "docs/documentation/batches/DOC-024/independent-symptoms-retry.json",
-        "docs/documentation/batches/DOC-024/independent-approval-decision.json"
+        "docs/documentation/batches/DOC-024/independent-approval-decision.json",
+        "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
+        "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
       ],
-      "verifiedAt": "2026-09-08T12:04:42.993Z"
+      "verifiedAt": "2026-09-08T11:52:53.570Z"
     },
     {
       "id": "V-C49",
@@ -53,9 +55,11 @@
         "docs/documentation/batches/DOC-024/independent-symptoms.json",
         "docs/documentation/batches/DOC-024/independent-symptoms-second.json",
         "docs/documentation/batches/DOC-024/independent-symptoms-retry.json",
-        "docs/documentation/batches/DOC-024/independent-approval-decision.json"
+        "docs/documentation/batches/DOC-024/independent-approval-decision.json",
+        "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
+        "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
       ],
-      "verifiedAt": "2026-09-08T12:04:42.993Z"
+      "verifiedAt": "2026-09-08T11:54:09.727Z"
     },
     {
       "id": "V-C49",
@@ -71,9 +75,11 @@
         "docs/documentation/batches/DOC-024/independent-symptoms.json",
         "docs/documentation/batches/DOC-024/independent-symptoms-second.json",
         "docs/documentation/batches/DOC-024/independent-symptoms-retry.json",
-        "docs/documentation/batches/DOC-024/independent-approval-decision.json"
+        "docs/documentation/batches/DOC-024/independent-approval-decision.json",
+        "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
+        "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
       ],
-      "verifiedAt": "2026-09-08T12:04:42.993Z"
+      "verifiedAt": "2026-09-08T11:41:36.342Z"
     },
     {
       "id": "V-C49",
@@ -89,9 +95,11 @@
         "docs/documentation/batches/DOC-024/independent-symptoms.json",
         "docs/documentation/batches/DOC-024/independent-symptoms-second.json",
         "docs/documentation/batches/DOC-024/independent-symptoms-retry.json",
-        "docs/documentation/batches/DOC-024/independent-approval-decision.json"
+        "docs/documentation/batches/DOC-024/independent-approval-decision.json",
+        "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
+        "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
       ],
-      "verifiedAt": "2026-09-08T12:04:42.993Z"
+      "verifiedAt": "2026-09-08T11:48:32.343Z"
     }
   ],
   "authorEvidence": [
@@ -116,13 +124,36 @@
     "Full-suite compatibility and publication acceptance remain DOC-025/027 work.",
     "The user will proofread the assembled full suite; no human feature-owner sign-off is claimed."
   ],
-  "authorCopyUpdate": "After author walkthroughs, copy-only review clarified target Document/source Document Version, assigned person and internal record-sharing wording. Historical records retain the bytes observed; current independent acceptance remains pending.",
+  "authorCopyUpdate": "After author walkthroughs, copy-only review clarified target Document/source Document Version, assigned person and internal record-sharing wording. Historical records retain the bytes observed; that sentence was written while independent acceptance was still pending, and it is kept as the historical note it was. Independent acceptance has since been recorded; see sourceReview and the scenario results above.",
   "independentEvidence": [
     "docs/documentation/batches/DOC-024/README.md",
     "docs/documentation/batches/DOC-024/independent-discovery.json",
     "docs/documentation/batches/DOC-024/independent-symptoms.json",
     "docs/documentation/batches/DOC-024/independent-symptoms-second.json",
     "docs/documentation/batches/DOC-024/independent-symptoms-retry.json",
-    "docs/documentation/batches/DOC-024/independent-approval-decision.json"
-  ]
+    "docs/documentation/batches/DOC-024/independent-approval-decision.json",
+    "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
+    "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
+  ],
+  "verifiedAtBasis": "Each scenario's verifiedAt is the recorded time of that role's last passing observation for this article, taken from the independent records listed in its evidence. The article-level verifiedAt is the latest of those scenario times. It is not a single acceptance ceremony and no finer time is claimed.",
+  "sourceReview": {
+    "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+    "reviewerKind": "agent",
+    "method": "source-inspection",
+    "completedAt": "2026-09-08T11:28:16Z",
+    "recordedIn": "commit 2570232af33f8f0a4e77e90cb69c70a04898fae9 on docs/744-support-reference",
+    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+    "scope": [
+      "messages/en-US.json for every quoted UI label",
+      "apps/api/src/lib/uploads.ts for the upload ceiling, its MAX_UPLOAD_MB control and the 255-character filename bound",
+      "apps/api/src/lib/render-family.ts for the stored-type and preview families, including SVG as download-only",
+      "apps/api/src/lib/notifications/notifier.ts and catalog.ts for the in-app and email rule",
+      "apps/api/src/modules/contract-analysis/routes.ts and contract-envelopes/routes.ts for the Analysis target and the single live Envelope",
+      "packages/db/src/schema/auth.ts for the account-role enum",
+      "CONTEXT.md and the canonical guides for the glossary, permission and Document rows",
+      "every internal link and heading anchor in the three articles"
+    ],
+    "outcome": "One correction was needed and applied: the reference article's title read \"file behaviour\", against the en-US rule in EDITORIAL.md and against the article's own \"File behavior and limits\" heading. Every other claim checked held. The same commit linked the batch record from WRITING-BATCHES.md and noted the aborted-run record shape.",
+    "note": "This source review is separate from the browser walkthroughs recorded in the scenarios below. Its completion time is the commit time of 2570232a converted to UTC; no finer time is claimed."
+  }
 }

@@ -8,17 +8,18 @@
   "technicalReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
   "walkthroughReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-08T12:04:42.993Z",
+  "verifiedAt": "2026-09-08T12:21:35.382Z",
   "status": "pass",
   "sources": [
     "CONTEXT.md",
+    "apps/api/src/lib/render-family.ts",
+    "apps/api/src/lib/uploads.ts",
+    "apps/api/src/modules/contracts/routes.ts",
+    "apps/web/src/components/approvals/approvals-signing-card.tsx",
+    "apps/web/src/components/documentation/documentation-reader.tsx",
     "docs/documentation/PUBLISHING.md",
     "docs/documentation/edition.json",
-    "apps/web/src/components/documentation/documentation-reader.tsx",
-    "apps/api/src/lib/uploads.ts",
-    "apps/api/src/lib/render-family.ts",
-    "apps/api/src/modules/contracts/routes.ts",
-    "apps/web/src/components/approvals/approvals-signing-card.tsx"
+    "packages/db/src/schema/auth.ts"
   ],
   "scenarios": [
     {
@@ -33,9 +34,14 @@
         "docs/documentation/batches/DOC-024/README.md",
         "docs/documentation/batches/DOC-024/independent-discovery.json",
         "docs/documentation/batches/DOC-024/independent-reference.json",
-        "docs/documentation/batches/DOC-024/independent-reference-retry.json"
+        "docs/documentation/batches/DOC-024/independent-reference-retry.json",
+        "docs/documentation/batches/DOC-024/independent-comparison-and-roles.json",
+        "docs/documentation/batches/DOC-024/independent-operator-reference.json",
+        "docs/documentation/batches/DOC-024/independent-operator-reference-retry.json",
+        "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
+        "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
       ],
-      "verifiedAt": "2026-09-08T12:04:42.993Z"
+      "verifiedAt": "2026-09-08T12:19:57.373Z"
     },
     {
       "id": "V-C50",
@@ -43,15 +49,20 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "expected": "Reference matches role limits, configured versus fixed concepts and actual file behavior.",
-      "actual": "Checked the reference against the actual controls. Organization settings answered 403 \"You do not have permission to perform this action.\" for this role while her own preference pane opened, which is the row's Administrator-only sentence. The Move to list showed each configured Status label beside its fixed Stage, including the seed's renamed \"Signed, awaiting countersignature\" against Signature. The key date form offers Date, Event and an optional Note with no assignee, while the task form offers Title, Assignee and an optional Due date, so Task due dates and Key dates are not equated. The Entities module lists our own Helix companies while the Contract overview carries separate \"Our entity\" and \"Counterparties\" fields. Adding a second Version reached v2 and the comparison appended nothing, so a Comparison is not a Version. An SVG was offered as a plain download link with no reading panel while a PDF opened the panel and drew \"Page 1 of 1\"; a seeded Word document rendered as a converted PDF and Download returned the original .docx. A 105 MiB upload was refused with \"over the 100 MB upload limit\" and nothing was stored.",
+      "actual": "Checked the reference against the actual controls. Organization settings answered 403 \"You do not have permission to perform this action.\" for this role while her own preference pane opened, which is the row's Administrator-only sentence. The Move to list showed each configured Status label beside its fixed Stage, including the seed's renamed \"Signed, awaiting countersignature\" against Signature. The key date form offers Date, Event and an optional Note with no assignee, while the task form offers Title, Assignee and an optional Due date, so Task due dates and Key dates are not equated. The Entities module lists our own Helix companies while the Contract overview carries separate \"Our entity\" and \"Counterparties\" fields. An actual Comparison was then computed and read on the seeded three-Version Word Document on C-21: \"Compare with previous\" on version 2 reached the ready state for the pair v1 → v2 and showed the counterparty's inserted wording, the chain still held v1, v2 and v3 afterwards, and reopening the same pair read it again without adding a Version. An SVG was offered as a plain download link with no reading panel while a PDF opened the panel and drew \"Page 1 of 1\"; a seeded Word document rendered as a converted PDF and Download returned the original .docx. A 105 MiB upload was refused with \"over the 100 MB upload limit\" and nothing was stored.",
       "result": "pass",
       "evidence": [
         "docs/documentation/batches/DOC-024/README.md",
         "docs/documentation/batches/DOC-024/independent-discovery.json",
         "docs/documentation/batches/DOC-024/independent-reference.json",
-        "docs/documentation/batches/DOC-024/independent-reference-retry.json"
+        "docs/documentation/batches/DOC-024/independent-reference-retry.json",
+        "docs/documentation/batches/DOC-024/independent-comparison-and-roles.json",
+        "docs/documentation/batches/DOC-024/independent-operator-reference.json",
+        "docs/documentation/batches/DOC-024/independent-operator-reference-retry.json",
+        "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
+        "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
       ],
-      "verifiedAt": "2026-09-08T12:04:42.993Z"
+      "verifiedAt": "2026-09-08T12:19:52.328Z"
     },
     {
       "id": "V-C50",
@@ -65,9 +76,14 @@
         "docs/documentation/batches/DOC-024/README.md",
         "docs/documentation/batches/DOC-024/independent-discovery.json",
         "docs/documentation/batches/DOC-024/independent-reference.json",
-        "docs/documentation/batches/DOC-024/independent-reference-retry.json"
+        "docs/documentation/batches/DOC-024/independent-reference-retry.json",
+        "docs/documentation/batches/DOC-024/independent-comparison-and-roles.json",
+        "docs/documentation/batches/DOC-024/independent-operator-reference.json",
+        "docs/documentation/batches/DOC-024/independent-operator-reference-retry.json",
+        "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
+        "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
       ],
-      "verifiedAt": "2026-09-08T12:04:42.993Z"
+      "verifiedAt": "2026-09-08T11:57:12.852Z"
     },
     {
       "id": "V-C50",
@@ -81,9 +97,14 @@
         "docs/documentation/batches/DOC-024/README.md",
         "docs/documentation/batches/DOC-024/independent-discovery.json",
         "docs/documentation/batches/DOC-024/independent-reference.json",
-        "docs/documentation/batches/DOC-024/independent-reference-retry.json"
+        "docs/documentation/batches/DOC-024/independent-reference-retry.json",
+        "docs/documentation/batches/DOC-024/independent-comparison-and-roles.json",
+        "docs/documentation/batches/DOC-024/independent-operator-reference.json",
+        "docs/documentation/batches/DOC-024/independent-operator-reference-retry.json",
+        "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
+        "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
       ],
-      "verifiedAt": "2026-09-08T12:04:42.993Z"
+      "verifiedAt": "2026-09-08T11:57:19.566Z"
     },
     {
       "id": "V-C50",
@@ -91,15 +112,20 @@
       "role": "operator",
       "method": "browser-walkthrough",
       "expected": "Reference matches role limits, configured versus fixed concepts and actual file behavior.",
-      "actual": "Read the reference signed out, with no app account and no app API calls during anonymous reading. The formal index and its Deployment operator audience view both offered the guide, and the operator row's claim was checked against the app's actual account roles, which contain no operator role.",
+      "actual": "Read the reference as an operator would, signed out and with no app account: the formal reader opened /documentation/reference with all six sections, an On this page outline, the operator's own MAX_UPLOAD_MB fact, and the Deployment operator row of the permissions table reading \"Maintains the installation and service configuration. This is an operational responsibility, not an additional app account role.\" Anonymous reading issued no app API calls, and the closing links reached \"Configure a deployment\" without a session. The row's claim about account roles was corroborated two ways, each labelled for what it is: the Administrator's actual role control offers only Administrator, Legal team member, Contributor and Business user, recorded as a browser walkthrough, and packages/db/src/schema/auth.ts declares the same four values in USER_ROLES, recorded as a source inspection. The earlier attempt listed the roles existing users happen to hold, which cannot establish the permitted set; that record is retained and superseded.",
       "result": "pass",
       "evidence": [
         "docs/documentation/batches/DOC-024/README.md",
         "docs/documentation/batches/DOC-024/independent-discovery.json",
         "docs/documentation/batches/DOC-024/independent-reference.json",
-        "docs/documentation/batches/DOC-024/independent-reference-retry.json"
+        "docs/documentation/batches/DOC-024/independent-reference-retry.json",
+        "docs/documentation/batches/DOC-024/independent-comparison-and-roles.json",
+        "docs/documentation/batches/DOC-024/independent-operator-reference.json",
+        "docs/documentation/batches/DOC-024/independent-operator-reference-retry.json",
+        "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
+        "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
       ],
-      "verifiedAt": "2026-09-08T12:04:42.993Z"
+      "verifiedAt": "2026-09-08T12:21:35.382Z"
     }
   ],
   "authorEvidence": [
@@ -124,11 +150,37 @@
     "Full-suite compatibility and publication acceptance remain DOC-025/027 work.",
     "The user will proofread the assembled full suite; no human feature-owner sign-off is claimed."
   ],
-  "authorCopyUpdate": "After author walkthroughs, copy-only review clarified target Document/source Document Version, assigned person and internal record-sharing wording. Review then corrected the title spelling to en-US, from \"file behaviour\" to \"file behavior\", to match EDITORIAL.md and this article's own heading. Historical records retain the bytes observed; current independent acceptance remains pending.",
+  "authorCopyUpdate": "After author walkthroughs, copy-only review clarified target Document/source Document Version, assigned person and internal record-sharing wording. Review then corrected the title spelling to en-US, from \"file behaviour\" to \"file behavior\", to match EDITORIAL.md and this article's own heading. Historical records retain the bytes observed; that sentence was written while independent acceptance was still pending, and it is kept as the historical note it was. Independent acceptance has since been recorded; see sourceReview and the scenario results above.",
   "independentEvidence": [
     "docs/documentation/batches/DOC-024/README.md",
     "docs/documentation/batches/DOC-024/independent-discovery.json",
     "docs/documentation/batches/DOC-024/independent-reference.json",
-    "docs/documentation/batches/DOC-024/independent-reference-retry.json"
-  ]
+    "docs/documentation/batches/DOC-024/independent-reference-retry.json",
+    "docs/documentation/batches/DOC-024/independent-comparison-and-roles.json",
+    "docs/documentation/batches/DOC-024/independent-operator-reference.json",
+    "docs/documentation/batches/DOC-024/independent-operator-reference-retry.json",
+    "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
+    "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
+  ],
+  "verifiedAtBasis": "Each scenario's verifiedAt is the recorded time of that role's last passing observation for this article, taken from the independent records listed in its evidence. The article-level verifiedAt is the latest of those scenario times. It is not a single acceptance ceremony and no finer time is claimed.",
+  "sourceReview": {
+    "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+    "reviewerKind": "agent",
+    "method": "source-inspection",
+    "completedAt": "2026-09-08T11:28:16Z",
+    "recordedIn": "commit 2570232af33f8f0a4e77e90cb69c70a04898fae9 on docs/744-support-reference",
+    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+    "scope": [
+      "messages/en-US.json for every quoted UI label",
+      "apps/api/src/lib/uploads.ts for the upload ceiling, its MAX_UPLOAD_MB control and the 255-character filename bound",
+      "apps/api/src/lib/render-family.ts for the stored-type and preview families, including SVG as download-only",
+      "apps/api/src/lib/notifications/notifier.ts and catalog.ts for the in-app and email rule",
+      "apps/api/src/modules/contract-analysis/routes.ts and contract-envelopes/routes.ts for the Analysis target and the single live Envelope",
+      "packages/db/src/schema/auth.ts for the account-role enum",
+      "CONTEXT.md and the canonical guides for the glossary, permission and Document rows",
+      "every internal link and heading anchor in the three articles"
+    ],
+    "outcome": "One correction was needed and applied: the reference article's title read \"file behaviour\", against the en-US rule in EDITORIAL.md and against the article's own \"File behavior and limits\" heading. Every other claim checked held. The same commit linked the batch record from WRITING-BATCHES.md and noted the aborted-run record shape.",
+    "note": "This source review is separate from the browser walkthroughs recorded in the scenarios below. Its completion time is the commit time of 2570232a converted to UTC; no finer time is claimed."
+  }
 }
