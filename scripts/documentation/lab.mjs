@@ -9,7 +9,6 @@ import {
   lstatSync,
   mkdirSync,
   readdirSync,
-  readFileSync,
   readlinkSync,
   rmSync,
   writeFileSync,
@@ -17,6 +16,7 @@ import {
 import { createServer } from "node:net";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readOwnedFile } from "./owned-file.mjs";
 
 const repository = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const stateRoot = join(repository, ".documentation-labs");
@@ -82,7 +82,10 @@ function snapshotDigest(root) {
       hash.update(`${name}\0${stat.mode & 0o777}\0`);
       if (stat.isSymbolicLink()) hash.update(`link:${readlinkSync(path)}`);
       else if (stat.isDirectory()) visit(name);
-      else if (stat.isFile()) hash.update(readFileSync(path));
+      // Through the descriptor, not the name a second time. This digest is
+      // what refuses a lab whose committed snapshot moved, so it has to
+      // cover the object the type check above accepted.
+      else if (stat.isFile()) hash.update(readOwnedFile(path, name));
       else fail(`Unsupported snapshot entry: ${name}`);
     }
   }
@@ -96,7 +99,13 @@ function configurationDigest(directory) {
     const path = join(directory, relative);
     if (!lstatSync(path).isFile() || lstatSync(path).isSymbolicLink())
       fail("Lab configuration must be an owned regular file.");
-    hash.update(readFileSync(path));
+    // The open re-checks what the two calls above checked, on the object it
+    // actually reads. A path swapped in between cannot reach the digest.
+    try {
+      hash.update(readOwnedFile(path, relative));
+    } catch {
+      fail("Lab configuration must be an owned regular file.");
+    }
   }
   return hash.digest("hex");
 }
@@ -243,7 +252,16 @@ async function main() {
   if (options.length) fail("Only create accepts options.");
   if (!existsSync(manifestPath) || lstatSync(manifestPath).isSymbolicLink())
     fail("No owned lab manifest.");
-  const lab = JSON.parse(readFileSync(manifestPath, "utf8"));
+  // The same one-open rule as the digests below it. The manifest carries the
+  // ownership fields every later command is checked against, so it is read
+  // from the descriptor its symlink check accepted.
+  let manifest;
+  try {
+    manifest = readOwnedFile(manifestPath, "lab.json").toString("utf8");
+  } catch {
+    return fail("No owned lab manifest.");
+  }
+  const lab = JSON.parse(manifest);
   if (lab.owner !== owner || lab.name !== name || lab.project !== project)
     fail("Lab ownership mismatch.");
   assertDirectory(source);
@@ -328,6 +346,11 @@ async function main() {
     writeJson(manifestPath, lab);
     console.log(`Lab ${name}: ${lab.appUrl}; mail: ${lab.mailUrl}`);
   } else if (command === "seed") {
+    // `appUrl` reaches here from the manifest, but only through the check
+    // above: `seed` runs it, and it refuses anything but
+    // `http://127.0.0.1:<integer port>`. The manifest is also ownership
+    // checked and digest checked before that. So this address is loopback
+    // by construction, not by convention.
     const response = await fetch(`${lab.appUrl}/api/v1/auth/setup`, {
       signal: AbortSignal.timeout(10000),
     });

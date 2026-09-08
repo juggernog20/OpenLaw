@@ -8,11 +8,16 @@ import { test } from "node:test";
 import { applicationDigest, buildIdentity, compileWorkspace } from "./build.mjs";
 import { compileDocumentation } from "./compiler.mjs";
 import { searchDocumentation, resolveDocumentationLink } from "./reader.mjs";
+import { readOwnedFile } from "./owned-file.mjs";
 
 const commit = "a".repeat(40);
 const digest = "b".repeat(64);
+// The fenced block carries a bare tag, an upper-case one and one with an
+// attribute. A filter that only knows the lower-case bare form would let the
+// other two through, so all three ride the fixture and the assertions below
+// match on the tag name alone, without case.
 const text =
-  "# Submit a fixture\n\nA validation fixture, not product instructions.\n\n## Before you start\n\nUse fictional paper.\n\n## Submit\n\n1. Open the fixture.\n2. Review the result.\n\n[Recovery](recover.md#retry)\n\n```sh\nprintf '<script>literal</script>'\n```\n";
+  "# Submit a fixture\n\nA validation fixture, not product instructions.\n\n## Before you start\n\nUse fictional paper.\n\n## Submit\n\n1. Open the fixture.\n2. Review the result.\n\n[Recovery](recover.md#retry)\n\n```sh\nprintf '<script>literal</script><SCRIPT SRC=x></SCRIPT><ScRiPt >mixed</ScRiPt>'\n```\n";
 function fixture(t, options = {}) {
   const root = mkdtempSync(join(tmpdir(), "openlaw-docs-test-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
@@ -161,8 +166,12 @@ test("one source supplies formal, Help, outlines, search and offline files", (t)
   assert.match(a.html.standalone, /href="recover.html#retry"/);
   for (const html of Object.values(a.html)) {
     assert.match(html, /Open the fixture/);
-    assert.doesNotMatch(html, /<script>/);
+    // Any casing, any attribute, any spacing before the name: the compiled
+    // page must carry no live script tag at all, only escaped text.
+    assert.doesNotMatch(html, /<\s*\/?\s*script/i);
     assert.match(html, /&lt;script&gt;/);
+    assert.match(html, /&lt;SCRIPT SRC=x&gt;/);
+    assert.match(html, /&lt;ScRiPt &gt;/);
   }
   assert.equal(a.outline[1].id, "before-you-start");
   assert.equal(searchDocumentation(bundle, { query: "PAPER fictional" })[0].id, "submit");
@@ -214,6 +223,14 @@ test("drafts require explicit preview and missing dependencies remain visible", 
 
 for (const [name, markdown, pattern] of [
   ["raw HTML", "# Submit a fixture\n\n<script>alert(1)</script>", /HTML/],
+  // The refusal is what keeps unsanitized markup out of a guide, so it has to
+  // hold for the casings an author could reach for, not only the usual one.
+  ["upper-case raw HTML", "# Submit a fixture\n\n<SCRIPT>alert(1)</SCRIPT>", /HTML/],
+  [
+    "mixed-case inline raw HTML",
+    "# Submit a fixture\n\nText <ImG SrC=x OnErRoR=alert(1)> more.",
+    /HTML/,
+  ],
   ["unsafe link", "# Submit a fixture\n\n[Open](javascript:alert%281%29)", /URL|link/i],
   ["remote image", "# Submit a fixture\n\n![Picture](https://example.com/x.png)", /image/i],
   ["path escape", "# Submit a fixture\n\n![Picture](../private.png)", /image|path/i],
@@ -251,6 +268,35 @@ test("rejects asset symlinks", (t) => {
     join(f.contentRoot, "submit.md"),
     "# Submit a fixture\n\n![Picture](assets/picture.png)",
   );
+  assert.throws(() => f.compile(), /symlink/i);
+});
+
+// The component walk approves names; the open decides what is read. These
+// pin the second half, because a checker that approves one object and then
+// reads another is the whole of the race these readers had to close.
+test("an owned read refuses a symlink and reads through its own descriptor", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "openlaw-owned-test-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const real = join(root, "real.txt");
+  writeFileSync(real, "owned bytes");
+  assert.equal(readOwnedFile(real).toString("utf8"), "owned bytes");
+
+  writeFileSync(join(root, "secret.txt"), "elsewhere");
+  const link = join(root, "link.txt");
+  symlinkSync(join(root, "secret.txt"), link);
+  // lstat would also catch this. The point is that the kernel refuses it at
+  // open, so nothing between a check and a read can put it back.
+  assert.throws(() => readOwnedFile(link, "link.txt"), /symlink forbidden: link\.txt/);
+
+  assert.throws(() => readOwnedFile(root, "root"), /not a file: root/);
+});
+
+test("readOwned refuses a source file replaced by a symlink", (t) => {
+  const f = fixture(t);
+  const guide = join(f.contentRoot, "submit.md");
+  writeFileSync(join(f.root, "outside.md"), "# Submit a fixture\n\nSubstituted.\n");
+  rmSync(guide);
+  symlinkSync(join(f.root, "outside.md"), guide);
   assert.throws(() => f.compile(), /symlink/i);
 });
 

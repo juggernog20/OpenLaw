@@ -11,7 +11,6 @@ import {
   lstatSync,
   mkdirSync,
   mkdtempSync,
-  readFileSync,
   readdirSync,
   rmSync,
   writeFileSync,
@@ -20,6 +19,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { compileDocumentation } from "./compiler.mjs";
+import { readOwnedFile } from "./owned-file.mjs";
 
 export const repository = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -53,7 +53,10 @@ export function applicationDigest(root = repository) {
         visit(`${relative}/${name}`);
       }
     else if (stat.isFile()) {
-      const bytes = readFileSync(path);
+      // Read through the descriptor rather than the name a second time. This
+      // digest is the edition's claim about the source it was built from, so
+      // it has to describe the bytes that passed the symlink check above.
+      const bytes = readOwnedFile(path, `Application source ${relative}`);
       hash.update(`${relative}\0${bytes.length}\0`);
       hash.update(bytes);
     }

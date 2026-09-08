@@ -12,6 +12,7 @@ import { fileURLToPath } from "node:url";
 import { Marked } from "marked";
 import sanitizeHtml from "sanitize-html";
 import { normalizeSearch, searchDocumentation, resolveDocumentationLink } from "./reader.mjs";
+import { readOwnedFile } from "./owned-file.mjs";
 
 export const ID = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 const SHA = /^[a-f0-9]{40}$/;
@@ -84,8 +85,14 @@ export function readOwned(root, name) {
     requireThat(existsSync(at), `missing file: ${name}`);
     requireThat(!lstatSync(at).isSymbolicLink(), `symlink forbidden: ${name}`);
   }
-  requireThat(lstatSync(path).isFile(), `not a file: ${name}`);
-  return readFileSync(path);
+  // The walk above approves the names on the way down. This opens the last
+  // one once and asks the descriptor, so the bytes an evidence record is
+  // bound to are the bytes that passed the type check.
+  try {
+    return readOwnedFile(path, name);
+  } catch (error) {
+    return requireThat(false, error.message);
+  }
 }
 function json(root, name) {
   return JSON.parse(readOwned(root, name).toString("utf8"));
