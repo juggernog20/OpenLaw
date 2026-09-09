@@ -7,7 +7,7 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { test } from "node:test";
 import { applicationDigest, buildIdentity, compileWorkspace } from "./build.mjs";
-import { compileDocumentation } from "./compiler.mjs";
+import { compileDocumentation, validateCatalog } from "./compiler.mjs";
 import { searchDocumentation, resolveDocumentationLink } from "./reader.mjs";
 import { readOwnedFile } from "./owned-file.mjs";
 
@@ -178,13 +178,39 @@ test("one source supplies formal, Help, outlines, search and offline files", (t)
   assert.equal(searchDocumentation(bundle, { query: "PAPER fictional" })[0].id, "submit");
   assert.deepEqual(searchDocumentation(bundle, { query: "paper absent" }), []);
   assert.equal(searchDocumentation(bundle, { destination: "staff-help" }).length, 0);
-  assert.match(files.get("index.html"), /submit.html/);
+  assert.match(files.get("index.html"), /section-start.html/);
+  assert.match(files.get("section-start.html"), /submit.html/);
+  assert.match(files.get("themes.css"), /data-theme="warm"/);
+  assert.equal(files.get("inter.woff2").subarray(0, 4).toString(), "wOF2");
+  assert.match(files.get("submit.html"), /aria-current="page"/);
   assert.match(files.get("submit.html"), /Open the fixture/);
   assert.doesNotMatch(files.get("search.js"), /\bfetch\s*\(/);
   // Retained copies open in older browsers; URLSearchParams.size is too new for them.
   assert.doesNotMatch(files.get("search.js"), /\.size\b/);
   assert.doesNotMatch(JSON.stringify(bundle), /Fixture author|fixture observation/);
   assert.equal(bundle.report.verified, 2);
+});
+
+test("collection filenames cannot replace an article or a redirect", (t) => {
+  const f = fixture(t);
+  assert.throws(
+    () =>
+      validateCatalog(
+        {
+          schemaVersion: 1,
+          sections: [{ id: "start", title: "Start here" }],
+          articles: [{ ...f.articles[0], id: "section-start" }],
+        },
+        [],
+        [],
+      ),
+    /article ID collides with a collection page/,
+  );
+  f.json("redirects.json", {
+    schemaVersion: 1,
+    redirects: [{ from: "section-start", to: "submit" }],
+  });
+  assert.throws(() => f.compile(), /redirect collides with a collection page/);
 });
 
 test("scoped catalog entries stay absent, and complete publication preserves the denominator", (t) => {

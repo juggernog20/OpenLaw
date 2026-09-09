@@ -57,6 +57,7 @@ export type HelpMetadata = Pick<DocumentationBundle, "contexts" | "bindings"> & 
 };
 export interface DocumentationSearch {
   query?: string;
+  section?: string;
   destination?: DocumentationDestination;
   audience?: string;
   topic?: string;
@@ -77,3 +78,5 @@ export function documentationExcerpt(
   query: string,
   length?: number,
 ): string;
+
+export function documentationIcon(section: string): string;
