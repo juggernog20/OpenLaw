@@ -56,7 +56,13 @@ describe("Help in the app shells", () => {
         expect(screen.getByRole("heading", { level: 1, name: "Help" })).toHaveFocus(),
       );
       expect(screen.getAllByRole("main")).toHaveLength(1);
-      expect(screen.getByRole("link", { name: "Try the documentation reader" })).toBeVisible();
+      expect(screen.queryByRole("link", { name: "Clear filters" })).not.toBeInTheDocument();
+      await userEvent
+        .setup()
+        .click(screen.getByRole("link", { name: /Validation fixtures.*guides?/ }));
+      expect(
+        await screen.findByRole("link", { name: "Try the documentation reader" }),
+      ).toBeVisible();
       expect(screen.queryByRole("combobox", { name: "Audience" })).not.toBeInTheDocument();
       expect(screen.getByRole("link", { name: "All documentation" })).toHaveAttribute(
         "href",

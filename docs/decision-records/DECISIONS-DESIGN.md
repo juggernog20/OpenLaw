@@ -4499,6 +4499,40 @@ implements and verifies these surfaces against
 repeat the `topic` query parameter to combine matching registered topics. Specific
 route topics rank before shared fallbacks; no originating record address is carried.
 
+## DES-074: Documentation and Help share the application design system
+
+- **Status:** Accepted
+- **Date:** 2026-09-09
+- **Task:** [#797](https://github.com/juggernog20/OpenLaw/issues/797)
+
+### Decision
+
+The public Documentation site, staff Help, Business Portal Help and retained HTML
+edition use the same reader styles and OpenLaw theme tokens. Keep Inter, the scales
+mark, six-pixel corners and restrained borders. Light remains the default; the
+public and retained readers offer Light, Warm and Dark without changing an account
+preference. Authenticated Help uses its existing shell and theme controls.
+
+Put local search first on the landing page. Group guides into the existing catalogue
+sections, with descriptions and available-article counts. Collection pages list the
+guides. Article pages keep section navigation, a breadcrumb, an on-page outline and
+adjacent guide links. Navigation uses only content available in the current edition
+and Help audience. Collapse navigation at narrow content widths. Preserve native
+links, labelled forms, focus movement and browser history.
+
+The retained edition includes the theme files and its font. Its collection pages and
+articles remain readable without JavaScript. It introduces no external service.
+DD-020 and TECH-026 continue to govern publication and access. A presentation change
+does not promote a draft or rewrite previous verification evidence.
+
+### Rationale
+
+The [research record](../documentation/DESIGN-RESEARCH.md) compares Help and manual
+patterns with OpenLaw's reading and deployment requirements. Search and browsable
+collections support different starting points. The article sidebar and outline
+serve different kinds of navigation. Shared styling keeps the retained copy useful
+when the application is unavailable.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                     |
@@ -4576,3 +4610,4 @@ route topics rank before shared fallbacks; no originating record address is carr
 | DES-071 | A Comparison is one change pane beside one compare card (extends DES-006, DES-016, DES-063)                                                                          | Accepted                                                                                                   |
 | DES-072 | The portal page is a main column beside an aside (amends the I5–I7 column; extends DES-012, DES-003, DES-068)                                                        | Accepted                                                                                                   |
 | DES-073 | Help has a discoverable entry in each shell and a public formal reader (extends DES-072)                                                                             | Accepted                                                                                                   |
+| DES-074 | Documentation and Help share the application design system                                                                                                           | Accepted                                                                                                   |

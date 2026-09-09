@@ -11,7 +11,8 @@ import { dirname, join, resolve, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Marked } from "marked";
 import sanitizeHtml from "sanitize-html";
-import { normalizeSearch, searchDocumentation, resolveDocumentationLink } from "./reader.mjs";
+import { normalizeSearch, resolveDocumentationLink } from "./reader.mjs";
+import { standaloneFiles } from "./standalone.mjs";
 import { readOwnedFile } from "./owned-file.mjs";
 
 export const ID = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
@@ -24,13 +25,6 @@ const AUDIENCES = [
   "business_user",
   "operator",
 ];
-const AUDIENCE_LABELS = {
-  legal_team_member: "Legal Team Member",
-  administrator: "Administrator",
-  contributor: "Contributor",
-  business_user: "Business User",
-  operator: "Deployment operator",
-};
 const DESTINATIONS = ["formal", "staff-help", "portal-help"];
 const RESERVED_ANCHORS = [
   "docs-main",
@@ -41,6 +35,7 @@ const RESERVED_ANCHORS = [
   "docs-index",
   "docs-results",
   "docs-missing-section",
+  "docs-theme",
 ];
 const STATES = ["scoped", "ready", "draft", "review", "verified", "published"];
 const escape = (value) =>
@@ -145,6 +140,10 @@ export function validateCatalog(catalog, scenarios, bindings) {
   for (const s of catalog.sections)
     requireThat(ID.test(s.id) && nonempty(s.title), "invalid section");
   for (const a of catalog.articles) {
+    requireThat(
+      !catalog.sections.some((s) => a.id === `section-${s.id}`),
+      "article ID collides with a collection page",
+    );
     requireThat(ID.test(a.id) && a.id !== "index" && nonempty(a.title), "invalid article ID/title");
     requireThat(
       catalog.sections.some((s) => s.id === a.section),
@@ -402,6 +401,14 @@ export function compileDocumentation({
   const redirects = array(json(metadataRoot, "redirects.json").redirects, "redirects required");
   const contexts = validateCatalog(catalog, scenarios, bindings);
   requireThat(
+    !redirects.some((r) =>
+      catalog.sections.some(
+        (s) => typeof r.from === "string" && r.from.split("#")[0] === `section-${s.id}`,
+      ),
+    ),
+    "redirect collides with a collection page",
+  );
+  requireThat(
     edition.schemaVersion === 1 &&
       ID.test(edition.id) &&
       ["development", "release"].includes(edition.channel) &&
@@ -639,7 +646,16 @@ export function compileDocumentation({
       sections: catalog.sections,
       redirects,
       contexts,
-      readerAssets: ["reader.css", "reader.mjs"].map((name) => ({
+      readerAssets: [
+        "reader.css",
+        "reader.mjs",
+        "standalone.mjs",
+        "standalone-browser.mjs",
+        "../../styles/themes/light.css",
+        "../../styles/themes/warm.css",
+        "../../styles/themes/dark.css",
+        "../../apps/web/node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2",
+      ].map((name) => ({
         name,
         sha256: sha256(readFileSync(join(dirname(fileURLToPath(import.meta.url)), name))),
       })),
@@ -697,93 +713,4 @@ export function compileDocumentation({
     report,
   };
   return { bundle, files: standaloneFiles(bundle, assetFiles) };
-}
-
-function standaloneFiles(bundle, assets) {
-  const files = new Map(assets);
-  const articleList = (items) =>
-    `<ul>${items.map((a) => `<li><a href="${a.id}.html">${escape(a.title)}</a></li>`).join("")}</ul>`;
-  const sections = bundle.sections
-    .map((s) => {
-      const items = bundle.articles.filter((a) => a.section === s.id);
-      return items.length
-        ? `<section><h2>${escape(s.title)}</h2>${articleList(items)}</section>`
-        : "";
-    })
-    .join("");
-  const edition = `<details id="edition"><summary>Edition details</summary><dl><dt>Edition</dt><dd>${escape(bundle.edition.id)} (${bundle.edition.channel})</dd><dt>Supported app</dt><dd>${escape(bundle.edition.supportedAppVersion)} / ${escape(bundle.edition.supportedAppCommit ?? "Not yet verified")}</dd><dt>Distribution commit</dt><dd>${escape(bundle.edition.distributionCommit ?? "Not recorded")}${bundle.edition.workingChanges ? " (working changes)" : ""}</dd><dt>Content digest</dt><dd>${bundle.edition.contentDigest}</dd><dt>Publication target</dt><dd>${escape(bundle.edition.publicationTarget)}</dd></dl></details>`;
-  const page = (title, content) =>
-    `<!doctype html><html lang="en-US" class="docs-static"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark"><title>${escape(title)} · OpenLaw</title><link rel="stylesheet" href="reader.css"><script src="redirect.js" defer></script></head><body class="docs-public"><a class="docs-skip" href="#docs-main">Skip to content</a><header><a href="index.html">OpenLaw documentation</a></header><main id="docs-main" class="docs-reader" tabindex="-1">${bundle.preview ? '<p class="docs-notice">Development preview: unverified validation or draft content.</p>' : ""}${content}${edition}</main></body></html>`;
-  files.set(
-    "index.html",
-    page(
-      "Documentation",
-      `<h1>OpenLaw documentation</h1><form id="docs-search" role="search"><div class="docs-search-field"><label for="docs-query">Search documentation</label><input id="docs-query" name="q" type="search"></div><div class="docs-audience-field"><label for="docs-audience">Audience</label><select id="docs-audience" name="audience"><option value="">All readers</option>${AUDIENCES.map((a) => `<option value="${a}">${escape(AUDIENCE_LABELS[a])}</option>`).join("")}</select></div><button>Search</button></form><noscript><p>Search requires JavaScript. All available articles are listed below.</p></noscript><div id="docs-results" aria-live="polite"></div><div id="docs-index">${sections || "<p>No verified articles are available in this edition yet.</p>"}</div><script src="search.js" defer></script>`,
-    ),
-  );
-  for (const a of bundle.articles) {
-    const outline = a.outline
-      .filter((h) => h.depth > 1)
-      .map((h) => `<li><a href="#${h.id}">${escape(h.text)}</a></li>`)
-      .join("");
-    const moved = bundle.redirects
-      .filter(
-        (r) =>
-          r.from.startsWith(a.id + "#") &&
-          !resolveDocumentationLink(bundle, r.from).startsWith(a.id + "#"),
-      )
-      .map((r) => {
-        const [target, hash] = resolveDocumentationLink(bundle, r.from).split("#");
-        return `<p id="${r.from.split("#")[1]}">Section moved: <a href="${target}.html${hash ? "#" + hash : ""}">Read the current section</a>.</p>`;
-      })
-      .join("");
-    files.set(
-      `${a.id}.html`,
-      page(
-        a.title,
-        `<nav aria-label="Article navigation"><a href="index.html">All documentation</a></nav>${a.unverified ? '<p class="docs-notice">Unverified article</p>' : ""}${outline ? `<nav aria-label="On this page"><ul>${outline}</ul></nav>` : ""}${moved}<article>${a.html.standalone}</article>`,
-      ),
-    );
-  }
-  for (const r of bundle.redirects.filter((r) => !r.from.includes("#"))) {
-    const resolved = resolveDocumentationLink(bundle, r.from),
-      [id, hash] = resolved.split("#");
-    const target = `${id}.html${hash ? `#${hash}` : ""}`;
-    files.set(
-      `${r.from}.html`,
-      page(
-        "Article moved",
-        `<h1>Article moved</h1><p><a id="docs-redirect" href="${target}">Read the current article</a></p>`,
-      ),
-    );
-  }
-  files.set(
-    "redirect.js",
-    `${resolveDocumentationLink.toString()}\nconst redirects=${JSON.stringify(bundle.redirects)};const id=decodeURIComponent(location.pathname.split('/').pop()).replace(/\\.html$/,'');function follow(){let fragment=location.hash;try{fragment=decodeURIComponent(fragment);}catch{}const original=id+fragment;const resolved=resolveDocumentationLink({redirects},id,fragment);if(resolved&&resolved!==original){const [target,hash]=resolved.split('#');location.replace(target+'.html'+location.search+(hash?'#'+hash:''));return;}document.getElementById('docs-missing-section')?.remove();if(fragment&&!document.getElementById(fragment.slice(1))){const notice=document.createElement('p');notice.id='docs-missing-section';notice.className='docs-notice';notice.setAttribute('role','status');notice.textContent='The requested section is unavailable. Use the page outline or the documentation index.';document.getElementById('docs-main').prepend(notice);}}addEventListener('hashchange',follow);follow();`,
-  );
-
-  const searchBundle = {
-    contexts: bundle.contexts,
-    articles: bundle.articles.map(
-      ({ id, title, section, audiences, destinations, contexts, outline, text }) => ({
-        id,
-        title,
-        section,
-        audiences,
-        destinations,
-        contexts,
-        outline,
-        text,
-      }),
-    ),
-  };
-  files.set(
-    "search.js",
-    `${normalizeSearch.toString()}\n${searchDocumentation.toString()}\nconst bundle=${JSON.stringify(searchBundle).replaceAll("<", "\\u003c")};\nconst form=document.getElementById('docs-search');const params=new URLSearchParams(location.search);form.elements.q.value=params.get('q')||'';form.elements.audience.value=params.get('audience')||'';function render(){const q=form.elements.q.value.trim(),audience=form.elements.audience.value;const results=document.getElementById('docs-results');results.replaceChildren();document.getElementById('docs-index').hidden=Boolean(q||audience);if(!q&&!audience)return;const found=searchDocumentation(bundle,{query:q,audience});const status=document.createElement('p');status.textContent=found.length?found.length+' articles found':'No matching articles. Clear the search to see the full index.';results.append(status);for(const article of found){const p=document.createElement('p'),a=document.createElement('a');a.href=article.id+'.html';a.textContent=article.title;p.append(a,document.createTextNode(' — '+article.text.slice(0,180)));results.append(p);}}form.addEventListener('submit',event=>{event.preventDefault();const query=new URLSearchParams();if(form.elements.q.value.trim())query.set('q',form.elements.q.value.trim());if(form.elements.audience.value)query.set('audience',form.elements.audience.value);const search=query.toString();history.pushState(null,'',location.pathname+(search?'?'+search:''));render();});addEventListener('popstate',()=>{const p=new URLSearchParams(location.search);form.elements.q.value=p.get('q')||'';form.elements.audience.value=p.get('audience')||'';render();});render();`,
-  );
-  files.set(
-    "reader.css",
-    readFileSync(join(dirname(fileURLToPath(import.meta.url)), "reader.css"), "utf8"),
-  );
-  return files;
 }

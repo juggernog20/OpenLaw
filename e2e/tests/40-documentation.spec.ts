@@ -46,7 +46,7 @@ test("a signed-out Help deep link keeps its article and section", async ({ page,
   await expect(page.getByRole("heading", { name: "Article unavailable" })).toBeVisible();
 });
 
-test("bundled documentation and its export are public without API reads", async ({
+test("public documentation and export avoid API reads and all themes fit narrow screens", async ({
   page,
   context,
   request,
@@ -61,12 +61,26 @@ test("bundled documentation and its export are public without API reads", async 
   await expect(
     page.getByRole("heading", { level: 1, name: "Documentation", exact: true }),
   ).toBeVisible();
+  for (const width of [1440, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const theme of ["light", "warm", "dark"]) {
+      await page.getByRole("combobox", { name: "Documentation theme" }).selectOption(theme);
+      await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+        width + 1,
+      );
+    }
+  }
+  await page.setViewportSize({ width: 1440, height: 900 });
   await page.getByText("Edition details", { exact: true }).first().click();
   await expect(page.getByRole("link", { name: "Download standalone edition" })).toBeVisible();
   expect(apiRequests).toEqual([]);
   const index = await request.get("/documentation-export/index.html");
   expect(index.status()).toBe(200);
   expect(await index.text()).toContain("OpenLaw documentation");
+  const font = await request.get("/documentation-export/inter.woff2");
+  expect(font.status()).toBe(200);
+  expect((await font.body()).subarray(0, 4).toString()).toBe("wOF2");
   const archive = await request.get("/documentation-export/openlaw-documentation.tar.gz");
   expect(archive.status()).toBe(200);
   expect((await archive.body()).subarray(0, 2).toString("hex")).toBe("1f8b");

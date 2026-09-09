@@ -4,8 +4,8 @@
  * Reads one compiled edition through public documentation or a Help shell.
  * DD-020 makes the formal manual public; TECH-026 supplies sanitized content.
  */
-import { useEffect, useRef, type MouseEvent } from "react";
-import { defineMessages, FormattedMessage, useIntl } from "react-intl";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
+import { FormattedMessage, useIntl } from "react-intl";
 import { Form, Link, Navigate, useLocation, useNavigate, useParams } from "react-router";
 import generated from "virtual:openlaw-documentation";
 import {
@@ -16,88 +16,44 @@ import {
   type DocumentationBundle,
   type DocumentationDestination,
 } from "../../../../../scripts/documentation/reader.mjs";
+import {
+  ArrowRight,
+  BookOpen,
+  ChevronRight,
+  Search,
+  Scale,
+  Compass,
+  MessageSquare,
+  Users,
+  FileText,
+  BriefcaseBusiness,
+  Files,
+  Building2,
+  Library,
+  SlidersHorizontal,
+  Server,
+  LifeBuoy,
+  type LucideIcon,
+} from "lucide-react";
+import { isTheme, setDocumentTheme, THEMES, type Theme } from "../../lib/theme";
+import { M, ROLES, DESCRIPTIONS } from "./documentation-messages";
 import { PageTitle } from "../page-title";
 import "../../../../../scripts/documentation/reader.css";
 
-const M = defineMessages({
-  editionIdentity: { id: "docs.editionIdentity", defaultMessage: "{id} ({channel})" },
-  supportedIdentity: { id: "docs.supportedIdentity", defaultMessage: "{version} / {commit}" },
-  distributionIdentity: { id: "docs.distributionIdentity", defaultMessage: "{commit} ({state})" },
-  development: { id: "docs.channel.development", defaultMessage: "Development" },
-  release: { id: "docs.channel.release", defaultMessage: "Release" },
-  title: { id: "docs.title", defaultMessage: "Documentation" },
-  search: { id: "docs.search", defaultMessage: "Search documentation" },
-  searchButton: { id: "docs.searchButton", defaultMessage: "Search" },
-  audience: { id: "docs.audience", defaultMessage: "Audience" },
-  allReaders: { id: "docs.allReaders", defaultMessage: "All readers" },
-  all: { id: "docs.all", defaultMessage: "All documentation" },
-  help: { id: "docs.help", defaultMessage: "Help" },
-  forAudience: { id: "docs.forAudience", defaultMessage: "Guides for {audience}" },
-  outsideAudience: {
-    id: "docs.outsideAudience",
-    defaultMessage:
-      "This article is available in the full documentation. Check its audience and prerequisites before following the instructions.",
-  },
-  outline: { id: "docs.outline", defaultMessage: "On this page" },
-  edition: { id: "docs.edition", defaultMessage: "Edition details" },
-  unavailable: { id: "docs.unavailable", defaultMessage: "Article unavailable" },
-  unavailableBody: {
-    id: "docs.unavailableBody",
-    defaultMessage:
-      "This article is not available in the bundled edition. Search the available guides or return to the index.",
-  },
-  wrongEdition: {
-    id: "docs.wrongEdition",
-    defaultMessage:
-      "The requested edition is not bundled with this instance. Open the current index or use your retained copy of that edition.",
-  },
-  preview: {
-    id: "docs.preview",
-    defaultMessage: "Development preview: draft and validation content is unverified.",
-  },
-  unverified: { id: "docs.unverified", defaultMessage: "Unverified article" },
-  empty: {
-    id: "docs.empty",
-    defaultMessage: "No verified articles are available in this edition yet.",
-  },
-  noMatches: {
-    id: "docs.noMatches",
-    defaultMessage: "No matching articles. Try another word or return to the full index.",
-  },
-  missingSection: {
-    id: "docs.missingSection",
-    defaultMessage:
-      "The requested section is unavailable. Use the page outline to find the current instructions.",
-  },
-  formal: { id: "docs.formal", defaultMessage: "Read this article in the full documentation" },
-  download: { id: "docs.download", defaultMessage: "Download standalone edition" },
-  standalone: { id: "docs.standalone", defaultMessage: "Open standalone edition" },
-  retention: {
-    id: "docs.retention",
-    defaultMessage:
-      "Keep an extracted copy outside this instance to read it when the app is unavailable.",
-  },
-  supported: { id: "docs.supported", defaultMessage: "Supported app" },
-  distribution: { id: "docs.distribution", defaultMessage: "Distribution commit" },
-  digest: { id: "docs.digest", defaultMessage: "Content digest" },
-  target: { id: "docs.target", defaultMessage: "Publication target" },
-  notVerified: { id: "docs.notVerified", defaultMessage: "Not yet verified" },
-  notRecorded: { id: "docs.notRecorded", defaultMessage: "Not recorded" },
-  dirty: { id: "docs.dirty", defaultMessage: "Working changes" },
-  notice: { id: "docs.notice", defaultMessage: "Preview build notices" },
-  admin: { id: "docs.role.admin", defaultMessage: "Administrator" },
-  member: { id: "docs.role.member", defaultMessage: "Legal Team Member" },
-  contributor: { id: "docs.role.contributor", defaultMessage: "Contributor" },
-  business: { id: "docs.role.business", defaultMessage: "Business User" },
-  operator: { id: "docs.role.operator", defaultMessage: "Deployment operator" },
-});
-const ROLES = {
-  administrator: M.admin,
-  legal_team_member: M.member,
-  contributor: M.contributor,
-  business_user: M.business,
-  operator: M.operator,
+const SECTION_ICONS: Record<string, LucideIcon> = {
+  start: Compass,
+  portal: MessageSquare,
+  "working-with-legal": Users,
+  contracts: FileText,
+  matters: BriefcaseBusiness,
+  documents: Files,
+  entities: Building2,
+  knowledge: Library,
+  administration: SlidersHorizontal,
+  operations: Server,
+  reference: LifeBuoy,
 };
+
 const BASE = { formal: "/documentation", "staff-help": "/help", "portal-help": "/portal/help" };
 
 export function DocumentationReader({
@@ -113,12 +69,30 @@ export function DocumentationReader({
     location = useLocation(),
     params = useParams();
   const main = useRef<HTMLElement>(null);
+  const [navigationOpen, setNavigationOpen] = useState(true);
+  const [outlineOpen, setOutlineOpen] = useState(true);
+  useEffect(() => {
+    if (typeof ResizeObserver !== "function" || !main.current) return;
+    let previousBreakpoint = "";
+    const observer = new ResizeObserver(([entry]) => {
+      if (!entry) return;
+      const width = entry.contentRect.width;
+      const breakpoint = `${width >= 880}:${width >= 1152}`;
+      if (breakpoint === previousBreakpoint) return;
+      previousBreakpoint = breakpoint;
+      setNavigationOpen(width >= 880);
+      setOutlineOpen(width >= 1152);
+    });
+    observer.observe(main.current);
+    return () => observer.disconnect();
+  }, []);
   const navigate = useNavigate();
   const Container = destination === "formal" ? "main" : "section";
   const id = params.articleId ?? params["*"] ?? "";
   const base = BASE[destination];
   const query = new URLSearchParams(location.search);
   const q = query.get("q") ?? "";
+  const selectedSection = bundle.sections.find((s) => s.id === query.get("section"));
   const requestedAudience = query.get("audience") ?? "";
   const selectedAudience =
     audience ?? (Object.hasOwn(ROLES, requestedAudience) ? requestedAudience : "");
@@ -146,7 +120,16 @@ export function DocumentationReader({
     destination,
     audience: selectedAudience,
     topics,
+    section: selectedSection?.id,
   });
+  const available = searchDocumentation(bundle, { destination, audience: selectedAudience });
+  const hasFilters = Boolean(
+    q || (!audience && selectedAudience) || topics.length || selectedSection,
+  );
+  const sections = bundle.sections.filter((s) => available.some((a) => a.section === s.id));
+  const siblings = available.filter((a) => a.section === article?.section);
+  const position = siblings.findIndex((a) => a.id === id);
+  const adjacent = position < 0 ? [] : [siblings[position - 1], siblings[position + 1]];
   const title = wrongEdition
     ? intl.formatMessage(M.unavailable)
     : id
@@ -156,11 +139,18 @@ export function DocumentationReader({
     const target = hash
       ? document.getElementById(hash.slice(1))
       : main.current?.querySelector<HTMLElement>("h1");
-    (target ?? main.current)?.focus();
+    (target ?? main.current)?.focus({ preventScroll: !hash });
+    if (!hash) {
+      if (destination === "formal") document.documentElement.scrollTo?.({ top: 0 });
+      else {
+        const scroll = main.current?.closest("main");
+        if (scroll) scroll.scrollTop = 0;
+      }
+    }
     if (hash && target) target.scrollIntoView?.({ block: "start" });
     // location.key: an outline link to the section already in the address
     // still moves focus, as the browser would for a native fragment link.
-  }, [location.key, location.pathname, location.search, hash]);
+  }, [location.key, location.pathname, location.search, hash, destination]);
   if (!wrongEdition && resolved && resolved !== `${id}${hash}`) {
     const [target, fragment] = resolved.split("#");
     return (
@@ -190,145 +180,300 @@ export function DocumentationReader({
   }
   const sectionTitle = (section: string) =>
     bundle.sections.find((s) => s.id === section)?.title ?? section;
+  const collectionHref = (section: string) => {
+    const search = new URLSearchParams({ section });
+    if (!audience && selectedAudience) search.set("audience", selectedAudience);
+    return `${base}?${search}`;
+  };
   const resultList = (items: typeof results) => (
     <div className="docs-results">
       {items.map((a) => (
         <section className="docs-result" key={a.id}>
-          <h2>
-            <Link to={`${base}/${a.id}`}>{a.title}</Link>
-          </h2>
-          <p>{sectionTitle(a.section)}</p>
-          {q && <p>{documentationExcerpt(a, q)}</p>}
-          {a.unverified && <p>{intl.formatMessage(M.unverified)}</p>}
+          <div>
+            <span className="docs-eyebrow">{sectionTitle(a.section)}</span>
+            <h2>
+              <Link to={`${base}/${a.id}`}>{a.title}</Link>
+            </h2>
+            <p>{documentationExcerpt(a, q, 180)}</p>
+            {a.unverified && <span className="docs-badge">{intl.formatMessage(M.unverified)}</span>}
+          </div>
+          <ChevronRight size={20} aria-hidden="true" />
         </section>
       ))}
     </div>
   );
   return (
-    <Container ref={main} id="docs-main" tabIndex={-1} className="docs-reader">
+    <Container
+      ref={main}
+      id="docs-main"
+      tabIndex={-1}
+      className={`docs-reader ${article ? "docs-reading" : ""}`}
+    >
       <PageTitle title={title} />
       {bundle.preview && (
         <p className="docs-notice" role="status">
           {intl.formatMessage(M.preview)}
         </p>
       )}
-      <nav aria-label={intl.formatMessage(M.title)}>
-        <ul className="docs-inline-links">
-          <li>
+      <div className="docs-layout">
+        <aside className="docs-sidebar">
+          <details
+            className="docs-navigation"
+            open={navigationOpen}
+            onToggle={(event) => setNavigationOpen(event.currentTarget.open)}
+          >
+            <summary>{intl.formatMessage(M.browse)}</summary>
+            <nav aria-label={intl.formatMessage(M.guideNavigation)}>
+              <Link
+                className="docs-overview"
+                to={base}
+                aria-current={!id && !selectedSection ? "page" : undefined}
+              >
+                <BookOpen size={16} aria-hidden="true" />
+                {intl.formatMessage(M.overview)}
+              </Link>
+              <p className="docs-nav-label">{intl.formatMessage(M.browse)}</p>
+              <ul>
+                {sections.map((section) => (
+                  <li key={section.id}>
+                    <Link
+                      to={collectionHref(section.id)}
+                      aria-current={selectedSection?.id === section.id ? "page" : undefined}
+                    >
+                      {section.title}
+                    </Link>
+                    {article?.section === section.id && (
+                      <ul className="docs-article-links">
+                        {available
+                          .filter((a) => a.section === section.id)
+                          .map((a) => (
+                            <li key={a.id}>
+                              <Link
+                                to={`${base}/${a.id}`}
+                                aria-current={a.id === id ? "page" : undefined}
+                              >
+                                {a.title}
+                              </Link>
+                            </li>
+                          ))}
+                      </ul>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </details>
+          <nav className="docs-sidebar-footer" aria-label={intl.formatMessage(M.title)}>
             <Link to={base}>{intl.formatMessage(destination === "formal" ? M.all : M.help)}</Link>
-          </li>
-          {destination !== "formal" && (
-            <li>
+            {destination !== "formal" && (
               <Link to={article ? `/documentation/${article.id}${hash}` : "/documentation"}>
                 {intl.formatMessage(article ? M.formal : M.all)}
               </Link>
-            </li>
-          )}
-        </ul>
-      </nav>
-      <Form
-        method="get"
-        action={base}
-        role="search"
-        key={`${q}:${selectedAudience}:${topics.join(",")}`}
-      >
-        <div className="docs-search-field">
-          <label htmlFor="docs-query">{intl.formatMessage(M.search)}</label>
-          <input id="docs-query" name="q" type="search" defaultValue={q} />
-        </div>
-        {!audience && (
-          <div className="docs-audience-field">
-            <label htmlFor="docs-audience">{intl.formatMessage(M.audience)}</label>
-            <select id="docs-audience" name="audience" defaultValue={selectedAudience}>
-              <option value="">{intl.formatMessage(M.allReaders)}</option>
-              {Object.entries(ROLES).map(([key, message]) => (
-                <option key={key} value={key}>
-                  {intl.formatMessage(message)}
-                </option>
+            )}
+          </nav>
+        </aside>
+        <div className="docs-content">
+          <div className={id || wrongEdition ? "docs-search-bar" : "docs-hero"}>
+            {!id && !wrongEdition && (
+              <>
+                <p className="docs-eyebrow">
+                  {intl.formatMessage(destination === "formal" ? M.intro : M.forAudience, {
+                    audience: audience ? intl.formatMessage(ROLES[audience]) : "",
+                  })}
+                </p>
+                <h1 tabIndex={-1}>
+                  {intl.formatMessage(destination === "formal" ? M.title : M.help)}
+                </h1>
+                <p className="docs-intro">
+                  {intl.formatMessage(destination === "formal" ? M.introBody : M.helpBody)}
+                </p>
+              </>
+            )}
+            <Form
+              method="get"
+              action={base}
+              role="search"
+              key={`${q}:${selectedAudience}:${topics.join(",")}:${selectedSection?.id}`}
+            >
+              <div className="docs-search-field">
+                <label className="docs-sr-only" htmlFor="docs-query">
+                  {intl.formatMessage(M.search)}
+                </label>
+                <Search size={20} aria-hidden="true" />
+                <input
+                  id="docs-query"
+                  name="q"
+                  type="search"
+                  defaultValue={q}
+                  placeholder={intl.formatMessage(M.search)}
+                />
+              </div>
+              {!audience && (
+                <div className="docs-audience-field">
+                  <label className="docs-sr-only" htmlFor="docs-audience">
+                    {intl.formatMessage(M.audience)}
+                  </label>
+                  <select id="docs-audience" name="audience" defaultValue={selectedAudience}>
+                    <option value="">{intl.formatMessage(M.allReaders)}</option>
+                    {Object.entries(ROLES).map(([key, message]) => (
+                      <option key={key} value={key}>
+                        {intl.formatMessage(message)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              {topics.map((topic) => (
+                <input key={topic} type="hidden" name="topic" value={topic} />
               ))}
-            </select>
+              {selectedSection && <input type="hidden" name="section" value={selectedSection.id} />}
+              <button className="docs-search-button" type="submit">
+                {intl.formatMessage(M.searchButton)}
+              </button>
+            </Form>
           </div>
-        )}
-        {topics.map((topic) => (
-          <input key={topic} type="hidden" name="topic" value={topic} />
-        ))}
-        <button type="submit">{intl.formatMessage(M.searchButton)}</button>
-      </Form>
-      {wrongEdition || (id && !article) ? (
-        <>
-          <h1 tabIndex={-1}>{intl.formatMessage(M.unavailable)}</h1>
-          <p>{intl.formatMessage(wrongEdition ? M.wrongEdition : M.unavailableBody)}</p>
-        </>
-      ) : article ? (
-        !permitted ? (
-          <>
-            <h1 tabIndex={-1}>{article.title}</h1>
-            <p>{intl.formatMessage(M.outsideAudience)}</p>
-            <Link to={`/documentation/${article.id}${hash}`}>{intl.formatMessage(M.formal)}</Link>
-          </>
-        ) : (
-          <>
-            {article.unverified && (
-              <p className="docs-notice">{intl.formatMessage(M.unverified)}</p>
-            )}
-            {missingSection && (
-              <p role="status" className="docs-notice">
-                {intl.formatMessage(M.missingSection)}
-              </p>
-            )}
-            <div className="docs-columns">
-              <nav className="docs-outline" aria-label={intl.formatMessage(M.outline)}>
-                <p>{intl.formatMessage(M.outline)}</p>
-                <ul>
-                  {article.outline
-                    .filter((h) => h.depth > 1)
-                    .map((h) => (
-                      <li key={h.id}>
-                        <Link to={`${location.pathname}${location.search}#${h.id}`}>{h.text}</Link>
-                      </li>
-                    ))}
-                </ul>
-              </nav>
-              <article
-                onClick={followArticleLink}
-                dangerouslySetInnerHTML={{ __html: article.html[destination] }}
-              />
+          {wrongEdition || (id && !article) ? (
+            <div className="docs-empty">
+              <BookOpen size={24} aria-hidden="true" />
+              <h1 tabIndex={-1}>{intl.formatMessage(M.unavailable)}</h1>
+              <p>{intl.formatMessage(wrongEdition ? M.wrongEdition : M.unavailableBody)}</p>
+              <Link to={base}>
+                {intl.formatMessage(M.overview)}
+                <ArrowRight size={16} aria-hidden="true" />
+              </Link>
             </div>
-          </>
-        )
-      ) : (
-        <>
-          <h1 tabIndex={-1}>{intl.formatMessage(destination === "formal" ? M.title : M.help)}</h1>
-          {audience && (
-            <p>
-              {intl.formatMessage(M.forAudience, { audience: intl.formatMessage(ROLES[audience]) })}
-            </p>
-          )}
-          {results.length === 0 ? (
-            <p role="status">
-              {intl.formatMessage(bundle.articles.length ? M.noMatches : M.empty)}
-            </p>
-          ) : q || (!audience && selectedAudience) || topics.length ? (
-            resultList(results)
+          ) : article ? (
+            !permitted ? (
+              <div className="docs-empty">
+                <h1 tabIndex={-1}>{article.title}</h1>
+                <p>{intl.formatMessage(M.outsideAudience)}</p>
+                <Link to={`/documentation/${article.id}${hash}`}>
+                  {intl.formatMessage(M.formal)}
+                </Link>
+              </div>
+            ) : (
+              <>
+                <nav className="docs-breadcrumb" aria-label={intl.formatMessage(M.breadcrumb)}>
+                  <Link to={base}>
+                    {intl.formatMessage(destination === "formal" ? M.title : M.help)}
+                  </Link>
+                  <ChevronRight size={16} aria-hidden="true" />
+                  <Link to={collectionHref(article.section)}>{sectionTitle(article.section)}</Link>
+                </nav>
+                <div className="docs-article-meta">
+                  <span>
+                    {intl.formatMessage(M.writtenFor, {
+                      roles: article.audiences
+                        .map((role) => intl.formatMessage(ROLES[role]))
+                        .join(" · "),
+                    })}
+                  </span>
+                  {article.unverified && (
+                    <span className="docs-badge">{intl.formatMessage(M.unverified)}</span>
+                  )}
+                </div>
+                {missingSection && (
+                  <p role="status" className="docs-notice">
+                    {intl.formatMessage(M.missingSection)}
+                  </p>
+                )}
+                <div className="docs-columns">
+                  <article
+                    onClick={followArticleLink}
+                    dangerouslySetInnerHTML={{ __html: article.html[destination] }}
+                  />
+                  {article.outline.some((h) => h.depth > 1) && (
+                    <nav className="docs-outline" aria-label={intl.formatMessage(M.outline)}>
+                      <details
+                        open={outlineOpen}
+                        onToggle={(event) => setOutlineOpen(event.currentTarget.open)}
+                      >
+                        <summary>{intl.formatMessage(M.outline)}</summary>
+                        <ul>
+                          {article.outline
+                            .filter((h) => h.depth > 1)
+                            .map((h) => (
+                              <li key={h.id} data-depth={h.depth}>
+                                <Link
+                                  to={`${location.pathname}${location.search}#${h.id}`}
+                                  aria-current={hash === `#${h.id}` ? "location" : undefined}
+                                >
+                                  {h.text}
+                                </Link>
+                              </li>
+                            ))}
+                        </ul>
+                      </details>
+                    </nav>
+                  )}
+                </div>
+                <nav className="docs-adjacent" aria-label={intl.formatMessage(M.articleNavigation)}>
+                  {adjacent.map((a, index) =>
+                    a ? (
+                      <Link key={a.id} to={`${base}/${a.id}`}>
+                        <span>{intl.formatMessage(index === 0 ? M.previous : M.next)}</span>
+                        <strong>{a.title}</strong>
+                        <ArrowRight size={16} aria-hidden="true" />
+                      </Link>
+                    ) : (
+                      <span key={index} />
+                    ),
+                  )}
+                </nav>
+              </>
+            )
           ) : (
-            bundle.sections.map((section) => {
-              const articles = results.filter((a) => a.section === section.id);
-              return articles.length ? (
-                <section key={section.id}>
-                  <h2>{section.title}</h2>
-                  <ul>
-                    {articles.map((a) => (
-                      <li key={a.id}>
-                        <Link to={`${base}/${a.id}`}>{a.title}</Link>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              ) : null;
-            })
+            <>
+              <div className="docs-section-heading">
+                <div>
+                  <h2>{selectedSection?.title ?? intl.formatMessage(M.collections)}</h2>
+                  <p>
+                    {hasFilters
+                      ? intl.formatMessage(M.resultCount, { count: results.length })
+                      : intl.formatMessage(M.collectionBody)}
+                  </p>
+                </div>
+                {hasFilters && <Link to={base}>{intl.formatMessage(M.clear)}</Link>}
+              </div>
+              {results.length === 0 ? (
+                <div className="docs-empty" role="status">
+                  <BookOpen size={24} aria-hidden="true" />
+                  <p>{intl.formatMessage(bundle.articles.length ? M.noMatches : M.empty)}</p>
+                </div>
+              ) : hasFilters ? (
+                resultList(results)
+              ) : (
+                <div className="docs-collections">
+                  {sections.map((section) => {
+                    const items = results.filter((a) => a.section === section.id);
+                    const description = DESCRIPTIONS[section.id as keyof typeof DESCRIPTIONS];
+                    const Icon = SECTION_ICONS[section.id] ?? BookOpen;
+                    return (
+                      <Link
+                        className="docs-collection"
+                        key={section.id}
+                        to={collectionHref(section.id)}
+                      >
+                        <Icon size={24} strokeWidth={1.5} aria-hidden="true" />
+                        <h3>{section.title}</h3>
+                        <p>
+                          {description
+                            ? intl.formatMessage(description)
+                            : items.map((a) => a.title).join(" · ")}
+                        </p>
+                        <span>
+                          {intl.formatMessage(M.count, { count: items.length })}
+                          <ArrowRight size={16} aria-hidden="true" />
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </>
           )}
-        </>
-      )}
+        </div>
+      </div>
       {bundle.preview && bundle.warnings.length > 0 && (
         <details>
           <summary>{intl.formatMessage(M.notice)}</summary>
@@ -389,15 +534,59 @@ export function DocumentationReader({
 }
 
 export function FormalDocumentationPage() {
+  const intl = useIntl();
+  const [theme, setTheme] = useState<Theme>(() => {
+    const value = document.documentElement.dataset.theme ?? "light";
+    return isTheme(value) ? value : "light";
+  });
   return (
     <div className="docs-public">
       <a className="docs-skip" href="#docs-main">
         <FormattedMessage id="docs.skip" defaultMessage="Skip to content" />
       </a>
-      <header>
-        <Link to="/documentation">
-          <FormattedMessage id="docs.brand" defaultMessage="OpenLaw documentation" />
+      <header className="docs-header">
+        <Link
+          className="docs-brand"
+          to="/documentation"
+          aria-label={intl.formatMessage({
+            id: "docs.brand",
+            defaultMessage: "OpenLaw documentation",
+          })}
+        >
+          <span className="docs-brand-mark" aria-hidden="true">
+            <Scale size={24} />
+          </span>
+          <strong>openlaw</strong>
+          <span className="docs-brand-divider" aria-hidden="true">
+            /
+          </span>
+          <span>{intl.formatMessage(M.title)}</span>
         </Link>
+        <div className="docs-header-actions">
+          <label className="docs-sr-only" htmlFor="docs-theme">
+            {intl.formatMessage(M.theme)}
+          </label>
+          <select
+            id="docs-theme"
+            value={theme}
+            onChange={(event) => {
+              if (isTheme(event.target.value)) {
+                setTheme(event.target.value);
+                setDocumentTheme(event.target.value);
+              }
+            }}
+          >
+            {THEMES.map((value) => (
+              <option key={value} value={value}>
+                {intl.formatMessage(M[value])}
+              </option>
+            ))}
+          </select>
+          <Link className="docs-open-app" to="/">
+            {intl.formatMessage(M.openApp)}
+            <ArrowRight size={16} aria-hidden="true" />
+          </Link>
+        </div>
       </header>
       <DocumentationReader />
     </div>

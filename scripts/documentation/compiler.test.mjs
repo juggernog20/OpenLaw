@@ -7,8 +7,8 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { test } from "node:test";
 import { applicationDigest, buildIdentity, compileWorkspace } from "./build.mjs";
-import { compileDocumentation } from "./compiler.mjs";
-import { searchDocumentation, resolveDocumentationLink } from "./reader.mjs";
+import { compileDocumentation, validateCatalog } from "./compiler.mjs";
+import { searchDocumentation, documentationExcerpt, resolveDocumentationLink } from "./reader.mjs";
 import { readOwnedFile } from "./owned-file.mjs";
 
 const commit = "a".repeat(40);
@@ -178,13 +178,50 @@ test("one source supplies formal, Help, outlines, search and offline files", (t)
   assert.equal(searchDocumentation(bundle, { query: "PAPER fictional" })[0].id, "submit");
   assert.deepEqual(searchDocumentation(bundle, { query: "paper absent" }), []);
   assert.equal(searchDocumentation(bundle, { destination: "staff-help" }).length, 0);
-  assert.match(files.get("index.html"), /submit.html/);
+  // The catalogue orders "Submit a fixture" before "Recover a fixture"; a
+  // title sort would reverse both the listing and the adjacent-guide links.
+  assert.deepEqual(
+    searchDocumentation(bundle).map((a) => a.id),
+    ["submit", "recover"],
+  );
+  assert.doesNotMatch(documentationExcerpt(bundle.articles[0], ""), /^Submit a fixture/);
+  assert.match(files.get("index.html"), /section-start.html/);
+  const collection = files.get("section-start.html");
+  assert.match(collection, /submit.html/);
+  assert.ok(collection.indexOf("submit.html") < collection.indexOf("recover.html"));
+  assert.match(collection, /<p>A validation fixture/);
+  assert.match(files.get("submit.html"), /<span>Next guide<\/span><strong>Recover a fixture</);
+  assert.match(files.get("themes.css"), /data-theme="warm"/);
+  assert.equal(files.get("inter.woff2").subarray(0, 4).toString(), "wOF2");
+  assert.match(files.get("submit.html"), /aria-current="page"/);
   assert.match(files.get("submit.html"), /Open the fixture/);
   assert.doesNotMatch(files.get("search.js"), /\bfetch\s*\(/);
   // Retained copies open in older browsers; URLSearchParams.size is too new for them.
   assert.doesNotMatch(files.get("search.js"), /\.size\b/);
   assert.doesNotMatch(JSON.stringify(bundle), /Fixture author|fixture observation/);
   assert.equal(bundle.report.verified, 2);
+});
+
+test("collection filenames cannot replace an article or a redirect", (t) => {
+  const f = fixture(t);
+  assert.throws(
+    () =>
+      validateCatalog(
+        {
+          schemaVersion: 1,
+          sections: [{ id: "start", title: "Start here" }],
+          articles: [{ ...f.articles[0], id: "section-start" }],
+        },
+        [],
+        [],
+      ),
+    /article ID collides with a collection page/,
+  );
+  f.json("redirects.json", {
+    schemaVersion: 1,
+    redirects: [{ from: "section-start", to: "submit" }],
+  });
+  assert.throws(() => f.compile(), /redirect collides with a collection page/);
 });
 
 test("scoped catalog entries stay absent, and complete publication preserves the denominator", (t) => {
@@ -526,6 +563,46 @@ test("standalone redirects include cross-page anchor moves and remain readable w
   assert.match(files.get("submit.html"), /id="older-section"/);
   assert.match(files.get("submit.html"), /href="recover.html#retry"/);
   assert.match(files.get("redirect.js"), /resolveDocumentationLink/);
+});
+
+test("every local link the retained edition writes names a page it contains", (t) => {
+  const f = fixture(t);
+  // The edition writes redirect targets in three places: the whole-article
+  // moved page, the moved-section link inside an article, and the script that
+  // follows a fragment. It builds its pages from the formal articles, so a
+  // redirect naming an article it left out would dangle.
+  f.json("redirects.json", {
+    schemaVersion: 1,
+    redirects: [
+      { from: "old-submit", to: "submit" },
+      { from: "submit#older-section", to: "recover#retry" },
+    ],
+  });
+  const { bundle, files } = f.compile();
+  assert.match(files.get("old-submit.html"), /href="submit.html"/);
+  assert.match(files.get("submit.html"), /href="recover.html#retry"/);
+  for (const r of bundle.redirects) {
+    const resolved = resolveDocumentationLink(bundle, r.from);
+    assert.ok(resolved, `redirect loop: ${r.from}`);
+    assert.ok(files.has(`${resolved.split("#")[0]}.html`), `${r.from} leaves the edition`);
+  }
+  const hrefs = new Set(
+    [...files]
+      .filter(([name]) => name.endsWith(".html"))
+      .flatMap(([, html]) => [...html.matchAll(/href="([a-z\d-]+\.html)(?:#[a-z\d-]+)?"/g)])
+      .map((m) => m[1]),
+  );
+  assert.ok(hrefs.size > 3);
+  for (const href of hrefs) assert.ok(files.has(href), `dangling link to ${href}`);
+  // Nothing can become a redirect target without a page, because the
+  // catalogue refuses an article that leaves the formal destination out.
+  f.articles[1].destinations = ["staff-help"];
+  f.json("articles.json", {
+    schemaVersion: 1,
+    sections: [{ id: "start", title: "Start here" }],
+    articles: f.articles,
+  });
+  assert.throws(() => f.compile(), /formal destination required: recover/);
 });
 
 test("validation fixtures require an explicit preview", () => {

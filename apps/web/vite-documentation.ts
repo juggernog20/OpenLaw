@@ -115,15 +115,19 @@ export function documentation(): Plugin {
             ? "text/javascript; charset=utf-8"
             : path.endsWith(".css")
               ? "text/css; charset=utf-8"
-              : path.endsWith(".png")
-                ? "image/png"
-                : /\.jpe?g$/.test(path)
-                  ? "image/jpeg"
-                  : path.endsWith(".webp")
-                    ? "image/webp"
-                    : path.endsWith(".gif")
-                      ? "image/gif"
-                      : "application/gzip";
+              : path.endsWith(".woff2")
+                ? "font/woff2"
+                : path.endsWith(".txt")
+                  ? "text/plain; charset=utf-8"
+                  : path.endsWith(".png")
+                    ? "image/png"
+                    : /\.jpe?g$/.test(path)
+                      ? "image/jpeg"
+                      : path.endsWith(".webp")
+                        ? "image/webp"
+                        : path.endsWith(".gif")
+                          ? "image/gif"
+                          : "application/gzip";
         response.setHeader("Content-Type", type);
         response.setHeader("X-Content-Type-Options", "nosniff");
         response.end(bytes);

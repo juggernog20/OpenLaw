@@ -10,6 +10,54 @@ vi.mock("virtual:openlaw-documentation", async () => {
 });
 
 describe("public documentation", () => {
+  it("offers no adjacent guides when the current article is outside the audience filter", async () => {
+    renderAt("/documentation/validation-recovery?audience=business_user");
+    expect(
+      await screen.findByRole("heading", { name: "Recover a validation fixture" }),
+    ).toBeVisible();
+    const adjacent = within(screen.getByRole("navigation", { name: "Article navigation" }));
+    expect(adjacent.queryAllByRole("link")).toHaveLength(0);
+  });
+  it("browses a collection, keeps the article selected, and offers adjacent guides", async () => {
+    const user = userEvent.setup();
+    const { router } = renderAt("/documentation");
+    await user.click(await screen.findByRole("link", { name: /Validation fixtures.*2 guides/ }));
+    expect(router.state.location.search).toContain("section=validation");
+    await user.click(screen.getByRole("link", { name: "Try the documentation reader" }));
+    const navigation = within(screen.getByRole("navigation", { name: "Guide navigation" }));
+    expect(navigation.getByRole("link", { name: "Try the documentation reader" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.getByRole("navigation", { name: "Article navigation" })).toHaveTextContent(
+      "Recover a validation fixture",
+    );
+    await user.click(
+      screen.getByRole("link", { name: /Next guide.*Recover a validation fixture/ }),
+    );
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Recover a validation fixture" }),
+    ).toHaveFocus();
+  });
+  it("changes the public reader theme without a session or preference write", async () => {
+    const calls: string[] = [];
+    stubFetch((call) => {
+      calls.push(call.url.pathname);
+      throw new Error("No API expected");
+    });
+    const user = userEvent.setup();
+    renderAt("/documentation");
+    await user.selectOptions(
+      await screen.findByRole("combobox", { name: "Documentation theme" }),
+      "dark",
+    );
+    expect(document.documentElement.dataset.theme).toBe("dark");
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "Documentation theme" }),
+      "light",
+    );
+    expect(calls).toEqual([]);
+  });
   it("reads and searches without setup, session, or any API request", async () => {
     const calls: string[] = [];
     stubFetch((call) => {
@@ -74,12 +122,16 @@ describe("public documentation", () => {
   it("uses registered topics, keeps a full index fallback, and filters reader paths", async () => {
     const user = userEvent.setup();
     renderAt("/documentation?topic=unknown-record-123");
-    expect(await screen.findByRole("link", { name: "Try the documentation reader" })).toBeVisible();
+    expect(
+      await screen.findByRole("link", { name: /Validation fixtures.*2 guides/ }),
+    ).toBeVisible();
     await user.selectOptions(screen.getByRole("combobox", { name: "Audience" }), "operator");
     await user.click(screen.getByRole("button", { name: "Search" }));
     expect(await screen.findByText(/No matching articles/)).toBeVisible();
     await user.click(screen.getByRole("link", { name: "All documentation" }));
-    expect(await screen.findByRole("link", { name: "Try the documentation reader" })).toBeVisible();
+    expect(
+      await screen.findByRole("link", { name: /Validation fixtures.*2 guides/ }),
+    ).toBeVisible();
   });
   it("renders code as text, tables as scrollable regions, and local export links", async () => {
     renderAt("/documentation/validation-procedure");

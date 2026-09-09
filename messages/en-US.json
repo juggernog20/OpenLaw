@@ -2303,17 +2303,71 @@
   "docs.allReaders": {
     "defaultMessage": "All readers"
   },
+  "docs.articleNavigation": {
+    "defaultMessage": "Article navigation"
+  },
   "docs.audience": {
     "defaultMessage": "Audience"
   },
   "docs.brand": {
     "defaultMessage": "OpenLaw documentation"
   },
+  "docs.breadcrumb": {
+    "defaultMessage": "Breadcrumb"
+  },
+  "docs.browse": {
+    "defaultMessage": "Browse guides"
+  },
   "docs.channel.development": {
     "defaultMessage": "Development"
   },
   "docs.channel.release": {
     "defaultMessage": "Release"
+  },
+  "docs.clear": {
+    "defaultMessage": "Clear filters"
+  },
+  "docs.collection.administration": {
+    "defaultMessage": "Set up your workspace, people, and connected services."
+  },
+  "docs.collection.contracts": {
+    "defaultMessage": "Take a Contract from first draft to signature and renewal."
+  },
+  "docs.collection.documents": {
+    "defaultMessage": "Find, organize, and work with your team's Documents."
+  },
+  "docs.collection.entities": {
+    "defaultMessage": "Keep corporate records and Obligations in order."
+  },
+  "docs.collection.knowledge": {
+    "defaultMessage": "Build and share the team's practical know-how."
+  },
+  "docs.collection.matters": {
+    "defaultMessage": "Organize legal work, people, Tasks, and Key dates."
+  },
+  "docs.collection.operations": {
+    "defaultMessage": "Deploy, maintain, and recover your OpenLaw instance."
+  },
+  "docs.collection.portal": {
+    "defaultMessage": "Ask Legal for help and follow your Requests."
+  },
+  "docs.collection.reference": {
+    "defaultMessage": "Look up a term or find a way through a problem."
+  },
+  "docs.collection.start": {
+    "defaultMessage": "Find your way around, sign in, and make OpenLaw yours."
+  },
+  "docs.collection.working": {
+    "defaultMessage": "Share context, collaborate, and keep work moving."
+  },
+  "docs.collectionBody": {
+    "defaultMessage": "Choose a topic to find the right place to start."
+  },
+  "docs.collections": {
+    "defaultMessage": "Explore the guides"
+  },
+  "docs.count": {
+    "defaultMessage": "{count, plural, one {# guide} other {# guides}}"
   },
   "docs.digest": {
     "defaultMessage": "Content digest"
@@ -2345,14 +2399,29 @@
   "docs.formal": {
     "defaultMessage": "Read this article in the full documentation"
   },
+  "docs.guideNavigation": {
+    "defaultMessage": "Guide navigation"
+  },
   "docs.help": {
     "defaultMessage": "Help"
+  },
+  "docs.helpBody": {
+    "defaultMessage": "Find the steps you need, then get back to your work."
   },
   "docs.helpWithPage": {
     "defaultMessage": "Help with this page"
   },
+  "docs.intro": {
+    "defaultMessage": "Find the guide you need."
+  },
+  "docs.introBody": {
+    "defaultMessage": "Practical guides for your legal work, your team, and your workspace."
+  },
   "docs.missingSection": {
     "defaultMessage": "The requested section is unavailable. Use the page outline to find the current instructions."
+  },
+  "docs.next": {
+    "defaultMessage": "Next guide"
   },
   "docs.noMatches": {
     "defaultMessage": "No matching articles. Try another word or return to the full index."
@@ -2366,14 +2435,26 @@
   "docs.notice": {
     "defaultMessage": "Preview build notices"
   },
+  "docs.openApp": {
+    "defaultMessage": "Open app"
+  },
   "docs.outline": {
     "defaultMessage": "On this page"
   },
   "docs.outsideAudience": {
     "defaultMessage": "This article is available in the full documentation. Check its audience and prerequisites before following the instructions."
   },
+  "docs.overview": {
+    "defaultMessage": "Overview"
+  },
   "docs.preview": {
     "defaultMessage": "Development preview: draft and validation content is unverified."
+  },
+  "docs.previous": {
+    "defaultMessage": "Previous guide"
+  },
+  "docs.resultCount": {
+    "defaultMessage": "{count, plural, one {# result} other {# results}}"
   },
   "docs.retention": {
     "defaultMessage": "Keep an extracted copy outside this instance to read it when the app is unavailable."
@@ -2420,6 +2501,18 @@
   "docs.target": {
     "defaultMessage": "Publication target"
   },
+  "docs.theme": {
+    "defaultMessage": "Documentation theme"
+  },
+  "docs.theme.dark": {
+    "defaultMessage": "Dark"
+  },
+  "docs.theme.light": {
+    "defaultMessage": "Light"
+  },
+  "docs.theme.warm": {
+    "defaultMessage": "Warm"
+  },
   "docs.title": {
     "defaultMessage": "Documentation"
   },
@@ -2431,6 +2524,9 @@
   },
   "docs.unverified": {
     "defaultMessage": "Unverified article"
+  },
+  "docs.writtenFor": {
+    "defaultMessage": "For {roles}"
   },
   "docs.wrongEdition": {
     "defaultMessage": "The requested edition is not bundled with this instance. Open the current index or use your retained copy of that edition."
