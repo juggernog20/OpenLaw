@@ -194,7 +194,7 @@ export function DocumentationReader({
             <h2>
               <Link to={`${base}/${a.id}`}>{a.title}</Link>
             </h2>
-            <p>{documentationExcerpt(a, q, 180).replace(/^# [^\n]+\n*/, "")}</p>
+            <p>{documentationExcerpt(a, q, 180)}</p>
             {a.unverified && <span className="docs-badge">{intl.formatMessage(M.unverified)}</span>}
           </div>
           <ChevronRight size={20} aria-hidden="true" />

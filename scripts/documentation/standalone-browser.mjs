@@ -2,7 +2,7 @@
 /* global document, localStorage, ResizeObserver, URLSearchParams, location, history, addEventListener */
 
 /** Serialized into the retained edition. All data and assets come from that edition. */
-export function initializeReader(bundle, searchDocumentation) {
+export function initializeReader(bundle, searchDocumentation, documentationExcerpt) {
   const theme = document.getElementById("docs-theme");
   const themeKey = "openlaw.documentation.theme";
   try {
@@ -81,7 +81,7 @@ export function initializeReader(bundle, searchDocumentation) {
       link.textContent = article.title;
       title.append(link);
       const excerpt = document.createElement("p");
-      excerpt.textContent = article.text.slice(0, 180);
+      excerpt.textContent = documentationExcerpt(article, query, 180);
       body.append(label, title, excerpt);
       row.append(body);
       results.append(row);

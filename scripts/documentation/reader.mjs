@@ -9,7 +9,11 @@ export function normalizeSearch(value) {
   return value.normalize("NFKC").toLocaleLowerCase("en-US").replace(/\s+/g, " ").trim();
 }
 
-/** Shared by the app and the standalone script; it performs no I/O. */
+/**
+ * Shared by the app and the standalone script; it performs no I/O.
+ * Equal scores keep the catalogue order, so browsing a collection and the
+ * adjacent-guide links follow the reading order in docs/documentation/NAVIGATION.md.
+ */
 export function searchDocumentation(
   bundle,
   { query = "", destination = "formal", audience = "", topic = "", topics = [], section = "" } = {},
@@ -26,7 +30,7 @@ export function searchDocumentation(
         (!audience || a.audiences.includes(audience)) &&
         (!registered.length || registered.some((key) => a.contexts.includes(key))),
     )
-    .map((article) => {
+    .map((article, order) => {
       const title = normalizeSearch(article.title),
         headings = normalizeSearch(article.outline.map((h) => h.text).join(" "));
       const all = normalizeSearch(
@@ -34,6 +38,7 @@ export function searchDocumentation(
       );
       return {
         article,
+        order,
         topicRank: registered.length
           ? registered.findIndex((key) => article.contexts.includes(key))
           : 0,
@@ -43,12 +48,7 @@ export function searchDocumentation(
       };
     })
     .filter((hit) => hit.score >= 0)
-    .sort(
-      (a, b) =>
-        b.score - a.score ||
-        a.topicRank - b.topicRank ||
-        a.article.title.localeCompare(b.article.title, "en-US"),
-    )
+    .sort((a, b) => b.score - a.score || a.topicRank - b.topicRank || a.order - b.order)
     .map((hit) => hit.article);
 }
 
@@ -67,12 +67,16 @@ export function resolveDocumentationLink(bundle, id, hash = "") {
   return null;
 }
 
+/** article.text opens with the title, which every caller already shows. */
 export function documentationExcerpt(article, query, length = 200) {
   const words = normalizeSearch(query).split(" ").filter(Boolean);
-  const body = normalizeSearch(article.text);
+  const text = article.text.startsWith(article.title)
+    ? article.text.slice(article.title.length).trimStart()
+    : article.text;
+  const body = normalizeSearch(text);
   const positions = words.map((w) => body.indexOf(w)).filter((p) => p >= 0);
   const start = Math.max(0, (positions.length ? Math.min(...positions) : 0) - 50);
-  return `${start ? "…" : ""}${article.text.slice(start, start + length)}${article.text.length > start + length ? "…" : ""}`;
+  return `${start ? "…" : ""}${text.slice(start, start + length)}${text.length > start + length ? "…" : ""}`;
 }
 
 /** Section symbols for the retained HTML edition. */

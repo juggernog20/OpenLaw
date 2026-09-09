@@ -8,7 +8,7 @@ import { execFileSync } from "node:child_process";
 import { test } from "node:test";
 import { applicationDigest, buildIdentity, compileWorkspace } from "./build.mjs";
 import { compileDocumentation, validateCatalog } from "./compiler.mjs";
-import { searchDocumentation, resolveDocumentationLink } from "./reader.mjs";
+import { searchDocumentation, documentationExcerpt, resolveDocumentationLink } from "./reader.mjs";
 import { readOwnedFile } from "./owned-file.mjs";
 
 const commit = "a".repeat(40);
@@ -178,8 +178,19 @@ test("one source supplies formal, Help, outlines, search and offline files", (t)
   assert.equal(searchDocumentation(bundle, { query: "PAPER fictional" })[0].id, "submit");
   assert.deepEqual(searchDocumentation(bundle, { query: "paper absent" }), []);
   assert.equal(searchDocumentation(bundle, { destination: "staff-help" }).length, 0);
+  // The catalogue orders "Submit a fixture" before "Recover a fixture"; a
+  // title sort would reverse both the listing and the adjacent-guide links.
+  assert.deepEqual(
+    searchDocumentation(bundle).map((a) => a.id),
+    ["submit", "recover"],
+  );
+  assert.doesNotMatch(documentationExcerpt(bundle.articles[0], ""), /^Submit a fixture/);
   assert.match(files.get("index.html"), /section-start.html/);
-  assert.match(files.get("section-start.html"), /submit.html/);
+  const collection = files.get("section-start.html");
+  assert.match(collection, /submit.html/);
+  assert.ok(collection.indexOf("submit.html") < collection.indexOf("recover.html"));
+  assert.match(collection, /<p>A validation fixture/);
+  assert.match(files.get("submit.html"), /<span>Next guide<\/span><strong>Recover a fixture</);
   assert.match(files.get("themes.css"), /data-theme="warm"/);
   assert.equal(files.get("inter.woff2").subarray(0, 4).toString(), "wOF2");
   assert.match(files.get("submit.html"), /aria-current="page"/);

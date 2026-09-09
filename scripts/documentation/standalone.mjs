@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import {
   normalizeSearch,
   searchDocumentation,
+  documentationExcerpt,
   resolveDocumentationLink,
   documentationIcon,
 } from "./reader.mjs";
@@ -55,7 +56,7 @@ export function standaloneFiles(bundle, assets) {
   const collectionHref = (id) => `section-${id}.html`;
   const label = (id) => bundle.sections.find((s) => s.id === id)?.title ?? id;
   const articleList = (items) =>
-    `<div class="docs-results">${items.map((a) => `<section class="docs-result"><div><span class="docs-eyebrow">${escape(label(a.section))}</span><h2><a href="${a.id}.html">${escape(a.title)}</a></h2><p>${escape(a.text.slice(0, 180))}</p>${a.unverified ? '<span class="docs-badge">Unverified article</span>' : ""}</div>${arrow}</section>`).join("")}</div>`;
+    `<div class="docs-results">${items.map((a) => `<section class="docs-result"><div><span class="docs-eyebrow">${escape(label(a.section))}</span><h2><a href="${a.id}.html">${escape(a.title)}</a></h2><p>${escape(documentationExcerpt(a, "", 180))}</p>${a.unverified ? '<span class="docs-badge">Unverified article</span>' : ""}</div>${arrow}</section>`).join("")}</div>`;
   const sidebar = (article, section) =>
     `<aside class="docs-sidebar"><details class="docs-navigation" open><summary>Browse guides</summary><nav aria-label="Guide navigation"><a class="docs-overview" href="index.html"${!article && !section ? ' aria-current="page"' : ""}>${book}Overview</a><p class="docs-nav-label">Browse guides</p><ul>${sections
       .map(
@@ -184,7 +185,7 @@ export function standaloneFiles(bundle, assets) {
   };
   files.set(
     "search.js",
-    `${normalizeSearch.toString()}\n${searchDocumentation.toString()}\n(${initializeReader.toString()})(${JSON.stringify(searchBundle).replaceAll("<", "\\u003c")}, searchDocumentation);`,
+    `${normalizeSearch.toString()}\n${searchDocumentation.toString()}\n${documentationExcerpt.toString()}\n(${initializeReader.toString()})(${JSON.stringify(searchBundle).replaceAll("<", "\\u003c")}, searchDocumentation, documentationExcerpt);`,
   );
   files.set("reader.css", readFileSync(join(directory, "reader.css"), "utf8"));
   const themes = ["light", "warm", "dark"]

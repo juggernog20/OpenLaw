@@ -33,7 +33,7 @@ describe("public documentation", () => {
       "Recover a validation fixture",
     );
     await user.click(
-      screen.getByRole("link", { name: /Previous guide.*Recover a validation fixture/ }),
+      screen.getByRole("link", { name: /Next guide.*Recover a validation fixture/ }),
     );
     expect(
       await screen.findByRole("heading", { level: 1, name: "Recover a validation fixture" }),
