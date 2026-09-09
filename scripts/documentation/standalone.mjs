@@ -52,11 +52,14 @@ const scale = icon(
 export function standaloneFiles(bundle, assets) {
   const files = new Map(assets);
   const available = searchDocumentation(bundle);
+  const validationBadge = bundle.validationPending
+    ? "Validation in progress"
+    : "Unverified article";
   const sections = bundle.sections.filter((s) => available.some((a) => a.section === s.id));
   const collectionHref = (id) => `section-${id}.html`;
   const label = (id) => bundle.sections.find((s) => s.id === id)?.title ?? id;
   const articleList = (items) =>
-    `<div class="docs-results">${items.map((a) => `<section class="docs-result"><div><span class="docs-eyebrow">${escape(label(a.section))}</span><h2><a href="${a.id}.html">${escape(a.title)}</a></h2><p>${escape(documentationExcerpt(a, "", 180))}</p>${a.unverified ? '<span class="docs-badge">Unverified article</span>' : ""}</div>${arrow}</section>`).join("")}</div>`;
+    `<div class="docs-results">${items.map((a) => `<section class="docs-result"><div><span class="docs-eyebrow">${escape(label(a.section))}</span><h2><a href="${a.id}.html">${escape(a.title)}</a></h2><p>${escape(documentationExcerpt(a, "", 180))}</p>${a.unverified ? `<span class="docs-badge">${validationBadge}</span>` : ""}</div>${arrow}</section>`).join("")}</div>`;
   const sidebar = (article, section) =>
     `<aside class="docs-sidebar"><details class="docs-navigation" open><summary>Browse guides</summary><nav aria-label="Guide navigation"><a class="docs-overview" href="index.html"${!article && !section ? ' aria-current="page"' : ""}>${book}Overview</a><p class="docs-nav-label">Browse guides</p><ul>${sections
       .map(
@@ -87,7 +90,7 @@ export function standaloneFiles(bundle, assets) {
   const hero = (title, description) =>
     `<div class="docs-hero"><p class="docs-eyebrow">Find the guide you need.</p><h1 tabindex="-1">${escape(title)}</h1><p class="docs-intro">${escape(description)}</p>${searchForm}</div>`;
   const page = (title, content, article = null, section = null) =>
-    `<!doctype html><html lang="en-US" data-theme="light" class="docs-static"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escape(title)} · OpenLaw</title><link rel="stylesheet" href="themes.css"><link rel="stylesheet" href="reader.css"><script src="redirect.js" defer></script><script src="search.js" defer></script></head><body class="docs-public"><a class="docs-skip" href="#docs-main">Skip to content</a><header class="docs-header"><a class="docs-brand" href="index.html" aria-label="OpenLaw documentation"><span class="docs-brand-mark">${scale}</span><strong>openlaw</strong><span class="docs-brand-divider" aria-hidden="true">/</span><span>Documentation</span></a><div class="docs-header-actions"><label class="docs-sr-only" for="docs-theme">Documentation theme</label><select id="docs-theme"><option value="light">Light</option><option value="warm">Warm</option><option value="dark">Dark</option></select><span>Standalone edition</span></div></header><main id="docs-main" class="docs-reader ${article ? "docs-reading" : ""}" tabindex="-1">${bundle.preview ? '<p class="docs-notice">Development preview: unverified validation or draft content.</p>' : ""}<div class="docs-layout">${sidebar(article, section)}<div class="docs-content">${content}</div></div>${edition}</main></body></html>`;
+    `<!doctype html><html lang="en-US" data-theme="light" class="docs-static"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escape(title)} · OpenLaw</title><link rel="stylesheet" href="themes.css"><link rel="stylesheet" href="reader.css"><script src="redirect.js" defer></script><script src="search.js" defer></script></head><body class="docs-public"><a class="docs-skip" href="#docs-main">Skip to content</a><header class="docs-header"><a class="docs-brand" href="index.html" aria-label="OpenLaw documentation"><span class="docs-brand-mark">${scale}</span><strong>openlaw</strong><span class="docs-brand-divider" aria-hidden="true">/</span><span>Documentation</span></a><div class="docs-header-actions"><label class="docs-sr-only" for="docs-theme">Documentation theme</label><select id="docs-theme"><option value="light">Light</option><option value="warm">Warm</option><option value="dark">Dark</option></select><span>Standalone edition</span></div></header><main id="docs-main" class="docs-reader ${article ? "docs-reading" : ""}" tabindex="-1">${bundle.preview ? '<p class="docs-notice">Development preview: unverified validation or draft content.</p>' : bundle.validationPending ? '<p class="docs-notice">Guide validation is in progress. Some instructions may change.</p>' : ""}<div class="docs-layout">${sidebar(article, section)}<div class="docs-content">${content}</div></div>${edition}</main></body></html>`;
   files.set(
     "index.html",
     page(
@@ -145,7 +148,7 @@ export function standaloneFiles(bundle, assets) {
       `${a.id}.html`,
       page(
         a.title,
-        `<div class="docs-search-bar">${searchForm}</div><nav class="docs-breadcrumb" aria-label="Breadcrumb"><a href="index.html">Documentation</a><span aria-hidden="true">/</span><a href="${collectionHref(a.section)}">${escape(label(a.section))}</a></nav><div class="docs-article-meta"><span>For ${a.audiences.map((r) => ROLES[r]).join(" · ")}</span>${a.unverified ? '<span class="docs-badge">Unverified article</span>' : ""}</div>${moved}<div class="docs-columns"><article>${a.html.standalone}</article>${outline ? `<nav class="docs-outline" aria-label="On this page"><details open><summary>On this page</summary><ul>${outline}</ul></details></nav>` : ""}</div><nav class="docs-adjacent" aria-label="Article navigation">${adjacent}</nav>`,
+        `<div class="docs-search-bar">${searchForm}</div><nav class="docs-breadcrumb" aria-label="Breadcrumb"><a href="index.html">Documentation</a><span aria-hidden="true">/</span><a href="${collectionHref(a.section)}">${escape(label(a.section))}</a></nav><div class="docs-article-meta"><span>For ${a.audiences.map((r) => ROLES[r]).join(" · ")}</span>${a.unverified ? `<span class="docs-badge">${validationBadge}</span>` : ""}</div>${moved}<div class="docs-columns"><article>${a.html.standalone}</article>${outline ? `<nav class="docs-outline" aria-label="On this page"><details open><summary>On this page</summary><ul>${outline}</ul></details></nav>` : ""}</div><nav class="docs-adjacent" aria-label="Article navigation">${adjacent}</nav>`,
         a,
       ),
     );

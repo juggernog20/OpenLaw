@@ -136,7 +136,7 @@ export function documentationStatus({ root = repository, build = buildIdentity(r
     notes: [
       "Evidence counts use the compiler's article checks and retained local scenario references. Only complete valid articles receive role/method credit.",
       "Evidence validity, catalog state, distribution compatibility and complete publication are separate results. This report runs no reader walkthroughs and changes no status.",
-      "Publication requires valid retained article evidence and the complete-suite compiler gate, including clean-build and final discovery/offline evidence requirements.",
+      "Fully verified release publication requires valid retained article evidence and the complete-suite compiler gate. Owner-authorized development publication does not grant evidence credit.",
     ],
   };
 }

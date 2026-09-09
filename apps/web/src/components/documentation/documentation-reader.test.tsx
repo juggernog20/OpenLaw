@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import { act, screen, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import { IntlProvider } from "react-intl";
+import { createMemoryRouter, RouterProvider } from "react-router";
+import { DocumentationReader } from "./documentation-reader";
+import generated from "virtual:openlaw-documentation";
 import { renderAt, stubFetch } from "../../testing/helpers";
 
 vi.mock("virtual:openlaw-documentation", async () => {
@@ -10,6 +14,27 @@ vi.mock("virtual:openlaw-documentation", async () => {
 });
 
 describe("public documentation", () => {
+  it("shows published guides with validation pending instead of a development preview", () => {
+    const router = createMemoryRouter([
+      {
+        path: "/",
+        element: (
+          <DocumentationReader bundle={{ ...generated, preview: false, validationPending: true }} />
+        ),
+      },
+    ]);
+    render(
+      <IntlProvider locale="en-US" defaultLocale="en-US">
+        <RouterProvider router={router} />
+      </IntlProvider>,
+    );
+    expect(
+      screen.getByText("Guide validation is in progress. Some instructions may change."),
+    ).toBeVisible();
+    expect(screen.queryByText(/Development preview/)).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Validation fixtures.*2 guides/ })).toBeVisible();
+  });
+
   it("offers no adjacent guides when the current article is outside the audience filter", async () => {
     renderAt("/documentation/validation-recovery?audience=business_user");
     expect(

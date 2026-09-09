@@ -163,8 +163,15 @@ walkthroughs on builds containing those changes. Unchanged procedures can retain
 their original observations. The edition-wide compatibility check still binds the
 target to the distribution's actual application bytes.
 
-The normal reader includes only `verified` and `published` articles whose evidence
-matches their bytes. An explicit development preview may include `draft` and
+By default, the normal reader includes only `verified` and `published` articles whose
+evidence matches their bytes. TECH-027 amends this rule to permit explicit
+development publication before verification. `edition.publication` records the
+owner's approval, source commit, reason, and each approved draft/review article's
+SHA-256. Only those exact sources become available in normal builds, with a visible
+validation-in-progress notice. Changed approved sources stop a normal build; a
+preview can still render them for editing. The record cannot be used in a release
+edition and never supplies verification evidence. See
+[batches/app-publication/README.md](batches/app-publication/README.md). An explicit development preview may include `draft` and
 `review` articles and must identify them as unverified. A source-less `scoped` or
 `ready` catalog entry never becomes a placeholder article. An empty early build
 shows an honest availability state, not fabricated content.

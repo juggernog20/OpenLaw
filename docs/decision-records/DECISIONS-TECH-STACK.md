@@ -1285,33 +1285,68 @@ search, build invalidation, and offline export. Detailed paths and failure behav
 are in [the publishing design](../documentation/PUBLISHING.md). The primary library
 references consulted for this choice are linked there.
 
+## TECH-027: Publish approved development guides before verification
+
+- **Status:** Accepted, amends TECH-026
+- **Date:** 2026-09-09
+- **Task:** [#800](https://github.com/juggernog20/OpenLaw/issues/800)
+
+### Context
+
+The product owner asked to publish the assembled guides after being told that
+verification and proofreading remain pending. TECH-026 normally selects only
+verified guides. The app needs to distinguish availability from verification.
+
+### Decision
+
+Allow an optional `edition.publication` record to name the approving person, date,
+source commit, reason, and exact article IDs and source hashes. It can admit only
+`draft` or `review` articles in a `development` edition. Normal builds reject
+changed approved sources. Explicit previews still allow editing drafts. Unknown,
+duplicate, source-less or malformed entries fail the build. Only publication
+status enters the reader bundle; approval details remain build metadata.
+
+The app and standalone edition display a validation-in-progress notice. Article
+verification status and evidence stay unchanged. `docs:complete` and release
+editions retain TECH-026's verification requirements. Promotion to verified removes
+the article's development-publication entry and supplies its actual evidence.
+
+### Consequences
+
+The guides are available for use in the development app while validation proceeds.
+This does not complete G4 acceptance or publish a versioned production release.
+Retain the prior edition declaration in
+`docs/documentation/batches/app-publication/previous-edition.json`. Maintenance must
+update the approval record when a guide changes or completes verification.
+
 ## Index of decisions
 
-| #        | Decision                                                                      | Status                 |
-| -------- | ----------------------------------------------------------------------------- | ---------------------- |
-| TECH-001 | Frontend stack — React + Tailwind CSS + shadcn/ui (copied) + Radix primitives | Accepted               |
-| TECH-002 | Backend — TypeScript on Node LTS                                              | Accepted               |
-| TECH-003 | Application shape — Fastify API + Vite React SPA (REST/OpenAPI)               | Accepted               |
-| TECH-004 | Database — PostgreSQL only                                                    | Accepted               |
-| TECH-005 | Deployment — Docker Compose as the blessed path                               | Accepted               |
-| TECH-006 | ORM — Drizzle (+ drizzle-kit migrations)                                      | Accepted               |
-| TECH-007 | Background jobs — pg-boss on Postgres                                         | Accepted               |
-| TECH-008 | Authentication — onboarding-selectable: built-in basic or BYO IdP (OIDC)      | Accepted               |
-| TECH-009 | Real-time — SSE on live surfaces                                              | Accepted               |
-| TECH-010 | Document engines — one LibreOffice + OCR sidecar                              | Accepted               |
-| TECH-011 | Email sending — SMTP first + provider adapter                                 | Accepted               |
-| TECH-012 | AI providers — three protocol adapters, presets, custom option                | Accepted               |
-| TECH-013 | DocuSign auth — JWT grant (service integration)                               | Accepted               |
-| TECH-014 | DX housekeeping — repo, CI, testing, observability, telemetry, storage/search | Accepted               |
-| TECH-015 | TypeScript 7 native compiler + TS 6 API shim for typescript-eslint            | Accepted (temporary)   |
-| TECH-016 | API validation vocabulary — Zod as the single schema source                   | Accepted               |
-| TECH-017 | Compose topology — single app container, BYO proxy, incremental growth        | Accepted               |
-| TECH-018 | Deployment fidelity — hybrid dev loop, E2E gate on built images, `e2e/` pkg   | Accepted               |
-| TECH-019 | Code documentation — module-granular doc comments, no coverage percentage     | Accepted               |
-| TECH-020 | Problem `type` URIs — a refusal names itself only when a client acts on it    | Accepted               |
-| TECH-021 | Secrets at rest — plaintext for v1, with one owner and one trigger            | Superseded by TECH-022 |
-| TECH-022 | Credentials at rest — sealed columns, one required key, outside the database  | Accepted               |
-| TECH-023 | Shared machinery grows named per-mount hooks — a third mount is configuration | Accepted               |
-| TECH-024 | Web data and state model — loaders read, screens own what they show           | Accepted               |
-| TECH-025 | A record applet's third web mount becomes configuration                       | Accepted               |
-| TECH-026 | Compile one Markdown source set for bundled Help and standalone documentation | Accepted               |
+| #        | Decision                                                                      | Status                    |
+| -------- | ----------------------------------------------------------------------------- | ------------------------- |
+| TECH-001 | Frontend stack — React + Tailwind CSS + shadcn/ui (copied) + Radix primitives | Accepted                  |
+| TECH-002 | Backend — TypeScript on Node LTS                                              | Accepted                  |
+| TECH-003 | Application shape — Fastify API + Vite React SPA (REST/OpenAPI)               | Accepted                  |
+| TECH-004 | Database — PostgreSQL only                                                    | Accepted                  |
+| TECH-005 | Deployment — Docker Compose as the blessed path                               | Accepted                  |
+| TECH-006 | ORM — Drizzle (+ drizzle-kit migrations)                                      | Accepted                  |
+| TECH-007 | Background jobs — pg-boss on Postgres                                         | Accepted                  |
+| TECH-008 | Authentication — onboarding-selectable: built-in basic or BYO IdP (OIDC)      | Accepted                  |
+| TECH-009 | Real-time — SSE on live surfaces                                              | Accepted                  |
+| TECH-010 | Document engines — one LibreOffice + OCR sidecar                              | Accepted                  |
+| TECH-011 | Email sending — SMTP first + provider adapter                                 | Accepted                  |
+| TECH-012 | AI providers — three protocol adapters, presets, custom option                | Accepted                  |
+| TECH-013 | DocuSign auth — JWT grant (service integration)                               | Accepted                  |
+| TECH-014 | DX housekeeping — repo, CI, testing, observability, telemetry, storage/search | Accepted                  |
+| TECH-015 | TypeScript 7 native compiler + TS 6 API shim for typescript-eslint            | Accepted (temporary)      |
+| TECH-016 | API validation vocabulary — Zod as the single schema source                   | Accepted                  |
+| TECH-017 | Compose topology — single app container, BYO proxy, incremental growth        | Accepted                  |
+| TECH-018 | Deployment fidelity — hybrid dev loop, E2E gate on built images, `e2e/` pkg   | Accepted                  |
+| TECH-019 | Code documentation — module-granular doc comments, no coverage percentage     | Accepted                  |
+| TECH-020 | Problem `type` URIs — a refusal names itself only when a client acts on it    | Accepted                  |
+| TECH-021 | Secrets at rest — plaintext for v1, with one owner and one trigger            | Superseded by TECH-022    |
+| TECH-022 | Credentials at rest — sealed columns, one required key, outside the database  | Accepted                  |
+| TECH-023 | Shared machinery grows named per-mount hooks — a third mount is configuration | Accepted                  |
+| TECH-024 | Web data and state model — loaders read, screens own what they show           | Accepted                  |
+| TECH-025 | A record applet's third web mount becomes configuration                       | Accepted                  |
+| TECH-026 | Compile one Markdown source set for bundled Help and standalone documentation | Accepted                  |
+| TECH-027 | Publish approved development guides before verification                       | Accepted, amends TECH-026 |
