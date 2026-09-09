@@ -69,6 +69,22 @@ export function matterTeamRoleLabel(intl: IntlShape, role: MatterTeamRole): stri
 export const MATTER_PROGRESSION_GROUPS = ["open", "in_progress", "waiting", "closed"] as const;
 export type MatterProgressionGroup = (typeof MATTER_PROGRESSION_GROUPS)[number];
 
+/** Status colours follow the configured progression group, including renamed statuses. */
+export const MATTER_PROGRESSION_PILL: Record<MatterProgressionGroup, string> = {
+  open: "bg-status-neutral-bg text-status-neutral-fg",
+  in_progress: "bg-status-info-bg text-status-info-fg",
+  waiting: "bg-status-warning-bg text-status-warning-fg",
+  closed: "bg-status-onhold-bg text-status-onhold-fg",
+};
+
+export function matterStatusPill(
+  matter: Pick<MatterRow, "statusCategory" | "statusProgressionGroup">,
+): string {
+  return MATTER_PROGRESSION_PILL[
+    matter.statusCategory === "closed" ? "closed" : matter.statusProgressionGroup
+  ];
+}
+
 export function matterGroupLabel(intl: IntlShape, group: MatterProgressionGroup): string {
   return intl.formatMessage(
     {

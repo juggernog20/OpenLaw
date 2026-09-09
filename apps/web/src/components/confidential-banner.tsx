@@ -53,7 +53,7 @@ export function ConfidentialBanner({
           : record === "entity"
             ? intl.formatMessage({
                 id: "entities.confidential.bannerRegion",
-                defaultMessage: "Confidential Entity",
+                defaultMessage: "Confidential entity",
               })
             : intl.formatMessage({
                 id: "contracts.confidential.bannerRegion",
@@ -68,17 +68,17 @@ export function ConfidentialBanner({
           {record === "matter" ? (
             <FormattedMessage
               id="matters.confidential.banner"
-              defaultMessage="Confidential matter — the matter team, the Matter Manager, and Administrators see it."
+              defaultMessage="Confidential matter — only the matter team and matter manager can access this matter."
             />
           ) : record === "entity" ? (
             <FormattedMessage
               id="entities.confidential.banner"
-              defaultMessage="Confidential Entity — Administrators and granted Legal Team Members see it."
+              defaultMessage="Confidential entity — only people with an access grant can access this entity."
             />
           ) : (
             <FormattedMessage
               id="contracts.confidential.banner"
-              defaultMessage="Confidential contract — the contract team, the Owner, and Administrators see it."
+              defaultMessage="Confidential contract — only the contract team and owner can access this contract."
             />
           )}
         </span>

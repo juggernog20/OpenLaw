@@ -43,7 +43,6 @@ function mattersTheyAreOn(db: Executor, user: AuthenticatedUser): SQL {
 export function matterTeamScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
   switch (user.role) {
     case "administrator":
-      return undefined;
     case "legal_team_member":
       return or(
         eq(matters.isConfidential, false),
@@ -98,7 +97,6 @@ export async function matterConfidentialityWrite(
   user: AuthenticatedUser,
   matter: Pick<Matter, "id" | "managerId" | "isConfidential">,
 ): Promise<MatterConfidentialityWrite> {
-  if (user.role === "administrator") return "allowed";
   const held = await db
     .select({ role: matterTeam.role })
     .from(matterTeam)
@@ -108,9 +106,13 @@ export async function matterConfidentialityWrite(
   const reaches =
     user.role === "contributor"
       ? onTeam
-      : user.role === "legal_team_member" && (!matter.isConfidential || onTeam || isManager);
+      : MEMBER_PLUS.has(user.role) && (!matter.isConfidential || onTeam || isManager);
   if (!reaches) return "unreachable";
-  return isManager || held.some((row) => row.role === MATTER_CREATOR_ROLE) ? "allowed" : "refused";
+  return user.role === "administrator" ||
+    isManager ||
+    held.some((row) => row.role === MATTER_CREATOR_ROLE)
+    ? "allowed"
+    : "refused";
 }
 
 export interface MatterAudience {
@@ -157,8 +159,7 @@ export async function matterAudience(
         entityType: "matter",
         matterId: row.id,
         tiers,
-        seesConfidentialDocuments:
-          user.role === "administrator" || row.onTeam || row.managerId === user.id,
+        seesConfidentialDocuments: row.onTeam || row.managerId === user.id,
       }
     : null;
 }
@@ -192,8 +193,7 @@ export async function matterMentionCandidates(
       and(
         isNull(users.archivedAt),
         or(
-          eq(users.role, "administrator"),
-          and(eq(users.role, "legal_team_member"), memberReach),
+          and(inArray(users.role, ["administrator", "legal_team_member"]), memberReach),
           and(eq(users.role, "contributor"), onTeam),
         ),
         only ? inArray(users.id, [...only]) : undefined,

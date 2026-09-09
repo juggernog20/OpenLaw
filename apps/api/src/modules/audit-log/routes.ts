@@ -4,15 +4,9 @@
  * The Administrator's audit log (M9/7, DD-017) — the second read surface
  * over `activity_log`, and the one that answers "who did that."
  *
- * **It reads the whole table.** No tier filter, no entity scope. The
- * record feed exists to show a working group the narrative of one record
- * and is filtered to the DD-016 tiers that viewer is in the room for;
- * this surface exists to demonstrate to an auditor that admin actions
- * are recorded, so it carries every entry of every tier — including the
- * `admin_only` user administration, settings, and security entries that
- * no record feed can reach. `contract-access.ts` is not consulted here
- * and must not be: the one gate this surface has is the Administrator
- * role (SET-002, DD-013), applied at the door.
+ * The administrator role permits this surface, including admin-only settings
+ * and security events. Record and document audience checks still apply to
+ * legal work, both on the page and in exports.
  *
  * Per SET-002 the pane is **absent** from the settings rail for everyone
  * else rather than shown and refused. These routes still refuse them:
@@ -54,6 +48,14 @@ import {
   ACTIVITY_ENTITY_TYPES,
   ACTIVITY_VISIBILITIES,
   activityLog,
+  contracts,
+  contractTeam,
+  matterTeam,
+  entityGrants,
+  matters,
+  entities,
+  documents,
+  inArray,
   and,
   desc,
   eq,
@@ -66,6 +68,10 @@ import {
   type Db,
   type SQL,
 } from "@openlaw/db";
+import { contractTeamScope, documentAudienceScope } from "../../lib/contract-access.js";
+import { matterTeamScope } from "../../lib/matter-access.js";
+import { entityReachScope } from "../../lib/entity-access.js";
+import type { AuthenticatedUser } from "../../auth/user.js";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { problemResponse } from "../../lib/problem.js";
@@ -239,12 +245,119 @@ function auditPredicate(filters: Filters): SQL | undefined {
  * written. An id naming no row leaves the comparison NULL, which
  * answers an empty page.
  */
-function olderThan(entryId: string): SQL {
+function olderThan(entryId: string, reach?: SQL): SQL {
   return sql`(${activityLog.createdAt}, ${activityLog.id}) < (
     select ${activityLog.createdAt}, ${activityLog.id}
     from ${activityLog}
-    where ${activityLog.id} = ${entryId}
+    where ${and(eq(activityLog.id, entryId), reach)}
   )`;
+}
+
+/** Audit access does not bypass a record's confidential audience. */
+function auditReachScope(db: Db, user: AuthenticatedUser): SQL | undefined {
+  const documentIds = db
+    .select({ id: documents.id })
+    .from(documents)
+    .leftJoin(contracts, eq(documents.contractId, contracts.id))
+    .leftJoin(matters, eq(documents.matterId, matters.id))
+    .leftJoin(entities, eq(documents.entityId, entities.id))
+    .where(
+      and(
+        documentAudienceScope(db, user),
+        or(
+          and(sql`${documents.contractId} is not null`, contractTeamScope(db, user)),
+          and(sql`${documents.matterId} is not null`, matterTeamScope(db, user)),
+          and(sql`${documents.entityId} is not null`, entityReachScope(db, user)),
+          sql`${documents.knowledgeItemId} is not null`,
+        ),
+      ),
+    );
+  const recordScope = or(
+    sql`${activityLog.entityType} not in ('contract', 'matter', 'entity', 'document')`,
+    and(
+      eq(activityLog.entityType, "contract"),
+      inArray(
+        activityLog.entityId,
+        db.select({ id: contracts.id }).from(contracts).where(contractTeamScope(db, user)),
+      ),
+    ),
+    and(
+      eq(activityLog.entityType, "matter"),
+      inArray(
+        activityLog.entityId,
+        db.select({ id: matters.id }).from(matters).where(matterTeamScope(db, user)),
+      ),
+    ),
+    and(
+      eq(activityLog.entityType, "entity"),
+      inArray(
+        activityLog.entityId,
+        db.select({ id: entities.id }).from(entities).where(entityReachScope(db, user)),
+      ),
+    ),
+    and(eq(activityLog.entityType, "document"), inArray(activityLog.entityId, documentIds)),
+  );
+  const namedOnRecord = or(
+    and(
+      eq(activityLog.entityType, "contract"),
+      inArray(
+        activityLog.entityId,
+        db
+          .select({ id: contracts.id })
+          .from(contracts)
+          .where(
+            or(
+              eq(contracts.managerId, user.id),
+              inArray(
+                contracts.id,
+                db
+                  .select({ id: contractTeam.contractId })
+                  .from(contractTeam)
+                  .where(eq(contractTeam.userId, user.id)),
+              ),
+            ),
+          ),
+      ),
+    ),
+    and(
+      eq(activityLog.entityType, "matter"),
+      inArray(
+        activityLog.entityId,
+        db
+          .select({ id: matters.id })
+          .from(matters)
+          .where(
+            or(
+              eq(matters.managerId, user.id),
+              inArray(
+                matters.id,
+                db
+                  .select({ id: matterTeam.matterId })
+                  .from(matterTeam)
+                  .where(eq(matterTeam.userId, user.id)),
+              ),
+            ),
+          ),
+      ),
+    ),
+    and(
+      eq(activityLog.entityType, "entity"),
+      inArray(
+        activityLog.entityId,
+        db
+          .select({ id: entityGrants.entityId })
+          .from(entityGrants)
+          .where(eq(entityGrants.userId, user.id)),
+      ),
+    ),
+  );
+  const documentReference = (key: string) =>
+    or(
+      namedOnRecord,
+      sql`${activityLog.payload} ->> ${key} is null`,
+      inArray(sql<string>`${activityLog.payload} ->> ${key}`, documentIds),
+    );
+  return and(recordScope, documentReference("documentId"), documentReference("fromDocumentId"));
 }
 
 /** One page of the log, newest first, under a predicate. */
@@ -328,8 +441,8 @@ export const auditLogRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "listAuditLog",
         summary:
-          "The system-wide audit log (DD-017), newest first: every entry " +
-          "of every entity type and every tier, including the " +
+          "The system-wide audit log (DD-017), newest first: reachable entries " +
+          "across entity types and tiers, including the " +
           "`admin_only` settings, user administration, and security " +
           "entries that no record feed carries. Administrator-only " +
           "(SET-002). Actor, action, entity type, date range, and search " +
@@ -355,7 +468,8 @@ export const auditLogRoutes: FastifyPluginAsyncZod = async (app) => {
       const { cursor, ...filters } = request.query;
       const where = and(
         auditPredicate(filters),
-        cursor === undefined ? undefined : olderThan(cursor),
+        auditReachScope(app.db, request.user),
+        cursor === undefined ? undefined : olderThan(cursor, auditReachScope(app.db, request.user)),
       );
       // One past the page, which is how the answer knows whether there
       // is more without counting anything.
@@ -388,10 +502,11 @@ export const auditLogRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
     },
-    async () => {
+    async (request) => {
       const rows = await app.db
         .selectDistinct({ action: activityLog.action })
         .from(activityLog)
+        .where(auditReachScope(app.db, request.user))
         .orderBy(activityLog.action);
       return { actions: rows.map((row) => row.action) };
     },
@@ -420,7 +535,7 @@ export const auditLogRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request, reply) => {
       const filters = request.query;
-      const where = auditPredicate(filters);
+      const where = and(auditPredicate(filters), auditReachScope(app.db, request.user));
 
       // The entry goes down before a byte is streamed, so a reader who
       // disconnects mid-download is still on the record as having asked

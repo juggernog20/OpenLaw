@@ -551,6 +551,27 @@ Four fixed roles. Custom RBAC is explicitly deferred (see Alternatives).
 
 ## DD-014: Sensitive matter gating — confidential flag, opt-in restriction
 
+### Amendment — 10 September 2026: administrators need record access
+
+Blair removed the Administrator bypass for confidential Matters, Contracts, and
+Entities. This supersedes the administrator exceptions in the original decision
+and its earlier addenda. App administration alone does not grant confidential
+record or document access.
+
+- Matters require a team row or the Matter Manager assignment; Contracts require
+  a team row or the Owner assignment. Creators already receive a team row.
+- Entities require an explicit access grant, including for administrators. New
+  Entity creators receive a recorded grant. Granted Legal Team Members can manage
+  access; administrators can configure open Entities and confidential Entities
+  they have been granted. An excluded administrator cannot grant themselves access.
+- Record reach applies to reads and mutations, documents and downloads, comments,
+  mentions, notifications, search, counts, and audit views/exports. Confidential
+  documents on open records also require the record's named audience.
+- Confidential Entities must retain a live grantee; setting confidentiality with
+  no live grants or removing the last live grant is refused.
+- Existing records receive no blanket administrator grants. Administrator-only
+  system settings remain available; record confidentiality does not change that role.
+
 - **Status:** Accepted
 - **Date:** 2026-05-03
 

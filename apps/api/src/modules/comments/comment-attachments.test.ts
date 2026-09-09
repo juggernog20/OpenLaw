@@ -9,6 +9,9 @@ import {
   activityLog,
   commentAttachments,
   comments,
+  matters,
+  matterTypes,
+  matterStatuses,
   documentVersionRenditions,
   documents,
   documentVersions,
@@ -163,7 +166,7 @@ async function submittedRequest(summary: string): Promise<string> {
 
 function postMultipart(
   cookies: Record<string, string>,
-  entityType: "contract" | "request",
+  entityType: "contract" | "request" | "matter",
   entityId: string,
   body: string,
   visibility: "legal_only" | "working_team" | "full_thread",
@@ -190,7 +193,7 @@ function postMultipart(
 
 function readThread(
   cookies: Record<string, string>,
-  entityType: "contract" | "request",
+  entityType: "contract" | "request" | "matter",
   entityId: string,
 ) {
   return harness.app.inject({
@@ -202,7 +205,7 @@ function readThread(
 
 function download(
   cookies: Record<string, string>,
-  entityType: "contract" | "request",
+  entityType: "contract" | "request" | "matter",
   entityId: string,
   commentId: string,
   attachmentId: string,
@@ -218,7 +221,7 @@ function download(
 
 function fileAttachment(
   cookies: Record<string, string>,
-  entityType: "contract" | "request",
+  entityType: "contract" | "request" | "matter",
   entityId: string,
   commentId: string,
   attachmentId: string,
@@ -231,7 +234,8 @@ function fileAttachment(
           | "redline_theirs"
           | "redline_ours"
           | "executed"
-          | "amendment";
+          | "amendment"
+          | "general";
         name: string;
         isConfidential: boolean;
       }
@@ -244,7 +248,8 @@ function fileAttachment(
           | "redline_theirs"
           | "redline_ours"
           | "executed"
-          | "amendment";
+          | "amendment"
+          | "general";
         note?: string;
       },
 ) {
@@ -1028,5 +1033,221 @@ describe("filing comment attachments", () => {
       documentTitle: "Confidential paper",
       versionNumber: 1,
     });
+  });
+});
+
+async function matterForFiling(title: string) {
+  const [type] = await harness.db.select({ id: matterTypes.id }).from(matterTypes).limit(1);
+  const [status] = await harness.db
+    .select({ id: matterStatuses.id })
+    .from(matterStatuses)
+    .where(eq(matterStatuses.category, "open"))
+    .limit(1);
+  const [matter] = await harness.db
+    .insert(matters)
+    .values({
+      title,
+      matterTypeId: type!.id,
+      statusId: status!.id,
+      managerId: memberId,
+      createdBy: memberId,
+    })
+    .returning();
+  return matter!;
+}
+
+describe("Matter attachment filing and previews", () => {
+  it("files Matter paper as a new document and a version, preserving ownership and activity", async () => {
+    const matter = await matterForFiling("Matter filing");
+    const posted = await postMultipart(
+      memberCookies,
+      "matter",
+      matter.id,
+      "Please review.",
+      "full_thread",
+      [
+        { filename: "advice.pdf", content: "%PDF-paper" },
+        { filename: "revised.pdf", content: "%PDF-revised" },
+      ],
+    );
+    expect(posted.statusCode, posted.body).toBe(201);
+    const comment = posted.json().comment;
+    const first = await fileAttachment(
+      memberCookies,
+      "matter",
+      matter.id,
+      comment.id,
+      comment.attachments[0].id,
+      { destination: "new_document", kind: "general", name: "Advice", isConfidential: false },
+    );
+    expect(first.statusCode, first.body).toBe(201);
+    const marker = first.json().comment.attachments[0].filed;
+    const [document] = await harness.db
+      .select()
+      .from(documents)
+      .where(eq(documents.id, marker.documentId));
+    expect(document).toMatchObject({
+      matterId: matter.id,
+      contractId: null,
+      title: "Advice",
+      createdBy: memberId,
+    });
+    const second = await fileAttachment(
+      memberCookies,
+      "matter",
+      matter.id,
+      comment.id,
+      comment.attachments[1].id,
+      {
+        destination: "new_version",
+        documentId: marker.documentId,
+        kind: "general",
+        note: "Revised advice",
+      },
+    );
+    expect(second.statusCode, second.body).toBe(201);
+    expect(second.json().comment.attachments[1].filed.versionNumber).toBe(2);
+    const versions = await harness.db
+      .select()
+      .from(documentVersions)
+      .where(eq(documentVersions.documentId, marker.documentId));
+    expect(versions.map((version) => version.kind)).toEqual(["general", "general"]);
+    const activities = await harness.db
+      .select()
+      .from(activityLog)
+      .where(and(eq(activityLog.entityType, "matter"), eq(activityLog.entityId, matter.id)));
+    expect(activities.map((activity) => activity.action)).toEqual(
+      expect.arrayContaining(["document.created", "document.version_added"]),
+    );
+    const again = await fileAttachment(
+      memberCookies,
+      "matter",
+      matter.id,
+      comment.id,
+      comment.attachments[0].id,
+      { destination: "new_document", kind: "general", name: "Duplicate", isConfidential: false },
+    );
+    expect(again.statusCode).toBe(409);
+  });
+
+  it("keeps filing within the Matter and refuses archived and restricted destinations", async () => {
+    const first = await matterForFiling("First Matter");
+    const second = await matterForFiling("Second Matter");
+    const posted = await postMultipart(memberCookies, "matter", first.id, "Paper.", "full_thread", [
+      { filename: "paper.pdf" },
+    ]);
+    const comment = posted.json().comment;
+    const [foreign] = await harness.db
+      .insert(documents)
+      .values({ title: "Other Matter paper", matterId: second.id, createdBy: memberId })
+      .returning();
+    const cross = await fileAttachment(
+      memberCookies,
+      "matter",
+      first.id,
+      comment.id,
+      comment.attachments[0].id,
+      { destination: "new_version", documentId: foreign!.id, kind: "general" },
+    );
+    expect(cross.statusCode).toBe(404);
+    await harness.db
+      .update(matters)
+      .set({ archivedAt: new Date() })
+      .where(eq(matters.id, first.id));
+    const archived = await fileAttachment(
+      memberCookies,
+      "matter",
+      first.id,
+      comment.id,
+      comment.attachments[0].id,
+      { destination: "new_document", kind: "general", name: "Archived", isConfidential: false },
+    );
+    expect(archived.statusCode).toBe(409);
+    const contributor = await fileAttachment(
+      contributorCookies,
+      "matter",
+      first.id,
+      comment.id,
+      comment.attachments[0].id,
+      { destination: "new_document", kind: "general", name: "Restricted", isConfidential: false },
+    );
+    expect(contributor.statusCode).toBe(403);
+  });
+
+  it("converts a supported attachment to PDF without filing it", async () => {
+    const matter = await matterForFiling("Preview conversion");
+    const posted = await postMultipart(
+      memberCookies,
+      "matter",
+      matter.id,
+      "Read this.",
+      "full_thread",
+      [{ filename: "advice.rtf", content: "{\\rtf1 advice}" }],
+    );
+    expect(posted.statusCode, posted.body).toBe(201);
+    const comment = posted.json().comment;
+    const response = await harness.app.inject({
+      method: "GET",
+      cookies: memberCookies,
+      url: `/api/v1/comments/${comment.id}/attachments/${comment.attachments[0].id}?entityType=matter&entityId=${matter.id}&preview=true`,
+    });
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.headers["content-type"]).toBe("application/pdf");
+    expect(response.rawPayload.subarray(0, 5).toString()).toBe("%PDF-");
+    const files = await harness.db
+      .select()
+      .from(documents)
+      .where(eq(documents.matterId, matter.id));
+    expect(files).toEqual([]);
+  });
+
+  it("previews PDFs through the comment audience and refuses previews after deletion", async () => {
+    const matter = await matterForFiling("Attachment preview");
+    const posted = await postMultipart(
+      memberCookies,
+      "matter",
+      matter.id,
+      "Internal paper.",
+      "legal_only",
+      [
+        { filename: "paper.pdf", content: "%PDF-paper" },
+        { filename: "script.svg", content: "<svg/>" },
+      ],
+    );
+    const comment = posted.json().comment;
+    const href = (id: string) =>
+      `/api/v1/comments/${comment.id}/attachments/${id}?entityType=matter&entityId=${matter.id}&preview=true`;
+    const pdf = await harness.app.inject({
+      method: "GET",
+      url: href(comment.attachments[0].id),
+      cookies: memberCookies,
+    });
+    expect(pdf.statusCode, pdf.body).toBe(200);
+    expect(pdf.headers["content-type"]).toBe("application/pdf");
+    expect(pdf.headers["content-disposition"]).toBe("inline");
+    expect(pdf.headers["cache-control"]).toBe("private, no-store");
+    const restricted = await harness.app.inject({
+      method: "GET",
+      url: href(comment.attachments[0].id),
+      cookies: contributorCookies,
+    });
+    expect(restricted.statusCode).toBe(404);
+    const svg = await harness.app.inject({
+      method: "GET",
+      url: href(comment.attachments[1].id),
+      cookies: memberCookies,
+    });
+    expect(svg.statusCode).toBe(415);
+    await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/comments/${comment.id}`,
+      cookies: memberCookies,
+    });
+    const deleted = await harness.app.inject({
+      method: "GET",
+      url: href(comment.attachments[0].id),
+      cookies: memberCookies,
+    });
+    expect(deleted.statusCode).toBe(404);
   });
 });

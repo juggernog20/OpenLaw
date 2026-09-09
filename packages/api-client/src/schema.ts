@@ -2169,7 +2169,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The contract list: number, title, type, and status; newest reference first unless sort names a column, and unknown-valued rows always last (DD-019). Archived contracts only with includeArchived=true; ended contracts only with includeEnded=true (CTR-019). Member+ read every contract that is not confidential; a Contributor reads exactly the contracts they hold a contract_team row on, archived and ended ones behind the same flags. A confidential contract is listed only for its named team, its Owner, and Administrators — silently absent for everyone else, so no count can reveal it */
+    /** The contract list: number, title, type, and status; newest reference first unless sort names a column, and unknown-valued rows always last (DD-019). Archived contracts only with includeArchived=true; ended contracts only with includeEnded=true (CTR-019). Member+ read every contract that is not confidential; a Contributor reads exactly the contracts they hold a contract_team row on, archived and ended ones behind the same flags. A confidential contract is listed only for its named team, or its Owner — silently absent for everyone else, so no count can reveal it */
     get: operations["listContracts"];
     put?: never;
     /** Create a contract from a title, a live type, and any custom fields that type hard-requires (CTR-016/MTR-014 — creation is refused while one is empty); the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward — except the Confidential flag (DD-014), which may be set here so a sensitive record is never visible to the wrong audience, even briefly. `renewalOf` routes a renewal into a new record (CTR-007's third and fourth vehicles, M16/5): the successor is born carrying its predecessor's business facts — our entity, the value, the term shape, and the counterparties — and linked to it, as a child by contracts.parent_id or as a standalone successor by a CTR-015 `renews` row. The team, the status, and the Confidential flag are **never** copied: CTR-015's no-inheritance stance, applied at birth. The title and the type are the body's, so whatever the person edited before pressing Create is what the record is born with. Appends the link's own activity action beside contract.created */
@@ -2220,7 +2220,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** One contract by its CTR-003 number, with its Owner, its signing entity, its counterparties, its working group, and the fields its type attaches (CTR-016) in attachment order — the record page's read; archived contracts answer too, so restore stays reachable. A Contributor reads a contract they hold a contract_team row on, and is answered 404 on one they do not. A confidential contract answers the same 404 to anyone outside its named team, its Owner, and Administrators */
+    /** One contract by its CTR-003 number, with its Owner, its signing entity, its counterparties, its working group, and the fields its type attaches (CTR-016) in attachment order — the record page's read; archived contracts answer too, so restore stays reachable. A Contributor reads a contract they hold a contract_team row on, and is answered 404 on one they do not. A confidential contract answers the same 404 to anyone outside its named team and Owner */
     get: operations["getContract"];
     put?: never;
     post?: never;
@@ -2886,7 +2886,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The paper on one matter, newest first, with each document's complete version chain. Access is inherited from the matter and a confidential document narrows to its team, Matter Manager, and Administrators. Administrators, Legal Team Members, and Contributors may read matter paper. Primary and executed designations are contract concepts. */
+    /** The paper on one matter, newest first, with each document's complete version chain. Access is inherited from the matter and a confidential document narrows to its team, or Matter Manager. Administrators, Legal Team Members, and Contributors may read matter paper. Primary and executed designations are contract concepts. */
     get: operations["listMatterDocuments"];
     put?: never;
     /** Upload a file to a matter, creating a document with version 1. The upload may name an existing matter folder or a folder path to recreate. Matter paper has no primary document or executed-version designation. A Contributor on the live Matter team may upload supporting paper at the record root but may not choose or create a folder. */
@@ -2963,7 +2963,7 @@ export interface paths {
     delete: operations["hardDeleteDocument"];
     options?: never;
     head?: never;
-    /** Rename a document or edit its description (DOC-007), one field per request as DES-017 commits them. The stored files are untouched by either: a version's own filename is what it arrived as and stays that, and a download still offers it back. Appends document.updated on the owning contract (DD-017), naming what changed. isConfidential is the third field, and it is not one of those two: it sets or clears DD-014's per-document flag, which narrows this one file to the contract's named team, its Owner, and Administrators, even on an open contract. It has an actor set narrower than the route's — an Administrator, the person who uploaded the document, and the contract's Owner — and anybody else who reaches the document is refused 403 rather than 404, because they can already see it. Each set and each clear appends its own action, document.confidentiality_set or document.confidentiality_cleared. folderId is the fourth, and it files the document (DOC-006): a folder on this document's own record, or null for the record root, with null and omitting the field two different requests. A folder on another contract answers 404, exactly as one that was never created, because a folder's id says nothing about which record it is on. Each move appends document.filed, carrying both folders by name so the entry outlives a rename. An archived contract takes no edit until it is restored. A document on a contract the editor cannot reach — and a confidential document they are outside the audience of — answers 404, exactly as one that does not exist */
+    /** Rename a document or edit its description (DOC-007), one field per request as DES-017 commits them. The stored files are untouched by either: a version's own filename is what it arrived as and stays that, and a download still offers it back. Appends document.updated on the owning contract (DD-017), naming what changed. isConfidential is the third field, and it is not one of those two: it sets or clears DD-014's per-document flag, which narrows this one file to the contract's named team and Owner, even on an open contract. It has an actor set narrower than the route's — an Administrator, the person who uploaded the document, and the contract's Owner — and anybody else who reaches the document is refused 403 rather than 404, because they can already see it. Each set and each clear appends its own action, document.confidentiality_set or document.confidentiality_cleared. folderId is the fourth, and it files the document (DOC-006): a folder on this document's own record, or null for the record root, with null and omitting the field two different requests. A folder on another contract answers 404, exactly as one that was never created, because a folder's id says nothing about which record it is on. Each move appends document.filed, carrying both folders by name so the entry outlives a rename. An archived contract takes no edit until it is restored. A document on a contract the editor cannot reach — and a confidential document they are outside the audience of — answers 404, exactly as one that does not exist */
     patch: operations["updateDocument"];
     trace?: never;
   };
@@ -3357,7 +3357,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** File one live comment attachment onto the record (CMT-011), either as a new root Document or as the next Version on a named chain. The comment's audience is the reach gate; a never-converted Request owns no Documents and is refused. The bytes are copied to a key minted from the destination ids, their media type is read from the blob, and the shared Version insert records every derivation an upload owes. The paper and the attachment marker commit together under the Contract row lock, so the same attachment cannot grow two rounds */
+    /** File one live comment attachment onto the record (CMT-011), either as a new root Document or as the next Version on a named chain. The comment's audience is the reach gate; a never-converted Request owns no Documents and is refused. The bytes are copied to a key minted from the destination ids, their media type is read from the blob, and the shared Version insert records every derivation an upload owes. The paper and the attachment marker commit together under the owning record row lock, so the same attachment cannot grow two rounds */
     post: operations["fileCommentAttachment"];
     delete?: never;
     options?: never;
@@ -3372,7 +3372,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Download one live comment attachment through the same audience arm and tier that exposed its comment. The entity reference is the address the reader used for the thread, so a Requester can continue through a converted Request while the stored comment hangs from its Contract. A hidden tier, another attachment, and either tombstone all answer 404 */
+    /** Download one live comment attachment, or preview it with preview=true, through the same audience arm and tier that exposed its comment. The entity reference is the address the reader used for the thread, so a Requester can continue through a converted Request while the stored comment hangs from its Contract. A hidden tier, another attachment, and either tombstone all answer 404 */
     get: operations["downloadCommentAttachment"];
     put?: never;
     post?: never;
@@ -3441,7 +3441,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The system-wide audit log (DD-017), newest first: every entry of every entity type and every tier, including the `admin_only` settings, user administration, and security entries that no record feed carries. Administrator-only (SET-002). Actor, action, entity type, date range, and search compose. Paged from a server-fixed page size: pass the previous page's `nextCursor` to read further back */
+    /** The system-wide audit log (DD-017), newest first: reachable entries across entity types and tiers, including the `admin_only` settings, user administration, and security entries that no record feed carries. Administrator-only (SET-002). Actor, action, entity type, date range, and search compose. Paged from a server-fixed page size: pass the previous page's `nextCursor` to read further back */
     get: operations["listAuditLog"];
     put?: never;
     post?: never;
@@ -18007,6 +18007,7 @@ export interface operations {
   listDocuments: {
     parameters: {
       query?: {
+        q?: string;
         owner?: "contract" | "matter" | "entity" | "knowledge_item";
         record?: string;
         folder?: string;
@@ -21690,6 +21691,7 @@ export interface operations {
       query: {
         entityType: "matter" | "contract" | "request" | "matter_task" | "contract_task";
         entityId: string;
+        preview?: "true";
       };
       header?: never;
       path: {
@@ -24603,6 +24605,7 @@ export interface operations {
         };
         content: {
           "application/json": {
+            canManageAccess?: boolean;
             entity: {
               id: string;
               legalName: string;
@@ -24726,6 +24729,7 @@ export interface operations {
         };
         content: {
           "application/json": {
+            canManageAccess?: boolean;
             entity: {
               id: string;
               legalName: string;

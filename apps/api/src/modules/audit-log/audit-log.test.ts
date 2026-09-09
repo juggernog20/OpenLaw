@@ -577,7 +577,7 @@ describe("the CSV export", () => {
     // An entity id is free text, so it is the shortest honest way to
     // put a formula where a CSV field starts.
     await recordActivity(harness.db, {
-      entityType: "contract",
+      entityType: "system",
       entityId: "=1+1",
       actorId: userIds.get(ADMIN.email),
       action: "contract.updated",

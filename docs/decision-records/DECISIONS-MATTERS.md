@@ -947,3 +947,11 @@ comments save independently.
 The Matter's Linked Contracts list excludes archived Contracts, including restricted
 placeholders for archived records. Archiving preserves the Contract's Matter link;
 restoring the Contract makes it visible in the list again under the usual access rules.
+
+### MTR-002 UX review addendum — progression colours (2026-09-10)
+
+Matter list status chips, the detail header chip, and the active progression step share
+one colour per top-level group: Open uses neutral grey, In progress uses blue, Waiting
+uses amber, and Closed uses the filled dark neutral family. This supersedes the category-only
+colour rule on those surfaces. Statuses within a group share its colour, including
+renamed and custom statuses. Closed-category statuses always use the Closed colour.

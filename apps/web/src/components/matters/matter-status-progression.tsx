@@ -4,7 +4,7 @@
 
 import { useIntl } from "react-intl";
 import {
-  MATTER_STATUS_PILL,
+  MATTER_PROGRESSION_PILL,
   MATTER_PROGRESSION_GROUPS,
   matterGroupLabel,
   matterStatusGroup,
@@ -37,7 +37,7 @@ export function MatterStatusProgression({
       steps={MATTER_PROGRESSION_GROUPS.map((group) => ({
         id: group,
         label: matterGroupLabel(intl, group),
-        className: MATTER_STATUS_PILL[group === "closed" ? "closed" : "open"],
+        className: MATTER_PROGRESSION_PILL[group],
       }))}
       {...(onPick
         ? {

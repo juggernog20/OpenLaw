@@ -24,6 +24,7 @@ import {
   and,
   asc,
   entities,
+  entityGrants,
   entityHoldings,
   entityObligations,
   entityTypeFields,
@@ -53,7 +54,13 @@ import {
   CustomFieldsSchema,
   selectAttachedFields,
 } from "../../lib/custom-fields.js";
-import { entityReachScope, NO_ENTITY, reachedEntity } from "../../lib/entity-access.js";
+import {
+  canManageEntityAccess,
+  hasLiveEntityGrant,
+  entityReachScope,
+  NO_ENTITY,
+  reachedEntity,
+} from "../../lib/entity-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { resolveStaffRefs, StaffRequestCustomFieldRefsSchema } from "../requests/projection.js";
 import { entityRecordChildRoutes } from "./record-routes.js";
@@ -122,6 +129,7 @@ const PersonOptionSchema = z.object({
 });
 
 const EntityRecordEnvelope = z.object({
+  canManageAccess: z.boolean().optional(),
   entity: EntityRowSchema,
   fields: z.array(AttachedCustomFieldSchema),
   customFieldRefs: StaffRequestCustomFieldRefsSchema,
@@ -513,6 +521,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
       );
       return {
         entity: toRow(row.entity, row.entityTypeName),
+        canManageAccess: await canManageEntityAccess(app.db, request.user, row.entity),
         fields: attached,
         customFieldRefs: await resolveStaffRefs(
           app.db,
@@ -584,6 +593,19 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
             status: body.status ?? "active",
           })
           .returning();
+        await tx.insert(entityGrants).values({ entityId: created!.id, userId: request.user.id });
+        await recordActivity(tx, {
+          entityType: "entity",
+          entityId: created!.id,
+          actorId: request.user.id,
+          action: "entity_grant.added",
+          visibility: "legal_only",
+          payload: {
+            legalName: created!.legalName,
+            userId: request.user.id,
+            userName: request.user.displayName,
+          },
+        });
         // The record's own feed entry (DD-017), atomically with the
         // insert. Legal Only: the registry is a Member+ surface (ENT-004).
         await recordActivity(tx, {
@@ -665,8 +687,17 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
             ? body.isConfidential
             : undefined;
         if (confidentialityChange !== undefined) {
-          if (request.user.role !== "administrator") {
-            throw httpError(403, "Only an Administrator can change Entity confidentiality.");
+          if (!(await canManageEntityAccess(tx, request.user, target))) {
+            throw httpError(
+              403,
+              "Only an access grantee or an administrator of an open entity can change confidentiality.",
+            );
+          }
+          if (confidentialityChange && !(await hasLiveEntityGrant(tx, target.id))) {
+            throw httpError(
+              409,
+              "Grant at least one person access before making this entity confidential.",
+            );
           }
           patch.isConfidential = confidentialityChange;
         }

@@ -40,6 +40,7 @@ import {
   type SortDirection,
 } from "@openlaw/shared";
 import { documentRepositoryScope, requireDocumentReader } from "../../lib/document-access.js";
+import { escapeLikePattern } from "../../lib/like.js";
 import { problemResponse } from "../../lib/problem.js";
 import { FilterChoices, validDateRanges } from "../../lib/record-filters.js";
 import { renderFamilySql } from "../../lib/render-family.js";
@@ -89,6 +90,7 @@ const RecordReferenceSchema = z
 
 const RepositoryQuerySchema = z
   .object({
+    q: z.string().trim().max(200).optional(),
     owner: z.enum(DOCUMENT_OWNER_KINDS).optional(),
     record: RecordReferenceSchema.optional(),
     folder: z.string().min(1).max(64).optional(),
@@ -540,6 +542,9 @@ export const documentRepositoryRoutes: FastifyPluginAsyncZod = async (app) => {
         .where(
           and(
             scope,
+            request.query.q
+              ? sql`${documents.title} ilike ${`%${escapeLikePattern(request.query.q)}%`}`
+              : undefined,
             request.query.owner === undefined
               ? undefined
               : isNotNull(documentOwnerSql(request.query.owner).documentOwnerId),

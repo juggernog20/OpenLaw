@@ -81,7 +81,12 @@ function recordApi(
   const posts: string[] = [];
   const handler = (call: StubCall): Response | undefined => {
     if (call.url.pathname === "/api/v1/entities/e1" && call.method === "GET") {
-      return json(200, { entity: row, fields: [], customFieldRefs: { users: [], entities: [] } });
+      return json(200, {
+        entity: row,
+        canManageAccess: true,
+        fields: [],
+        customFieldRefs: { users: [], entities: [] },
+      });
     }
     if (call.url.pathname === "/api/v1/entities/types" && call.method === "GET") {
       return json(200, { entityTypes: TYPE_OPTIONS });
@@ -109,7 +114,12 @@ function recordApi(
         ...body,
         ...(body.entityTypeId === "t-llc" ? { entityTypeName: "LLC" } : {}),
       };
-      return json(200, { entity: row, fields: [], customFieldRefs: { users: [], entities: [] } });
+      return json(200, {
+        entity: row,
+        canManageAccess: true,
+        fields: [],
+        customFieldRefs: { users: [], entities: [] },
+      });
     }
     if (call.url.pathname === "/api/v1/entities/e1/archive" && call.method === "POST") {
       posts.push("archive");
@@ -154,14 +164,14 @@ describe("the /entities/:entityId record page", () => {
     renderAt("/entities/e1");
     const user = userEvent.setup();
 
-    expect(await screen.findByRole("region", { name: "Confidential Entity" })).toHaveTextContent(
-      "Administrators and granted Legal Team Members see it",
+    expect(await screen.findByRole("region", { name: "Confidential entity" })).toHaveTextContent(
+      "only people with an access grant can access this entity.",
     );
     expect(screen.getByText("CONFI")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Manage access" }));
     expect(await screen.findByRole("dialog", { name: "Confidential access" })).toBeInTheDocument();
     expect(screen.getByText("Nadia Counsel")).toBeInTheDocument();
-    await user.selectOptions(screen.getByRole("combobox", { name: "Legal Team Member" }), "u4");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Person" }), "u4");
     await user.click(screen.getByRole("button", { name: "Grant access" }));
     await waitFor(() => expect(writes).toEqual([{ userId: "u4" }]));
   });

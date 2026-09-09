@@ -6,6 +6,7 @@ import { Link } from "react-router";
 import { formatDeadline, formatShortDate } from "../../lib/format";
 import type { ColumnCatalogue, ColumnDef } from "../../lib/list-views";
 import {
+  matterStatusPill,
   matterPath,
   matterReference,
   matterSeverityLabel,
@@ -69,11 +70,7 @@ const COLUMNS: ColumnDef<MatterRow>[] = [
     clip: true,
     render: (row) => (
       <span
-        className={`inline-flex w-max rounded-pill px-2 py-0.5 text-xs font-medium ${
-          row.statusCategory === "closed"
-            ? "bg-badge-neutral-bg text-badge-neutral-fg"
-            : "bg-badge-positive-bg text-badge-positive-fg"
-        }`}
+        className={`inline-flex w-max rounded-pill px-2 py-0.5 text-xs font-medium ${matterStatusPill(row)}`}
       >
         {row.statusName}
       </span>

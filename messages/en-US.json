@@ -1115,8 +1115,14 @@
   "comments.attachments.destination": {
     "defaultMessage": "{title}, version {number}"
   },
-  "comments.attachments.file": {
-    "defaultMessage": "File"
+  "comments.attachments.download": {
+    "defaultMessage": "Download {filename}"
+  },
+  "comments.attachments.fileContract": {
+    "defaultMessage": "File to Contract"
+  },
+  "comments.attachments.fileMatter": {
+    "defaultMessage": "File to Matter"
   },
   "comments.attachments.filedTo": {
     "defaultMessage": "Filed to {destination}"
@@ -1140,7 +1146,16 @@
     "defaultMessage": "New comment"
   },
   "comments.confidentialNotice": {
-    "defaultMessage": "Confidential contract — whichever audience you pick, only the contract team, the Owner, and Administrators can read it."
+    "defaultMessage": "Confidential contract — only the contract team and owner can read it."
+  },
+  "comments.contract.internalAudience": {
+    "defaultMessage": "Visible to the legal team and Contract team members. Not shared with the requester."
+  },
+  "comments.contract.team": {
+    "defaultMessage": "Contract Team"
+  },
+  "comments.contract.teamAudience": {
+    "defaultMessage": "Visible to the legal team, Contract team members, and the requester."
   },
   "comments.countLabel": {
     "defaultMessage": "{count, plural, one {# comment} other {# comments}}"
@@ -1208,17 +1223,53 @@
   "comments.loadError": {
     "defaultMessage": "The conversation could not be read. Reopen the panel to try again."
   },
-  "comments.mention.available": {
-    "defaultMessage": "{count, plural, one {# person matches} other {# people match}}. Use the arrow keys to choose one."
+  "comments.matter.confidentialNotice": {
+    "defaultMessage": "Confidential matter — only the matter team and matter manager can read it."
   },
-  "comments.mention.listLabel": {
-    "defaultMessage": "People you can mention"
+  "comments.matter.internal": {
+    "defaultMessage": "Internal team"
+  },
+  "comments.matter.internalAudience": {
+    "defaultMessage": "Visible to the legal team and Matter team members. Not shared with the requester."
+  },
+  "comments.matter.legalOnly": {
+    "defaultMessage": "Legal Only"
+  },
+  "comments.matter.team": {
+    "defaultMessage": "Matter Team"
+  },
+  "comments.matter.teamAudience": {
+    "defaultMessage": "Visible to the legal team, Matter team members, and the requester."
+  },
+  "comments.mention.filesLoading": {
+    "defaultMessage": "Searching files…"
+  },
+  "comments.mention.filesTab": {
+    "defaultMessage": "Files"
+  },
+  "comments.mention.matchesAvailable": {
+    "defaultMessage": "{count, plural, one {# match} other {# matches}}. Use the arrow keys to choose one."
+  },
+  "comments.mention.noFiles": {
+    "defaultMessage": "No matching files"
+  },
+  "comments.mention.noPeople": {
+    "defaultMessage": "No matching people"
+  },
+  "comments.mention.peopleAndFiles": {
+    "defaultMessage": "People and files you can mention"
+  },
+  "comments.mention.peopleTab": {
+    "defaultMessage": "People"
   },
   "comments.mention.pickedLabel": {
     "defaultMessage": "Mentioned"
   },
   "comments.mention.remove": {
     "defaultMessage": "Remove {name}"
+  },
+  "comments.mention.type": {
+    "defaultMessage": "Mention type"
   },
   "comments.mention.unreachable": {
     "defaultMessage": "{names} cannot be reached on this record at any audience you can post to. Take the mention out."
@@ -1237,6 +1288,18 @@
   },
   "comments.postError": {
     "defaultMessage": "The comment could not be posted. Try again."
+  },
+  "comments.preview.close": {
+    "defaultMessage": "Close attachment preview"
+  },
+  "comments.preview.download": {
+    "defaultMessage": "Download"
+  },
+  "comments.preview.loading": {
+    "defaultMessage": "Opening attachment…"
+  },
+  "comments.preview.unavailable": {
+    "defaultMessage": "Preview unavailable. You can download the original file."
   },
   "comments.promote.body": {
     "defaultMessage": "{names} cannot see a {current} comment. Post it at {promoted} instead to reach {count, plural, one {them} other {all of them}}."
@@ -1485,7 +1548,7 @@
     "defaultMessage": "Value"
   },
   "contracts.confidential.banner": {
-    "defaultMessage": "Confidential contract — the contract team, the Owner, and Administrators see it."
+    "defaultMessage": "Confidential contract — only the contract team and owner can access this contract."
   },
   "contracts.confidential.bannerRegion": {
     "defaultMessage": "Confidential contract"
@@ -2676,13 +2739,13 @@
     "defaultMessage": "Cancelled before it was uploaded."
   },
   "documents.batch.carriesOn": {
-    "defaultMessage": "A file that fails costs that file. The rest of the import carries on."
+    "defaultMessage": "If a file fails to upload, the remaining files continue uploading."
   },
   "documents.batch.confirmTitle": {
     "defaultMessage": "{count, plural, =0 {Import folders} one {Import # file} other {Import # files}}"
   },
   "documents.batch.derivations": {
-    "defaultMessage": "Text extraction and OCR run in the background after every file lands."
+    "defaultMessage": "Uploaded files become searchable once processing finishes."
   },
   "documents.batch.destination": {
     "defaultMessage": "Destination"
@@ -2720,9 +2783,6 @@
   "documents.batch.more": {
     "defaultMessage": "…and {count, plural, one {# more file} other {# more files}}"
   },
-  "documents.batch.nothingYet": {
-    "defaultMessage": "Nothing is created until you import."
-  },
   "documents.batch.onRecord": {
     "defaultMessage": "{count, plural, =0 {Nothing was added to the contract.} one {# file is already on the contract.} other {# files are already on the contract.}}"
   },
@@ -2742,16 +2802,13 @@
     "defaultMessage": "Retry {name}"
   },
   "documents.batch.retryNote": {
-    "defaultMessage": "Retry re-uploads only the file you pick. A file over the size ceiling stays refused until it is made smaller."
+    "defaultMessage": "Retry uploads the selected file again. Files over the size limit must be reduced before retrying."
   },
   "documents.batch.root": {
     "defaultMessage": "Record root"
   },
   "documents.batch.runningTitle": {
     "defaultMessage": "{count, plural, one {Importing # file} other {Importing # files}}"
-  },
-  "documents.batch.setByDrop": {
-    "defaultMessage": "Set by the drop"
   },
   "documents.batch.settledTitle": {
     "defaultMessage": "Imported {landed} of {total, plural, one {# file} other {# files}}"
@@ -2773,6 +2830,33 @@
   },
   "documents.batch.unreadable": {
     "defaultMessage": "{count, plural, one {# folder could not be read} other {# folders could not be read}}: {names}. Check the list below — it may be missing files."
+  },
+  "documents.bulk.clear": {
+    "defaultMessage": "Clear selection"
+  },
+  "documents.bulk.deleteTitle": {
+    "defaultMessage": "Delete {count, plural, one {# document} other {# documents}}?"
+  },
+  "documents.bulk.deleteWarning": {
+    "defaultMessage": "The selected documents and all their versions will be permanently deleted. This cannot be undone."
+  },
+  "documents.bulk.failed": {
+    "defaultMessage": "This document could not be updated. Try again."
+  },
+  "documents.bulk.move": {
+    "defaultMessage": "Move"
+  },
+  "documents.bulk.moveTitle": {
+    "defaultMessage": "Move {count, plural, one {# document} other {# documents}}"
+  },
+  "documents.bulk.none": {
+    "defaultMessage": "None"
+  },
+  "documents.bulk.selected": {
+    "defaultMessage": "{count} selected"
+  },
+  "documents.bulk.updating": {
+    "defaultMessage": "Updating documents…"
   },
   "documents.chain.toggle": {
     "defaultMessage": "{open, select, true {Hide} other {Show}} the {count, plural, one {# earlier version} other {# earlier versions}} of {title}"
@@ -2844,7 +2928,7 @@
     "defaultMessage": "Delete {title}"
   },
   "documents.delete.confirmLabel": {
-    "defaultMessage": "Type {title} to confirm"
+    "defaultMessage": "Type \"delete\" to confirm"
   },
   "documents.delete.error": {
     "defaultMessage": "That document could not be deleted. Try again."
@@ -3140,6 +3224,12 @@
   "documents.section": {
     "defaultMessage": "Documents"
   },
+  "documents.select": {
+    "defaultMessage": "Select {title}"
+  },
+  "documents.selectAll": {
+    "defaultMessage": "Select visible documents"
+  },
   "documents.showArchived": {
     "defaultMessage": "Show archived"
   },
@@ -3267,10 +3357,10 @@
     "defaultMessage": "Entity ownership chart"
   },
   "entities.confidential.banner": {
-    "defaultMessage": "Confidential Entity — Administrators and granted Legal Team Members see it."
+    "defaultMessage": "Confidential entity — only people with an access grant can access this entity."
   },
   "entities.confidential.bannerRegion": {
-    "defaultMessage": "Confidential Entity"
+    "defaultMessage": "Confidential entity"
   },
   "entities.confidential.field": {
     "defaultMessage": "Confidential — restrict to the grant list"
@@ -3345,13 +3435,13 @@
     "defaultMessage": "Grant access"
   },
   "entities.grants.description": {
-    "defaultMessage": "Administrators always have access. Grant Legal Team Members access here."
+    "defaultMessage": "Only people listed here can access this entity when it is confidential. Administrators also need a grant."
   },
   "entities.grants.empty": {
     "defaultMessage": "No grants yet."
   },
   "entities.grants.person": {
-    "defaultMessage": "Legal Team Member"
+    "defaultMessage": "Person"
   },
   "entities.grants.pick": {
     "defaultMessage": "Pick a person"
@@ -4755,7 +4845,7 @@
     "defaultMessage": "Type"
   },
   "matters.confidential.banner": {
-    "defaultMessage": "Confidential matter — the matter team, the Matter Manager, and Administrators see it."
+    "defaultMessage": "Confidential matter — only the matter team and matter manager can access this matter."
   },
   "matters.confidential.bannerRegion": {
     "defaultMessage": "Confidential matter"

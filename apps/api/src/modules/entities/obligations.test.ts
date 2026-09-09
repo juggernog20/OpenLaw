@@ -69,11 +69,11 @@ beforeAll(async () => {
 
 afterAll(async () => harness.stop());
 
-async function newEntity(legalName: string) {
+async function newEntity(legalName: string, cookies = memberCookies) {
   const response = await harness.app.inject({
     method: "POST",
     url: "/api/v1/entities",
-    cookies: memberCookies,
+    cookies,
     payload: { legalName, entityTypeId: corporationId },
   });
   expect(response.statusCode, response.body).toBe(201);
@@ -392,7 +392,7 @@ describe("Mark filed", () => {
 
 describe("the unified compliance calendar", () => {
   it("omits a Confidential Entity until the viewer has an Entity grant", async () => {
-    const entity = await newEntity("Hidden Calendar Vehicle");
+    const entity = await newEntity("Hidden Calendar Vehicle", adminCookies);
     expect(
       (
         await createObligation(entity.id, {

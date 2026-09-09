@@ -105,6 +105,7 @@ beforeAll(async () => {
     })
     .returning({ id: entities.id });
   confidentialEntityId = confidentialEntity!.id;
+  await harness.db.insert(entityGrants).values({ entityId: confidentialEntityId, userId: adminId });
   await harness.db.insert(entityGrants).values({
     entityId: confidentialEntityId,
     userId: ids.get(PEOPLE.onTeam.email)!,
@@ -188,7 +189,11 @@ beforeAll(async () => {
     })),
   );
 
-  for (const userId of [ids.get(PEOPLE.onTeam.email)!, ids.get(PEOPLE.contributor.email)!]) {
+  for (const userId of [
+    adminId,
+    ids.get(PEOPLE.onTeam.email)!,
+    ids.get(PEOPLE.contributor.email)!,
+  ]) {
     await harness.db.insert(contractTeam).values({
       contractId: confidentialContractId,
       userId,
@@ -236,7 +241,7 @@ describe("the DD-014 gate in search", () => {
     expect(response.statusCode, response.body).toBe(401);
   });
 
-  it("answers Administrators, on-team Members, and Contributors from their reach", async () => {
+  it("answers explicitly added Administrators, on-team Members, and Contributors from their reach", async () => {
     for (const viewer of ["administrator", PEOPLE.onTeam.email, PEOPLE.contributor.email]) {
       const ids = (await search(viewer)).results.map((row) => row.id);
       expect(ids).toContain(confidentialContractId);

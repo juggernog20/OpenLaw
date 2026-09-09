@@ -211,8 +211,33 @@ export function PdfPreview({
   }, [src]);
 
   useEffect(() => {
-    if (findOpen) findInput.current?.focus();
+    if (findOpen) {
+      findInput.current?.focus();
+      findInput.current?.select();
+    }
   }, [findOpen]);
+
+  useEffect(() => {
+    if (!allowFind || stage === "failed") return;
+    function onFind(event: KeyboardEvent) {
+      if (
+        event.defaultPrevented ||
+        event.isComposing ||
+        event.altKey ||
+        event.shiftKey ||
+        !(event.ctrlKey || event.metaKey) ||
+        event.key.toLowerCase() !== "f"
+      )
+        return;
+      event.preventDefault();
+      event.stopPropagation();
+      setFindOpen(true);
+      findInput.current?.focus();
+      findInput.current?.select();
+    }
+    window.addEventListener("keydown", onFind);
+    return () => window.removeEventListener("keydown", onFind);
+  }, [allowFind, stage]);
 
   // Count against pdf.js's text content for every page. The drawn text
   // layers remain virtualized with their canvases, so reading only the
@@ -304,6 +329,7 @@ export function PdfPreview({
           {allowFind && (
             <Button
               ref={findToggle}
+              aria-keyshortcuts="Control+f Meta+f"
               variant="ghost"
               size="icon"
               onClick={() => setFindOpen(true)}

@@ -140,6 +140,7 @@ import {
   Link,
   redirect,
   useLoaderData,
+  useLocation,
   useNavigate,
   useParams,
   useRevalidator,
@@ -1237,6 +1238,22 @@ export function ContractRecordPage() {
   useEffect(() => {
     if (!readingDocked.current) closeReading();
   }, [tab]);
+
+  const location = useLocation();
+  const landedNavigation = useRef(location.key);
+  useEffect(() => {
+    if (landedNavigation.current === location.key) return;
+    landedNavigation.current = location.key;
+    const target = documentLanding;
+    if (!target) return;
+    // Apply a completed navigation once; background revalidation must not reopen the reader.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPaper((rows) => rows.map((row) => (row.id === target.document.id ? target.document : row)));
+    setFiled((rows) => [...rows.filter((row) => row.id !== target.document.id), target.document]);
+    setReading({ documentId: target.document.id, versionId: target.versionId });
+    setReadingCovers(false);
+    readingDocked.current = true;
+  }, [location.key, documentLanding]);
 
   /** Closes the panel. Focus goes back to the control that opened it —
    * DES-010's restore-to-trigger rule, wired by hand because the panel

@@ -302,3 +302,54 @@ counts the thread; audience resolution holds it `FOR SHARE`, as the `request` ar
 does for conversion. A post therefore either commits first and the removal is refused for
 the comment it now finds, or it waits and is told the Task is gone. No comment, mention,
 attachment, or watermark can be stranded on an id nothing answers for.
+
+### CMT-003 UX review addendum — Matter audiences (2026-09-09)
+
+The Matter record composer offers **Legal Only** and **Matter Team**, defaulting to
+Matter Team. Matter Team includes the originating Requester through the converted
+Request's portal thread and uses the existing `full_thread` tier. Legal Only retains
+its existing audience. Historical `working_team` comments remain internal and display
+as **Internal team**, with a tooltip explaining that the Requester cannot read them.
+No historical comment is shared more widely. Task audiences remain internal.
+
+### CMT-002 UX review addendum — Document references and growing inputs (2026-09-09)
+
+The shared comment composer offers accessible, live Documents alongside people in the
+`@` picker, with People and Files tabs above the results. Switching tabs preserves
+the search text and caret. File results show their owning record to distinguish matching titles. A
+selected file becomes a linked chip in the posted comment, opening the Version that
+was current when selected. The link does not grant access to the Document.
+
+Document references persist as internal Markdown links in `comments.body`; edits and
+revisions retain them, and deletion/redaction follow the existing body rules. The
+comment renderer recognizes only the application's Document landing URLs. The editor
+shows the title rather than the link syntax. People retain their structured mentions
+and notification behavior; referencing a file does not send a person notification.
+
+New-comment and edit-comment fields grow and shrink with their text and have no drag
+resize handle. Document links also open the reader when navigating within an already
+open Contract or Matter.
+
+### CMT-003 / CMT-011 UX review addendum — chat parity and attachment previews (2026-09-10)
+
+Contract chat adopts the Matter chat controls: Legal Only and Contract Team, defaulting
+to Contract Team. Contract Team includes the originating Requester through its portal
+thread. Historical internal comments keep their existing audience and use the Internal
+team label. The composer, growing inputs, People/Files picker, and document links remain
+shared between both record types.
+
+Clicking a comment attachment opens a preview dialog. PDFs and supported images display
+directly; Word and presentation formats use the existing document engine to return a PDF.
+Unsupported or unreadable files retain an explicit Download action. Every preview passes
+the comment's current record and tier gates, uses a server-selected content type, and
+is served without caching or creating a Document. Deleted and redacted sources return 404.
+
+File to Matter and File to Contract appear beside unfiled attachments and in their
+preview. Member+ can file into the owning record as a new Document or the next Version
+of an existing Document. Matter filing uses General kind and hides Contract-specific
+kind choices. Both paths copy the source, insert the Version through the shared writer,
+record Activity, request derivations, and mark the attachment atomically. Matter paper
+has no primary designation; Contract notifications and primary rules remain intact.
+Archived owners, inaccessible Documents, another record's Documents, and repeated filing
+are refused. The Documents list refreshes after filing, and the comment links to the
+exact filed Version.

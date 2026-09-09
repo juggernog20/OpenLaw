@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** M22/5's record interactions through the real router and typed API client. */
-import { screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
@@ -340,7 +340,11 @@ describe("the editable matter record", () => {
     );
   });
 
-  it("opens the version named by the Document search landing params", async () => {
+  it.each([
+    "/matters/12",
+    "/matters/12/documents",
+    "/matters/12/documents?doc=doc-matter-search&version=ver-matter-search",
+  ])("opens a document link from %s", async (start) => {
     stubApi({
       signedIn: ADMIN,
       extra: (call) => {
@@ -364,7 +368,14 @@ describe("the editable matter record", () => {
       },
     });
 
-    renderAt("/matters/12/documents?doc=doc-matter-search&version=ver-matter-search");
+    const { router } = renderAt(start);
+    await screen.findByRole("navigation", { name: "Matter sections" });
+    if (!start.includes("?"))
+      await act(async () => {
+        await router.navigate(
+          "/matters/12/documents?doc=doc-matter-search&version=ver-matter-search",
+        );
+      });
 
     expect(
       await screen.findByRole("complementary", {
@@ -451,6 +462,10 @@ describe("the editable matter record", () => {
         "Nothing has been said about this record yet. Add the first comment to keep the conversation on the record.",
       ),
     ).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Matter Team" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Legal Only" })).toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "Working Team" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "Full Thread" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "History" }));
     expect(await screen.findByText("Ada Admin created this matter")).toBeInTheDocument();
     expect(
@@ -884,7 +899,7 @@ describe("the editable matter record", () => {
     const user = userEvent.setup();
     expect(
       await screen.findByText(
-        "Confidential matter — the matter team, the Matter Manager, and Administrators see it.",
+        "Confidential matter — only the matter team and matter manager can access this matter.",
       ),
     ).toBeInTheDocument();
     await user.click(screen.getByRole("link", { name: "Manage team" }));

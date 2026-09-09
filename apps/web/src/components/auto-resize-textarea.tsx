@@ -2,7 +2,7 @@
 
 /** Fits multiline form fields to their contents (DECISIONS-DESIGN.md UX review addenda). */
 
-import { useLayoutEffect, useRef, type ComponentPropsWithoutRef } from "react";
+import { useImperativeHandle, useLayoutEffect, useRef, type ComponentPropsWithRef } from "react";
 import { TEXTAREA_CLASS } from "../lib/form-controls";
 import { cn } from "../lib/utils";
 
@@ -13,12 +13,14 @@ function fitContents(element: HTMLTextAreaElement) {
 }
 
 export function AutoResizeTextarea({
+  ref: forwardedRef,
   className,
   value,
   onInput,
   ...props
-}: ComponentPropsWithoutRef<"textarea">) {
+}: ComponentPropsWithRef<"textarea">) {
   const ref = useRef<HTMLTextAreaElement>(null);
+  useImperativeHandle(forwardedRef, () => ref.current!, []);
   useLayoutEffect(() => {
     if (ref.current) fitContents(ref.current);
   }, [value]);

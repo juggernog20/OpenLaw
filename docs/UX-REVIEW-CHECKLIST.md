@@ -11,12 +11,18 @@ This document is the working checklist for the initial end-to-end product review
 
 An interaction is complete only after it has been manually tested and any agreed follow-up has been resolved. Page-level checkboxes are roll-ups; check one only when every interaction listed beneath that page is complete.
 
-## Current review checkpoint — 9 September 2026
+## Current review checkpoint — 10 September 2026
 
-- Resume at **Matter record → Documents → document reader** on M-89. The current browser page does not determine the review sequence.
+- Next flow: **Matter Overview → Confidentiality**. The current browser page does not determine the review sequence.
+- Blair approved the Matter archive and restore flow (10 September).
+- Confidentiality policy updated at Blair’s request (10 September): administrators require team membership/ownership for confidential Matters and Contracts, or an explicit grant for confidential Entities. Includes private documents and audit access. Awaiting UX review.
+- Blair approved the Matter History applet UX (10 September): changes, authors, timestamps, and before/after presentation. Pagination and failure-state checks remain separate.
+- Blair approved the People and Files picker tabs and the latest chat UX changes (10 September): attachment preview, Matter filing, and bringing Contract chat into line. Shared component approval does not mark every granular correction, failure-state, or permission check below as manually tested.
+- Matter stage colours updated (10 September), awaiting review: list and detail chips plus the active progression step use grey for Open, blue for In progress, amber for Waiting, and dark grey for Closed.
+- Chat UX changes approved: Matter/Contract audience choices are Legal Only and Matter Team/Contract Team (including the originating Requester); historical internal comments keep their original audience. The shared `@` picker offers People and Files tabs, preserves the search when switching, and posts linked document chips. New and edited comment boxes resize with the text, without a drag handle.
 - Blair approved the expanded Task detail modal (description, attachments, comments), Matter Tasks list, and earlier Add Task modal. Task rows now sort by due date, with undated Tasks last; Move up/down was removed after Blair’s feedback. Key date Edit form UX and canceling/confirming removal are also approved.
 - Keep the Key dates name. The redundant State column was removed. The standalone record Due date was withdrawn in favor of Tasks, Key dates, and derived Next deadline.
-- Blair approved New contract from Linked Contracts after the shared form was fixed to include all attached Fields and the linked list was fixed to omit archived Contracts. Continue remaining Matter UX components before starting Contract record review; next is the document reader as a complete UX component. Blair requested dragging saved Documents on Matters, Contracts, and the Documents repository, and replacing “The matter itself” with None in move menus. Drag-and-drop and the None label are ready for UX review. Folder chevrons now appear only for folders with visible Documents or subfolders, following Blair’s next feedback. Unchecked Key date items remain outstanding; the tab is not marked complete.
+- Blair approved New contract from Linked Contracts and the Documents page/viewer UX, including the latest upload, deletion-confirmation, and multi-file selection changes (9 September). The latest shared chat changes are also approved. Earlier granular functional checks remain recorded separately; do not repeat approved Documents UX from scratch. Unchecked Key date items remain outstanding.
 - Pending implementation: previous-version actions. Proposed menu includes editing version metadata, Download, Compare, reversible archive/restore, and Administrator deletion with dependency protection. This is not built or marked reviewed.
 - Guide one complete UX component at a time, not individual clicks. Routine persistence and validation checks belong in automated tests; their manual checkboxes remain open unless Blair actually reviewed them. Earlier unchecked items are outstanding, not evidence that an approved component needs to be reviewed again from scratch.
 
@@ -189,7 +195,7 @@ Route: `/matters/:matterNumber/:tab?`
 - [x] From a closed Matter, select a status in an open group and check the Reopen confirmation appears. Blair confirmed the prompt after the confirmation guard was added.
 - [ ] Cancel reopening and confirm the Matter stays closed.
 - [x] Confirm reopening and check Closed returns to Still open. Blair verified the placeholder.
-- [ ] Archive a Matter through its confirmation; open the archived record and restore it.
+- [x] Archive a Matter through its confirmation; open the archived record and restore it. Blair approved the flow on 10 September.
 - [ ] Open Team, Comments and History from the right-hand applet bar on each tab; complete the shared comment and history checks below.
 - [ ] As an Administrator, open Matter settings from its applet shortcut.
 - [ ] Follow a direct link to another Matter and confirm the title, fields, and applets belong to that new record.
@@ -210,6 +216,7 @@ Route: `/matters/:matterNumber`
 - [ ] Clear the Matter Manager to Unassigned, then assign someone again.
 - [ ] Change Priority and Risk, including Not assessed.
 - [ ] Set and clear confidentiality; inspect the team-only access explanation.
+  - Feedback (10 September): use consistent sentence case in the confidentiality header. Updated the shared Matter, Contract, and Entity banners; awaiting review.
 - [ ] Edit and clear each attached custom field according to its data type and required state.
   - Blair confirmed External counsel and Budget approved save.
   - [x] Check Budget approved displays separators, choose Budget currency, and refresh to verify both values persist. Blair confirmed AED and the formatted amount persist.
@@ -232,6 +239,7 @@ Route: `/matters/:matterNumber`
 Route: `/matters/:matterNumber/documents`
 
 - [ ] Tab review complete
+- [x] Documents page and viewer UX approved by Blair on 9 September after the upload, `delete` confirmation, and multi-file action changes. Separate per-action and edge-case checks below are not implied by this component approval.
 - [ ] Review uploading a document or new version with a note, without contract-specific Kind choices; cancel the composer before submitting.
 - [ ] Review switching Matter tabs with a document open. The reader closes when it overlays the record and stays open when docked beside it; both layouts are covered by regression and browser checks.
 - [ ] Choose several files or a folder, or drag them onto the card; review and run the batch import.
@@ -241,7 +249,7 @@ Route: `/matters/:matterNumber/documents`
 - [ ] Create, rename, move, nest, and delete folders; move documents between folders and the record root.
   - [ ] Review dragging a saved Document into a folder and back out; review None in the move menu. Shared with Contracts; the Documents repository reveals the dragged Document’s record folders as drop targets.
 - [ ] Mark or clear document confidentiality where offered; inspect how record access limits visibility.
-- [ ] Show archived documents, archive and restore one, and use the named confirmation to delete one.
+- [ ] Show archived documents, archive and restore one, and type `delete` to confirm deletion.
 - [ ] Complete the shared document reader, upload, and folder checks below on this Matter.
 
 #### Key dates
@@ -1226,12 +1234,16 @@ Applies to Matter/sub-Matter creation, Contracts including renewals, Entity regi
 
 Applies to document cards on Contracts, Matters, Entities, and Knowledge, with folder controls only where exposed.
 
+- [x] Review the document viewer as a complete UX component. Blair approved it on 9 September after the Ctrl+F / Cmd+F shortcut was added.
+- [ ] Review successful uploads closing automatically and failed uploads retaining their results/retry controls.
+- [ ] Review multi-file selection and Move, Archive, Restore, and Delete on Matter and Contract Documents; deletion requires typing `delete`.
+
 - [ ] Open a current version and an earlier version; check the reader title/version and owning-record context.
 - [ ] Close the reader with its close control and Escape; reopen from a direct document/version link.
 - [ ] Download the selected original file.
 - [ ] In PDF/converted-document preview, use Previous page and Next page and inspect page limits.
 - [ ] Zoom in/out and inspect zoom limits.
-- [ ] Open Find in document, enter a term, step through matches in both directions, and close Find.
+- [ ] Open Find in document with its button or Ctrl+F / Cmd+F, enter a term, step through matches in both directions, and close Find with Escape. Repeating the shortcut focuses/selects the query; closing the reader restores browser Find. Shortcut implemented and automatically verified on 9 September; awaiting UX review.
 - [ ] Follow a search-result highlight into the preview and inspect no-match handling.
 - [ ] Read an email preview, open/download an embedded attachment, and use Back to the message.
 - [ ] Use the download fallback for unsupported, failed, or still-preparing previews.
@@ -1239,14 +1251,14 @@ Applies to document cards on Contracts, Matters, Entities, and Knowledge, with f
 - [ ] Choose files or a folder in Upload, or drag/drop onto the card or a folder target.
 - [ ] Review the batch folder/file tree, destination, version kind, and any unreadable-folder warning before importing.
 - [ ] Cancel a batch before import; separately start Import and inspect per-file progress/results.
-- [ ] Cancel remaining uploads; retry an individual failed file or all retryable failed files; finish with Done.
+- [ ] Cancel remaining uploads; retry an individual failed file or all retryable failed files; successful retries close the dialog; use Done to dismiss remaining failures.
 - [ ] Correct a file over the size limit and inspect partial-success feedback without duplicating successful files.
 - [ ] Add a version to an existing document and inspect the incremented version history and note.
 - [ ] Change a version kind and inspect immutable Generated redline kinds where offered.
 - [ ] Expand/collapse folders, add a subfolder, rename a folder, and move it to an eligible parent.
 - [ ] Move a document by its Move to folder dialog and by drag/drop where offered.
 - [ ] Delete a folder and inspect the stated movement of its contents to the parent/root.
-- [ ] Cancel document deletion; enter the exact name to confirm deletion and inspect unavailable deletion of protected/derived versions.
+- [ ] Cancel document deletion; type `delete` to confirm deletion and inspect unavailable deletion of protected/derived versions.
 - [ ] Reopen a failed upload/details/folder dialog and inspect validation, pending controls, and preserved input.
 
 ### Shared comments, mentions, and attachment filing
@@ -1254,7 +1266,7 @@ Applies to document cards on Contracts, Matters, Entities, and Knowledge, with f
 Applies to the staff Comments applet on Requests, Matters, and Contracts; the portal has its own reply controls above.
 
 - [ ] Open/close Comments and load older entries; inspect authors, timestamps, audience, and edited/deleted markers.
-- [ ] Choose an available audience: Legal only, Working team, or Full thread.
+- [ ] Choose an available audience: Legal Only or Matter Team/Contract Team on records; Request threads retain their own audience choices.
 - [ ] Write and post a comment; inspect empty-comment refusal and save/error feedback.
 - [ ] Type an @mention, navigate eligible people with pointer/keyboard, select a person, and remove a selected mention.
 - [ ] Cancel or confirm Widen the audience when a mentioned person needs a broader audience.
@@ -1271,6 +1283,7 @@ Applies to the staff Comments applet on Requests, Matters, and Contracts; the po
 
 ### Shared history, forms, and navigation
 
+- [x] Review the Matter History applet’s presentation of changes, authors, timestamps, and before/after values. Blair approved the UX on 10 September.
 - [ ] Open History, read changes with before/after values, and use Show older.
 - [ ] Close/reopen a failed History read; switch records and inspect that entries belong to the selected record.
 - [ ] In inline fields, commit with blur/Enter where supported, revert with Escape, and inspect Saving/Saved/error feedback.

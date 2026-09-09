@@ -64,6 +64,19 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { FormattedMessage, defineMessage, useIntl, type IntlShape } from "react-intl";
 import { Eraser, Lock, MessageSquare, MoreHorizontal, Pencil, Trash2, X } from "lucide-react";
+import { Link } from "react-router";
+import { FileText } from "lucide-react";
+import {
+  documentLandingPath,
+  documentOwnerReference,
+  type RepositoryDocument,
+} from "../../lib/documents";
+import {
+  commentBodyParts,
+  documentLinkDraft,
+  serializeDocumentLinks,
+  type CommentDocumentLink,
+} from "../../lib/comment-document-links";
 import { api } from "../../lib/api";
 import {
   composerTiers,
@@ -85,10 +98,10 @@ import {
   type MentionCandidate,
 } from "../../lib/comments";
 import { formatLongDateTime, formatRelativeOrShort } from "../../lib/format";
-import { TEXTAREA_CLASS } from "../../lib/form-controls";
+import { AutoResizeTextarea } from "../auto-resize-textarea";
 import { subscribeLiveEvents } from "../../lib/events";
 import { problem as readProblem } from "../../lib/problem";
-import type { Role } from "../../lib/roles";
+import { canReadContracts, type Role } from "../../lib/roles";
 import { cn } from "../../lib/utils";
 import { Avatar } from "../avatar";
 import {
@@ -761,7 +774,7 @@ function CommentRow({
         >
           {comment.author.displayName}
         </span>
-        <TierBadge tier={comment.visibility} />
+        <TierBadge tier={comment.visibility} entityType={entityType} />
         <div className="ms-auto flex shrink-0 items-center gap-1.5">
           {/* Only while there is text to have been edited. A tombstone
               saying "edited" would be reporting on nothing. */}
@@ -933,10 +946,11 @@ function EditBox({
   onSave: (body: string) => void;
 }>) {
   const intl = useIntl();
-  const [draft, setDraft] = useState(body);
+  const [initial] = useState(() => documentLinkDraft(body));
+  const [draft, setDraft] = useState(initial.draft);
   return (
     <div className="flex flex-col gap-2">
-      <textarea
+      <AutoResizeTextarea
         // The row swapped its body for this box on the viewer's own
         // command, so the caret belongs where they just asked to type.
         // This is a mount inside a click handler, not a page load.
@@ -946,7 +960,6 @@ function EditBox({
           defaultMessage: "Edit comment",
         })}
         value={draft}
-        className={TEXTAREA_CLASS}
         onChange={(event) => setDraft(event.target.value)}
         onKeyDown={(event) => {
           if (event.key !== "Escape") return;
@@ -964,7 +977,7 @@ function EditBox({
           type="button"
           size="sm"
           disabled={busy || draft.trim() === ""}
-          onClick={() => onSave(draft.trim())}
+          onClick={() => onSave(serializeDocumentLinks(draft, initial.links).trim())}
         >
           <FormattedMessage id="action.save" defaultMessage="Save" />
         </Button>
@@ -1065,6 +1078,26 @@ function MentionedBody({
   body,
   mentions,
 }: Readonly<{ body: string; mentions: readonly CommentMention[] }>) {
+  return commentBodyParts(body).map((part, index) =>
+    typeof part === "string" ? (
+      <PersonMentionedBody key={index} body={part} mentions={mentions} />
+    ) : (
+      <Link
+        key={index}
+        to={part.href}
+        className="inline-flex max-w-full items-baseline gap-1 rounded-chip bg-badge-count-bg px-1 font-medium text-badge-count-fg hover:underline focus-visible:outline-2 focus-visible:outline-link"
+      >
+        <FileText size={12} className="shrink-0 self-center" aria-hidden="true" />
+        <span className="break-words">{part.displayName}</span>
+      </Link>
+    ),
+  );
+}
+
+function PersonMentionedBody({
+  body,
+  mentions,
+}: Readonly<{ body: string; mentions: readonly CommentMention[] }>) {
   if (mentions.length === 0) return body;
   // Longest first, so "@Casey Contributor" wins over a "@Casey" who is
   // also in the list rather than leaving half a name behind.
@@ -1097,10 +1130,14 @@ function MentionChip({ name }: Readonly<{ name: string }>) {
 /** The tier every comment wears (CMT-003). Legal Only takes DES-009's
  * own pair and its lock glyph, one step deeper than the row it sits on;
  * the other two are neutral counters on the panel's own surface. */
-function TierBadge({ tier }: Readonly<{ tier: CommentTier }>) {
+function TierBadge({
+  tier,
+  entityType,
+}: Readonly<{ tier: CommentTier; entityType: CommentEntityType }>) {
   const intl = useIntl();
   return (
     <span
+      title={tierAudience(intl, tier, entityType)}
       className={cn(
         "inline-flex shrink-0 items-center gap-1 rounded-chip px-1.5 py-px text-xs font-semibold",
         tier === "legal_only"
@@ -1109,7 +1146,7 @@ function TierBadge({ tier }: Readonly<{ tier: CommentTier }>) {
       )}
     >
       {tier === "legal_only" && <Lock size={LOCK_SIZE} aria-hidden="true" />}
-      {tierLabel(intl, tier)}
+      {tierLabel(intl, tier, entityType)}
     </span>
   );
 }
@@ -1149,7 +1186,7 @@ function Composer({
   onPosted: (comment: Comment) => void;
 }>) {
   const intl = useIntl();
-  const tiers = composerTiers(role).filter(
+  const tiers = composerTiers(role, entityType).filter(
     (tier) =>
       !(entityType === "matter_task" || entityType === "contract_task") || tier !== "full_thread",
   );
@@ -1158,8 +1195,10 @@ function Composer({
   // role without Working Team holding a tier no segment offers: nothing
   // would read as checked, and the post would carry a tier the seam
   // refuses.
+  const defaultTier =
+    entityType === "matter" || entityType === "contract" ? "full_thread" : RECORD_DEFAULT_TIER;
   const [tier, setTier] = useState<CommentTier>(
-    tiers.includes(RECORD_DEFAULT_TIER) ? RECORD_DEFAULT_TIER : tiers[0]!,
+    tiers.includes(defaultTier) ? defaultTier : tiers[0]!,
   );
   const [draft, setDraft] = useState("");
   const [files, setFiles] = useState<File[]>([]);
@@ -1167,9 +1206,15 @@ function Composer({
   /** Everybody picked from the typeahead so far. The draft is what says
    * whether they are still named — see `namedInDraft`. */
   const [picked, setPicked] = useState<MentionCandidate[]>([]);
+  const [pickedDocuments, setPickedDocuments] = useState<CommentDocumentLink[]>([]);
+  const [documentResults, setDocumentResults] = useState<{
+    query: string;
+    documents: RepositoryDocument[];
+  } | null>(null);
   /** The `@…` being typed at the caret, or null when there is none. */
   const [query, setQuery] = useState<MentionQuery | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [mentionTab, setMentionTab] = useState<"people" | "files">("people");
   /** The promotion the author has been asked about, or null. */
   const [promotion, setPromotion] = useState<Promotion | null>(null);
   /** Where the caret goes after a pick, applied once the box re-renders
@@ -1191,35 +1236,102 @@ function Composer({
     element.setSelectionRange(caret.at, caret.at);
   }, [caret]);
 
-  const matches = query
-    ? candidates.filter((person) =>
-        person.displayName.toLowerCase().includes(query.text.toLowerCase()),
-      )
+  const documentQuery = query?.text.trim() ?? null;
+  useEffect(() => {
+    if (documentQuery === null || mentionTab !== "files" || !canReadContracts(role)) return;
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      void api
+        .GET("/api/v1/documents", {
+          params: { query: { q: documentQuery, limit: 12 } },
+          signal: controller.signal,
+        })
+        .then(({ data }) => {
+          if (!controller.signal.aborted)
+            setDocumentResults({ query: documentQuery, documents: data?.documents ?? [] });
+        })
+        .catch(() => {
+          if (!controller.signal.aborted)
+            setDocumentResults({ query: documentQuery, documents: [] });
+        });
+    }, 150);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [documentQuery, role, mentionTab]);
+
+  type Match =
+    | { kind: "person"; person: MentionCandidate }
+    | { kind: "document"; document: RepositoryDocument };
+  const matches: Match[] = query
+    ? mentionTab === "people"
+      ? candidates
+          .filter((person) => person.displayName.toLowerCase().includes(query.text.toLowerCase()))
+          .map((person): Match => ({ kind: "person", person }))
+      : (documentResults?.query === documentQuery ? documentResults.documents : []).map(
+          (document): Match => ({ kind: "document", document }),
+        )
     : [];
-  const open = matches.length > 0;
+  const open = query !== null;
+  const loadingFiles = mentionTab === "files" && documentResults?.query !== documentQuery;
+  function switchMentionTab(tab: "people" | "files") {
+    setMentionTab(tab);
+    setActiveIndex(0);
+  }
   const active = Math.min(activeIndex, matches.length - 1);
   const rowId = (index: number) => `${listboxId}-row-${index}`;
+
+  useEffect(() => {
+    if (!open || active < 0) return;
+    document.getElementById(`${listboxId}-row-${active}`)?.scrollIntoView?.({ block: "nearest" });
+  }, [active, open, listboxId, mentionTab]);
 
   /** Who the comment addresses as it stands — picked, and still named. */
   const named = namedInDraft(draft, picked);
 
+  function activeMentionQuery(value: string, at: number) {
+    const next = mentionQueryAt(value, at);
+    if (!next) return null;
+    const completed = [...picked, ...pickedDocuments].some((mention) =>
+      next.text.startsWith(`${mention.displayName} `),
+    );
+    return completed ? null : next;
+  }
+
   function retype(value: string, at: number) {
     setDraft(value);
-    setQuery(mentionQueryAt(value, at));
+    setQuery(activeMentionQuery(value, at));
     setActiveIndex(0);
   }
 
-  function pick(person: MentionCandidate) {
+  function pick(match: Match) {
     if (!query) return;
+    const person = match.kind === "person" ? match.person : null;
+    const document = match.kind === "document" ? match.document : null;
+    const href = document ? documentLandingPath(document) : "";
+    const title = document?.title.replace(/[\r\n]+/g, " ") ?? "";
+    const displayName =
+      person?.displayName ??
+      (pickedDocuments.some((link) => link.displayName === title && link.href !== href)
+        ? `${title} (${documentOwnerReference(document!.owner)})`
+        : title);
     const before = draft.slice(0, query.start);
     const after = draft.slice(query.start + 1 + query.text.length);
     // The trailing space is what lets the next word be typed straight
     // on, and what keeps the name from running into it.
-    const inserted = `${mentionText(person.displayName)} `;
+    const inserted = `${mentionText(displayName)} `;
     setDraft(before + inserted + after);
-    setPicked((current) =>
-      current.some((existing) => existing.id === person.id) ? current : [...current, person],
-    );
+    if (person)
+      setPicked((current) =>
+        current.some((existing) => existing.id === person.id) ? current : [...current, person],
+      );
+    else
+      setPickedDocuments((current) =>
+        current.some((existing) => existing.href === href)
+          ? current
+          : [...current, { displayName, href }],
+      );
     setQuery(null);
     setActiveIndex(0);
     setCaret({ at: before.length + inserted.length });
@@ -1235,7 +1347,7 @@ function Composer({
   }
 
   async function post(visibility: CommentTier, mentions: readonly MentionCandidate[]) {
-    const body = draft.trim();
+    const body = serializeDocumentLinks(draft.trim(), pickedDocuments);
     if (body === "" || inFlight.current) return;
     inFlight.current = true;
     setBusy(true);
@@ -1269,6 +1381,7 @@ function Composer({
     setDraft("");
     setFiles([]);
     setPicked([]);
+    setPickedDocuments([]);
     setQuery(null);
   }
 
@@ -1338,12 +1451,17 @@ function Composer({
               className="sr-only"
             />
             {option === "legal_only" && <Lock size={LOCK_SIZE} aria-hidden="true" />}
-            {tierLabel(intl, option)}
+            {tierLabel(intl, option, entityType)}
           </label>
         ))}
       </fieldset>
-      <div className="relative">
-        <textarea
+      <div
+        className="relative"
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) setQuery(null);
+        }}
+      >
+        <AutoResizeTextarea
           ref={box}
           aria-label={intl.formatMessage({
             id: "comments.composer",
@@ -1354,7 +1472,6 @@ function Composer({
             defaultMessage: "Add a comment…",
           })}
           value={draft}
-          className={TEXTAREA_CLASS}
           // The box stays a textbox. ARIA in HTML permits no other role
           // on a `textarea`, so this is not the counterparty picker's
           // combobox: `aria-autocomplete` and `aria-activedescendant`
@@ -1362,7 +1479,7 @@ function Composer({
           // the live region below says the list is there — the pattern
           // an inline mention typeahead has to use (DES-024).
           aria-controls={listboxId}
-          aria-activedescendant={open ? rowId(active) : undefined}
+          aria-activedescendant={open && active >= 0 ? rowId(active) : undefined}
           aria-autocomplete="list"
           autoComplete="off"
           onChange={(event) => retype(event.target.value, event.target.selectionStart)}
@@ -1371,18 +1488,22 @@ function Composer({
           onSelect={(event) => {
             if (query === null) return;
             const element = event.currentTarget;
-            setQuery(mentionQueryAt(element.value, element.selectionStart));
+            setQuery(activeMentionQuery(element.value, element.selectionStart));
           }}
-          onBlur={() => setQuery(null)}
           onKeyDown={(event) => {
             if (!open) return;
-            if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+            if (event.key === "Tab" && !event.shiftKey) {
+              event.preventDefault();
+              document.getElementById(`${listboxId}-${mentionTab}-tab`)?.focus();
+              return;
+            }
+            if ((event.key === "ArrowDown" || event.key === "ArrowUp") && matches.length > 0) {
               event.preventDefault();
               const delta = event.key === "ArrowDown" ? 1 : -1;
               setActiveIndex((active + delta + matches.length) % matches.length);
               return;
             }
-            if (event.key === "Enter" || event.key === "Tab") {
+            if (event.key === "Enter" && matches.length > 0) {
               // Enter in an open list picks a name; it does not send a
               // half-written comment.
               event.preventDefault();
@@ -1397,49 +1518,157 @@ function Composer({
             }
           }}
         />
-        <ul // NOSONAR — a select cannot narrow as a name is typed
-          id={listboxId}
-          role="listbox"
-          aria-label={intl.formatMessage({
-            id: "comments.mention.listLabel",
-            defaultMessage: "People you can mention",
-          })}
-          className={cn(
-            "absolute bottom-full z-10 mb-1 max-h-48 w-full overflow-y-auto rounded-card border border-border-default bg-raised py-1",
-            !open && "hidden",
-          )}
+        <div
+          hidden={!open}
+          className="absolute bottom-full z-10 mb-1 w-full overflow-hidden rounded-card border border-border-default bg-raised shadow-md"
         >
-          {matches.map((person, index) => (
-            <li
-              key={person.id}
-              id={rowId(index)}
-              role="option"
-              aria-selected={index === active}
-              className={cn(
-                "flex cursor-default items-center gap-2 px-2 py-1 text-sm text-primary",
-                index === active && "bg-control",
-              )}
-              // Ahead of the box's own blur, so the pick lands.
-              onPointerDown={(event) => {
-                event.preventDefault();
-                pick(person);
-              }}
-              onMouseMove={() => setActiveIndex(index)}
+          <div
+            role="tablist"
+            aria-label={intl.formatMessage({
+              id: "comments.mention.type",
+              defaultMessage: "Mention type",
+            })}
+            className="flex gap-1 border-b border-border-muted px-2 pt-1"
+          >
+            {(["people", ...(canReadContracts(role) ? ["files" as const] : [])] as const).map(
+              (tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  role="tab"
+                  id={`${listboxId}-${tab}-tab`}
+                  aria-selected={mentionTab === tab}
+                  aria-controls={`${listboxId}-panel`}
+                  tabIndex={mentionTab === tab ? 0 : -1}
+                  className={cn(
+                    "min-h-8 flex-1 border-b-2 px-3 py-1.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-link",
+                    mentionTab === tab
+                      ? "border-link text-link"
+                      : "border-transparent text-muted hover:text-primary",
+                  )}
+                  onPointerDown={(event) => event.preventDefault()}
+                  onClick={() => switchMentionTab(tab)}
+                  onFocus={() => switchMentionTab(tab)}
+                  onKeyDown={(event) => {
+                    if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
+                      event.preventDefault();
+                      const next =
+                        event.key === "Home" || !canReadContracts(role)
+                          ? "people"
+                          : event.key === "End"
+                            ? "files"
+                            : tab === "people"
+                              ? "files"
+                              : "people";
+                      document.getElementById(`${listboxId}-${next}-tab`)?.focus();
+                    } else if (event.key === "ArrowDown" || event.key === "Escape") {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      if (event.key === "Escape") setQuery(null);
+                      box.current?.focus();
+                    }
+                  }}
+                >
+                  {tab === "people" ? (
+                    <FormattedMessage id="comments.mention.peopleTab" defaultMessage="People" />
+                  ) : (
+                    <FormattedMessage id="comments.mention.filesTab" defaultMessage="Files" />
+                  )}
+                </button>
+              ),
+            )}
+          </div>
+          <div
+            role="tabpanel"
+            id={`${listboxId}-panel`}
+            aria-labelledby={`${listboxId}-${mentionTab}-tab`}
+          >
+            <ul // NOSONAR — a select cannot narrow as a name is typed
+              id={listboxId}
+              role="listbox"
+              aria-label={intl.formatMessage({
+                id: "comments.mention.peopleAndFiles",
+                defaultMessage: "People and files you can mention",
+              })}
+              aria-busy={loadingFiles}
+              className="max-h-48 overflow-y-auto py-1"
             >
-              <Avatar name={person.displayName} image={person.image} className="size-5" />
-              <span className="truncate">{person.displayName}</span>
-            </li>
-          ))}
-        </ul>
+              {matches.map((match, index) => (
+                <li
+                  key={
+                    match.kind === "person"
+                      ? `person-${match.person.id}`
+                      : `document-${match.document.id}`
+                  }
+                  id={rowId(index)}
+                  role="option"
+                  aria-selected={index === active}
+                  className={cn(
+                    "flex cursor-default items-center gap-2 px-2 py-1 text-sm text-primary",
+                    index === active && "bg-control",
+                  )}
+                  // Ahead of the box's own blur, so the pick lands.
+                  onPointerDown={(event) => {
+                    event.preventDefault();
+                    pick(match);
+                  }}
+                  onMouseMove={() => setActiveIndex(index)}
+                >
+                  {match.kind === "person" ? (
+                    <>
+                      <Avatar
+                        name={match.person.displayName}
+                        image={match.person.image}
+                        className="size-5"
+                      />
+                      <span className="truncate">{match.person.displayName}</span>
+                    </>
+                  ) : (
+                    <>
+                      <FileText size={20} className="shrink-0 text-muted" aria-hidden="true" />
+                      <span className="min-w-0">
+                        <span className="block truncate">{match.document.title}</span>
+                        <span className="block truncate text-xs text-muted">
+                          {documentOwnerReference(match.document.owner)} ·{" "}
+                          {match.document.owner.title}
+                        </span>
+                      </span>
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+            {matches.length === 0 && (
+              <p role="status" className="px-3 pb-3 pt-2 text-sm text-muted">
+                {loadingFiles ? (
+                  <FormattedMessage
+                    id="comments.mention.filesLoading"
+                    defaultMessage="Searching files…"
+                  />
+                ) : mentionTab === "files" ? (
+                  <FormattedMessage
+                    id="comments.mention.noFiles"
+                    defaultMessage="No matching files"
+                  />
+                ) : (
+                  <FormattedMessage
+                    id="comments.mention.noPeople"
+                    defaultMessage="No matching people"
+                  />
+                )}
+              </p>
+            )}
+          </div>
+        </div>
         {/* A textbox cannot carry `aria-expanded`, so the list's arrival
             is announced instead of implied. */}
         <p aria-live="polite" className="sr-only">
           {open &&
             intl.formatMessage(
               {
-                id: "comments.mention.available",
+                id: "comments.mention.matchesAvailable",
                 defaultMessage:
-                  "{count, plural, one {# person matches} other {# people match}}. Use the arrow keys to choose one.",
+                  "{count, plural, one {# match} other {# matches}}. Use the arrow keys to choose one.",
               },
               { count: matches.length },
             )}
@@ -1478,9 +1707,41 @@ function Composer({
           ))}
         </ul>
       )}
+      {pickedDocuments.some((link) => draft.includes(`@${link.displayName}`)) && (
+        <div className="flex flex-wrap gap-1">
+          {pickedDocuments
+            .filter((link) => draft.includes(`@${link.displayName}`))
+            .map((link) => (
+              <span
+                key={link.href}
+                className="inline-flex max-w-full items-center gap-1 rounded-chip bg-badge-count-bg py-px ps-1.5 pe-px text-xs font-medium text-badge-count-fg"
+              >
+                <FileText size={12} className="shrink-0" aria-hidden="true" />
+                <span className="truncate">{link.displayName}</span>
+                <button
+                  type="button"
+                  className="inline-flex size-6 shrink-0 items-center justify-center rounded-chip hover:text-primary focus-visible:outline-2 focus-visible:outline-link"
+                  aria-label={intl.formatMessage(
+                    { id: "comments.mention.remove", defaultMessage: "Remove {name}" },
+                    { name: link.displayName },
+                  )}
+                  onClick={() => {
+                    setDraft((current) => current.replaceAll(`@${link.displayName}`, ""));
+                    setPickedDocuments((current) =>
+                      current.filter((existing) => existing.href !== link.href),
+                    );
+                    setQuery(null);
+                  }}
+                >
+                  <X size={CHIP_GLYPH_SIZE} aria-hidden="true" />
+                </button>
+              </span>
+            ))}
+        </div>
+      )}
       <CommentFilePicker files={files} disabled={busy} onChange={setFiles} />
       {/* Said before the post, never after (CMT-003). */}
-      <p className="text-xs text-muted">{tierAudience(intl, tier)}</p>
+      <p className="text-xs text-muted">{tierAudience(intl, tier, entityType)}</p>
       {/* DES-009 Tier 3, as CTR-022 amended it. The tier line above says
           which room this comment goes to; this says the whole panel is
           inside a wall, whichever room is picked. It names the audience
@@ -1491,10 +1752,17 @@ function Composer({
       {confidential && (
         <p className="flex items-start gap-1 text-xs text-confidential">
           <ConfidentialMarker variant="micro" className="mt-0.5" />
-          <FormattedMessage
-            id="comments.confidentialNotice"
-            defaultMessage="Confidential contract — whichever audience you pick, only the contract team, the Owner, and Administrators can read it."
-          />
+          {entityType === "matter" ? (
+            <FormattedMessage
+              id="comments.matter.confidentialNotice"
+              defaultMessage="Confidential matter — only the matter team and matter manager can read it."
+            />
+          ) : (
+            <FormattedMessage
+              id="comments.confidentialNotice"
+              defaultMessage="Confidential contract — only the contract team and owner can read it."
+            />
+          )}
         </p>
       )}
       {error && (
@@ -1508,6 +1776,7 @@ function Composer({
         </Button>
       </div>
       <PromotionDialog
+        entityType={entityType}
         promotion={promotion}
         current={tier}
         onCancel={() => setPromotion(null)}
@@ -1571,11 +1840,13 @@ function nameList(intl: IntlShape, people: readonly MentionCandidate[]): string 
  * widening the room.
  */
 function PromotionDialog({
+  entityType,
   promotion,
   current,
   onCancel,
   onConfirm,
 }: Readonly<{
+  entityType: CommentEntityType;
   promotion: Promotion | null;
   current: CommentTier;
   onCancel: () => void;
@@ -1596,8 +1867,10 @@ function PromotionDialog({
                 defaultMessage="{names} cannot see a {current} comment. Post it at {promoted} instead to reach {count, plural, one {them} other {all of them}}."
                 values={{
                   names: nameList(intl, promotion.blocked),
-                  current: tierLabel(intl, current).toLocaleLowerCase(intl.locale),
-                  promoted: tierLabel(intl, promotion.tier).toLocaleLowerCase(intl.locale),
+                  current: tierLabel(intl, current, entityType).toLocaleLowerCase(intl.locale),
+                  promoted: tierLabel(intl, promotion.tier, entityType).toLocaleLowerCase(
+                    intl.locale,
+                  ),
                   count: promotion.blocked.length,
                 }}
               />
@@ -1605,7 +1878,9 @@ function PromotionDialog({
             {/* The audience the promotion means, in the same words the
                 composer's own line uses — said before the post, never
                 after (CMT-003). */}
-            <p className="mt-2 text-sm text-muted">{tierAudience(intl, promotion.tier)}</p>
+            <p className="mt-2 text-sm text-muted">
+              {tierAudience(intl, promotion.tier, entityType)}
+            </p>
           </>
         )}
         <div className="mt-6 flex justify-end gap-2">

@@ -173,6 +173,7 @@ beforeAll(async () => {
   );
 
   for (const userId of [
+    adminId,
     peopleIds.get(PEOPLE.onTeam.email)!,
     peopleIds.get(PEOPLE.contributor.email)!,
   ]) {
@@ -206,7 +207,7 @@ async function options(as: string) {
 }
 
 describe("the DD-014 gate in the Document repository", () => {
-  it("answers Administrators, on-team Members, and Contributors from their reach", async () => {
+  it("answers explicitly added Administrators, on-team Members, and Contributors from their reach", async () => {
     for (const viewer of ["administrator", PEOPLE.onTeam.email, PEOPLE.contributor.email]) {
       const response = await list(viewer);
       expect(response.statusCode, response.body).toBe(200);
@@ -237,6 +238,23 @@ describe("the DD-014 gate in the Document repository", () => {
     const response = await list(PEOPLE.offTeam.email, `?cursor=${hiddenIds[0]!}`);
     expect(response.statusCode, response.body).toBe(200);
     expect(response.json()).toEqual({ documents: [], nextCursor: null });
+  });
+
+  it("keeps title search behind the same record access checks", async () => {
+    const reached = await list("administrator", "?q=paper&limit=100");
+    expect(reached.statusCode).toBe(200);
+    const hidden = reached
+      .json<{ documents: { id: string; title: string }[] }>()
+      .documents.filter((row) => hiddenIds.includes(row.id));
+    // Query each exact confidential title, including those in folders.
+    for (const row of hidden) {
+      const response = await list(PEOPLE.offTeam.email, `?q=${encodeURIComponent(row.title)}`);
+      expect(response.statusCode).toBe(200);
+      expect(response.json().documents.map((item: { id: string }) => item.id)).not.toContain(
+        row.id,
+      );
+    }
+    expect(hidden.length).toBeGreaterThan(0);
   });
 
   it("refuses a Business User at requireDocumentReader", async () => {

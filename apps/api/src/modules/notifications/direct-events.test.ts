@@ -306,7 +306,7 @@ describe("being handed a contract (CTR-004)", () => {
     // (CTR-022), which is only true once the hand-over has committed.
     const contract = await newContract("Direct · handed over behind the wall");
     await wallOff(contract.id);
-    await assignOwner(contract.number, idOf(TARGET), ADMIN);
+    await assignOwner(contract.number, idOf(TARGET), ACTOR);
 
     const items = await bellFor(TARGET, contract);
     expect(items.map((row) => row.eventType)).toEqual(["contract.owner_assigned"]);

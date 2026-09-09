@@ -282,6 +282,15 @@ async function list(query = ""): Promise<RepositoryAnswer> {
 }
 
 describe("the Document repository", () => {
+  it("searches titles before paging and treats wildcard characters literally", async () => {
+    const result = await list("?q=SERVICES&limit=1");
+    expect(result.documents.map((row) => row.title)).toEqual(["Master services agreement"]);
+    expect(result.nextCursor).toBeNull();
+    expect((await list("?q=%25")).documents).toEqual([]);
+    expect((await list("?q=_")).documents).toEqual([]);
+    expect((await list("?q=Archived")).documents).toEqual([]);
+  });
+
   it("returns the full row projection in newest-current-Version order", async () => {
     const answer = await list();
     expect(answer.documents.map((row) => row.title)).toEqual([

@@ -22467,7 +22467,7 @@
     "/api/v1/contracts": {
       "get": {
         "operationId": "listContracts",
-        "summary": "The contract list: number, title, type, and status; newest reference first unless sort names a column, and unknown-valued rows always last (DD-019). Archived contracts only with includeArchived=true; ended contracts only with includeEnded=true (CTR-019). Member+ read every contract that is not confidential; a Contributor reads exactly the contracts they hold a contract_team row on, archived and ended ones behind the same flags. A confidential contract is listed only for its named team, its Owner, and Administrators — silently absent for everyone else, so no count can reveal it",
+        "summary": "The contract list: number, title, type, and status; newest reference first unless sort names a column, and unknown-valued rows always last (DD-019). Archived contracts only with includeArchived=true; ended contracts only with includeEnded=true (CTR-019). Member+ read every contract that is not confidential; a Contributor reads exactly the contracts they hold a contract_team row on, archived and ended ones behind the same flags. A confidential contract is listed only for its named team, or its Owner — silently absent for everyone else, so no count can reveal it",
         "tags": ["contracts"],
         "parameters": [
           {
@@ -23898,7 +23898,7 @@
     "/api/v1/contracts/{number}": {
       "get": {
         "operationId": "getContract",
-        "summary": "One contract by its CTR-003 number, with its Owner, its signing entity, its counterparties, its working group, and the fields its type attaches (CTR-016) in attachment order — the record page's read; archived contracts answer too, so restore stays reachable. A Contributor reads a contract they hold a contract_team row on, and is answered 404 on one they do not. A confidential contract answers the same 404 to anyone outside its named team, its Owner, and Administrators",
+        "summary": "One contract by its CTR-003 number, with its Owner, its signing entity, its counterparties, its working group, and the fields its type attaches (CTR-016) in attachment order — the record page's read; archived contracts answer too, so restore stays reachable. A Contributor reads a contract they hold a contract_team row on, and is answered 404 on one they do not. A confidential contract answers the same 404 to anyone outside its named team and Owner",
         "tags": ["contracts"],
         "parameters": [
           {
@@ -34976,6 +34976,15 @@
           {
             "schema": {
               "type": "string",
+              "maxLength": 200
+            },
+            "in": "query",
+            "name": "q",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
               "enum": ["contract", "matter", "entity", "knowledge_item"]
             },
             "in": "query",
@@ -36541,7 +36550,7 @@
     "/api/v1/matters/{number}/documents": {
       "get": {
         "operationId": "listMatterDocuments",
-        "summary": "The paper on one matter, newest first, with each document's complete version chain. Access is inherited from the matter and a confidential document narrows to its team, Matter Manager, and Administrators. Administrators, Legal Team Members, and Contributors may read matter paper. Primary and executed designations are contract concepts.",
+        "summary": "The paper on one matter, newest first, with each document's complete version chain. Access is inherited from the matter and a confidential document narrows to its team, or Matter Manager. Administrators, Legal Team Members, and Contributors may read matter paper. Primary and executed designations are contract concepts.",
         "tags": ["documents"],
         "parameters": [
           {
@@ -38287,7 +38296,7 @@
     "/api/v1/documents/{documentId}": {
       "patch": {
         "operationId": "updateDocument",
-        "summary": "Rename a document or edit its description (DOC-007), one field per request as DES-017 commits them. The stored files are untouched by either: a version's own filename is what it arrived as and stays that, and a download still offers it back. Appends document.updated on the owning contract (DD-017), naming what changed. isConfidential is the third field, and it is not one of those two: it sets or clears DD-014's per-document flag, which narrows this one file to the contract's named team, its Owner, and Administrators, even on an open contract. It has an actor set narrower than the route's — an Administrator, the person who uploaded the document, and the contract's Owner — and anybody else who reaches the document is refused 403 rather than 404, because they can already see it. Each set and each clear appends its own action, document.confidentiality_set or document.confidentiality_cleared. folderId is the fourth, and it files the document (DOC-006): a folder on this document's own record, or null for the record root, with null and omitting the field two different requests. A folder on another contract answers 404, exactly as one that was never created, because a folder's id says nothing about which record it is on. Each move appends document.filed, carrying both folders by name so the entry outlives a rename. An archived contract takes no edit until it is restored. A document on a contract the editor cannot reach — and a confidential document they are outside the audience of — answers 404, exactly as one that does not exist",
+        "summary": "Rename a document or edit its description (DOC-007), one field per request as DES-017 commits them. The stored files are untouched by either: a version's own filename is what it arrived as and stays that, and a download still offers it back. Appends document.updated on the owning contract (DD-017), naming what changed. isConfidential is the third field, and it is not one of those two: it sets or clears DD-014's per-document flag, which narrows this one file to the contract's named team and Owner, even on an open contract. It has an actor set narrower than the route's — an Administrator, the person who uploaded the document, and the contract's Owner — and anybody else who reaches the document is refused 403 rather than 404, because they can already see it. Each set and each clear appends its own action, document.confidentiality_set or document.confidentiality_cleared. folderId is the fourth, and it files the document (DOC-006): a folder on this document's own record, or null for the record root, with null and omitting the field two different requests. A folder on another contract answers 404, exactly as one that was never created, because a folder's id says nothing about which record it is on. Each move appends document.filed, carrying both folders by name so the entry outlives a rename. An archived contract takes no edit until it is restored. A document on a contract the editor cannot reach — and a confidential document they are outside the audience of — answers 404, exactly as one that does not exist",
         "tags": ["documents"],
         "requestBody": {
           "required": true,
@@ -45185,7 +45194,7 @@
     "/api/v1/comments/{commentId}/attachments/{attachmentId}/file": {
       "post": {
         "operationId": "fileCommentAttachment",
-        "summary": "File one live comment attachment onto the record (CMT-011), either as a new root Document or as the next Version on a named chain. The comment's audience is the reach gate; a never-converted Request owns no Documents and is refused. The bytes are copied to a key minted from the destination ids, their media type is read from the blob, and the shared Version insert records every derivation an upload owes. The paper and the attachment marker commit together under the Contract row lock, so the same attachment cannot grow two rounds",
+        "summary": "File one live comment attachment onto the record (CMT-011), either as a new root Document or as the next Version on a named chain. The comment's audience is the reach gate; a never-converted Request owns no Documents and is refused. The bytes are copied to a key minted from the destination ids, their media type is read from the blob, and the shared Version insert records every derivation an upload owes. The paper and the attachment marker commit together under the owning record row lock, so the same attachment cannot grow two rounds",
         "tags": ["comments"],
         "requestBody": {
           "required": true,
@@ -45546,7 +45555,7 @@
     "/api/v1/comments/{commentId}/attachments/{attachmentId}": {
       "get": {
         "operationId": "downloadCommentAttachment",
-        "summary": "Download one live comment attachment through the same audience arm and tier that exposed its comment. The entity reference is the address the reader used for the thread, so a Requester can continue through a converted Request while the stored comment hangs from its Contract. A hidden tier, another attachment, and either tombstone all answer 404",
+        "summary": "Download one live comment attachment, or preview it with preview=true, through the same audience arm and tier that exposed its comment. The entity reference is the address the reader used for the thread, so a Requester can continue through a converted Request while the stored comment hangs from its Contract. A hidden tier, another attachment, and either tombstone all answer 404",
         "tags": ["comments"],
         "parameters": [
           {
@@ -45567,6 +45576,15 @@
             "in": "query",
             "name": "entityId",
             "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["true"]
+            },
+            "in": "query",
+            "name": "preview",
+            "required": false
           },
           {
             "schema": {
@@ -46356,7 +46374,7 @@
     "/api/v1/audit-log": {
       "get": {
         "operationId": "listAuditLog",
-        "summary": "The system-wide audit log (DD-017), newest first: every entry of every entity type and every tier, including the `admin_only` settings, user administration, and security entries that no record feed carries. Administrator-only (SET-002). Actor, action, entity type, date range, and search compose. Paged from a server-fixed page size: pass the previous page's `nextCursor` to read further back",
+        "summary": "The system-wide audit log (DD-017), newest first: reachable entries across entity types and tiers, including the `admin_only` settings, user administration, and security entries that no record feed carries. Administrator-only (SET-002). Actor, action, entity type, date range, and search compose. Paged from a server-fixed page size: pass the previous page's `nextCursor` to read further back",
         "tags": ["audit-log"],
         "parameters": [
           {
@@ -52702,6 +52720,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "canManageAccess": {
+                      "type": "boolean"
+                    },
                     "entity": {
                       "type": "object",
                       "properties": {
@@ -53200,6 +53221,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "canManageAccess": {
+                      "type": "boolean"
+                    },
                     "entity": {
                       "type": "object",
                       "properties": {

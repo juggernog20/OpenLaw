@@ -253,11 +253,50 @@ const TIER_COPY: Record<CommentTier, { label: MessageDescriptor; audience: Messa
   },
 };
 
-export function tierLabel(intl: IntlShape, tier: CommentTier): string {
+export function tierLabel(
+  intl: IntlShape,
+  tier: CommentTier,
+  entityType?: CommentEntityType,
+): string {
+  if (entityType === "matter" || entityType === "contract") {
+    if (tier === "legal_only")
+      return intl.formatMessage({ id: "comments.matter.legalOnly", defaultMessage: "Legal Only" });
+    if (tier === "full_thread")
+      return entityType === "matter"
+        ? intl.formatMessage({ id: "comments.matter.team", defaultMessage: "Matter Team" })
+        : intl.formatMessage({ id: "comments.contract.team", defaultMessage: "Contract Team" });
+    return intl.formatMessage({ id: "comments.matter.internal", defaultMessage: "Internal team" });
+  }
   return intl.formatMessage(TIER_COPY[tier].label);
 }
 
-export function tierAudience(intl: IntlShape, tier: CommentTier): string {
+export function tierAudience(
+  intl: IntlShape,
+  tier: CommentTier,
+  entityType?: CommentEntityType,
+): string {
+  if (entityType === "contract" && tier === "full_thread")
+    return intl.formatMessage({
+      id: "comments.contract.teamAudience",
+      defaultMessage: "Visible to the legal team, Contract team members, and the requester.",
+    });
+  if (entityType === "contract" && tier === "working_team")
+    return intl.formatMessage({
+      id: "comments.contract.internalAudience",
+      defaultMessage:
+        "Visible to the legal team and Contract team members. Not shared with the requester.",
+    });
+  if (entityType === "matter" && tier === "full_thread")
+    return intl.formatMessage({
+      id: "comments.matter.teamAudience",
+      defaultMessage: "Visible to the legal team, Matter team members, and the requester.",
+    });
+  if (entityType === "matter" && tier === "working_team")
+    return intl.formatMessage({
+      id: "comments.matter.internalAudience",
+      defaultMessage:
+        "Visible to the legal team and Matter team members. Not shared with the requester.",
+    });
   return intl.formatMessage(TIER_COPY[tier].audience);
 }
 
@@ -269,7 +308,9 @@ export function tierAudience(intl: IntlShape, tier: CommentTier): string {
  * real gate; this keeps the composer from offering a room nobody would
  * let them into.
  */
-export function composerTiers(role: Role): readonly CommentTier[] {
+export function composerTiers(role: Role, entityType?: CommentEntityType): readonly CommentTier[] {
+  if (entityType === "matter" || entityType === "contract")
+    return isMemberPlus(role) ? ["legal_only", "full_thread"] : ["full_thread"];
   if (isMemberPlus(role)) return COMMENT_TIERS;
   return role === "contributor" ? CONTRIBUTOR_TIERS : REQUESTER_TIERS;
 }
