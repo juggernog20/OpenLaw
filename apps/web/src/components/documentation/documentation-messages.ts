@@ -3,6 +3,11 @@
 import { defineMessages } from "react-intl";
 
 export const M = defineMessages({
+  validationPending: {
+    id: "docs.validationPending",
+    defaultMessage: "Guide validation is in progress. Some instructions may change.",
+  },
+  validationBadge: { id: "docs.validationBadge", defaultMessage: "Validation in progress" },
   intro: { id: "docs.intro", defaultMessage: "Find the guide you need." },
   introBody: {
     id: "docs.introBody",

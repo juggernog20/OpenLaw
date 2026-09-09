@@ -162,6 +162,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
         {
           edition: result.bundle.edition,
           preview: result.bundle.preview,
+          validationPending: result.bundle.validationPending,
+          available: result.bundle.articles.length,
           ...result.bundle.report,
           warnings: result.bundle.warnings,
         },

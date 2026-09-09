@@ -158,6 +158,93 @@ function fixture(t, options = {}) {
   };
 }
 
+function authorizePublication(f) {
+  for (const article of f.articles) article.status = "review";
+  f.json("articles.json", {
+    schemaVersion: 1,
+    sections: [{ id: "start", title: "Start here" }],
+    articles: f.articles,
+  });
+  f.edition.publication = {
+    status: "validation-pending",
+    approvedBy: "Fixture maintainer",
+    approvedAt: "2026-09-09T00:00:00Z",
+    sourceCommit: commit,
+    reason: "Publish the current guide sources while validation continues.",
+    articles: f.articles.map((a) => ({
+      id: a.id,
+      contentSha256: createHash("sha256").update(f.sources[a.id]).digest("hex"),
+    })),
+  };
+  f.json("edition.json", f.edition);
+}
+
+test("authorized development publication includes current sources without claiming verification", (t) => {
+  const f = fixture(t);
+  authorizePublication(f);
+  const { bundle, files } = f.compile();
+  assert.equal(bundle.preview, false);
+  assert.equal(bundle.validationPending, true);
+  assert.equal(bundle.articles.length, 2);
+  assert.equal(bundle.report.verified, 0);
+  assert.ok(bundle.articles.every((a) => a.unverified));
+  assert.match(files.get("index.html"), /Guide validation is in progress/);
+  assert.doesNotMatch(files.get("index.html"), /Development preview/);
+  const page = files.get("submit.html");
+  assert.match(page, /Guide validation is in progress/);
+  assert.match(page, /docs-badge">Validation in progress</);
+  assert.doesNotMatch(page, /Unverified article/);
+  assert.doesNotMatch(JSON.stringify(bundle), /Fixture maintainer|Publish the current guide/);
+  assert.throws(() => f.compile({ complete: true }), /unverified articles or coverage/);
+  f.edition.publication.articles = f.edition.publication.articles.filter((a) => a.id === "recover");
+  f.json("edition.json", f.edition);
+  assert.deepEqual(
+    f.compile().bundle.articles.map((a) => a.id),
+    ["recover"],
+  );
+});
+
+test("publication authorization cannot publish changed sources or become a release waiver", (t) => {
+  const f = fixture(t);
+  authorizePublication(f);
+  writeFileSync(join(f.contentRoot, "submit.md"), f.sources.submit + "\nChanged instructions.\n");
+  assert.throws(() => f.compile(), /publication source changed: submit/);
+  assert.equal(f.compile({ preview: true }).bundle.preview, true);
+  f.edition.channel = "release";
+  f.json("edition.json", f.edition);
+  assert.throws(() => f.compile(), /publication requires a development edition/);
+});
+
+test("publication authorization rejects unknown, duplicate, source-less and incomplete entries", (t) => {
+  const f = fixture(t);
+  authorizePublication(f);
+  const original = globalThis.structuredClone(f.edition.publication);
+  for (const change of [
+    (p) => p.articles.push({ ...p.articles[0] }),
+    (p) => (p.articles[0].id = "missing"),
+    (p) => (p.articles[0].contentSha256 = "stale"),
+    (p) => (p.approvedBy = ""),
+    (p) => (p.approvedAt = "yesterday"),
+    (p) => (p.sourceCommit = "HEAD"),
+    (p) => (p.reason = ""),
+    (p) => (p.articles = []),
+  ]) {
+    f.edition.publication = globalThis.structuredClone(original);
+    change(f.edition.publication);
+    f.json("edition.json", f.edition);
+    assert.throws(() => f.compile(), /publication/);
+  }
+  f.edition.publication = original;
+  f.json("edition.json", f.edition);
+  f.articles[0].status = "scoped";
+  f.json("articles.json", {
+    schemaVersion: 1,
+    sections: [{ id: "start", title: "Start here" }],
+    articles: f.articles,
+  });
+  assert.throws(() => f.compile(), /publication article must be a draft or review: submit/);
+});
+
 test("one source supplies formal, Help, outlines, search and offline files", (t) => {
   const f = fixture(t);
   const { bundle, files } = f.compile();

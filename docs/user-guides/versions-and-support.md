@@ -8,11 +8,11 @@ Check which version of OpenLaw the documentation supports and give the right per
 2. Expand **Edition details** near the bottom of the reader.
 3. Record the edition identifier and channel, **Supported app**, **Distribution commit**, and **Content digest**. **Publication target** distinguishes where that edition is intended to be used.
 
-**Supported app** is the version/build declared by this documentation edition. It is not a live measurement of the running server. Ask your Administrator or operator for the installed app build when comparing a problem with these instructions. Operators can use the build and image records described in [upgrades](upgrade.md).
+**Supported app** is the version/build declared by this documentation edition. It is not a live measurement of the running server. It shows **Not yet verified** when the edition has not yet recorded a checked app build. Ask your Administrator or operator for the installed app build when comparing a problem with these instructions. Operators can use the build and image records described in [upgrades](upgrade.md).
 
 The package version alone is insufficient for development builds: different builds can share `0.0.1`. The distribution commit identifies the source used to assemble the docs, while the content digest identifies the bundled documentation content. **Working changes** means the bundle included uncommitted source changes.
 
-**Development preview: draft and validation content is unverified.** and **Unverified article** identify review content. A feature-review preview is not a production release or a claim that every article has passed final acceptance. Record those notices if you report a mismatch.
+A reader can show one of two notices. **Guide validation is in progress. Some instructions may change.** and the **Validation in progress** badge mean the guide is available before its independent verification finishes. **Development preview: draft and validation content is unverified.** and the **Unverified article** badge mean you are reading a development preview. Neither notice is a production release. Neither notice claims that every article has passed final acceptance. Record the notice you see if you report a mismatch.
 
 ## If a link names another edition or a missing article
 
@@ -53,7 +53,7 @@ Use the [OpenLaw GitHub issue tracker](https://github.com/juggernog20/OpenLaw/is
 
 Include:
 
-- The installed app build when known, the documentation edition details, and any preview notice.
+- The installed app build when known, the documentation edition details, and any validation or preview notice.
 - The guide title and section, or the control and action that failed.
 - Your account role and relevant configuration conditions, without credentials.
 - Short steps using fictional names and records, the expected outcome, and what actually happened.

@@ -3,13 +3,240 @@
   "id": "documentation-development",
   "channel": "development",
   "supportedAppVersion": "0.0.1",
-  "supportedAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-  "publicationTarget": "feature-review",
-  "compatibilityReview": {
-    "testedAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "applicationSha256": "b7bc6323f8e3d95a4ee006eab289f434502dccfdb7aee4c5fcb2026e7c41cd30",
-    "reviewer": "Codex DOC-025 source compatibility audit (agent)",
-    "reviewedAt": "2026-09-08T12:56:21.570227Z",
-    "summary": "DOC-025 source audit: target-to-distribution changes only remove an unused selected property and alter comments/test coverage; behavior and deployment configuration unchanged. See batches/DOC-025/compatibility.json. Historical article appCommit fields are preserved with hash-bound range reviews."
+  "supportedAppCommit": null,
+  "publicationTarget": "development-app",
+  "compatibilityReview": null,
+  "publication": {
+    "status": "validation-pending",
+    "approvedBy": "Blair Wentworth",
+    "approvedAt": "2026-09-09T07:31:08.623029Z",
+    "sourceCommit": "1ab2a82055e4de20e215b28a46150e9010c7aea9",
+    "reason": "User instruction: \"Okay lets publish the documentation and help guides to the app\". Publication follows disclosure that the 56-guide suite still awaits independent verification and proofreading. This authorizes availability in the development app, not a claim that those checks have passed.",
+    "articles": [
+      {
+        "id": "staff-sign-in",
+        "contentSha256": "3c7ed38f6e42d021121f8566c99a6f9a45e3ec63cebe90e28a957ee20c575651"
+      },
+      {
+        "id": "portal-sign-in",
+        "contentSha256": "9d419eb6c397fcaca5aac93331cb5dd06905f8152446485705714e07995adf7d"
+      },
+      {
+        "id": "find-your-work",
+        "contentSha256": "6fa8eb3a4f1302279ec5419435fbeeb34596a17d1897bc90d62c52037f8ac8d0"
+      },
+      {
+        "id": "search-and-views",
+        "contentSha256": "e303479e3b19bde3f34d5131d4f5c59de37b6feab2ef9b50bacdb97cb5478b23"
+      },
+      {
+        "id": "personal-settings",
+        "contentSha256": "155c97620d4f7999fa850eb2923f73ee797df09b2e62bf61cf0e5b292c16b2b8"
+      },
+      {
+        "id": "roles-and-access",
+        "contentSha256": "d3fcc8fc2ea63b5fb1b5b55e33cceb1c9b1cd8b0ce6d059b61accb6189998e91"
+      },
+      {
+        "id": "comments-and-activity",
+        "contentSha256": "91b235629a33bd9e798fc887f6d92226d007ed7673ec767d55f65f04c85ab67f"
+      },
+      {
+        "id": "notifications",
+        "contentSha256": "7f0a7503cf875f644ef8642f7d5d6ac0c67e335c319d023faff93a30cd42f294"
+      },
+      {
+        "id": "submit-request",
+        "contentSha256": "29e285e98a77548c08f8958fed91f0200db47c8188ef90619dab061925059f90"
+      },
+      {
+        "id": "follow-request",
+        "contentSha256": "ca5dff1ef7d999e36d8655c3d00ffb6b5a2136427e86f2be168889ca417dbca3"
+      },
+      {
+        "id": "portal-knowledge",
+        "contentSha256": "f44331f28896c6fbdebed9d636bb937d06330e9a52e850bb0b755f987aacb559"
+      },
+      {
+        "id": "triage-requests",
+        "contentSha256": "b28fe6456b9259168173d057309994db811044beac40c09dcafd96ea7da36eea"
+      },
+      {
+        "id": "convert-request",
+        "contentSha256": "09ba1d034467e55a18a1b06c5942e0485d9282afbfe6b31676e239b470809abe"
+      },
+      {
+        "id": "create-contract",
+        "contentSha256": "47fd79617177199075b878852e58515847792a1534b1e69aae7781be46fbd2a3"
+      },
+      {
+        "id": "contract-stages",
+        "contentSha256": "a01d92cc6adf974978b91b9ff543402472ed5bd4300755e5a78a02370465854b"
+      },
+      {
+        "id": "contract-approvals",
+        "contentSha256": "e3b7b6ee7e2b8b121c8be45203099d69331e09d5d55d374b577d5fe81bcf67f6"
+      },
+      {
+        "id": "manual-signing",
+        "contentSha256": "2415ba7d5c22ff900dd3b3fd67a5012f86fd276dfc4eb7f299e59e3419e3d5ae"
+      },
+      {
+        "id": "electronic-signing",
+        "contentSha256": "df172df43d2efc94cbd2daa7f03cc1161332885578c353e5137b1e0ffe4c90fc"
+      },
+      {
+        "id": "terms-and-renewals",
+        "contentSha256": "d5af58d3f6934b6b5730e8e100c31ffc21e08640347b82750c9b39c24b085c6e"
+      },
+      {
+        "id": "contract-tasks-and-dates",
+        "contentSha256": "05701bf7e4daa6099cca5ced8e61e360dbef0641fd53aa93c031bbcb29a59d67"
+      },
+      {
+        "id": "contract-relations-and-ending",
+        "contentSha256": "ca10c84a725573c1e32fdae19502056cfd0075a0223131a3dc54d32d75272b47"
+      },
+      {
+        "id": "contract-analysis",
+        "contentSha256": "24e4375567bdf273873018732f93743584b71b260a07890f4f4719f257050243"
+      },
+      {
+        "id": "create-matter",
+        "contentSha256": "078e5ac72d41fa7ed55e02131b55dcdb86cb26d646485e64f5a494969e1aef73"
+      },
+      {
+        "id": "matter-status-and-archive",
+        "contentSha256": "7b4f1d4b77f4979d273e68ffcefe9be849c7e371cd518b256e466a6ba2df60cf"
+      },
+      {
+        "id": "matter-work",
+        "contentSha256": "020bf3cc086bafd7efbd28255bb5c607fb5864836abef8e58d17336ae12a2836"
+      },
+      {
+        "id": "contributor-guide",
+        "contentSha256": "279714f01601850e530c33fc253bf68bbf5efb8ea8585651ff3a4053e8fc437e"
+      },
+      {
+        "id": "document-versions",
+        "contentSha256": "e7d0286c6eefad20fd0e0a08df2dc6c530d5c3fa517e1b65e17e9f338e5f147d"
+      },
+      {
+        "id": "document-folders",
+        "contentSha256": "1844521ab7ef07fc40fe8e0c01aaeb7df5022acf1e8059b2b24716f809838fec"
+      },
+      {
+        "id": "document-previews",
+        "contentSha256": "12cf5181a1b0c37788c1cd3d07ce04d8ac6c41efc68fed4188d47074307bd24a"
+      },
+      {
+        "id": "compare-versions",
+        "contentSha256": "2bfbd81cb149cd8bed215e1ada5736bf85fe9e4445241fea4307f2c36dae09df"
+      },
+      {
+        "id": "document-repository",
+        "contentSha256": "59f88467c3a576764b212e36ebf5cb8bd49ff84a146a1ec3321d3d0a3da19969"
+      },
+      {
+        "id": "entities-and-counterparties",
+        "contentSha256": "7313af8226fa554a32c4e86919d581a972fd574654e4b8559ccd8df591fe177e"
+      },
+      {
+        "id": "entity-records",
+        "contentSha256": "9d8b0ae49f2d38291393c876d0851ec3811a5d6dd3d24add2631615ade6db0bc"
+      },
+      {
+        "id": "create-knowledge",
+        "contentSha256": "295001ee071b093a3d66f72fb1faf23a81a959d13c08fbaba19e3062a738d34f"
+      },
+      {
+        "id": "publish-knowledge",
+        "contentSha256": "cae7b9ef9551242ef7b502892e4a9f63fa0229caf44e1578ec684490b793ffa5"
+      },
+      {
+        "id": "first-run",
+        "contentSha256": "17a32bd77a5673364e11c7ff3906b3e657a90c6750e8df6ff60e2611391bf3e4"
+      },
+      {
+        "id": "organisation-and-users",
+        "contentSha256": "2d28269f8c2f22700cab66cdba067f377fbc5477e6a6f4365650241e3a0adc5a"
+      },
+      {
+        "id": "authentication-and-email",
+        "contentSha256": "a47a3665df8e885bd034226de107c182564f6048ea74aa6707f2f1eaff6df8db"
+      },
+      {
+        "id": "types-statuses-fields",
+        "contentSha256": "6e3fa892dc9b2bb23d05bd7b3125a187cdd1cbafb384cdf2d248064a1bcd1abe"
+      },
+      {
+        "id": "matter-templates",
+        "contentSha256": "c458f44480e167baf2930bdad0f03a944b0f10b890c7ff10468543328016f9e9"
+      },
+      {
+        "id": "request-forms",
+        "contentSha256": "5981f17a9afc7dc219cf98d35d603f7c5491eed8c253b7fbd9e5fab294bd873b"
+      },
+      {
+        "id": "reminders-and-audit",
+        "contentSha256": "91583fda511a5d75941af7d8b919de5db42298846ee2b9dad65fcd6f43a4565c"
+      },
+      {
+        "id": "configure-signing",
+        "contentSha256": "13d8d4eab928e2b2a9ecc1c82865b4c4577f262416211aadf712d6cfb97042cc"
+      },
+      {
+        "id": "configure-analysis",
+        "contentSha256": "28bf804aa38a3559571e3251eddbfb1b52d5ca03897f372fac920c478ba01740"
+      },
+      {
+        "id": "install",
+        "contentSha256": "35b1bd584e291c4b42741097c9aa66ebd9db95092d293ed80821d3e7eee01b0f"
+      },
+      {
+        "id": "deployment-configuration",
+        "contentSha256": "b661e8eb9077609e5b06974d96043e80c95db5fa5ecca9d7bc779396ec605468"
+      },
+      {
+        "id": "upgrade",
+        "contentSha256": "96cc17166c77af291161ea34540f2c1c9683d2736cd903c42e2692ba9fe8e94d"
+      },
+      {
+        "id": "backup-and-restore",
+        "contentSha256": "3a36f9794df340c90d415b20578e8cc58b97ee1972ccdec4c09913358a308361"
+      },
+      {
+        "id": "operator-troubleshooting",
+        "contentSha256": "4f5920cb683a58e59e590a6ab7bc756bab31080345b6936baccfcadf0e5e1aab"
+      },
+      {
+        "id": "troubleshooting",
+        "contentSha256": "e2404361abcc621f8ee36fcd03dec23150bdabc0070d30678ba54caaabb9dd1b"
+      },
+      {
+        "id": "reference",
+        "contentSha256": "71259a27b93b495c22a73ba251ec3224ac610ae24b6dee7b88de83a2ac809135"
+      },
+      {
+        "id": "versions-and-support",
+        "contentSha256": "142c80618478cc104f3a1a506530f574f7ccfb90945442e16c7188a4cf7699d4"
+      },
+      {
+        "id": "entity-obligations",
+        "contentSha256": "b4a8ade34e728a7cb4de68a659779fe45d68781028d899b97c580771c1d0f604"
+      },
+      {
+        "id": "entity-structure-and-access",
+        "contentSha256": "95e5fbe88de8dcba1a417dada7ce078459a39aa633fa3f8e72d1ccc3a7295953"
+      },
+      {
+        "id": "archive-and-delete-documents",
+        "contentSha256": "f00bcd882a961a9944be0aed0bc83a991a29870eb318dbdfe8ef66c52c2c4551"
+      },
+      {
+        "id": "approver-groups",
+        "contentSha256": "baffd87c46ad0bfa7d084348f14bf7334da24590d99ca4c50a04cb870b7bdbb9"
+      }
+    ]
   }
 }

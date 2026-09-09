@@ -185,6 +185,7 @@ export function DocumentationReader({
     if (!audience && selectedAudience) search.set("audience", selectedAudience);
     return `${base}?${search}`;
   };
+  const badge = bundle.validationPending ? M.validationBadge : M.unverified;
   const resultList = (items: typeof results) => (
     <div className="docs-results">
       {items.map((a) => (
@@ -195,7 +196,7 @@ export function DocumentationReader({
               <Link to={`${base}/${a.id}`}>{a.title}</Link>
             </h2>
             <p>{documentationExcerpt(a, q, 180)}</p>
-            {a.unverified && <span className="docs-badge">{intl.formatMessage(M.unverified)}</span>}
+            {a.unverified && <span className="docs-badge">{intl.formatMessage(badge)}</span>}
           </div>
           <ChevronRight size={20} aria-hidden="true" />
         </section>
@@ -210,9 +211,9 @@ export function DocumentationReader({
       className={`docs-reader ${article ? "docs-reading" : ""}`}
     >
       <PageTitle title={title} />
-      {bundle.preview && (
+      {(bundle.preview || bundle.validationPending) && (
         <p className="docs-notice" role="status">
-          {intl.formatMessage(M.preview)}
+          {intl.formatMessage(bundle.preview ? M.preview : M.validationPending)}
         </p>
       )}
       <div className="docs-layout">
@@ -369,7 +370,7 @@ export function DocumentationReader({
                     })}
                   </span>
                   {article.unverified && (
-                    <span className="docs-badge">{intl.formatMessage(M.unverified)}</span>
+                    <span className="docs-badge">{intl.formatMessage(badge)}</span>
                   )}
                 </div>
                 {missingSection && (

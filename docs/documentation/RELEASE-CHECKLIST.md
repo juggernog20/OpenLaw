@@ -1,5 +1,9 @@
 # Documentation release checklist
 
+Use this checklist for fully verified release publication. Do not treat the
+development publication in [#800](https://github.com/juggernog20/OpenLaw/issues/800)
+as completion of these gates. It makes guides available with validation in progress.
+
 Owner: Blair Wentworth, @juggernog20. Use this checklist for the release handoff.
 Check a box only after completing its requirement. Keep a completed, dated copy
 with the edition's release record and link the actual artifacts and observations.

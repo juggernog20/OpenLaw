@@ -84,6 +84,19 @@ test("public documentation and export avoid API reads and all themes fit narrow 
   const archive = await request.get("/documentation-export/openlaw-documentation.tar.gz");
   expect(archive.status()).toBe(200);
   expect((await archive.body()).subarray(0, 2).toString("hex")).toBe("1f8b");
+  await page.getByRole("link", { name: /Contracts.*guides/ }).click();
+  await page.getByRole("link", { name: "Create and maintain a Contract", exact: true }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Create and maintain a Contract",
+  );
+  await expect(
+    page.getByText("Guide validation is in progress. Some instructions may change.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(page.getByText("Validation in progress", { exact: true })).toBeVisible();
+  await expect(page.getByText(/Development preview/)).toHaveCount(0);
+  expect(apiRequests).toEqual([]);
   await page.goto("/documentation/unavailable-fixture");
   await expect(page.getByRole("heading", { name: "Article unavailable" })).toBeVisible();
   const missing = await request.get("/documentation-export/unavailable-fixture.html");

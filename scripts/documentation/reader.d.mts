@@ -34,6 +34,7 @@ export interface DocumentationBundle {
     contentDigest: string;
   };
   preview: boolean;
+  validationPending: boolean;
   sections: { id: string; title: string }[];
   contexts: string[];
   bindings: {

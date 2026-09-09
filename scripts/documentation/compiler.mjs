@@ -380,6 +380,38 @@ const sanitizeOptions = {
   allowProtocolRelative: false,
 };
 
+/** TECH-027 keeps the owner's publication decision separate from verification. */
+function developmentPublication(edition, catalog) {
+  const entries = new Map();
+  const publication = edition.publication;
+  if (publication === undefined) return entries;
+  requireThat(edition.channel === "development", "publication requires a development edition");
+  requireThat(
+    publication &&
+      publication.status === "validation-pending" &&
+      nonempty(publication.approvedBy) &&
+      validDate(publication.approvedAt) &&
+      SHA.test(publication.sourceCommit) &&
+      nonempty(publication.reason),
+    "invalid development publication authorization",
+  );
+  array(publication.articles, "publication articles required");
+  requireThat(publication.articles.length > 0, "publication articles required");
+  for (const entry of publication.articles) {
+    requireThat(
+      entry && ID.test(entry.id) && HASH.test(entry.contentSha256) && !entries.has(entry.id),
+      "invalid or duplicate publication article",
+    );
+    const article = catalog.articles.find((a) => a.id === entry.id);
+    requireThat(
+      article && ["draft", "review"].includes(article.status),
+      `publication article must be a draft or review: ${entry.id}`,
+    );
+    entries.set(entry.id, entry.contentSha256);
+  }
+  return entries;
+}
+
 /** Validates the whole catalog; returns only eligible reader data and safe export files. */
 export function compileDocumentation({
   contentRoot,
@@ -438,10 +470,11 @@ export function compileDocumentation({
   const warnings = [],
     assetFiles = new Map(),
     parsed = new Map();
+  const publication = developmentPublication(edition, catalog);
   const eligible = catalog.articles.filter(
     (a) =>
       ["verified", "published"].includes(a.status) ||
-      (preview && ["draft", "review"].includes(a.status)),
+      ((preview || publication.has(a.id)) && ["draft", "review"].includes(a.status)),
   );
   const verified = eligible.filter((a) => ["verified", "published"].includes(a.status));
   if (verified.length) verifyApplicationCompatibility(edition, build);
@@ -450,6 +483,8 @@ export function compileDocumentation({
     const bytes = readOwned(contentRoot, `${a.id}.md`),
       source = bytes.toString("utf8");
     const unverified = !["verified", "published"].includes(a.status);
+    if (!preview && publication.has(a.id))
+      requireThat(sha256(bytes) === publication.get(a.id), `publication source changed: ${a.id}`);
     if (!unverified) verifyArticleEvidence(a, bytes, metadataRoot, edition, scenarios);
     const tokens = parser.lexer(source),
       outline = [],
@@ -640,9 +675,11 @@ export function compileDocumentation({
         warnings.length === 0),
     "complete suite still has unverified articles or coverage",
   );
+  const validationPending = !preview && publication.size > 0;
   const contentDigest = sha256(
     JSON.stringify({
       articles,
+      validationPending,
       sections: catalog.sections,
       redirects,
       contexts,
@@ -704,6 +741,7 @@ export function compileDocumentation({
       contentDigest,
     },
     preview,
+    validationPending,
     sections: catalog.sections,
     contexts,
     bindings,

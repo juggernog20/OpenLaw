@@ -87,6 +87,17 @@ export function documentationStatus({ root = repository, build = buildIdentity(r
       requiredRoleMethods: s.roles.length * s.requiredMethods.length,
     }));
   const distributionReview = check(() => verifyApplicationCompatibility(edition, build));
+  // TECH-027 lets the owner publish named unverified sources. Nothing else in this
+  // report distinguishes an edition that ships nothing from one that ships the whole
+  // suite with its verification outstanding, so the decision is reported on its own.
+  const developmentPublication = edition.publication
+    ? {
+        status: edition.publication.status,
+        approvedAt: edition.publication.approvedAt,
+        sourceCommit: edition.publication.sourceCommit,
+        articles: (edition.publication.articles ?? []).map((a) => a.id),
+      }
+    : null;
   const completePublication = check(() => {
     const incomplete = articles.find((a) => !a.pass);
     if (incomplete) throw new Error(`Article evidence is incomplete: ${incomplete.id}`);
@@ -129,6 +140,7 @@ export function documentationStatus({ root = repository, build = buildIdentity(r
       }),
     ),
     distributionReview,
+    developmentPublication,
     completePublication,
     sharedScenarios: shared,
     articles,
@@ -136,7 +148,7 @@ export function documentationStatus({ root = repository, build = buildIdentity(r
     notes: [
       "Evidence counts use the compiler's article checks and retained local scenario references. Only complete valid articles receive role/method credit.",
       "Evidence validity, catalog state, distribution compatibility and complete publication are separate results. This report runs no reader walkthroughs and changes no status.",
-      "Publication requires valid retained article evidence and the complete-suite compiler gate, including clean-build and final discovery/offline evidence requirements.",
+      "Fully verified release publication requires valid retained article evidence and the complete-suite compiler gate. Owner-authorized development publication does not grant evidence credit.",
     ],
   };
 }
