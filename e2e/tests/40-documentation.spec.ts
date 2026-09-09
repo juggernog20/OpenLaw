@@ -93,7 +93,7 @@ test("public documentation and export avoid API reads and all themes fit narrow 
     page.getByText("Guide validation is in progress. Some instructions may change.", {
       exact: true,
     }),
-  ).toBeVisible();
+  ).toHaveCount(0);
   await expect(page.getByText("Validation in progress", { exact: true })).toBeVisible();
   await expect(page.getByText(/Development preview/)).toHaveCount(0);
   expect(apiRequests).toEqual([]);

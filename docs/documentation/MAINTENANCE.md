@@ -60,7 +60,7 @@ Preserve the authored source audit separately from its independent acceptance.
 
 Missing or stale evidence keeps an article out of normal publication. The exception
 is an article the edition's TECH-027 publication record names. That record makes the
-article available with a validation-in-progress notice. It grants no evidence credit.
+article available with a validation-in-progress article badge. It grants no evidence credit.
 Record the failure against its coverage ID, correct it, and retain the retest beside the
 failed attempt. A blocked group stays in the denominator. A release exception needs
 Blair's explicit decision, reason, owner and future target; it does not turn an

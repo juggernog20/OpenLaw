@@ -32,11 +32,11 @@ describe("public documentation", () => {
     );
   };
 
-  it("shows published guides with validation pending instead of a development preview", () => {
+  it("shows published guides without the validation banner", () => {
     const overview = renderPublished("/");
     expect(
-      screen.getByText("Guide validation is in progress. Some instructions may change."),
-    ).toBeVisible();
+      screen.queryByText("Guide validation is in progress. Some instructions may change."),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText(/Development preview/)).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Validation fixtures.*2 guides/ })).toBeVisible();
     overview.unmount();
@@ -44,8 +44,8 @@ describe("public documentation", () => {
     renderPublished("/validation-recovery");
     expect(screen.getByRole("heading", { name: "Recover a validation fixture" })).toBeVisible();
     expect(
-      screen.getByText("Guide validation is in progress. Some instructions may change."),
-    ).toBeVisible();
+      screen.queryByText("Guide validation is in progress. Some instructions may change."),
+    ).not.toBeInTheDocument();
     expect(screen.getByText("Validation in progress")).toBeVisible();
     expect(screen.queryByText("Unverified article")).not.toBeInTheDocument();
   });

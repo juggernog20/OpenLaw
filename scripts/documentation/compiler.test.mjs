@@ -188,10 +188,10 @@ test("authorized development publication includes current sources without claimi
   assert.equal(bundle.articles.length, 2);
   assert.equal(bundle.report.verified, 0);
   assert.ok(bundle.articles.every((a) => a.unverified));
-  assert.match(files.get("index.html"), /Guide validation is in progress/);
+  assert.doesNotMatch(files.get("index.html"), /Guide validation is in progress/);
   assert.doesNotMatch(files.get("index.html"), /Development preview/);
   const page = files.get("submit.html");
-  assert.match(page, /Guide validation is in progress/);
+  assert.doesNotMatch(page, /Guide validation is in progress/);
   assert.match(page, /docs-badge">Validation in progress</);
   assert.doesNotMatch(page, /Unverified article/);
   assert.doesNotMatch(JSON.stringify(bundle), /Fixture maintainer|Publish the current guide/);
