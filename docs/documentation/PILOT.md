@@ -2,9 +2,11 @@
 
 Task: [#728](https://github.com/juggernog20/OpenLaw/issues/728). The pilot follows one
 Contract-targeting form across Administrator, Business User, and Legal Team Member
-sessions. Its four canonical articles are drafts in the development preview. Their
-full C09/C12/C13/C40 scenarios remain unverified; normal publication includes none
-of these drafts. Passing this bounded pilot does not complete those coverage groups.
+sessions. Its four canonical articles are still in review, and their full
+C09/C12/C13/C40 scenarios remain unverified. The TECH-027 publication record makes
+them available in the development app with a validation-in-progress notice. That
+availability is not verification. Passing this bounded pilot does not complete those
+coverage groups.
 
 ## Articles and handoff
 

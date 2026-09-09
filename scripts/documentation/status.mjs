@@ -87,6 +87,17 @@ export function documentationStatus({ root = repository, build = buildIdentity(r
       requiredRoleMethods: s.roles.length * s.requiredMethods.length,
     }));
   const distributionReview = check(() => verifyApplicationCompatibility(edition, build));
+  // TECH-027 lets the owner publish named unverified sources. Nothing else in this
+  // report distinguishes an edition that ships nothing from one that ships the whole
+  // suite with its verification outstanding, so the decision is reported on its own.
+  const developmentPublication = edition.publication
+    ? {
+        status: edition.publication.status,
+        approvedAt: edition.publication.approvedAt,
+        sourceCommit: edition.publication.sourceCommit,
+        articles: (edition.publication.articles ?? []).map((a) => a.id),
+      }
+    : null;
   const completePublication = check(() => {
     const incomplete = articles.find((a) => !a.pass);
     if (incomplete) throw new Error(`Article evidence is incomplete: ${incomplete.id}`);
@@ -129,6 +140,7 @@ export function documentationStatus({ root = repository, build = buildIdentity(r
       }),
     ),
     distributionReview,
+    developmentPublication,
     completePublication,
     sharedScenarios: shared,
     articles,

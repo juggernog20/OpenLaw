@@ -59,8 +59,10 @@ writes the normal standalone files and archive to ignored `.documentation-output
 is publishing test material, not an OpenLaw procedure. It never joins the real catalog.
 
 Normal builds include only `verified` or `published` articles with valid evidence.
-An empty early edition says that no verified articles are available. `scoped` and
-`ready` entries never produce placeholders. A draft/review preview is opt-in:
+They also include each `draft` or `review` article the edition's TECH-027 publication
+record names, if that source still hashes to the approved bytes. Such a build shows a
+validation-in-progress notice. An empty early edition says that no verified articles
+are available. `scoped` and `ready` entries never produce placeholders. A draft/review preview is opt-in:
 
 ```sh
 OPENLAW_DOCS_PREVIEW=true pnpm --filter @openlaw/web dev

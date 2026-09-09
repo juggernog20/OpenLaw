@@ -233,3 +233,34 @@ test("publication needs the matching complete-edition record and retained shared
   assert.equal(f.status().completePublication.pass, false);
   assert.match(f.status().completePublication.error, /missing file/);
 });
+
+test("the report names an owner-authorized development publication and grants it no credit", (t) => {
+  const f = fixture(t);
+  assert.equal(f.status().developmentPublication, null);
+  const edition = JSON.parse(readFileSync(join(f.root, f.metadata + "edition.json"), "utf8"));
+  edition.publication = {
+    status: "validation-pending",
+    approvedBy: "Fixture maintainer",
+    approvedAt: "2026-09-09T00:00:00Z",
+    sourceCommit: commit,
+    reason: "Publish the current guide sources while validation continues.",
+    articles: f.articles.map((a) => ({
+      id: a.id,
+      contentSha256: createHash("sha256")
+        .update(readFileSync(join(f.root, `docs/user-guides/${a.id}.md`)))
+        .digest("hex"),
+    })),
+  };
+  f.put(f.metadata + "edition.json", edition);
+  const result = f.status();
+  assert.deepEqual(result.developmentPublication, {
+    status: "validation-pending",
+    approvedAt: "2026-09-09T00:00:00Z",
+    sourceCommit: commit,
+    articles: ["account", "provider"],
+  });
+  assert.doesNotMatch(JSON.stringify(result), /Fixture maintainer|while validation continues/);
+  assert.equal(result.counts.articlesWithValidEvidence, 1);
+  assert.equal(result.counts.catalogVerifiedOrPublished, 0);
+  assert.equal(result.completePublication.pass, false);
+});

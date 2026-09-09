@@ -380,7 +380,6 @@ const sanitizeOptions = {
   allowProtocolRelative: false,
 };
 
-/** Validates the whole catalog; returns only eligible reader data and safe export files. */
 /** TECH-027 keeps the owner's publication decision separate from verification. */
 function developmentPublication(edition, catalog) {
   const entries = new Map();
@@ -413,6 +412,7 @@ function developmentPublication(edition, catalog) {
   return entries;
 }
 
+/** Validates the whole catalog; returns only eligible reader data and safe export files. */
 export function compileDocumentation({
   contentRoot,
   metadataRoot,

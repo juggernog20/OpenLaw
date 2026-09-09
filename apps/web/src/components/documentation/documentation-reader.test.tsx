@@ -14,25 +14,40 @@ vi.mock("virtual:openlaw-documentation", async () => {
 });
 
 describe("public documentation", () => {
-  it("shows published guides with validation pending instead of a development preview", () => {
-    const router = createMemoryRouter([
-      {
-        path: "/",
-        element: (
-          <DocumentationReader bundle={{ ...generated, preview: false, validationPending: true }} />
-        ),
-      },
-    ]);
-    render(
+  const renderPublished = (path: string) => {
+    const element = (
+      <DocumentationReader bundle={{ ...generated, preview: false, validationPending: true }} />
+    );
+    const router = createMemoryRouter(
+      [
+        { path: "/", element },
+        { path: "/:articleId", element },
+      ],
+      { initialEntries: [path] },
+    );
+    return render(
       <IntlProvider locale="en-US" defaultLocale="en-US">
         <RouterProvider router={router} />
       </IntlProvider>,
     );
+  };
+
+  it("shows published guides with validation pending instead of a development preview", () => {
+    const overview = renderPublished("/");
     expect(
       screen.getByText("Guide validation is in progress. Some instructions may change."),
     ).toBeVisible();
     expect(screen.queryByText(/Development preview/)).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Validation fixtures.*2 guides/ })).toBeVisible();
+    overview.unmount();
+
+    renderPublished("/validation-recovery");
+    expect(screen.getByRole("heading", { name: "Recover a validation fixture" })).toBeVisible();
+    expect(
+      screen.getByText("Guide validation is in progress. Some instructions may change."),
+    ).toBeVisible();
+    expect(screen.getByText("Validation in progress")).toBeVisible();
+    expect(screen.queryByText("Unverified article")).not.toBeInTheDocument();
   });
 
   it("offers no adjacent guides when the current article is outside the audience filter", async () => {
