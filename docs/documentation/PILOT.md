@@ -4,7 +4,7 @@ Task: [#728](https://github.com/juggernog20/OpenLaw/issues/728). The pilot follo
 Contract-targeting form across Administrator, Business User, and Legal Team Member
 sessions. Its four canonical articles are still in review, and their full
 C09/C12/C13/C40 scenarios remain unverified. The TECH-027 publication record makes
-them available in the development app with a validation-in-progress notice. That
+them available in the development app with a validation-in-progress article badge. That
 availability is not verification. Passing this bounded pilot does not complete those
 coverage groups.
 

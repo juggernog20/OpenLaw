@@ -61,7 +61,7 @@ is publishing test material, not an OpenLaw procedure. It never joins the real c
 Normal builds include only `verified` or `published` articles with valid evidence.
 They also include each `draft` or `review` article the edition's TECH-027 publication
 record names, if that source still hashes to the approved bytes. Such a build shows a
-validation-in-progress notice. An empty early edition says that no verified articles
+validation-in-progress article badge. An empty early edition says that no verified articles
 are available. `scoped` and `ready` entries never produce placeholders. A draft/review preview is opt-in:
 
 ```sh

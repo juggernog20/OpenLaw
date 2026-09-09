@@ -2528,9 +2528,6 @@
   "docs.validationBadge": {
     "defaultMessage": "Validation in progress"
   },
-  "docs.validationPending": {
-    "defaultMessage": "Guide validation is in progress. Some instructions may change."
-  },
   "docs.writtenFor": {
     "defaultMessage": "For {roles}"
   },

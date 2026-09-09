@@ -1311,6 +1311,9 @@ verification status and evidence stay unchanged. `docs:complete` and release
 editions retain TECH-026's verification requirements. Promotion to verified removes
 the article's development-publication entry and supplies its actual evidence.
 
+Amended 2026-09-09 at the owner's request: remove the page-wide validation notice
+from the app and standalone edition. Keep the article validation badges.
+
 ### Consequences
 
 The guides are available for use in the development app while validation proceeds.

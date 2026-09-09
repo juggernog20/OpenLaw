@@ -148,9 +148,9 @@ describe("Help in the app shells", () => {
     );
     expect(
       within(screen.getByRole("navigation", { name: "Documentation" })).getByRole("link", {
-        name: "Read this article in the full documentation",
+        name: "All documentation",
       }),
-    ).toBeVisible();
+    ).toHaveAttribute("href", "/documentation");
   });
 
   it("keeps the shared error page for failures other than the session check", async () => {

@@ -211,9 +211,9 @@ export function DocumentationReader({
       className={`docs-reader ${article ? "docs-reading" : ""}`}
     >
       <PageTitle title={title} />
-      {(bundle.preview || bundle.validationPending) && (
+      {bundle.preview && (
         <p className="docs-notice" role="status">
-          {intl.formatMessage(bundle.preview ? M.preview : M.validationPending)}
+          {intl.formatMessage(M.preview)}
         </p>
       )}
       <div className="docs-layout">
@@ -267,9 +267,7 @@ export function DocumentationReader({
           <nav className="docs-sidebar-footer" aria-label={intl.formatMessage(M.title)}>
             <Link to={base}>{intl.formatMessage(destination === "formal" ? M.all : M.help)}</Link>
             {destination !== "formal" && (
-              <Link to={article ? `/documentation/${article.id}${hash}` : "/documentation"}>
-                {intl.formatMessage(article ? M.formal : M.all)}
-              </Link>
+              <Link to="/documentation">{intl.formatMessage(M.all)}</Link>
             )}
           </nav>
         </aside>
