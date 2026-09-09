@@ -11,12 +11,13 @@ This document is the working checklist for the initial end-to-end product review
 
 An interaction is complete only after it has been manually tested and any agreed follow-up has been resolved. Page-level checkboxes are roll-ups; check one only when every interaction listed beneath that page is complete.
 
-## Current review checkpoint — 8 September 2026
+## Current review checkpoint — 9 September 2026
 
-- Resume at **Matter record → Documents → folder organization** on M-89. The current browser page does not determine the review sequence.
+- Resume at **Matter record → Documents → document reader** on M-89. The current browser page does not determine the review sequence.
 - Blair approved the expanded Task detail modal (description, attachments, comments), Matter Tasks list, and earlier Add Task modal. Task rows now sort by due date, with undated Tasks last; Move up/down was removed after Blair’s feedback. Key date Edit form UX and canceling/confirming removal are also approved.
 - Keep the Key dates name. The redundant State column was removed. The standalone record Due date was withdrawn in favor of Tasks, Key dates, and derived Next deadline.
-- Blair approved New contract from Linked Contracts after the shared form was fixed to include all attached Fields and the linked list was fixed to omit archived Contracts. Continue remaining Matter UX components before starting Contract record review; next is organizing Documents into folders. Blair requested dragging saved Documents on Matters, Contracts, and the Documents repository, and replacing “The matter itself” with None in move menus. Drag-and-drop and the None label are ready for UX review. Folder chevrons now appear only for folders with visible Documents or subfolders, following Blair’s next feedback. Unchecked Key date items remain outstanding; the tab is not marked complete.
+- Blair approved New contract from Linked Contracts after the shared form was fixed to include all attached Fields and the linked list was fixed to omit archived Contracts. Continue remaining Matter UX components before starting Contract record review; next is the document reader as a complete UX component. Blair requested dragging saved Documents on Matters, Contracts, and the Documents repository, and replacing “The matter itself” with None in move menus. Drag-and-drop and the None label are ready for UX review. Folder chevrons now appear only for folders with visible Documents or subfolders, following Blair’s next feedback. Unchecked Key date items remain outstanding; the tab is not marked complete.
+- Pending implementation: previous-version actions. Proposed menu includes editing version metadata, Download, Compare, reversible archive/restore, and Administrator deletion with dependency protection. This is not built or marked reviewed.
 - Guide one complete UX component at a time, not individual clicks. Routine persistence and validation checks belong in automated tests; their manual checkboxes remain open unless Blair actually reviewed them. Earlier unchecked items are outstanding, not evidence that an approved component needs to be reviewed again from scratch.
 
 ## Inventory basis
