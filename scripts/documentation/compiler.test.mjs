@@ -565,6 +565,46 @@ test("standalone redirects include cross-page anchor moves and remain readable w
   assert.match(files.get("redirect.js"), /resolveDocumentationLink/);
 });
 
+test("every local link the retained edition writes names a page it contains", (t) => {
+  const f = fixture(t);
+  // The edition writes redirect targets in three places: the whole-article
+  // moved page, the moved-section link inside an article, and the script that
+  // follows a fragment. It builds its pages from the formal articles, so a
+  // redirect naming an article it left out would dangle.
+  f.json("redirects.json", {
+    schemaVersion: 1,
+    redirects: [
+      { from: "old-submit", to: "submit" },
+      { from: "submit#older-section", to: "recover#retry" },
+    ],
+  });
+  const { bundle, files } = f.compile();
+  assert.match(files.get("old-submit.html"), /href="submit.html"/);
+  assert.match(files.get("submit.html"), /href="recover.html#retry"/);
+  for (const r of bundle.redirects) {
+    const resolved = resolveDocumentationLink(bundle, r.from);
+    assert.ok(resolved, `redirect loop: ${r.from}`);
+    assert.ok(files.has(`${resolved.split("#")[0]}.html`), `${r.from} leaves the edition`);
+  }
+  const hrefs = new Set(
+    [...files]
+      .filter(([name]) => name.endsWith(".html"))
+      .flatMap(([, html]) => [...html.matchAll(/href="([a-z\d-]+\.html)(?:#[a-z\d-]+)?"/g)])
+      .map((m) => m[1]),
+  );
+  assert.ok(hrefs.size > 3);
+  for (const href of hrefs) assert.ok(files.has(href), `dangling link to ${href}`);
+  // Nothing can become a redirect target without a page, because the
+  // catalogue refuses an article that leaves the formal destination out.
+  f.articles[1].destinations = ["staff-help"];
+  f.json("articles.json", {
+    schemaVersion: 1,
+    sections: [{ id: "start", title: "Start here" }],
+    articles: f.articles,
+  });
+  assert.throws(() => f.compile(), /formal destination required: recover/);
+});
+
 test("validation fixtures require an explicit preview", () => {
   assert.throws(() => compileWorkspace({ fixture: true, preview: false }), /preview/i);
 });
