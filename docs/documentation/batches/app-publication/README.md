@@ -29,6 +29,15 @@ promoted to verified and supply the required real evidence. Do not change old ev
 to match a newer source or build. A release edition cannot carry this development
 publication record, and `docs:complete` continues to reject an unverified suite.
 
+## Amendments
+
+The independent Opus 5 review of the implementation PR found that
+[versions-and-support.md](../../../user-guides/versions-and-support.md) still named
+only the development-preview notice and badge, which this edition never shows. That
+guide now describes both notices and the **Not yet verified** supported-app value.
+Its publication hash was updated for the corrected bytes. The review made no other
+change to a guide source and promoted no article.
+
 DOC-022 #742, DOC-025 #745 and fully verified release publication #747 remain open.
 The 56-guide and 55-coverage-group denominators are unchanged. Verification of the
 publication mechanism and served readers is recorded in the implementation PR linked from #800.
