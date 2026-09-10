@@ -40,7 +40,7 @@
  * why, and the API refuses the write behind it.
  */
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import { TriangleAlert } from "lucide-react";
@@ -501,6 +501,96 @@ function TargetControl({
   );
 }
 
+/** INT-003 publishes a calendar-day suggestion, never a change to existing estimates. */
+function TurnaroundControl({
+  typeId,
+  initial,
+}: Readonly<{ typeId: string; initial: number | null }>) {
+  const intl = useIntl();
+  const [saved, setSaved] = useState(initial);
+  const [draft, setDraft] = useState(initial === null ? "" : String(initial));
+  const [status, setStatus] = useState<FieldStatus>("idle");
+  const [error, setError] = useState<string | null>(null);
+  const pending = useRef(false);
+  async function commit() {
+    if (pending.current) return;
+    const turnaroundDays = draft.trim() === "" ? null : Number(draft);
+    if (
+      turnaroundDays !== null &&
+      (!Number.isInteger(turnaroundDays) || turnaroundDays < 0 || turnaroundDays > 36500)
+    ) {
+      setStatus("error");
+      setError(
+        intl.formatMessage({
+          id: "settings.requestTypeEditor.turnaroundInvalid",
+          defaultMessage: "Enter a whole number from 0 to 36,500 calendar days, or leave it blank.",
+        }),
+      );
+      return;
+    }
+    if (turnaroundDays === saved) return;
+    pending.current = true;
+    setStatus("saving");
+    setError(null);
+    const result = await api
+      .PATCH("/api/v1/request-types/{id}", {
+        params: { path: { id: typeId } },
+        body: { turnaroundDays },
+      })
+      .catch(() => undefined);
+    if (result?.data) {
+      const next = result.data.requestType.turnaroundDays;
+      setSaved(next);
+      setDraft(next === null ? "" : String(next));
+      setStatus("saved");
+    } else {
+      setStatus("error");
+      setError((await problem(result)).detail ?? null);
+    }
+    pending.current = false;
+  }
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor="request-type-turnaround">
+        <FormattedMessage
+          id="settings.requestTypeEditor.turnaround"
+          defaultMessage="Turnaround (calendar days)"
+        />
+      </Label>
+      <input
+        id="request-type-turnaround"
+        type="number"
+        min="0"
+        max="36500"
+        step="1"
+        className={CONTROL_CLASS}
+        value={draft}
+        disabled={status === "saving"}
+        onChange={(event) => setDraft(event.target.value)}
+        onBlur={() => void commit()}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            void commit();
+          }
+          if (event.key === "Escape") {
+            setDraft(saved === null ? "" : String(saved));
+            setStatus("idle");
+          }
+        }}
+        aria-describedby="request-type-turnaround-help"
+      />
+      <p id="request-type-turnaround-help" className="text-xs text-muted">
+        <FormattedMessage
+          id="settings.requestTypeEditor.turnaroundHint"
+          defaultMessage="Suggests an expected return date from submission for Legal to confirm. Blank means no suggestion; saved Request estimates stay unchanged."
+        />
+      </p>
+      <StatusNote status={status} detail={error} />
+    </div>
+  );
+}
+
 export function SettingsRequestTypeEditorPage() {
   const { requestType, matterTypes, contractTypes, attachedFields, catalog } =
     useLoaderData<typeof settingsRequestTypeEditorLoader>();
@@ -523,13 +613,20 @@ export function SettingsRequestTypeEditorPage() {
       api={EDITOR_API}
       messages={MESSAGES}
       identityExtra={
-        <TargetControl
-          typeId={requestType.id}
-          initial={target}
-          onTargetSaved={setTarget}
-          matterTypes={matterTypes}
-          contractTypes={contractTypes}
-        />
+        <>
+          <TurnaroundControl
+            key={requestType.id}
+            typeId={requestType.id}
+            initial={requestType.turnaroundDays ?? null}
+          />
+          <TargetControl
+            typeId={requestType.id}
+            initial={target}
+            onTargetSaved={setTarget}
+            matterTypes={matterTypes}
+            contractTypes={contractTypes}
+          />
+        </>
       }
       attachments={{
         initialAttached: attachedFields,

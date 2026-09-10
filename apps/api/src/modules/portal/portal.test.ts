@@ -154,6 +154,7 @@ describe("the request types a requester is offered", () => {
       slug: "nda_request",
       displayName: "NDA request",
       description: "Mutual or one-way NDA with a counterparty.",
+      turnaroundDays: null,
       displayOrder: 1,
     });
   });
@@ -169,6 +170,7 @@ describe("the request types a requester is offered", () => {
       "displayOrder",
       "id",
       "slug",
+      "turnaroundDays",
     ]);
   });
 

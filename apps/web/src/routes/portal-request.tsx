@@ -72,6 +72,7 @@
  *    than under it. Below that width the mock's order holds.
  */
 
+import { RequestExpectation } from "../components/portal/request-expectation";
 import { HelpLink } from "../components/documentation/help-link";
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { defineMessage, FormattedMessage, useIntl, type IntlShape } from "react-intl";
@@ -179,6 +180,7 @@ export function PortalRequestPage() {
       <HelpLink surface="portal" contextual />
       <div className="grid gap-section-gap @3xl/page:grid-cols-portal-split">
         <div className="flex min-w-0 flex-col gap-4">
+          <RequestExpectation request={request} />
           <StatusBanner status={request.status} declinedReason={request.declinedReason} />
           {/* I7 puts the conversation between the banner and the card,
               which is where a requester looks first: what has been said

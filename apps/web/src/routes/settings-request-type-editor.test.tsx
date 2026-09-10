@@ -45,6 +45,7 @@ interface StubType {
   inUseCount: number;
   targetModule: "matter" | "contract" | null;
   targetTypeId: string | null;
+  turnaroundDays: number | null;
   formFieldCount: number;
 }
 
@@ -103,6 +104,7 @@ function review(overrides: Partial<StubType> = {}): StubType {
     inUseCount: 0,
     targetModule: "contract",
     targetTypeId: null,
+    turnaroundDays: null,
     formFieldCount: 1,
     ...overrides,
   };
@@ -550,6 +552,7 @@ describe("moving between two request types on the same route (#372)", () => {
     inUseCount: 0,
     targetModule: null,
     targetTypeId: null,
+    turnaroundDays: null,
     formFieldCount: 0,
   };
 
@@ -593,4 +596,24 @@ describe("moving between two request types on the same route (#372)", () => {
     expect(within(menu).getAllByRole("menuitem")).toHaveLength(1);
     expect(within(menu).getByRole("menuitem", { name: /Department/ })).toBeInTheDocument();
   });
+});
+
+it("saves a whole calendar-day turnaround, rejects fractions, and clears back to no suggestion", async () => {
+  const calls = newCalls();
+  openEditor(editorApi(calls));
+  const user = userEvent.setup();
+  const input = await screen.findByLabelText("Turnaround (calendar days)");
+  expect(input).toHaveValue(null);
+  await user.type(input, "3{Enter}");
+  await waitFor(() => expect(calls.patches).toEqual([{ turnaroundDays: 3 }]));
+  await waitFor(() => expect(input).toBeEnabled());
+  await user.clear(input);
+  await user.type(input, "1.5{Enter}");
+  expect(await screen.findByText(/Enter a whole number from 0/)).toBeInTheDocument();
+  expect(calls.patches).toHaveLength(1);
+  await user.clear(input);
+  await user.tab();
+  await waitFor(() =>
+    expect(calls.patches).toEqual([{ turnaroundDays: 3 }, { turnaroundDays: null }]),
+  );
 });

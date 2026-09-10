@@ -237,6 +237,7 @@ type RequestPayloads = {
    * resolution with no closing reply looks identical here, because what
    * this entry records is the closure and not the answer. */
   "request.resolved": { number: number };
+  "request.expected_by_changed": { number: number; from: string | null; to: string | null };
   "request.assignee_changed": {
     number: number;
     assignee: string | null;

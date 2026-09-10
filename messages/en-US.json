@@ -330,7 +330,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} turnaroundDays {Turnaround (calendar days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -514,6 +514,9 @@
   },
   "activity.request.declined": {
     "defaultMessage": "{actor} declined this request"
+  },
+  "activity.request.expectedByChanged": {
+    "defaultMessage": "{set, select, yes {{actor} set Expected back (estimate) to {date}} other {{actor} cleared Expected back (estimate)}}"
   },
   "activity.request.resolved": {
     "defaultMessage": "{actor} resolved this request"
@@ -5846,6 +5849,9 @@
   "portal.request.meta": {
     "defaultMessage": "{reference} · {requestType} · Submitted {submitted}"
   },
+  "portal.request.owner": {
+    "defaultMessage": "Owner: {name}"
+  },
   "portal.request.paperOnThread": {
     "defaultMessage": "<composer>Attach new files to a reply</composer>."
   },
@@ -5885,6 +5891,9 @@
   "portal.request.threadYou": {
     "defaultMessage": "You"
   },
+  "portal.request.unassigned": {
+    "defaultMessage": "Not assigned yet"
+  },
   "portal.settings.heading": {
     "defaultMessage": "How we tell you about your requests"
   },
@@ -5902,6 +5911,9 @@
   },
   "portal.theme.failed": {
     "defaultMessage": "The theme could not be saved. Please choose it again to retry."
+  },
+  "portal.turnaround": {
+    "defaultMessage": "Estimated turnaround: {days, plural, one {# calendar day} other {# calendar days}}"
   },
   "recordFilters.apply": {
     "defaultMessage": "Apply"
@@ -6110,6 +6122,24 @@
   "renewal.vehicle.successorBlurb": {
     "defaultMessage": "Standalone record linked as the renewal."
   },
+  "requests.clearEstimate": {
+    "defaultMessage": "Clear estimate"
+  },
+  "requests.estimateHint": {
+    "defaultMessage": "An estimate from Legal, separate from the requester's Needed by date. Suggested dates use the request type's calendar-day turnaround from submission."
+  },
+  "requests.estimateNotSet": {
+    "defaultMessage": "Not set yet"
+  },
+  "requests.estimatePassed": {
+    "defaultMessage": "Estimate passed"
+  },
+  "requests.expectedBack": {
+    "defaultMessage": "Expected back (estimate)"
+  },
+  "requests.expectedBackValue": {
+    "defaultMessage": "Expected back (estimate): {date}"
+  },
   "requests.reference": {
     "defaultMessage": "R-{number, number, ::group-off}"
   },
@@ -6118,6 +6148,9 @@
   },
   "requests.statusLabel": {
     "defaultMessage": "{status, select, new {New} converted {Converted} resolved {Resolved} declined {Declined} other {Unknown}}"
+  },
+  "requests.useSuggestedEstimate": {
+    "defaultMessage": "Use suggested date: {date}"
   },
   "resolve.explains": {
     "defaultMessage": "Explain why this request can be closed without creating a contract or matter."
@@ -8326,6 +8359,15 @@
   },
   "settings.requestTypeEditor.targetNone": {
     "defaultMessage": "No target"
+  },
+  "settings.requestTypeEditor.turnaround": {
+    "defaultMessage": "Turnaround (calendar days)"
+  },
+  "settings.requestTypeEditor.turnaroundHint": {
+    "defaultMessage": "Suggests an expected return date from submission for Legal to confirm. Blank means no suggestion; saved Request estimates stay unchanged."
+  },
+  "settings.requestTypeEditor.turnaroundInvalid": {
+    "defaultMessage": "Enter a whole number from 0 to 36,500 calendar days, or leave it blank."
   },
   "settings.requestTypes.add": {
     "defaultMessage": "Add request type"

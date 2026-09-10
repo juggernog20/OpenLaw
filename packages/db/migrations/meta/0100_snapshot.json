@@ -1,6 +1,6 @@
 {
-  "id": "69713d2e-92fd-4ad7-9fb4-9aae5c0fb6a3",
-  "prevId": "f7c3de48-67fe-419d-a72d-af020dab6218",
+  "id": "c1931179-6793-442a-960f-24c8e1bb476c",
+  "prevId": "69713d2e-92fd-4ad7-9fb4-9aae5c0fb6a3",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -2504,78 +2504,6 @@
           "value": "\"contract_relations\".\"from_contract_id\" <> \"contract_relations\".\"to_contract_id\""
         }
       },
-      "isRLSEnabled": false
-    },
-    "public.contract_stakeholders": {
-      "name": "contract_stakeholders",
-      "schema": "",
-      "columns": {
-        "contract_id": {
-          "name": "contract_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "contract_stakeholders_user_idx": {
-          "name": "contract_stakeholders_user_idx",
-          "columns": [
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "contract_stakeholders_contract_id_contracts_id_fk": {
-          "name": "contract_stakeholders_contract_id_contracts_id_fk",
-          "tableFrom": "contract_stakeholders",
-          "tableTo": "contracts",
-          "columnsFrom": ["contract_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "contract_stakeholders_user_id_users_id_fk": {
-          "name": "contract_stakeholders_user_id_users_id_fk",
-          "tableFrom": "contract_stakeholders",
-          "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "contract_stakeholders_pkey": {
-          "name": "contract_stakeholders_pkey",
-          "columns": ["contract_id", "user_id"]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.contract_statuses": {
@@ -8859,6 +8787,12 @@
           "notNull": true,
           "default": "now()"
         },
+        "turnaround_days": {
+          "name": "turnaround_days",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "target_module": {
           "name": "target_module",
           "type": "text",
@@ -8919,6 +8853,10 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
+        "request_types_turnaround_days_check": {
+          "name": "request_types_turnaround_days_check",
+          "value": "\"request_types\".\"turnaround_days\" >= 0 AND \"request_types\".\"turnaround_days\" <= 36500"
+        },
         "request_types_target_check": {
           "name": "request_types_target_check",
           "value": "(\n        (\"request_types\".\"target_module\" is null and \"request_types\".\"target_matter_type_id\" is null and \"request_types\".\"target_contract_type_id\" is null)\n        or (\"request_types\".\"target_module\" is not distinct from 'matter' and \"request_types\".\"target_contract_type_id\" is null)\n        or (\"request_types\".\"target_module\" is not distinct from 'contract' and \"request_types\".\"target_matter_type_id\" is null)\n      )"
@@ -8964,6 +8902,12 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "expected_by": {
+          "name": "expected_by",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
         },
         "assignee_id": {
           "name": "assignee_id",
@@ -9331,6 +9275,78 @@
           "value": "\"signing_connectors\".\"environment\" in ('demo', 'production')"
         }
       },
+      "isRLSEnabled": false
+    },
+    "public.contract_stakeholders": {
+      "name": "contract_stakeholders",
+      "schema": "",
+      "columns": {
+        "contract_id": {
+          "name": "contract_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "contract_stakeholders_user_idx": {
+          "name": "contract_stakeholders_user_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "contract_stakeholders_contract_id_contracts_id_fk": {
+          "name": "contract_stakeholders_contract_id_contracts_id_fk",
+          "tableFrom": "contract_stakeholders",
+          "tableTo": "contracts",
+          "columnsFrom": ["contract_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "contract_stakeholders_user_id_users_id_fk": {
+          "name": "contract_stakeholders_user_id_users_id_fk",
+          "tableFrom": "contract_stakeholders",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "contract_stakeholders_pkey": {
+          "name": "contract_stakeholders_pkey",
+          "columns": ["contract_id", "user_id"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
       "isRLSEnabled": false
     }
   },

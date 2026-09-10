@@ -35,6 +35,7 @@
 import { sql } from "drizzle-orm";
 import {
   check,
+  date,
   index,
   integer,
   jsonb,
@@ -79,6 +80,8 @@ export const requests = pgTable(
     requesterId: text("requester_id")
       .notNull()
       .references(() => users.id),
+    /** INT-003: Legal’s confirmed return estimate, independent of Needed by; NULL means unset. */
+    expectedBy: date("expected_by"),
     /** The staff member responsible for triage, independently of the outcome. */
     assigneeId: text("assignee_id").references(() => users.id, { onDelete: "set null" }),
     /** Born `new`; M21's disposition routes write the other three. */

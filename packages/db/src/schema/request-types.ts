@@ -35,7 +35,7 @@
  */
 
 import { sql } from "drizzle-orm";
-import { check, pgTable, text, uniqueIndex } from "drizzle-orm/pg-core";
+import { check, integer, pgTable, text, uniqueIndex } from "drizzle-orm/pg-core";
 import { contractTypes } from "./contract-types.js";
 import { matterTypes } from "./matter-types.js";
 import { taxonomyColumns } from "./helpers.js";
@@ -44,6 +44,8 @@ export const requestTypes = pgTable(
   "request_types",
   {
     ...taxonomyColumns(),
+    /** INT-003: calendar days offered to triage as an unconfirmed estimate; NULL means no suggestion. */
+    turnaroundDays: integer("turnaround_days"),
     /** What converting one of these requests creates: NULL (nothing),
      * `matter`, or `contract`. */
     targetModule: text("target_module"),
@@ -59,6 +61,10 @@ export const requestTypes = pgTable(
     }),
   },
   (table) => [
+    check(
+      "request_types_turnaround_days_check",
+      sql`${table.turnaroundDays} >= 0 AND ${table.turnaroundDays} <= 36500`,
+    ),
     uniqueIndex("request_types_slug_unique").on(table.slug),
     /**
      * The whole three-state target in one constraint: no target carries
