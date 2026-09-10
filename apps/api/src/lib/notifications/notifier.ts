@@ -59,7 +59,6 @@ import {
   commentMentions,
   eq,
   notifications,
-  sql,
   type CommentVisibility,
   type ContractStage,
   type Db,
