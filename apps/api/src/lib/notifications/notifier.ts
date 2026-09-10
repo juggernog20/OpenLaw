@@ -59,7 +59,6 @@ import {
   commentMentions,
   eq,
   notifications,
-  sql,
   type CommentVisibility,
   type ContractStage,
   type Db,
@@ -905,27 +904,10 @@ async function fanOut(
 
   // 4. The rows, inside the caller's transaction.
   const insert = tx.insert(notifications).values(rows);
-  const written = await (
-    reminder
-      ? insert.onConflictDoNothing({
-          // The partial unique index, named by its own columns and its
-          // own predicate so Postgres infers *that* index rather than
-          // ignoring every conflict there could ever be. Two approval
-          // requests for one person on one record are two real
-          // notifications, and this must never quietly swallow the
-          // second of them.
-          target: [
-            notifications.userId,
-            notifications.eventType,
-            notifications.entityType,
-            notifications.entityId,
-            notifications.reminderDate,
-            notifications.reminderOffsetDays,
-          ],
-          where: sql`reminder_date is not null`,
-        })
-      : insert
-  ).returning({
+  // Only reminders ignore conflicts. The table's unique constraints are its
+  // generated UUID primary key and reminder identity. Drizzle cannot name an
+  // expression in a conflict target; other events still use a plain insert.
+  const written = await (reminder ? insert.onConflictDoNothing() : insert).returning({
     id: notifications.id,
     userId: notifications.userId,
     emailOwed: notifications.emailOwed,

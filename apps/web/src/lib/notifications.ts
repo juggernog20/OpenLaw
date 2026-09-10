@@ -34,9 +34,12 @@
  * wait for M21's disposition routes: that is what makes the slices
  * behind #318–#321, #382, and #415 an emission rather than a surface
  * change.
- * Every arm reads only the two keys the fan-out already writes — the
- * record's number and its name — plus the actor's name where the event
- * has one, so no arm is a guess about a payload nobody has written yet.
+ * Every arm reads only keys the fan-out already writes — the record's
+ * number and its name, the actor's name where the event has one, and
+ * the `label` a dated row carries — so no arm is a guess about a
+ * payload nobody has written yet. Each of those reads is still
+ * defensive: a row older than the key it wants falls back to a sentence
+ * that needs it.
  *
  * **The address is a section, not a record.** An approval request opens
  * the Approvals section (DES-032's routed tabs); a task opens Tasks;
@@ -276,12 +279,16 @@ const ARMS: Readonly<Record<string, Arm>> = {
     }),
   },
   // Group 3 — dates arriving. Nobody acts, so nobody is named.
+  // The Key date is named, because distinct Key dates on one record and
+  // one day are now one reminder each (the NOT-001 #760 addendum).
+  // Without the name, a record with three deadlines due on Monday draws
+  // three rows of the same sentence.
   "date.key_date_approaching": {
     icon: CalendarClock,
     section: "key-dates",
     message: defineMessage({
       id: "notifications.date.keyDate",
-      defaultMessage: "A key date on {contract} is coming up",
+      defaultMessage: "{keyDate} on {contract} is coming up",
     }),
   },
   "date.notice_deadline_approaching": {
@@ -419,6 +426,14 @@ const UNNAMED = defineMessage({
 const UNNAMED_OBLIGATION = defineMessage({
   id: "notifications.unnamedObligation",
   defaultMessage: "an obligation",
+});
+
+/** The fallback for a Key date row written before the label was in the
+ * payload. It is the sentence this arm carried while several Key dates
+ * on one day shared one row. */
+const UNNAMED_KEY_DATE = defineMessage({
+  id: "notifications.unnamedKeyDate",
+  defaultMessage: "A key date",
 });
 
 /**
@@ -567,6 +582,9 @@ export function narrateNotification(intl: IntlShape, item: BellItem): NarratedNo
       contract: record,
       request: record,
       obligation: text(item.payload, "label") ?? intl.formatMessage(UNNAMED_OBLIGATION),
+      // The same `label` key under the noun a Key date's sentence uses,
+      // on the `contract`/`request` rule two lines up.
+      keyDate: text(item.payload, "label") ?? intl.formatMessage(UNNAMED_KEY_DATE),
       actor: actor ?? "",
       // Every arm gets these whether or not its sentence selects on
       // them.

@@ -5466,7 +5466,7 @@
     "defaultMessage": "{contract} is expiring"
   },
   "notifications.date.keyDate": {
-    "defaultMessage": "A key date on {contract} is coming up"
+    "defaultMessage": "{keyDate} on {contract} is coming up"
   },
   "notifications.date.noticeDeadline": {
     "defaultMessage": "The notice deadline on {contract} is coming up"
@@ -5530,6 +5530,9 @@
   },
   "notifications.unknown": {
     "defaultMessage": "{contract} — {event}"
+  },
+  "notifications.unnamedKeyDate": {
+    "defaultMessage": "A key date"
   },
   "notifications.unnamedObligation": {
     "defaultMessage": "an obligation"

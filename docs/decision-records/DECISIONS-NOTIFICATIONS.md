@@ -56,13 +56,29 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 
   **The read side re-applies the confidentiality predicate on every read** — the list **and** the count, through one predicate composed from `contractTeamScope`. An item about a record walled off after it was written leaves both, silently: no row, no gap, and no number that says something was left out (M10's answer, on a surface DD-014 was never written about). The row itself stays in the table, so opening the wall again brings the item back.
 
-- **Addendum (2026-08-18, M18/8, [#323](https://github.com/juggernog20/OpenLaw/issues/323))** — **The dedup identity names the record, not the date row, and that is a product answer as well as a schema one.** The identity is user, event, entity, the date value, and the offset (M18/1), and `entity` is the contract. So several named key dates that fall on **one record on one day** are **one** bell item and **one** briefing line, not one each — the second insert conflicts with the first and is dropped, and the line the reader gets carries whichever label was written first.
+- **Addendum (2026-08-18, M18/8, [#323](https://github.com/juggernog20/OpenLaw/issues/323))** — **The dedup identity names the record, not the date row, and that is a product answer as well as a schema one.** **Superseded by the #760 addendum below.** The identity is user, event, entity, the date value, and the offset (M18/1), and `entity` is the contract. So several named key dates that fall on **one record on one day** are **one** bell item and **one** briefing line, not one each — the second insert conflicts with the first and is dropped, and the line the reader gets carries whichever label was written first.
 
   It is stated here because the milestone close is where anybody found out. The bell's own sentence is already written at that grain — "A key date on {contract} is coming up" — so the item is true either way; the **briefing** is where the difference shows, because a digest line names the date. The alternative is to widen the identity with `key_date_id`, which would give a reader one line per named date and give an install with a busy record a briefing several lines longer for one day. Neither is obviously right, and nothing decided it: this addendum records what shipped so the choice can be made deliberately rather than discovered again.
 
   **Nothing else collapses.** Two approval requests for one person on one record are still two rows — the partial index only covers rows that carry a reminder date (M18/6) — and a date that **moves** carries a different value and is a different identity, so it fires again.
 
 - **Addendum (2026-08-24, M23 close, [#496](https://github.com/juggernog20/OpenLaw/issues/496))** — **Matter events use the same engine and one continuous wall.** Matter assignment, Task assignment, Activity, comments, Documents, Status changes, and approaching Key dates all enter through the existing `Notifier`. Audience resolution starts with the Matter Manager and explicit team, then DD-014 reach and DD-016 tier narrow it. The same Matter predicate is re-applied on bell reads and sends, so a removed or archived reader gets no row, count, or title leak; Closing alone changes neither audience nor writability.
+
+### NOT-001 addendum: each Key date has its own reminder (2026-09-10, [#760](https://github.com/juggernog20/OpenLaw/issues/760))
+
+Distinct Contract and Matter Key dates produce separate reminders, even when their dates
+and labels match. The bell item and each briefing line name the Key date, so a record with
+several deadlines on one day no longer draws the same sentence twice. This supersedes the
+M18/8 aggregation rule above, which could omit other deadlines on the same record and day.
+
+The reminder identity includes the recipient, event type, record type and ID, Key date ID,
+date value, and offset. Repeating a round does not resend an unchanged reminder. A new
+offset or a rescheduled date still produces a new reminder. Current access and channel
+preferences apply as before.
+
+The index reads the Key date ID already held in each reminder's payload. Upgrading keeps
+existing notification rows and their delivery state. Events other than Key dates keep
+their existing record-based identity. No historical reminder is recreated by migration.
 
 ## NOT-002 — Event catalog: five groups, defaults by interruptiveness
 
