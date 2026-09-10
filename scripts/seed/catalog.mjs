@@ -393,10 +393,14 @@ export const MATTER_KEY_DATES = [
 /**
  * The Requests the business sends in, by Request Type. `urgency` is the
  * weighting the seed draws from, so most Requests are ordinary.
+ * `turnaroundDays` is what the Type publishes as its calendar-day
+ * turnaround (INT-003), which is what triage is offered as a suggested
+ * return estimate. A question comes back faster than a redline does.
  */
 export const REQUEST_KINDS = [
   {
     typeSlug: "nda_request",
+    turnaroundDays: 3,
     summaries: [
       "NDA for {cp} before the product demo",
       "Mutual NDA with {cp} ahead of a pilot",
@@ -411,6 +415,7 @@ export const REQUEST_KINDS = [
   },
   {
     typeSlug: "contract_review",
+    turnaroundDays: 7,
     summaries: [
       "Review {cp} order form before quarter end",
       "{cp} has redlined our MSA",
@@ -426,6 +431,7 @@ export const REQUEST_KINDS = [
   },
   {
     typeSlug: "legal_question",
+    turnaroundDays: 2,
     summaries: [
       "Can we name {cp} as a reference customer?",
       "Do we need a DPA for an analytics tool?",
@@ -441,6 +447,7 @@ export const REQUEST_KINDS = [
   },
   {
     typeSlug: "vendor_onboarding",
+    turnaroundDays: 10,
     displayName: "Vendor onboarding",
     isNew: true,
     targetModule: "contract",
@@ -457,6 +464,7 @@ export const REQUEST_KINDS = [
   },
   {
     typeSlug: "employment_question",
+    turnaroundDays: 4,
     displayName: "Employment question",
     isNew: true,
     targetModule: "matter",
