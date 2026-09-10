@@ -90,6 +90,14 @@ export const contractKeyDates = pgTable(
       "contract_key_dates_note_check",
       sql`${table.note} is null or length(btrim(${table.note})) between 1 and 2000`,
     ),
+    check(
+      "contract_key_dates_reminder_offsets_check",
+      sql`case when jsonb_typeof(${table.reminderOffsetDays}) = 'array' then jsonb_array_length(${table.reminderOffsetDays}) <= 20 and not jsonb_path_exists(${table.reminderOffsetDays}, 'strict $[*] ? (@.type() != "number")') and not jsonb_path_exists(${table.reminderOffsetDays}, 'strict $[*] ? (@.type() == "number") ? (@ < 0 || @ > 730 || @ != @.floor())') else false end`,
+    ),
+    check(
+      "contract_key_dates_reminder_recipients_check",
+      sql`case when jsonb_typeof(${table.reminderRecipientIds}) = 'array' then not jsonb_path_exists(${table.reminderRecipientIds}, 'strict $[*] ? (@.type() != "string")') else false end`,
+    ),
   ],
 );
 

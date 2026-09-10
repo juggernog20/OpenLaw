@@ -2423,6 +2423,14 @@
         "contract_key_dates_note_check": {
           "name": "contract_key_dates_note_check",
           "value": "\"contract_key_dates\".\"note\" is null or length(btrim(\"contract_key_dates\".\"note\")) between 1 and 2000"
+        },
+        "contract_key_dates_reminder_offsets_check": {
+          "name": "contract_key_dates_reminder_offsets_check",
+          "value": "case when jsonb_typeof(\"contract_key_dates\".\"reminder_offset_days\") = 'array' then jsonb_array_length(\"contract_key_dates\".\"reminder_offset_days\") <= 20 and not jsonb_path_exists(\"contract_key_dates\".\"reminder_offset_days\", 'strict $[*] ? (@.type() != \"number\")') and not jsonb_path_exists(\"contract_key_dates\".\"reminder_offset_days\", 'strict $[*] ? (@.type() == \"number\") ? (@ < 0 || @ > 730 || @ != @.floor())') else false end"
+        },
+        "contract_key_dates_reminder_recipients_check": {
+          "name": "contract_key_dates_reminder_recipients_check",
+          "value": "case when jsonb_typeof(\"contract_key_dates\".\"reminder_recipient_ids\") = 'array' then not jsonb_path_exists(\"contract_key_dates\".\"reminder_recipient_ids\", 'strict $[*] ? (@.type() != \"string\")') else false end"
         }
       },
       "isRLSEnabled": false
@@ -6822,6 +6830,14 @@
         "matter_key_dates_note_check": {
           "name": "matter_key_dates_note_check",
           "value": "\"matter_key_dates\".\"note\" is null or length(btrim(\"matter_key_dates\".\"note\")) between 1 and 2000"
+        },
+        "matter_key_dates_reminder_offsets_check": {
+          "name": "matter_key_dates_reminder_offsets_check",
+          "value": "case when jsonb_typeof(\"matter_key_dates\".\"reminder_offset_days\") = 'array' then jsonb_array_length(\"matter_key_dates\".\"reminder_offset_days\") <= 20 and not jsonb_path_exists(\"matter_key_dates\".\"reminder_offset_days\", 'strict $[*] ? (@.type() != \"number\")') and not jsonb_path_exists(\"matter_key_dates\".\"reminder_offset_days\", 'strict $[*] ? (@.type() == \"number\") ? (@ < 0 || @ > 730 || @ != @.floor())') else false end"
+        },
+        "matter_key_dates_reminder_recipients_check": {
+          "name": "matter_key_dates_reminder_recipients_check",
+          "value": "case when jsonb_typeof(\"matter_key_dates\".\"reminder_recipient_ids\") = 'array' then not jsonb_path_exists(\"matter_key_dates\".\"reminder_recipient_ids\", 'strict $[*] ? (@.type() != \"string\")') else false end"
         }
       },
       "isRLSEnabled": false

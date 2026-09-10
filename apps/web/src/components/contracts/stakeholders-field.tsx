@@ -100,7 +100,7 @@ export function StakeholdersField({
       <p className="text-sm text-muted">
         <FormattedMessage
           id="contracts.stakeholders.explanation"
-          defaultMessage="The Business Owner and stakeholders can read this Contract in the Portal. Confidential Contracts also require team membership. Stakeholder access continues when the Business Owner changes."
+          defaultMessage="The Business Owner and stakeholders can read this Contract in the Portal. Confidential Contracts also require record-team or Legal Owner access. Stakeholder access continues when the Business Owner changes."
         />
       </p>
       {stakeholders && stakeholders.length > 0 ? (

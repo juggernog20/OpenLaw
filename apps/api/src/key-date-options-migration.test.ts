@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** Existing Key dates retain their content and use the global reminder defaults after upgrade. */
+/** Upgrade preserves Key dates and enforces reminder JSON invariants on subsequent writes. */
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testcontainers/postgresql";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { runMigrations, sql } from "@openlaw/db";
@@ -12,7 +12,7 @@ beforeAll(async () => {
 });
 afterAll(async () => container?.stop());
 
-it("adds empty reminder settings without altering existing Contract or Matter Key dates", async () => {
+it("preserves existing Key dates and constrains reminder settings after upgrade", async () => {
   const db = await freshDb(container, "key_date_options_upgrade");
   try {
     await migrateThrough(db, "0098_distinct_key_date_reminders", migrationEntries());
@@ -55,6 +55,55 @@ it("adds empty reminder settings without altering existing Contract or Matter Ke
       { reminder_offset_days: [], reminder_recipient_ids: [] },
       { reminder_offset_days: [], reminder_recipient_ids: [] },
     ]);
+
+    for (const table of ["contract_key_dates", "matter_key_dates"]) {
+      const validOffsets = [0, 730, ...Array.from({ length: 18 }, (_, index) => index + 1)];
+      const validRecipients = ["author", "another-person"];
+      await db.execute(sql`update ${sql.identifier(table)}
+        set reminder_offset_days = ${JSON.stringify(validOffsets)}::jsonb,
+            reminder_recipient_ids = ${JSON.stringify(validRecipients)}::jsonb`);
+
+      for (const [column, constraint, invalidValues] of [
+        [
+          "reminder_offset_days",
+          `${table}_reminder_offsets_check`,
+          [
+            null,
+            {},
+            60,
+            "60",
+            ["60"],
+            [null],
+            [true],
+            [[60]],
+            [{}],
+            [-1],
+            [731],
+            [1.5],
+            Array.from({ length: 21 }, (_, index) => index),
+          ],
+        ],
+        [
+          "reminder_recipient_ids",
+          `${table}_reminder_recipients_check`,
+          [null, {}, "author", [1], [null], [false], [["author"]], [{}], ["author", 1]],
+        ],
+      ] as const) {
+        for (const value of invalidValues) {
+          // Assert PostgreSQL's constraint refusal, rather than Drizzle's SQL text.
+          await expect(
+            db.execute(sql`update ${sql.identifier(table)}
+              set ${sql.identifier(column)} = ${JSON.stringify(value)}::jsonb`),
+          ).rejects.toMatchObject({ cause: { code: "23514", constraint } });
+        }
+      }
+      expect(
+        (
+          await db.execute(sql`select reminder_offset_days, reminder_recipient_ids
+          from ${sql.identifier(table)}`)
+        ).rows,
+      ).toEqual([{ reminder_offset_days: validOffsets, reminder_recipient_ids: validRecipients }]);
+    }
   } finally {
     await db.$client.end();
   }

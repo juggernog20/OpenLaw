@@ -8,6 +8,7 @@ import {
   type DispositionScaffold,
 } from "../../testing/disposition.js";
 import { startHarness, TEST_ADMIN, type TestHarness } from "../../testing/harness.js";
+import { StaffRequestSchema } from "./projection.js";
 
 let harness: TestHarness;
 let cast: DispositionScaffold;
@@ -38,7 +39,16 @@ async function submit() {
     },
   });
   expect(res.statusCode, res.body).toBe(201);
-  return res.json().request as { id: string; number: number };
+  const request = StaffRequestSchema.pick({
+    id: true,
+    number: true,
+    status: true,
+    summary: true,
+  }).parse(res.json().request);
+  expect(request.id).not.toBe("");
+  expect(request.number).toBeGreaterThan(0);
+  expect(request).toMatchObject({ status: "new", summary: "Estimate this review" });
+  return request;
 }
 function estimate(number: number, expectedBy: unknown, cookies = cast.memberCookies) {
   return harness.app.inject({
@@ -151,7 +161,7 @@ it("restricts writes to Member+, validates real dates and preserves the requeste
   expect((await estimate(999999, null)).statusCode).toBe(404);
 });
 it("accepts nullable whole-day turnaround settings and refuses invalid values", async () => {
-  for (const turnaroundDays of [0, 3, null]) {
+  for (const turnaroundDays of [0, 3, 36_500, null]) {
     const res = await harness.app.inject({
       method: "PATCH",
       url: `/api/v1/request-types/${typeId}`,
@@ -169,7 +179,7 @@ it("accepts nullable whole-day turnaround settings and refuses invalid values", 
       published.json().requestTypes.find((row: { id: string }) => row.id === typeId).turnaroundDays,
     ).toBe(turnaroundDays);
   }
-  for (const turnaroundDays of [-1, 1.5, "3"])
+  for (const turnaroundDays of [-1, 1.5, "3", 36_501])
     expect(
       (
         await harness.app.inject({
@@ -203,7 +213,25 @@ it("audits a changed estimate once, preserves it through conversion, and refuses
     visibility: "working_team",
     payload: { number: request.number, from: null, to: "2026-10-15" },
   });
-  await harness.db.update(requests).set({ status: "converted" }).where(eq(requests.id, request.id));
+  const converted = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/requests/${request.number}/convert`,
+    cookies: cast.memberCookies,
+    payload: { title: "Estimated NDA review" },
+  });
+  expect(converted.statusCode, converted.body).toBe(200);
+  const convertedRequest = StaffRequestSchema.parse(converted.json().request);
+  expect(convertedRequest).toMatchObject({
+    id: request.id,
+    number: request.number,
+    status: "converted",
+    expectedBy: "2026-10-15",
+  });
+  expect(convertedRequest.convertedContract?.number).toBeGreaterThan(0);
+  expect(await detail(request.number, true)).toMatchObject({
+    status: "converted",
+    expectedBy: "2026-10-15",
+  });
   expect((await estimate(request.number, "2026-10-16")).statusCode).toBe(200);
   for (const status of ["resolved", "declined"] as const) {
     await harness.db.update(requests).set({ status }).where(eq(requests.id, request.id));

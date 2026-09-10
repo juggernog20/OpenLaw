@@ -93,7 +93,7 @@ The single accountable person on a Matter [MTR-003]. The Contract equivalent is 
 _Avoid_: assignee, lead, responsible
 
 **Business Owner**:
-The single nullable business contact on a Contract, initially the Requester when a Request converts. Member+ maintains this independently of the Legal Owner and explicit stakeholders [DD-021].
+The single nullable person named for the business on a Contract, initially the Requester when a Request converts. Member+ maintains this independently of the Legal Owner and explicit stakeholders [DD-021].
 
 **Stakeholder**:
 A named person explicitly linked to a Contract by Member+. This link grants Portal access independently of Business Owner assignment; Confidential audience rules still apply [DD-021].

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** DD-021 points the shared reader at Portal routes. Memoize the returned reader
+/** DD-021 points the shared reader at Portal routes. Callers memoize the returned reader
  * per Contract number so conversion and email effects do not restart on every render. */
 
 import type { DocumentReaderSource } from "../components/documents/reader-context";

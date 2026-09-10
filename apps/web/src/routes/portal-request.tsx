@@ -5,11 +5,10 @@
  * intake.pen: what a Requester sees when they open one of their own
  * asks.
  *
- * Four blocks, in I7's order: the envelope — the summary, the status,
- * and the "R-45 · Contract review · Submitted Aug 6" line — a banner
- * that says what the status means for the requester, the Conversation
- * card, and the "What you submitted" card carrying the values the form
- * collected.
+ * Five blocks: the envelope — the summary, the status, and the
+ * "R-45 · Contract review · Submitted Aug 6" line — then the Owner and
+ * return estimate (INT-003), a banner explaining the status, the
+ * Conversation card, and "What you submitted" with the saved form values.
  *
  * **The thread sits between the banner and the card** (#381), which is
  * where I7 draws it. It is the same thread the staff applet draws, read
@@ -19,10 +18,10 @@
  * and why is in `components/portal/request-thread.tsx`.
  *
  * **A converted Request opens like any other** (INT-001, DD-018), and
- * the page does not name what it became: a Business User cannot open a
- * Contract or a Matter, so a reference they could not follow would be a
- * dead end dressed as a fact. What the banner says is that Legal is
- * working on it and that this page is still their window.
+ * the page keeps the Request reference and conversation. Eligible
+ * Business Owners and stakeholders can separately open Your Contracts
+ * (DD-021); staff Contract and Matter pages remain unavailable. The
+ * banner explains that Legal is working on the Request.
  *
  * **The thread on a converted Request is the record's thread** (CMT-001,
  * #422), and nothing here had to learn that. The conversation moved onto

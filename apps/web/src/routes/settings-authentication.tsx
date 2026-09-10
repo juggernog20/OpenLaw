@@ -545,7 +545,7 @@ export function SettingsAuthenticationPage() {
           ) : (
             <FormattedMessage
               id="settings.auth.portalOptional"
-              defaultMessage="Turn off to require SSO for everyone. Business users would then need accounts in your identity provider to reach the portal."
+              defaultMessage="Turn off to require SSO for Business Users. They will need accounts in your identity provider to reach the Portal. Administrators retain emergency password sign-in."
             />
           )}
         </p>

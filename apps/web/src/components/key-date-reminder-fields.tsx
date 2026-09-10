@@ -173,7 +173,7 @@ export function KeyDateReminderFields({
       <p className="text-sm text-muted">
         <FormattedMessage
           id="keyDates.reminders.recipientHelp"
-          defaultMessage="With no selection, reminders go to the Owner or Matter Manager and record team. Select people to send this Key date's reminders only to them. Current access and personal preferences still apply."
+          defaultMessage="With no selection, reminders go to the Legal Owner or Matter Manager and record team. Select people to send this Key date's reminders only to them. Current access and personal preferences still apply."
         />
       </p>
       {options?.recipients.map((person) => (

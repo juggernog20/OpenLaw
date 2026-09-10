@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** INT-003: triage confirms a suggestion or selects its own return estimate. */
-import { useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { api } from "../../lib/api";
 import { formatFullDate } from "../../lib/format";
@@ -16,6 +16,11 @@ export type EstimatedRequest = Pick<
   StaffRequest,
   "number" | "status" | "expectedBy" | "suggestedExpectedBy"
 >;
+
+function estimateVersion(request: EstimatedRequest) {
+  const editable = request.status === "new" || request.status === "converted";
+  return `${request.number}|${request.expectedBy ?? ""}|${String(editable)}`;
+}
 
 export function RequestEstimate({
   request,
@@ -35,21 +40,29 @@ export function RequestEstimate({
   // saving another date, or closing the Request, is the saved answer
   // and the box has to show it. Adjusted during render rather than in
   // an effect, so no frame draws the stale date.
-  const seen = `${request.expectedBy ?? ""}|${String(editable)}`;
+  const seen = estimateVersion(request);
+  const [accepted, setAccepted] = useState<string | null>(null);
+  const generation = useRef(0);
+  useLayoutEffect(() => {
+    // A refreshed record or unmount makes every outstanding answer obsolete.
+    return () => {
+      generation.current += 1;
+      pending.current = false;
+    };
+  }, [seen]);
   const [lastSeen, setLastSeen] = useState(seen);
   if (lastSeen !== seen) {
     setLastSeen(seen);
     setDraft(request.expectedBy ?? "");
-    // The refusal was about a draft that is now gone. Left standing
-    // over the saved date it reads as a lie about it.
-    if (status === "error") {
-      setStatus("idle");
-      setError(null);
-    }
+    setStatus(accepted === seen ? "saved" : "idle");
+    setAccepted(null);
+    setError(null);
   }
   async function save(expectedBy: string | null) {
     if (pending.current) return;
     pending.current = true;
+    const started = generation.current;
+    setAccepted(null);
     setDraft(expectedBy ?? "");
     setStatus("saving");
     setError(null);
@@ -59,11 +72,15 @@ export function RequestEstimate({
         body: { expectedBy },
       })
       .catch(() => undefined);
+    if (started !== generation.current) return;
     if (result?.data) {
+      setAccepted(estimateVersion(result.data.request));
       onSaved(result.data.request);
       setStatus("saved");
     } else {
-      setError((await problem(result)).detail ?? null);
+      const failure = await problem(result);
+      if (started !== generation.current) return;
+      setError(failure.detail ?? null);
       setStatus("error");
     }
     pending.current = false;

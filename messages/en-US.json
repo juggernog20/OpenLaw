@@ -2028,7 +2028,7 @@
     "defaultMessage": "No additional stakeholders."
   },
   "contracts.stakeholders.explanation": {
-    "defaultMessage": "The Business Owner and stakeholders can read this Contract in the Portal. Confidential Contracts also require team membership. Stakeholder access continues when the Business Owner changes."
+    "defaultMessage": "The Business Owner and stakeholders can read this Contract in the Portal. Confidential Contracts also require record-team or Legal Owner access. Stakeholder access continues when the Business Owner changes."
   },
   "contracts.stakeholders.person": {
     "defaultMessage": "Add stakeholder"
@@ -4560,7 +4560,7 @@
     "defaultMessage": "Loading reminder ladder and team…"
   },
   "keyDates.reminders.recipientHelp": {
-    "defaultMessage": "With no selection, reminders go to the Owner or Matter Manager and record team. Select people to send this Key date's reminders only to them. Current access and personal preferences still apply."
+    "defaultMessage": "With no selection, reminders go to the Legal Owner or Matter Manager and record team. Select people to send this Key date's reminders only to them. Current access and personal preferences still apply."
   },
   "keyDates.reminders.remove": {
     "defaultMessage": "Remove {offset}"
@@ -6639,7 +6639,7 @@
     "defaultMessage": "Magic links are the only portal sign-in method in built-in mode, so they can't be turned off."
   },
   "settings.auth.portalOptional": {
-    "defaultMessage": "Turn off to require SSO for everyone. Business users would then need accounts in your identity provider to reach the portal."
+    "defaultMessage": "Turn off to require SSO for Business Users. They will need accounts in your identity provider to reach the Portal. Administrators retain emergency password sign-in."
   },
   "settings.auth.providerId": {
     "defaultMessage": "Provider ID"

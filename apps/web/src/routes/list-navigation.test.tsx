@@ -271,6 +271,72 @@ describe.each(SURFACES)("$path navigation commits", ({ path, resource, filter, l
       expect(new URLSearchParams(router.state.location.search).has(filter)).toBe(false);
     },
   );
+  it("adopts a navigation that interrupts the list's URL sync", async () => {
+    let filteredReads = 0;
+    let releaseSync: (() => void) | undefined;
+    let releasePage: (() => void) | undefined;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname !== `/api/v1/${resource}` || call.method !== "GET") return undefined;
+        const paged = call.url.searchParams.has("cursor");
+        const title = paged
+          ? "Stale page"
+          : call.url.searchParams.get("status") === "status"
+            ? "Initial record"
+            : call.url.searchParams.has(filter)
+              ? "Filtered record"
+              : "External record";
+        const response = () =>
+          json(200, {
+            [resource]: [row(title, paged ? "second" : "first")],
+            nextCursor: paged ? null : "next",
+            total: 2,
+            counts: { open: 2, onHold: 0 },
+          });
+        if (paged)
+          return new Promise<Response>((resolve) => {
+            releasePage = () => resolve(response());
+          });
+        if (
+          !call.url.searchParams.has("status") &&
+          call.url.searchParams.has(filter) &&
+          ++filteredReads === 2
+        )
+          return new Promise<Response>((resolve) => {
+            releaseSync = () => resolve(response());
+          });
+        return response();
+      },
+    });
+    const { router } = renderAt(`/${path}?status=status&${filter}=high`);
+    const user = userEvent.setup();
+    await screen.findByRole("row", { name: /Initial record/ });
+    transitions.held = true;
+    await user.click(screen.getByRole("button", { name: "Remove Status filter" }));
+    await vi.waitFor(() => expect(releaseSync).toBeDefined());
+    expect(router.state.navigation.state).toBe("loading");
+    await act(async () => {
+      await router.navigate(`/${path}`);
+    });
+    expect(router.state.navigation.state).toBe("idle");
+    await act(async () => {
+      releaseSync!();
+    });
+    await user.click(screen.getByRole("button", { name: "Show more" }));
+    await vi.waitFor(() => expect(releasePage).toBeDefined());
+    await commitNavigation();
+    await act(async () => {
+      releasePage!();
+    });
+    await screen.findByRole("row", { name: /External record/ });
+    expect(
+      screen.queryByRole("row", { name: /Filtered record|Stale page/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: `Remove ${label} filter` }),
+    ).not.toBeInTheDocument();
+  });
   it.each(["filter", "page"])(
     "discards an old %s answer after a newer navigation",
     async (action) => {

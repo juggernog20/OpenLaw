@@ -433,7 +433,7 @@ test.describe.serial("M8 demo path", () => {
       // The Owner: one accountable person, set from the picker and
       // committed on its own (CTR-004, DES-017).
       const ownerSaved = contractPatched(page);
-      await page.getByLabel("Owner").selectOption({ label: OWNER_NAME });
+      await page.getByLabel("Legal Owner", { exact: true }).selectOption({ label: OWNER_NAME });
       expect((await ownerSaved).ok()).toBe(true);
       // The DES-017 micro-state, beside the one field that has
       // committed so far — this is the whole page's only "Saved".

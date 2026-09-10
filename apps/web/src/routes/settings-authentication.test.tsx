@@ -196,7 +196,7 @@ describe("the Authentication pane (#64)", () => {
 
     // The portal toggle unlocks, with the SSO-only caption.
     expect(screen.getByRole("switch", { name: "Magic-link sign-in" })).toBeEnabled();
-    expect(screen.getByText(/Turn off to require SSO for everyone/)).toBeVisible();
+    expect(screen.getByText(/Turn off to require SSO for Business Users/)).toBeVisible();
   });
 
   it("snaps the mode radio back with the error micro-state when the switch fails", async () => {

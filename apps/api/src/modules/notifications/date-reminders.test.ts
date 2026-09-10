@@ -1025,13 +1025,14 @@ describe.each([
     expect((await bellFor(OWNER, record)).map((row) => row.payload.offsetDays)).toEqual([60]);
     await round(at(today, 9));
     expect(await bellFor(OWNER, record)).toHaveLength(1);
-    // Restored JSON may not have passed the write schema. A numeric-looking string
-    // must not become an extra offset when the worker reads it.
+    // The database also refuses malformed offsets from writers outside the API.
     const table = kind === "contracts" ? contractKeyDates : matterKeyDates;
-    await harness.db
-      .update(table)
-      .set({ reminderOffsetDays: sql`'[60, "59", -1, 1.5, 731]'::jsonb` })
-      .where(eq(table.id, response.json().deadlines[0].keyDateId));
+    await expect(
+      harness.db
+        .update(table)
+        .set({ reminderOffsetDays: sql`'[60, "59", -1, 1.5, 731]'::jsonb` })
+        .where(eq(table.id, response.json().deadlines[0].keyDateId)),
+    ).rejects.toMatchObject({ cause: { code: "23514" } });
     await round(at(plusDays(today, 1), 8));
     expect(await bellFor(OWNER, record)).toHaveLength(1);
     await round(at(plusDays(today, 53), 8));
