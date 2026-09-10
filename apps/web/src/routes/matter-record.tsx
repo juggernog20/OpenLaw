@@ -337,6 +337,28 @@ function MatterRecord() {
     ...people,
     ...heldPeople.filter((held) => !people.some((row) => row.id === held.id)),
   ];
+  // Only live registry rows are new choices. Keep this Field's saved archived
+  // reference visible, and mask its saved restricted reference.
+  function entityChoices(value: CustomFieldValue | undefined): FieldReference[] {
+    const held = customFieldRefs.entities.find((entity) => entity.id === value);
+    const choices = loader.entities
+      .filter((entity) => entity.archivedAt === null && entity.id !== held?.id)
+      .map((entity) => ({ id: entity.id, label: entity.legalName }));
+    if (!held) return choices;
+    return [
+      ...choices,
+      held.restricted
+        ? {
+            id: held.id,
+            label: intl.formatMessage({
+              id: "entities.restricted",
+              defaultMessage: "Restricted Entity",
+            }),
+            restricted: true,
+          }
+        : { id: held.id, label: held.legalName, archived: held.archived },
+    ];
+  }
   const taskAssignees = useMemo(() => {
     const candidates = [
       ...(saved.manager && !saved.manager.archived ? [saved.manager] : []),
@@ -1112,18 +1134,7 @@ function MatterRecord() {
                           frozen && !(contributor && !archived && field.fieldTag === "business")
                         }
                         people={peopleRefs}
-                        entities={customFieldRefs.entities.map((entity) =>
-                          entity.restricted
-                            ? {
-                                id: entity.id,
-                                label: intl.formatMessage({
-                                  id: "entities.restricted",
-                                  defaultMessage: "Restricted Entity",
-                                }),
-                                restricted: true,
-                              }
-                            : { id: entity.id, label: entity.legalName },
-                        )}
+                        entities={entityChoices(saved.customFields[field.slug])}
                         status={fieldStatus[`field:${field.slug}`] ?? "idle"}
                         error={fieldError[`field:${field.slug}`]}
                         onInvalid={(detail) => note(`field:${field.slug}`, "error", detail)}

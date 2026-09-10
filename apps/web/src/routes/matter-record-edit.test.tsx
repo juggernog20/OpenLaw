@@ -201,6 +201,123 @@ describe("the editable matter record", () => {
     expect(title).toHaveValue("Editable advice");
   });
 
+  it.each([ADMIN, { ...MEMBER, email: "member@example.com" }])(
+    "lets $role select and change an Entity-valued Field from the reachable registry",
+    async (signedIn) => {
+      let saved = row({ matterTypeId: "t-acquisition", matterTypeName: "Acquisition" });
+      const live = [
+        { id: "e-first", legalName: "First Entity", archivedAt: null },
+        { id: "e-second", legalName: "Second Entity", archivedAt: null },
+      ];
+      const patches: unknown[] = [];
+      stubApi({
+        signedIn,
+        extra: (call) => {
+          if (call.url.pathname === "/api/v1/entities") {
+            const secondPage = call.url.searchParams.has("cursor");
+            return json(200, {
+              entities: [live[secondPage ? 1 : 0]],
+              nextCursor: secondPage ? null : "next-entity",
+            });
+          }
+          if (call.url.pathname === "/api/v1/matters/options") return options();
+          if (call.url.pathname === "/api/v1/matters/12") {
+            if (call.method === "PATCH") {
+              patches.push(call.body);
+              if (!call.body || typeof call.body !== "object" || Array.isArray(call.body)) {
+                throw new Error("Expected a Matter PATCH object.");
+              }
+              saved = { ...saved, ...call.body };
+            }
+            const selectedId = Object.entries(saved.customFields).find(
+              ([slug]) => slug === ENTITY_FIELD.slug,
+            )?.[1];
+            const selected = live.find((entity) => entity.id === selectedId);
+            return json(
+              200,
+              record(saved, [], {
+                users: [],
+                entities: selected ? [{ ...selected, restricted: false, archived: false }] : [],
+              }),
+            );
+          }
+          return undefined;
+        },
+      });
+      const user = userEvent.setup();
+      renderAt("/matters/12");
+      const control = await screen.findByRole("combobox", { name: "Acquisition vehicle" });
+      expect(control).toHaveValue("");
+      expect(
+        within(control)
+          .getAllByRole("option")
+          .map((option) => option.textContent),
+      ).toEqual(["Not set", "First Entity", "Second Entity"]);
+      await user.selectOptions(control, "e-first");
+      await waitFor(() =>
+        expect(patches).toEqual([{ customFields: { "acquisition-vehicle": "e-first" } }]),
+      );
+      await waitFor(() => expect(within(control).getAllByRole("option")).toHaveLength(3));
+      await user.selectOptions(control, "e-second");
+      await waitFor(() =>
+        expect(patches).toEqual([
+          { customFields: { "acquisition-vehicle": "e-first" } },
+          { customFields: { "acquisition-vehicle": "e-second" } },
+        ]),
+      );
+      expect(control).toHaveValue("e-second");
+    },
+  );
+
+  it("keeps archived and restricted references on their saved Fields only", async () => {
+    const fields = [
+      ENTITY_FIELD,
+      { ...ENTITY_FIELD, slug: "former-vehicle", displayName: "Former vehicle" },
+      { ...ENTITY_FIELD, slug: "secret-vehicle", displayName: "Secret vehicle" },
+    ];
+    const saved = row({
+      matterTypeId: "t-acquisition",
+      matterTypeName: "Acquisition",
+      customFields: { "former-vehicle": "e-archived", "secret-vehicle": "e-secret" },
+    });
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/12")
+          return json(200, {
+            ...record(saved, [], {
+              users: [],
+              entities: [
+                { id: "e-archived", legalName: "Former Entity", restricted: false, archived: true },
+                { id: "e-secret", restricted: true },
+              ],
+            }),
+            fields,
+          });
+        if (call.url.pathname === "/api/v1/matters/options") return options();
+        if (call.url.pathname === "/api/v1/entities")
+          return json(200, {
+            entities: [{ id: "e-live", legalName: "Live Entity", archivedAt: null }],
+            nextCursor: null,
+          });
+        return undefined;
+      },
+    });
+    renderAt("/matters/12");
+    const blank = await screen.findByRole("combobox", { name: "Acquisition vehicle" });
+    expect(
+      within(blank)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["Not set", "Live Entity"]);
+    const former = screen.getByRole("combobox", { name: "Former vehicle" });
+    expect(former).toHaveValue("e-archived");
+    expect(within(former).getByRole("option", { name: "Former Entity" })).toBeInTheDocument();
+    expect(screen.getByText("Restricted Entity")).toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: "Secret vehicle" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: "Restricted Entity" })).not.toBeInTheDocument();
+  });
+
   it("uses the shared Restricted Entity cell for an Entity-valued custom Field", async () => {
     const saved = row({
       matterTypeId: "t-acquisition",
