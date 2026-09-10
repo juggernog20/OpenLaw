@@ -27,7 +27,7 @@ The current Contract Task screen has no reordering control. Complete, edit, assi
 1. Open **Key dates** and select **Add date**.
 2. Enter **Date**, name the **Event**, and add **Note (optional)** if useful.
 3. Under **Reminders**, check the global lead times and the combined schedule for this date. To add one, enter **Additional lead time (days before)** and select **Add lead time**. Use whole days from 0 to 730; 0 means on the date. You can add up to 20 lead times. **Remove** removes an additional lead time; the global reminders still apply.
-4. Leave the recipient checkboxes clear to use the usual audience: the Contract Owner and its team. Select people to send this Key date's reminders only to those people. Their current access and notification preferences still apply; selecting someone grants no access.
+4. Leave the recipient checkboxes clear to use the usual audience: the Legal Owner and its team. Select people to send this Key date's reminders only to those people. Their current access and notification preferences still apply; selecting someone grants no access.
 5. Select **Add date**, then check the date, event, and **Key date** source.
 6. Use that row's actions to **Edit date** or **Remove date**. Cancel leaves the saved date unchanged.
 

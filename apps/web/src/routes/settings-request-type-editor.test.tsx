@@ -606,7 +606,7 @@ it("saves a whole calendar-day turnaround, rejects fractions, and clears back to
   expect(input).toHaveValue(null);
   await user.type(input, "3{Enter}");
   await waitFor(() => expect(calls.patches).toEqual([{ turnaroundDays: 3 }]));
-  await waitFor(() => expect(input).toBeEnabled());
+  await waitFor(() => expect(input).not.toHaveAttribute("readonly"));
   await user.clear(input);
   await user.type(input, "1.5{Enter}");
   expect(await screen.findByText(/Enter a whole number from 0/)).toBeInTheDocument();
@@ -629,4 +629,82 @@ it("drops the turnaround refusal as soon as the text it was about changes", asyn
   await user.type(input, "{Backspace}{Backspace}");
   expect(screen.queryByText(/Enter a whole number from 0/)).not.toBeInTheDocument();
   expect(calls.patches).toEqual([]);
+});
+
+/** The editor with its turnaround write held open, so the box can be
+ * asked what it is doing while the answer is still out. */
+function heldTurnaround(calls: EditorCalls, refuse?: { status: number; detail: string }) {
+  let release: (() => void) | undefined;
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const base = editorApi(calls, review(), refuse);
+  stubApi({
+    signedIn: ADMIN,
+    extra: (call) => {
+      const answer = base(call);
+      const patching = call.url.pathname === "/api/v1/request-types/r2" && call.method === "PATCH";
+      return patching && answer ? held.then(() => answer) : answer;
+    },
+  });
+  renderAt("/settings/intake/request-types/r2");
+  return () => release!();
+}
+
+it("keeps the keyboard in the turnaround box while an Enter save is in flight", async () => {
+  const calls = newCalls();
+  const release = heldTurnaround(calls);
+  const user = userEvent.setup();
+  const input = await screen.findByLabelText("Turnaround (calendar days)");
+  await user.type(input, "3{Enter}");
+  await waitFor(() => expect(calls.patches).toEqual([{ turnaroundDays: 3 }]));
+
+  // Held still, not disabled. A browser takes focus off a control it
+  // disables, so committing with Enter used to throw the reader out of
+  // the box they were typing in. jsdom does not blur on `disabled`, so
+  // the two attribute assertions are what pin the mechanism here; the
+  // focus assertion states the behaviour they buy.
+  expect(screen.getByText("Saving…")).toBeInTheDocument();
+  expect(input).toBeEnabled();
+  expect(input).toHaveAttribute("readonly");
+  expect(document.activeElement).toBe(input);
+
+  // What `disabled` used to refuse, the guard and `readOnly` refuse now:
+  // no second write, no edit under the one in flight, and Escape does
+  // not revert the text the answer is about to replace.
+  await user.keyboard("9{Enter}{Escape}");
+  expect(calls.patches).toHaveLength(1);
+  expect(input).toHaveValue(3);
+  expect(document.activeElement).toBe(input);
+
+  release();
+  expect(await screen.findByText("Saved")).toBeInTheDocument();
+  expect(document.activeElement).toBe(input);
+  expect(input).not.toHaveAttribute("readonly");
+  // Escape is itself again once the write has landed.
+  await user.keyboard("{Escape}");
+  expect(input).toHaveValue(3);
+});
+
+it("keeps the keyboard in the turnaround box when the save is refused", async () => {
+  const calls = newCalls();
+  const release = heldTurnaround(calls, {
+    status: 400,
+    detail: "That turnaround is out of range.",
+  });
+  const user = userEvent.setup();
+  const input = await screen.findByLabelText("Turnaround (calendar days)");
+  await user.type(input, "3{Enter}");
+  await waitFor(() => expect(calls.patches).toEqual([{ turnaroundDays: 3 }]));
+  expect(document.activeElement).toBe(input);
+
+  release();
+  expect(await screen.findByText("That turnaround is out of range.")).toBeInTheDocument();
+  expect(document.activeElement).toBe(input);
+  expect(input).not.toHaveAttribute("readonly");
+  // The refused text stays in the box, so the retry is the key already
+  // under the reader's hand.
+  expect(input).toHaveValue(3);
+  await user.keyboard("{Enter}");
+  await waitFor(() => expect(calls.patches).toHaveLength(2));
 });

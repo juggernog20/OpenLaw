@@ -565,7 +565,12 @@ function TurnaroundControl({
         step="1"
         className={CONTROL_CLASS}
         value={draft}
-        disabled={status === "saving"}
+        // Held still rather than disabled: a browser takes focus off a
+        // control it disables, so committing with Enter would throw the
+        // keyboard out of the box it was typing in. `readOnly` refuses
+        // the edit and keeps the caret; `pending` refuses the second
+        // commit.
+        readOnly={status === "saving"}
         onChange={(event) => {
           setDraft(event.target.value);
           // The refusal was about the text that is now gone. Left
@@ -581,7 +586,11 @@ function TurnaroundControl({
             event.preventDefault();
             void commit();
           }
-          if (event.key === "Escape") {
+          // Escape reached nothing while the box was disabled, and it
+          // reaches nothing while a save is in flight now: reverting the
+          // text under a write that is about to answer would show the
+          // old number as though it had been kept.
+          if (event.key === "Escape" && !pending.current) {
             setDraft(saved === null ? "" : String(saved));
             setStatus("idle");
             setError(null);

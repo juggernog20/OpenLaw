@@ -1694,6 +1694,122 @@ describe("the /contracts/:number record page", () => {
     expect(await within(section).findByText("No additional stakeholders.")).toBeInTheDocument();
   });
 
+  /** One stakeholder roster and one DELETE, held open when a suite asks
+   * for it. Focus is what these cases are about, so the answer has to be
+   * stoppable in the middle. */
+  function stakeholderApi(
+    handler: (call: StubCall) => Response | Promise<Response> | undefined,
+    options: { refuse?: boolean; hold?: () => Promise<void> } = {},
+  ) {
+    let roster = [
+      { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+      { id: "u3", displayName: "Casey Contributor", image: null, archived: false },
+    ];
+    return (call: StubCall) => {
+      if (!call.url.pathname.startsWith("/api/v1/contracts/42/stakeholders")) return handler(call);
+      if (call.method !== "DELETE") return json(200, { stakeholders: roster });
+      if (options.refuse)
+        return problem(409, "Restore this Contract before changing stakeholders.");
+      const id = call.url.pathname.split("/").at(-1)!;
+      roster = roster.filter((person) => person.id !== id);
+      const answer = json(200, { stakeholders: roster });
+      return options.hold ? options.hold().then(() => answer) : answer;
+    };
+  }
+
+  it("returns focus to the Add control when a removal takes the focused button away", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: stakeholderApi(api.handler) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+    const section = await screen.findByRole("region", { name: "Stakeholders" });
+    const remove = await within(section).findByRole("button", {
+      name: "Remove Nadia Counsel as stakeholder",
+    });
+
+    // The keyboard path the defect is on: the button that runs the
+    // removal is the button the removal deletes.
+    remove.focus();
+    expect(document.activeElement).toBe(remove);
+    await user.keyboard("{Enter}");
+
+    // The Remove button, not the name: a removed stakeholder comes back
+    // as an option in the Add control, under that same name.
+    await waitFor(() =>
+      expect(
+        within(section).queryByRole("button", { name: "Remove Nadia Counsel as stakeholder" }),
+      ).toBeNull(),
+    );
+    const add = within(section).getByLabelText("Add stakeholder");
+    // The Add control, not the row below the one that went: focus lands
+    // somewhere that is there whether or not the list is now empty.
+    expect(document.activeElement).toBe(add);
+    expect(add).toBeEnabled();
+    expect(
+      within(section).getByRole("button", { name: "Remove Casey Contributor as stakeholder" }),
+    ).toBeInTheDocument();
+
+    // And again down to the empty list, where there is no next row at all.
+    const last = within(section).getByRole("button", {
+      name: "Remove Casey Contributor as stakeholder",
+    });
+    last.focus();
+    await user.keyboard("{Enter}");
+    expect(await within(section).findByText("No additional stakeholders.")).toBeInTheDocument();
+    expect(document.activeElement).toBe(within(section).getByLabelText("Add stakeholder"));
+  });
+
+  it("leaves focus on the button when a removal is refused", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: stakeholderApi(api.handler, { refuse: true }) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+    const section = await screen.findByRole("region", { name: "Stakeholders" });
+    const remove = await within(section).findByRole("button", {
+      name: "Remove Nadia Counsel as stakeholder",
+    });
+    remove.focus();
+    await user.keyboard("{Enter}");
+
+    expect(await within(section).findByRole("alert")).toHaveTextContent(
+      "Restore this Contract before changing stakeholders.",
+    );
+    // The row is still there, so the button that was pressed still holds
+    // the focus it never lost, and nothing moved it to the Add control.
+    expect(remove).toBeInTheDocument();
+    expect(document.activeElement).toBe(remove);
+  });
+
+  it("does not take focus from a control the reader moved to while a removal was in flight", async () => {
+    let release: (() => void) | undefined;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: stakeholderApi(api.handler, { hold: () => held }) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+    const section = await screen.findByRole("region", { name: "Stakeholders" });
+    const remove = await within(section).findByRole("button", {
+      name: "Remove Nadia Counsel as stakeholder",
+    });
+    remove.focus();
+    await user.keyboard("{Enter}");
+
+    // The answer is still out, and the reader has gone somewhere else.
+    const elsewhere = screen.getByLabelText("Business Owner");
+    elsewhere.focus();
+    release!();
+
+    await waitFor(() =>
+      expect(
+        within(section).queryByRole("button", { name: "Remove Nadia Counsel as stakeholder" }),
+      ).toBeNull(),
+    );
+    // Focus goes to the Add control from nothing, never from somewhere.
+    expect(document.activeElement).toBe(elsewhere);
+  });
+
   it("reports stakeholder write refusals and retries a failed read", async () => {
     const api = recordApi(contractRow());
     let reads = 0;
