@@ -566,7 +566,15 @@ function TurnaroundControl({
         className={CONTROL_CLASS}
         value={draft}
         disabled={status === "saving"}
-        onChange={(event) => setDraft(event.target.value)}
+        onChange={(event) => {
+          setDraft(event.target.value);
+          // The refusal was about the text that is now gone. Left
+          // standing over the new text it reads as a lie about it.
+          if (status === "error") {
+            setStatus("idle");
+            setError(null);
+          }
+        }}
         onBlur={() => void commit()}
         onKeyDown={(event) => {
           if (event.key === "Enter") {
@@ -576,6 +584,7 @@ function TurnaroundControl({
           if (event.key === "Escape") {
             setDraft(saved === null ? "" : String(saved));
             setStatus("idle");
+            setError(null);
           }
         }}
         aria-describedby="request-type-turnaround-help"

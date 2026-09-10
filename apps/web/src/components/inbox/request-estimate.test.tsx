@@ -6,6 +6,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, it } from "vitest";
 import { json, problem, stubApi } from "../../testing/helpers";
+import { pickDate } from "../../testing/dates";
 import { RequestEstimate, type EstimatedRequest } from "./request-estimate";
 
 const initial = {
@@ -66,4 +67,58 @@ it("does not offer to overwrite a saved estimate with a changed suggestion", () 
   mount({ ...initial, expectedBy: "2026-10-11" });
   expect(screen.getByLabelText("Expected back (estimate)")).toHaveTextContent("11");
   expect(screen.queryByRole("button", { name: /Use suggested date/ })).not.toBeInTheDocument();
+});
+it("keeps a refused pick in the box, and Escape puts the saved date back", async () => {
+  // A pick that the server would not take is still the pick triage
+  // made. Snapping the box back to the saved date would lose it and
+  // leave a refusal beside a date nobody chose (DES-048).
+  stubApi({
+    extra: (call) => {
+      if (call.method === "PATCH" && call.url.pathname.endsWith("/expected-by"))
+        return problem(500, "Could not save this estimate.");
+    },
+  });
+  mount({ ...initial, expectedBy: "2026-10-11" });
+  const user = userEvent.setup();
+  await pickDate(user, "Expected back (estimate)", "2026-10-20");
+  expect(await screen.findByText("Could not save this estimate.")).toBeInTheDocument();
+  expect(screen.getByLabelText("Expected back (estimate)")).toHaveTextContent("Oct 20, 2026");
+
+  await user.keyboard("{Escape}");
+  expect(screen.getByLabelText("Expected back (estimate)")).toHaveTextContent("Oct 11, 2026");
+  expect(screen.queryByText("Could not save this estimate.")).not.toBeInTheDocument();
+});
+
+it.each(["new", "resolved"] as const)(
+  "adopts a refreshed saved estimate when the Request is %s",
+  (status) => {
+    const editor = (request: EstimatedRequest) => (
+      <IntlProvider locale="en-US">
+        <RequestEstimate request={request} onSaved={() => {}} />
+      </IntlProvider>
+    );
+    const view = render(editor({ ...initial, expectedBy: "2026-10-10" }));
+    view.rerender(editor({ ...initial, expectedBy: "2026-10-12", status }));
+    expect(screen.getByLabelText("Expected back (estimate)")).toHaveTextContent("Oct 12, 2026");
+  },
+);
+
+it("shows the saved date when another triager closes a Request with a refused draft", async () => {
+  stubApi({
+    extra: (call) => {
+      if (call.method === "PATCH" && call.url.pathname.endsWith("/expected-by"))
+        return problem(500, "Could not save this estimate.");
+    },
+  });
+  const editor = (request: EstimatedRequest) => (
+    <IntlProvider locale="en-US">
+      <RequestEstimate request={request} onSaved={() => {}} />
+    </IntlProvider>
+  );
+  const view = render(editor(initial));
+  await userEvent.setup().click(screen.getByRole("button", { name: /Use suggested date/ }));
+  await screen.findByText("Could not save this estimate.");
+  view.rerender(editor({ ...initial, status: "resolved" }));
+  expect(screen.getByLabelText("Expected back (estimate)")).toBeDisabled();
+  expect(screen.getByLabelText("Expected back (estimate)")).toHaveTextContent("Select a date");
 });
