@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * DES-070 evidence lookup and DES-016 doc panel handoff. Once the panel opens,
+ * it owns focus and restores the sparkle on close, so the popover must not
+ * pull focus back while the reader opens.
+ */
+
 import { Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -131,7 +137,7 @@ export function AiFieldEvidence({
               ) : (
                 <FormattedMessage
                   id="contracts.analysis.evidenceUnavailable"
-                  defaultMessage="Source evidence is unavailable. The document may have been removed or you may not have access."
+                  defaultMessage="Source evidence is unavailable. The Document Version may have been removed or you may not have access."
                 />
               )}
             </p>

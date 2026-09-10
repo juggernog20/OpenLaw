@@ -703,7 +703,20 @@ function ContractRecord() {
   /** The record's paper (M11/2, M11/3). State rather than loader data
    * because an upload, an appended version, and a metadata edit each
    * change it without a page re-read. */
-  const [paper, setPaper] = useState<ContractDocument[]>(contractDocuments);
+  const [{ paper, filed }, setDocumentLists] = useState(() => ({
+    paper: contractDocuments,
+    filed:
+      documentLanding &&
+      !contractDocuments.some((document) => document.id === documentLanding.document.id)
+        ? [documentLanding.document]
+        : [],
+  }));
+  const setPaper = useCallback((next: React.SetStateAction<ContractDocument[]>) => {
+    setDocumentLists((current) => ({
+      ...current,
+      paper: typeof next === "function" ? next(current.paper) : next,
+    }));
+  }, []);
   /** Where the next page of paper starts, or null at the end of it. The
    * section pages itself; the record holds the position, because the
    * record holds the list (CTR-024). */
@@ -716,12 +729,12 @@ function ContractRecord() {
    * screen, and the doc panel below resolves against both. Without it a
    * filed document's name would open nothing.
    */
-  const [filed, setFiled] = useState<ContractDocument[]>(() =>
-    documentLanding &&
-    !contractDocuments.some((document) => document.id === documentLanding.document.id)
-      ? [documentLanding.document]
-      : [],
-  );
+  const setFiled = useCallback((next: React.SetStateAction<ContractDocument[]>) => {
+    setDocumentLists((current) => ({
+      ...current,
+      filed: typeof next === "function" ? next(current.filed) : next,
+    }));
+  }, []);
   /** How the record's paper is filed (M13/2). State rather than loader
    * data because every folder write answers the whole set, and the
    * section replaces what it holds without a page re-read. */
@@ -968,7 +981,7 @@ function ContractRecord() {
         setFiled((rows) => [...rows.filter((row) => row.folderId !== inFolder), ...fresh]);
       }
     },
-    [filed, saved.number],
+    [filed, saved.number, setFiled, setPaper],
   );
 
   /** All reachable chains for the filing dialog, across the root and
@@ -1199,16 +1212,16 @@ function ContractRecord() {
                 versionId,
               );
               if (!landing || signal.aborted) return false;
-              if (paper.some((row) => row.id === documentId)) {
-                setPaper((current) =>
-                  current.map((row) => (row.id === documentId ? landing.document : row)),
-                );
-              } else {
-                setFiled((current) => [
-                  ...current.filter((row) => row.id !== documentId),
-                  landing.document,
-                ]);
-              }
+              setDocumentLists((current) => {
+                const inRoot = current.paper.some((row) => row.id === documentId);
+                const otherFiled = current.filed.filter((row) => row.id !== documentId);
+                return {
+                  paper: inRoot
+                    ? current.paper.map((row) => (row.id === documentId ? landing.document : row))
+                    : current.paper,
+                  filed: inRoot ? otherFiled : [...otherFiled, landing.document],
+                };
+              });
             }
             readingTrigger.current = trigger;
             setReading({
@@ -1344,7 +1357,7 @@ function ContractRecord() {
     setReading({ documentId: target.document.id, versionId: target.versionId });
     setReadingCovers(false);
     readingDocked.current = true;
-  }, [location.key, documentLanding]);
+  }, [location.key, documentLanding, setFiled, setPaper]);
 
   /** Closes the panel. Focus goes back to the control that opened it —
    * DES-010's restore-to-trigger rule, wired by hand because the panel

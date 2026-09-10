@@ -8193,6 +8193,7 @@ describe("the doc panel (M12/2)", () => {
     "centres a split-span AI citation with PDF line wrap %s",
     async (wrapped) => {
       const original = PDF_PAGE_TEXT[1]!;
+      const scroll = vi.spyOn(Element.prototype, "scrollIntoView");
       if (wrapped) {
         PDF_PAGE_TEXT[1] = [
           "A second termi",
@@ -8228,7 +8229,6 @@ describe("the doc panel (M12/2)", () => {
             return record.handler(call);
           },
         });
-        const scroll = vi.spyOn(Element.prototype, "scrollIntoView");
         const { router } = renderAt("/contracts/42");
         await userEvent
           .setup()
@@ -8258,8 +8258,8 @@ describe("the doc panel (M12/2)", () => {
             }),
           ).toBe(true);
         });
-        scroll.mockRestore();
       } finally {
+        scroll.mockRestore();
         PDF_PAGE_TEXT[1] = original;
       }
     },

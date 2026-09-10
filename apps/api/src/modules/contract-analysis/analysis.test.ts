@@ -679,9 +679,16 @@ describe("the manual Contract analysis run", () => {
       evidence,
       outcome: "written",
     });
-    const [row] = await harness.db.select().from(contracts).where(eq(contracts.id, contract.id));
-    expect(row!.termType).toBe(expected);
-    expect(row!.aiUnverified?.term_type?.runId).toBe(run.id);
+    const read = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/contracts/${String(contract.number)}`,
+      cookies: memberCookies,
+    });
+    expect(read.statusCode, read.body).toBe(200);
+    expect(read.json().contract).toMatchObject({
+      termType: expected,
+      aiUnverified: { term_type: { runId: run.id } },
+    });
     const confirmation = await harness.app.inject({
       method: "POST",
       url: `/api/v1/contracts/${String(contract.number)}/analysis/confirm`,
@@ -720,12 +727,15 @@ describe("the manual Contract analysis run", () => {
       expect(run.outcome!.results).toContainEqual(
         expect.objectContaining({ slug: "counterparty", outcome: "unmatched" }),
       );
-      const links = await harness.db
-        .select()
-        .from(contractCounterparties)
-        .where(eq(contractCounterparties.contractId, contract.id));
-      expect(links).toHaveLength(1);
-      expect(links[0]!.counterpartyId).toBe(party!.id);
+      const read = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/contracts/${String(contract.number)}`,
+        cookies: memberCookies,
+      });
+      expect(read.statusCode, read.body).toBe(200);
+      expect(read.json().counterparties).toEqual([
+        expect.objectContaining({ id: party!.id, isPrimary }),
+      ]);
     },
   );
 

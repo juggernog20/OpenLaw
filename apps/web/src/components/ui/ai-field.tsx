@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** DES-070's decorative AI border; the value's Unverified pill remains separate. */
+
 import type { ReactNode } from "react";
 import { cn } from "../../lib/utils";
 

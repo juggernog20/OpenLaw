@@ -1446,7 +1446,7 @@
     "defaultMessage": "Counterparty"
   },
   "contracts.analysis.evidenceUnavailable": {
-    "defaultMessage": "Source evidence is unavailable. The document may have been removed or you may not have access."
+    "defaultMessage": "Source evidence is unavailable. The Document Version may have been removed or you may not have access."
   },
   "contracts.analysis.failed": {
     "defaultMessage": "Failed {when} on Version {version} with {model}: {reason}"
