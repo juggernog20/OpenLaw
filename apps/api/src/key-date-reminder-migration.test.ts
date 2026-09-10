@@ -2,9 +2,16 @@
 
 /** Existing reminders keep their delivery state when Key date identity is widened. */
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testcontainers/postgresql";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { notifications, runMigrations, sql, type Db } from "@openlaw/db";
-import { freshDb, migrateThrough, migrationEntries } from "./testing/migration-rehearsal.js";
+import {
+  freshDb,
+  migrateThrough,
+  migrationEntries,
+  MIGRATIONS,
+} from "./testing/migration-rehearsal.js";
 
 let container: StartedPostgreSqlContainer;
 beforeAll(async () => {
@@ -33,6 +40,49 @@ async function insertOnce(db: Db, row: typeof notifications.$inferInsert) {
     .onConflictDoNothing()
     .returning({ id: notifications.id });
 }
+
+it("restores the transaction for its journal entry and following migrations", async () => {
+  const db = await freshDb(container, "key_date_reminder_transaction");
+  try {
+    const entries = migrationEntries();
+    await migrateThrough(db, "0097_currencies_in_use", entries);
+    const entry = entries.find((item) => item.tag === "0098_distinct_key_date_reminders")!;
+    const statements = readFileSync(join(MIGRATIONS, `${entry.tag}.sql`), "utf8")
+      .split("--> statement-breakpoint")
+      .map((statement) => statement.trim())
+      .filter(Boolean);
+    await expect(
+      db.transaction(async (tx) => {
+        for (const statement of statements) await tx.execute(sql.raw(statement));
+        await tx.execute(sql`insert into drizzle.__drizzle_migrations (hash, created_at)
+          values (${entry.hash}, ${entry.when})`);
+        await tx.execute(sql`create table following_migration_probe (id integer)`);
+        throw new Error("a later migration failed");
+      }),
+    ).rejects.toThrow("a later migration failed");
+    expect(
+      (await db.execute(sql`select to_regclass('following_migration_probe') as probe`)).rows,
+    ).toEqual([{ probe: null }]);
+    expect(
+      (
+        await db.execute(
+          sql`select id from drizzle.__drizzle_migrations where hash = ${entry.hash}`,
+        )
+      ).rows,
+    ).toEqual([]);
+    // Concurrent index work has committed; an ordinary retry must finish the upgrade.
+    await runMigrations(db);
+    expect(
+      (
+        await db.execute(
+          sql`select id from drizzle.__drizzle_migrations where hash = ${entry.hash}`,
+        )
+      ).rows,
+    ).toHaveLength(1);
+  } finally {
+    await db.$client.end();
+  }
+});
 
 it.each(["none", "valid", "swapped", "invalid", "half-dropped", "renamed"])(
   "preserves delivered reminders and distinguishes new Key dates, staged index=%s",

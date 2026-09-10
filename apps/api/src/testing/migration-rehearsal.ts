@@ -93,10 +93,12 @@ export async function migrateThrough(db: Db, tag: string, entries: JournalEntry[
       .split("--> statement-breakpoint")
       .map((statement) => statement.trim())
       .filter((statement) => statement.length > 0);
-    for (const statement of statements) await db.execute(sql.raw(statement));
-    await db.execute(
-      sql`insert into drizzle.__drizzle_migrations (hash, created_at) values (${entry.hash}, ${entry.when})`,
-    );
+    await db.transaction(async (tx) => {
+      for (const statement of statements) await tx.execute(sql.raw(statement));
+      await tx.execute(
+        sql`insert into drizzle.__drizzle_migrations (hash, created_at) values (${entry.hash}, ${entry.when})`,
+      );
+    });
     if (entry.tag === tag) return;
   }
 }
