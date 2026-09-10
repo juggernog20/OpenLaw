@@ -228,48 +228,6 @@ describe("welcome wizard portal step", () => {
     expect(await screen.findByText(/Outbound email is not set up/)).toBeInTheDocument();
     expect(putBody).toEqual({ domains: ["acme.example"] });
   });
-
-  it("holds the DD-010 floor: built-in mode keeps magic links on", async () => {
-    const portalBodies: unknown[] = [];
-    stubApi({
-      signedIn: ADMIN,
-      onboarding: { completed: false, steps: { email: false } },
-      // An install that turned magic links off under OIDC and is now
-      // back on built-in mode. Built-in has no second way into the
-      // portal, so the step may not leave the setting off.
-      methods: { mode: "built_in", magicLinkEnabled: false, ssoProviderId: null },
-      extra: (call) => {
-        const fromLoader = wizardExtra()(call);
-        if (fromLoader) return fromLoader;
-        if (call.url.pathname === "/api/v1/auth/allowed-domains" && call.method === "PUT") {
-          return json(200, call.body);
-        }
-        if (call.url.pathname === "/api/v1/auth/portal" && call.method === "PATCH") {
-          portalBodies.push(call.body);
-          return json(200, call.body);
-        }
-        return undefined;
-      },
-    });
-    renderAt("/welcome");
-    const user = userEvent.setup();
-
-    await user.click(await screen.findByRole("button", { name: "Get started" }));
-    await user.click(await screen.findByRole("button", { name: "Continue" }));
-    await user.click(screen.getByRole("button", { name: "Continue" }));
-
-    // The toggle reads on and cannot be pressed, as the Authentication
-    // pane's switch cannot.
-    const toggle = screen.getByRole("button", { name: /Magic-link sign-in is on/ });
-    expect(toggle).toBeDisabled();
-    await user.click(toggle);
-    expect(screen.getByRole("button", { name: /Magic-link sign-in is on/ })).toBeInTheDocument();
-
-    // Continue repairs the stored setting instead of carrying it on.
-    await user.click(screen.getByRole("button", { name: "Continue" }));
-    expect(await screen.findByRole("heading", { name: "Outbound email" })).toBeInTheDocument();
-    expect(portalBodies).toEqual([{ magicLinkEnabled: true }]);
-  });
 });
 
 describe("welcome wizard organization step (#697)", () => {

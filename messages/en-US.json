@@ -9042,7 +9042,7 @@
     "defaultMessage": "Remove {domain}"
   },
   "welcome.portal.toggle.hint": {
-    "defaultMessage": "Magic links are required in built-in mode. With OIDC, turning them off requires business users to sign in with SSO."
+    "defaultMessage": "In built-in mode, turning off magic links closes Portal entry. With OIDC, business users can still sign in with SSO."
   },
   "welcome.progress": {
     "defaultMessage": "Step {current} of {total}"
