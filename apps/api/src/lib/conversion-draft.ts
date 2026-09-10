@@ -7,6 +7,8 @@ import {
   and,
   asc,
   comments,
+  commentAttachments,
+  inArray,
   eq,
   fields as catalogFields,
   isNull,
@@ -18,13 +20,14 @@ import {
   users,
   type Executor,
 } from "@openlaw/db";
-import { type ConversionSuggestion } from "@openlaw/shared";
+import { type ConversionSuggestion, type ConversionAttachmentRead } from "@openlaw/shared";
 import {
   coerceCustomFieldValue,
   selectAttachedFields,
   CustomFieldValueSchema,
 } from "./custom-fields.js";
 import type { AiExtraction, AiExtractionTarget, AiSource } from "./ai/provider.js";
+import type { AttachmentSource } from "./conversion-attachments.js";
 import { httpError } from "./problem.js";
 
 export const ConversionSuggestionSchema = z.object({
@@ -146,12 +149,44 @@ export async function conversionSources(db: Executor, requestId: string, lockSou
   }
   const warnings: string[] = [];
   if (all.some((s) => s.restricted)) warnings.push("restricted_sources");
+  const attachments: AttachmentSource[] = [];
   const paper = await db
-    .select({ id: requestAttachments.id })
+    .select()
     .from(requestAttachments)
     .where(eq(requestAttachments.requestId, row.id))
-    .limit(1);
-  if (paper.length) warnings.push("attachments_not_read");
+    .orderBy(asc(requestAttachments.createdAt), asc(requestAttachments.id));
+  for (const file of paper)
+    attachments.push({
+      id: `attachment:${file.id}`,
+      label: file.filename,
+      fileRef: file.fileRef,
+      revision: hash([file.id, file.fileRef, file.filename]),
+      restricted: false,
+      versionId: file.promotedVersionId,
+    });
+  if (messages.length) {
+    const files = await db
+      .select()
+      .from(commentAttachments)
+      .where(
+        inArray(
+          commentAttachments.commentId,
+          messages.map((m) => m.id),
+        ),
+      )
+      .orderBy(asc(commentAttachments.createdAt), asc(commentAttachments.id));
+    for (const file of files) {
+      const message = messages.find((m) => m.id === file.commentId)!;
+      attachments.push({
+        id: `message-attachment:${file.id}`,
+        label: file.filename,
+        fileRef: file.fileRef,
+        revision: hash([file.id, file.fileRef, file.filename, message.visibility]),
+        restricted: message.visibility !== "full_thread",
+        versionId: file.filedVersionId,
+      });
+    }
+  }
   let characters = 0;
   const sources = all
     .filter((source) => {
@@ -174,7 +209,7 @@ export async function conversionSources(db: Executor, requestId: string, lockSou
       createdAt,
     }));
   if (all.filter((s) => !s.restricted).length > 200) warnings.push("source_budget");
-  return { row, all, sources, warnings: [...new Set(warnings)] };
+  return { row, all, sources, attachments, warnings: [...new Set(warnings)] };
 }
 export async function conversionContext(
   db: Executor,
@@ -234,7 +269,24 @@ export async function conversionContext(
     return true;
   });
   if (targets.length !== allTargets.length) source.warnings.push("target_budget");
-  return { ...source, fields, types, targets, snapshot: hash([source.all, types, perType]) };
+  return {
+    ...source,
+    fields,
+    types,
+    targets,
+    snapshot: hash([
+      source.all,
+      source.attachments.map((a) => ({
+        id: a.id,
+        revision: a.revision,
+        label: a.label,
+        fileRef: a.fileRef,
+        restricted: a.restricted,
+      })),
+      types,
+      perType,
+    ]),
+  };
 }
 export function checkedSuggestion(
   answer: AiExtraction,
@@ -284,4 +336,30 @@ export function checkedSuggestion(
     }
   }
   return value === null ? null : { value, citations: checked };
+}
+
+/** Metadata determines freshness; cached text enters only execution and authorized evidence reads. */
+export function withAttachmentReads<T extends Awaited<ReturnType<typeof conversionContext>>>(
+  context: T,
+  reads: ConversionAttachmentRead[],
+): T {
+  for (const read of reads) {
+    const source = context.attachments.find(
+      (a) => a.id === read.sourceId && a.revision === read.revision && !a.restricted,
+    );
+    if (source && (read.status === "readable" || read.status === "truncated") && read.text) {
+      context.sources.push({
+        id: source.id,
+        revision: source.revision,
+        kind: "document",
+        label: source.label,
+        text: read.text,
+        author: undefined,
+        createdAt: undefined,
+      });
+    }
+    if (read.status !== "readable") context.warnings.push("attachment_omissions");
+  }
+  context.warnings = [...new Set(context.warnings)];
+  return context;
 }

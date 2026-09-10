@@ -606,10 +606,10 @@ export function ConvertDialog({
                       id="conversion.restrictedOmitted"
                       defaultMessage="Restricted messages and Legal or reference Fields were omitted to keep Matter values safe for broader readers."
                     />
-                  ) : warning === "attachments_not_read" ? (
+                  ) : warning === "attachment_omissions" ? (
                     <FormattedMessage
-                      id="conversion.attachmentsOmitted"
-                      defaultMessage="Attachments were not read. Review the Request's paper before converting."
+                      id="conversion.attachmentOmissions"
+                      defaultMessage="Some attachments could not be fully read. Review the source statuses and original files before converting."
                     />
                   ) : warning === "target_budget" ? (
                     <FormattedMessage
@@ -624,6 +624,46 @@ export function ConvertDialog({
                   )}
                 </p>
               ))}
+            {initialDraft &&
+              !dropped &&
+              targetModule === "matter" &&
+              initialDraft.attachmentReads?.length > 0 && (
+                <details className="text-sm text-muted">
+                  <summary>
+                    <FormattedMessage
+                      id="conversion.attachmentReads"
+                      defaultMessage="Attachment reading details"
+                    />
+                  </summary>
+                  <p>
+                    <FormattedMessage
+                      id="conversion.readingLimits"
+                      defaultMessage="Up to 20 attachments, 10 MiB each and 50 MiB total; 30,000 characters each and 180,000 across all sources. Reading allows 15 seconds per attachment and 45 seconds total. Request answers and messages are considered first."
+                    />
+                  </p>
+                  <ul>
+                    {initialDraft.attachmentReads.map((source) => (
+                      <li key={source.sourceId}>
+                        {source.label}:{" "}
+                        <FormattedMessage
+                          id={`conversion.sourceStatus.${source.status}`}
+                          defaultMessage={source.status}
+                        />
+                        {source.reason && (
+                          <>
+                            {" "}
+                            —{" "}
+                            <FormattedMessage
+                              id={`conversion.sourceReason.${source.reason}`}
+                              defaultMessage={source.reason.replaceAll("_", " ")}
+                            />
+                          </>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
             {initialDraft &&
               !dropped &&
               targetModule === "matter" &&

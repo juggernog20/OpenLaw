@@ -211,6 +211,7 @@ async function promotePaper(
   const record = input.target.record;
   const attachments = await tx
     .select({
+      id: requestAttachments.id,
       fileRef: requestAttachments.fileRef,
       filename: requestAttachments.filename,
     })
@@ -275,6 +276,10 @@ async function promotePaper(
       checksumSha256: copied.checksumSha256,
       createdBy: input.actorId,
     });
+    await tx
+      .update(requestAttachments)
+      .set({ promotedVersionId: versionId })
+      .where(eq(requestAttachments.id, attachment.id));
     // One entry per file, naming its destination (DD-017, the M13 batch
     // doctrine) — the same entry an upload writes, with the same
     // payload, so the record's feed reads one way whatever put the paper

@@ -584,4 +584,5 @@ export type {
   ConversionSuggestion,
   ConversionProvenance,
   ConversionProvenanceMap,
+  ConversionAttachmentRead,
 } from "./conversion-draft.js";

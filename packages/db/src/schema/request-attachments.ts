@@ -12,9 +12,10 @@
  * what promotes one into `documents`, under the record the Request
  * became.
  *
- * Five columns and a stamp, exactly as SCHEMA.md records them. There
+ * The original file and a nullable promoted Version mapping (#827). There
  * is no declared media type and no byte count here, because nothing on
- * this side of conversion reads either. The download answers
+ * the upload needs either. Preparation derives them through the existing storage
+ * and document engine interfaces without promoting the attachment. The download answers
  * `application/octet-stream` rather than echoing a client's declaration,
  * which is the rule an email attachment's download already follows
  * (DOC-004). A promotion that needs those facts reads them off the blob.
@@ -27,6 +28,7 @@
 import { index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { users } from "./auth.js";
 import { uuidPk } from "./helpers.js";
+import { documentVersions } from "./documents.js";
 import { requests } from "./requests.js";
 
 export const requestAttachments = pgTable(
@@ -51,6 +53,9 @@ export const requestAttachments = pgTable(
     /** Who attached it. The Requester on the portal. A column of its
      * own because the Request's own `requester_id` answers a different
      * question: who asked, not who put this file here. */
+    promotedVersionId: text("promoted_version_id").references(() => documentVersions.id, {
+      onDelete: "set null",
+    }),
     uploadedBy: text("uploaded_by")
       .notNull()
       .references(() => users.id),

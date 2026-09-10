@@ -5,6 +5,7 @@ import { z } from "zod";
 import {
   and,
   conversionDrafts,
+  contracts,
   eq,
   isNull,
   matterTypeFields,
@@ -20,11 +21,14 @@ import {
   conversionContext,
   conversionSources,
   matterPreparationEnabled,
-  normalizeQuote,
 } from "../../lib/conversion-draft.js";
 import { selectAttachedFields } from "../../lib/custom-fields.js";
 import { reachedMatter } from "../../lib/matter-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
+import { authorizedAttachment, conversionEvidence, EvidenceSchema } from "./conversion-evidence.js";
+import { attachmentDisposition, inlineDisposition } from "../../lib/uploads.js";
+import { ATTACHMENT_LIMITS } from "../../lib/conversion-attachments.js";
+import { reachedContract } from "../../lib/contract-access.js";
 import { boundedQueueAsk } from "../../pipeline/jobs.js";
 
 const DraftSchema = z.object({
@@ -34,6 +38,25 @@ const DraftSchema = z.object({
   suggestions: z.record(z.string(), ConversionSuggestionSchema),
   conflicts: z.record(z.string(), ConversionSuggestionSchema),
   warnings: z.array(z.string()),
+  attachmentReads: z.array(
+    z.object({
+      sourceId: z.string(),
+      label: z.string(),
+      status: z.enum(["readable", "unreadable", "unsupported", "truncated", "omitted"]),
+      reason: z.string().optional(),
+    }),
+  ),
+  limits: z
+    .object({
+      sources: z.number(),
+      bytes: z.number(),
+      totalBytes: z.number(),
+      characters: z.number(),
+      totalCharacters: z.number(),
+      sourceRuntimeMs: z.number(),
+      runtimeMs: z.number(),
+    })
+    .default(ATTACHMENT_LIMITS),
   failure: z.string().nullable(),
 });
 const Envelope = z.object({ draft: DraftSchema });
@@ -121,7 +144,7 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
       if (draft.state === "pending")
         await boundedQueueAsk(app.jobs.requestConversionDraft(draft.id)).catch(() => {});
       reply.code(202);
-      return { draft };
+      return { draft: DraftSchema.parse(draft) };
     },
   );
   app.get(
@@ -158,9 +181,10 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
       }
       return {
         draft: current
-          ? draft
+          ? DraftSchema.parse(draft)
           : {
-              ...draft,
+              ...DraftSchema.parse(draft),
+              attachmentReads: [],
               state: "failed" as const,
               suggestions: {},
               conflicts: {},
@@ -177,17 +201,7 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "getConversionDraftEvidence",
         params: params.extend({ draftId: z.string(), slug: z.string() }),
         response: {
-          200: z.object({
-            available: z.boolean(),
-            citations: z.array(
-              z.object({
-                label: z.string(),
-                text: z.string(),
-                quote: z.string(),
-                sourceId: z.string(),
-              }),
-            ),
-          }),
+          200: EvidenceSchema,
           default: problemResponse,
         },
       },
@@ -208,18 +222,8 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
       const source = await conversionSources(app.db, row.id);
       const proposal =
         draft.suggestions[request.params.slug] ?? draft.conflicts[request.params.slug];
-      const citations = (proposal?.citations ?? []).flatMap((citation) => {
-        const live = source.sources.find(
-          (s) => s.id === citation.sourceId && s.revision === citation.revision,
-        );
-        return live
-          ? [{ label: live.label, text: live.text, quote: citation.quote, sourceId: live.id }]
-          : [];
-      });
-      return {
-        available: citations.length > 0 && citations.length === proposal?.citations.length,
-        citations: citations.length === proposal?.citations.length ? citations : [],
-      };
+      if (row.status !== "new") throw httpError(404, "The Conversion draft is unavailable.");
+      return conversionEvidence(app.db, request.user, source, draft, proposal);
     },
   );
   app.get(
@@ -230,17 +234,7 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "getMatterConversionEvidence",
         params: params.extend({ slug: z.string() }),
         response: {
-          200: z.object({
-            available: z.boolean(),
-            citations: z.array(
-              z.object({
-                label: z.string(),
-                text: z.string(),
-                quote: z.string(),
-                sourceId: z.string(),
-              }),
-            ),
-          }),
+          200: EvidenceSchema,
           default: problemResponse,
         },
       },
@@ -269,23 +263,80 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!source || source.row.convertedMatterId !== row.id)
         return { available: false, citations: [] };
       const proposal = draft.suggestions[request.params.slug];
-      const citations = (proposal?.citations ?? []).flatMap((citation) => {
-        const live = source.sources.find(
-          (s) =>
-            s.id === citation.sourceId &&
-            s.revision === citation.revision &&
-            normalizeQuote(s.text).includes(normalizeQuote(citation.quote)),
-        );
-        return live
-          ? [{ label: live.label, text: live.text, quote: citation.quote, sourceId: live.id }]
-          : [];
-      });
-      return {
-        available: citations.length > 0 && citations.length === proposal?.citations.length,
-        citations: citations.length === proposal?.citations.length ? citations : [],
-      };
+      return conversionEvidence(app.db, request.user, source, draft, proposal);
     },
   );
+  for (const mode of ["preview", "download"] as const)
+    app.get(
+      `/requests/:number/conversion-drafts/:draftId/sources/:sourceId/${mode}`,
+      {
+        preHandler: requireAuth,
+        schema: {
+          operationId:
+            mode === "preview" ? "previewConversionAttachment" : "downloadConversionAttachment",
+          params: params.extend({ draftId: z.string(), sourceId: z.string() }),
+          response: { 200: z.any(), default: problemResponse },
+        },
+      },
+      async (request, reply) => {
+        const row = await requestOf(app.db, request.params.number);
+        const [draft] = await app.db
+          .select()
+          .from(conversionDrafts)
+          .where(
+            and(
+              eq(conversionDrafts.id, request.params.draftId),
+              eq(conversionDrafts.requestId, row.id),
+            ),
+          );
+        if (!draft) throw httpError(404, "The source is unavailable.");
+        if (row.status === "new") {
+          if (
+            draft.actorId !== request.user.id ||
+            !["administrator", "legal_team_member"].includes(request.user.role)
+          )
+            throw httpError(404, "The source is unavailable.");
+        } else if (row.convertedMatterId) {
+          const [matter] = await app.db
+            .select({ number: matters.number })
+            .from(matters)
+            .where(eq(matters.id, row.convertedMatterId));
+          const reached = matter && (await reachedMatter(app.db, request.user, matter.number));
+          if (!reached || reached.archivedAt) throw httpError(404, "The source is unavailable.");
+        } else if (row.convertedContractId) {
+          const [contract] = await app.db
+            .select({ number: contracts.number })
+            .from(contracts)
+            .where(eq(contracts.id, row.convertedContractId));
+          const reached =
+            contract && (await reachedContract(app.db, request.user, contract.number));
+          if (!reached || reached.archivedAt) throw httpError(404, "The source is unavailable.");
+        } else throw httpError(404, "The source is unavailable.");
+        const sources = await conversionSources(app.db, row.id);
+        const read = draft.attachmentReads.find((r) => r.sourceId === request.params.sourceId);
+        const authorized =
+          read && (await authorizedAttachment(app.db, request.user, sources, read));
+        if (!read || !authorized || authorized.version)
+          throw httpError(404, "The source is unavailable.");
+        const ref = mode === "preview" ? read.previewRef : authorized.file.fileRef;
+        if (!ref)
+          throw httpError(415, "This source has no passage preview. Download it to read it.");
+        reply
+          .header("cache-control", "private, no-store")
+          .header("x-content-type-options", "nosniff");
+        reply.header(
+          "content-disposition",
+          mode === "preview"
+            ? inlineDisposition(read.method === "converted" ? `${read.label}.pdf` : read.label)
+            : attachmentDisposition(read.label),
+        );
+        reply.header(
+          "content-type",
+          mode === "preview" ? "application/pdf" : "application/octet-stream",
+        );
+        return reply.send(await app.storage.get(ref));
+      },
+    );
   app.post(
     "/matters/:number/conversion-confirm/:slug",
     {

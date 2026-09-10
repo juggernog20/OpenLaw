@@ -18,3 +18,17 @@ export interface ConversionProvenance {
   keyDateId?: string;
 }
 export type ConversionProvenanceMap = Record<string, ConversionProvenance>;
+
+/** A bounded read of one immutable attachment; storage references stay server-side. */
+export interface ConversionAttachmentRead {
+  sourceId: string;
+  revision: string;
+  label: string;
+  status: "readable" | "unreadable" | "unsupported" | "truncated" | "omitted";
+  reason?: "source_limit" | "byte_limit" | "character_limit" | "runtime_limit" | "restricted";
+  text: string;
+  mimeType?: string;
+  method?: "native_layer" | "converted" | "ocr" | "email_body";
+  previewRef?: string;
+  byteSize?: number;
+}

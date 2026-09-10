@@ -2306,6 +2306,38 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/requests/{number}/conversion-drafts/{draftId}/sources/{sourceId}/preview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["previewConversionAttachment"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/requests/{number}/conversion-drafts/{draftId}/sources/{sourceId}/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["downloadConversionAttachment"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/matters/{number}/conversion-confirm/{slug}": {
     parameters: {
       query?: never;
@@ -14668,6 +14700,33 @@ export interface operations {
                 };
               };
               warnings: string[];
+              attachmentReads: {
+                sourceId: string;
+                label: string;
+                /** @enum {string} */
+                status: "readable" | "unreadable" | "unsupported" | "truncated" | "omitted";
+                reason?: string;
+              }[];
+              /**
+               * @default {
+               *       "sources": 20,
+               *       "bytes": 10485760,
+               *       "totalBytes": 52428800,
+               *       "characters": 30000,
+               *       "totalCharacters": 180000,
+               *       "sourceRuntimeMs": 15000,
+               *       "runtimeMs": 45000
+               *     }
+               */
+              limits: {
+                sources: number;
+                bytes: number;
+                totalBytes: number;
+                characters: number;
+                totalCharacters: number;
+                sourceRuntimeMs: number;
+                runtimeMs: number;
+              };
               failure: string | null;
             };
           };
@@ -14729,6 +14788,33 @@ export interface operations {
                 };
               };
               warnings: string[];
+              attachmentReads: {
+                sourceId: string;
+                label: string;
+                /** @enum {string} */
+                status: "readable" | "unreadable" | "unsupported" | "truncated" | "omitted";
+                reason?: string;
+              }[];
+              /**
+               * @default {
+               *       "sources": 20,
+               *       "bytes": 10485760,
+               *       "totalBytes": 52428800,
+               *       "characters": 30000,
+               *       "totalCharacters": 180000,
+               *       "sourceRuntimeMs": 15000,
+               *       "runtimeMs": 45000
+               *     }
+               */
+              limits: {
+                sources: number;
+                bytes: number;
+                totalBytes: number;
+                characters: number;
+                totalCharacters: number;
+                sourceRuntimeMs: number;
+                runtimeMs: number;
+              };
               failure: string | null;
             };
           };
@@ -14771,6 +14857,13 @@ export interface operations {
               text: string;
               quote: string;
               sourceId: string;
+              attachment?: {
+                previewHref: string | null;
+                downloadHref: string;
+                documentId: string | null;
+                versionId: string | null;
+                method: string | null;
+              };
             }[];
           };
         };
@@ -14811,8 +14904,81 @@ export interface operations {
               text: string;
               quote: string;
               sourceId: string;
+              attachment?: {
+                previewHref: string | null;
+                downloadHref: string;
+                documentId: string | null;
+                versionId: string | null;
+                method: string | null;
+              };
             }[];
           };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  previewConversionAttachment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        draftId: string;
+        sourceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  downloadConversionAttachment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        draftId: string;
+        sourceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
         };
       };
       /** @description Problem details (RFC 9457) */

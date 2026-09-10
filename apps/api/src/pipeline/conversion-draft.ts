@@ -6,13 +6,23 @@ import {
   checkedSuggestion,
   conversionContext,
   matterPreparationEnabled,
+  withAttachmentReads,
 } from "../lib/conversion-draft.js";
+import { readConversionAttachments } from "../lib/conversion-attachments.js";
+import type { StorageAdapter } from "../lib/storage/adapter.js";
+import type { DocEngine } from "../lib/doc-engine/engine.js";
 import type { AiResolver } from "../lib/ai/resolver.js";
 import type { PipelineLogger } from "./logger.js";
 import type { JobQueue } from "./jobs.js";
 
 export async function handleConversionDraft(
-  deps: { db: Db; resolveAiProvider: AiResolver; log?: PipelineLogger },
+  deps: {
+    db: Db;
+    resolveAiProvider: AiResolver;
+    storage: StorageAdapter;
+    docEngine: DocEngine;
+    log?: PipelineLogger;
+  },
   id: string,
 ) {
   const now = new Date();
@@ -44,6 +54,24 @@ export async function handleConversionDraft(
     stage = "sources";
     const context = await conversionContext(deps.db, draft.requestId, draft.targetTypeId);
     if (context.row.status !== "new" || context.snapshot !== draft.snapshot)
+      throw new Error("changed");
+    const attachmentReads = draft.attachmentReads.length
+      ? draft.attachmentReads
+      : await readConversionAttachments(
+          deps,
+          context.attachments,
+          draft.id,
+          180_000 - context.sources.reduce((n, source) => n + source.text.length, 0),
+        );
+    await deps.db
+      .update(conversionDrafts)
+      .set({ attachmentReads })
+      .where(and(eq(conversionDrafts.id, id), eq(conversionDrafts.startedAt, now)));
+    withAttachmentReads(context, attachmentReads);
+    if (
+      (await conversionContext(deps.db, draft.requestId, draft.targetTypeId)).snapshot !==
+      draft.snapshot
+    )
       throw new Error("changed");
     stage = "provider";
     const provider = await deps.resolveAiProvider();
@@ -83,6 +111,7 @@ export async function handleConversionDraft(
       .set({
         state: "ready",
         suggestions,
+        attachmentReads,
         conflicts,
         warnings: context.warnings,
         model: provider.model,

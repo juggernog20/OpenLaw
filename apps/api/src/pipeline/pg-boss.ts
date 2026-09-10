@@ -697,7 +697,13 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
         async (jobs: JobWithMetadata<{ draftId: string }>[]) => {
           for (const job of jobs)
             await handleConversionDraft(
-              { db: handlers.db, resolveAiProvider: handlers.resolveAiProvider, log },
+              {
+                db: handlers.db,
+                resolveAiProvider: handlers.resolveAiProvider,
+                storage: handlers.storage,
+                docEngine: handlers.docEngine,
+                log,
+              },
               job.data.draftId,
             );
         },

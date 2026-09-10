@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import { afterAll, beforeAll, beforeEach, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, expect, it, vi } from "vitest";
 import {
   aiConnector,
   comments,
@@ -140,7 +140,15 @@ it("prepares actual current messages, binds quotes and provenance, and preserves
   const made = await prepare(row.number);
   expect(made.statusCode, made.body).toBe(202);
   const id = made.json().draft.id;
-  await handleConversionDraft({ db: harness.db, resolveAiProvider: harness.resolveAiProvider }, id);
+  await handleConversionDraft(
+    {
+      db: harness.db,
+      storage: harness.storage,
+      docEngine: harness.docEngine,
+      resolveAiProvider: harness.resolveAiProvider,
+    },
+    id,
+  );
   const read = await harness.app.inject({
     url: `/api/v1/requests/${row.number}/conversion-drafts/${id}`,
     cookies: cast.memberCookies,
@@ -213,7 +221,15 @@ it("rejects stale sources and forged acceptance, while edited values remain huma
   };
   const made = await prepare(row.number);
   const id = made.json().draft.id;
-  await handleConversionDraft({ db: harness.db, resolveAiProvider: harness.resolveAiProvider }, id);
+  await handleConversionDraft(
+    {
+      db: harness.db,
+      storage: harness.storage,
+      docEngine: harness.docEngine,
+      resolveAiProvider: harness.resolveAiProvider,
+    },
+    id,
+  );
   await harness.db
     .update(requests)
     .set({ description: "Changed input" })
@@ -262,7 +278,15 @@ it("flags unresolved contradictions and rejects a quote assigned to the wrong so
   };
   const made = await prepare(row.number);
   const id = made.json().draft.id;
-  await handleConversionDraft({ db: harness.db, resolveAiProvider: harness.resolveAiProvider }, id);
+  await handleConversionDraft(
+    {
+      db: harness.db,
+      storage: harness.storage,
+      docEngine: harness.docEngine,
+      resolveAiProvider: harness.resolveAiProvider,
+    },
+    id,
+  );
   const read = await harness.app.inject({
     url: `/api/v1/requests/${row.number}/conversion-drafts/${id}`,
     cookies: cast.memberCookies,
@@ -297,7 +321,12 @@ it("blocks narrowing a cited source until its unverified derivative is reviewed"
   };
   const made = await prepare(row.number);
   await handleConversionDraft(
-    { db: harness.db, resolveAiProvider: harness.resolveAiProvider },
+    {
+      db: harness.db,
+      storage: harness.storage,
+      docEngine: harness.docEngine,
+      resolveAiProvider: harness.resolveAiProvider,
+    },
     made.json().draft.id,
   );
   const converted = await harness.app.inject({
@@ -351,7 +380,12 @@ it("checks disablement again at execution without calling AI", async () => {
   await harness.db.update(aiConnector).set({ matterPreparation: false });
   const count = provider.extractions.length;
   await handleConversionDraft(
-    { db: harness.db, resolveAiProvider: harness.resolveAiProvider },
+    {
+      db: harness.db,
+      storage: harness.storage,
+      docEngine: harness.docEngine,
+      resolveAiProvider: harness.resolveAiProvider,
+    },
     made.json().draft.id,
   );
   expect(provider.extractions).toHaveLength(count);
@@ -454,6 +488,8 @@ it("leaves an active lease to its owner and resolves connector disablement live"
   let resolutions = 0;
   const deps = {
     db: harness.db,
+    storage: harness.storage,
+    docEngine: harness.docEngine,
     resolveAiProvider: async () => {
       resolutions += 1;
       markEntered();
@@ -484,4 +520,226 @@ it("leaves an active lease to its owner and resolves connector disablement live"
     .where(eq(conversionDrafts.id, id));
   expect(finished!.state).toBe("failed");
   expect(provider.extractions).toHaveLength(count);
+});
+
+it("reads all eligible paper once, preserves named evidence, and maps promotion without filing message paper", async () => {
+  await harness.db.update(aiConnector).set({ matterPreparation: true, disabledAt: null });
+  const { Readable } = await import("node:stream");
+  const { requestAttachments, commentAttachments, documents, documentVersions } =
+    await import("@openlaw/db");
+  const {
+    fakeComparisonDocx,
+    fakeImageOnlyPdf,
+    fakeConversionText,
+    fakeExtractedText,
+    fakeOcrText,
+  } = await import("../../lib/doc-engine/fake.js");
+  const row = await ask();
+  const native = Buffer.from("%PDF-1.4\nShared supporting agreement");
+  const word = fakeComparisonDocx();
+  const scan = fakeImageOnlyPdf("Scanned supporting paper");
+  const paper = [];
+  for (const [index, filename, bytes] of [
+    [0, "first.pdf", native],
+    [1, "second.pdf", native],
+    [2, "terms.docx", word],
+    [3, "scan.pdf", scan],
+    [4, "sheet.xlsx", Buffer.from("PK\x03\x04")],
+    [5, "broken.pdf", Buffer.from("broken")],
+  ] as const) {
+    const fileRef = await harness.storage.put(`test/${row.id}/${index}`, Readable.from([bytes]));
+    const [file] = await harness.db
+      .insert(requestAttachments)
+      .values({ requestId: row.id, fileRef, filename, uploadedBy: cast.requesterId })
+      .returning();
+    paper.push(file!);
+  }
+  const [message] = await harness.db
+    .insert(comments)
+    .values({
+      entityType: "request",
+      entityId: row.id,
+      authorId: cast.requesterId,
+      visibility: "full_thread",
+      body: "Supporting correspondence",
+    })
+    .returning();
+  const fileRef = await harness.storage.put(`test/${row.id}/message`, Readable.from([native]));
+  const [messagePaper] = await harness.db
+    .insert(commentAttachments)
+    .values({
+      commentId: message!.id,
+      fileRef,
+      filename: "message.pdf",
+      uploadedBy: cast.requesterId,
+    })
+    .returning();
+  answers.title = {
+    value: "Prepared from second paper",
+    sourceId: `attachment:${paper[1]!.id}`,
+    evidence: fakeExtractedText(native),
+  };
+  answers.description = {
+    value: "Prepared from all the supporting paper",
+    citations: [
+      { sourceId: `attachment:${paper[2]!.id}`, quote: fakeConversionText("docx", word) },
+      { sourceId: `attachment:${paper[3]!.id}`, quote: fakeOcrText(scan) },
+      { sourceId: `message-attachment:${messagePaper!.id}`, quote: fakeExtractedText(native) },
+    ],
+  };
+  answers.priority = {
+    value: "high",
+    sourceId: `attachment:${paper[4]!.id}`,
+    evidence: fakeExtractedText(native),
+  };
+  const made = await prepare(row.number);
+  const id = made.json().draft.id;
+  await handleConversionDraft(
+    {
+      db: harness.db,
+      storage: harness.storage,
+      docEngine: harness.docEngine,
+      resolveAiProvider: harness.resolveAiProvider,
+    },
+    id,
+  );
+  const extractionSpy = vi.spyOn(harness.docEngine, "extractPdfText");
+  const draft = await harness.app.inject({
+    url: `/api/v1/requests/${row.number}/conversion-drafts/${id}`,
+    cookies: cast.memberCookies,
+  });
+  expect(draft.json().draft.state, draft.body).toBe("ready");
+  expect(extractionSpy).not.toHaveBeenCalled();
+  extractionSpy.mockRestore();
+  expect(draft.json().draft.attachmentReads.map((r: { status: string }) => r.status)).toEqual([
+    "readable",
+    "readable",
+    "readable",
+    "readable",
+    "unsupported",
+    "unreadable",
+    "readable",
+  ]);
+  expect(draft.json().draft.suggestions.description).toBeDefined();
+  expect(draft.json().draft.suggestions.priority).toBeUndefined();
+  expect(draft.json().draft.warnings).toContain("attachment_omissions");
+  expect(draft.body).not.toContain(fileRef);
+  expect(provider.extractions.at(-1)!.sources.filter((s) => s.kind === "document")).toHaveLength(5);
+  const [stillNew] = await harness.db.select().from(requests).where(eq(requests.id, row.id));
+  expect(stillNew!.convertedMatterId).toBeNull();
+  expect(
+    (
+      await harness.db
+        .select()
+        .from(requestAttachments)
+        .where(eq(requestAttachments.requestId, row.id))
+    ).every((a) => a.promotedVersionId === null),
+  ).toBe(true);
+  const evidencePath = `/api/v1/requests/${row.number}/conversion-drafts/${id}/evidence/title`;
+  const evidence = await harness.app.inject({ url: evidencePath, cookies: cast.memberCookies });
+  expect(evidence.json().citations[0].sourceId).toBe(`attachment:${paper[1]!.id}`);
+  const previewPath = evidence.json().citations[0].attachment.previewHref;
+  expect(
+    (await harness.app.inject({ url: previewPath, cookies: cast.memberCookies })).rawPayload,
+  ).toEqual(native);
+  expect(
+    (await harness.app.inject({ url: previewPath, cookies: cast.otherMemberCookies })).statusCode,
+  ).toBe(404);
+  const converted = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/requests/${row.number}/convert`,
+    cookies: cast.memberCookies,
+    payload: {
+      title: "Prepared from second paper",
+      description: "Prepared from all the supporting paper",
+      matterTypeId: typeId,
+      conversionDraftId: id,
+      aiAccepted: ["title", "description"],
+    },
+  });
+  expect(converted.statusCode, converted.body).toBe(200);
+  const [request] = await harness.db.select().from(requests).where(eq(requests.id, row.id));
+  const [matter] = await harness.db
+    .select()
+    .from(matters)
+    .where(eq(matters.id, request!.convertedMatterId!));
+  const [promoted] = await harness.db
+    .select()
+    .from(requestAttachments)
+    .where(eq(requestAttachments.id, paper[1]!.id));
+  const [version] = await harness.db
+    .select()
+    .from(documentVersions)
+    .where(eq(documentVersions.id, promoted!.promotedVersionId!));
+  const after = () =>
+    harness.app.inject({
+      url: `/api/v1/matters/${matter!.number}/conversion-evidence/title`,
+      cookies: cast.otherMemberCookies,
+    });
+  expect((await after()).json().citations[0].attachment).toMatchObject({
+    documentId: version!.documentId,
+    versionId: version!.id,
+  });
+  expect(
+    (await harness.app.inject({ url: previewPath, cookies: cast.memberCookies })).statusCode,
+  ).toBe(404);
+  const [moved] = await harness.db
+    .select()
+    .from(commentAttachments)
+    .where(eq(commentAttachments.id, messagePaper!.id));
+  expect(moved!.filedVersionId).toBeNull();
+  const description = await harness.app.inject({
+    url: `/api/v1/matters/${matter!.number}/conversion-evidence/description`,
+    cookies: cast.memberCookies,
+  });
+  expect(description.json().available).toBe(true);
+  const messagePreview = description.json().citations[2].attachment.previewHref;
+  expect(
+    (await harness.app.inject({ url: messagePreview, cookies: cast.memberCookies })).statusCode,
+  ).toBe(200);
+  await harness.db
+    .update(comments)
+    .set({ deletedAt: new Date() })
+    .where(eq(comments.id, message!.id));
+  expect(
+    (await harness.app.inject({ url: messagePreview, cookies: cast.memberCookies })).statusCode,
+  ).toBe(404);
+  const narrowing = await harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/documents/${version!.documentId}`,
+    cookies: cast.memberCookies,
+    payload: { isConfidential: true },
+  });
+  expect(narrowing.statusCode, narrowing.body).toBe(409);
+  await harness.db
+    .update(documents)
+    .set({ isConfidential: true })
+    .where(eq(documents.id, version!.documentId));
+  expect((await after()).json()).toEqual({ available: false, citations: [] });
+  const [newOwner] = await harness.db
+    .insert(matters)
+    .values({
+      title: "Confidential new owner",
+      matterTypeId: typeId,
+      statusId: matter!.statusId,
+      createdBy: cast.memberId,
+      managerId: cast.memberId,
+      isConfidential: true,
+    })
+    .returning();
+  await harness.db
+    .update(documents)
+    .set({ isConfidential: false, matterId: newOwner!.id })
+    .where(eq(documents.id, version!.documentId));
+  expect((await after()).json()).toEqual({ available: false, citations: [] });
+  await harness.db
+    .update(documents)
+    .set({ matterId: matter!.id })
+    .where(eq(documents.id, version!.documentId));
+  expect((await after()).json().available).toBe(true);
+  await harness.db
+    .update(documents)
+    .set({ archivedAt: new Date() })
+    .where(eq(documents.id, version!.documentId));
+  expect((await after()).json()).toEqual({ available: false, citations: [] });
 });

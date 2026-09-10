@@ -198,6 +198,7 @@ export function extractionPrompt(
       : "Each value must have value, sourceId, and an exact supporting evidence quote. For synthesis, also return citations: [{sourceId, quote}].",
     "A later statement overrides an earlier fact only when it explicitly corrects that fact. For unresolved contradictions return conflict: true and cite the conflicting passages; do not choose a value.",
     "Use null when the sources do not support a value. Return no prose.",
+    "Only the supplied passages were considered. Sources can be omitted or truncated; never claim complete analysis of every attachment or document.",
     "",
     "Fields:",
     fields,
