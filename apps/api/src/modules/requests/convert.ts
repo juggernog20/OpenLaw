@@ -121,6 +121,8 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireRole(...REQUIRE_TRIAGER),
       schema: {
         operationId: "convertRequest",
+        description:
+          "Contract conversion makes the Requester its Business Owner, granting Portal reads subject to DD-021 confidentiality. Matter conversion assigns no Business Owner.",
         summary:
           "Turn a Request into the contract or matter its request type targets " +
           "(INT-002, DD-018, M22/9). The Request row is locked so racing " +
@@ -227,6 +229,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
             const [row] = await tx
               .select({
                 urgency: requests.urgency,
+                requesterId: requests.requesterId,
                 description: requests.description,
                 customFields: requests.customFields,
                 targetModule: requestTypes.targetModule,
@@ -312,6 +315,8 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                     // (CTR-004). Self-assignment narrates nothing beyond
                     // `contract.created`, as the matter arm does.
                     managerId: request.user.id,
+                    // DD-021: the Requester becomes Business Owner; Confidential gates still apply.
+                    businessOwnerId: row.requesterId,
                   })
                 : await createMatter(tx, {
                     actorId: request.user.id,

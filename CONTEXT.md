@@ -82,15 +82,21 @@ A person, such as a procurement colleague or external counsel, granted access to
 _Avoid_: collaborator, guest, external user
 
 **Business User**:
-An employee who submits requests and sees only their own, via the portal [DD-013].
+An employee who submits Requests and sees their own Requests, plus non-archived Contracts where they are Business Owner or a named stakeholder, via the Portal. Confidential Contract and Document access also requires the existing named-team or Legal Owner audience [DD-013, DD-021].
 _Avoid_: requester (that is a role on a specific Request), end user, customer
 
 **Member+**:
 Shorthand for Administrators and Legal Team Members together — the access floor for most legal-side surfaces.
 
 **Matter Manager**:
-The single accountable person on a Matter [MTR-003]. The Contract equivalent is stored the same way but labelled **Owner** in the UI [CTR-004].
+The single accountable person on a Matter [MTR-003]. The Contract equivalent is stored the same way but labelled **Legal Owner** in Contract Overview [CTR-004, DD-021].
 _Avoid_: assignee, lead, responsible
+
+**Business Owner**:
+The single nullable business contact on a Contract, initially the Requester when a Request converts. Member+ maintains this independently of the Legal Owner and explicit stakeholders [DD-021].
+
+**Stakeholder**:
+A named person explicitly linked to a Contract by Member+. This link grants Portal access independently of Business Owner assignment; Confidential audience rules still apply [DD-021].
 
 **Requester**:
 The Business User who submitted a given Request.
@@ -170,7 +176,7 @@ The audience of a comment or activity entry — **Legal Only**, **Working Team**
 _Avoid_: Privileged (deliberately rejected — privilege is a legal doctrine, not a UI setting), internal, shared, public
 
 **Portal**:
-The lightweight, magic-link-authenticated surface where Business Users submit Requests and follow their threads [INT-001].
+The lightweight, magic-link-authenticated surface where Business Users submit Requests and follow their threads, and read non-archived Contracts where they are Business Owner or a named stakeholder. Confidential Contract and Document access also requires the existing named-team or Legal Owner audience [INT-001, DD-021].
 _Avoid_: customer portal, self-service portal
 
 **portal-readable**:

@@ -687,6 +687,13 @@
       "when": 1789031726092,
       "tag": "0097_currencies_in_use",
       "breakpoints": true
+    },
+    {
+      "idx": 98,
+      "version": "7",
+      "when": 1789055118250,
+      "tag": "0099_contract_portal_access",
+      "breakpoints": true
     }
   ]
 }

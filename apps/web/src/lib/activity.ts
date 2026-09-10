@@ -350,7 +350,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
       // provider. A key with no arm reads as itself, which is the
       // honest rendering for one this build no longer writes.
       defaultMessage:
-        "{key, select, title {Title} description {Description} owner {Owner} " +
+        "{key, select, title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} stakeholders {Stakeholders} " +
         "entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} " +
         "contractType {Contract type} value {Value} status {Status} " +
         "dueDate {Due date} termType {Term type} effectiveDate {Effective date} " +

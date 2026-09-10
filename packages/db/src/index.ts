@@ -26,6 +26,7 @@ import * as contractKeyDatesSchema from "./schema/contract-key-dates.js";
 import * as contractRelationsSchema from "./schema/contract-relations.js";
 import * as contractTasksSchema from "./schema/contract-tasks.js";
 import * as contractStatusesSchema from "./schema/contract-statuses.js";
+import * as contractStakeholdersSchema from "./schema/contract-stakeholders.js";
 import * as contractTeamSchema from "./schema/contract-team.js";
 import * as contractTypeFieldsSchema from "./schema/contract-type-fields.js";
 import * as contractTypesSchema from "./schema/contract-types.js";
@@ -84,6 +85,7 @@ export * from "./schema/contract-relations.js";
 export * from "./schema/contract-tasks.js";
 export * from "./schema/contract-statuses.js";
 export * from "./schema/contract-team.js";
+export * from "./schema/contract-stakeholders.js";
 export * from "./schema/contract-type-fields.js";
 export * from "./schema/contract-types.js";
 export * from "./schema/contracts.js";
@@ -143,6 +145,7 @@ export const schema = {
   ...contractTasksSchema,
   ...contractStatusesSchema,
   ...contractTeamSchema,
+  ...contractStakeholdersSchema,
   ...contractTypeFieldsSchema,
   ...contractTypesSchema,
   ...contractsSchema,

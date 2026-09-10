@@ -118,6 +118,12 @@ function contractsTheyAreOn(db: Executor, user: AuthenticatedUser): SQL {
   );
 }
 
+/** Confidential staff and Portal reads share the named team or Legal Owner audience.
+ * Business Owner grants no access through this predicate. */
+export function contractNamedAudienceScope(db: Executor, user: AuthenticatedUser): SQL {
+  return or(contractsTheyAreOn(db, user), eq(contracts.managerId, user.id))!;
+}
+
 /**
  * How far one viewer sees across the contract table (CTR-021, DD-014).
  *
@@ -157,11 +163,7 @@ export function contractTeamScope(db: Executor, user: AuthenticatedUser): SQL | 
   switch (user.role) {
     case "administrator":
     case "legal_team_member":
-      return or(
-        eq(contracts.isConfidential, false),
-        contractsTheyAreOn(db, user),
-        eq(contracts.managerId, user.id),
-      );
+      return or(eq(contracts.isConfidential, false), contractNamedAudienceScope(db, user));
     case "contributor":
       return contractsTheyAreOn(db, user);
     case "business_user":

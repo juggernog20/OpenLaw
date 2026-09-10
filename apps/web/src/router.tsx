@@ -40,6 +40,8 @@ import {
 import { PortalHomePage, portalHomeLoader } from "./routes/portal";
 import { PortalRequestFormPage, portalRequestFormLoader } from "./routes/portal-request-form";
 import { PortalRequestPage, portalRequestLoader } from "./routes/portal-request";
+import { PortalContractsPage, portalContractsLoader } from "./routes/portal-contracts";
+import { PortalContractPage, portalContractLoader } from "./routes/portal-contract";
 import { PortalKnowledgePage, portalKnowledgeLoader } from "./routes/portal-knowledge";
 import { PortalEntryPage, portalEntryLoader } from "./routes/portal-entry";
 import { PortalSettingsPage, portalSettingsLoader } from "./routes/portal-settings";
@@ -572,6 +574,16 @@ export const routes: RouteObject[] = [
     hydrateFallbackElement: <></>,
     children: [
       { index: true, loader: portalHomeLoader, element: <PortalHomePage /> },
+      { path: "contracts", loader: portalContractsLoader, element: <PortalContractsPage /> },
+      {
+        path: "contracts/:number",
+        loader: portalContractLoader,
+        element: (
+          <KeyedByParam name="number">
+            <PortalContractPage />
+          </KeyedByParam>
+        ),
+      },
       // The front door. Its own address rather than the portal home in a
       // signed-out costume, so the emailed link, the dead-link page, and
       // the sign-out redirect all name one place.

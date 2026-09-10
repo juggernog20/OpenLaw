@@ -487,6 +487,14 @@ describe("what the record is born with (INT-002, MTR-012, CTR-016)", () => {
     const number = res.json().request.convertedContract.number as number;
     const contract = await contractNumbered(number);
     expect(contract.title).toBe("Northwind Labs — mutual NDA");
+    expect(contract.businessOwnerId).toBe(requesterId);
+    const portal = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/portal/contracts/${number}`,
+      cookies: requesterCookies,
+    });
+    expect(portal.statusCode, portal.body).toBe(200);
+    expect(portal.json().contract.businessOwner.id).toBe(requesterId);
     expect(contract.description).toBe("For the pilot kicking off next month.");
     // MTR-012's 1:1 map. Urgency is what the requester claimed; priority
     // is what legal now holds, and they start equal.
@@ -616,6 +624,13 @@ describe("what the record is born with (INT-002, MTR-012, CTR-016)", () => {
         repaired.json().request.convertedContract.number as number,
       );
       expect(contract.customFields[manager]).toBe(memberId);
+      expect(contract.businessOwnerId).toBe(requesterId);
+      const refusedPortal = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/portal/contracts/${contract.number}`,
+        cookies: requesterCookies,
+      });
+      expect(refusedPortal.statusCode).toBe(401);
     } finally {
       await harness.db.update(users).set({ archivedAt: null }).where(eq(users.id, requesterId));
     }
