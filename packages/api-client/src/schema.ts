@@ -3404,7 +3404,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Download one live comment attachment, or preview it with preview=true, through the same audience arm and tier that exposed its comment. The entity reference is the address the reader used for the thread, so a Requester can continue through a converted Request while the stored comment hangs from its Contract. A hidden tier, another attachment, and either tombstone all answer 404 */
+    /** Download one live comment attachment, or preview it with preview=true, through the same audience arm and tier that exposed its comment. The entity reference is the address the reader used for the thread, so a Requester can continue through a converted Request while the stored comment hangs from its Contract. A hidden tier, another attachment, either tombstone, and a redact that has removed the bytes but not yet committed all answer 404 */
     get: operations["downloadCommentAttachment"];
     put?: never;
     post?: never;

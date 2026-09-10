@@ -264,6 +264,56 @@ function fileAttachment(
   });
 }
 
+/**
+ * Runs `inWindow` with a redact stopped inside its transaction, at the
+ * moment after it has removed the stored blob and before it commits the
+ * rows that name it — the window a concurrent reader meets. The redact
+ * is let go afterwards and has to answer 200.
+ *
+ * The held request never leaves this function. An `async` helper that
+ * returned it would adopt it, so the caller would wait on the very
+ * request the caller has to release, and the barrier would never lift.
+ */
+async function duringRedactBlobRemoval(commentId: string, inWindow: () => Promise<void>) {
+  let markRemoved!: () => void;
+  const removed = new Promise<void>((resolve) => {
+    markRemoved = resolve;
+  });
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const deleteBlob = harness.app.storage.delete.bind(harness.app.storage);
+  const heldDelete = vi.spyOn(harness.app.storage, "delete").mockImplementation(async (ref) => {
+    await deleteBlob(ref);
+    markRemoved();
+    await held;
+  });
+  const redaction = harness.app
+    .inject({
+      method: "POST",
+      url: `/api/v1/comments/${commentId}/redact`,
+      cookies: adminCookies,
+    })
+    .then((response) => response);
+  try {
+    await Promise.race([
+      removed,
+      redaction.then((response) => {
+        throw new Error(`Redaction finished before the storage barrier: ${response.statusCode}`);
+      }),
+    ]);
+    await inWindow();
+  } finally {
+    release();
+    heldDelete.mockRestore();
+  }
+  // Awaited after the cleanup rather than inside it, so a failed
+  // expectation in the window is the one the run reports.
+  const redacted = await redaction;
+  expect(redacted.statusCode, redacted.body).toBe(200);
+}
+
 async function blobCount(): Promise<number> {
   async function beneath(path: string): Promise<number> {
     const entries = await readdir(path, { withFileTypes: true }).catch(() => []);
@@ -579,34 +629,7 @@ describe("corrections", () => {
     expect(posted.statusCode, posted.body).toBe(201);
     const comment = posted.json().comment as { id: string; attachments: { id: string }[] };
     const attachmentId = comment.attachments[0]!.id;
-    let markRemoved!: () => void;
-    const removed = new Promise<void>((resolve) => {
-      markRemoved = resolve;
-    });
-    let release!: () => void;
-    const held = new Promise<void>((resolve) => {
-      release = resolve;
-    });
-    const deleteBlob = harness.app.storage.delete.bind(harness.app.storage);
-    const heldDelete = vi.spyOn(harness.app.storage, "delete").mockImplementation(async (ref) => {
-      await deleteBlob(ref);
-      markRemoved();
-      await held;
-    });
-    const redaction = harness.app
-      .inject({
-        method: "POST",
-        url: `/api/v1/comments/${comment.id}/redact`,
-        cookies: adminCookies,
-      })
-      .then((response) => response);
-    try {
-      await Promise.race([
-        removed,
-        redaction.then((response) => {
-          throw new Error(`Redaction finished before the storage barrier: ${response.statusCode}`);
-        }),
-      ]);
+    await duringRedactBlobRemoval(comment.id, async () => {
       // The other connection still sees the live row while its blob is gone.
       const thread = await readThread(memberCookies, "contract", contract.id);
       expect(
@@ -634,12 +657,7 @@ describe("corrections", () => {
           });
         }
       }
-    } finally {
-      release();
-      heldDelete.mockRestore();
-      const response = await redaction;
-      expect(response.statusCode, response.body).toBe(200);
-    }
+    });
     const after = await download(memberCookies, "contract", contract.id, comment.id, attachmentId);
     expect(after.statusCode, after.body).toBe(404);
   });
@@ -710,6 +728,47 @@ describe("corrections", () => {
 });
 
 describe("filing comment attachments", () => {
+  it("refuses a filing with 404 while redaction has removed the blob but not committed", async () => {
+    const contract = await contractWithContributor("Paper filed against a redact");
+    const posted = await postMultipart(
+      memberCookies,
+      "contract",
+      contract.id,
+      "Wrong record, being filed.",
+      "legal_only",
+      [{ filename: "racing.pdf", content: "%PDF-racing" }],
+    );
+    expect(posted.statusCode, posted.body).toBe(201);
+    const comment = posted.json().comment as { id: string; attachments: { id: string }[] };
+    const attachmentId = comment.attachments[0]!.id;
+    const file = () =>
+      fileAttachment(memberCookies, "contract", contract.id, comment.id, attachmentId, {
+        destination: "new_document",
+        kind: "draft_theirs",
+        name: "Should never land",
+        isConfidential: false,
+      });
+
+    await duringRedactBlobRemoval(comment.id, async () => {
+      // The copy reads the source before the route takes the comment
+      // lock, so filing meets the window the download answers for.
+      const raced = await file();
+      expect(raced.statusCode, raced.body).toBe(404);
+      expect(raced.headers["content-type"]).toContain("application/problem+json");
+      expect(raced.json()).toMatchObject({
+        status: 404,
+        detail: "No comment attachment exists with this id.",
+      });
+      expect(
+        await harness.db.select().from(documents).where(eq(documents.contractId, contract.id)),
+      ).toEqual([]);
+    });
+    // The same answer once the redact has committed, which is the point.
+    const after = await file();
+    expect(after.statusCode, after.body).toBe(404);
+    expect(after.json()).toMatchObject({ detail: "No comment attachment exists with this id." });
+  });
+
   it("files a new root Document, narrates the source, marks the thread, and survives redaction", async () => {
     const contract = await contractWithContributor("Filed comment paper");
     const posted = await postMultipart(
