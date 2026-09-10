@@ -1177,6 +1177,18 @@ The Contract record is the first live surface to use clause 4's whole-record pat
 
 The sync effect adopts the new record projection and Analysis run. It keeps an unrelated draft when the corresponding server value did not change, so an analysis completion does not discard a title or date the reader is still typing. Confirmation uses the same whole-record response for the browser that pressed it, and its SSE frame revalidates every other open browser.
 
+### Clause 2 addendum (2026-09-10, [#751](https://github.com/juggernog20/OpenLaw/issues/751))
+
+A DES-046 managed list holds its own rows, so two answers can reach one screen: the list's own read and the route loader's. React Router settles a navigation in its own state and commits the matching React render later, inside a transition. Between those two moments the screen still shows the previous list, its controls stay enabled, and `useNavigation()` still reports idle. A filter or paging click in that gap starts a read that already belongs to the new loader.
+
+`useListReadGuard` in `lib/list-read-guard.ts` reads `router.state` through `UNSAFE_DataRouterContext`, which is the only way to see the router ahead of the committed render. Contracts, Matters, and the Inbox use it and hold no read counter of their own.
+
+- `beginRead()` records the router state a read starts from and answers whether that read is still the current one. The read is dropped when the location, the pending navigation, or the loader data moved on.
+- `shouldAdoptLoader(loaded)` decides whether a loader answer reaching React replaces what the list shows. It is dropped only when a read started after that loader finished **and** the loader repeats a URL sync the page itself asked for.
+- `noteUrlSync(navigate(...))` marks a navigation the page started. `commit()` and `adopt()` hand it their navigation; it records the loader data that navigation lands with. Without that mark, a Back press or a nav-rail click that settles in the same gap would lose its answer, and the filter chips would describe a URL the reader is no longer on.
+
+The private API is the cost of the fix. A React Router upgrade that renames or drops `UNSAFE_DataRouterContext` breaks this one file, and `routes/list-navigation.test.tsx` holds the 33 controlled cases that a replacement has to pass.
+
 ### Consequences
 
 - `requireUser()` and `useSignOut()` in `lib/session.ts` replace the 34 and 16 copies of those idioms.

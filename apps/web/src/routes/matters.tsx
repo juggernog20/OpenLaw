@@ -125,7 +125,7 @@ export function MattersPage() {
   const [requestBusy, setBusy] = useState(false);
   const navigation = useNavigation();
   const busy = requestBusy || navigation.state !== "idle";
-  const { beginRead, shouldAdoptLoader } = useListReadGuard();
+  const { beginRead, noteUrlSync, shouldAdoptLoader } = useListReadGuard();
   const [listError, setListError] = useState<string | null>(null);
   const [pageError, setPageError] = useState<string | null>(null);
   const [appended, setAppended] = useState<{ count: number; from: string } | null>(null);
@@ -170,9 +170,11 @@ export function MattersPage() {
       setLayout(next);
       setActiveViewId(nextActiveId);
       if (nextActiveId !== activeViewId)
-        await navigate(
-          { search: filterSearch(next, MATTER_FILTER_KEYS, nextActiveId) },
-          { preventScrollReset: true },
+        await noteUrlSync(
+          navigate(
+            { search: filterSearch(next, MATTER_FILTER_KEYS, nextActiveId) },
+            { preventScrollReset: true },
+          ),
         );
       return;
     }
@@ -201,9 +203,11 @@ export function MattersPage() {
     setPageError(null);
     setLayout(next);
     setActiveViewId(nextActiveId);
-    await navigate(
-      { search: filterSearch(next, MATTER_FILTER_KEYS, nextActiveId) },
-      { preventScrollReset: true },
+    await noteUrlSync(
+      navigate(
+        { search: filterSearch(next, MATTER_FILTER_KEYS, nextActiveId) },
+        { preventScrollReset: true },
+      ),
     );
   }
 
@@ -244,9 +248,11 @@ export function MattersPage() {
     setViews(next);
     setActiveViewId(activeId);
     if (activeId !== activeViewId)
-      void navigate(
-        { search: filterSearch(layout, MATTER_FILTER_KEYS, activeId) },
-        { replace: true, preventScrollReset: true },
+      void noteUrlSync(
+        navigate(
+          { search: filterSearch(layout, MATTER_FILTER_KEYS, activeId) },
+          { replace: true, preventScrollReset: true },
+        ),
       );
   }
 
