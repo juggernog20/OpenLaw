@@ -117,13 +117,22 @@ describe("the M29 Home substrate migration", () => {
   });
 });
 
+/**
+ * The seeded rows as they stand, in the shape the M28 install wrote them.
+ *
+ * The subtractions are columns migrations after the cutoff add — M27's
+ * `ai_unverified`, DD-021's `business_owner_id` — plus the vector M25
+ * derives. A wider row is not a touched row, and this rehearsal promises
+ * only that the Home migrations leave the data alone, so a later
+ * milestone's new nullable column is dropped rather than compared.
+ */
 async function existingRows(db: Db): Promise<unknown> {
   const snapshot = await db.execute<{ rows: unknown }>(sql`
     select jsonb_build_object(
       'preference', (select to_jsonb(p.*) from notification_preferences p
         where user_id = 'home-existing-user' and event_group = 'assigned_to_you'),
-      'contract', (select to_jsonb(c.*) - 'search_vector' - 'ai_unverified' from contracts c
-        where id = 'home-existing-contract'),
+      'contract', (select to_jsonb(c.*) - 'search_vector' - 'ai_unverified' - 'business_owner_id'
+        from contracts c where id = 'home-existing-contract'),
       'contractTask', (select to_jsonb(t.*) - 'description' from contract_tasks t
         where id = 'home-existing-contract-task'),
       'approval', (select to_jsonb(a.*) from contract_approvals a
