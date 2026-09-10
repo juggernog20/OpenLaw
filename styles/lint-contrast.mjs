@@ -6,11 +6,12 @@
  *   - 4.5:1 for body-size text (DES-006 ramp is 11–14px in pills,
  *     badges, avatar initials, links, and copy — all under the 18px
  *     large-text cutoff).
- *   - 3:1 for graphical objects and non-body roles: the file-type icon
- *     squares and `--text-subtle`, whose only roles are placeholder and disabled
- *     text (DES-005). Disabled text is exempt under WCAG 1.4.3; we hold
- *     placeholders to the 3:1 non-text floor instead of exempting them.
- *     `--text-subtle` is never body copy.
+ *   - 3:1 for graphical objects and non-body roles. Those are the
+ *     file-type icon squares, the DES-034 stage glyph and the DES-041
+ *     timeline fills, and `--text-subtle`, whose only roles are
+ *     placeholder and disabled text (DES-005). Disabled text is exempt
+ *     under WCAG 1.4.3; we hold placeholders to the 3:1 non-text floor
+ *     instead of exempting them. `--text-subtle` is never body copy.
  *
  * Failures are fixed by adjusting the failing token in
  * styles/themes/<theme>.css — never by relaxing the check (DES-011).

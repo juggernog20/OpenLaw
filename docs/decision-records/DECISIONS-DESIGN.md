@@ -1322,7 +1322,7 @@ Eight chrome color variables join the theme files, one value per theme, consumed
 
 The Light column is exactly what the shell rendered before this record, so Light is unchanged.
 
-**Warm avatar (amends DES-018 point 3):** Warm's avatar is terracotta (`--avatar-bg: #C97B5C`, `--avatar-fg: #FBFAF7`) per the updated mock — blue is the one hue Warm's palette refuses. Light and Dark keep the light-blue treatment; the "no per-person hue hashing" rule is untouched.
+**Warm avatar (amends DES-018 point 3):** Warm's avatar is terracotta (`--avatar-bg: #C97B5C`, `--avatar-fg: #FBFAF7`) per the updated mock — blue is the one hue Warm's palette refuses. Light and Dark keep the light-blue treatment; the "no per-person hue hashing" rule is untouched. _The `--avatar-fg` value here is superseded. #756 (2026-09-10) moved Warm's initials to `#1F2328`, because the cream reads 3.11:1 on the terracotta and 11px initials are held to 4.5:1. See the avatar contrast addendum under DES-011. The terracotta background and the rest of this clause stand._
 
 ### Recorded normalization points (mock deviations accepted)
 
