@@ -170,12 +170,15 @@ async function openComments(page: Page): Promise<Locator> {
   return comments(page);
 }
 
-async function postWorkingTeamComment(page: Page, body: string): Promise<void> {
+async function postRecordComment(page: Page, body: string): Promise<void> {
   const panel = comments(page);
-  await panel
-    .getByRole("group", { name: "Audience" })
-    .getByText("Internal team", { exact: true })
-    .click();
+  // A Contract composer offers two segments and opens on Contract Team
+  // (DD-016). Both rooms hold the other Legal Team Member watching this
+  // record, so the preset is what this journey posts at. It is asserted
+  // rather than assumed, so a moved default cannot quietly change who
+  // the live update reaches.
+  await expect(panel.getByRole("group", { name: "Audience" }).getByRole("radio")).toHaveCount(2);
+  await expect(panel.getByRole("radio", { name: "Contract Team" })).toBeChecked();
   await panel.getByLabel("New comment").fill(body);
   const posted = page.waitForResponse(
     (response) =>
@@ -360,7 +363,7 @@ test.describe("M30 demo path", () => {
       });
 
       await expect(comments(observer.page).getByText(COMMENT)).toHaveCount(0);
-      await postWorkingTeamComment(page, COMMENT);
+      await postRecordComment(page, COMMENT);
       await expect(comments(observer.page).getByText(COMMENT)).toBeVisible();
       expect(observerReloads).toBe(0);
 
