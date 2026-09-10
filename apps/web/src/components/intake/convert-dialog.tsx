@@ -7,7 +7,9 @@ import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { ArrowRightLeft, FilePen } from "lucide-react";
 import {
+  INTAKE_CARRY_SLUGS,
   MAX_CONTRACT_TITLE_LENGTH,
+  MAX_COUNTERPARTY_NAME_LENGTH,
   MAX_MATTER_TITLE_LENGTH,
   type RequestOutcome,
 } from "@openlaw/shared";
@@ -29,6 +31,7 @@ import {
 import { CONTROL_CLASS } from "../../lib/form-controls";
 import type {
   ConvertedRecord,
+  ConvertRequestInput,
   StaffRequest,
   StaffRequestField,
   StaffRequestFieldRefs,
@@ -96,14 +99,7 @@ export function ConvertDialog({
   entities: readonly FieldReference[];
   busy: boolean;
   onClose: () => void;
-  onConvert: (input: {
-    title: string;
-    contractTypeId?: string;
-    matterTypeId?: string;
-    templateId?: string;
-    priority?: StaffRequest["urgency"];
-    customFields?: Record<string, CustomFieldValue | null>;
-  }) => Promise<ConvertResult>;
+  onConvert: (input: ConvertRequestInput) => Promise<ConvertResult>;
 }>) {
   const intl = useIntl();
   const attachments = useCreateAttachments();
@@ -128,6 +124,15 @@ export function ConvertDialog({
   const [templateId, setTemplateId] = useState("");
   const [title, setTitle] = useState(request.summary);
   const [priority, setPriority] = useState(request.urgency);
+  /** The two facts that are not Fields on the record (INT-002's
+   * 2026-09-09 addendum). Seeded once from the seeded request fields,
+   * where the form collected them; editable either way. */
+  const [counterpartyName, setCounterpartyName] = useState(() =>
+    collectedText(fields, request, INTAKE_CARRY_SLUGS.counterpartyName),
+  );
+  const [neededBy, setNeededBy] = useState(() =>
+    collectedText(fields, request, INTAKE_CARRY_SLUGS.neededBy),
+  );
   /** The creation fields' drafts, keyed by slug. They survive switching
    * types and back — a value typed once should not have to be typed
    * again because somebody checked another type on the way. */
@@ -167,10 +172,30 @@ export function ConvertDialog({
       )
       .map((field) => field.slug),
   );
+  /** The slugs this form lands through its own boxes rather than as
+   * Fields: a value in one of them is carried, so it is never listed as
+   * staying behind. The counterparty box is drawn on the contract arm
+   * only. */
+  const targetAttaches = (slug: string) => targetFields.some((attached) => attached.slug === slug);
+  // A box is drawn only where the target type gives the fact no Field
+  // of its own; a type that attaches the slug lands the value once, as
+  // that Field, through the ordinary carry.
+  const drawsCounterparty =
+    targetModule === "contract" && !targetAttaches(INTAKE_CARRY_SLUGS.counterpartyName);
+  const drawsNeededBy = !targetAttaches(INTAKE_CARRY_SLUGS.neededBy);
+  // A box that holds a value carries it. A box the person cleared does
+  // not, and the collected value is then named as staying behind.
+  const drawnSlugs = new Set<string>([
+    ...(drawsNeededBy && neededBy.trim() !== "" ? [INTAKE_CARRY_SLUGS.neededBy] : []),
+    ...(drawsCounterparty && counterpartyName.trim() !== ""
+      ? [INTAKE_CARRY_SLUGS.counterpartyName]
+      : []),
+  ]);
   const staysBehind = fields.filter(
     (field) =>
       isAnswered(request.customFields[field.slug]) &&
-      !targetFields.some((attached) => attached.slug === field.slug),
+      !drawnSlugs.has(field.slug) &&
+      !targetAttaches(field.slug),
   );
   // Keep live carried references labelled even when an options read omits them.
   const fieldPeople = [
@@ -276,6 +301,7 @@ export function ConvertDialog({
       if (drafts[field.slug] !== undefined) customFields[field.slug] = parsed.value;
     }
 
+    const namedCounterparty = counterpartyName.trim();
     const result = await onConvert({
       title: named,
       priority,
@@ -284,6 +310,12 @@ export function ConvertDialog({
         : { matterTypeId: target.id }),
       ...(selectedTemplate ? { templateId: selectedTemplate.id } : {}),
       ...(Object.keys(customFields).length === 0 ? {} : { customFields }),
+      // An empty box sends nothing: the seam lands what is named and
+      // refuses a name on the matter arm, so the box is not drawn there.
+      ...(drawsCounterparty && namedCounterparty !== ""
+        ? { counterpartyName: namedCounterparty }
+        : {}),
+      ...(drawsNeededBy && neededBy !== "" ? { neededBy } : {}),
     });
     if (result.ok) {
       const record = result.request.convertedRecord;
@@ -500,6 +532,38 @@ export function ConvertDialog({
                 ))}
               </select>
             </div>
+            {drawsCounterparty && (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="convert-counterparty">
+                  <FormattedMessage id="convert.counterparty" defaultMessage="Counterparty" />
+                </Label>
+                <Input
+                  id="convert-counterparty"
+                  value={counterpartyName}
+                  maxLength={MAX_COUNTERPARTY_NAME_LENGTH}
+                  onChange={(event) => {
+                    setCounterpartyName(event.target.value);
+                    setError(null);
+                  }}
+                />
+              </div>
+            )}
+            {drawsNeededBy && (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="convert-needed-by">
+                  <FormattedMessage id="convert.neededBy" defaultMessage="Needed by" />
+                </Label>
+                <Input
+                  id="convert-needed-by"
+                  type="date"
+                  value={neededBy}
+                  onChange={(event) => {
+                    setNeededBy(event.target.value);
+                    setError(null);
+                  }}
+                />
+              </div>
+            )}
             {target && staysBehind.length > 0 && (
               <div className="flex flex-col gap-1.5">
                 <p className="text-sm font-medium">
@@ -611,4 +675,19 @@ export function ConvertDialog({
       </DialogContent>
     </Dialog>
   );
+}
+
+/**
+ * The text a request-form field collected under one slug, or the empty
+ * string. Only a field the form still names counts: a value under a
+ * slug no field carries is a leftover nobody can read the label of.
+ */
+function collectedText(
+  fields: readonly StaffRequestField[],
+  request: StaffRequest,
+  slug: string,
+): string {
+  if (!fields.some((field) => field.slug === slug)) return "";
+  const value = request.customFields[slug];
+  return typeof value === "string" ? value.trim() : "";
 }

@@ -26,6 +26,7 @@ import { requireUser, useSignOut } from "../lib/session";
 import { useActivityApplet } from "../components/activity/activity-applet";
 import { KnowledgeMarkdown } from "../components/knowledge/markdown";
 import { PageTitle } from "../components/page-title";
+import { RecordNotFoundPage, type RecordNotFound } from "./not-found";
 import { AppShell } from "../components/shell/app-shell";
 import { RecordApplets } from "../components/shell/record-applets";
 import { StatusNote } from "../components/status-note";
@@ -68,6 +69,10 @@ export async function knowledgeRecordLoader({ params, request }: LoaderFunctionA
       ? readDocumentLanding({ entityType: "knowledge_item", id }, documentId, versionId)
       : null,
   ]);
+  // An id nobody holds and an item this viewer cannot open are the same
+  // 404 (KNW-004). Both draw a page that says so; every other failure
+  // still throws to the error boundary.
+  if (item.response.status === 404) return { notFound: true as const, user };
   if (!item.data || !types.data || !folders.data || !paper.ok)
     throw new Error("The Knowledge item could not be read.");
   return {
@@ -107,8 +112,40 @@ async function readReplacementItems() {
 
 type FieldKey = "title" | "type" | "folder" | "body" | "audience";
 
+type KnowledgeRecordData = Exclude<
+  ReturnType<typeof useLoaderData<typeof knowledgeRecordLoader>>,
+  RecordNotFound
+>;
+
 export function KnowledgeRecordPage() {
   const loaded = useLoaderData<typeof knowledgeRecordLoader>();
+  const intl = useIntl();
+  if (loaded.notFound) {
+    return (
+      <RecordNotFoundPage
+        user={loaded.user}
+        title={intl.formatMessage({
+          id: "notFound.knowledge.title",
+          defaultMessage: "Knowledge Item not found",
+        })}
+        body={
+          <FormattedMessage
+            id="notFound.knowledge.body"
+            defaultMessage="This Knowledge Item does not exist, or you cannot open it."
+          />
+        }
+        backTo="/knowledge"
+        backLabel={
+          <FormattedMessage id="notFound.knowledge.back" defaultMessage="Back to Knowledge" />
+        }
+      />
+    );
+  }
+  return <KnowledgeRecord />;
+}
+
+function KnowledgeRecord() {
+  const loaded = useLoaderData() as KnowledgeRecordData;
   const intl = useIntl();
   const signOut = useSignOut("/auth/login");
   const [saved, setSaved] = useState<KnowledgeRecord>(loaded.item);

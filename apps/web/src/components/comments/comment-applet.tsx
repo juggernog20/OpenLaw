@@ -1491,10 +1491,20 @@ function Composer({
       {confidential && (
         <p className="flex items-start gap-1 text-xs text-confidential">
           <ConfidentialMarker variant="micro" className="mt-0.5" />
-          <FormattedMessage
-            id="comments.confidentialNotice"
-            defaultMessage="Confidential contract — whichever audience you pick, only the contract team, the Owner, and Administrators can read it."
-          />
+          {/* A Matter and its Tasks name the matter team and the Matter
+              Manager. Every other kind is a Contract's or hangs off one,
+              and keeps the contract wording. */}
+          {entityType === "matter" || entityType === "matter_task" ? (
+            <FormattedMessage
+              id="comments.confidentialNotice.matter"
+              defaultMessage="Confidential matter — whichever audience you pick, only the matter team, the Matter Manager, and Administrators can read it."
+            />
+          ) : (
+            <FormattedMessage
+              id="comments.confidentialNotice"
+              defaultMessage="Confidential contract — whichever audience you pick, only the contract team, the Owner, and Administrators can read it."
+            />
+          )}
         </p>
       )}
       {error && (

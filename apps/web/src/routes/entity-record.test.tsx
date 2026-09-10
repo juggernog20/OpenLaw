@@ -127,6 +127,33 @@ function recordApi(
 }
 
 describe("the /entities/:entityId record page", () => {
+  it("draws the not-found page when the record read answers 404", async () => {
+    // An id nobody holds and a confidential Entity this viewer has no
+    // grant on are the same 404 (DD-014); the page says both.
+    const api = recordApi(entityRow());
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/entities/e1" && call.method === "GET"
+          ? problem(404, "No entity exists with this id.")
+          : api.handler(call),
+    });
+    renderAt("/entities/e1");
+
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Entity not found" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("This Entity does not exist, or you cannot open it."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Primary" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Back to Entities" })).toHaveAttribute(
+      "href",
+      "/entities",
+    );
+    await waitFor(() => expect(document.title).toBe("Entity not found · OpenLaw"));
+  });
+
   it("draws the DD-014 banner and CONFI marker and opens the Administrator grant dialog", async () => {
     const api = recordApi(entityRow({ isConfidential: true }));
     const writes: unknown[] = [];

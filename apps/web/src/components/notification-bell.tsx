@@ -13,8 +13,8 @@
  * the same anatomy. So `surface` is the whole of the difference: which
  * four routes are asked, what the empty panel says, and how the trigger
  * is coloured for the chrome it sits in. Everything else — the badge and
- * its cap, read-on-open, paging, the focus landing, both failure states
- * — is written once, because it is one decision and not two.
+ * its cap, the read model, paging, the focus landing, both failure
+ * states — is written once, because it is one decision and not two.
  *
  * **The two bells never see each other's items.** The scope is the API's
  * (`NotificationSurface`), not this component's: the staff mount answers
@@ -24,10 +24,9 @@
  * exactly as it was.
  *
  * **The bell is an ephemeral prompt, and the activity feed is the
- * durable history** (NOT-005). So there is no per-item read ceremony
- * here and no per-record notifications surface anywhere — NOT-001
- * removed the contract-details chip. Being shown an item is the only
- * thing that reads it, and the bell is the only place it is shown.
+ * durable history** (NOT-005). There is no per-record notifications
+ * surface anywhere — NOT-001 removed the contract-details chip. The
+ * bell is the only place an item is shown.
  *
  * **The badge is the server's number, always.** It is read on mount,
  * again on every navigation, and on the shared channel's bell and open
@@ -38,9 +37,12 @@
  * browser reconnects the shared EventSource; its next open frame makes
  * this surface re-ask the same reads.
  *
- * **Opening the centre marks the page it drew read** (NOT-005), and so
- * does "Show older" for the page it brings. That is the whole read
- * model: one write per page shown.
+ * **Opening the centre marks nothing** (the NOT-005 2026-09-09
+ * amendment). An item is read when the person opens it, which is the
+ * row's click; "Mark all read" is the one deliberate sweep. So a row
+ * still unread wears a marker, and the badge means "not yet looked
+ * at" rather than "not yet drawn". That is the whole read model: one
+ * write per item opened, or one for everything.
  *
  * **The wall is the API's, not this component's.** Both reads and both
  * writes re-apply the confidentiality predicate (DD-014, M10), so an
@@ -138,7 +140,7 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
   const landing = useRef<HTMLAnchorElement | null>(null);
   /** Which landing row focus has already been given to, so the move
    * happens once per page and not again every time the rows are
-   * re-rendered under it (the mark-read write does that). */
+   * re-rendered under it (a live re-read does that). */
   const landed = useRef<number | null>(null);
 
   /** Asks for the count. A failed count answers undefined and leaves
@@ -172,17 +174,18 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
   }, [fetchCount, location.pathname]);
 
   /**
-   * Marks a page's unread items read and takes the badge from the
-   * answer.
+   * Marks one item read, because the person opened it, and takes the
+   * badge from the answer.
    *
-   * Only the unread ones are sent: the write is idempotent on the
-   * server, but a page redrawn after a reopen would otherwise be a
-   * request that could only ever change nothing.
+   * An item already read sends nothing: the write is idempotent on the
+   * server, but it would be a request that could only ever change
+   * nothing. The row follows the write, so its marker goes out and the
+   * panel agrees with the badge. A refused write moves neither.
    */
-  const markPageRead = useCallback(
-    async (page: readonly BellItem[]) => {
-      const ids = page.filter((item) => item.readAt === null).map((item) => item.id);
-      if (ids.length === 0) return;
+  const markRead = useCallback(
+    async (item: BellItem) => {
+      if (item.readAt !== null) return;
+      const ids = [item.id];
       const { data } = await (
         surface === "portal"
           ? api.POST("/api/v1/portal/notifications/read", { body: { ids } })
@@ -190,12 +193,10 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
       ).catch(() => ({ data: undefined }));
       if (!data) return;
       setUnread(data.unread);
-      // The rows follow the write, so a second draw of the same page
-      // sends nothing and the panel agrees with the badge.
-      const marked = new Set(ids);
       const readAt = new Date().toISOString();
-      setItems((current) =>
-        (current ?? []).map((item) => (marked.has(item.id) ? { ...item, readAt } : item)),
+      setItems(
+        (current) =>
+          current && current.map((row) => (row.id === item.id ? { ...row, readAt } : row)),
       );
     },
     [surface],
@@ -246,13 +247,11 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
         from === null ? data.notifications : [...(current ?? []), ...data.notifications],
       );
       setCursor(data.nextCursor);
-      // Shown is read (NOT-005). After the rows are on screen rather
-      // than before, so a page that never arrived is never marked. A
-      // read whose centre closed while it was out showed nobody
-      // anything, so it marks nothing either.
-      if (openNow.current) await markPageRead(data.notifications);
+      // Drawing is not reading (the NOT-005 2026-09-09 amendment): a
+      // page lands with its read state exactly as the API answered it,
+      // and nothing is written until a row is opened.
     },
-    [markPageRead, surface],
+    [surface],
   );
 
   // One shared EventSource serves both bells and every later live
@@ -271,12 +270,12 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
     [loadPage, readCount],
   );
 
-  // Opening is what draws the centre, so opening is what reads it. Every
-  // open re-reads: a panel opened twice in a long session must not show
-  // the first open's answer. The read starts in the open handler, the
-  // one place the panel is opened from. It is also the one place it is
-  // closed from: a row's navigation closes through here too, so the
-  // `openNow` ref the live re-read consults cannot drift from `open`.
+  // Opening is what draws the centre. Every open re-reads the list: a
+  // panel opened twice in a long session must not show the first
+  // open's answer. The read starts in the open handler, the one place
+  // the panel is opened from. It is also the one place it is closed
+  // from: a row's navigation closes through here too, so the `openNow`
+  // ref the live re-read consults cannot drift from `open`.
   const onOpenChange = useCallback(
     (next: boolean) => {
       openNow.current = next;
@@ -303,6 +302,20 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
     void loadPage(cursor);
   }, [cursor, items, loadPage]);
 
+  /** A row was opened: it is read now, and the centre closes because
+   * the reader asked to go somewhere. The write is not awaited; the
+   * navigation is the reader's, and the badge follows when the server
+   * answers. */
+  const openItem = useCallback(
+    (item: BellItem) => {
+      void markRead(item);
+      onOpenChange(false);
+    },
+    [markRead, onOpenChange],
+  );
+
+  /** The one deliberate sweep (NOT-005). Reachable whenever the badge
+   * is above zero, because opening the centre no longer clears it. */
   const markAllRead = useCallback(async () => {
     const { data } = await (
       surface === "portal"
@@ -312,8 +325,8 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
     if (!data) return;
     setUnread(data.unread);
     const readAt = new Date().toISOString();
-    setItems((current) =>
-      (current ?? []).map((item) => ({ ...item, readAt: item.readAt ?? readAt })),
+    setItems(
+      (current) => current && current.map((item) => ({ ...item, readAt: item.readAt ?? readAt })),
     );
   }, [surface]);
 
@@ -407,7 +420,7 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
                 <NotificationRow
                   key={item.id}
                   item={item}
-                  onNavigate={() => onOpenChange(false)}
+                  onOpen={openItem}
                   ref={index === landingIndex ? landing : undefined}
                 />
               ))}
@@ -442,27 +455,33 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
  *
  * **The whole row is the link.** An item exists to be acted on and it
  * carries exactly one action, so a link inside the row would be a
- * smaller target for the same destination (DES-011).
+ * smaller target for the same destination (DES-011). Opening it is
+ * what reads it, so the click is also the write.
  *
- * **No unread marker.** Opening the centre reads everything it draws
- * (NOT-005), so a per-item mark would be a dot that goes out while the
- * reader watches it. The badge is where unread is said.
+ * **An unread row wears a marker** (the NOT-005 2026-09-09 amendment).
+ * The marker is presentational, in the badge's own red, at the row's
+ * trailing edge: it says the same thing the badge says, one row at a
+ * time. It is not the only cue — the sentence is a step heavier while
+ * unread (DES-011 point 6) — and a screen reader hears "Unread" at the
+ * start of the row's name, so the state is in the text, not only in
+ * the paint.
  */
 function NotificationRow({
   item,
-  onNavigate,
+  onOpen,
   ref,
 }: Readonly<{
   item: BellItem;
-  /** Closes the centre: the reader asked to go somewhere, and a panel
-   * left open over the record they landed on is clutter. */
-  onNavigate: () => void;
+  /** The reader opened this item: it is read now, and the centre
+   * closes behind them. */
+  onOpen: (item: BellItem) => void;
   /** Set on the first row of a page "Show older" brought, so focus can
    * land there (DES-031). */
   ref?: Ref<HTMLAnchorElement>;
 }>) {
   const intl = useIntl();
   const { icon: Icon, sentence, href } = narrateNotification(intl, item);
+  const unread = item.readAt === null;
 
   const face = (
     <>
@@ -473,7 +492,21 @@ function NotificationRow({
         <Icon size={ROW_GLYPH_SIZE} />
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="text-sm text-primary">{sentence}</span>
+        <span className={`text-sm text-primary ${unread ? "font-medium" : ""}`}>
+          {/* The space sits outside the hidden span: the accessible
+              name trims each element's text, so a space inside it
+              would be lost and the name would run the two together.
+              On screen the hidden span is out of flow, and a space at
+              the start of a line collapses. */}
+          {unread && (
+            <>
+              <span className="sr-only">
+                <FormattedMessage id="notifications.unreadRow" defaultMessage="Unread" />
+              </span>{" "}
+            </>
+          )}
+          {sentence}
+        </span>
         <time
           dateTime={item.createdAt}
           title={formatLongDateTime(item.createdAt, { locale: intl.locale })}
@@ -482,6 +515,13 @@ function NotificationRow({
           {formatRelativeOrShort(item.createdAt, { locale: intl.locale })}
         </time>
       </span>
+      {/* Decorative: the name already says "Unread". */}
+      {unread && (
+        <span
+          aria-hidden="true"
+          className="mt-1.5 size-2 shrink-0 rounded-pill bg-badge-alert-bg"
+        />
+      )}
     </>
   );
 
@@ -498,7 +538,7 @@ function NotificationRow({
         <Link
           ref={ref}
           to={href}
-          onClick={onNavigate}
+          onClick={() => onOpen(item)}
           // The base layer's ring, pulled inside the row: a full-width
           // row's outward offset would be clipped by the scrolling
           // list it sits in.

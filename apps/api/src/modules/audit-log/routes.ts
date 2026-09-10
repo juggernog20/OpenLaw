@@ -55,14 +55,22 @@ import {
   ACTIVITY_VISIBILITIES,
   activityLog,
   and,
+  contracts,
   desc,
+  documents,
+  entities,
   eq,
   gte,
   ilike,
+  inArray,
+  knowledgeItems,
   lte,
+  matters,
   or,
+  requests,
   sql,
   users,
+  type ActivityEntityType,
   type Db,
   type SQL,
 } from "@openlaw/db";
@@ -131,6 +139,15 @@ const ActorSchema = z.object({
   archived: z.boolean(),
 });
 
+/** The name a record goes by. Contracts, Matters, and Requests carry a
+ * number; an Entity, Document, or Knowledge Item has a title alone. */
+const EntityRefSchema = z.object({
+  number: z.number().int().nullable(),
+  title: z.string(),
+});
+
+type EntityRef = z.infer<typeof EntityRefSchema>;
+
 const AuditEntrySchema = z.object({
   id: z.string(),
   /**
@@ -149,6 +166,14 @@ const AuditEntrySchema = z.object({
   /** The record the entry hangs off. NULL for a `system` entry, which
    * is about no single record. */
   entityId: z.string().nullable(),
+  /**
+   * What a person calls the record `entityId` names: the reference
+   * number where the record has one, and its title. NULL for a `system`
+   * or `user` entry, and for a record since hard-deleted. Resolved for
+   * the Administrator reading this surface, who reaches every record
+   * (DD-013), so no confidentiality wall applies here.
+   */
+  entityRef: EntityRefSchema.nullable(),
   /** Who acted. NULL for a system-emitted event with no human actor. */
   actor: ActorSchema.nullable(),
   createdAt: z.iso.datetime({ offset: true }),
@@ -263,13 +288,99 @@ function selectEntries(db: Db, where: SQL | undefined, limit: number) {
   );
 }
 
-/** One row, as the API answers it. */
-function toEntry(row: EntryRow) {
+/** The key one record's name is filed under. Typed, so two tables
+ * cannot answer for one id. */
+function refKey(entityType: string, entityId: string): string {
+  return `${entityType}:${entityId}`;
+}
+
+/**
+ * The names of the records one page's entries hang off, in one read
+ * per entity type rather than one per row.
+ *
+ * Only the types that have a name are read. A `user` entry's subject
+ * is already named in its payload, and a `system` entry is about no
+ * record. An id naming no row, because the record was hard-deleted,
+ * is left out and the entry answers NULL.
+ */
+async function resolveEntityRefs(
+  db: Db,
+  rows: readonly EntryRow[],
+): Promise<Map<string, EntityRef>> {
+  const idsOf = (entityType: ActivityEntityType): string[] => [
+    ...new Set(
+      rows.flatMap((row) =>
+        row.entityType === entityType && row.entityId !== null ? [row.entityId] : [],
+      ),
+    ),
+  ];
+  const reads: Promise<{ id: string; number: number | null; title: string }[]>[] = [];
+  const types: ActivityEntityType[] = [];
+  const read = <T extends { id: string; number: number | null; title: string }>(
+    entityType: ActivityEntityType,
+    select: (ids: string[]) => Promise<T[]>,
+  ) => {
+    const ids = idsOf(entityType);
+    if (ids.length === 0) return;
+    types.push(entityType);
+    reads.push(select(ids));
+  };
+  read("contract", (ids) =>
+    db
+      .select({ id: contracts.id, number: contracts.number, title: contracts.title })
+      .from(contracts)
+      .where(inArray(contracts.id, ids)),
+  );
+  read("matter", (ids) =>
+    db
+      .select({ id: matters.id, number: matters.number, title: matters.title })
+      .from(matters)
+      .where(inArray(matters.id, ids)),
+  );
+  read("request", (ids) =>
+    db
+      .select({ id: requests.id, number: requests.number, title: requests.summary })
+      .from(requests)
+      .where(inArray(requests.id, ids)),
+  );
+  read("document", (ids) =>
+    db
+      .select({ id: documents.id, number: sql<null>`null`, title: documents.title })
+      .from(documents)
+      .where(inArray(documents.id, ids)),
+  );
+  read("entity", (ids) =>
+    db
+      .select({ id: entities.id, number: sql<null>`null`, title: entities.legalName })
+      .from(entities)
+      .where(inArray(entities.id, ids)),
+  );
+  read("knowledge_item", (ids) =>
+    db
+      .select({ id: knowledgeItems.id, number: sql<null>`null`, title: knowledgeItems.title })
+      .from(knowledgeItems)
+      .where(inArray(knowledgeItems.id, ids)),
+  );
+  const refs = new Map<string, EntityRef>();
+  const answers = await Promise.all(reads);
+  answers.forEach((found, index) => {
+    for (const row of found) {
+      refs.set(refKey(types[index]!, row.id), { number: row.number, title: row.title });
+    }
+  });
+  return refs;
+}
+
+/** One row, as the API answers it. The export passes no names: its
+ * columns are the row's own, and the id is what it carries. */
+function toEntry(row: EntryRow, refs?: ReadonlyMap<string, EntityRef>) {
   return {
     id: row.id,
     action: row.action,
     entityType: row.entityType,
     entityId: row.entityId,
+    entityRef:
+      row.entityId === null ? null : (refs?.get(refKey(row.entityType, row.entityId)) ?? null),
     visibility: row.visibility,
     actor:
       row.actor?.id && row.actor.displayName !== null
@@ -333,8 +444,10 @@ export const auditLogRoutes: FastifyPluginAsyncZod = async (app) => {
           "`admin_only` settings, user administration, and security " +
           "entries that no record feed carries. Administrator-only " +
           "(SET-002). Actor, action, entity type, date range, and search " +
-          "compose. Paged from a server-fixed page size: pass the " +
-          "previous page's `nextCursor` to read further back",
+          "compose. Each entry names the record it hangs off in " +
+          "`entityRef`, where the record has a number or a title. Paged " +
+          "from a server-fixed page size: pass the previous page's " +
+          "`nextCursor` to read further back",
         tags: ["audit-log"],
         querystring: FilterSchema.extend({
           /** The previous page's `nextCursor`. Omit for the first page. */
@@ -361,8 +474,9 @@ export const auditLogRoutes: FastifyPluginAsyncZod = async (app) => {
       // is more without counting anything.
       const rows = await selectEntries(app.db, where, PAGE_SIZE + 1);
       const page = rows.slice(0, PAGE_SIZE);
+      const refs = await resolveEntityRefs(app.db, page);
       return {
-        entries: page.map(toEntry),
+        entries: page.map((row) => toEntry(row, refs)),
         // Only when a further row was actually read. A cursor on the
         // last page would send the client for an empty one.
         nextCursor: rows.length > PAGE_SIZE ? (page.at(-1)?.id ?? null) : null,

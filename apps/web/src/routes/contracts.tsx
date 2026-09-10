@@ -63,10 +63,10 @@ import { RecordFilterBar } from "../components/table/record-filter-bar";
 import { useRecordFilterDefinitions } from "../components/table/record-filter-definitions";
 import { readRegistry } from "../lib/entities";
 import {
+  contractPath,
   contractReference,
   type ContractRow,
   type RegistryEntity,
-  type UserOption,
 } from "../lib/contracts";
 import {
   builtInLayout,
@@ -564,17 +564,17 @@ export function ContractsPage() {
       {createOpen && (
         <CreateContractDialog
           contractTypes={contractTypes}
-          people={users.map((person: UserOption) => ({
-            id: person.id,
-            label: person.displayName,
-            archived: person.archived,
-          }))}
+          users={users}
           entities={entities.map((entity: RegistryEntity) => ({
             id: entity.id,
             label: entity.legalName,
           }))}
+          viewerId={user.id}
           onOpenChange={setCreateOpen}
-          onCreated={(row) => setRows((current) => [row, ...current])}
+          // Straight to the newborn record, as Matters and Knowledge do:
+          // the record is where the work continues, and four focus-group
+          // testers looked for it there (2026-09-07).
+          onCreated={(row) => void navigate(contractPath(row.number))}
         />
       )}
     </AppShell>

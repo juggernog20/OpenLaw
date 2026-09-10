@@ -382,6 +382,8 @@ describe("the child and successor vehicles (CTR-007 §3, §4)", () => {
           contractTypeId: "t-nda",
           customFields: {},
           isConfidential: false,
+          // The dialog seeds the viewer as Owner (CTR-004, 2026-09-09).
+          managerId: "u2",
           // The routing, and nothing about what it copies: the seam owns
           // the prefill, so this page cannot disagree with it.
           renewalOf: { number: 42, vehicle: "successor" },

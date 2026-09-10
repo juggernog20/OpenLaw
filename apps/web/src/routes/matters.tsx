@@ -382,6 +382,7 @@ export function MattersPage() {
           matterTypes={loaded.matterTypes}
           users={loaded.users}
           entities={loaded.entities.map((entity) => ({ id: entity.id, label: entity.legalName }))}
+          viewerId={loaded.user.id}
           onOpenChange={setCreateOpen}
           onCreated={(matter) => void navigate(matterPath(matter.number))}
         />

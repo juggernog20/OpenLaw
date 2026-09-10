@@ -568,8 +568,9 @@ test.describe("M18 demo path", () => {
         approverCentre.getByRole("link", { name: `${OWNER_NAME} asked you to approve ${title}` }),
       ).toBeVisible();
 
-      // Read-on-open, on the smaller of the two bells: the page it drew
-      // is read, so the badge goes (NOT-005).
+      // Opening marks nothing (NOT-005, 2026-09-09 amendment). The badge
+      // goes on the deliberate sweep, and takes the server's answer.
+      await approverCentre.getByRole("button", { name: "Mark all read" }).click();
       await expect(bellTrigger(approverPage)).toHaveAccessibleName("Notifications, none unread", {
         timeout: 15_000,
       });
@@ -646,8 +647,9 @@ test.describe("M18 demo path", () => {
       // foot is absent rather than disabled.
       await expect(centre.getByRole("button", { name: "Show older" })).toHaveCount(0);
 
-      // The badge takes the server's answer, so it goes when the page is
-      // read — not because the surface decremented anything.
+      // The badge takes the server's answer, so it goes on the sweep —
+      // not because the surface decremented anything.
+      await centre.getByRole("button", { name: "Mark all read" }).click();
       await expect(bellTrigger(ownerPage)).toHaveAccessibleName("Notifications, none unread", {
         timeout: 15_000,
       });

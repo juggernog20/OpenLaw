@@ -1059,3 +1059,53 @@ describe("the Request thread follows onto the matter (CMT-001, NOT-002)", () => 
     }
   });
 });
+
+describe("what the form collected beside the Fields (INT-002, focus group 2026-09-07)", () => {
+  it("lands Needed by as one key date on the matter and narrates it", async () => {
+    const request = await submit("A deadline the requester stated");
+    const res = await convert(request.number, { title: "Dated matter", neededBy: "2027-03-31" });
+    expect(res.statusCode, res.body).toBe(200);
+    const matter = await matterNumbered(res.json().request.convertedRecord.number as number);
+
+    const dates = await harness.db
+      .select({
+        id: matterKeyDates.id,
+        date: matterKeyDates.date,
+        label: matterKeyDates.label,
+        note: matterKeyDates.note,
+      })
+      .from(matterKeyDates)
+      .where(eq(matterKeyDates.matterId, matter.id));
+    expect(dates).toHaveLength(1);
+    expect(dates[0]).toMatchObject({ date: "2027-03-31", label: "Needed by", note: null });
+
+    const [entry] = await harness.db
+      .select({ payload: activityLog.payload })
+      .from(activityLog)
+      .where(
+        and(
+          eq(activityLog.entityType, "matter"),
+          eq(activityLog.entityId, matter.id),
+          eq(activityLog.action, "key_date.added"),
+        ),
+      );
+    expect(entry?.payload).toEqual({
+      keyDateId: dates[0]!.id,
+      label: "Needed by",
+      date: "2027-03-31",
+    });
+  });
+
+  it("refuses a counterparty name on the matter arm, and writes nothing", async () => {
+    const request = await submit("A matter has no other side");
+    const before = await matterCount();
+    const res = await convert(request.number, {
+      title: "Named matter",
+      counterpartyName: "Helix Labs GmbH",
+    });
+    expect(res.statusCode, res.body).toBe(400);
+    expect(res.json().detail).toContain("matter has no counterparty");
+    expect((await cast.stored(request.id)).status).toBe("new");
+    expect(await matterCount()).toBe(before);
+  });
+});

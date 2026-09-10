@@ -123,6 +123,7 @@ import {
   type SeverityLevel,
   type TermType,
 } from "./contracts";
+import { knowledgeAudienceLabel } from "./knowledge";
 
 type FeedResponse =
   paths["/api/v1/activity"]["get"]["responses"]["200"]["content"]["application/json"];
@@ -406,6 +407,11 @@ function customField(context: NarrationContext, slug: string): NarratedField | u
  * stores one. Anything else renders as itself. */
 const CIVIL_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
+/** The record's own changed keys whose value is an id, not a name.
+ * `linkedUser` already carries names; it is here so a row written
+ * before that was true still reads through the same lookup. */
+const REFERENCE_KEYS = new Set(["assigneeId", "matterId", "registrationId", "linkedUser"]);
+
 /**
  * One side of a change, rendered as the record renders it (DES-014).
  *
@@ -434,6 +440,12 @@ function changeValue(
   // where the column says `evergreen`. Its ICU message carries an
   // `other` arm, so a kind this build no longer has still renders.
   if (key === "termType") return termTypeLabel(intl, value as TermType);
+  // KNW-004's audience is a stored slug, so the feed says "Everyone"
+  // where the column says `everyone`. The label helper knows only the
+  // two values the column admits; anything else reads as itself.
+  if (key === "audience" && (value === "legal_only" || value === "everyone")) {
+    return knowledgeAudienceLabel(intl, value);
+  }
   if (key === "kind") {
     return intl.formatMessage(
       {
@@ -489,6 +501,10 @@ function changeValue(
     const slug = customFieldSlug(key);
     const kind = slug === null ? undefined : customField(context, slug)?.fieldType;
     if (kind === "user" || kind === "entity") return context.referenceNames?.[value] ?? value;
+    // The record's own id-valued keys read the same way: a Task's
+    // assignee and an Obligation's Matter or Registration are stored as
+    // ids, and the mount's pickers already hold their names.
+    if (REFERENCE_KEYS.has(key)) return context.referenceNames?.[value] ?? value;
     return CIVIL_DATE.test(value) ? formatShortDate(value, { locale: intl.locale }) : value;
   }
   if (Array.isArray(value)) {

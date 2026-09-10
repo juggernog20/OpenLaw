@@ -80,6 +80,7 @@ interface AuditEntry {
   action: string;
   entityType: string;
   entityId: string | null;
+  entityRef: { number: number | null; title: string } | null;
   visibility: string;
   actor: { id: string; displayName: string; image: string | null; archived: boolean } | null;
   createdAt: string;
@@ -328,6 +329,33 @@ describe("what the audit log carries", () => {
 
     const stamps = entries.map((entry) => Date.parse(entry.createdAt));
     expect(stamps).toEqual([...stamps].sort((a, b) => b - a));
+  });
+
+  it("names the record each entry hangs off, as it stands now", async () => {
+    const { entries } = await everyPage();
+
+    // The Contract by its number and its current title: the rename
+    // happened after the create, and the name is read live, not stored
+    // on the entry.
+    const created = entries.find((entry) => entry.action === "contract.created");
+    expect(created?.entityRef).toEqual({
+      number: expect.any(Number),
+      title: "The Ashford supply agreement, restated",
+    });
+    for (const entry of entries.filter((entry) => entry.entityType === "contract")) {
+      expect(entry.entityRef).toEqual(created?.entityRef);
+    }
+
+    // An Entity has no number; its legal name is what it goes by.
+    const registered = entries.find((entry) => entry.entityType === "entity");
+    expect(registered?.entityRef).toEqual({ number: null, title: "Ashford Holdings Ltd" });
+
+    // A person and the system are not records with a name here.
+    for (const entry of entries.filter(
+      (entry) => entry.entityType === "user" || entry.entityType === "system",
+    )) {
+      expect(entry.entityRef).toBeNull();
+    }
   });
 
   it("offers the action vocabulary the table actually holds", async () => {

@@ -31,6 +31,7 @@ import { OwnershipCard } from "../components/entities/ownership-card";
 import { RegistrationsCard } from "../components/entities/registrations-card";
 import { ShareCapitalCard, type CapitalKey } from "../components/entities/share-capital-card";
 import { PageTitle } from "../components/page-title";
+import { RecordNotFoundPage, type RecordNotFound } from "./not-found";
 import { AppShell } from "../components/shell/app-shell";
 import { RecordApplets } from "../components/shell/record-applets";
 import { RecordTabs } from "../components/shell/record-tabs";
@@ -88,6 +89,10 @@ export async function entityRecordLoader({ params, request }: LoaderFunctionArgs
     api.GET("/api/v1/entities/obligation-options"),
     api.GET("/api/v1/entities/{id}/linked-record-counts", { params: { path: { id } } }),
   ]);
+  // An id nobody holds and an Entity this viewer cannot open are the
+  // same 404 (DD-014). Both draw a page that says so; every other
+  // failure still throws to the error boundary.
+  if (record.response.status === 404) return { notFound: true as const, user };
   if (
     !record.data ||
     !types.data ||
@@ -157,8 +162,38 @@ type FieldKey =
   | "formedOn"
   | "isConfidential";
 
+type EntityRecordData = Exclude<
+  ReturnType<typeof useLoaderData<typeof entityRecordLoader>>,
+  RecordNotFound
+>;
+
 export function EntityRecordPage() {
   const loaded = useLoaderData<typeof entityRecordLoader>();
+  const intl = useIntl();
+  if (loaded.notFound) {
+    return (
+      <RecordNotFoundPage
+        user={loaded.user}
+        title={intl.formatMessage({
+          id: "notFound.entity.title",
+          defaultMessage: "Entity not found",
+        })}
+        body={
+          <FormattedMessage
+            id="notFound.entity.body"
+            defaultMessage="This Entity does not exist, or you cannot open it."
+          />
+        }
+        backTo="/entities"
+        backLabel={<FormattedMessage id="notFound.entity.back" defaultMessage="Back to Entities" />}
+      />
+    );
+  }
+  return <EntityRecord />;
+}
+
+function EntityRecord() {
+  const loaded = useLoaderData() as EntityRecordData;
   const intl = useIntl();
   const [saved, setSaved] = useState<EntityRow>(loaded.entity);
   const [attachedFields, setAttachedFields] = useState<EntityField[]>(loaded.fields);

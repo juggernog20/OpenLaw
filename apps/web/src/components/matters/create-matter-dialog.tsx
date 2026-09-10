@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** The M8 create-matter dialog, with all type-driven fields redrawn on type change. */
+/**
+ * The M8 create-matter dialog, with all type-driven fields redrawn on
+ * type change.
+ *
+ * The Matter Manager is seeded with the person opening the dialog
+ * (MTR-003 focus-group addendum, 2026-09-09): opening it is taking the
+ * work on. They can clear it to Unassigned, which stays a real state.
+ */
 import { CreateAttachments, useCreateAttachments } from "../documents/create-attachments";
 import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -38,6 +45,7 @@ export function CreateMatterDialog({
   matterTypes,
   users,
   entities,
+  viewerId,
   parent,
   onOpenChange,
   onCreated,
@@ -45,6 +53,8 @@ export function CreateMatterDialog({
   matterTypes: MatterTypeOption[];
   users: MatterUserOption[];
   entities: readonly FieldReference[];
+  /** Who opened the dialog. Seeded as the Matter Manager when eligible. */
+  viewerId: string;
   parent?: Readonly<{ number: number; title: string }>;
   onOpenChange: (open: boolean) => void;
   onCreated: (matter: MatterRow) => void;
@@ -54,7 +64,14 @@ export function CreateMatterDialog({
   const [title, setTitle] = useState("");
   const [matterTypeId, setMatterTypeId] = useState("");
   const [templateId, setTemplateId] = useState("");
-  const [managerId, setManagerId] = useState("");
+  const managers = users.filter(
+    (person) => person.role === "administrator" || person.role === "legal_team_member",
+  );
+  // Seeded once, as the initial value: the person may clear it, and a
+  // seed that re-applied itself would put them back.
+  const [managerId, setManagerId] = useState(
+    managers.some((person) => person.id === viewerId) ? viewerId : "",
+  );
   const [priority, setPriority] = useState<MatterRow["priority"]>("medium");
   const [risk, setRisk] = useState<MatterRow["risk"]>(null);
   const [description, setDescription] = useState("");
@@ -71,9 +88,6 @@ export function CreateMatterDialog({
     label: person.displayName,
     archived: person.archived,
   }));
-  const managers = users.filter(
-    (person) => person.role === "administrator" || person.role === "legal_team_member",
-  );
 
   /**
    * Re-seed the form from a template, or from none. Priority, risk, and

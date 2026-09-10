@@ -272,32 +272,50 @@ export async function resolveRequest(number: number, reply: string): Promise<Dis
  * live one — triage confirms the routing rather than choosing it
  * (DD-018), and the seam refuses a body that names a different type.
  *
+ * Two facts ride beside the Fields (INT-002's 2026-09-09 addendum):
+ * the counterparty's name, contract arm only, and the Needed by date.
+ * Both are what the dialog's own boxes hold at the press, prefilled
+ * from the seeded request fields but editable.
+ *
  * Nothing about the Request is written before this call, for the reason
  * a decline writes nothing before its own: INT-007 has no claim step.
  */
+export interface ConvertRequestInput {
+  title: string;
+  contractTypeId?: string;
+  matterTypeId?: string;
+  templateId?: string;
+  priority?: StaffRequest["urgency"];
+  customFields?: Record<string, CustomFieldValue | null>;
+  /** The other side by name; contract conversions only. */
+  counterpartyName?: string;
+  /** The requester's deadline as an ISO civil date; either arm. */
+  neededBy?: string;
+}
+
+type ConvertBody = NonNullable<
+  paths["/api/v1/requests/{number}/convert"]["post"]["requestBody"]
+>["content"]["application/json"];
+
 export async function convertRequest(
   number: number,
-  input: {
-    title: string;
-    contractTypeId?: string;
-    matterTypeId?: string;
-    templateId?: string;
-    priority?: StaffRequest["urgency"];
-    customFields?: Record<string, CustomFieldValue | null>;
-  },
+  input: ConvertRequestInput,
 ): Promise<DispositionOutcome> {
+  const body: ConvertBody = {
+    title: input.title,
+    ...(input.priority === undefined ? {} : { priority: input.priority }),
+    ...(input.contractTypeId === undefined ? {} : { contractTypeId: input.contractTypeId }),
+    ...(input.matterTypeId === undefined ? {} : { matterTypeId: input.matterTypeId }),
+    ...(input.templateId === undefined ? {} : { templateId: input.templateId }),
+    ...(input.customFields === undefined ? {} : { customFields: input.customFields }),
+    ...(input.counterpartyName === undefined ? {} : { counterpartyName: input.counterpartyName }),
+    ...(input.neededBy === undefined ? {} : { neededBy: input.neededBy }),
+  };
   // Settled, never rejected — `declineRequest`'s rule.
   const result = await api
     .POST("/api/v1/requests/{number}/convert", {
       params: { path: { number } },
-      body: {
-        title: input.title,
-        ...(input.priority === undefined ? {} : { priority: input.priority }),
-        ...(input.contractTypeId === undefined ? {} : { contractTypeId: input.contractTypeId }),
-        ...(input.matterTypeId === undefined ? {} : { matterTypeId: input.matterTypeId }),
-        ...(input.templateId === undefined ? {} : { templateId: input.templateId }),
-        ...(input.customFields === undefined ? {} : { customFields: input.customFields }),
-      },
+      body,
     })
     .catch(() => undefined);
   if (result?.data) return { ok: true, request: result.data.request };

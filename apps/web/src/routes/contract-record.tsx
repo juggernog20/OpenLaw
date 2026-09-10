@@ -255,6 +255,7 @@ import { CustomFieldControl, type FieldReference } from "../components/custom-fi
 import { DocPanel } from "../components/documents/doc-panel";
 import { DocumentsCard } from "../components/documents/documents-card";
 import { PageTitle } from "../components/page-title";
+import { RecordNotFoundPage, type RecordNotFound } from "./not-found";
 import { StagePipeline } from "../components/stage-pipeline";
 import { DatePicker } from "../components/date-picker";
 import { StatusNote, type FieldStatus } from "../components/status-note";
@@ -367,6 +368,10 @@ export async function contractRecordLoader({ params, request }: LoaderFunctionAr
         )
       : Promise.resolve(null),
   ]);
+  // A number nobody holds and a record this viewer cannot open are the
+  // same 404 (DD-013, DD-014). Both draw a page that says so; every
+  // other failure still throws to the error boundary.
+  if (record.response.status === 404) return { notFound: true as const, user, number };
   // The documents read is required, like the record read: every viewer
   // who reaches this page reads the paper on it (DD-015). A failure
   // here must not render as "No documents on this contract yet" — an
@@ -599,7 +604,40 @@ function readNewestDeadlines(
   });
 }
 
+type ContractRecordData = Exclude<
+  ReturnType<typeof useLoaderData<typeof contractRecordLoader>>,
+  RecordNotFound
+>;
+
 export function ContractRecordPage() {
+  const loaded = useLoaderData<typeof contractRecordLoader>();
+  const intl = useIntl();
+  if (loaded.notFound) {
+    return (
+      <RecordNotFoundPage
+        user={loaded.user}
+        title={intl.formatMessage({
+          id: "notFound.contract.title",
+          defaultMessage: "Contract not found",
+        })}
+        body={
+          <FormattedMessage
+            id="notFound.contract.body"
+            defaultMessage="{reference} does not exist, or you cannot open it."
+            values={{ reference: contractReference(intl, loaded.number) }}
+          />
+        }
+        backTo="/contracts"
+        backLabel={
+          <FormattedMessage id="notFound.contract.back" defaultMessage="Back to Contracts" />
+        }
+      />
+    );
+  }
+  return <ContractRecord />;
+}
+
+function ContractRecord() {
   // Which section is on screen (DES-032). The loader has already sent
   // an unknown segment to the Overview, so anything that survives to
   // here is one of the five tab segments or "overview".
@@ -632,7 +670,7 @@ export function ContractRecordPage() {
     linkedMatter: loadedMatter,
     documentLanding,
     documentFindQuery,
-  } = useLoaderData<typeof contractRecordLoader>();
+  } = useLoaderData() as ContractRecordData;
   const intl = useIntl();
   const navigate = useNavigate();
   const { revalidate } = useRevalidator();
@@ -2946,8 +2984,9 @@ export function ContractRecordPage() {
             // `entity` field among them offers exactly what it offers on
             // the record itself.
             contractTypes={typeOptions}
-            people={peopleReferences}
+            users={users}
             entities={entityReferences}
+            viewerId={user.id}
             renewalOf={{
               number: saved.number,
               vehicle: routingTo,

@@ -1981,7 +1981,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage may override the configured type or Re-target to the other module. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request summary, urgency defaulting priority unless overridden, the Request description, risk unset, the converting person as Matter Manager, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. Matter conversions may apply a live template for the confirmed type; carried values and triager answers override its defaults. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Request remains the Requester's window. Member+ only */
+    /** Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage may override the configured type or Re-target to the other module. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request summary, urgency defaulting priority unless overridden, the Request description, risk unset, the converting person as Matter Manager or Contract Owner, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. counterpartyName, contract conversions only, finds or creates the live counterparty of that name (case-insensitive) and links it as the primary; a matter conversion refuses it with 400. neededBy lands one "Needed by" key date on either record, past dates included. Matter conversions may apply a live template for the confirmed type; carried values and triager answers override its defaults. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Request remains the Requester's window. Member+ only */
     post: operations["convertRequest"];
     delete?: never;
     options?: never;
@@ -2172,7 +2172,7 @@ export interface paths {
     /** The contract list: number, title, type, and status; newest reference first unless sort names a column, and unknown-valued rows always last (DD-019). Archived contracts only with includeArchived=true; ended contracts only with includeEnded=true (CTR-019). Member+ read every contract that is not confidential; a Contributor reads exactly the contracts they hold a contract_team row on, archived and ended ones behind the same flags. A confidential contract is listed only for its named team, its Owner, and Administrators — silently absent for everyone else, so no count can reveal it */
     get: operations["listContracts"];
     put?: never;
-    /** Create a contract from a title, a live type, and any custom fields that type hard-requires (CTR-016/MTR-014 — creation is refused while one is empty); the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward — except the Confidential flag (DD-014), which may be set here so a sensitive record is never visible to the wrong audience, even briefly. `renewalOf` routes a renewal into a new record (CTR-007's third and fourth vehicles, M16/5): the successor is born carrying its predecessor's business facts — our entity, the value, the term shape, and the counterparties — and linked to it, as a child by contracts.parent_id or as a standalone successor by a CTR-015 `renews` row. The team, the status, and the Confidential flag are **never** copied: CTR-015's no-inheritance stance, applied at birth. The title and the type are the body's, so whatever the person edited before pressing Create is what the record is born with. Appends the link's own activity action beside contract.created */
+    /** Create a contract from a title, a live type, and any custom fields that type hard-requires (CTR-016/MTR-014 — creation is refused while one is empty); the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward — except the Confidential flag (DD-014), which may be set here so a sensitive record is never visible to the wrong audience, even briefly, and the Owner (CTR-004), which the create dialog seeds with the acting person and which must be a live Administrator or Legal Team Member; omitted or null is unassigned, a real state. `renewalOf` routes a renewal into a new record (CTR-007's third and fourth vehicles, M16/5): the successor is born carrying its predecessor's business facts — our entity, the value, the term shape, and the counterparties — and linked to it, as a child by contracts.parent_id or as a standalone successor by a CTR-015 `renews` row. The team, the status, and the Confidential flag are **never** copied: CTR-015's no-inheritance stance, applied at birth. The title and the type are the body's, so whatever the person edited before pressing Create is what the record is born with. Appends the link's own activity action beside contract.created */
     post: operations["createContract"];
     delete?: never;
     options?: never;
@@ -3441,7 +3441,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The system-wide audit log (DD-017), newest first: every entry of every entity type and every tier, including the `admin_only` settings, user administration, and security entries that no record feed carries. Administrator-only (SET-002). Actor, action, entity type, date range, and search compose. Paged from a server-fixed page size: pass the previous page's `nextCursor` to read further back */
+    /** The system-wide audit log (DD-017), newest first: every entry of every entity type and every tier, including the `admin_only` settings, user administration, and security entries that no record feed carries. Administrator-only (SET-002). Actor, action, entity type, date range, and search compose. Each entry names the record it hangs off in `entityRef`, where the record has a number or a title. Paged from a server-fixed page size: pass the previous page's `nextCursor` to read further back */
     get: operations["listAuditLog"];
     put?: never;
     post?: never;
@@ -4609,7 +4609,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Mark the named items read — what opening the notification centre does with the page it just drew (NOT-005). There is no per-item read ceremony, so being shown an item is the only thing that reads it. One page's worth of ids at a time, because the centre draws a page at a time. Ids that are not this person's, are already read, are about a record they can no longer reach, or belong to their portal bell match nothing and are not refused — a refusal would answer whether an id exists. Answers the unread count that remains: normally what the page did not cover, plus whatever landed while it was being read */
+    /** Mark the named items read — what opening one from the notification centre does (NOT-005, 2026-09-09 amendment). Drawing the centre writes nothing; the click on an item is the read, so the centre sends that one id. The body is a list of up to one page's worth, because a page is the most the centre ever holds. Ids that are not this person's, are already read, are about a record they can no longer reach, or belong to their portal bell match nothing and are not refused — a refusal would answer whether an id exists. Answers the unread count that remains: what was not sent, plus whatever landed in the meantime */
     post: operations["markNotificationsRead"];
     delete?: never;
     options?: never;
@@ -4695,7 +4695,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Mark the named portal items read — what opening the portal bell does with the page it just drew (NOT-005). There is no per-item read ceremony, so being shown an item is the only thing that reads it. One page's worth of ids at a time, because the panel draws a page at a time. Ids that are not this person's, are already read, are about a Request they can no longer reach, or belong to their staff notification centre match nothing and are not refused — a refusal would answer whether an id exists. Answers the unread count that remains */
+    /** Mark the named portal items read — what opening one from the portal bell does (NOT-005, 2026-09-09 amendment). Drawing the panel writes nothing; the click on an item is the read, so the panel sends that one id. The body is a list of up to one page's worth, because a page is the most the panel ever holds. Ids that are not this person's, are already read, are about a Request they can no longer reach, or belong to their staff notification centre match nothing and are not refused — a refusal would answer whether an id exists. Answers the unread count that remains */
     post: operations["markPortalNotificationsRead"];
     delete?: never;
     options?: never;
@@ -13266,6 +13266,9 @@ export interface operations {
           };
           /** @enum {string} */
           priority?: "low" | "medium" | "high" | "critical";
+          counterpartyName?: string;
+          /** Format: date */
+          neededBy?: string;
         };
       };
     };
@@ -14128,6 +14131,7 @@ export interface operations {
             [key: string]: (string | number | boolean | string[]) | null;
           };
           isConfidential?: boolean;
+          managerId?: string | null;
           renewalOf?: {
             number: number;
             /** @enum {string} */
@@ -22024,6 +22028,10 @@ export interface operations {
               /** @enum {string} */
               visibility: "legal_only" | "working_team" | "full_thread" | "admin_only";
               entityId: string | null;
+              entityRef: {
+                number: number | null;
+                title: string;
+              } | null;
               actor: {
                 id: string;
                 displayName: string;

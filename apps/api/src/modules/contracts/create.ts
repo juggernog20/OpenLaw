@@ -33,10 +33,14 @@
  *   wrote plus the two display names it had to read anyway.
  *
  * What a contract is **not** born with is as much the decision as what
- * it is. No Owner, no team beyond the creator's provenance row, no
- * status but the draft seed, and no Confidential flag unless the caller
- * asks for one. CTR-015's no-inheritance stance, applied at birth, and
- * the same rule the M16 successor obeys.
+ * it is. No Owner unless the caller names one, no team beyond the
+ * creator's provenance row, no status but the draft seed, and no
+ * Confidential flag unless the caller asks for one. CTR-015's
+ * no-inheritance stance, applied at birth, and the same rule the M16
+ * successor obeys: a routed renewal never copies its predecessor's
+ * Owner. The Owner a caller names is a choice the acting person made in
+ * the create dialog, or the converting person at INT-002's conversion
+ * (CTR-004 focus-group addendum, 2026-09-09).
  *
  * **Risk is never born and priority is born only where a caller holds
  * one** (MTR-012, M21/9). Risk is legal's assessment of how bad it
@@ -69,9 +73,10 @@ import {
   type Matter,
   type SeverityLevel,
   type Transaction,
+  users,
 } from "@openlaw/db";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
-import { CREATOR_TEAM_ROLE } from "../../lib/contract-access.js";
+import { CREATOR_TEAM_ROLE, OWNER_REFUSAL, OWNER_ROLES } from "../../lib/contract-access.js";
 import { linkContracts, setContractParent } from "../../lib/contract-relations.js";
 import {
   applyCustomFields,
@@ -136,6 +141,13 @@ export interface CreateContractInput {
    * never visible to the wrong audience even briefly. Omitted means
    * open, which is the product's default. */
   isConfidential?: boolean | undefined;
+  /**
+   * The Owner the record is born with (CTR-004). Omitted or null is
+   * unassigned, which stays a real state. A named person must be a live
+   * Member+ user, or the create is refused the way the record's Owner
+   * write refuses them.
+   */
+  managerId?: string | null | undefined;
   /** CTR-007's routing. Omitted is the ordinary create: a record that
    * renews nothing and sits under nobody. */
   renewal?: ContractRenewalRouting | null | undefined;
@@ -271,6 +283,24 @@ export async function createContract(
     if (!signatory || signatory.archivedAt !== null) copied.entityId = null;
   }
 
+  // The Owner, checked the way the record's Owner write checks one: a
+  // live Member+ user, locked so a concurrent archive cannot slip between
+  // the check and the insert. Nothing here reads the predecessor: a
+  // routed renewal is born with the Owner its caller named, or none.
+  let managerId: string | null = null;
+  if (input.managerId) {
+    const [person] = await tx
+      .select({ id: users.id, role: users.role, archivedAt: users.archivedAt })
+      .from(users)
+      .where(eq(users.id, input.managerId))
+      .limit(1)
+      .for("update");
+    if (!person || person.archivedAt || !OWNER_ROLES.includes(person.role)) {
+      throw httpError(400, OWNER_REFUSAL);
+    }
+    managerId = person.id;
+  }
+
   const isConfidential = input.isConfidential ?? false;
   const [row] = await tx
     .insert(contracts)
@@ -279,6 +309,7 @@ export async function createContract(
       description: input.description?.trim() || null,
       contractTypeId: contractType.id,
       statusId: draft.id,
+      managerId,
       customFields,
       isConfidential,
       matterId: matter?.id ?? null,

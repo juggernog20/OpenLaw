@@ -86,6 +86,15 @@ import type { AuthenticatedUser } from "../auth/user.js";
  */
 export const CREATOR_TEAM_ROLE = "creator";
 
+/**
+ * Who may be the Owner (CTR-004, DD-013): a Member+ user. The Owner runs
+ * the contract, and a read-only viewer cannot run one. The create and
+ * the record's Owner write both check against this list, so a person one
+ * refuses the other refuses too, in the same words.
+ */
+export const OWNER_ROLES: readonly string[] = ["administrator", "legal_team_member"];
+export const OWNER_REFUSAL = "The Owner must be a live Administrator or Legal Team Member.";
+
 /** Every tier a Member+ hears — DD-016's three, widest last. */
 const ALL_TIERS: readonly CommentVisibility[] = COMMENT_VISIBILITIES;
 

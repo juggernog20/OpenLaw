@@ -379,7 +379,9 @@ describe("the Matters destination", () => {
     const dialog = await screen.findByRole("dialog");
     await user.type(within(dialog).getByLabelText(/^Title\*?$/), "New advice");
     await user.selectOptions(within(dialog).getByLabelText(/^Matter type\*?$/), TYPE.id);
-    await user.selectOptions(within(dialog).getByLabelText("Matter Manager"), MEMBER.id);
+    // The Matter Manager is seeded with the person creating it (MTR-003
+    // focus-group addendum, 2026-09-09): nobody selects themselves.
+    expect(within(dialog).getByLabelText("Matter Manager")).toHaveValue(MEMBER.id);
     await user.selectOptions(within(dialog).getByLabelText(/^Priority\*?$/), "high");
     await user.selectOptions(within(dialog).getByLabelText("Risk"), "low");
     await user.type(within(dialog).getByLabelText(/Business unit/), "Operations");
@@ -397,6 +399,37 @@ describe("the Matters destination", () => {
       customFields: { "business-unit": "Operations" },
       isConfidential: true,
     });
+  });
+
+  it("lets the creator clear the seeded Matter Manager, and posts null for Unassigned", async () => {
+    let posted: unknown;
+    stubApi({
+      signedIn: MEMBER,
+      extra: matterApi((call) => {
+        posted = call.body;
+        return json(201, {
+          matter: matter({
+            id: "matter-8",
+            number: 8,
+            title: "Nobody's yet",
+            customFields: { "business-unit": "Operations" },
+          }),
+        });
+      }),
+    });
+    renderAt("/matters");
+    const user = userEvent.setup();
+    await screen.findByRole("heading", { name: "No matters yet" });
+    await user.click(screen.getAllByRole("button", { name: "New matter" })[0]!);
+    const dialog = await screen.findByRole("dialog");
+    await user.type(within(dialog).getByLabelText(/^Title\*?$/), "Nobody's yet");
+    await user.selectOptions(within(dialog).getByLabelText(/^Matter type\*?$/), TYPE.id);
+    await user.selectOptions(within(dialog).getByLabelText("Matter Manager"), "");
+    await user.type(within(dialog).getByLabelText(/Business unit/), "Operations");
+    await user.click(within(dialog).getByRole("button", { name: "Create" }));
+    expect((await screen.findAllByText("M-8")).length).toBeGreaterThan(0);
+    // Unassigned stays a real state: null on the wire, not a missing key.
+    expect(posted).toMatchObject({ managerId: null });
   });
 
   it("stages documents without writes, removes a selection, and discards them on cancel", async () => {

@@ -22,10 +22,14 @@
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+  and,
+  contractCounterparties,
+  contractKeyDates,
   contracts,
   contractStatuses,
   contractTeam,
   contractTypes,
+  counterparties,
   eq,
   requestTypes,
   users,
@@ -510,7 +514,7 @@ describe("what the record is born with (INT-002, MTR-012, CTR-016)", () => {
     expect(await contractCount()).toBe(before);
   });
 
-  it("is born ordinary — C-###, the draft seed, no Owner, no team, not confidential", async () => {
+  it("is born ordinary — C-###, the draft seed, the converter as Owner, no team, not confidential", async () => {
     const request = await submit("An ordinary birth");
     const res = await convert(request.number, { title: "Ordinary NDA" });
     expect(res.statusCode, res.body).toBe(200);
@@ -520,8 +524,10 @@ describe("what the record is born with (INT-002, MTR-012, CTR-016)", () => {
     // The CTR-003 sequence gives the number; conversion invents none.
     expect(Number.isInteger(contract.number)).toBe(true);
     expect(contract.number).toBeGreaterThan(0);
-    // The M16 successor rule's sibling: nothing is inherited.
-    expect(contract.managerId).toBeNull();
+    // The Matter Manager rule's sibling (the INT-002 2026-09-09
+    // addendum): the person who converts owns what they made. Nothing
+    // else is inherited.
+    expect(contract.managerId).toBe(memberId);
     expect(contract.isConfidential).toBe(false);
     expect(contract.entityId).toBeNull();
     expect(contract.parentId).toBeNull();
@@ -846,5 +852,174 @@ describe("the disposition scaffold, from Convert (INT-007)", () => {
     expect(
       (await entriesOn("request", request.id)).filter((row) => row.action === "request.converted"),
     ).toHaveLength(1);
+  });
+});
+
+describe("what the form collected beside the Fields (INT-002, focus group 2026-09-07)", () => {
+  /** The parties on one contract, with the organization's name. */
+  async function partiesOn(contractId: string) {
+    return harness.db
+      .select({
+        counterpartyId: contractCounterparties.counterpartyId,
+        name: counterparties.name,
+        isPrimary: contractCounterparties.isPrimary,
+      })
+      .from(contractCounterparties)
+      .innerJoin(counterparties, eq(counterparties.id, contractCounterparties.counterpartyId))
+      .where(eq(contractCounterparties.contractId, contractId));
+  }
+
+  /** How many live or archived counterparties carry one name, any case. */
+  async function namedCount(name: string) {
+    return (
+      await harness.db
+        .select({ id: counterparties.id })
+        .from(counterparties)
+        .where(eq(counterparties.name, name))
+    ).length;
+  }
+
+  it("makes the converting person Owner even when someone else was assigned to triage", async () => {
+    const request = await submit("Another person completes triage");
+    const assigned = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/requests/${request.number}/assignee`,
+      cookies: memberCookies,
+      payload: { assigneeId: memberId },
+    });
+    expect(assigned.statusCode, assigned.body).toBe(200);
+    const res = await convert(
+      request.number,
+      { title: "Converted by another person" },
+      otherMemberCookies,
+    );
+    expect(res.statusCode, res.body).toBe(200);
+    const contract = await contractNumbered(res.json().request.convertedContract.number as number);
+    // A contract holds no creator column; the CTR-004 creator row is
+    // the provenance, and the Owner is that same person.
+    const [creator] = await harness.db
+      .select({ userId: contractTeam.userId })
+      .from(contractTeam)
+      .where(and(eq(contractTeam.contractId, contract.id), eq(contractTeam.role, "creator")));
+    expect(contract.managerId).toBe(creator!.userId);
+    expect(contract.managerId).not.toBe(memberId);
+    expect(contract.managerId).not.toBeNull();
+  });
+
+  it("creates an unknown counterparty by name and links it as the primary", async () => {
+    const request = await submit("A new name on the other side");
+    const before = await namedCount("Helix Labs GmbH");
+    const res = await convert(request.number, {
+      title: "Helix Labs NDA",
+      counterpartyName: "  Helix Labs GmbH  ",
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    const contract = await contractNumbered(res.json().request.convertedContract.number as number);
+
+    const parties = await partiesOn(contract.id);
+    expect(parties).toHaveLength(1);
+    expect(parties[0]).toMatchObject({ name: "Helix Labs GmbH", isPrimary: true });
+    expect(await namedCount("Helix Labs GmbH")).toBe(before + 1);
+
+    // The add route's own entry, `created` included, so the feed reads
+    // "added Helix Labs GmbH (new)" exactly as it would after a manual add.
+    const entry = (await entriesOn("contract", contract.id)).find(
+      (row) => row.action === "contract.counterparty_added",
+    );
+    expect(entry?.payload).toMatchObject({
+      counterparty: "Helix Labs GmbH",
+      isPrimary: true,
+      created: true,
+    });
+  });
+
+  it("links a name we already hold, matched without regard to case, and creates nothing", async () => {
+    const [held] = await harness.db
+      .insert(counterparties)
+      .values({ name: "Orion Cloud Ltd" })
+      .returning({ id: counterparties.id });
+    const before = (await harness.db.select({ id: counterparties.id }).from(counterparties)).length;
+
+    const request = await submit("A name we already know");
+    const res = await convert(request.number, {
+      title: "Orion Cloud NDA",
+      counterpartyName: "orion cloud ltd",
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    const contract = await contractNumbered(res.json().request.convertedContract.number as number);
+
+    const parties = await partiesOn(contract.id);
+    expect(parties).toEqual([
+      { counterpartyId: held!.id, name: "Orion Cloud Ltd", isPrimary: true },
+    ]);
+    expect((await harness.db.select({ id: counterparties.id }).from(counterparties)).length).toBe(
+      before,
+    );
+    const entry = (await entriesOn("contract", contract.id)).find(
+      (row) => row.action === "contract.counterparty_added",
+    );
+    expect(entry?.payload).toMatchObject({ counterparty: "Orion Cloud Ltd", created: false });
+  });
+
+  it("lands Needed by as one key date, past dates included, and narrates it", async () => {
+    const request = await submit("A deadline the requester stated");
+    const res = await convert(request.number, {
+      title: "Dated NDA",
+      neededBy: "2020-02-29",
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    const contract = await contractNumbered(res.json().request.convertedContract.number as number);
+
+    const dates = await harness.db
+      .select({
+        id: contractKeyDates.id,
+        date: contractKeyDates.date,
+        label: contractKeyDates.label,
+        note: contractKeyDates.note,
+      })
+      .from(contractKeyDates)
+      .where(eq(contractKeyDates.contractId, contract.id));
+    expect(dates).toHaveLength(1);
+    expect(dates[0]).toMatchObject({ date: "2020-02-29", label: "Needed by", note: null });
+
+    const entry = (await entriesOn("contract", contract.id)).find(
+      (row) => row.action === "key_date.added",
+    );
+    expect(entry?.payload).toEqual({
+      keyDateId: dates[0]!.id,
+      label: "Needed by",
+      date: "2020-02-29",
+    });
+  });
+
+  it("refuses a malformed date and an empty name, and writes nothing", async () => {
+    const request = await submit("Badly formed facts");
+    const before = await contractCount();
+    for (const body of [
+      { title: "NDA", neededBy: "next Tuesday" },
+      { title: "NDA", counterpartyName: "   " },
+    ]) {
+      const res = await convert(request.number, body);
+      expect(res.statusCode, res.body).toBe(400);
+    }
+    expect((await stored(request.id)).status).toBe("new");
+    expect(await contractCount()).toBe(before);
+  });
+
+  it("leaves the record without a party or a date when neither is sent", async () => {
+    const request = await submit("Nothing beside the Fields");
+    const res = await convert(request.number, { title: "Bare NDA" });
+    expect(res.statusCode, res.body).toBe(200);
+    const contract = await contractNumbered(res.json().request.convertedContract.number as number);
+    expect(await partiesOn(contract.id)).toEqual([]);
+    expect(
+      await harness.db
+        .select({ id: contractKeyDates.id })
+        .from(contractKeyDates)
+        .where(and(eq(contractKeyDates.contractId, contract.id))),
+    ).toEqual([]);
+    const actions = (await entriesOn("contract", contract.id)).map((row) => row.action);
+    expect(actions).not.toContain("contract.counterparty_added");
+    expect(actions).not.toContain("key_date.added");
   });
 });

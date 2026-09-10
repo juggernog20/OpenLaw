@@ -392,6 +392,9 @@ describe("the Matter record's linked Contracts (M23/6)", () => {
         contractTypeId: "ct-employment",
         customFields: { employee: "Alex Example", probation: 6 },
         isConfidential: false,
+        // The options answer above lists nobody, so the Owner seed has
+        // nobody eligible to land on and the record is born Unassigned.
+        managerId: null,
         matterNumber: 12,
       },
     ]);

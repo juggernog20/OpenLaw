@@ -46,11 +46,18 @@ const MEMBER = {
   displayName: "Legal Member",
   password: "correct-horse-battery",
 } as const;
+/** External counsel: on a team when added, never an Owner (CTR-004). */
+const CONTRIBUTOR = {
+  email: "counsel@example.com",
+  displayName: "Outside Counsel",
+  password: "correct-horse-battery",
+} as const;
 
 let harness: TestHarness;
 let adminCookies: Record<string, string>;
 let memberCookies: Record<string, string>;
 let memberId: string;
+let contributorId: string;
 
 let plainTypeId: string;
 let archivedTypeId: string;
@@ -68,6 +75,9 @@ beforeAll(async () => {
   const member = await provisionUser(harness.app.auth, MEMBER);
   await harness.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, member.id));
   memberId = member.id;
+  const contributor = await provisionUser(harness.app.auth, CONTRIBUTOR);
+  await harness.db.update(users).set({ role: "contributor" }).where(eq(users.id, contributor.id));
+  contributorId = contributor.id;
   adminCookies = await signInCookies(harness.app, ADMIN.email, ADMIN.password);
   memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
 
@@ -147,6 +157,7 @@ async function expectMatchingRefusal(payload: {
   title: string;
   contractTypeId: string;
   customFields?: Record<string, string>;
+  managerId?: string | null;
 }) {
   const overHttp = await createOverHttp(payload);
   // The route has to have refused before there is anything to compare.
@@ -224,6 +235,48 @@ describe("the contract create inside a caller's transaction", () => {
 
     const left = await harness.db.select().from(contracts).where(eq(contracts.title, title));
     expect(left).toHaveLength(0);
+  });
+});
+
+describe("the Owner at birth (CTR-004, focus-group addendum 2026-09-09)", () => {
+  it("is born with the Owner the caller names, through either door", async () => {
+    const overHttp = await createOverHttp({
+      title: "Door owned by route",
+      contractTypeId: plainTypeId,
+      managerId: memberId,
+    });
+    expect(overHttp.statusCode, overHttp.body).toBe(201);
+    const answered = overHttp.json().contract as { manager: { id: string } | null };
+    // The answer names the Owner straight away: the dialog lands on the
+    // record, and the record must not read Unassigned for a beat.
+    expect(answered.manager?.id).toBe(memberId);
+
+    const inCaller = await createInCallerTransaction({
+      title: "Door owned by caller",
+      contractTypeId: plainTypeId,
+      managerId: memberId,
+    });
+    expect(inCaller.row.managerId).toBe(memberId);
+  });
+
+  it("stays unassigned when the caller names nobody, and null is that same state", async () => {
+    const overHttp = await createOverHttp({
+      title: "Door explicitly unassigned",
+      contractTypeId: plainTypeId,
+      managerId: null,
+    });
+    expect(overHttp.statusCode, overHttp.body).toBe(201);
+    expect((overHttp.json().contract as { manager: unknown }).manager).toBeNull();
+  });
+
+  it("refuses an Owner who is not a live Member+ user the same way", async () => {
+    const problem = await expectMatchingRefusal({
+      title: "Door owned by counsel",
+      contractTypeId: plainTypeId,
+      managerId: contributorId,
+    });
+    expect(problem.status).toBe(400);
+    expect(problem.detail).toContain("Owner");
   });
 });
 

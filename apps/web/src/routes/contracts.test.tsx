@@ -5,9 +5,9 @@
  * the standard fetch stub: Member+ lands on the list, which shows each
  * contract's C-### reference, title, primary counterparty, type, and
  * status and links to the record by number; the create dialog takes a
- * title and a type and
- * adds the created contract to the list; the show-archived toggle
- * re-reads the list and offers a row-level restore.
+ * title and a type, seeds the Owner with the creator, and lands on the
+ * newborn record; the show-archived toggle re-reads the list and offers
+ * a row-level restore.
  *
  * A Contributor lands on the same list read-only (M9/1): the API
  * answers them exactly the contracts they hold a `contract_team` row
@@ -131,7 +131,8 @@ function contractRow(overrides: Partial<Record<string, unknown>> = {}) {
 }
 
 /** The list loader's two reads plus the mutations under test. The list
- * is stateful: creating adds a row, and the archived read answers with
+ * is stateful: creating adds a row and answers the newborn record's own
+ * read, since the dialog lands there; the archived read answers with
  * the archived rows appended. */
 function listApi(
   live: Record<string, unknown>[],
@@ -141,6 +142,9 @@ function listApi(
   const rows = [...live];
   const creates: unknown[] = [];
   const restores: string[] = [];
+  /** The record the create answered, for the record page the dialog
+   * lands on. The page's other reads take the helpers' empty defaults. */
+  let born: Record<string, unknown> | null = null;
   const handler = (call: StubCall): Response | undefined => {
     if (call.url.pathname === "/api/v1/contracts/options" && call.method === "GET") {
       return json(200, OPTIONS);
@@ -186,7 +190,35 @@ function listApi(
         isConfidential: body.isConfidential ?? false,
       });
       rows.unshift(created);
+      born = created;
       return json(201, { contract: created });
+    }
+    if (born && call.url.pathname === "/api/v1/contracts/43" && call.method === "GET") {
+      return json(200, {
+        // The record read carries what a list row does not: the signing
+        // entity (CTR-011), the term (CTR-006), and the AI markers
+        // (CTR-008), all at their newborn defaults.
+        contract: {
+          ...born,
+          entity: null,
+          termType: "fixed",
+          effectiveDate: null,
+          expiryDate: null,
+          renewalPeriodMonths: null,
+          noticePeriodDays: null,
+          noticeDeadline: null,
+          daysRemaining: null,
+          renewalPendingConfirmation: false,
+          proposedRenewalExpiry: null,
+          aiUnverified: null,
+        },
+        fields: [],
+        customFieldRefs: { users: [], entities: [] },
+        team: [],
+        counterparties: [],
+        renewals: [],
+        analysis: { available: false, latestRun: null },
+      });
     }
     const restore = /^\/api\/v1\/contracts\/(\d+)\/restore$/.exec(call.url.pathname);
     if (restore && call.method === "POST") {
@@ -352,7 +384,7 @@ describe("the /contracts destination", () => {
     expect(await screen.findByText("No contracts yet")).toBeInTheDocument();
   });
 
-  it("creates a contract from a title and a type, and shows it in the list", async () => {
+  it("creates a contract from a title and a type, and lands on the newborn C-number", async () => {
     const api = listApi([]);
     let uploaded = false;
     stubApi({
@@ -373,6 +405,9 @@ describe("the /contracts destination", () => {
     await openCreateDialog(user);
     await user.type(screen.getByLabelText(/^Title\*?$/), "Globex NDA");
     await user.selectOptions(screen.getByLabelText(/^Contract type\*?$/), "t-nda");
+    // The Owner starts on the person creating it (CTR-004 focus-group
+    // addendum, 2026-09-09): nobody selects themselves.
+    expect(screen.getByLabelText("Owner")).toHaveValue(MEMBER.id);
     await user.upload(
       screen.getByLabelText("Attach documents"),
       new File(["NDA"], "nda.txt", { type: "text/plain" }),
@@ -381,14 +416,36 @@ describe("the /contracts destination", () => {
 
     await waitFor(() =>
       expect(api.creates).toEqual([
-        { title: "Globex NDA", contractTypeId: "t-nda", customFields: {}, isConfidential: false },
+        {
+          title: "Globex NDA",
+          contractTypeId: "t-nda",
+          customFields: {},
+          isConfidential: false,
+          // Seeded with the creator (CTR-004 focus-group addendum).
+          managerId: MEMBER.id,
+        },
       ]),
     );
     await waitFor(() => expect(uploaded).toBe(true));
-    expect(await screen.findByRole("link", { name: "Globex NDA" })).toHaveAttribute(
-      "href",
-      "/contracts/43",
-    );
+    // Straight to the record, the way Matters land on theirs.
+    expect((await screen.findAllByText("C-43")).length).toBeGreaterThan(0);
+  });
+
+  it("lets the creator clear the seeded Owner, and posts null for Unassigned", async () => {
+    const api = listApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts");
+    const user = userEvent.setup();
+
+    await openCreateDialog(user);
+    await user.type(screen.getByLabelText(/^Title\*?$/), "Nobody's NDA");
+    await user.selectOptions(screen.getByLabelText(/^Contract type\*?$/), "t-nda");
+    await user.selectOptions(screen.getByLabelText("Owner"), "");
+    await user.click(screen.getByRole("button", { name: "Create" }));
+
+    // Unassigned stays a real state: null on the wire, not a missing key.
+    await waitFor(() => expect(api.creates).toHaveLength(1));
+    expect(api.creates[0]).toMatchObject({ managerId: null });
   });
 
   it("offers an optional reachable Matter and otherwise leaves creation standalone", async () => {
@@ -423,6 +480,7 @@ describe("the /contracts destination", () => {
           contractTypeId: "t-nda",
           customFields: {},
           isConfidential: false,
+          managerId: MEMBER.id,
           matterNumber: 12,
         },
       ]),
@@ -452,6 +510,7 @@ describe("the /contracts destination", () => {
           contractTypeId: "t-nda",
           customFields: {},
           isConfidential: true,
+          managerId: MEMBER.id,
         },
       ]),
     );
@@ -507,6 +566,7 @@ describe("the /contracts destination", () => {
           contractTypeId: "t-msa",
           customFields: { governing_law: "England & Wales", notes: "Annual review" },
           isConfidential: false,
+          managerId: MEMBER.id,
         },
       ]),
     );

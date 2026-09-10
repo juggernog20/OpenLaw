@@ -19,7 +19,20 @@
  * **The record is born ordinary** through its module's create callable:
  * its own sequence, default open state, no team beyond the
  * creator row, and no Confidential flag inherited from anywhere. The one thing it
- * defaults from the Request is its urgency as priority.
+ * defaults from the Request is its urgency as priority. The converting
+ * person is its Matter Manager or Contract Owner (the INT-002
+ * 2026-09-06 and 2026-09-09 addenda).
+ *
+ * **Two facts the form collects are not Fields on the record** (the
+ * INT-002 2026-09-09 focus-group addendum). The other side of a Contract is
+ * a `contract_counterparties` row and a deadline is a key date, so no
+ * slug intersection could carry them. The dialog draws both as its own
+ * controls, prefilled from the seeded request fields, and sends them as
+ * `counterpartyName` and `neededBy`. The server lands what the body
+ * says and never reads the slugs: a counterparty is found or created
+ * under CTR-011's name lock and linked primary, and the date becomes
+ * one "Needed by" key date on either record. A matter has no
+ * counterparty model, so a name on that arm is refused.
  *
  * **Both records narrate it** (DD-017). `request.converted` on the ask
  * names the permanent reference it became; the module's
@@ -61,19 +74,24 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
+  contractCounterparties,
+  contractKeyDates,
   contractTypeFields,
   contractTypes,
   eq,
+  matterKeyDates,
   matterTypeFields,
   matterTypes,
   requestTypes,
   SEVERITY_LEVELS,
   requests,
   type CustomFieldValue,
+  type Transaction,
 } from "@openlaw/db";
 import { MAX_CONTRACT_TITLE_LENGTH, MAX_MATTER_TITLE_LENGTH } from "@openlaw/shared";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
+import { CounterpartyNameSchema, findOrCreateCounterparty } from "../../lib/counterparty-link.js";
 import { CustomFieldsInput, selectAttachedFields } from "../../lib/custom-fields.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { createContract } from "../contracts/create.js";
@@ -88,6 +106,13 @@ import { moveThread } from "./move-thread.js";
 import { withPromotedPaper } from "./promote-paper.js";
 import { liveTargetContractType, liveTargetMatterType, StaffRequestSchema } from "./projection.js";
 import type { ConversionRecordReference } from "./record-reference.js";
+
+/**
+ * The label the "Needed by" key date is born with. Stored text, like a
+ * template key date's label: the requester stated a date, and this is
+ * the record's word for what that date was.
+ */
+const NEEDED_BY_LABEL = "Needed by";
 
 export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
@@ -105,10 +130,14 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
           "never both. The record is born through its ordinary create callable " +
           "with the title seeded from the Request summary, urgency defaulting " +
           "priority unless overridden, the Request description, risk unset, the converting " +
-          "person as Matter Manager, one creator row, and no confidential " +
+          "person as Matter Manager or Contract Owner, one creator row, and no confidential " +
           "flag. Matching collected values carry server-side; values with no " +
           "field remain on the Request; missing required fields and dead " +
           "references are refused by name and can be answered in customFields. " +
+          "counterpartyName, contract conversions only, finds or creates the live " +
+          "counterparty of that name (case-insensitive) and links it as the primary; " +
+          'a matter conversion refuses it with 400. neededBy lands one "Needed by" ' +
+          "key date on either record, past dates included. " +
           "Matter conversions may apply a live template for the confirmed type; " +
           "carried values and triager answers override its defaults. " +
           "Both records narrate the conversion and requestStatusChanged raises " +
@@ -139,6 +168,13 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
              * here; a slug the target type does not attach is refused. */
             customFields: CustomFieldsInput.optional(),
             priority: z.enum(SEVERITY_LEVELS).optional(),
+            /** The other side, by name, on the contract arm only. The
+             * dialog prefills it from the request form's "Counterparty
+             * name" field; the seam reads only what is sent here. */
+            counterpartyName: CounterpartyNameSchema.optional(),
+            /** The requester's deadline as an ISO civil date. Becomes
+             * one "Needed by" key date on either record. */
+            neededBy: z.iso.date().optional(),
           })
           .refine((body) => !(body.contractTypeId && body.matterTypeId), {
             message: "Name either a contract type or a matter type, never both.",
@@ -163,6 +199,8 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
       const chosenMatterTypeId = request.body.matterTypeId;
       const chosenTemplateId = request.body.templateId;
       const answers = request.body.customFields;
+      const counterpartyName = request.body.counterpartyName;
+      const neededBy = request.body.neededBy;
 
       // The promotion's wrapper sits **outside** the transaction and the
       // disposition alike, because what it owns happens on either side
@@ -221,6 +259,12 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
             if (target.module === "contract" && chosenTemplateId !== undefined) {
               throw httpError(400, "A matter template can only be applied to a matter conversion.");
             }
+            if (target.module === "matter" && counterpartyName !== undefined) {
+              throw httpError(
+                400,
+                "A counterparty can only be named on a contract conversion — a matter has no counterparty.",
+              );
+            }
             if (title === "") {
               throw httpError(
                 400,
@@ -264,6 +308,10 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                     description: row.description,
                     customFields,
                     priority: request.body.priority ?? row.urgency,
+                    // The Contract Owner, the Matter Manager's sibling
+                    // (CTR-004). Self-assignment narrates nothing beyond
+                    // `contract.created`, as the matter arm does.
+                    managerId: request.user.id,
                   })
                 : await createMatter(tx, {
                     actorId: request.user.id,
@@ -305,6 +353,22 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
               actorId: request.user.id,
               actorName: request.user.displayName,
             });
+
+            // The two facts that are not Fields, landed as the rows they
+            // are. After the paper, so the counterparty name's advisory
+            // lock spans two inserts and the commit rather than the blob
+            // copies above. The contract arm was refused above for a
+            // matter, so a name here is always on a contract.
+            if (counterpartyName !== undefined) {
+              await linkPrimaryCounterparty(tx, {
+                contract: { id: born.row.id, number: born.row.number, title: born.row.title },
+                name: counterpartyName,
+                actorId: request.user.id,
+              });
+            }
+            if (neededBy !== undefined) {
+              await addNeededByKeyDate(tx, { record, date: neededBy, actorId: request.user.id });
+            }
 
             // CMT-001's thread, moved onto the record beside the paper
             // (#422). Tiers are preserved because the write does not
@@ -381,6 +445,71 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 };
+
+/**
+ * Puts the named organization on a newborn contract as its primary
+ * (CTR-011). The contract has no parties yet, so the first-party rule
+ * the add route applies holds by construction, and the entry is the
+ * add route's own, `created` included.
+ */
+async function linkPrimaryCounterparty(
+  tx: Transaction,
+  input: {
+    contract: { id: string; number: number; title: string };
+    name: string;
+    actorId: string;
+  },
+): Promise<void> {
+  const { counterparty: party, born } = await findOrCreateCounterparty(tx, input.name);
+  await tx.insert(contractCounterparties).values({
+    contractId: input.contract.id,
+    counterpartyId: party.id,
+    isPrimary: true,
+  });
+  await recordActivity(tx, {
+    entityType: "contract",
+    entityId: input.contract.id,
+    actorId: input.actorId,
+    action: "contract.counterparty_added",
+    visibility: RECORD_ACTIVITY_TIER,
+    payload: {
+      number: input.contract.number,
+      title: input.contract.title,
+      counterparty: party.name,
+      isPrimary: true,
+      created: born,
+    },
+  });
+}
+
+/**
+ * One "Needed by" key date on either record, narrated the way the key
+ * date routes narrate theirs. A past date still lands: it is a fact the
+ * requester stated, and the deadline surfaces will say it is behind us.
+ */
+async function addNeededByKeyDate(
+  tx: Transaction,
+  input: { record: ConversionRecordReference; date: string; actorId: string },
+): Promise<void> {
+  const [created] =
+    input.record.module === "contract"
+      ? await tx
+          .insert(contractKeyDates)
+          .values({ contractId: input.record.id, date: input.date, label: NEEDED_BY_LABEL })
+          .returning({ id: contractKeyDates.id })
+      : await tx
+          .insert(matterKeyDates)
+          .values({ matterId: input.record.id, date: input.date, label: NEEDED_BY_LABEL })
+          .returning({ id: matterKeyDates.id });
+  await recordActivity(tx, {
+    entityType: input.record.module,
+    entityId: input.record.id,
+    actorId: input.actorId,
+    action: "key_date.added",
+    visibility: RECORD_ACTIVITY_TIER,
+    payload: { keyDateId: created!.id, label: NEEDED_BY_LABEL, date: input.date },
+  });
+}
 
 /** Explicit choices override the Request type; omitted choices use its live default. */
 type ConversionTarget =

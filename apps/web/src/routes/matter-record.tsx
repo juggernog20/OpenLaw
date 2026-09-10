@@ -62,6 +62,7 @@ import { CreateMatterDialog } from "../components/matters/create-matter-dialog";
 import { DocPanel } from "../components/documents/doc-panel";
 import { DocumentsCard } from "../components/documents/documents-card";
 import { PageTitle } from "../components/page-title";
+import { RecordNotFoundPage, type RecordNotFound } from "./not-found";
 import { AppShell } from "../components/shell/app-shell";
 import { RecordApplets } from "../components/shell/record-applets";
 import { RecordTabs } from "../components/shell/record-tabs";
@@ -135,6 +136,10 @@ export async function matterRecordLoader({ params, request }: LoaderFunctionArgs
         )
       : Promise.resolve(null),
   ]);
+  // A number nobody holds and a Matter this viewer cannot open are the
+  // same 404 (DD-013, DD-014). Both draw a page that says so; every
+  // other failure still throws to the error boundary.
+  if (record.response.status === 404) return { notFound: true as const, user, number };
   if (!record.data || !relations.data || !linkedContracts.data || !keyDates.data || !tasks.data) {
     throw new Error("The matter could not be read.");
   }
@@ -182,8 +187,39 @@ type FieldKey =
   | "isConfidential"
   | `field:${string}`;
 
+type MatterRecordData = Exclude<
+  ReturnType<typeof useLoaderData<typeof matterRecordLoader>>,
+  RecordNotFound
+>;
+
 export function MatterRecordPage() {
-  const loader = useLoaderData<typeof matterRecordLoader>();
+  const loaded = useLoaderData<typeof matterRecordLoader>();
+  const intl = useIntl();
+  if (loaded.notFound) {
+    return (
+      <RecordNotFoundPage
+        user={loaded.user}
+        title={intl.formatMessage({
+          id: "notFound.matter.title",
+          defaultMessage: "Matter not found",
+        })}
+        body={
+          <FormattedMessage
+            id="notFound.matter.body"
+            defaultMessage="{reference} does not exist, or you cannot open it."
+            values={{ reference: matterReference(intl, loaded.number) }}
+          />
+        }
+        backTo="/matters"
+        backLabel={<FormattedMessage id="notFound.matter.back" defaultMessage="Back to Matters" />}
+      />
+    );
+  }
+  return <MatterRecord />;
+}
+
+function MatterRecord() {
+  const loader = useLoaderData() as MatterRecordData;
   const { user, matterTypes, matterStatuses, users } = loader;
   const intl = useIntl();
   const navigate = useNavigate();
@@ -1182,6 +1218,7 @@ export function MatterRecordPage() {
             matterTypes={matterTypes}
             users={users}
             entities={loader.entities.map((entity) => ({ id: entity.id, label: entity.legalName }))}
+            viewerId={user.id}
             parent={{ number: saved.number, title: saved.title }}
             onOpenChange={setSubMatterOpen}
             onCreated={(matter) => void navigate(`/matters/${matter.number}`)}

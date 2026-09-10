@@ -69,6 +69,8 @@ import {
 } from "lucide-react";
 import { defineMessage, type IntlShape, type MessageDescriptor } from "react-intl";
 import type { paths } from "@openlaw/api-client";
+import { REQUEST_OUTCOMES } from "@openlaw/shared";
+import { requesterStatusLabel, type RequestStatus } from "./requests";
 
 /**
  * The staff list's own response, which the portal list's matches
@@ -219,13 +221,20 @@ const ARMS: Readonly<Record<string, Arm>> = {
     }),
   },
   // Group 2 — ambient movement on records you are on.
+  // Names the new status when the payload carries it (the NOT-005
+  // 2026-09-09 amendment). A row written before `to` was snapshotted
+  // still reads, through the arm that says only that it changed.
   "contract.status_changed": {
     icon: GitCommitHorizontal,
     message: defineMessage({
       id: "notifications.contract.statusChanged",
       defaultMessage:
+        "{hasStatus, select, yes {" +
+        "{hasActor, select, yes {{actor} changed the status of {contract} to {status}} " +
+        "other {{contract} is now {status}}}} " +
+        "other {" +
         "{hasActor, select, yes {{actor} changed the status of {contract}} " +
-        "other {The status of {contract} changed}}",
+        "other {The status of {contract} changed}}}}",
     }),
   },
   "comment.posted": {
@@ -340,11 +349,17 @@ const ARMS: Readonly<Record<string, Arm>> = {
       defaultMessage: "Legal has received your request {request}",
     }),
   },
+  // Names the new status in the requester's own words (the NOT-005
+  // 2026-09-09 amendment): "changed" on its own told testers nothing.
+  // A row whose `to` this build cannot name falls back to saying only
+  // that it changed.
   "request.status_changed": {
     icon: GitCommitHorizontal,
     message: defineMessage({
       id: "notifications.request.statusChanged",
-      defaultMessage: "The status of your request {request} changed",
+      defaultMessage:
+        "{hasStatus, select, yes {Your request {request} is now {status}} " +
+        "other {The status of your request {request} changed}}",
     }),
   },
   // The one arm here with an actor: a reply is somebody's act, and the
@@ -497,6 +512,32 @@ function hrefFor(item: BellItem, arm: Arm | undefined): string | null {
   return arm?.section ? `/contracts/${number}/${arm.section}` : `/contracts/${number}`;
 }
 
+/** Every status a Request can hold: `new`, then one of the three
+ * outcomes (INT-007). */
+const REQUEST_STATUSES: readonly RequestStatus[] = ["new", ...REQUEST_OUTCOMES];
+
+function isRequestStatus(value: string): value is RequestStatus {
+  return (REQUEST_STATUSES as readonly string[]).includes(value);
+}
+
+/**
+ * The new status a status-change item names, or null.
+ *
+ * Both status-change slugs snapshot `to`. A Request's is the enum, so it
+ * goes through the requester's vocabulary (`requesterStatusLabel`); a
+ * value this build has no word for answers null rather than a raw slug.
+ * A contract's is the label an Administrator chose (CTR-001), so it is
+ * shown as written.
+ */
+function newStatus(intl: IntlShape, item: BellItem): string | null {
+  const to = text(item.payload, "to");
+  if (to === null) return null;
+  if (item.entityType === "request") {
+    return isRequestStatus(to) ? requesterStatusLabel(intl, to) : null;
+  }
+  return to;
+}
+
 /**
  * One item, narrated. Reads every payload key defensively; never throws;
  * a slug with no arm falls through to {@link UNKNOWN}.
@@ -513,6 +554,7 @@ export function narrateNotification(intl: IntlShape, item: BellItem): NarratedNo
     };
   }
   const actor = text(item.payload, "actorName");
+  const status = newStatus(intl, item);
   return {
     icon: arm.icon,
     sentence: intl.formatMessage(arm.message, {
@@ -526,8 +568,11 @@ export function narrateNotification(intl: IntlShape, item: BellItem): NarratedNo
       request: record,
       obligation: text(item.payload, "label") ?? intl.formatMessage(UNNAMED_OBLIGATION),
       actor: actor ?? "",
-      // Every arm gets this whether or not its sentence selects on it.
+      // Every arm gets these whether or not its sentence selects on
+      // them.
       hasActor: actor ? "yes" : "no",
+      status: status ?? "",
+      hasStatus: status ? "yes" : "no",
     }),
     href,
   };

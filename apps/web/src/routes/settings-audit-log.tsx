@@ -42,7 +42,10 @@ import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { Download, Lock } from "lucide-react";
 import { api } from "../lib/api";
 import { narrateActivity } from "../lib/activity";
+import { contractReference } from "../lib/contracts";
 import { dayBounds, formatLongDateTime, formatRelativeOrShort } from "../lib/format";
+import { matterReference } from "../lib/matters";
+import { requestReference } from "../lib/requests";
 import { CONTROL_CLASS } from "../lib/form-controls";
 import { registerSearchTarget } from "../lib/keyboard";
 import { requireUser } from "../lib/session";
@@ -60,6 +63,9 @@ type LogResponse =
 /** One entry as the audit log answers it — wider than a record feed's,
  * because this surface has no entity scope and no tier filter. */
 type AuditEntry = LogResponse["entries"][number];
+
+/** The record an entry hangs off: its number where it has one, and its title. */
+type EntityRef = NonNullable<AuditEntry["entityRef"]>;
 
 type EntityType = AuditEntry["entityType"];
 type Tier = AuditEntry["visibility"];
@@ -142,6 +148,32 @@ function queryFrom(filters: Filters): Record<string, string> {
 
 /** What a record type reads as. `other` covers a type this build does
  * not know, which an append-only table can still be holding. */
+/**
+ * The record's name as the rest of the product speaks it: the numbered
+ * reference each module already formats, then the title. A record with
+ * no number is its title.
+ */
+function entityRefLabel(intl: IntlShape, entityType: string, ref: EntityRef): string {
+  const reference =
+    ref.number === null
+      ? null
+      : entityType === "contract"
+        ? contractReference(intl, ref.number)
+        : entityType === "matter"
+          ? matterReference(intl, ref.number)
+          : entityType === "request"
+            ? requestReference(intl, ref.number)
+            : null;
+  if (reference === null) return ref.title;
+  return intl.formatMessage(
+    {
+      id: "audit.entityRef",
+      defaultMessage: "{reference} · {title}",
+    },
+    { reference, title: ref.title },
+  );
+}
+
 function entityTypeLabel(intl: IntlShape, entityType: string): string {
   return intl.formatMessage(
     {
@@ -587,6 +619,13 @@ function EntryRow({ entry }: Readonly<{ entry: AuditEntry }>) {
       </td>
       <td className="px-3 py-2.5 align-top text-sm text-muted">
         <span className="block">{entityTypeLabel(intl, entry.entityType)}</span>
+        {/* The record by the name a person knows it by: C-42 and its
+            title, or the title alone where there is no number. */}
+        {entry.entityRef && (
+          <span className="block text-primary">
+            {entityRefLabel(intl, entry.entityType, entry.entityRef)}
+          </span>
+        )}
         {/* The id is what an auditor quotes back, so it is on screen and
             not only in the export. */}
         {entry.entityId !== null && (
