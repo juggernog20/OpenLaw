@@ -3545,84 +3545,90 @@ function ValueField({
         {marker}
         <StatusNote status={status} detail={error} />
       </div>
-      <div
-        role="group"
-        aria-labelledby="contract-value-label"
-        className="flex flex-wrap items-center gap-2"
-        // Focus moving between the three controls stays inside one
-        // field, so only focus leaving the group commits it.
-        onBlur={(event) => {
-          if (event.currentTarget.contains(event.relatedTarget)) return;
-          commit();
-        }}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            // The record page is not a form; Enter here means commit.
-            event.preventDefault();
+      {/* The review controls sit beside the group, never inside it.
+          The group takes Enter as a commit and cancels the key, so a
+          button within it could never be pressed with the keyboard.
+          The group names the value's three controls and nothing else. */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div
+          role="group"
+          aria-labelledby="contract-value-label"
+          className="flex flex-1 flex-wrap items-center gap-2"
+          // Focus moving between the three controls stays inside one
+          // field, so only focus leaving the group commits it.
+          onBlur={(event) => {
+            if (event.currentTarget.contains(event.relatedTarget)) return;
             commit();
-          }
-          if (event.key === "Escape") revert();
-        }}
-      >
-        <AiField active={Boolean(marker)} className="w-40">
-          <Input
-            id="contract-value-amount"
-            type="number"
-            inputMode="decimal"
-            min={0}
-            step={step}
-            disabled={frozen}
-            aria-label={intl.formatMessage({
-              id: "contracts.value.amount",
-              defaultMessage: "Amount",
-            })}
-            value={draft.amount}
-            onChange={(event) =>
-              setDraft((current) => ({ ...current, amount: event.target.value }))
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              // The record page is not a form; Enter here means commit.
+              event.preventDefault();
+              commit();
             }
-          />
-        </AiField>
-        <AiField active={Boolean(marker)} className="w-56">
-          <CurrencySelect
-            id="contract-value-currency"
-            className="w-full"
-            disabled={frozen}
-            aria-label={intl.formatMessage({
-              id: "contracts.value.currency",
-              defaultMessage: "Currency",
-            })}
-            value={draft.currency}
-            onValueChange={(currency) => setDraft((current) => ({ ...current, currency }))}
-            placeholder={intl.formatMessage({
-              id: "contracts.value.currencyPlaceholder",
-              defaultMessage: "Currency…",
-            })}
-          />
-        </AiField>
-        <AiField active={Boolean(marker)} className="w-40">
-          <select
-            id="contract-value-cadence"
-            className={CONTROL_CLASS}
-            disabled={frozen}
-            aria-label={intl.formatMessage({
-              id: "contracts.value.cadence",
-              defaultMessage: "Cadence",
-            })}
-            value={draft.cadence}
-            onChange={(event) =>
-              setDraft((current) => ({ ...current, cadence: event.target.value as ValueCadence }))
-            }
-          >
-            {/* No empty option: an amount always says what it is per, and
+            if (event.key === "Escape") revert();
+          }}
+        >
+          <AiField active={Boolean(marker)} className="w-40">
+            <Input
+              id="contract-value-amount"
+              type="number"
+              inputMode="decimal"
+              min={0}
+              step={step}
+              disabled={frozen}
+              aria-label={intl.formatMessage({
+                id: "contracts.value.amount",
+                defaultMessage: "Amount",
+              })}
+              value={draft.amount}
+              onChange={(event) =>
+                setDraft((current) => ({ ...current, amount: event.target.value }))
+              }
+            />
+          </AiField>
+          <AiField active={Boolean(marker)} className="w-56">
+            <CurrencySelect
+              id="contract-value-currency"
+              className="w-full"
+              disabled={frozen}
+              aria-label={intl.formatMessage({
+                id: "contracts.value.currency",
+                defaultMessage: "Currency",
+              })}
+              value={draft.currency}
+              onValueChange={(currency) => setDraft((current) => ({ ...current, currency }))}
+              placeholder={intl.formatMessage({
+                id: "contracts.value.currencyPlaceholder",
+                defaultMessage: "Currency…",
+              })}
+            />
+          </AiField>
+          <AiField active={Boolean(marker)} className="w-40">
+            <select
+              id="contract-value-cadence"
+              className={CONTROL_CLASS}
+              disabled={frozen}
+              aria-label={intl.formatMessage({
+                id: "contracts.value.cadence",
+                defaultMessage: "Cadence",
+              })}
+              value={draft.cadence}
+              onChange={(event) =>
+                setDraft((current) => ({ ...current, cadence: event.target.value as ValueCadence }))
+              }
+            >
+              {/* No empty option: an amount always says what it is per, and
               a one-off is a cadence, not the absence of one (CTR-010). */}
-            {VALUE_CADENCES.map((cadence) => (
-              <option key={cadence} value={cadence}>
-                {cadenceLabel(intl, cadence)}
-              </option>
-            ))}
-          </select>
-        </AiField>
-        <span className="ms-auto flex items-center gap-2">{confirmation}</span>
+              {VALUE_CADENCES.map((cadence) => (
+                <option key={cadence} value={cadence}>
+                  {cadenceLabel(intl, cadence)}
+                </option>
+              ))}
+            </select>
+          </AiField>
+        </div>
+        <span className="flex items-center gap-2">{confirmation}</span>
       </div>
       {/* Only once there is a value to read back. Empty, the three
           controls are the whole field: they already say the amount is

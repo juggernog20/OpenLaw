@@ -1365,6 +1365,54 @@ describe("the /contracts/:number record page", () => {
       expect(trigger).toHaveFocus();
     });
 
+    // The Value field's three controls sit in a group that takes Enter
+    // as a commit and cancels the key. A review button inside that
+    // group would be unreachable from the keyboard (WCAG 2.1.1), so
+    // both of them sit beside it.
+    it.each([
+      ["View AI evidence for Value", "evidence"],
+      ["Confirm", "confirm"],
+    ])("presses the Value field's %s button with Enter", async (name, expected) => {
+      const api = recordApi(
+        contractRow({
+          value: { amount: 12_500_000, currency: "USD", cadence: "annually" },
+          aiUnverified: { value: { runId: "value-run", writtenAt: "2026-08-01T00:00:00.000Z" } },
+        }),
+        undefined,
+        undefined,
+        undefined,
+        { available: true, latestRun: analysisRun({ id: "value-run" }) },
+      );
+      const asked: string[] = [];
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call) => {
+          if (call.url.pathname.endsWith("/analysis/value-run")) {
+            asked.push("evidence");
+            return json(200, {
+              documentId: "source-doc",
+              run: analysisRun({
+                id: "value-run",
+                outcome: { written: ["value"], kept: [], invalid: [], unsupported: [] },
+              }),
+            });
+          }
+          if (call.url.pathname.endsWith("/analysis/confirm")) asked.push("confirm");
+          return api.handler(call);
+        },
+      });
+      renderAt("/contracts/42");
+      const user = userEvent.setup();
+      const button = await screen.findByRole("button", { name });
+      await user.click(screen.getByLabelText("Amount"));
+      await user.tab();
+      button.focus();
+      await user.keyboard("{Enter}");
+      await waitFor(() => expect(asked).toContain(expected));
+      // The value was never touched, so Enter left it alone.
+      expect(api.posts.filter((post) => post.startsWith("value"))).toEqual([]);
+    });
+
     it("removes one marker from the confirmation response", async () => {
       const outcome = {
         written: ["term_type", "value"],
@@ -8264,6 +8312,78 @@ describe("the doc panel (M12/2)", () => {
       }
     },
   );
+
+  // A page is drawn again on a zoom step, and released and redrawn
+  // whenever it leaves and re-enters the draw margin. The reader asked
+  // to be taken to the citation once; a redraw must not drag them back
+  // to it from wherever they have read on to.
+  it("centres a citation once and leaves the reader there through a redraw", async () => {
+    const quote = "A second termination right appears here.";
+    const scroll = vi.spyOn(Element.prototype, "scrollIntoView");
+    const centred = () =>
+      scroll.mock.calls.filter((call) => typeof call[0] === "object" && call[0]?.block === "center")
+        .length;
+    const record = recordApi(
+      contractRow({ aiUnverified: { term_type: { runId: "citation-run" } } }),
+    );
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/contracts/42/documents")
+          return json(200, { documents: [document()], nextCursor: null });
+        if (call.url.pathname === "/api/v1/contracts/42/analysis/citation-run")
+          return json(200, {
+            documentId: "pdoc-1",
+            run: analysisRun({
+              versionId: "pv-1",
+              outcome: {
+                written: ["term_type"],
+                kept: [],
+                invalid: [],
+                unsupported: [],
+                results: [
+                  { slug: "term_type", evidence: quote, value: "fixed", outcome: "written" },
+                ],
+              },
+            }),
+          });
+        return record.handler(call);
+      },
+    });
+    try {
+      renderAt("/contracts/42");
+      const user = userEvent.setup();
+      await user.click(
+        await screen.findByRole("button", { name: "View AI evidence for Term type" }),
+      );
+      const reading = await panel(/master services agreement, version 1/);
+      await within(reading).findByText("1 of 1");
+      await waitFor(() => expect(centred()).toBe(1));
+
+      await user.click(within(reading).getByRole("button", { name: "Zoom in" }));
+      await waitFor(() => {
+        expect(
+          reading.querySelectorAll('[data-page-number="2"] mark[data-pdf-find-match="0"]').length,
+        ).toBeGreaterThan(0);
+      });
+      expect(centred()).toBe(1);
+
+      // Stepping the find on and back is a fresh ask, and it moves.
+      await user.click(within(reading).getByRole("button", { name: "Find in document" }));
+      await user.clear(within(reading).getByRole("searchbox", { name: "Find in document" }));
+      await user.type(
+        within(reading).getByRole("searchbox", { name: "Find in document" }),
+        "termination right",
+      );
+      await within(reading).findByText("1 of 3");
+      const stepped = centred();
+      await user.click(within(reading).getByRole("button", { name: "Next match" }));
+      await within(reading).findByText("2 of 3");
+      await waitFor(() => expect(centred()).toBeGreaterThan(stepped));
+    } finally {
+      scroll.mockRestore();
+    }
+  });
 
   it("routes Ctrl+F and Cmd+F to document find only while the PDF reader is open", async () => {
     stubApi({ signedIn: MEMBER, extra: panelApi([document()]) });

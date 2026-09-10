@@ -691,10 +691,34 @@ const PdfPage = memo(function PdfPage({
     };
   }, [document, pageNumber, scale, near]);
 
+  /** The match this page has already taken the reader to. A page is
+   * released and drawn again every time it leaves and re-enters the
+   * draw margin, and a zoom step redraws it where it stands. The
+   * highlight below runs on each of those, and scrolling again would
+   * drag the reader back to a passage they had deliberately left. They
+   * asked to be taken to the match once, when they asked for it. */
+  const centred = useRef<string | null>(null);
   useEffect(() => {
     const layer = textLayer.current;
     if (!layer) return;
     highlightTextLayer(layer, findQuery, findMatches, currentFindIndex);
+    const asked = `${findQuery}\u0000${String(currentFindIndex)}`;
+    // Another page holds the current match, or there is no current
+    // match at all: this page has nothing to show for the ask, which
+    // is an answer, so record it and stay put.
+    if (!findMatches.some((match) => match.index === currentFindIndex)) {
+      centred.current = asked;
+      return;
+    }
+    const mark = layer.querySelector<HTMLElement>(
+      `[data-pdf-find-match="${String(currentFindIndex)}"]`,
+    );
+    // The drawing has not landed yet. It bumps the revision when it
+    // does, and brings this effect back with the layer filled in.
+    if (!mark) return;
+    if (centred.current === asked) return;
+    centred.current = asked;
+    mark.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" });
   }, [currentFindIndex, findMatches, findQuery, textLayerRevision]);
 
   // Reports how much of this page's own container is inside the well —
@@ -947,9 +971,6 @@ function highlightTextLayer(
       mark.append(matched);
     }
   }
-  layer
-    .querySelector<HTMLElement>(`[data-pdf-find-match="${currentFindIndex}"]`)
-    ?.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" });
 }
 
 /**
