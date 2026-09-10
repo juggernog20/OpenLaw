@@ -337,6 +337,44 @@ function MatterRecord() {
     ...people,
     ...heldPeople.filter((held) => !people.some((row) => row.id === held.id)),
   ];
+  /** The Entities a Field may newly name, in the order the registry
+   * read answered them. The registry is read once, when the page
+   * loads, but every commit answers with fresh references. A reference
+   * that comes back sealed or archived is the later word about that
+   * Entity, so its stale registry row is dropped here rather than
+   * offered as a choice under a name the viewer may no longer reach. */
+  const liveEntities = useMemo<FieldReference[]>(() => {
+    const overtaken = new Set(
+      customFieldRefs.entities
+        .filter((entity) => entity.restricted || entity.archived)
+        .map((entity) => entity.id),
+    );
+    return loader.entities
+      .filter((entity) => entity.archivedAt === null && !overtaken.has(entity.id))
+      .map((entity) => ({ id: entity.id, label: entity.legalName }));
+  }, [loader.entities, customFieldRefs]);
+  /** One Field's choices: the registry, plus its own saved reference
+   * when the registry left that out. An archived Entity stays
+   * selectable as itself, and a restricted one keeps its mask
+   * (DD-016). The saved reference belongs to the Field that holds it,
+   * so it never becomes a choice on a Field beside it. */
+  function entityChoices(value: CustomFieldValue | undefined): readonly FieldReference[] {
+    const held = customFieldRefs.entities.find((entity) => entity.id === value);
+    if (!held || liveEntities.some((choice) => choice.id === held.id)) return liveEntities;
+    return [
+      ...liveEntities,
+      held.restricted
+        ? {
+            id: held.id,
+            label: intl.formatMessage({
+              id: "entities.restricted",
+              defaultMessage: "Restricted Entity",
+            }),
+            restricted: true,
+          }
+        : { id: held.id, label: held.legalName, archived: held.archived },
+    ];
+  }
   const taskAssignees = useMemo(() => {
     const candidates = [
       ...(saved.manager && !saved.manager.archived ? [saved.manager] : []),
@@ -1112,18 +1150,7 @@ function MatterRecord() {
                           frozen && !(contributor && !archived && field.fieldTag === "business")
                         }
                         people={peopleRefs}
-                        entities={customFieldRefs.entities.map((entity) =>
-                          entity.restricted
-                            ? {
-                                id: entity.id,
-                                label: intl.formatMessage({
-                                  id: "entities.restricted",
-                                  defaultMessage: "Restricted Entity",
-                                }),
-                                restricted: true,
-                              }
-                            : { id: entity.id, label: entity.legalName },
-                        )}
+                        entities={entityChoices(saved.customFields[field.slug])}
                         status={fieldStatus[`field:${field.slug}`] ?? "idle"}
                         error={fieldError[`field:${field.slug}`]}
                         onInvalid={(detail) => note(`field:${field.slug}`, "error", detail)}
@@ -1219,18 +1246,10 @@ function MatterRecord() {
             target={retypeTo}
             values={saved.customFields}
             people={peopleRefs}
-            entities={customFieldRefs.entities.map((entity) =>
-              entity.restricted
-                ? {
-                    id: entity.id,
-                    label: intl.formatMessage({
-                      id: "entities.restricted",
-                      defaultMessage: "Restricted Entity",
-                    }),
-                    restricted: true,
-                  }
-                : { id: entity.id, label: entity.legalName },
-            )}
+            // The dialog asks only for the target type's unanswered
+            // required Fields. No Field in it holds a saved reference,
+            // so the registry is the whole list.
+            entities={liveEntities}
             onOpenChange={(open) => {
               if (!open) setRetypeTo(null);
             }}
@@ -1275,7 +1294,7 @@ function MatterRecord() {
           <CreateMatterDialog
             matterTypes={matterTypes}
             users={users}
-            entities={loader.entities.map((entity) => ({ id: entity.id, label: entity.legalName }))}
+            entities={liveEntities}
             viewerId={user.id}
             parent={{ number: saved.number, title: saved.title }}
             onOpenChange={setSubMatterOpen}
