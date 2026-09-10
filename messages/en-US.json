@@ -9024,7 +9024,7 @@
     "defaultMessage": "Allowed email domains"
   },
   "welcome.portal.empty": {
-    "defaultMessage": "No domains allowed yet — the portal is closed."
+    "defaultMessage": "No domains allowed yet. Magic-link sign-in is unavailable."
   },
   "welcome.portal.enabled": {
     "defaultMessage": "Magic-link sign-in is on"
@@ -9036,13 +9036,13 @@
     "defaultMessage": "The magic-link setting could not be saved."
   },
   "welcome.portal.hint": {
-    "defaultMessage": "Business users sign in with emailed magic links, restricted to the domains you allow. An empty list admits nobody."
+    "defaultMessage": "Business users can sign in with emailed magic links from the domains you allow. An empty list prevents magic-link sign-in."
   },
   "welcome.portal.remove": {
     "defaultMessage": "Remove {domain}"
   },
   "welcome.portal.toggle.hint": {
-    "defaultMessage": "Select to change. Off closes the portal entirely, even for allowed domains."
+    "defaultMessage": "Magic links are required in built-in mode. With OIDC, turning them off requires business users to sign in with SSO."
   },
   "welcome.progress": {
     "defaultMessage": "Step {current} of {total}"
