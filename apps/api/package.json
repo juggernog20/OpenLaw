@@ -21,8 +21,8 @@
     "openapi:emit": "tsx scripts/emit-openapi.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1128.0",
-    "@aws-sdk/lib-storage": "^3.1128.0",
+    "@aws-sdk/client-s3": "^3.1129.0",
+    "@aws-sdk/lib-storage": "^3.1129.0",
     "@azure/identity": "^4.13.2",
     "@azure/storage-blob": "^12.33.0",
     "@better-auth/drizzle-adapter": "~1.7.3",
@@ -40,12 +40,12 @@
     "fast-myers-diff": "3.2.0",
     "fastify": "^5.12.3",
     "fastify-type-provider-zod": "^7.0.0",
-    "nodemailer": "^10.0.1",
+    "nodemailer": "^10.0.2",
     "pg-boss": "^12.30.0",
     "postal-mime": "^3.0.0",
     "sanitize-html": "^2.17.7",
     "uuidv7": "^1.2.1",
-    "zod": "^4.5.4"
+    "zod": "^4.6.1"
   },
   "devDependencies": {
     "@testcontainers/azurite": "^12.1.0",
