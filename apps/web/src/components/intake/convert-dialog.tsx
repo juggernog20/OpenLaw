@@ -159,7 +159,7 @@ export function ConvertDialog({
   const [templateId, setTemplateId] = useState("");
   const [title, setTitle] = useState(String(suggestions.title?.value ?? request.summary));
   const [priority, setPriority] = useState<StaffRequest["urgency"]>(
-    (suggestions.priority?.value as StaffRequest["urgency"]) ?? request.urgency,
+    SEVERITY_LEVELS.find((level) => level === suggestions.priority?.value) ?? request.urgency,
   );
   /** The two facts that are not Fields on the record (INT-002's
    * 2026-09-09 addendum). Seeded once from the seeded request fields,
@@ -193,15 +193,23 @@ export function ConvertDialog({
   const templates = matterTarget?.templates ?? [];
   const selectedTemplate = templates.find((template) => template.id === templateId);
 
-  /** Template defaults sit below both carried Request values and what
-   * the triager types. `drafts` holds only the latter, so changing a
-   * Template changes an untouched default without taking back an edit. */
   /** Puts the boxes a Conversion draft prefilled back to what the manual
    * dialog would have shown, and stops applying the draft. Boxes somebody
    * already edited keep their edit. */
   function dropPreparedValues() {
     for (const slug of Object.keys(suggestions)) {
-      if (human.has(slug)) continue;
+      if (human.has(slug)) {
+        // A confirmed Field has no text edit in drafts yet, but is human-reviewed.
+        if (slug.startsWith("field:") && drafts[slug.slice(6)] === undefined) {
+          const field = targetFields.find((field) => `field:${field.slug}` === slug);
+          if (field)
+            setDrafts((current) => ({
+              ...current,
+              [field.slug]: toDraft(field, suggestions[slug]!.value),
+            }));
+        }
+        continue;
+      }
       if (slug === "title") setTitle(request.summary);
       else if (slug === "priority") setPriority(request.urgency);
       else if (slug === "description") setDescription(request.description ?? "");
@@ -369,9 +377,11 @@ export function ConvertDialog({
     const namedCounterparty = counterpartyName.trim();
     const result = await onConvert({
       title: named,
+      ...(initialDraft && targetModule === "matter" && (!dropped || human.has("description"))
+        ? { description: description.trim() || null }
+        : {}),
       ...(initialDraft && !dropped && targetModule === "matter"
         ? {
-            description: description.trim() || null,
             conversionDraftId: initialDraft.id,
             aiAccepted: Object.keys(suggestions).filter((slug) => marked(slug)),
           }
@@ -562,29 +572,27 @@ export function ConvertDialog({
               </select>
               {marker("matter_type")}
             </AiField>
+            {initialDraft &&
+              targetModule === "matter" &&
+              (!dropped || human.has("description")) && (
+                <AiField active={marked("description")} className="flex flex-col gap-1.5">
+                  <Label htmlFor="convert-description">
+                    <FormattedMessage id="matters.field.description" defaultMessage="Description" />
+                  </Label>
+                  <textarea
+                    id="convert-description"
+                    className={`${CONTROL_CLASS} h-auto min-h-24 py-2`}
+                    value={description}
+                    onChange={(event) => {
+                      humanValue("description");
+                      setDescription(event.target.value);
+                    }}
+                  />
+                  {marker("description")}
+                </AiField>
+              )}
             {initialDraft && !dropped && targetModule === "matter" && (
-              <AiField active={marked("description")} className="flex flex-col gap-1.5">
-                <Label htmlFor="convert-description">
-                  <FormattedMessage id="matters.field.description" defaultMessage="Description" />
-                </Label>
-                <textarea
-                  id="convert-description"
-                  className={CONTROL_CLASS}
-                  value={description}
-                  onChange={(event) => {
-                    humanValue("description");
-                    setDescription(event.target.value);
-                  }}
-                />
-                {marker("description")}
-              </AiField>
-            )}
-            {initialDraft && !dropped && targetModule === "matter" && (
-              <Button
-                type="button"
-                variant="link"
-                onClick={() => setHuman(new Set(Object.keys(suggestions)))}
-              >
+              <Button type="button" variant="link" onClick={dropPreparedValues}>
                 <FormattedMessage id="conversion.manual" defaultMessage="Continue manually" />
               </Button>
             )}

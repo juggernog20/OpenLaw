@@ -180,6 +180,7 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireRole("administrator"),
       schema: {
         operationId: "updateAiWorkflows",
+        summary: "Update AI workflow settings; an empty body changes nothing",
         tags: ["ai-connector"],
         body: WorkflowSettingsSchema.partial().strict(),
         response: { 200: ConnectorEnvelope, default: problemResponse },
@@ -194,16 +195,17 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
           .set(request.body)
           .where(eq(aiConnector.id, current.id))
           .returning();
+        if (!row) throw httpError(500, "The AI connector could not be updated.");
         for (const field of Object.keys(request.body) as (keyof z.infer<
           typeof WorkflowSettingsSchema
         >)[]) {
-          if (current[field] !== row![field])
+          if (current[field] !== row[field])
             await recordActivity(tx, {
               entityType: "system",
               actorId: request.user.id,
               action: "ai_connector.updated",
               visibility: "admin_only",
-              payload: { preset: current.preset, field, old: current[field], new: row![field] },
+              payload: { preset: current.preset, field, old: current[field], new: row[field] },
             });
         }
         return row;

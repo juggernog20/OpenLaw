@@ -85,7 +85,7 @@ export function PreparedConvertDialog({
         if (!open) props.onClose();
       }}
     >
-      <DialogContent>
+      <DialogContent aria-describedby={undefined}>
         <DialogTitle>
           <FormattedMessage id="conversion.draft" defaultMessage="Conversion draft" />
         </DialogTitle>
@@ -97,7 +97,7 @@ export function PreparedConvertDialog({
             />
           ) : (
             <>
-              <LoaderCircle className="animate-spin" aria-hidden="true" size={18} />
+              <LoaderCircle className="animate-spin" aria-hidden="true" size={16} />
               <FormattedMessage
                 id="conversion.gettingMatterReady"
                 defaultMessage="Getting matter ready…"

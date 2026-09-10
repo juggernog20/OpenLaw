@@ -391,6 +391,10 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
           wants("description", body.description?.trim() || null);
         }
         if (body.fieldTag === "legal" && target.fieldTag === "business") {
+          // conversionSources identifies answers as field:<requestId>:<slug>.
+          // JSON citations require this SQL join across draft and Matter maps.
+          // Same-slot values follow the Field tag themselves; only derivatives
+          // in another slot would keep a broader audience after retagging.
           const dependencies = await tx.execute<{ present: boolean }>(sql`
             select exists (
               select 1 from ${matters} m

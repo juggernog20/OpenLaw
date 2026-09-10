@@ -8,10 +8,11 @@ import {
   matterPreparationEnabled,
 } from "../lib/conversion-draft.js";
 import type { AiResolver } from "../lib/ai/resolver.js";
+import type { PipelineLogger } from "./logger.js";
 import type { JobQueue } from "./jobs.js";
 
 export async function handleConversionDraft(
-  deps: { db: Db; resolveAiProvider: AiResolver },
+  deps: { db: Db; resolveAiProvider: AiResolver; log?: PipelineLogger },
   id: string,
 ) {
   const now = new Date();
@@ -30,6 +31,7 @@ export async function handleConversionDraft(
     )
     .returning();
   if (!draft) return;
+  let stage = "authorization";
   try {
     const [actor] = await deps.db.select().from(users).where(eq(users.id, draft.actorId));
     if (
@@ -39,16 +41,21 @@ export async function handleConversionDraft(
       !(await matterPreparationEnabled(deps.db))
     )
       throw new Error("disabled");
+    stage = "sources";
     const context = await conversionContext(deps.db, draft.requestId, draft.targetTypeId);
     if (context.row.status !== "new" || context.snapshot !== draft.snapshot)
       throw new Error("changed");
+    stage = "provider";
     const provider = await deps.resolveAiProvider();
     if (!provider) throw new Error("disabled");
     let timer: NodeJS.Timeout | undefined;
     const answers = await Promise.race([
       provider.extract(context.sources, context.targets),
       new Promise<never>((_, reject) => {
-        timer = setTimeout(() => reject(new Error("timeout")), 125_000);
+        timer = setTimeout(() => {
+          stage = "timeout";
+          reject(new Error("timeout"));
+        }, 125_000);
       }),
     ]).finally(() => clearTimeout(timer));
     const suggestions: Record<string, ConversionSuggestion> = {};
@@ -59,6 +66,7 @@ export async function handleConversionDraft(
       if (proposal) (answer.conflict ? conflicts : suggestions)[answer.slug] = proposal;
     }
     for (const slug of Object.keys(conflicts)) delete suggestions[slug];
+    stage = "freshness";
     const current = await conversionContext(deps.db, draft.requestId, draft.targetTypeId);
     const [currentActor] = await deps.db.select().from(users).where(eq(users.id, draft.actorId));
     if (
@@ -89,6 +97,7 @@ export async function handleConversionDraft(
         ),
       );
   } catch {
+    deps.log?.warn({ draftId: id, stage }, "Matter preparation failed");
     await deps.db
       .update(conversionDrafts)
       .set({

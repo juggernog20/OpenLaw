@@ -42,6 +42,7 @@ export const matters = pgTable(
     priority: text("priority", { enum: SEVERITY_LEVELS }).notNull().default("medium"),
     // Null means risk has not been assessed.
     risk: text("risk", { enum: SEVERITY_LEVELS }),
+    // Null means no retained Unverified value provenance.
     aiUnverified: jsonb("ai_unverified").$type<ConversionProvenanceMap>(),
     customFields: jsonb("custom_fields")
       .$type<Record<string, CustomFieldValue>>()

@@ -587,6 +587,7 @@ export interface paths {
     delete?: never;
     options?: never;
     head?: never;
+    /** Update AI workflow settings; an empty body changes nothing */
     patch: operations["updateAiWorkflows"];
     trace?: never;
   };

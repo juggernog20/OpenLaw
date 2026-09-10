@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { describeAiProviderContract } from "../../testing/ai-provider-contract.js";
 import { createAnthropicProvider } from "./anthropic.js";
 import { createGeminiProvider } from "./gemini.js";
-import { EXTRACTION_BOUND } from "./http.js";
+import { EXTRACTION_BOUND, extractionPrompt } from "./http.js";
 import { createOpenAiCompatibleProvider } from "./openai-compatible.js";
 import { AiUnavailableError } from "./provider.js";
 
@@ -70,7 +70,10 @@ async function startServer(
     }
 
     const serialized = JSON.stringify(body);
-    const reply = serialized.includes("Sources:") ? extractionReply : '{"ok":true}';
+    const reply =
+      serialized.includes("Sources:") || serialized.includes("Contract text:")
+        ? extractionReply
+        : '{"ok":true}';
     response.statusCode = 200;
     response.end(
       JSON.stringify(
@@ -365,3 +368,9 @@ for (const protocol of ["anthropic", "openai", "gemini"] as const) {
     }
   });
 }
+
+it("does not request source IDs from legacy unaddressed text", () => {
+  const prompt = extractionPrompt("A fixed term", [{ slug: "term_type", prompt: "Extract term" }]);
+  expect(prompt).toContain("Contract text:");
+  expect(prompt).not.toContain("sourceId");
+});

@@ -1101,9 +1101,14 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
             priority: "priority",
             matterTypeId: "matter_type",
           }))
-            if (key in body) delete flags[slug];
-          for (const slug of Object.keys(body.customFields ?? {})) delete flags[`field:${slug}`];
-          if (body.matterTypeId !== undefined)
+            if (key in patch) delete flags[slug];
+          for (const slug of Object.keys(body.customFields ?? {}))
+            if (
+              JSON.stringify((patch.customFields ?? target.customFields)[slug]) !==
+              JSON.stringify(target.customFields[slug])
+            )
+              delete flags[`field:${slug}`];
+          if (retyped)
             for (const slug of Object.keys(flags))
               if (slug.startsWith("field:")) delete flags[slug];
           // Only deletions happen above, so a shorter map is a real change.

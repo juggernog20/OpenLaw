@@ -162,13 +162,9 @@ export async function inboxRequestLoader({ params }: LoaderFunctionArgs) {
   // the error boundary: a stale bookmark is not a fault a triager can
   // act on, and the Inbox is where the Requests they can open are.
   if (!Number.isInteger(number) || number < 1) return redirect("/inbox");
-  // The detail, plus the two reads Convert needs to draw a prefilled
-  // contract create (#420). The contract options carry the live contract
-  // types with the fields each attaches (CTR-016) and the people a
-  // required `user` gap field offers; the M7 registry carries the
-  // Entities a required `entity` one offers. Both ride the loader rather
-  // than the dialog, so opening the dialog is instant and still writes
-  // nothing (INT-007).
+  // Load the Request and live creation options before opening Convert.
+  // A failed workflow-settings read falls back to the ordinary manual dialog;
+  // the other reads are required to show reachable, valid creation choices.
   const [res, options, matterOptions, registry, workflow] = await Promise.all([
     api.GET("/api/v1/requests/{number}", { params: { path: { number } } }),
     api.GET("/api/v1/contracts/options"),

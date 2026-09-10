@@ -265,7 +265,7 @@ export function checkedSuggestion(
         ? raw.trim()
         : null;
   else if (answer.slug === "matter_type")
-    value = context.types.some((t) => t.id === raw) ? (raw as string) : null;
+    value = typeof raw === "string" && context.types.some((t) => t.id === raw) ? raw : null;
   else if (answer.slug === "priority")
     value = ["low", "medium", "high", "critical"].includes(String(raw)) ? String(raw) : null;
   else if (answer.slug === "needed_by") {

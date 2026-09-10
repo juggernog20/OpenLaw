@@ -441,7 +441,7 @@
     "defaultMessage": "{actor} created this matter from {request}"
   },
   "activity.matter.fieldConfirmed": {
-    "defaultMessage": "{actor} confirmed an AI-written value"
+    "defaultMessage": "{actor} confirmed the AI-written value for {field}"
   },
   "activity.matter.parentRemoved": {
     "defaultMessage": "{actor} took this Matter out from under {parent}"

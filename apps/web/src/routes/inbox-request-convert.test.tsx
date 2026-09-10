@@ -1042,13 +1042,25 @@ describe("a lost race (INT-007, TECH-020)", () => {
 });
 
 describe("Matter Conversion drafts", () => {
-  function preparedApi(pending = false) {
+  function preparedApi(pending = false, allValues = false) {
     const base = requestApi();
     const draft = {
       id: "draft-1",
       targetTypeId: "mt-dispute",
       state: pending ? "pending" : "ready",
       suggestions: {
+        ...(allValues
+          ? {
+              priority: {
+                value: "critical",
+                citations: [{ sourceId: "message:1", revision: "rev", quote: "urgent" }],
+              },
+              needed_by: {
+                value: "2026-10-02",
+                citations: [{ sourceId: "message:1", revision: "rev", quote: "October 2" }],
+              },
+            }
+          : {}),
         title: {
           value: "Prepared response",
           citations: [{ sourceId: "message:1", revision: "rev", quote: "Prepare a response" }],
@@ -1135,6 +1147,75 @@ describe("Matter Conversion drafts", () => {
     );
     expect(within(dialog).queryByText("Unverified")).toBeNull();
   });
+  it.each(["Continue manually", "Convert to contract instead"])(
+    "%s restores untouched defaults for every prepared value",
+    async (action) => {
+      const user = userEvent.setup();
+      open(preparedApi(false, true));
+      await openDisposition(user, "Convert to matter");
+      await screen.findByDisplayValue("Prepared response");
+      const dialog = screen.getByRole("dialog");
+      expect(within(dialog).getByLabelText(/^Priority/)).toHaveValue("critical");
+      expect(within(dialog).getByLabelText(/^Needed by/)).toHaveValue("2026-10-02");
+      await user.click(within(dialog).getByRole("button", { name: action }));
+      if (action === "Convert to contract instead")
+        await user.selectOptions(within(dialog).getByLabelText(/^Contract type/), "ct-msa");
+      expect(within(dialog).getByLabelText(/^Title/)).toHaveValue("Northwind Labs mutual NDA");
+      expect(within(dialog).getByLabelText(/^Priority/)).toHaveValue("high");
+      expect(within(dialog).getByLabelText(/^Needed by/)).toHaveValue("");
+      expect(within(dialog).getByLabelText(/^Governing law/)).toHaveValue("");
+      expect(within(dialog).queryByText("Unverified")).toBeNull();
+      expect(within(dialog).queryByLabelText("Description")).toBeNull();
+    },
+  );
+  it.each(["Continue manually", "Convert to contract instead"])(
+    "%s preserves human edits while discarding the draft",
+    async (action) => {
+      const user = userEvent.setup();
+      const api = preparedApi(false, true);
+      open(api);
+      await openDisposition(user, "Convert to matter");
+      await screen.findByDisplayValue("Prepared response");
+      const dialog = screen.getByRole("dialog");
+      for (const [label, value] of [
+        [/^Title/, "Human title"],
+        [/^Governing law/, "France"],
+        [/^Description/, "Human description"],
+      ] as const) {
+        const box = within(dialog).getByLabelText(label);
+        await user.clear(box);
+        await user.type(box, value);
+      }
+      await user.selectOptions(within(dialog).getByLabelText(/^Priority/), "low");
+      const date = within(dialog).getByLabelText(/^Needed by/);
+      await user.clear(date);
+      await user.type(date, "2026-11-03");
+      await user.click(within(dialog).getByRole("button", { name: action }));
+      if (action === "Convert to contract instead")
+        await user.selectOptions(within(dialog).getByLabelText(/^Contract type/), "ct-msa");
+      expect(within(dialog).getByLabelText(/^Title/)).toHaveValue("Human title");
+      expect(within(dialog).getByLabelText(/^Priority/)).toHaveValue("low");
+      expect(within(dialog).getByLabelText(/^Needed by/)).toHaveValue("2026-11-03");
+      expect(within(dialog).getByLabelText(/^Governing law/)).toHaveValue("France");
+      expect(within(dialog).queryByText("Unverified")).toBeNull();
+      await user.click(
+        within(dialog).getByRole("button", {
+          name: action === "Continue manually" ? "Convert to matter" : "Convert to contract",
+        }),
+      );
+      await waitFor(() => expect(api.conversions).toHaveLength(1));
+      expect(api.conversions[0]).toMatchObject({
+        title: "Human title",
+        priority: "low",
+        neededBy: "2026-11-03",
+        customFields: { governing_law: "France" },
+      });
+      expect(api.conversions[0]).not.toHaveProperty("conversionDraftId");
+      expect(api.conversions[0]).not.toHaveProperty("aiAccepted");
+      if (action === "Continue manually")
+        expect(api.conversions[0]).toHaveProperty("description", "Human description");
+    },
+  );
   it("keeps manual continuation usable while preparation waits", async () => {
     const user = userEvent.setup();
     const api = preparedApi(true);

@@ -4027,6 +4027,7 @@
     "/api/v1/ai-connector/workflows": {
       "patch": {
         "operationId": "updateAiWorkflows",
+        "summary": "Update AI workflow settings; an empty body changes nothing",
         "tags": ["ai-connector"],
         "requestBody": {
           "required": true,

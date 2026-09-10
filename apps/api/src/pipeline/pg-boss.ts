@@ -173,6 +173,9 @@ export const NOTIFICATION_EMAIL_QUEUE_OPTIONS = {
   retryBackoff: true,
 } as const;
 
+/** One bounded attempt; the durable sweep recovers abandoned preparation. */
+export const CONVERSION_DRAFT_QUEUE_OPTIONS = { retryLimit: 0, expireInSeconds: 180 };
+
 /** One provider call, with the pipeline's three-attempt backoff. */
 export const CONTRACT_ANALYSIS_QUEUE_OPTIONS = {
   expireInSeconds: 300,
@@ -493,8 +496,11 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
     await boss.createQueue(JOB_QUEUES.conversionDraft, {
       policy: "short",
       notify: true,
-      retryLimit: 0,
-      expireInSeconds: 180,
+      ...CONVERSION_DRAFT_QUEUE_OPTIONS,
+    });
+    await boss.updateQueue(JOB_QUEUES.conversionDraft, {
+      notify: true,
+      ...CONVERSION_DRAFT_QUEUE_OPTIONS,
     });
     await boss.createQueue(JOB_QUEUES.contractAnalysis, {
       policy: "short",
@@ -691,7 +697,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
         async (jobs: JobWithMetadata<{ draftId: string }>[]) => {
           for (const job of jobs)
             await handleConversionDraft(
-              { db: handlers.db, resolveAiProvider: handlers.resolveAiProvider },
+              { db: handlers.db, resolveAiProvider: handlers.resolveAiProvider, log },
               job.data.draftId,
             );
         },

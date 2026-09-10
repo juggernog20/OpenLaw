@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import { afterAll, beforeAll, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, expect, it } from "vitest";
 import {
   aiConnector,
   comments,
@@ -9,6 +9,7 @@ import {
   requestTypeFields,
   matters,
   matterTypes,
+  matterTypeFields,
   requestTypes,
   requests,
 } from "@openlaw/db";
@@ -47,6 +48,9 @@ beforeAll(async () => {
     cookies: cast.adminCookies,
     payload: { preset: "openai", model: "fake", apiKey: FAKE_VALID_AI_KEY },
   });
+});
+beforeEach(() => {
+  for (const slug of Object.keys(answers)) delete answers[slug];
 });
 afterAll(async () => {
   await harness?.stop();
@@ -347,4 +351,79 @@ it("checks disablement again at execution without calling AI", async () => {
     .from(conversionDrafts)
     .where(eq(conversionDrafts.id, made.json().draft.id));
   expect(draft!.state).toBe("failed");
+});
+
+it("preserves provenance on no-op Matter resends and clears only edited values", async () => {
+  const [field] = await harness.db
+    .insert(fields)
+    .values({
+      slug: "review_context",
+      displayName: "Review context",
+      moduleScope: "matter",
+      fieldType: "text",
+      fieldTag: "business",
+    })
+    .returning();
+  await harness.db
+    .insert(matterTypeFields)
+    .values({ typeId, fieldId: field!.id, displayOrder: 999, isRequired: false });
+  const row = await ask();
+  const converted = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/requests/${row.number}/convert`,
+    cookies: cast.memberCookies,
+    payload: {
+      title: "Prepared title",
+      matterTypeId: typeId,
+      customFields: { review_context: "Prepared context" },
+    },
+  });
+  expect(converted.statusCode, converted.body).toBe(200);
+  const [request] = await harness.db.select().from(requests).where(eq(requests.id, row.id));
+  const marker = {
+    draftId: "test-provenance",
+    writtenAt: new Date().toISOString(),
+    targetTypeId: typeId,
+  };
+  const flags = {
+    title: marker,
+    description: marker,
+    priority: marker,
+    matter_type: marker,
+    "field:review_context": marker,
+  };
+  const [matter] = await harness.db
+    .update(matters)
+    .set({ aiUnverified: flags })
+    .where(eq(matters.id, request!.convertedMatterId!))
+    .returning();
+  const resend = await harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/matters/${matter!.number}`,
+    cookies: cast.memberCookies,
+    payload: {
+      title: matter!.title,
+      description: matter!.description,
+      priority: matter!.priority,
+      matterTypeId: typeId,
+      customFields: { review_context: "Prepared context" },
+    },
+  });
+  expect(resend.statusCode, resend.body).toBe(200);
+  const [unchanged] = await harness.db.select().from(matters).where(eq(matters.id, matter!.id));
+  expect(unchanged!.aiUnverified).toEqual(flags);
+  expect(unchanged!.updatedAt).toEqual(matter!.updatedAt);
+  const edited = await harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/matters/${matter!.number}`,
+    cookies: cast.memberCookies,
+    payload: { title: "Human title", customFields: { review_context: "Human context" } },
+  });
+  expect(edited.statusCode, edited.body).toBe(200);
+  const [after] = await harness.db.select().from(matters).where(eq(matters.id, matter!.id));
+  expect(after!.aiUnverified).toEqual({
+    description: marker,
+    priority: marker,
+    matter_type: marker,
+  });
 });
