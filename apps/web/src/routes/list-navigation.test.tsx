@@ -201,64 +201,76 @@ describe.each(SURFACES)("$path navigation commits", ({ path, resource, filter, l
       }
     },
   );
-  it("adopts a loader answer from a navigation the list did not start", async () => {
-    let holdRead = false;
-    let answer: (() => void) | undefined;
-    stubApi({
-      signedIn: MEMBER,
-      extra: (call) => {
-        if (call.url.pathname !== `/api/v1/${resource}` || call.method !== "GET") return undefined;
-        const paged = call.url.searchParams.has("cursor");
-        const title = paged
-          ? "Next page"
-          : call.url.searchParams.has(filter)
-            ? "Filtered record"
-            : "Unfiltered record";
-        const response = () =>
-          json(200, {
-            [resource]: [row(title, paged ? "second" : "first")],
-            nextCursor: paged ? null : "next",
-            total: 2,
-            counts: { open: 2, onHold: 0 },
-          });
-        if (holdRead) {
-          holdRead = false;
-          return new Promise<Response>((resolve) => {
-            answer = () => resolve(response());
-          });
-        }
-        return response();
-      },
-    });
-    const { router } = renderAt(`/${path}?${filter}=high`);
-    const user = userEvent.setup();
-    await screen.findByRole("row", { name: /Filtered record/ });
+  it.each(["before", "after"] as const)(
+    "adopts an external navigation with the page response %s its commit",
+    async (responseOrder) => {
+      let holdRead = false;
+      let answer: (() => void) | undefined;
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call) => {
+          if (call.url.pathname !== `/api/v1/${resource}` || call.method !== "GET")
+            return undefined;
+          const paged = call.url.searchParams.has("cursor");
+          const title = paged
+            ? "Next page"
+            : call.url.searchParams.has(filter)
+              ? "Filtered record"
+              : "Unfiltered record";
+          const response = () =>
+            json(200, {
+              [resource]: [row(title, paged ? "second" : "first")],
+              nextCursor: paged ? null : "next",
+              total: 2,
+              counts: { open: 2, onHold: 0 },
+            });
+          if (holdRead) {
+            holdRead = false;
+            return new Promise<Response>((resolve) => {
+              answer = () => resolve(response());
+            });
+          }
+          return response();
+        },
+      });
+      const { router } = renderAt(`/${path}?${filter}=high`);
+      const user = userEvent.setup();
+      await screen.findByRole("row", { name: /Filtered record/ });
 
-    // A nav-rail click, not a list control. The list never asked for this
-    // URL, so the answer is a list it has never shown and a page read
-    // taken in the gap must not discard it.
-    transitions.held = true;
-    await act(async () => {
-      await router.navigate(`/${path}`);
-    });
-    expect(router.state.navigation.state).toBe("idle");
-    expect(transitions.pending.length).toBeGreaterThan(0);
+      // A nav-rail click, not a list control. The list never asked for this
+      // URL, so the answer is a list it has never shown and a page read
+      // taken in the gap must not discard it.
+      transitions.held = true;
+      await act(async () => {
+        await router.navigate(`/${path}`);
+      });
+      expect(router.state.navigation.state).toBe("idle");
+      expect(transitions.pending.length).toBeGreaterThan(0);
 
-    holdRead = true;
-    await user.click(screen.getByRole("button", { name: "Show more" }));
-    await vi.waitFor(() => expect(answer).toBeDefined());
-    await act(async () => {
-      answer!();
-    });
-    await commitNavigation();
+      holdRead = true;
+      await user.click(screen.getByRole("button", { name: "Show more" }));
+      await vi.waitFor(() => expect(answer).toBeDefined());
+      if (responseOrder === "before")
+        await act(async () => {
+          answer!();
+        });
+      await commitNavigation();
+      if (responseOrder === "after") {
+        await screen.findByRole("row", { name: /Unfiltered record/ });
+        await act(async () => {
+          answer!();
+        });
+      }
 
-    await screen.findByRole("row", { name: /Unfiltered record/ });
-    expect(screen.queryByRole("row", { name: /Filtered record/ })).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: `Remove ${label} filter` }),
-    ).not.toBeInTheDocument();
-    expect(new URLSearchParams(router.state.location.search).has(filter)).toBe(false);
-  });
+      await screen.findByRole("row", { name: /Unfiltered record/ });
+      expect(screen.queryByRole("row", { name: /Filtered record/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole("row", { name: /Next page/ })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: `Remove ${label} filter` }),
+      ).not.toBeInTheDocument();
+      expect(new URLSearchParams(router.state.location.search).has(filter)).toBe(false);
+    },
+  );
   it.each(["filter", "page"])(
     "discards an old %s answer after a newer navigation",
     async (action) => {

@@ -48,13 +48,17 @@ export function useListReadGuard() {
     (loaded: unknown) => {
       if (!Object.values(router.state.loaderData).includes(loaded)) return false;
       const read = latest.current;
-      if (!read || !Object.values(read.state.loaderData).includes(loaded)) return true;
-      // The read started after this loader finished, so it supersedes
-      // these rows. It does so only where the loader repeats a URL sync
-      // this page asked for. A navigation the page did not start, a Back
-      // press or a nav-rail click, still carries a list the page has
-      // never shown.
-      return !read.echo;
+      // A read started after this loader finished supersedes these rows,
+      // but only where the loader repeats a URL sync this page asked for.
+      // A navigation the page did not start, a Back press or a nav-rail
+      // click, still carries a list the page has never shown.
+      if (read?.echo && Object.values(read.state.loaderData).includes(loaded)) return false;
+      // The page takes the loader's list, so a read still in flight asks
+      // a question the reader has left. Drop it, whichever order the two
+      // answers arrive in: appending its rows would page a list that is
+      // no longer on screen.
+      latest.current = null;
+      return true;
     },
     [router],
   );
