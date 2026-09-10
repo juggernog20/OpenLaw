@@ -23,6 +23,15 @@ import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import { civilToday, daysBetween } from "../../lib/contract-term.js";
 import { matterTeamScope, NO_MATTER, reachedMatter } from "../../lib/matter-access.js";
+import {
+  KeyDateOffsetsSchema,
+  KeyDateRecipientsSchema,
+  KeyDateReminderOptionsSchema,
+  keyDateReminderOptions,
+  ownReminderOffsets,
+  ownReminderRecipients,
+  validateKeyDateRecipients,
+} from "../../lib/key-date-reminders.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
 const requireReader = requireRole("administrator", "legal_team_member", "contributor");
@@ -39,6 +48,8 @@ const DeadlineSchema = z.object({
   date: z.iso.date(),
   label: z.string(),
   note: z.string().nullable(),
+  reminderOffsetDays: z.array(z.int()),
+  reminderRecipientIds: z.array(z.string()),
   daysAway: z.int(),
   overdue: z.boolean(),
   isNext: z.boolean(),
@@ -87,6 +98,8 @@ export const matterKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
         date: matterKeyDates.date,
         label: matterKeyDates.label,
         note: matterKeyDates.note,
+        reminderOffsetDays: matterKeyDates.reminderOffsetDays,
+        reminderRecipientIds: matterKeyDates.reminderRecipientIds,
       })
       .from(matterKeyDates)
       .where(eq(matterKeyDates.matterId, context.matter.id))
@@ -95,7 +108,14 @@ export const matterKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
     const active = context.statusCategory === "open" && context.matter.archivedAt === null;
     const deadlines = rows.map((row) => {
       const daysAway = daysBetween(today, row.date);
-      return { ...row, daysAway, overdue: daysAway < 0, isNext: false };
+      return {
+        ...row,
+        reminderOffsetDays: ownReminderOffsets(row.reminderOffsetDays),
+        reminderRecipientIds: ownReminderRecipients(row.reminderRecipientIds),
+        daysAway,
+        overdue: daysAway < 0,
+        isNext: false,
+      };
     });
     if (active) {
       const next = deadlines.find((row) => !row.overdue);
@@ -111,6 +131,8 @@ export const matterKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
         date: matterKeyDates.date,
         label: matterKeyDates.label,
         note: matterKeyDates.note,
+        reminderOffsetDays: matterKeyDates.reminderOffsetDays,
+        reminderRecipientIds: matterKeyDates.reminderRecipientIds,
         matter: matters,
         statusCategory: matterStatuses.category,
       })
@@ -126,6 +148,8 @@ export const matterKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
           date: row.date,
           label: row.label,
           note: row.note,
+          reminderOffsetDays: row.reminderOffsetDays,
+          reminderRecipientIds: row.reminderRecipientIds,
           context: { matter: row.matter, statusCategory: row.statusCategory },
         }
       : null;
@@ -136,6 +160,25 @@ export const matterKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
     if (context.matter.archivedAt) throw httpError(409, FROZEN);
   }
   const toNote = (note: string | null | undefined): string | null => note?.trim() || null;
+
+  app.get(
+    "/matters/:number/key-date-reminder-options",
+    {
+      preHandler: requireReader,
+      schema: {
+        operationId: "matterKeyDateReminderOptions",
+        summary: "Current global reminder ladder and eligible team recipients for a reached matter",
+        tags: ["matter-key-dates"],
+        params: NumberParams,
+        response: { 200: KeyDateReminderOptionsSchema, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const context = await reachedContext(app.db, request.user, request.params.number);
+      if (!context) throw httpError(404, NO_MATTER);
+      return keyDateReminderOptions(app.db, "matter", context.matter.id);
+    },
+  );
 
   app.get(
     "/matters/:number/key-dates",
@@ -171,6 +214,8 @@ export const matterKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
           date: z.iso.date(),
           label: LabelSchema,
           note: NoteSchema.optional(),
+          reminderOffsetDays: KeyDateOffsetsSchema.optional(),
+          reminderRecipientIds: KeyDateRecipientsSchema.optional(),
         }),
         response: { 201: DeadlinesEnvelope, default: problemResponse },
       },
@@ -180,6 +225,9 @@ export const matterKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
         const context = await reachedContext(tx, request.user, request.params.number, true);
         assertWritable(context);
         const note = toNote(request.body.note);
+        const reminderOffsetDays = request.body.reminderOffsetDays ?? [];
+        const reminderRecipientIds = request.body.reminderRecipientIds ?? [];
+        await validateKeyDateRecipients(tx, "matter", context.matter.id, reminderRecipientIds);
         const [created] = await tx
           .insert(matterKeyDates)
           .values({
@@ -187,6 +235,8 @@ export const matterKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
             date: request.body.date,
             label: request.body.label,
             note,
+            reminderOffsetDays,
+            reminderRecipientIds,
           })
           .returning({ id: matterKeyDates.id });
         await recordActivity(tx, {
@@ -217,10 +267,12 @@ export const matterKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
             date: z.iso.date().optional(),
             label: LabelSchema.optional(),
             note: NoteSchema.optional(),
+            reminderOffsetDays: KeyDateOffsetsSchema.optional(),
+            reminderRecipientIds: KeyDateRecipientsSchema.optional(),
           })
           .meta({ minProperties: 1 })
           .refine((body) => Object.keys(body).length > 0, {
-            message: "Send at least one of date, label, or note.",
+            message: "Send at least one Key date field.",
           }),
         response: { 200: DeadlinesEnvelope, default: problemResponse },
       },
@@ -231,11 +283,29 @@ export const matterKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
         if (!current) throw httpError(404, NO_KEY_DATE);
         assertWritable(current.context);
         const wanted = {
+          reminderOffsetDays:
+            request.body.reminderOffsetDays ?? ownReminderOffsets(current.reminderOffsetDays),
+          reminderRecipientIds:
+            request.body.reminderRecipientIds ??
+            ownReminderRecipients(current.reminderRecipientIds),
           date: request.body.date ?? current.date,
           label: request.body.label ?? current.label,
           note: request.body.note === undefined ? current.note : toNote(request.body.note),
         };
+        if (request.body.reminderRecipientIds !== undefined) {
+          await validateKeyDateRecipients(
+            tx,
+            "matter",
+            current.context.matter.id,
+            wanted.reminderRecipientIds,
+          );
+        }
         const changed: ChangedFields = {};
+        for (const field of ["reminderOffsetDays", "reminderRecipientIds"] as const) {
+          if (JSON.stringify(wanted[field]) !== JSON.stringify(current[field])) {
+            changed[field] = { from: current[field], to: wanted[field] };
+          }
+        }
         if (wanted.date !== current.date) changed.date = { from: current.date, to: wanted.date };
         if (wanted.label !== current.label)
           changed.label = { from: current.label, to: wanted.label };

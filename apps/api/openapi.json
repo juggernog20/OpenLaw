@@ -10869,6 +10869,75 @@
         }
       }
     },
+    "/api/v1/matters/{number}/key-date-reminder-options": {
+      "get": {
+        "operationId": "matterKeyDateReminderOptions",
+        "summary": "Current global reminder ladder and eligible team recipients for a reached matter",
+        "tags": ["matter-key-dates"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "globalOffsetDays": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "recipients": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "displayName"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["globalOffsetDays", "recipients"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/matters/{number}/key-dates": {
       "get": {
         "operationId": "listMatterKeyDates",
@@ -10913,6 +10982,20 @@
                           "note": {
                             "type": ["string", "null"]
                           },
+                          "reminderOffsetDays": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "reminderRecipientIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
                           "daysAway": {
                             "type": "integer",
                             "minimum": -9007199254740991,
@@ -10930,6 +11013,8 @@
                           "date",
                           "label",
                           "note",
+                          "reminderOffsetDays",
+                          "reminderRecipientIds",
                           "daysAway",
                           "overdue",
                           "isNext"
@@ -10987,6 +11072,24 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "reminderOffsetDays": {
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 730
+                    }
+                  },
+                  "reminderRecipientIds": {
+                    "maxItems": 200,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    }
                   }
                 },
                 "required": ["date", "label"],
@@ -11034,6 +11137,20 @@
                           "note": {
                             "type": ["string", "null"]
                           },
+                          "reminderOffsetDays": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "reminderRecipientIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
                           "daysAway": {
                             "type": "integer",
                             "minimum": -9007199254740991,
@@ -11051,6 +11168,8 @@
                           "date",
                           "label",
                           "note",
+                          "reminderOffsetDays",
+                          "reminderRecipientIds",
                           "daysAway",
                           "overdue",
                           "isNext"
@@ -11110,6 +11229,24 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "reminderOffsetDays": {
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 730
+                    }
+                  },
+                  "reminderRecipientIds": {
+                    "maxItems": 200,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    }
                   }
                 },
                 "additionalProperties": false,
@@ -11157,6 +11294,20 @@
                           "note": {
                             "type": ["string", "null"]
                           },
+                          "reminderOffsetDays": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "reminderRecipientIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
                           "daysAway": {
                             "type": "integer",
                             "minimum": -9007199254740991,
@@ -11174,6 +11325,8 @@
                           "date",
                           "label",
                           "note",
+                          "reminderOffsetDays",
+                          "reminderRecipientIds",
                           "daysAway",
                           "overdue",
                           "isNext"
@@ -11243,6 +11396,20 @@
                           "note": {
                             "type": ["string", "null"]
                           },
+                          "reminderOffsetDays": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "reminderRecipientIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
                           "daysAway": {
                             "type": "integer",
                             "minimum": -9007199254740991,
@@ -11260,6 +11427,8 @@
                           "date",
                           "label",
                           "note",
+                          "reminderOffsetDays",
+                          "reminderRecipientIds",
                           "daysAway",
                           "overdue",
                           "isNext"
@@ -31671,6 +31840,75 @@
         }
       }
     },
+    "/api/v1/contracts/{number}/key-date-reminder-options": {
+      "get": {
+        "operationId": "contractKeyDateReminderOptions",
+        "summary": "Current global reminder ladder and eligible team recipients for a reached contract",
+        "tags": ["contract-key-dates"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "globalOffsetDays": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "recipients": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "displayName"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["globalOffsetDays", "recipients"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/contracts/{number}/key-dates": {
       "get": {
         "operationId": "listContractKeyDates",
@@ -31719,6 +31957,20 @@
                           "note": {
                             "type": ["string", "null"]
                           },
+                          "reminderOffsetDays": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "reminderRecipientIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
                           "daysAway": {
                             "type": "integer",
                             "minimum": -9007199254740991,
@@ -31737,6 +31989,8 @@
                           "date",
                           "label",
                           "note",
+                          "reminderOffsetDays",
+                          "reminderRecipientIds",
                           "daysAway",
                           "isNext",
                           "unverified"
@@ -31765,7 +32019,7 @@
       },
       "post": {
         "operationId": "addContractKeyDate",
-        "summary": "Put a named date on a contract (CTR-009): a calendar date, a label, and an optional note — the free-form escape hatch beside the typed term columns, for price reviews, option-exercise windows, and delivery milestones. A blank label is refused and a blank note is stored as no note at all. There is no owner and no per-date reminder schedule: NOT-004 fixed one global offset list for every tracked date. Answers the record's whole deadline surface, because a new date can change which one is next. Appends one key_date.added entry on the owning contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract takes no new date until it is restored",
+        "summary": "Put a named date on a contract (CTR-009): a calendar date, a label, and an optional note — the free-form escape hatch beside the typed term columns, for price reviews, option-exercise windows, and delivery milestones. A blank label is refused and a blank note is stored as no note at all. Additional reminder lead times join the global ladder; selected recipients must belong to the record team. Answers the record's whole deadline surface, because a new date can change which one is next. Appends one key_date.added entry on the owning contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract takes no new date until it is restored",
         "tags": ["key-dates"],
         "requestBody": {
           "required": true,
@@ -31794,6 +32048,24 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "reminderOffsetDays": {
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 730
+                    }
+                  },
+                  "reminderRecipientIds": {
+                    "maxItems": 200,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    }
                   }
                 },
                 "required": ["date", "label"],
@@ -31845,6 +32117,20 @@
                           "note": {
                             "type": ["string", "null"]
                           },
+                          "reminderOffsetDays": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "reminderRecipientIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
                           "daysAway": {
                             "type": "integer",
                             "minimum": -9007199254740991,
@@ -31863,6 +32149,8 @@
                           "date",
                           "label",
                           "note",
+                          "reminderOffsetDays",
+                          "reminderRecipientIds",
                           "daysAway",
                           "isNext",
                           "unverified"
@@ -31922,6 +32210,24 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "reminderOffsetDays": {
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 730
+                    }
+                  },
+                  "reminderRecipientIds": {
+                    "maxItems": 200,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    }
                   }
                 },
                 "additionalProperties": false
@@ -31972,6 +32278,20 @@
                           "note": {
                             "type": ["string", "null"]
                           },
+                          "reminderOffsetDays": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "reminderRecipientIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
                           "daysAway": {
                             "type": "integer",
                             "minimum": -9007199254740991,
@@ -31990,6 +32310,8 @@
                           "date",
                           "label",
                           "note",
+                          "reminderOffsetDays",
+                          "reminderRecipientIds",
                           "daysAway",
                           "isNext",
                           "unverified"
@@ -32063,6 +32385,20 @@
                           "note": {
                             "type": ["string", "null"]
                           },
+                          "reminderOffsetDays": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "reminderRecipientIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
                           "daysAway": {
                             "type": "integer",
                             "minimum": -9007199254740991,
@@ -32081,6 +32417,8 @@
                           "date",
                           "label",
                           "note",
+                          "reminderOffsetDays",
+                          "reminderRecipientIds",
                           "daysAway",
                           "isNext",
                           "unverified"

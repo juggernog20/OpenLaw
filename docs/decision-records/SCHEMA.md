@@ -371,16 +371,18 @@ Source: **MTR-004**
 
 Named deadlines on a matter. Zero-to-many per matter; the earliest upcoming entry is the matter's "next deadline" in lists and dashboards. No SLA semantics in v1 (see `FUTURE-FEATURES.md`).
 
-| Column                     | Type        | Notes                                                                                            |
-| -------------------------- | ----------- | ------------------------------------------------------------------------------------------------ |
-| `id`                       | UUID        | PK                                                                                               |
-| `matter_id`                | UUID        | FK → `matters.id`, not null, cascade — a Key date is part of the Matter                          |
-| `date`                     | date        | not null; a calendar date, not a timestamp (deadlines are day-granular; display per **DES-014**) |
-| `label`                    | text        | not null, 1–200 trimmed characters, e.g., "SOL expires", "Preliminary hearing"                   |
-| `note`                     | text        | nullable, 1–2000 trimmed characters; a blank write is normalized to NULL                         |
-| `created_at`, `updated_at` | timestamptz |                                                                                                  |
+| Column                     | Type        | Notes                                                                                                                                                                                                       |
+| -------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                                                                                                                                          |
+| `matter_id`                | UUID        | FK → `matters.id`, not null, cascade — a Key date is part of the Matter                                                                                                                                     |
+| `date`                     | date        | not null; a calendar date, not a timestamp (deadlines are day-granular; display per **DES-014**)                                                                                                            |
+| `label`                    | text        | not null, 1–200 trimmed characters, e.g., "SOL expires", "Preliminary hearing"                                                                                                                              |
+| `note`                     | text        | nullable, 1–2000 trimmed characters; a blank write is normalized to NULL                                                                                                                                    |
+| `reminder_offset_days`     | jsonb       | not null, default `[]`; up to 20 additional whole-day lead times, 0–730, deduplicated; unioned with the global list (**NOT-004**, #807)                                                                     |
+| `reminder_recipient_ids`   | jsonb       | not null, default `[]`; deduplicated person IDs from the current record team, including Owner/Manager; empty uses the usual audience, nonempty selects a subset revalidated at delivery (**NOT-004**, #807) |
+| `created_at`, `updated_at` | timestamptz |                                                                                                                                                                                                             |
 
-Indexed on (`matter_id`, `date`). CRUD audit-logged per **DD-017**.
+Indexed on (`matter_id`, `date`). CRUD audit-logged per **DD-017**. Migration `0101_key_date_reminders` adds the reminder lists without changing existing dates or their default recipients. Removed or archived selected recipients are excluded, and an explicit subset with no eligible people remains empty.
 
 Landed in M23/3, migration `0073_shocking_raider`. Closing and archiving retain these rows. Only an open, non-archived Matter contributes a Next deadline or approaching-date notification; archive freezes CRUD, while closing does not.
 
@@ -828,18 +830,20 @@ Free-form named dates beyond the typed term machinery (price reviews, milestones
 
 Landed in M16/3, migration `0047_contract_key_dates`, with the columns CTR-009 names and nothing else.
 
-| Column                     | Type        | Notes                                                                                            |
-| -------------------------- | ----------- | ------------------------------------------------------------------------------------------------ |
-| `id`                       | UUID        | PK                                                                                               |
-| `contract_id`              | UUID        | FK → `contracts.id`, not null, cascade — a key date is part of the contract                      |
-| `date`                     | date        | not null; a calendar date, not a timestamp (deadlines are day-granular; display per **DES-014**) |
-| `label`                    | text        | not null, 1–200 trimmed characters                                                               |
-| `note`                     | text        | nullable, 1–2000 trimmed characters; the write path normalizes a blank string to NULL            |
-| `created_at`, `updated_at` | timestamptz |                                                                                                  |
+| Column                     | Type        | Notes                                                                                                                                                                                                       |
+| -------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                                                                                                                                          |
+| `contract_id`              | UUID        | FK → `contracts.id`, not null, cascade — a key date is part of the contract                                                                                                                                 |
+| `date`                     | date        | not null; a calendar date, not a timestamp (deadlines are day-granular; display per **DES-014**)                                                                                                            |
+| `label`                    | text        | not null, 1–200 trimmed characters                                                                                                                                                                          |
+| `note`                     | text        | nullable, 1–2000 trimmed characters; the write path normalizes a blank string to NULL                                                                                                                       |
+| `reminder_offset_days`     | jsonb       | not null, default `[]`; up to 20 additional whole-day lead times, 0–730, deduplicated; unioned with the global list (**NOT-004**, #807)                                                                     |
+| `reminder_recipient_ids`   | jsonb       | not null, default `[]`; deduplicated person IDs from the current record team, including Owner/Manager; empty uses the usual audience, nonempty selects a subset revalidated at delivery (**NOT-004**, #807) |
+| `created_at`, `updated_at` | timestamptz |                                                                                                                                                                                                             |
 
 Indexed on (`contract_id`, `date`) — the shape every deadline surface reads. CRUD audit-logged per **DD-017**, one closed-union action per act (`key_date.added`, `key_date.edited`, `key_date.removed`), each at the record tier on the owning contract.
 
-- **Deliberately flat** (CTR-009). No owner column: the matters-side owner question stays a matters question. No per-date reminder schedule: **NOT-004** fixed one global offset list for every tracked date.
+- **Deliberately flat** (CTR-009). No owner column: the matters-side owner question stays a matters question. The original global-only reminder rule is superseded by the **NOT-004** addendum for #807. Migration `0101_key_date_reminders` adds the reminder lists; existing dates retain the global schedule and usual audience. Removed or archived selected recipients are excluded, and an explicit subset with no eligible people remains empty.
 - **No audience of its own.** Access is the owning contract's (DD-014, CTR-021), so confidentiality composes without this table holding a flag, a team, or a tier.
 - **Derived, never stored.** The notice deadline in the union beside these rows is `expiry_date − notice_period_days`, computed where the answer is assembled (**CTR-006**). Which date is next, and how many days away each is, are answered there too — one place, so a surface cannot disagree with the order it was given.
 

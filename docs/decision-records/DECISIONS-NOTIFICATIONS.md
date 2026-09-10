@@ -264,7 +264,7 @@ Five email-only section preferences control Approvals, Tasks, Dates, Obligations
 
 - **Status** — Accepted
 - **Date** — 2026-08-05
-- **Decision** — A single global offset list (Settings → Notifications), seeded `7 days / 1 day / day-of`, applied to every tracked date (key dates, notice deadlines, expiries). Admin-tunable; not per-user or per-date in v1. CTR-006's mandated fires are dates within this scheme.
+- **Decision** — A single global offset list (Settings → Notifications), seeded `7 days / 1 day / day-of`, applied to every tracked date (key dates, notice deadlines, expiries). Admin-tunable; the original exclusion of per-date lead times is superseded by the 2026-09-09 and 2026-09-10 addenda below. No per-user list. CTR-006's mandated fires are dates within this scheme.
 - **Rationale** — Configurable-over-fixed applies (nothing branches on the numbers); per-date schedules are config sprawl.
 - **Alternatives considered** — Fixed offsets; per-date custom schedules.
 - **Consequences** — Settings inventory row. Long notice windows may warrant a larger seeded offset later — tune via settings, not code.
@@ -303,6 +303,16 @@ Three Legal Team Members in the focus group typed "remind me 60 days before" int
 **What is not decided.** Time of day on a key date (one tester wanted 09:10, not "Sep 10"); whether an Obligation (ENT) gets the same field; whether a per-date reminder can be earlier than 730 days. Those are for the spec.
 
 **Consequences.** One `jsonb` lead-time list and one recipient list on `contract_key_dates` and `matter_key_dates`, sanitised the way `reminder_offset_days` is. The round's union query reads both lists. The Home dates card and the daily briefing need no change. NOT-004's "not per-date in v1" sentence is superseded by this addendum.
+
+### NOT-004 addendum: per-date lead times and selected recipients (2026-09-10, [#807](https://github.com/juggernog20/OpenLaw/issues/807))
+
+Contract and Matter Key dates now store their own lead-time and recipient lists. Both default to empty, preserving the schedule and audience of existing dates. A per-date list accepts at most twenty whole-day offsets from 0 through 730, deduplicated. Every morning round unions the global and per-date offsets and matches each by equality; the same offset in both lists fires once. An empty or unusable per-date list adds nothing, while the global list retains its existing fallback. Expiry, notice deadlines and Entity Obligations keep the global list alone. Time of day remains outside this change.
+
+An empty recipient list uses the existing reminder audience: the Contract Owner or Matter Manager and the explicit record team. A nonempty list selects a subset of that audience for all of this Key date's reminders, including those at global offsets. The selected subset replaces the default recipients; adding it to an audience that already includes every team member would have no effect. This makes explicit the recipient behavior left open in the preceding addendum. New selections must be active people on the current record team, including its Owner or Manager.
+
+Delivery rechecks active accounts, current team membership, DD-014 access and notification preferences. A person removed from the team or archived receives no new reminder. Pending Key-date briefing entries are checked against the current date selection and team before sending; already-delivered entries remain history. If all selected recipients become ineligible, the audience stays empty; it must not fall back to the full team. Editing an unrelated date field preserves the saved recipient choice. Returning to the usual audience is an explicit choice that clears the list.
+
+The Add and Edit Key date dialogs show the global lead times and the combined schedule, allow additional lead times to be added or removed, and explain the recipient selection. No assignee, record access, Task reminder behavior or deadline calculation changes. Per-date reminders continue to use the separate Key date identity established by #760.
 
 ## NOT-005 — Badge: unread count, 9+ cap, read-on-open
 

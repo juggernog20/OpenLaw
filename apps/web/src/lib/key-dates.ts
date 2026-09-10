@@ -36,11 +36,9 @@ export type DeadlineSource = ContractDeadline["source"];
 
 /** What one key date carries when it is written. The note is optional on
  * the way in and `null` is how an existing one is cleared. */
-export interface KeyDateInput {
-  date: string;
-  label: string;
-  note: string | null;
-}
+export type KeyDateInput = NonNullable<
+  paths["/api/v1/contracts/{number}/key-dates"]["post"]["requestBody"]
+>["content"]["application/json"];
 
 /** What a read or a write over the record's deadlines answers: the union
  * as it now stands, or why not. */
@@ -82,7 +80,7 @@ export async function addContractKeyDate(
   const result = await api
     .POST("/api/v1/contracts/{number}/key-dates", {
       params: { path: { number: contractNumber } },
-      body: { date: input.date, label: input.label, note: input.note },
+      body: input,
     })
     .catch(() => undefined);
   return result?.data
@@ -105,7 +103,7 @@ export async function updateContractKeyDate(
   const result = await api
     .PATCH("/api/v1/key-dates/{keyDateId}", {
       params: { path: { keyDateId } },
-      body: { date: input.date, label: input.label, note: input.note },
+      body: input,
     })
     .catch(() => undefined);
   return result?.data

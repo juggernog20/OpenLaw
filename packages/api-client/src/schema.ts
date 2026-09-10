@@ -1217,6 +1217,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/matters/{number}/key-date-reminder-options": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Current global reminder ladder and eligible team recipients for a reached matter */
+    get: operations["matterKeyDateReminderOptions"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/matters/{number}/key-dates": {
     parameters: {
       query?: never;
@@ -2554,6 +2571,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/contracts/{number}/key-date-reminder-options": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Current global reminder ladder and eligible team recipients for a reached contract */
+    get: operations["contractKeyDateReminderOptions"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contracts/{number}/key-dates": {
     parameters: {
       query?: never;
@@ -2564,7 +2598,7 @@ export interface paths {
     /** One contract's whole deadline surface (CTR-009): the union of its key dates, its expiry date, and its derived notice deadline, ordered with what is still ahead first and nearest first, then what has gone by, most recently passed first. Exactly one entry — the earliest still ahead — is marked as the next deadline, and none is on a record whose every date has passed. The expiry and the notice deadline carry no key date id, because no row backs them: the notice deadline is the expiry minus the notice period, computed on every read and stored nowhere, and both move by editing the term on the record. Access is inherited from the contract and nothing else: a Contributor on the team reads the surface, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist. An archived contract still reads: archiving freezes a record, it does not hide it */
     get: operations["listContractKeyDates"];
     put?: never;
-    /** Put a named date on a contract (CTR-009): a calendar date, a label, and an optional note — the free-form escape hatch beside the typed term columns, for price reviews, option-exercise windows, and delivery milestones. A blank label is refused and a blank note is stored as no note at all. There is no owner and no per-date reminder schedule: NOT-004 fixed one global offset list for every tracked date. Answers the record's whole deadline surface, because a new date can change which one is next. Appends one key_date.added entry on the owning contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract takes no new date until it is restored */
+    /** Put a named date on a contract (CTR-009): a calendar date, a label, and an optional note — the free-form escape hatch beside the typed term columns, for price reviews, option-exercise windows, and delivery milestones. A blank label is refused and a blank note is stored as no note at all. Additional reminder lead times join the global ladder; selected recipients must belong to the record team. Answers the record's whole deadline surface, because a new date can change which one is next. Appends one key_date.added entry on the owning contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract takes no new date until it is restored */
     post: operations["addContractKeyDate"];
     delete?: never;
     options?: never;
@@ -9664,6 +9698,43 @@ export interface operations {
       };
     };
   };
+  matterKeyDateReminderOptions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            globalOffsetDays: number[];
+            recipients: {
+              id: string;
+              displayName: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   listMatterKeyDates: {
     parameters: {
       query?: never;
@@ -9688,6 +9759,8 @@ export interface operations {
               date: string;
               label: string;
               note: string | null;
+              reminderOffsetDays: number[];
+              reminderRecipientIds: string[];
               daysAway: number;
               overdue: boolean;
               isNext: boolean;
@@ -9722,6 +9795,8 @@ export interface operations {
           date: string;
           label: string;
           note?: string | null;
+          reminderOffsetDays?: number[];
+          reminderRecipientIds?: string[];
         };
       };
     };
@@ -9739,6 +9814,8 @@ export interface operations {
               date: string;
               label: string;
               note: string | null;
+              reminderOffsetDays: number[];
+              reminderRecipientIds: string[];
               daysAway: number;
               overdue: boolean;
               isNext: boolean;
@@ -9781,6 +9858,8 @@ export interface operations {
               date: string;
               label: string;
               note: string | null;
+              reminderOffsetDays: number[];
+              reminderRecipientIds: string[];
               daysAway: number;
               overdue: boolean;
               isNext: boolean;
@@ -9815,6 +9894,8 @@ export interface operations {
           date?: string;
           label?: string;
           note?: string | null;
+          reminderOffsetDays?: number[];
+          reminderRecipientIds?: string[];
         };
       };
     };
@@ -9832,6 +9913,8 @@ export interface operations {
               date: string;
               label: string;
               note: string | null;
+              reminderOffsetDays: number[];
+              reminderRecipientIds: string[];
               daysAway: number;
               overdue: boolean;
               isNext: boolean;
@@ -16723,6 +16806,43 @@ export interface operations {
       };
     };
   };
+  contractKeyDateReminderOptions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            globalOffsetDays: number[];
+            recipients: {
+              id: string;
+              displayName: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   listContractKeyDates: {
     parameters: {
       query?: never;
@@ -16749,6 +16869,8 @@ export interface operations {
               date: string;
               label: string | null;
               note: string | null;
+              reminderOffsetDays: number[];
+              reminderRecipientIds: string[];
               daysAway: number;
               isNext: boolean;
               unverified: boolean;
@@ -16783,6 +16905,8 @@ export interface operations {
           date: string;
           label: string;
           note?: string | null;
+          reminderOffsetDays?: number[];
+          reminderRecipientIds?: string[];
         };
       };
     };
@@ -16802,6 +16926,8 @@ export interface operations {
               date: string;
               label: string | null;
               note: string | null;
+              reminderOffsetDays: number[];
+              reminderRecipientIds: string[];
               daysAway: number;
               isNext: boolean;
               unverified: boolean;
@@ -16846,6 +16972,8 @@ export interface operations {
               date: string;
               label: string | null;
               note: string | null;
+              reminderOffsetDays: number[];
+              reminderRecipientIds: string[];
               daysAway: number;
               isNext: boolean;
               unverified: boolean;
@@ -16880,6 +17008,8 @@ export interface operations {
           date?: string;
           label?: string;
           note?: string | null;
+          reminderOffsetDays?: number[];
+          reminderRecipientIds?: string[];
         };
       };
     };
@@ -16899,6 +17029,8 @@ export interface operations {
               date: string;
               label: string | null;
               note: string | null;
+              reminderOffsetDays: number[];
+              reminderRecipientIds: string[];
               daysAway: number;
               isNext: boolean;
               unverified: boolean;
