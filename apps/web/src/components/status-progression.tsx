@@ -28,6 +28,18 @@ export interface ProgressionMove {
   onPick: (statusId: string) => void;
 }
 
+/** Pointer opening leaves focus on the menu, so reveal the saved selection after placement. */
+function revealCheckedStatus(content: HTMLDivElement | null) {
+  if (!content) return;
+  const frame = requestAnimationFrame(() => {
+    if (!content.isConnected) return;
+    content
+      .querySelector<HTMLElement>('[role="menuitemradio"][data-state="checked"]')
+      ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  });
+  return () => cancelAnimationFrame(frame);
+}
+
 /** Shared status strip. Earlier checks show position, not completed work. */
 export function StatusProgression({
   steps,
@@ -92,7 +104,12 @@ export function StatusProgression({
                     <ChevronDown size={12} aria-hidden="true" className="shrink-0" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="max-w-80">
+                <DropdownMenuContent
+                  align="start"
+                  collisionPadding={8}
+                  className="max-h-(--radix-dropdown-menu-content-available-height) max-w-80 overflow-y-auto overscroll-contain"
+                  ref={revealCheckedStatus}
+                >
                   <DropdownMenuLabel className="text-xs text-muted">
                     <FormattedMessage id="contracts.stage.moveTo" defaultMessage="Move to" />
                   </DropdownMenuLabel>
