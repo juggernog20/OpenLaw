@@ -809,6 +809,19 @@ describe("an immediate email whose wake-up was lost", () => {
         ),
       );
     expect(row, "the hand-over's own notification row").toBeDefined();
+    const readEmailedAt = async (): Promise<Date | null> => {
+      const [current] = await harness.db
+        .select({ emailedAt: notifications.emailedAt })
+        .from(notifications)
+        .where(eq(notifications.id, row!.id));
+      return current?.emailedAt ?? null;
+    };
+
+    // The first send hands the message to the mailer and only then marks
+    // the row, so wait for that mark before clearing it. Clearing the
+    // column while the mark is still in flight puts a fresh timestamp
+    // back on the row, and the round then reads an email nobody owes.
+    await settles("the hand-over email's own mark", async () => (await readEmailedAt()) !== null);
     await harness.db
       .update(notifications)
       .set({
@@ -828,11 +841,12 @@ describe("an immediate email whose wake-up was lost", () => {
         harness.mailer.messagesTo(OUTSIDER.email).filter((m) => m.text.includes(contract.title))
           .length > delivered,
     );
-    const [settled] = await harness.db
-      .select({ emailedAt: notifications.emailedAt })
-      .from(notifications)
-      .where(eq(notifications.id, row!.id));
-    expect(settled!.emailedAt).not.toBeNull();
+    // The mark lands after the message, so settle on the column rather
+    // than reading it the moment the mailer has the mail.
+    await settles(
+      "the re-asked hand-over email's own mark",
+      async () => (await readEmailedAt()) !== null,
+    );
   });
 });
 
