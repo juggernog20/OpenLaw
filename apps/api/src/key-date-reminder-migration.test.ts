@@ -34,10 +34,10 @@ async function insertOnce(db: Db, row: typeof notifications.$inferInsert) {
     .returning({ id: notifications.id });
 }
 
-it.each([false, true])(
-  "preserves delivered reminders and distinguishes new Key dates, interrupted build=%s",
-  async (interrupted) => {
-    const db = await freshDb(container, `key_date_reminder_upgrade_${interrupted}`);
+it.each(["none", "valid", "swapped", "invalid"])(
+  "preserves delivered reminders and distinguishes new Key dates, staged index=%s",
+  async (stage) => {
+    const db = await freshDb(container, `key_date_reminder_upgrade_${stage}`);
     try {
       await migrateThrough(db, "0097_currencies_in_use", migrationEntries());
       await db.execute(sql`insert into users (id, email, display_name)
@@ -54,10 +54,33 @@ it.each([false, true])(
         sql`select to_jsonb(n) as row from notifications n order by id`,
       );
 
-      if (interrupted) {
-        await db.execute(sql`create index notifications_reminder_idx_v3 on notifications (id)`);
+      let stagedOid: unknown;
+      if (stage !== "none") {
+        await db.execute(sql`create unique index notifications_reminder_idx_v3 on notifications
+          (user_id, event_type, entity_type, entity_id, reminder_date, reminder_offset_days,
+          coalesce(case when event_type = 'date.key_date_approaching' then payload ->> 'keyDateId' end, ''))
+          where reminder_date is not null`);
+        stagedOid = (
+          await db.execute(sql`select 'notifications_reminder_idx_v3'::regclass::oid as oid`)
+        ).rows[0]?.oid;
+        if (stage === "swapped") {
+          await db.execute(sql`drop index notifications_reminder_idx`);
+        } else if (stage === "invalid") {
+          // Rehearse the catalog state left by a failed concurrent index build.
+          await db.execute(sql`update pg_index set indisvalid = false
+            where indexrelid = 'notifications_reminder_idx_v3'::regclass`);
+        }
       }
       await runMigrations(db);
+      const finalOid = (
+        await db.execute(sql`select 'notifications_reminder_idx'::regclass::oid as oid`)
+      ).rows[0]?.oid;
+      if (stage === "valid" || stage === "swapped") {
+        // A retry must keep the valid guard, including after the old index was dropped.
+        expect(finalOid).toEqual(stagedOid);
+      } else if (stage === "invalid") {
+        expect(finalOid).not.toEqual(stagedOid);
+      }
 
       expect(
         (await db.execute(sql`select to_jsonb(n) as row from notifications n order by id`)).rows,
