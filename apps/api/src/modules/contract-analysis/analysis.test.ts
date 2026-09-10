@@ -542,6 +542,16 @@ describe("the manual Contract analysis run", () => {
     expect(administrator.statusCode, administrator.body).toBe(200);
     expect(administrator.json().analysis.latestRun.outcome).not.toHaveProperty("results");
 
+    for (const cookies of [memberCookies, adminCookies]) {
+      const hidden = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/contracts/${String(contract.number)}/analysis/${run!.id}`,
+        cookies,
+      });
+      expect(hidden.statusCode).toBe(404);
+      expect(hidden.body).not.toContain("2027-02-03");
+    }
+
     await harness.db.insert(contractTeam).values({
       contractId: contract.id,
       userId: memberId,
@@ -556,9 +566,32 @@ describe("the manual Contract analysis run", () => {
     expect(teammate.json().analysis.latestRun.outcome.results).toEqual([
       expect.objectContaining({ slug: "effective_date", value: "2027-02-03" }),
     ]);
+    const evidence = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/contracts/${String(contract.number)}/analysis/${run!.id}`,
+      cookies: memberCookies,
+    });
+    expect(evidence.statusCode, evidence.body).toBe(200);
+    expect(evidence.json()).toMatchObject({
+      documentId: paper.document.id,
+      run: {
+        id: run!.id,
+        versionNumber: 1,
+        outcome: {
+          results: [expect.objectContaining({ evidence: "private effective date is 2027-02-03" })],
+        },
+      },
+    });
+    const other = await newContract("Different contract");
+    const wrongContract = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/contracts/${String(other.number)}/analysis/${run!.id}`,
+      cookies: memberCookies,
+    });
+    expect(wrongContract.statusCode).toBe(404);
   });
 
-  it("keeps human and confirmed values, replaces earlier AI evidence, and reports an occupied Counterparty", async () => {
+  it("keeps human and confirmed values and an already-linked Counterparty, and replaces earlier AI evidence", async () => {
     const contract = await newContract("Analysis overwrite rules");
     await addPaper(contract, [
       "Effective on 2026-01-01. Revised effective on 2026-02-01. Notice is 45 days. Notice is 60 days. Fees are USD 500 once. Acme LLC. We are the Customer.",
@@ -603,14 +636,14 @@ describe("the manual Contract analysis run", () => {
     const run = await waitForRun(response.json().run.id as string);
     expect(run.outcome).toMatchObject({
       written: expect.arrayContaining(["effective_date"]),
-      kept: expect.arrayContaining(["notice_period_days", "value"]),
-      unmatched: "Acme LLC",
+      kept: expect.arrayContaining(["notice_period_days", "value", "counterparty"]),
     });
+    expect(run.outcome).not.toHaveProperty("unmatched");
     expect(run.outcome!.results).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ slug: "notice_period_days", outcome: "kept" }),
         expect.objectContaining({ slug: "value", outcome: "kept" }),
-        expect.objectContaining({ slug: "counterparty", outcome: "unmatched" }),
+        expect.objectContaining({ slug: "counterparty", outcome: "kept" }),
       ]),
     );
     const [row] = await harness.db.select().from(contracts).where(eq(contracts.id, contract.id));
@@ -628,6 +661,83 @@ describe("the manual Contract analysis run", () => {
       runId: run.id,
     });
   });
+
+  it.each([
+    ["fixed term", "fixed"],
+    ["Fixed-term", "fixed"],
+    ["auto-renewing", "auto_renew"],
+  ])("accepts the model's %s term label and preserves it on rerun", async (value, expected) => {
+    const contract = await newContract(`Analysis term label ${value}`);
+    const evidence = `This agreement has a ${value} term.`;
+    await addPaper(contract, [evidence]);
+    setAnswers({ term_type: { value, evidence } });
+    const response = await startRun(contract.number);
+    const run = await waitForRun(response.json().run.id as string);
+    expect(run.outcome!.results).toContainEqual({
+      slug: "term_type",
+      value: expected,
+      evidence,
+      outcome: "written",
+    });
+    const read = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/contracts/${String(contract.number)}`,
+      cookies: memberCookies,
+    });
+    expect(read.statusCode, read.body).toBe(200);
+    expect(read.json().contract).toMatchObject({
+      termType: expected,
+      aiUnverified: { term_type: { runId: run.id } },
+    });
+    const confirmation = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${String(contract.number)}/analysis/confirm`,
+      cookies: memberCookies,
+      payload: { slug: "term_type" },
+    });
+    expect(confirmation.statusCode, confirmation.body).toBe(200);
+    const rerun = await startRun(contract.number);
+    const settled = await waitForRun(rerun.json().run.id as string);
+    expect(settled.outcome!.results).toContainEqual({
+      slug: "term_type",
+      value: expected,
+      evidence,
+      outcome: "kept",
+    });
+  });
+
+  it.each([true, false])(
+    "does not replace an existing Counterparty (primary: %s)",
+    async (isPrimary) => {
+      const contract = await newContract("Analysis occupied Counterparty");
+      await addPaper(contract, ["The counterparty is Acme LLC."]);
+      const [party] = await harness.db
+        .insert(counterparties)
+        .values({ name: `Other party ${contract.number}` })
+        .returning();
+      await harness.db
+        .insert(contractCounterparties)
+        .values({ contractId: contract.id, counterpartyId: party!.id, isPrimary });
+      setAnswers({
+        counterparty: { value: "Acme LLC", evidence: "The counterparty is Acme LLC." },
+      });
+      const response = await startRun(contract.number);
+      const run = await waitForRun(response.json().run.id as string);
+      expect(run.outcome!.unmatched).toBe("Acme LLC");
+      expect(run.outcome!.results).toContainEqual(
+        expect.objectContaining({ slug: "counterparty", outcome: "unmatched" }),
+      );
+      const read = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/contracts/${String(contract.number)}`,
+        cookies: memberCookies,
+      });
+      expect(read.statusCode, read.body).toBe(200);
+      expect(read.json().counterparties).toEqual([
+        expect.objectContaining({ id: party!.id, isPrimary }),
+      ]);
+    },
+  );
 
   it("rejects contradictory term dependents and writes no partial value", async () => {
     const contract = await newContract("Analysis invalid groups");

@@ -311,11 +311,11 @@ test.describe.serial("M31 deployer journey", () => {
       const recordRead = await refreshed;
       expect(recordRead.status(), await recordRead.text()).toBe(200);
 
-      await expect(observer.getByLabel("Term type")).toHaveValue("auto_renew");
-      await expect(observer.getByLabel("Amount")).toHaveValue("125000");
-      await expect(observer.getByLabel("Currency")).toHaveValue("USD");
-      await expect(observer.getByLabel("Cadence")).toHaveValue("annually");
-      await expect(observer.getByLabel("Notice period (days)")).toHaveValue("90");
+      await expect(observer.getByLabel("Term type", { exact: true })).toHaveValue("auto_renew");
+      await expect(observer.getByLabel("Amount", { exact: true })).toHaveValue("125000");
+      await expect(observer.getByLabel("Currency", { exact: true })).toHaveValue("USD");
+      await expect(observer.getByLabel("Cadence", { exact: true })).toHaveValue("annually");
+      await expect(observer.getByLabel("Notice period (days)", { exact: true })).toHaveValue("90");
       await expect(markerBeside(observer, "Term type")).toBeVisible();
       await expect(markerBeside(observer, "Value")).toBeVisible();
       await expect(markerBeside(observer, "Notice period (days)")).toBeVisible();

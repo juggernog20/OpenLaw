@@ -1445,14 +1445,23 @@
   "contracts.analysis.counterparty": {
     "defaultMessage": "Counterparty"
   },
+  "contracts.analysis.evidenceUnavailable": {
+    "defaultMessage": "Source evidence is unavailable. The Document Version may have been removed or you may not have access."
+  },
   "contracts.analysis.failed": {
     "defaultMessage": "Failed {when} on Version {version} with {model}: {reason}"
   },
   "contracts.analysis.heading": {
     "defaultMessage": "AI analysis"
   },
+  "contracts.analysis.loadingEvidence": {
+    "defaultMessage": "Opening cited passage…"
+  },
   "contracts.analysis.noEvidence": {
     "defaultMessage": "No evidence returned."
+  },
+  "contracts.analysis.noSavedEvidence": {
+    "defaultMessage": "No source quote was saved for this field."
   },
   "contracts.analysis.notRun": {
     "defaultMessage": "No analysis has run yet."
@@ -1475,6 +1484,9 @@
   "contracts.analysis.results": {
     "defaultMessage": "Analysis results"
   },
+  "contracts.analysis.retryEvidence": {
+    "defaultMessage": "Try again"
+  },
   "contracts.analysis.run": {
     "defaultMessage": "Run analysis"
   },
@@ -1483,6 +1495,9 @@
   },
   "contracts.analysis.unverified": {
     "defaultMessage": "Unverified"
+  },
+  "contracts.analysis.viewEvidence": {
+    "defaultMessage": "View AI evidence for {field}"
   },
   "contracts.applet.settings": {
     "defaultMessage": "Contract settings"
@@ -2434,6 +2449,9 @@
   },
   "docpanel.find.next": {
     "defaultMessage": "Next match"
+  },
+  "docpanel.find.noMatches": {
+    "defaultMessage": "No matches"
   },
   "docpanel.find.open": {
     "defaultMessage": "Find in document"

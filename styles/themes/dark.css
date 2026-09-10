@@ -32,6 +32,13 @@
   --border-strong: #484f58; /* Primer grey one step past default */
   --border-on-inverted: #30363d;
 
+  /* AI provenance, paired with the Unverified pill (DES-070 addendum). */
+  --ai-field-border-start: #9e82e0;
+  --ai-field-border-middle: #9874e5;
+  --ai-field-border-end: #b77dde;
+  --ai-field-border-fade: #c7b8ed;
+  --ai-evidence-fg: #c4b5fd;
+
   /* Text */
   --text-primary: #e6edf3;
   --text-muted: #8b949e;

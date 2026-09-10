@@ -2644,6 +2644,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/contracts/{number}/analysis/{runId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Read an analysis run and its evidence when its source Document is accessible */
+    get: operations["getContractAnalysisRun"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contracts/{number}/analysis": {
     parameters: {
       query?: never;
@@ -17056,6 +17073,79 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getContractAnalysisRun: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        runId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            run: {
+              id: string;
+              contractId: string;
+              versionId: string | null;
+              versionNumber: number | null;
+              /** @enum {string} */
+              state: "pending" | "ready" | "failed";
+              /** @enum {string} */
+              trigger: "automatic" | "manual";
+              requestedBy: string | null;
+              /** @enum {string} */
+              preset:
+                | "anthropic"
+                | "openai"
+                | "azure_openai"
+                | "gemini"
+                | "openrouter"
+                | "ollama"
+                | "custom";
+              model: string;
+              truncated: boolean;
+              outcome: {
+                written: string[];
+                kept: string[];
+                unsupported: string[];
+                invalid: string[];
+                unmatched?: string;
+                results?: {
+                  slug: string;
+                  value: unknown;
+                  evidence: string | null;
+                  /** @enum {string} */
+                  outcome: "written" | "kept" | "unsupported" | "invalid" | "unmatched";
+                }[];
+              } | null;
+              failure: string | null;
+              startedAt: string | null;
+              finishedAt: string | null;
+            };
+            documentId: string;
           };
         };
       };

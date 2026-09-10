@@ -51,6 +51,8 @@ const PAIRS = [];
 for (const text of ["text-primary", "text-muted"]) {
   for (const surface of SURFACES) PAIRS.push([text, surface, BODY]);
 }
+// The evidence sparkle remains readable beside a field in every theme.
+for (const surface of SURFACES) PAIRS.push(["ai-evidence-fg", surface, UI]);
 // Links appear on canvas, cards, and section-header strips ("View all").
 for (const surface of ["bg-canvas", "bg-raised", "bg-section-header"]) {
   PAIRS.push(["text-link", surface, BODY]);
