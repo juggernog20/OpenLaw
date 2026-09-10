@@ -1,6 +1,6 @@
 # Sign in to the Business Portal
 
-Use the Portal to send Requests to Legal and follow your own conversations. Ask Legal for your organization's Portal address. You need access to your work email and an email domain the Administrator allows.
+Use the Portal to send Requests to Legal, follow your own conversations, and read Contracts shared with you. Ask Legal for your organization's Portal address. You need access to your work email and an email domain the Administrator allows.
 
 ## Get a sign-in link
 
@@ -32,4 +32,17 @@ Your account keeps its role when you follow a sign-in link. Administrators and L
 
 Select **Sign out** in the Portal header. To return after sign-out or session expiry, open the Portal address and request a new link, or use the configured organization sign-in.
 
-Another Business User's Request link does not grant you access to that Request. Check that you used your own account and ask Legal if you need help. The Portal does not give Business Users access to the Inbox, Contracts, or Matters.
+Another Business User's Request link does not grant you access to that Request. Check that you used your own account and ask Legal if you need help. Business Users cannot enter the staff Inbox, Contracts, or Matters pages. Contracts shared through the Portal have a separate read-only view, described below.
+
+## Read your Contracts
+
+1. Select **Your Contracts** on the Portal home. The list contains unarchived Contracts for which you are the Business Owner or an explicitly added stakeholder, subject to current access rules.
+2. Open a Contract and check its C- reference, title, Counterparty, Stage, Business Owner, Legal Owner, term dates, renewal period, notice deadline and Value. **Not recorded** means Legal has not recorded that fact. **Unverified** means Legal has not yet confirmed the marked value; check it with Legal before relying on it.
+3. Under **Primary Document**, select **Read Document** to open the current Version in the document reader, or **Download** to save it. If no primary Document is available to you, the page says so. Earlier Versions and other Documents are not offered here.
+4. Use **Your Contracts** to return to the list. Use **Next page** when more Contracts are available, or **First page** to return to the beginning.
+
+This page is read-only. It does not expose Tasks, internal Fields, History or Contract conversations. Continue using your own Request conversation when you need to reply to Legal. A Contract's Stage can be more detailed than the status of the Request that led to it.
+
+When a Request converts to a Contract, its Requester becomes the initial Business Owner. Legal can change that owner or maintain separate stakeholders later. Changing or clearing Business Owner removes access supplied by that role, but an explicit stakeholder entry can preserve access. Confidential Contracts also require qualifying team access; the Business Owner or stakeholder designation alone is insufficient. The primary Document's own Confidential rule can further limit what you can read or download.
+
+If a Contract disappears or shows **Contract not found**, ask Legal to check your current ownership, stakeholder entry and access. A saved link does not preserve access, and the Portal does not send new Contract Stage notifications as part of this view.

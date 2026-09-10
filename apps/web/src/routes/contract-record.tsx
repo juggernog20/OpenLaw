@@ -135,6 +135,7 @@
  * Users are bounced home, and the API's 403 is the real refusal.
  */
 
+import { StakeholdersField } from "../components/contracts/stakeholders-field";
 import { CurrencySelect } from "../components/currency-select";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
@@ -470,6 +471,7 @@ type FieldKey =
   | CustomFieldKey
   | "termType"
   | "managerId"
+  | "businessOwnerId"
   | "entityId"
   | "counterparties"
   | "contractTypeId"
@@ -2235,8 +2237,52 @@ function ContractRecord() {
                       </div>
                     </div>
                     <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="contract-business-owner">
+                        <FormattedMessage
+                          id="contracts.form.businessOwner"
+                          defaultMessage="Business Owner"
+                        />
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <select
+                          id="contract-business-owner"
+                          value={saved.businessOwner?.id ?? ""}
+                          className={CONTROL_CLASS}
+                          disabled={frozen}
+                          onChange={(event) =>
+                            void commit("businessOwnerId", {
+                              businessOwnerId: event.target.value || null,
+                            })
+                          }
+                        >
+                          <option value="">
+                            {intl.formatMessage({
+                              id: "contracts.ownerUnassigned",
+                              defaultMessage: "Unassigned",
+                            })}
+                          </option>
+                          {(saved.businessOwner &&
+                          !users.some((person) => person.id === saved.businessOwner!.id)
+                            ? [saved.businessOwner, ...users]
+                            : users
+                          ).map((person) => (
+                            <option key={person.id} value={person.id}>
+                              {person.displayName}
+                            </option>
+                          ))}
+                        </select>
+                        <StatusNote
+                          status={fieldStatus.businessOwnerId ?? "idle"}
+                          detail={fieldError.businessOwnerId}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
                       <Label htmlFor="contract-owner">
-                        <FormattedMessage id="contracts.form.owner" defaultMessage="Owner" />
+                        <FormattedMessage
+                          id="contracts.form.legalOwner"
+                          defaultMessage="Legal Owner"
+                        />
                       </Label>
                       <div className="flex items-center gap-2">
                         <select
@@ -2276,7 +2322,7 @@ function ContractRecord() {
                         />
                       </div>
                     </div>
-                    <div className="flex flex-col gap-1.5">
+                    <div className="flex flex-col gap-1.5 @2xl/page:col-span-2">
                       <Label htmlFor="contract-entity">
                         {/* "Our entity" as the C2 mock labels it: the Entity
                         is ours, the Counterparty is theirs, and the
@@ -2323,8 +2369,7 @@ function ContractRecord() {
                         />
                       </div>
                     </div>
-                    {/* Their side, next to ours: the two never blur
-                    (CONTEXT.md), and the record reads them together. */}
+                    {/* Counterparties follow our signing Entity (CONTEXT.md). */}
                     <CounterpartiesField
                       contractNumber={saved.number}
                       parties={parties}
@@ -2341,6 +2386,14 @@ function ContractRecord() {
                         setParties(next);
                       }}
                     />
+                    {canEdit && (
+                      <StakeholdersField
+                        key={saved.number}
+                        number={saved.number}
+                        people={users}
+                        frozen={frozen}
+                      />
+                    )}
                     {/* The status is not a field of this card any more
                       (DES-053). It commits from the sub-bar's stage
                       strip, which is on screen in every section, and a

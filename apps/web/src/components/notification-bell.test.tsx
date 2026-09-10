@@ -591,6 +591,74 @@ describe("the notification centre", () => {
     expect(link).toHaveAttribute("href", "/entities/e1/obligations");
   });
 
+  it("tells two Key dates that fall on one contract and one day apart", async () => {
+    // The NOT-001 #760 addendum: each Key date is its own reminder, so
+    // the row that used to be one is now several. They differ only in
+    // the label, which is why the sentence names it.
+    const user = userEvent.setup();
+    const keyDate = (index: number, label: string): BellItem =>
+      item(index, {
+        eventType: "date.key_date_approaching",
+        entityType: "contract",
+        entityId: "c33",
+        payload: {
+          contractNumber: 33,
+          contractTitle: "Acme MSA",
+          keyDateId: `k${index}`,
+          label,
+          reminderDate: "2026-09-07",
+          offsetDays: 1,
+        },
+      });
+    bellApi({
+      unread: 2,
+      pages: {
+        first: {
+          notifications: [keyDate(1, "File response"), keyDate(2, "Attend hearing")],
+          nextCursor: null,
+        },
+      },
+    });
+    renderAt("/");
+
+    await user.click(await bell("2 unread"));
+    const centre = await screen.findByRole("dialog", { name: "Notifications" });
+    for (const label of ["File response", "Attend hearing"]) {
+      expect(
+        within(centre).getByRole("link", {
+          name: new RegExp(`${label} on Acme MSA is coming up`),
+        }),
+      ).toHaveAttribute("href", "/contracts/33/key-dates");
+    }
+  });
+
+  it("falls back to the old sentence for a Key date row with no label", async () => {
+    const user = userEvent.setup();
+    bellApi({
+      unread: 1,
+      pages: {
+        first: {
+          notifications: [
+            item(1, {
+              eventType: "date.key_date_approaching",
+              entityType: "contract",
+              entityId: "c33",
+              payload: { contractNumber: 33, contractTitle: "Acme MSA" },
+            }),
+          ],
+          nextCursor: null,
+        },
+      },
+    });
+    renderAt("/");
+
+    await user.click(await bell("1 unread"));
+    const centre = await screen.findByRole("dialog", { name: "Notifications" });
+    expect(
+      within(centre).getByRole("link", { name: /A key date on Acme MSA is coming up/ }),
+    ).toBeInTheDocument();
+  });
+
   it("deep-links the Inbox's arrival to the staff request detail", async () => {
     // Group 4 is the one Request event on this bell (INT-006, M21/4),
     // and it addresses the staff detail rather than the portal one: the

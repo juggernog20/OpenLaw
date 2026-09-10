@@ -141,6 +141,18 @@ export async function configureTaxonomy(admin, log) {
     });
   }
 
+  // The turnaround the Type publishes (INT-003). The portal draws it
+  // beside the type, and triage is offered it as a suggested return
+  // estimate, so a demo without it shows the picker and the estimate
+  // box empty on every type.
+  for (const kind of REQUEST_KINDS.filter((k) => k.turnaroundDays !== undefined)) {
+    const row = withTargets.bySlug.get(kind.typeSlug);
+    if (!row) continue;
+    await admin.patch(`/api/v1/request-types/${row.id}`, {
+      turnaroundDays: kind.turnaroundDays,
+    });
+  }
+
   const contractStatuses = await index(admin, "/api/v1/contract-statuses", "contractStatuses");
   for (const status of [
     { displayName: "Signed, awaiting countersignature", stage: "signature" },

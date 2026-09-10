@@ -1011,7 +1011,7 @@ and organization-authored Knowledge remain governed by their current decisions.
 
 ## DD-021: Business Users see the Contracts they are stakeholders on, in the portal
 
-- **Status:** Accepted; spec pending
+- **Status:** Accepted; implemented in #808
 - **Date:** 2026-09-09
 - **Source:** [focus group, 2026-09-07](../reviews/focus-group-2026-09-07.md)
 
@@ -1021,9 +1021,13 @@ DD-013 gives a Business User the portal and only their own Requests. Four tester
 
 ### Decision
 
-A Business User can open, in the portal, the Contracts on which they are the business sponsor or a named stakeholder. The view is read-only: title, counterparty, stage, Owner, term and renewal dates, notice deadline, value, and the current Version of the primary Document, read in the same document viewer the app uses, with download. Nothing else on the record crosses over: no comments below Full Thread, no Tasks, no Fields tagged legal, no History. DD-014 and CTR-018 confidentiality apply unchanged; a Confidential contract is reachable only if the person is on its team.
+A Business User can open, in the portal, the Contracts on which they are the Business Owner or a named stakeholder. The view is read-only: title, counterparty, stage, Business Owner, Legal Owner, term and renewal dates, notice deadline, value, and the current Version of the primary Document, read in the same document viewer the app uses, with download. Nothing else on the record crosses over: no comments below Full Thread, no Tasks, no Fields tagged legal, no History. DD-014 and CTR-018 confidentiality apply unchanged; a Confidential contract is reachable only if the person is on its team.
 
-The stakeholder link is the existing business-sponsor Field plus a stakeholder list on the Contract that Member+ maintains. Being a Requester whose Request converted into the Contract makes that person a stakeholder by default.
+The original decision described an existing business-sponsor Field. The 2026-09-10 clarification supersedes that mechanism: Business sponsor means the Requester, represented by a single nullable **Business Owner**, not a custom Field. Conversion seeds the Requester as Business Owner; migration backfills existing converted Contracts. Directly created Contracts start unassigned. Automatic conversion and backfill retain the original Requester even if their account was archived before triage; this historical assignment does not bypass the archived-account sign-in gate. New manual assignments require a live person. The existing accountable Owner (`manager_id`) is labelled **Legal Owner**.
+
+Member+ who can reach the Contract may assign or clear a live Business Owner and maintain a separate list of named, live stakeholders. Contributors cannot change either access mechanism. Portal access is the current Business Owner OR an explicit stakeholder link; changing or clearing the owner removes only ownership-derived access, preserving separately maintained stakeholder links. Conversion does not create a duplicate link. For Confidential Contracts and Confidential primary Documents, this affiliation must also pass the existing named-team or Legal Owner gate. No role bypasses this Portal gate. Archived Contracts and Documents are omitted.
+
+Contract Overview pairs Business Owner and Legal Owner, followed by a full-width Our Entity row directly above Counterparties. Stakeholders are managed separately.
 
 ### Rationale
 
@@ -1031,7 +1035,9 @@ The portal's job is to stop the inbox back-and-forth (PRODUCT.md principle 3). "
 
 ### Consequences
 
-Spec must settle: the list's shape in the portal (one flat list, DD-019 views do not apply), which term fields a Business User sees when they are Unverified (CTR-008 markers stay visible), and whether a stakeholder is notified on stage changes (NOT-002 group). Reporting stays deferred; this is a read on records the person already has a stake in, not a dashboard.
+Your Contracts is one flat paginated list; DD-019 views do not apply. The detail exposes title, primary counterparty, stage, both owner names, value, term type, effective and expiry dates, renewal period, notice deadline, and renewal-pending state. Existing CTR-008 Unverified markers remain visible with an explanation; internal evidence, run details, legal Fields, Tasks and History are excluded. No new Contract comment surface or stage-change notification is added. Existing Request threads are unchanged.
+
+The existing Document reader uses dedicated Portal endpoints. Every metadata, byte, rendition, email and attachment request checks affiliation and confidentiality again, and accepts only the current Version of the current primary Document. Staff Document endpoints retain their existing access rules. Reporting stays deferred; this is a read on records the person already has a stake in, not a dashboard.
 
 ## DD-022: Auto-Docs — a new destination that fills approved templates from a form
 
@@ -1079,5 +1085,5 @@ Nothing is built until the decision record exists. FUTURE-FEATURES' "Contract te
 | DD-018 | Work-model doctrine — dual workspaces with the deliverable rule                           | Accepted                          |
 | DD-019 | Saved list views — private to one person, one `jsonb` config, saving is an act            | Accepted                          |
 | DD-020 | Product documentation is public, versioned, and separate from Knowledge                   | Accepted                          |
-| DD-021 | Business Users see the Contracts they are stakeholders on, in the portal                  | Accepted; spec pending            |
+| DD-021 | Business Users see the Contracts they are stakeholders on, in the portal                  | Accepted; implemented in #808     |
 | DD-022 | Auto-Docs — a new destination that fills approved templates from a form                   | Accepted direction; grill pending |

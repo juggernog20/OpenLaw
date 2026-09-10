@@ -40,7 +40,7 @@
  * Users are bounced home; the API's 403 is the real refusal.
  */
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   redirect,
   useLoaderData,
@@ -52,6 +52,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { FilePen, Plus } from "lucide-react";
 import { CONTRACT_SORT_KEYS, type SortDirection } from "@openlaw/shared";
 import { api } from "../lib/api";
+import { useListReadGuard } from "../lib/list-read-guard";
 import {
   CONTRACT_FILTER_KEYS,
   filterQuery,
@@ -198,14 +199,7 @@ export function ContractsPage() {
   const [requestBusy, setListBusy] = useState(false);
   const navigation = useNavigation();
   const listBusy = requestBusy || navigation.state !== "idle";
-  const readVersion = useRef(0);
-  // A layout effect, not a passive one: the bump has to land in the
-  // same commit as the render that shows the new list. A passive effect
-  // runs a scheduler tick later, and a click in that gap starts a read
-  // that the late bump then discards, so the click is silently lost.
-  useLayoutEffect(() => {
-    readVersion.current += 1;
-  }, [loaded, navigation.location]);
+  const { beginRead, noteUrlSync, shouldAdoptLoader } = useListReadGuard();
 
   /** What the reader is looking at, and the views they could be looking
    * at instead. Both start from the loader, which already resolved the
@@ -218,7 +212,7 @@ export function ContractsPage() {
   useEffect(() => {
     const previous = previousLoad.current;
     previousLoad.current = loaded;
-    if (previous === loaded) return;
+    if (previous === loaded || !shouldAdoptLoader(loaded)) return;
     setRows(loaded.contracts);
     setCursor(loaded.nextCursor);
     setTotal(loaded.total ?? loaded.contracts.length);
@@ -232,7 +226,7 @@ export function ContractsPage() {
     setAppended(null);
     setPageError(null);
     setListError(null);
-  }, [loaded]);
+  }, [loaded, shouldAdoptLoader]);
   const definitions = useRecordFilterDefinitions("contracts", loaded.filterOptions);
 
   const activeView = views.find((view) => view.id === activeViewId) ?? null;
@@ -268,9 +262,11 @@ export function ContractsPage() {
       setLayout(next);
       setActiveViewId(nextActiveId);
       if (nextActiveId !== activeViewId)
-        await navigate(
-          { search: filterSearch(next, CONTRACT_FILTER_KEYS, nextActiveId) },
-          { preventScrollReset: true },
+        await noteUrlSync(
+          navigate(
+            { search: filterSearch(next, CONTRACT_FILTER_KEYS, nextActiveId) },
+            { preventScrollReset: true },
+          ),
         );
       return;
     }
@@ -280,12 +276,12 @@ export function ContractsPage() {
     if (listBusy) return;
     setListError(null);
     setListBusy(true);
-    const version = ++readVersion.current;
+    const isCurrent = beginRead();
     const { data } = await api
       .GET("/api/v1/contracts", { params: { query: listQuery(next) } })
       .catch(() => ({ data: undefined }))
       .finally(() => setListBusy(false));
-    if (version !== readVersion.current) return;
+    if (!isCurrent()) return;
     if (!data) {
       setListError(
         intl.formatMessage({
@@ -302,9 +298,11 @@ export function ContractsPage() {
     setPageError(null);
     setLayout(next);
     setActiveViewId(nextActiveId);
-    await navigate(
-      { search: filterSearch(next, CONTRACT_FILTER_KEYS, nextActiveId) },
-      { preventScrollReset: true },
+    await noteUrlSync(
+      navigate(
+        { search: filterSearch(next, CONTRACT_FILTER_KEYS, nextActiveId) },
+        { preventScrollReset: true },
+      ),
     );
   }
 
@@ -319,12 +317,12 @@ export function ContractsPage() {
     if (listBusy || cursor === null) return;
     setPageError(null);
     setListBusy(true);
-    const version = ++readVersion.current;
+    const isCurrent = beginRead();
     const { data } = await api
       .GET("/api/v1/contracts", { params: { query: { cursor, ...listQuery(layout) } } })
       .catch(() => ({ data: undefined }))
       .finally(() => setListBusy(false));
-    if (version !== readVersion.current) return;
+    if (!isCurrent()) return;
     if (!data) {
       // Beside the control that failed, and the control stays: the retry
       // is the button already under the reader's hand.
@@ -387,9 +385,11 @@ export function ContractsPage() {
     setViews(next);
     setActiveViewId(activeId);
     if (activeId !== activeViewId)
-      void navigate(
-        { search: filterSearch(layout, CONTRACT_FILTER_KEYS, activeId) },
-        { replace: true, preventScrollReset: true },
+      void noteUrlSync(
+        navigate(
+          { search: filterSearch(layout, CONTRACT_FILTER_KEYS, activeId) },
+          { replace: true, preventScrollReset: true },
+        ),
       );
   }
 

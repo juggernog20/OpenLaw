@@ -90,13 +90,15 @@ const MISSING_NUMBER = 999_999;
  * side doors, which are addressed by id rather than by reference. */
 const MISSING_ID = "00000000-0000-7000-8000-000000000000";
 
-/** DES-009's copy, as DES-028 and DES-029 settled it. Asserted as
- * literals: a reminder that misstates who can see the record is worse
- * than none, so the words are part of the acceptance. */
+/** The banner and the composer notice, word for word. DES-028 and
+ * DES-029 drew them naming Administrators in the audience; the DD-014
+ * amendment of 10 September 2026 took the Administrator bypass away, and
+ * the copy names who reaches the record now. Asserted as literals: a
+ * reminder that misstates who can see the record is worse than none, so
+ * the words are part of the acceptance. */
 const BANNER_COPY =
-  "Confidential contract — the contract team, the Owner, and Administrators see it.";
-const COMPOSER_NOTICE =
-  "Confidential contract — whichever audience you pick, only the contract team, the Owner, and Administrators can read it.";
+  "Confidential contract — only the contract team and owner can access this contract.";
+const COMPOSER_NOTICE = "Confidential contract — only the contract team and owner can read it.";
 const FLAG_LABEL = "Confidential — restrict to the contract team";
 
 /** Only what the sweep reads: the title it matches on and the reference
@@ -115,11 +117,17 @@ async function listContracts(request: APIRequestContext) {
   return ContractRows.parse(await listed.json()).contracts;
 }
 
-/** Archives every live per-run contract — the resting state a contract
- * has (TECH-018 cleanup; there is no hard delete). The default list
- * leaves archived rows out, so nothing here is archived twice. The
- * Administrator runs it, and an Administrator reaches every contract
- * confidential or not (DD-014), so the flag never strands a row. */
+/** Archives every live per-run contract this caller reaches. Archived is
+ * the resting state a contract has (TECH-018 cleanup; there is no hard
+ * delete). The default list leaves archived rows out, so nothing here is
+ * archived twice.
+ *
+ * Who runs it decides what it can reach. The DD-014 amendment of
+ * 10 September 2026 took the Administrator's bypass away, so an
+ * Administrator with no team row cannot see the walled record at all.
+ * A sweep that cannot see a row leaves it live rather than failing. The
+ * creator holds the `creator` team row (CTR-004), so they are the one
+ * who can still archive it. */
 async function ensureDemoContractsInert(request: APIRequestContext) {
   for (const row of (await listContracts(request)).filter((contract) =>
     contract.title.startsWith(CONTRACT_PREFIX),
@@ -225,8 +233,14 @@ test.describe.serial("M10 demo path", () => {
      * Leaves the shared instance as the run found it (TECH-018): the
      * per-run contract archived with its conversation on it, and both
      * per-run people archived (an activated user has no hard delete).
+     *
+     * The contract is walled by the time this runs, so the creator
+     * sweeps it first, while their context is still open. The
+     * Administrator sweep below reaches whatever is left in the open,
+     * and nothing behind the wall.
      */
     const leaveInert = async () => {
+      if (creator) await ensureDemoContractsInert(creator.page.request);
       await creator?.context.close();
       await outsider?.context.close();
       await ensureDemoContractsInert(page.request);

@@ -85,6 +85,7 @@
  * on the contract land in the same thread.
  */
 
+import { RequestEstimate } from "../components/inbox/request-estimate";
 import { HelpLink } from "../components/documentation/help-link";
 import { useState } from "react";
 import {
@@ -382,6 +383,13 @@ export function InboxRequestPage() {
       <RecordApplets applets={[chatApplet]}>
         <div className="flex h-full flex-col gap-4 overflow-y-auto px-page-x py-page-y">
           <Hero request={request} />
+          <RequestEstimate
+            key={request.id}
+            request={request}
+            onSaved={() => {
+              void revalidator.revalidate();
+            }}
+          />
           {/* The record box rather than the page: opening the thread
               takes a column out of this row, so the two columns have to
               reflow against what is left of it (DES-012, DES-016). */}

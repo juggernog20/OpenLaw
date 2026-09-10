@@ -35,6 +35,9 @@
   "action.reload": {
     "defaultMessage": "Reload"
   },
+  "action.remove": {
+    "defaultMessage": "Remove"
+  },
   "action.rename": {
     "defaultMessage": "Rename"
   },
@@ -330,7 +333,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} turnaroundDays {Turnaround (calendar days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -503,6 +506,9 @@
   "activity.reminderOffset": {
     "defaultMessage": "{days, plural, =0 {day of} one {# day} other {# days}}"
   },
+  "activity.reminderUsualAudience": {
+    "defaultMessage": "Usual audience"
+  },
   "activity.request.assigneeChanged": {
     "defaultMessage": "{assigned, select, yes {{actor} assigned {assignee} to triage this request} other {{actor} cleared the triage assignment}}"
   },
@@ -514,6 +520,9 @@
   },
   "activity.request.declined": {
     "defaultMessage": "{actor} declined this request"
+  },
+  "activity.request.expectedByChanged": {
+    "defaultMessage": "{set, select, yes {{actor} set Expected back (estimate) to {date}} other {{actor} cleared Expected back (estimate)}}"
   },
   "activity.request.resolved": {
     "defaultMessage": "{actor} resolved this request"
@@ -1649,6 +1658,9 @@
   "contracts.filteredCount": {
     "defaultMessage": "{shown} of {total, plural, one {# contract} other {# contracts}}"
   },
+  "contracts.form.businessOwner": {
+    "defaultMessage": "Business Owner"
+  },
   "contracts.form.counterparties": {
     "defaultMessage": "Counterparties"
   },
@@ -1675,6 +1687,9 @@
   },
   "contracts.form.lastRenewal": {
     "defaultMessage": "Last renewal"
+  },
+  "contracts.form.legalOwner": {
+    "defaultMessage": "Legal Owner"
   },
   "contracts.form.matter": {
     "defaultMessage": "Matter"
@@ -1999,6 +2014,42 @@
   },
   "contracts.stageLabel": {
     "defaultMessage": "{stage, select, draft {Draft} review {Review} approval {Approval} signature {Signature} active {Active} ended {Ended} other {Unknown}}"
+  },
+  "contracts.stakeholders.add": {
+    "defaultMessage": "Add"
+  },
+  "contracts.stakeholders.archived": {
+    "defaultMessage": "(archived)"
+  },
+  "contracts.stakeholders.choose": {
+    "defaultMessage": "Choose a person"
+  },
+  "contracts.stakeholders.empty": {
+    "defaultMessage": "No additional stakeholders."
+  },
+  "contracts.stakeholders.explanation": {
+    "defaultMessage": "The Business Owner and stakeholders can read this Contract in the Portal. Confidential Contracts also require record-team or Legal Owner access. Stakeholder access continues when the Business Owner changes."
+  },
+  "contracts.stakeholders.person": {
+    "defaultMessage": "Add stakeholder"
+  },
+  "contracts.stakeholders.readError": {
+    "defaultMessage": "Stakeholders could not be read."
+  },
+  "contracts.stakeholders.remove": {
+    "defaultMessage": "Remove"
+  },
+  "contracts.stakeholders.removeNamed": {
+    "defaultMessage": "Remove {name} as stakeholder"
+  },
+  "contracts.stakeholders.retry": {
+    "defaultMessage": "Retry"
+  },
+  "contracts.stakeholders.title": {
+    "defaultMessage": "Stakeholders"
+  },
+  "contracts.stakeholders.writeError": {
+    "defaultMessage": "Stakeholders could not be updated."
   },
   "contracts.team.add": {
     "defaultMessage": "Add team member"
@@ -4487,6 +4538,42 @@
   "keyDates.needLabel": {
     "defaultMessage": "Name what the date is."
   },
+  "keyDates.reminders.add": {
+    "defaultMessage": "Add lead time"
+  },
+  "keyDates.reminders.addOffset": {
+    "defaultMessage": "Additional lead time (days before)"
+  },
+  "keyDates.reminders.departed": {
+    "defaultMessage": "Some selected recipients have left the team and will not be reminded."
+  },
+  "keyDates.reminders.effective": {
+    "defaultMessage": "This date will remind: {ladder}"
+  },
+  "keyDates.reminders.global": {
+    "defaultMessage": "Global reminders: {ladder}"
+  },
+  "keyDates.reminders.loadFailed": {
+    "defaultMessage": "The current reminder ladder and team could not be loaded."
+  },
+  "keyDates.reminders.loading": {
+    "defaultMessage": "Loading reminder ladder and team…"
+  },
+  "keyDates.reminders.recipientHelp": {
+    "defaultMessage": "With no selection, reminders go to the Legal Owner or Matter Manager and record team. Select people to send this Key date's reminders only to them. Current access and personal preferences still apply."
+  },
+  "keyDates.reminders.remove": {
+    "defaultMessage": "Remove {offset}"
+  },
+  "keyDates.reminders.removeUnavailable": {
+    "defaultMessage": "Remove unavailable recipients"
+  },
+  "keyDates.reminders.reset": {
+    "defaultMessage": "Use the usual audience"
+  },
+  "keyDates.reminders.title": {
+    "defaultMessage": "Reminders"
+  },
   "keyDates.remove": {
     "defaultMessage": "Remove date"
   },
@@ -5466,7 +5553,7 @@
     "defaultMessage": "{contract} is expiring"
   },
   "notifications.date.keyDate": {
-    "defaultMessage": "A key date on {contract} is coming up"
+    "defaultMessage": "{keyDate} on {contract} is coming up"
   },
   "notifications.date.noticeDeadline": {
     "defaultMessage": "The notice deadline on {contract} is coming up"
@@ -5531,6 +5618,9 @@
   "notifications.unknown": {
     "defaultMessage": "{contract} — {event}"
   },
+  "notifications.unnamedKeyDate": {
+    "defaultMessage": "A key date"
+  },
   "notifications.unnamedObligation": {
     "defaultMessage": "an obligation"
   },
@@ -5551,6 +5641,81 @@
   },
   "portal.businessView.return": {
     "defaultMessage": "Return to legal view"
+  },
+  "portal.contract.back": {
+    "defaultMessage": "Your Contracts"
+  },
+  "portal.contract.counterparty": {
+    "defaultMessage": "Counterparty"
+  },
+  "portal.contract.effectiveDate": {
+    "defaultMessage": "Effective date"
+  },
+  "portal.contract.expiryDate": {
+    "defaultMessage": "Expiry date"
+  },
+  "portal.contract.months": {
+    "defaultMessage": "{count, plural, one {# month} other {# months}}"
+  },
+  "portal.contract.noDocument": {
+    "defaultMessage": "No primary Document is available to you."
+  },
+  "portal.contract.notFound": {
+    "defaultMessage": "Contract not found"
+  },
+  "portal.contract.notRecorded": {
+    "defaultMessage": "Not recorded"
+  },
+  "portal.contract.noticeDeadline": {
+    "defaultMessage": "Notice deadline"
+  },
+  "portal.contract.primaryDocument": {
+    "defaultMessage": "Primary Document"
+  },
+  "portal.contract.readDocument": {
+    "defaultMessage": "Read Document"
+  },
+  "portal.contract.renewalPending": {
+    "defaultMessage": "Renewal is pending confirmation by Legal."
+  },
+  "portal.contract.renewalPeriod": {
+    "defaultMessage": "Renewal period"
+  },
+  "portal.contract.stage": {
+    "defaultMessage": "Stage"
+  },
+  "portal.contract.termType": {
+    "defaultMessage": "Term type"
+  },
+  "portal.contract.unreachable": {
+    "defaultMessage": "This Contract does not exist, or you cannot open it."
+  },
+  "portal.contract.unverifiedExplanation": {
+    "defaultMessage": "Legal has not yet verified the values marked Unverified. Confirm them with Legal before relying on them."
+  },
+  "portal.contract.value": {
+    "defaultMessage": "Value"
+  },
+  "portal.contracts.description": {
+    "defaultMessage": "Contracts where you are the Business Owner or a stakeholder."
+  },
+  "portal.contracts.empty": {
+    "defaultMessage": "No Contracts are available to you."
+  },
+  "portal.contracts.firstPage": {
+    "defaultMessage": "First page"
+  },
+  "portal.contracts.nextPage": {
+    "defaultMessage": "Next page"
+  },
+  "portal.contracts.pagination": {
+    "defaultMessage": "Contract pages"
+  },
+  "portal.contracts.requests": {
+    "defaultMessage": "Your requests"
+  },
+  "portal.contracts.title": {
+    "defaultMessage": "Your Contracts"
   },
   "portal.deflection.heading": {
     "defaultMessage": "Before you submit"
@@ -5726,6 +5891,9 @@
   "portal.request.meta": {
     "defaultMessage": "{reference} · {requestType} · Submitted {submitted}"
   },
+  "portal.request.owner": {
+    "defaultMessage": "Owner: {name}"
+  },
   "portal.request.paperOnThread": {
     "defaultMessage": "<composer>Attach new files to a reply</composer>."
   },
@@ -5765,6 +5933,9 @@
   "portal.request.threadYou": {
     "defaultMessage": "You"
   },
+  "portal.request.unassigned": {
+    "defaultMessage": "Not assigned yet"
+  },
   "portal.settings.heading": {
     "defaultMessage": "How we tell you about your requests"
   },
@@ -5782,6 +5953,9 @@
   },
   "portal.theme.failed": {
     "defaultMessage": "The theme could not be saved. Please choose it again to retry."
+  },
+  "portal.turnaround": {
+    "defaultMessage": "Estimated turnaround: {days, plural, one {# calendar day} other {# calendar days}}"
   },
   "recordFilters.apply": {
     "defaultMessage": "Apply"
@@ -5990,6 +6164,24 @@
   "renewal.vehicle.successorBlurb": {
     "defaultMessage": "Standalone record linked as the renewal."
   },
+  "requests.clearEstimate": {
+    "defaultMessage": "Clear estimate"
+  },
+  "requests.estimateHint": {
+    "defaultMessage": "An estimate from Legal, separate from the requester's Needed by date. Suggested dates use the request type's calendar-day turnaround from submission."
+  },
+  "requests.estimateNotSet": {
+    "defaultMessage": "Not set yet"
+  },
+  "requests.estimatePassed": {
+    "defaultMessage": "Estimate passed"
+  },
+  "requests.expectedBack": {
+    "defaultMessage": "Expected back (estimate)"
+  },
+  "requests.expectedBackValue": {
+    "defaultMessage": "Expected back (estimate): {date}"
+  },
   "requests.reference": {
     "defaultMessage": "R-{number, number, ::group-off}"
   },
@@ -5998,6 +6190,9 @@
   },
   "requests.statusLabel": {
     "defaultMessage": "{status, select, new {New} converted {Converted} resolved {Resolved} declined {Declined} other {Unknown}}"
+  },
+  "requests.useSuggestedEstimate": {
+    "defaultMessage": "Use suggested date: {date}"
   },
   "resolve.explains": {
     "defaultMessage": "Explain why this request can be closed without creating a contract or matter."
@@ -6429,7 +6624,7 @@
     "defaultMessage": "Switching modes applies immediately and is recorded in the activity log."
   },
   "settings.auth.noDomains": {
-    "defaultMessage": "No domains allowed yet — the portal is closed."
+    "defaultMessage": "No domains allowed yet. Magic-link sign-in is unavailable."
   },
   "settings.auth.oidc": {
     "defaultMessage": "Identity provider (OIDC)"
@@ -6444,7 +6639,7 @@
     "defaultMessage": "Magic links are the only portal sign-in method in built-in mode, so they can't be turned off."
   },
   "settings.auth.portalOptional": {
-    "defaultMessage": "Turn off to require SSO for everyone. Requesters would then need accounts in your identity provider to reach the portal."
+    "defaultMessage": "Turn off to require SSO for Business Users. They will need accounts in your identity provider to reach the Portal. Administrators retain emergency password sign-in."
   },
   "settings.auth.providerId": {
     "defaultMessage": "Provider ID"
@@ -8207,6 +8402,15 @@
   "settings.requestTypeEditor.targetNone": {
     "defaultMessage": "No target"
   },
+  "settings.requestTypeEditor.turnaround": {
+    "defaultMessage": "Turnaround (calendar days)"
+  },
+  "settings.requestTypeEditor.turnaroundHint": {
+    "defaultMessage": "Suggests an expected return date from submission for Legal to confirm. Blank means no suggestion; saved Request estimates stay unchanged."
+  },
+  "settings.requestTypeEditor.turnaroundInvalid": {
+    "defaultMessage": "Enter a whole number from 0 to 36,500 calendar days, or leave it blank."
+  },
   "settings.requestTypes.add": {
     "defaultMessage": "Add request type"
   },
@@ -9024,7 +9228,7 @@
     "defaultMessage": "Allowed email domains"
   },
   "welcome.portal.empty": {
-    "defaultMessage": "No domains allowed yet — the portal is closed."
+    "defaultMessage": "No domains allowed yet. Magic-link sign-in is unavailable."
   },
   "welcome.portal.enabled": {
     "defaultMessage": "Magic-link sign-in is on"
@@ -9036,13 +9240,13 @@
     "defaultMessage": "The magic-link setting could not be saved."
   },
   "welcome.portal.hint": {
-    "defaultMessage": "Business users sign in with emailed magic links, restricted to the domains you allow. An empty list admits nobody."
+    "defaultMessage": "Business users can sign in with emailed magic links from the domains you allow. An empty list prevents magic-link sign-in."
   },
   "welcome.portal.remove": {
     "defaultMessage": "Remove {domain}"
   },
   "welcome.portal.toggle.hint": {
-    "defaultMessage": "Select to change. Off closes the portal entirely, even for allowed domains."
+    "defaultMessage": "In built-in mode, turning off magic links closes Portal entry. With OIDC, business users can still sign in with SSO."
   },
   "welcome.progress": {
     "defaultMessage": "Step {current} of {total}"

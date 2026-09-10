@@ -1376,7 +1376,7 @@ export function WelcomePage() {
                     <CardDescription>
                       <FormattedMessage
                         id="welcome.portal.hint"
-                        defaultMessage="Business users sign in with emailed magic links, restricted to the domains you allow. An empty list admits nobody."
+                        defaultMessage="Business users can sign in with emailed magic links from the domains you allow. An empty list prevents magic-link sign-in."
                       />
                     </CardDescription>
                     <OptionButton
@@ -1398,7 +1398,7 @@ export function WelcomePage() {
                       description={
                         <FormattedMessage
                           id="welcome.portal.toggle.hint"
-                          defaultMessage="Select to change. Off closes the portal entirely, even for allowed domains."
+                          defaultMessage="In built-in mode, turning off magic links closes Portal entry. With OIDC, business users can still sign in with SSO."
                         />
                       }
                     />
@@ -1459,7 +1459,7 @@ export function WelcomePage() {
                       <p className="text-sm text-muted">
                         <FormattedMessage
                           id="welcome.portal.empty"
-                          defaultMessage="No domains allowed yet — the portal is closed."
+                          defaultMessage="No domains allowed yet. Magic-link sign-in is unavailable."
                         />
                       </p>
                     )}

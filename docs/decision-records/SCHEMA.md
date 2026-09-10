@@ -371,16 +371,20 @@ Source: **MTR-004**
 
 Named deadlines on a matter. Zero-to-many per matter; the earliest upcoming entry is the matter's "next deadline" in lists and dashboards. No SLA semantics in v1 (see `FUTURE-FEATURES.md`).
 
-| Column                     | Type        | Notes                                                                                            |
-| -------------------------- | ----------- | ------------------------------------------------------------------------------------------------ |
-| `id`                       | UUID        | PK                                                                                               |
-| `matter_id`                | UUID        | FK → `matters.id`, not null, cascade — a Key date is part of the Matter                          |
-| `date`                     | date        | not null; a calendar date, not a timestamp (deadlines are day-granular; display per **DES-014**) |
-| `label`                    | text        | not null, 1–200 trimmed characters, e.g., "SOL expires", "Preliminary hearing"                   |
-| `note`                     | text        | nullable, 1–2000 trimmed characters; a blank write is normalized to NULL                         |
-| `created_at`, `updated_at` | timestamptz |                                                                                                  |
+| Column                     | Type        | Notes                                                                                                                                                                                                                                                                                       |
+| -------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                                                                                                                                                                                                                          |
+| `matter_id`                | UUID        | FK → `matters.id`, not null, cascade — a Key date is part of the Matter                                                                                                                                                                                                                     |
+| `date`                     | date        | not null; a calendar date, not a timestamp (deadlines are day-granular; display per **DES-014**)                                                                                                                                                                                            |
+| `label`                    | text        | not null, 1–200 trimmed characters, e.g., "SOL expires", "Preliminary hearing"                                                                                                                                                                                                              |
+| `note`                     | text        | nullable, 1–2000 trimmed characters; a blank write is normalized to NULL                                                                                                                                                                                                                    |
+| `reminder_offset_days`     | jsonb       | not null, default `[]`; up to 20 additional whole-day lead times, 0–730, deduplicated; unioned with the global list (**NOT-004**, #807)                                                                                                                                                     |
+| `reminder_recipient_ids`   | jsonb       | not null, default `[]`; deduplicated person IDs from the current record team, including Owner/Manager; empty uses the usual audience, nonempty selects a subset revalidated at delivery; Business Users are not selectable, since the morning round does not serve them (**NOT-004**, #807) |
+| `created_at`, `updated_at` | timestamptz |                                                                                                                                                                                                                                                                                             |
 
-Indexed on (`matter_id`, `date`). CRUD audit-logged per **DD-017**.
+Migration `0101_key_date_reminders` adds database checks requiring an offset array of at most 20 whole numbers from 0 through 730 and a recipient array containing only strings. Empty arrays remain valid. Deduplication and current-team eligibility are enforced by the write routes.
+
+Indexed on (`matter_id`, `date`). CRUD audit-logged per **DD-017**. Migration `0101_key_date_reminders` adds the reminder lists without changing existing dates or their default recipients. Removed or archived selected recipients are excluded, and an explicit subset with no eligible people remains empty.
 
 Landed in M23/3, migration `0073_shocking_raider`. Closing and archiving retain these rows. Only an open, non-archived Matter contributes a Next deadline or approaching-date notification; archive freezes CRUD, while closing does not.
 
@@ -596,7 +600,8 @@ Columns:
 - `title` — text, not null, free-form, editable per **CTR-003**
 - `contract_type_id` FK → `contract_types.id`, not null per **CTR-002**
 - `status_id` FK → `contract_statuses.id`, not null per **CTR-001**; the contract's **stage** is derived from the status, never stored on the contract
-- `manager_id` FK → `users.id`, nullable (null = unassigned/triage), UI label "Owner" per **CTR-004**
+- `manager_id` FK → `users.id`, nullable (null = unassigned/triage), the existing **CTR-004** Owner responsibility, labelled **Legal Owner** on Contract Overview and the Portal after **DD-021** (#808)
+- `business_owner_id` FK → `users.id`, nullable; one Business Owner, seeded/backfilled from a converted Request's Requester. Supplies Portal Contract access independently of explicit stakeholders; changing or clearing it removes that source of access. Manual assignments require an active person. Existing conversions from archived Requesters retain their historical ownership without granting sign-in access (**DD-021**, #808)
 - `priority` — text enum `low|medium|high|critical` (levels renamed per **DES-018**), not null, default `medium` per **CTR-005**
 - `risk` — text enum `low|medium|high|critical`, nullable (null = not yet assessed) per **CTR-005**
 - `term_type` — text enum `fixed|auto_renew|evergreen`, not null per **CTR-006**, default `fixed`; renewal engine and calendar branch on this. Landed in M16/1
@@ -628,6 +633,20 @@ Term shape per **CTR-006**. The five columns landed in M16/1, migration `0046_co
 - **Backfill.** Existing rows took `fixed`. That is an assertion about them, not a discovery: `fixed` is the least-asserting of the three kinds. Re-type an evergreen contract by editing it.
 - **Derived.** Four answers the record gives sit in no column, and all four are computed where the answer is assembled. The notice deadline above; days remaining (`expiry_date − today`), which goes negative once the expiry has passed; **renewal pending confirmation** (M16/4) — true when the contract is `auto_renew`, is not archived, is not ended, and its `expiry_date` is behind today; and the **proposed roll expiry**, `expiry_date` plus `renewal_period_months`, clamped at the target month's last day — null whenever the contract cannot roll, which is any term that is not `auto_renew` and any `auto_renew` term missing either `expiry_date` or `renewal_period_months`. None of the four needs a job, a sweep, or a clock.
 - **A renewal is not a row.** Confirming a roll (**CTR-007**) moves `expiry_date` and appends one `contract.renewal_confirmed` entry to `activity_log`; nothing else records it. The record's renewal history and its "Last renewal" fact are those entries read back. No renewal table exists, and none is planned.
+
+---
+
+### `contract_stakeholders`
+
+Source: **DD-021**, #808. Explicit people who can read a Contract's narrow Portal view, independently of its Business Owner.
+
+| Column        | Type        | Notes                                                       |
+| ------------- | ----------- | ----------------------------------------------------------- |
+| `contract_id` | text        | FK → `contracts.id`, not null, cascade on Contract deletion |
+| `user_id`     | text        | FK → `users.id`, not null                                   |
+| `created_at`  | timestamptz | not null, defaults to now                                   |
+
+Primary key (`contract_id`, `user_id`); `contract_stakeholders_user_idx` supports a person's Contract list. Member+ maintains entries on a reachable, unarchived Contract. Conversion seeds Business Owner alone, without a duplicate stakeholder entry. The Portal checks current ownership or stakeholder membership, live account, archive state and DD-014 confidentiality on every request; the primary Document's own access rule applies too. This association grants no staff-record access and contains no separate Confidential override.
 
 ---
 
@@ -828,18 +847,22 @@ Free-form named dates beyond the typed term machinery (price reviews, milestones
 
 Landed in M16/3, migration `0047_contract_key_dates`, with the columns CTR-009 names and nothing else.
 
-| Column                     | Type        | Notes                                                                                            |
-| -------------------------- | ----------- | ------------------------------------------------------------------------------------------------ |
-| `id`                       | UUID        | PK                                                                                               |
-| `contract_id`              | UUID        | FK → `contracts.id`, not null, cascade — a key date is part of the contract                      |
-| `date`                     | date        | not null; a calendar date, not a timestamp (deadlines are day-granular; display per **DES-014**) |
-| `label`                    | text        | not null, 1–200 trimmed characters                                                               |
-| `note`                     | text        | nullable, 1–2000 trimmed characters; the write path normalizes a blank string to NULL            |
-| `created_at`, `updated_at` | timestamptz |                                                                                                  |
+| Column                     | Type        | Notes                                                                                                                                                                                                                                                                                       |
+| -------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                                                                                                                                                                                                                          |
+| `contract_id`              | UUID        | FK → `contracts.id`, not null, cascade — a key date is part of the contract                                                                                                                                                                                                                 |
+| `date`                     | date        | not null; a calendar date, not a timestamp (deadlines are day-granular; display per **DES-014**)                                                                                                                                                                                            |
+| `label`                    | text        | not null, 1–200 trimmed characters                                                                                                                                                                                                                                                          |
+| `note`                     | text        | nullable, 1–2000 trimmed characters; the write path normalizes a blank string to NULL                                                                                                                                                                                                       |
+| `reminder_offset_days`     | jsonb       | not null, default `[]`; up to 20 additional whole-day lead times, 0–730, deduplicated; unioned with the global list (**NOT-004**, #807)                                                                                                                                                     |
+| `reminder_recipient_ids`   | jsonb       | not null, default `[]`; deduplicated person IDs from the current record team, including Owner/Manager; empty uses the usual audience, nonempty selects a subset revalidated at delivery; Business Users are not selectable, since the morning round does not serve them (**NOT-004**, #807) |
+| `created_at`, `updated_at` | timestamptz |                                                                                                                                                                                                                                                                                             |
+
+Migration `0101_key_date_reminders` adds database checks requiring an offset array of at most 20 whole numbers from 0 through 730 and a recipient array containing only strings. Empty arrays remain valid. Deduplication and current-team eligibility are enforced by the write routes.
 
 Indexed on (`contract_id`, `date`) — the shape every deadline surface reads. CRUD audit-logged per **DD-017**, one closed-union action per act (`key_date.added`, `key_date.edited`, `key_date.removed`), each at the record tier on the owning contract.
 
-- **Deliberately flat** (CTR-009). No owner column: the matters-side owner question stays a matters question. No per-date reminder schedule: **NOT-004** fixed one global offset list for every tracked date.
+- **Deliberately flat** (CTR-009). No owner column: the matters-side owner question stays a matters question. The original global-only reminder rule is superseded by the **NOT-004** addendum for #807. Migration `0101_key_date_reminders` adds the reminder lists; existing dates retain the global schedule and usual audience. Removed or archived selected recipients are excluded, and an explicit subset with no eligible people remains empty.
 - **No audience of its own.** Access is the owning contract's (DD-014, CTR-021), so confidentiality composes without this table holding a flag, a team, or a tier.
 - **Derived, never stored.** The notice deadline in the union beside these rows is `expiry_date − notice_period_days`, computed where the answer is assembled (**CTR-006**). Which date is next, and how many days away each is, are answered there too — one place, so a surface cannot disagree with the order it was given.
 
@@ -1106,7 +1129,7 @@ _Landed in M18/1 (#316). The columns below are what the migration holds; the two
 | `reminder_offset_days` | integer     | **Refinement 2**, half two. Which NOT-004 offset fired it                                                                                                                                                                                                                                                                                                                       |
 | `created_at`           | timestamptz |                                                                                                                                                                                                                                                                                                                                                                                 |
 
-Indexes: `notifications_user_idx` on `(user_id, created_at, id)` — the list's keyset order; `notifications_unread_idx` on `(user_id) where read_at is null` — the NOT-005 badge; and `notifications_reminder_idx`, a **partial unique** index on `(user_id, event_type, entity_id, reminder_date, reminder_offset_days) where reminder_date is not null`. That last one is the date reminder's **dedup identity**: it makes a re-ask a no-op and makes a date that _moves_ correctly fire again for its new value. It is defined in M18/1 and first written by the dates slice — the identity has to be in the schema before the first round runs rather than retrofitted around rows with no key.
+Indexes: `notifications_user_idx` on `(user_id, created_at, id)` — the list's keyset order; `notifications_unread_idx` on `(user_id) where read_at is null` — the NOT-005 badge; and `notifications_reminder_idx`, a **partial unique** index on `(user_id, event_type, entity_type, entity_id, reminder_date, reminder_offset_days, key_date_identity) where reminder_date is not null`. `key_date_identity` is an index expression, not a column: it reads `payload.keyDateId` for `date.key_date_approaching` and otherwise uses an empty string, also used when the ID is absent or null. Distinct Contract and Matter Key dates therefore keep separate reminders on the same day. That last index is the date reminder's **dedup identity**: it makes a re-ask a no-op and makes a date that _moves_ correctly fire again for its new value. M18/1 introduced the original index before the dates slice first wrote reminders. Migration `0098_distinct_key_date_reminders.sql` replaces that index with the current `key_date_identity` expression over `payload.keyDateId`.
 
 Checks: `entity_type` in the vocabulary; a reminder carries both halves of its identity or neither; an email is sent or skipped, never both; and neither outcome is reachable on a row that never owed one.
 
@@ -1127,6 +1150,7 @@ Structured request envelope, created only via portal forms. Not a work container
 | `id`                       | UUID        | PK                                                                                                                                                                                                                |
 | `number`                   | integer     | `GENERATED ALWAYS AS IDENTITY` (`requests_number_seq`), displayed **R-42** per **INT-002**                                                                                                                        |
 | `request_type_id`          | UUID        | FK → `request_types.id`, not null                                                                                                                                                                                 |
+| `expected_by`              | date        | nullable confirmed estimate, independent of Needed by; Member+ writes while Open/In progress (**INT-003**, #806)                                                                                                  |
 | `requester_id`             | UUID        | FK → `users.id`, not null (magic-link identity)                                                                                                                                                                   |
 | `status`                   | text (enum) | `new` \| `converted` \| `resolved` \| `declined` per **INT-001** as revised by **INT-007** — fixed, code branches; not null, default `new` (every Request is born open; M21's disposition writes the other three) |
 | `summary`                  | text        | not null                                                                                                                                                                                                          |
@@ -1153,6 +1177,8 @@ The table landed with M20/4 (#378), migration 0061, and was reconciled against t
 Source: **INT-002**
 
 `request_types`: MTR-001 machinery (`slug`, `display_name`, `description`, `display_order`, `is_system_default`, `archived_at`, timestamps) + the **three-state target** (INT-002's M19/4 addendum): `target_module` (nullable — `matter` or `contract`), `target_matter_type_id` and `target_contract_type_id` (both nullable FKs, `on delete set null`). One check constraint holds all three together — with no module both type ids are NULL; under `matter`, `target_contract_type_id` is NULL and `target_matter_type_id` may be set or NULL; under `contract`, the mirror — so "no target", "the Contract module", and "the NDA contract type" are the only shapes the table accepts. `on delete set null` demotes rather than strands: deleting the targeted type leaves the module standing. No row is system-protected; there is no fallback request type, because no record needs a non-null request type once conversion is done. Admin-managed via Intake Settings → Request types.
+
+`turnaround_days` on `request_types` is a nullable integer of 0–36,500 calendar days (**INT-003**, #806), enforced by `request_types_turnaround_days_check`. It is published on Portal request types and supplies an unconfirmed suggestion from the submission date in the organization timezone. Changing it never writes existing Requests. Both additions use migration 0100 with NULL defaults and no backfill.
 
 `request_type_fields`: (`request_type_id`, `field_id`, `display_order`, `is_required`, `created_at`), compound PK on the first two. Attachable fields: scope matching the target module, or `global`. One invariant here has no constraint behind it: a `user`- or `entity`-typed field may sit on a request form and may never be `is_required` on one, because the portal draws those pickers empty and a required one would refuse every submission of the type forever (the INT-002 M20/11 addendum, #400). Both write doors refuse the flag by name and migration 0063 cleared the rows an install could already hold; nothing in the table stops a hand-written `UPDATE`.
 

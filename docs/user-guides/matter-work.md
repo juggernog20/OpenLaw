@@ -22,9 +22,15 @@ Tasks are listed by due date, with undated Tasks last and saved display order br
 
 ## Maintain Key dates
 
-Open **Key dates**, select **Add date**, and enter **Date**, **Event**, and any **Note (optional)**. Select **Add date** to save. Use the row's actions for **Edit date** or **Remove date**; edits use **Save**, and removal asks for confirmation.
+Open **Key dates**, select **Add date**, and enter **Date**, **Event**, and any **Note (optional)**.
 
-Check the saved date and event together. An open, unarchived Matter marks its earliest eligible upcoming Key date **Next**; overdue dates are marked **Overdue**. Closed Matters retain their dates but contribute none to active deadline surfaces until reopened. Key dates have no assignee or per-date reminder schedule. See [notifications](notifications.md) for reminder behavior.
+Under **Reminders**, check the global lead times and the combined schedule for this date. To add one, enter **Additional lead time (days before)** and select **Add lead time**. Use whole days from 0 to 730; 0 means on the date. You can add up to 20 lead times. **Remove** removes an additional lead time; global reminders still apply, and a lead time in both lists fires once.
+
+Leave the recipient checkboxes clear to use the usual audience: the Matter Manager and its team. Select people to send this Key date's reminders only to those people. Their current access and notification preferences still apply; selecting someone grants no access. Selected people who leave the team or become inactive are excluded. If none remain eligible, reminders do not fall back to everyone. Use **Use the usual audience** to deliberately restore the default recipients.
+
+Select **Add date** to save. Use the row's actions for **Edit date** or **Remove date**; edits use **Save**, and removal asks for confirmation.
+
+Check the saved date and event together. An open, unarchived Matter marks its earliest eligible upcoming Key date **Next**; overdue dates are marked **Overdue**. Closed Matters retain their dates but contribute none to active deadline surfaces until reopened. Key dates have no assignee. Their additional lead times and recipient choices affect reminders, while Tasks keep their own assignment and due-date behavior. See [notifications](notifications.md) for delivery timing and preferences.
 
 Template Tasks and Key dates are ordinary rows after creation. Their relative dates have already become fixed dates, and later template or Manager changes do not reapply the template. Adjust the actual rows when the plan changes. See [creating from a template](create-matter.md).
 

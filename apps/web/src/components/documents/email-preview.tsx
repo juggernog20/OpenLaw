@@ -36,11 +36,9 @@ import { ArrowLeft, Download, Paperclip } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { formatFileSize, formatLongDateTime } from "../../lib/format";
 import { ChunkBoundary } from "../chunk-boundary";
+import { useDocumentReader } from "./reader-context";
 import {
-  emailAttachmentDownloadHref,
-  emailAttachmentPreviewHref,
   isPreviewableAttachment,
-  readEmail,
   type EmailAttachment,
   type ParsedEmail,
 } from "../../lib/documents";
@@ -66,6 +64,7 @@ export function EmailPreview({
    * offer the download it always offers when a preview is not coming. */
   onUnreadable: () => void;
 }>) {
+  const reader = useDocumentReader();
   const [loaded, setLoaded] = useState<Loaded>({ state: "loading" });
   // Which attachment is open, by its position in the message. `null` is
   // the message itself.
@@ -83,7 +82,7 @@ export function EmailPreview({
 
   useEffect(() => {
     let live = true;
-    void readEmail(documentId, versionId).then((outcome) => {
+    void reader.readEmail(documentId, versionId).then((outcome) => {
       // The panel closed, or moved to another version, while the answer
       // was in flight.
       if (!live) return;
@@ -92,7 +91,7 @@ export function EmailPreview({
     return () => {
       live = false;
     };
-  }, [documentId, versionId]);
+  }, [documentId, versionId, reader]);
 
   // Reported to the panel rather than drawn here, so every "there is no
   // preview" path in the panel ends at one card.
@@ -380,6 +379,7 @@ function Attachment({
   attachment: EmailAttachment;
   onOpen: (index: number) => void;
 }>) {
+  const reader = useDocumentReader();
   const chip =
     "flex items-center gap-2 rounded-button border border-border-default px-2.5 py-1.5 text-sm font-medium text-link hover:bg-canvas focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link";
   const inside = (
@@ -401,7 +401,7 @@ function Attachment({
   }
   return (
     <a
-      href={emailAttachmentDownloadHref(documentId, versionId, attachment.index)}
+      href={reader.emailAttachmentDownloadHref(documentId, versionId, attachment.index)}
       download={attachment.filename}
       className={chip}
     >
@@ -429,7 +429,8 @@ function OpenAttachment({
   attachment: EmailAttachment;
   onBack: () => void;
 }>) {
-  const src = emailAttachmentPreviewHref(documentId, versionId, attachment.index);
+  const reader = useDocumentReader();
+  const src = reader.emailAttachmentPreviewHref(documentId, versionId, attachment.index);
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <div className="flex h-10 shrink-0 items-center justify-between gap-2 border-b border-border-muted bg-canvas px-3">
@@ -442,7 +443,7 @@ function OpenAttachment({
           <FormattedMessage id="docPanel.email.back" defaultMessage="Back to the message" />
         </button>
         <a
-          href={emailAttachmentDownloadHref(documentId, versionId, attachment.index)}
+          href={reader.emailAttachmentDownloadHref(documentId, versionId, attachment.index)}
           download={attachment.filename}
           className="flex shrink-0 items-center gap-1 rounded-button px-2 py-1 text-sm text-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
         >

@@ -217,6 +217,22 @@ describe("per-field matter PATCH", () => {
     expect(read.statusCode, read.body).toBe(200);
     expect(read.body).not.toContain("Secret Matter Vehicle Ltd");
     expect(read.json().customFieldRefs.entities).toEqual([{ restricted: true, id: entityId }]);
+
+    const choices = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/entities",
+      cookies: outsiderCookies,
+    });
+    expect(choices.statusCode, choices.body).toBe(200);
+    expect(choices.json().entities).not.toContainEqual(expect.objectContaining({ id: entityId }));
+    expect(choices.body).not.toContain("Secret Matter Vehicle Ltd");
+
+    const contributorChoices = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/entities",
+      cookies: contributorCookies,
+    });
+    expect(contributorChoices.statusCode, contributorChoices.body).toBe(403);
   });
 
   it("projects only business Fields and values to a Contributor on the team", async () => {

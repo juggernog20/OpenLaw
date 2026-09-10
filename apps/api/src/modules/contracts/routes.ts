@@ -146,6 +146,7 @@ import {
 } from "../../lib/record-filters.js";
 import {
   activityLog,
+  alias,
   and,
   approverGroupMembers,
   approverGroups,
@@ -435,6 +436,8 @@ const ContractRowSchema = z.object({
   /** CTR-004's single accountable person, labelled "Owner" in the UI.
    * NULL = unassigned, which reads as triage, not as missing data. */
   manager: PersonSchema.nullable(),
+  /** DD-021 business contact, independent of the Legal Owner; null means unassigned. */
+  businessOwner: PersonSchema.nullable(),
   /** CTR-011's our side: which of our Entities signs. NULL until known.
    * The list does not draw it (the C1 mock has no such column), but it
    * is a field of the record, and a field rides the row the per-field
@@ -746,6 +749,7 @@ interface ContractContext {
   statusName: string;
   stage: (typeof CONTRACT_STAGES)[number];
   manager: JoinedPerson | null;
+  businessOwner: JoinedPerson | null;
   entity: JoinedEntity | null;
   entityRestricted: boolean;
   primaryCounterparty: JoinedCounterparty | null;
@@ -808,6 +812,7 @@ function toRow(
     statusName: context.statusName,
     stage: context.stage,
     manager: toPersonOrNull(context.manager),
+    businessOwner: toPersonOrNull(context.businessOwner ?? null),
     // The projection blanks `legalName` on a signing Entity outside the
     // viewer's reach, so a null name is the restricted case however the
     // context was built.
@@ -865,6 +870,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
    * back out. */
   const selectContracts = (db: Executor, user: AuthenticatedUser) => {
     const entityScope = entityReachScope(db, user);
+    const businessOwner = alias(users, "business_owner");
     return db
       .select({
         row: contracts,
@@ -877,6 +883,12 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           displayName: users.displayName,
           image: users.image,
           archivedAt: users.archivedAt,
+        },
+        businessOwner: {
+          id: businessOwner.id,
+          displayName: businessOwner.displayName,
+          image: businessOwner.image,
+          archivedAt: businessOwner.archivedAt,
         },
         entity: {
           id: entities.id,
@@ -900,6 +912,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       .innerJoin(contractTypes, eq(contracts.contractTypeId, contractTypes.id))
       .innerJoin(contractStatuses, eq(contracts.statusId, contractStatuses.id))
       .leftJoin(users, eq(contracts.managerId, users.id))
+      .leftJoin(businessOwner, eq(contracts.businessOwnerId, businessOwner.id))
       .leftJoin(entities, eq(contracts.entityId, entities.id))
       .leftJoin(
         contractCounterparties,
@@ -2065,6 +2078,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             // ours signs is not known yet, and nobody is recorded on the
             // other side; all three are set on the record afterwards.
             manager: null,
+            businessOwner: null,
             entity: null,
             entityRestricted: false,
             primaryCounterparty: null,
@@ -2091,6 +2105,8 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireContractReader,
       schema: {
         operationId: "updateContract",
+        description:
+          "Business Owner assignment is Member+ only: Administrator or Legal Team Member. The person must be live; null clears ownership without removing explicit stakeholders.",
         summary:
           "Commit one field of a contract in place (DES-017 per-field " +
           "commits): title, description, the Owner, the signing entity, " +
@@ -2125,6 +2141,8 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           /** CTR-004's Owner. `null` clears it back to unassigned —
            * a real state (triage), not an absent field. */
           managerId: z.string().nullable().optional(),
+          /** DD-021: Member+ assigns a live person; null clears ownership and preserves stakeholder links. */
+          businessOwnerId: z.string().nullable().optional(),
           /** CTR-011's our side. `null` clears it back to not known,
            * which is where every contract starts. */
           entityId: z.string().nullable().optional(),
@@ -2266,6 +2284,23 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           changed.owner = {
             from: current.manager?.displayName ?? null,
             to: manager?.displayName ?? null,
+          };
+        }
+
+        let businessOwner = current.businessOwner ?? null;
+        if (body.businessOwnerId !== undefined && body.businessOwnerId !== target.businessOwnerId) {
+          businessOwner = body.businessOwnerId
+            ? await lockedUser(
+                tx,
+                body.businessOwnerId,
+                USER_ROLES,
+                "The Business Owner must be a live person.",
+              )
+            : null;
+          patch.businessOwnerId = businessOwner?.id ?? null;
+          changed.businessOwner = {
+            from: current.businessOwner?.displayName ?? null,
+            to: businessOwner?.displayName ?? null,
           };
         }
 
@@ -2716,6 +2751,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           statusName,
           stage,
           manager,
+          businessOwner,
           entity,
           entityRestricted,
           // No field of this PATCH touches the other side — the

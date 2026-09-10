@@ -2,7 +2,7 @@
 
 /** The staff triage queue, with shared quick filters and private saved views. */
 import { HelpLink } from "../components/documentation/help-link";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Inbox } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import {
@@ -13,6 +13,7 @@ import {
   type LoaderFunctionArgs,
 } from "react-router";
 import { api } from "../lib/api";
+import { useListReadGuard } from "../lib/list-read-guard";
 import { resolveTimeZone } from "../lib/format";
 import {
   INBOX_FILTER_KEYS,
@@ -110,14 +111,7 @@ export function InboxPage() {
   const [requestBusy, setBusy] = useState(false);
   const navigation = useNavigation();
   const busy = requestBusy || navigation.state !== "idle";
-  const readVersion = useRef(0);
-  // A layout effect, not a passive one: the bump has to land in the
-  // same commit as the render that shows the new list. A passive effect
-  // runs a scheduler tick later, and a click in that gap starts a read
-  // that the late bump then discards, so the click is silently lost.
-  useLayoutEffect(() => {
-    readVersion.current += 1;
-  }, [loaded, navigation.location]);
+  const { beginRead, noteUrlSync, shouldAdoptLoader } = useListReadGuard();
   const [listError, setListError] = useState<string | null>(null);
   const [pageError, setPageError] = useState<string | null>(null);
   const [appended, setAppended] = useState<{ count: number; from: string } | null>(null);
@@ -126,7 +120,7 @@ export function InboxPage() {
   useEffect(() => {
     const previous = previousLoad.current;
     previousLoad.current = loaded;
-    if (previous === loaded) return;
+    if (previous === loaded || !shouldAdoptLoader(loaded)) return;
     setRows(loaded.requests);
     setCursor(loaded.nextCursor);
     setTotal(loaded.total ?? loaded.requests.length);
@@ -140,7 +134,7 @@ export function InboxPage() {
     setAppended(null);
     setPageError(null);
     setListError(null);
-  }, [loaded]);
+  }, [loaded, shouldAdoptLoader]);
   const definitions = useInboxFilterDefinitions(loaded.filterOptions);
 
   const activeView = views.find((view) => view.id === activeViewId) ?? null;
@@ -158,21 +152,23 @@ export function InboxPage() {
       setLayout(next);
       setActiveViewId(nextActiveId);
       if (nextActiveId !== activeViewId)
-        await navigate(
-          { search: filterSearch(next, INBOX_FILTER_KEYS, nextActiveId) },
-          { preventScrollReset: true },
+        await noteUrlSync(
+          navigate(
+            { search: filterSearch(next, INBOX_FILTER_KEYS, nextActiveId) },
+            { preventScrollReset: true },
+          ),
         );
       return;
     }
     if (busy) return;
     setListError(null);
     setBusy(true);
-    const version = ++readVersion.current;
+    const isCurrent = beginRead();
     const { data } = await api
       .GET("/api/v1/requests", { params: { query: listQuery(next) } })
       .catch(() => ({ data: undefined }))
       .finally(() => setBusy(false));
-    if (version !== readVersion.current) return;
+    if (!isCurrent()) return;
     if (!data) {
       setListError(
         intl.formatMessage({
@@ -189,9 +185,11 @@ export function InboxPage() {
     setPageError(null);
     setLayout(next);
     setActiveViewId(nextActiveId);
-    await navigate(
-      { search: filterSearch(next, INBOX_FILTER_KEYS, nextActiveId) },
-      { preventScrollReset: true },
+    await noteUrlSync(
+      navigate(
+        { search: filterSearch(next, INBOX_FILTER_KEYS, nextActiveId) },
+        { preventScrollReset: true },
+      ),
     );
   }
 
@@ -199,12 +197,12 @@ export function InboxPage() {
     if (busy || cursor === null) return;
     setPageError(null);
     setBusy(true);
-    const version = ++readVersion.current;
+    const isCurrent = beginRead();
     const { data } = await api
       .GET("/api/v1/requests", { params: { query: { cursor, ...listQuery(layout) } } })
       .catch(() => ({ data: undefined }))
       .finally(() => setBusy(false));
-    if (version !== readVersion.current) return;
+    if (!isCurrent()) return;
     if (!data) {
       setPageError(
         intl.formatMessage({
@@ -232,9 +230,11 @@ export function InboxPage() {
     setViews(next);
     setActiveViewId(activeId);
     if (activeId !== activeViewId)
-      void navigate(
-        { search: filterSearch(layout, INBOX_FILTER_KEYS, activeId) },
-        { replace: true, preventScrollReset: true },
+      void noteUrlSync(
+        navigate(
+          { search: filterSearch(layout, INBOX_FILTER_KEYS, activeId) },
+          { replace: true, preventScrollReset: true },
+        ),
       );
   }
 

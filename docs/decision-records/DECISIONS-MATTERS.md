@@ -967,3 +967,11 @@ one colour per top-level group: Open uses neutral grey, In progress uses blue, W
 uses amber, and Closed uses the filled dark neutral family. This supersedes the category-only
 colour rule on those surfaces. Statuses within a group share its colour, including
 renamed and custom statuses. Closed-category statuses always use the Closed colour.
+
+### MTR-013 addendum — clearing a template default at Matter creation (2026-09-10, [#770](https://github.com/juggernog20/OpenLaw/issues/770))
+
+The Matter creation dialog sends `null` for an optional Field it shows as empty, so a
+template default the person cleared does not come back on the saved Matter. A Field left
+untouched keeps its default, and a replacement value wins over it. A required Field still
+needs an answer at both creation seams. This matches the conversion rule already recorded
+in INT-002.

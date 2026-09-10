@@ -68,20 +68,23 @@
  * caller puts focus back where it came from.
  */
 
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState, type ComponentProps } from "react";
+import {
+  DocumentReaderContext,
+  staffDocumentReader,
+  useDocumentReader,
+  type DocumentReaderSource,
+} from "./reader-context";
 import { Download, FileText, X } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Link } from "react-router";
 import { formatFileSize } from "../../lib/format";
 import { ChunkBoundary } from "../chunk-boundary";
 import {
-  documentDownloadHref,
   documentComparisonPath,
-  documentPreviewHref,
   DOCUMENT_DERIVATION_POLL_MS,
   findDocumentComparison,
   isConverted,
-  readRenditionState,
   type DocumentVersion,
   type RenditionState,
 } from "../../lib/documents";
@@ -123,7 +126,23 @@ const EmailPreview = lazy(async () => ({
  */
 const DOCK_WIDTH_PX = 1400;
 
+type ReaderVersion = Pick<
+  DocumentVersion,
+  "id" | "versionNumber" | "kind" | "renderFamily" | "mimeType" | "originalFilename" | "byteSize"
+>;
+
 export function DocPanel({
+  source = staffDocumentReader,
+  ...props
+}: ComponentProps<typeof DocPanelContent> & { source?: DocumentReaderSource }) {
+  return (
+    <DocumentReaderContext value={source}>
+      <DocPanelContent {...props} />
+    </DocumentReaderContext>
+  );
+}
+
+function DocPanelContent({
   documentId,
   title,
   version,
@@ -137,7 +156,7 @@ export function DocPanel({
    * says — the file's own name goes on the toolbar below it. */
   title: string;
   /** The one version being read. Any round in the chain may be it. */
-  version: DocumentVersion;
+  version: ReaderVersion;
   /** The previous hand-set round, when this Version may be compared. */
   previousVersion?: DocumentVersion;
   /** A global-search landing may carry the words that found this
@@ -153,6 +172,7 @@ export function DocPanel({
   onDockedChange?: (docked: boolean) => void;
 }>) {
   const intl = useIntl();
+  const reader = useDocumentReader();
   const panel = useRef<HTMLElement>(null);
   const [knownComparison, setKnownComparison] = useState<{
     fromVersionId: string;
@@ -214,7 +234,7 @@ export function DocPanel({
     return () => observer.disconnect();
   }, []);
 
-  const previewHref = documentPreviewHref(documentId, version.id);
+  const previewHref = reader.documentPreviewHref(documentId, version.id);
   return (
     <aside // NOSONAR — the listener serves DES-010's Esc rule, not interactivity
       ref={panel}
@@ -300,7 +320,7 @@ export function DocPanel({
       <div className="flex h-10 shrink-0 items-center justify-between gap-2 border-b border-border-muted bg-canvas px-3">
         <span className="truncate text-sm text-muted">{version.originalFilename}</span>
         <a
-          href={documentDownloadHref(documentId, version.id)}
+          href={reader.documentDownloadHref(documentId, version.id)}
           download={version.originalFilename}
           className="flex shrink-0 items-center gap-1 rounded-button px-2 py-1 text-sm text-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
         >
@@ -329,7 +349,7 @@ function Surface({
   initialFind,
 }: Readonly<{
   documentId: string;
-  version: DocumentVersion;
+  version: ReaderVersion;
   previewHref: string;
   initialFind?: string | null;
 }>) {
@@ -395,7 +415,7 @@ function Surface({
 function EmailSurface({
   documentId,
   version,
-}: Readonly<{ documentId: string; version: DocumentVersion }>) {
+}: Readonly<{ documentId: string; version: ReaderVersion }>) {
   // The version a refusal was reported for. The panel can move from one
   // version to another without unmounting, and a refusal carried over
   // would hide a message that reads perfectly well, so the refusal is
@@ -491,7 +511,7 @@ function ConvertedSurface({
   initialFind,
 }: Readonly<{
   documentId: string;
-  version: DocumentVersion;
+  version: ReaderVersion;
   previewHref: string;
   initialFind?: string | null;
 }>) {
@@ -499,6 +519,7 @@ function ConvertedSurface({
   // move from one version to another without unmounting, and a ready
   // state carried over would point pdf.js at a rendition that is not
   // there yet, so another version's answer reads as pending.
+  const reader = useDocumentReader();
   const [answer, setAnswer] = useState<{ versionId: string; state: RenditionState } | null>(null);
   const state = answer?.versionId === version.id ? answer.state : "pending";
 
@@ -510,7 +531,7 @@ function ConvertedSurface({
     const setState = (next: RenditionState) => setAnswer({ versionId, state: next });
 
     const ask = async () => {
-      const answer = await readRenditionState(documentId, version.id);
+      const answer = await reader.readRenditionState(documentId, version.id);
       // The panel closed, or moved to another version, while the answer
       // was in flight. Writing state here would set it on a surface that
       // is gone and schedule a poll nobody is watching.
@@ -539,7 +560,7 @@ function ConvertedSurface({
       live = false;
       clearTimeout(timer);
     };
-  }, [documentId, version.id]);
+  }, [documentId, version.id, reader]);
 
   if (state === "ready") {
     return (
@@ -583,11 +604,12 @@ function DownloadCard({
   reason = "downloadOnly",
 }: Readonly<{
   documentId: string;
-  version: DocumentVersion;
+  version: ReaderVersion;
   /** Why there is no preview: this file type never opens here, or this
    * one file could not be converted. */
   reason?: "downloadOnly" | "conversionFailed";
 }>) {
+  const reader = useDocumentReader();
   return (
     <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-canvas p-6">
       <div className="flex max-w-sm flex-col items-center gap-3 rounded-card border border-border-default bg-raised px-6 py-8 text-center">
@@ -608,7 +630,7 @@ function DownloadCard({
         </p>
         <p className="text-sm text-muted">{formatFileSize(version.byteSize)}</p>
         <a
-          href={documentDownloadHref(documentId, version.id)}
+          href={reader.documentDownloadHref(documentId, version.id)}
           download={version.originalFilename}
           className="flex items-center gap-1.5 rounded-button border border-border-default bg-raised px-3 py-1.5 text-base font-semibold text-primary hover:bg-canvas focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
         >

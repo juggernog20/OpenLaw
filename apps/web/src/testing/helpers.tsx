@@ -415,6 +415,13 @@ export function stubApi(state: ApiState) {
       };
       return json(200, { ...methods, emailConfigured: methods.emailConfigured ?? true });
     }
+    // Additional Contract stakeholders are empty unless a suite supplies them.
+    if (
+      /^\/api\/v1\/contracts\/\d+\/stakeholders$/.test(call.url.pathname) &&
+      call.method === "GET"
+    ) {
+      return json(200, { stakeholders: [] });
+    }
     // A contract record reads its paper (M11/2). Empty by default, so
     // every suite that is not about documents needs no stub of its own;
     // the ones that are supply rows through `extra`, which runs first.

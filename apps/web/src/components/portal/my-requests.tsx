@@ -43,6 +43,7 @@
  *    summary alone.
  */
 
+import { RequestExpectation } from "./request-expectation";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Link } from "react-router";
 import { ChevronRight, Inbox } from "lucide-react";
@@ -126,6 +127,7 @@ export function MyRequests({
                       {formatRelativeOrShort(row.createdAt)}
                     </time>
                   </span>
+                  <RequestExpectation request={row} />
                 </span>
                 <span
                   className={`inline-flex shrink-0 rounded-pill px-2 py-0.5 text-xs font-medium ${REQUEST_STATUS_PILL[row.status]}`}

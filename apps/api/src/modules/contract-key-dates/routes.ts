@@ -25,11 +25,8 @@
  * `daysRemaining` rides the contract row (DES-040 clause 4): it is one
  * number two places could disagree about, so one place counts it.
  *
- * **Deliberately flat** (CTR-009). No owner on a date, because the
- * matters-side owner question is a matters question. No per-date
- * reminder schedule, because NOT-004 already fixed one global offset
- * list for every tracked date — what fires on these dates is M18's, and
- * this module ships the data it will fire on.
+ * Key dates have no owner. NOT-004 permits additional reminder lead
+ * times and a selected subset of the record team (#807).
  *
  * **Access is inherited and nothing is held here** (DD-014, CTR-021).
  * Every route answers the owning contract's reach question first, with
@@ -75,6 +72,16 @@ import {
   type ReachedContract,
 } from "../../lib/contract-access.js";
 import { civilToday, daysBetween, noticeDeadline } from "../../lib/contract-term.js";
+import {
+  KeyDateOffsetsSchema,
+  KeyDateRecipientsSchema,
+  KeyDateReminderOptionsSchema,
+  chosenList,
+  keyDateReminderOptions,
+  ownReminderOffsets,
+  ownReminderRecipients,
+  validateKeyDateRecipients,
+} from "../../lib/key-date-reminders.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
 /** The contract read floor (CTR-021), which is the deadline surface's
@@ -140,6 +147,8 @@ const DeadlineSchema = z.object({
    * in its own locale copy (DES-013), not by the seam. */
   label: z.string().nullable(),
   note: z.string().nullable(),
+  reminderOffsetDays: z.array(z.int()),
+  reminderRecipientIds: z.array(z.string()),
   /** Whole days from today, negative once the date has gone by. Derived
    * here so the count, the order, and the mark below cannot disagree. */
   daysAway: z.int(),
@@ -175,6 +184,8 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
     date: string;
     label: string;
     note: string | null;
+    reminderOffsetDays: number[];
+    reminderRecipientIds: string[];
     contract: ReachedContract;
   }
 
@@ -198,6 +209,8 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
         date: contractKeyDates.date,
         label: contractKeyDates.label,
         note: contractKeyDates.note,
+        reminderOffsetDays: contractKeyDates.reminderOffsetDays,
+        reminderRecipientIds: contractKeyDates.reminderRecipientIds,
         contract: {
           id: contracts.id,
           number: contracts.number,
@@ -243,6 +256,8 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
         date: contractKeyDates.date,
         label: contractKeyDates.label,
         note: contractKeyDates.note,
+        reminderOffsetDays: contractKeyDates.reminderOffsetDays,
+        reminderRecipientIds: contractKeyDates.reminderRecipientIds,
       })
       .from(contractKeyDates)
       .where(eq(contractKeyDates.contractId, contract.id))
@@ -255,6 +270,8 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
       date: row.date,
       label: row.label,
       note: row.note,
+      reminderOffsetDays: ownReminderOffsets(row.reminderOffsetDays),
+      reminderRecipientIds: ownReminderRecipients(row.reminderRecipientIds),
       daysAway: daysBetween(today, row.date),
       isNext: false,
       unverified: false,
@@ -270,6 +287,8 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
         date,
         label: null,
         note: null,
+        reminderOffsetDays: [],
+        reminderRecipientIds: [],
         daysAway: daysBetween(today, date),
         isNext: false,
         unverified: derivedDateUnverified(contract.aiUnverified, source),
@@ -319,6 +338,26 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
   const toNote = (note: string | null | undefined): string | null => note?.trim() || null;
 
   app.get(
+    "/contracts/:number/key-date-reminder-options",
+    {
+      preHandler: requireKeyDateReader,
+      schema: {
+        operationId: "contractKeyDateReminderOptions",
+        summary:
+          "Current global reminder ladder and eligible team recipients for a reached contract",
+        tags: ["contract-key-dates"],
+        params: NumberParams,
+        response: { 200: KeyDateReminderOptionsSchema, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const record = await reachedContract(app.db, request.user, request.params.number);
+      if (!record) throw httpError(404, NO_CONTRACT);
+      return keyDateReminderOptions(app.db, "contract", record.id);
+    },
+  );
+
+  app.get(
     "/contracts/:number/key-dates",
     {
       preHandler: requireKeyDateReader,
@@ -366,8 +405,7 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
           "beside the typed term columns, for price reviews, " +
           "option-exercise windows, and delivery milestones. A blank " +
           "label is refused and a blank note is stored as no note at " +
-          "all. There is no owner and no per-date reminder schedule: " +
-          "NOT-004 fixed one global offset list for every tracked date. " +
+          "all. Additional reminder lead times join the global ladder; selected recipients must belong to the record team. " +
           "Answers the record's whole deadline surface, because a new " +
           "date can change which one is next. Appends one key_date.added " +
           "entry on the owning contract at the working-team tier " +
@@ -381,6 +419,8 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
           date: z.iso.date(),
           label: LabelSchema,
           note: NoteSchema.optional(),
+          reminderOffsetDays: KeyDateOffsetsSchema.optional(),
+          reminderRecipientIds: KeyDateRecipientsSchema.optional(),
         }),
         response: { 201: DeadlinesEnvelope, default: problemResponse },
       },
@@ -394,10 +434,20 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
           lock: true,
         });
         assertOpen(contract);
+        const reminderOffsetDays = request.body.reminderOffsetDays ?? [];
+        const reminderRecipientIds = request.body.reminderRecipientIds ?? [];
+        await validateKeyDateRecipients(tx, "contract", contract.id, reminderRecipientIds);
 
         const [created] = await tx
           .insert(contractKeyDates)
-          .values({ contractId: contract.id, date, label, note })
+          .values({
+            contractId: contract.id,
+            date,
+            label,
+            note,
+            reminderOffsetDays,
+            reminderRecipientIds,
+          })
           .returning({ id: contractKeyDates.id });
 
         await recordActivity(tx, {
@@ -440,11 +490,13 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
             date: z.iso.date().optional(),
             label: LabelSchema.optional(),
             note: NoteSchema.optional(),
+            reminderOffsetDays: KeyDateOffsetsSchema.optional(),
+            reminderRecipientIds: KeyDateRecipientsSchema.optional(),
           })
           // A body with nothing in it is a client that built the request
           // badly, not an edit of nothing.
           .refine((body) => Object.keys(body).length > 0, {
-            message: "Send at least one of date, label, or note.",
+            message: "Send at least one Key date field.",
           }),
         response: { 200: DeadlinesEnvelope, default: problemResponse },
       },
@@ -458,12 +510,36 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
         // Only what was sent is read, so a surface that edits one field
         // sends one field — the DES-017 rule, said over a row rather
         // than over the record's own columns.
+        const saved = {
+          reminderOffsetDays: ownReminderOffsets(keyDate.reminderOffsetDays),
+          reminderRecipientIds: ownReminderRecipients(keyDate.reminderRecipientIds),
+        };
         const wanted = {
+          reminderOffsetDays: chosenList(request.body.reminderOffsetDays, saved.reminderOffsetDays),
+          reminderRecipientIds: chosenList(
+            request.body.reminderRecipientIds,
+            saved.reminderRecipientIds,
+          ),
           date: request.body.date ?? keyDate.date,
           label: request.body.label ?? keyDate.label,
           note: request.body.note === undefined ? keyDate.note : toNote(request.body.note),
         };
+        if (request.body.reminderRecipientIds !== undefined) {
+          await validateKeyDateRecipients(
+            tx,
+            "contract",
+            keyDate.contract.id,
+            wanted.reminderRecipientIds,
+          );
+        }
         const changed: ChangedFields = {};
+        for (const field of ["reminderOffsetDays", "reminderRecipientIds"] as const) {
+          // `chosenList` hands the saved list straight back when the
+          // choices match, so identity is the whole comparison.
+          if (wanted[field] !== saved[field]) {
+            changed[field] = { from: saved[field], to: wanted[field] };
+          }
+        }
         if (wanted.date !== keyDate.date) changed.date = { from: keyDate.date, to: wanted.date };
         if (wanted.label !== keyDate.label) {
           changed.label = { from: keyDate.label, to: wanted.label };

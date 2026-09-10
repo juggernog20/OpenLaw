@@ -108,6 +108,7 @@ export const requestTypesRoutes = taxonomyRoutes({
   recordNoun: { singular: "request", plural: "requests" },
   extras: {
     rowSchema: {
+      turnaroundDays: z.number().int().nullable(),
       targetModule: TargetModuleSchema.nullable(),
       targetTypeId: z.string().nullable(),
       /** ST12's Form fields column: how many catalog fields this type's
@@ -124,21 +125,28 @@ export const requestTypesRoutes = taxonomyRoutes({
     projectRow: (row, counts) => {
       const type = row as RequestType;
       return {
+        turnaroundDays: type.turnaroundDays,
         targetModule: type.targetModule as TargetModule | null,
         targetTypeId: targetTypeId(type),
         formFieldCount: counts.get(type.id) ?? 0,
       };
     },
     patchSchema: {
+      turnaroundDays: z.number().int().min(0).max(36500).nullable().optional(),
       targetModule: TargetModuleSchema.nullable().optional(),
       targetTypeId: z.string().nullable().optional(),
     },
     applyPatch: async ({ tx, row, body }) => {
       const namesModule = body.targetModule !== undefined;
       const namesType = body.targetTypeId !== undefined;
-      if (!namesModule && !namesType) return {};
-
       const current = row as RequestType;
+      const columns: Partial<RequestType> = {};
+      const changed: ChangedFields = {};
+      if (body.turnaroundDays !== undefined && body.turnaroundDays !== current.turnaroundDays) {
+        columns.turnaroundDays = body.turnaroundDays;
+        changed.turnaroundDays = { from: current.turnaroundDays, to: body.turnaroundDays };
+      }
+      if (!namesModule && !namesType) return { columns, changed };
       const currentModule = current.targetModule as TargetModule | null;
       const currentTypeId = targetTypeId(current);
       // The two keys are one value: a body that names the module says
@@ -169,7 +177,7 @@ export const requestTypesRoutes = taxonomyRoutes({
         }
       }
 
-      if (module === currentModule && typeId === currentTypeId) return {};
+      if (module === currentModule && typeId === currentTypeId) return { columns, changed };
 
       // The strand refusal (INT-002): a target decides which catalog
       // fields the form may collect, so re-pointing it can leave
@@ -186,7 +194,6 @@ export const requestTypesRoutes = taxonomyRoutes({
         if (stranded.length > 0) throw httpError(409, strandRefusal(stranded));
       }
 
-      const changed: ChangedFields = {};
       if (module !== currentModule) {
         changed.targetModule = { from: currentModule, to: module };
       }
@@ -205,6 +212,7 @@ export const requestTypesRoutes = taxonomyRoutes({
 
       return {
         columns: {
+          ...columns,
           targetModule: module,
           targetMatterTypeId: module === "matter" ? typeId : null,
           targetContractTypeId: module === "contract" ? typeId : null,

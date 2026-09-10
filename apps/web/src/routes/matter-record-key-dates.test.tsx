@@ -141,6 +141,12 @@ function recordApi(
       if (call.url.pathname === "/api/v1/matters/12/folders" && call.method === "GET") {
         return json(200, { folders: [] });
       }
+      if (call.url.pathname === "/api/v1/matters/12/key-date-reminder-options") {
+        return json(200, {
+          globalOffsetDays: [7, 1, 0],
+          recipients: [{ id: MEMBER.id, displayName: MEMBER.displayName }],
+        });
+      }
       if (call.url.pathname === "/api/v1/matters/12/key-dates" && call.method === "GET") {
         return json(200, { deadlines });
       }
@@ -176,6 +182,58 @@ function recordApi(
 const section = async () => within(await screen.findByRole("region", { name: "Key dates" }));
 
 describe("the Matter record's Key dates section", () => {
+  it("edits a date with departed recipients without widening its audience", async () => {
+    const api = recordApi([
+      deadline({
+        label: "Selected reminder",
+        reminderOffsetDays: [],
+        reminderRecipientIds: ["departed", MEMBER.id],
+      }),
+    ]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/matters/12/key-dates");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Actions for Selected reminder" }));
+    await user.click(screen.getByRole("menuitem", { name: /Edit date/i }));
+    await user.type(screen.getByLabelText(/Note/), "Updated note");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]!.body).not.toHaveProperty("reminderRecipientIds");
+    await user.click(screen.getByRole("button", { name: "Actions for Selected reminder" }));
+    await user.click(screen.getByRole("menuitem", { name: /Edit date/i }));
+    await user.click(await screen.findByRole("button", { name: "Remove unavailable recipients" }));
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(api.writes).toHaveLength(2));
+    expect(api.writes[1]!.body).toHaveProperty("reminderRecipientIds", [MEMBER.id]);
+  });
+
+  it("adds a lead time and selects recipients, then restores both in Edit", async () => {
+    const api = recordApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/matters/12/key-dates");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Add date" }));
+    await user.type(screen.getByLabelText(/^Date\*?$/), "2027-05-04");
+    await user.type(screen.getByLabelText(/^Event\*?$/), "Trademark renewal");
+    await user.type(screen.getByLabelText("Additional lead time (days before)"), "60");
+    await user.click(screen.getByRole("button", { name: "Add lead time" }));
+    await user.click(await screen.findByRole("checkbox", { name: MEMBER.displayName }));
+    expect(
+      screen.getByText(
+        "This date will remind: 60 days before, 7 days before, 1 day before, On the day",
+      ),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Add date" }));
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]).toMatchObject({
+      body: { reminderOffsetDays: [60], reminderRecipientIds: [MEMBER.id] },
+    });
+    await user.click(screen.getByRole("button", { name: "Actions for Trademark renewal" }));
+    await user.click(screen.getByRole("menuitem", { name: "Edit date" }));
+    expect(await screen.findByRole("checkbox", { name: MEMBER.displayName })).toBeChecked();
+    expect(screen.getByRole("button", { name: "Remove 60 days before" })).toBeInTheDocument();
+  });
+
   it("draws dates and events in chronological order without a redundant State column", async () => {
     const api = recordApi();
     stubApi({ signedIn: MEMBER, extra: api.handler });

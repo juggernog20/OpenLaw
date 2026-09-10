@@ -2,6 +2,7 @@
 
 /** The Matter record's named Key dates (MTR-004). */
 import { useState } from "react";
+import { KeyDateReminderFields, type KeyDateReminderDraft } from "../key-date-reminder-fields";
 import { useRecord } from "../record-context";
 import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -281,6 +282,10 @@ function MatterKeyDateDialog({
   onConfirm: (input: MatterKeyDateInput) => Promise<string | null>;
 }>) {
   const intl = useIntl();
+  const [reminders, setReminders] = useState<KeyDateReminderDraft>({
+    reminderOffsetDays: row?.reminderOffsetDays ?? [],
+    reminderRecipientIds: row?.reminderRecipientIds ?? [],
+  });
   const [date, setDate] = useState(row?.date ?? "");
   const [label, setLabel] = useState(row?.label ?? "");
   const [note, setNote] = useState(row?.note ?? "");
@@ -298,7 +303,26 @@ function MatterKeyDateDialog({
           defaultMessage: "Name what the date is.",
         }),
       );
-    setError(await onConfirm({ date, label: label.trim(), note: note.trim() || null }));
+    setError(
+      await onConfirm({
+        date,
+        label: label.trim(),
+        note: note.trim() || null,
+        ...reminders,
+        reminderOffsetDays:
+          row &&
+          JSON.stringify(row.reminderOffsetDays ?? []) ===
+            JSON.stringify(reminders.reminderOffsetDays)
+            ? undefined
+            : reminders.reminderOffsetDays,
+        reminderRecipientIds:
+          row &&
+          JSON.stringify(row.reminderRecipientIds ?? []) ===
+            JSON.stringify(reminders.reminderRecipientIds)
+            ? undefined
+            : reminders.reminderRecipientIds,
+      }),
+    );
   }
 
   return (
@@ -365,6 +389,7 @@ function MatterKeyDateDialog({
               }}
             />
           </div>
+          <KeyDateReminderFields value={reminders} onChange={setReminders} />
           {error && (
             <p role="alert" className="text-xs text-status-danger-fg">
               {error}

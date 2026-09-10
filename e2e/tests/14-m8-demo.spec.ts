@@ -423,11 +423,17 @@ test.describe.serial("M8 demo path", () => {
       await expect(listRow).toContainText(`C-${number}`);
       await listRow.getByRole("link", { name: title }).click();
       await expect(page).toHaveURL(new RegExp(`/contracts/${number}$`));
+      // The address changes before the list gives up the screen, and the
+      // list's own Owner column carries that word twice: the header, and
+      // the handle that resizes it. Wait for the record to be drawn, or
+      // the picker below is asked for while three "Owner" labels are on
+      // the page.
+      await expect(page.getByRole("heading", { level: 1, name: title })).toBeVisible();
 
       // The Owner: one accountable person, set from the picker and
       // committed on its own (CTR-004, DES-017).
       const ownerSaved = contractPatched(page);
-      await page.getByLabel("Owner").selectOption({ label: OWNER_NAME });
+      await page.getByLabel("Legal Owner", { exact: true }).selectOption({ label: OWNER_NAME });
       expect((await ownerSaved).ok()).toBe(true);
       // The DES-017 micro-state, beside the one field that has
       // committed so far — this is the whole page's only "Saved".

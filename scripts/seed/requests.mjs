@@ -211,6 +211,29 @@ export async function seedRequests(admin, context, log) {
   );
   log(`${comments} request comments`);
 
+  // Pick-up (INT-003). Before any outcome, a legal member puts their
+  // name on the ask and says when it should come back. That pair is the
+  // whole requester-facing answer to "who has this, and until when". A
+  // demo without it shows every Request unowned and unestimated, which
+  // is the complaint the estimate was built to answer. A quarter of the
+  // estimates are behind today, so the neutral "Estimate passed" line
+  // has something to say.
+  let owned = 0;
+  let estimated = 0;
+  await pool(submitted, 3, async (request) => {
+    if (!random.chance(0.8)) return;
+    const triager = random.pick(triagers);
+    const at = `/api/v1/requests/${request.number}`;
+    await triager.session.patch(`${at}/assignee`, { assigneeId: triager.id });
+    owned += 1;
+    if (!random.chance(0.75)) return;
+    await triager.session.patch(`${at}/expected-by`, {
+      expectedBy: daysFromToday(random.chance(0.25) ? random.int(-14, -1) : random.int(1, 21)),
+    });
+    estimated += 1;
+  });
+  log(`${owned} requests picked up, ${estimated} with a return estimate`);
+
   // Triage. One outcome each, by whichever legal member picked it up.
   const outcomes = { converted: 0, resolved: 0, declined: 0, new: 0 };
   await pool(submitted, 3, async (request) => {

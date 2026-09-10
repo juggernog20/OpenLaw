@@ -350,7 +350,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
       // provider. A key with no arm reads as itself, which is the
       // honest rendering for one this build no longer writes.
       defaultMessage:
-        "{key, select, title {Title} description {Description} owner {Owner} " +
+        "{key, select, title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} stakeholders {Stakeholders} " +
         "entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} " +
         "contractType {Contract type} value {Value} status {Status} " +
         "dueDate {Due date} termType {Term type} effectiveDate {Effective date} " +
@@ -362,11 +362,11 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "displayName {Name} display_name {Display name} name {Name} " +
         "role {Role} email {Email} " +
         "stage {Stage} moduleScope {Scope} isRequired {Required} " +
-        "targetModule {Target} targetType {Target type} " +
+        "targetModule {Target} targetType {Target type} turnaroundDays {Turnaround (calendar days)} " +
         "theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} " +
         "defaultLocale {Default language} defaultTimezone {Default timezone} " +
         "authMode {Sign-in method} allowedEmailDomains {Allowed email domains} " +
-        "reminderOffsetDays {Reminder lead times} " +
+        "reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} " +
         "smtpUrl {SMTP server} smtpFrom {From address} " +
         "issuer {Issuer} domain {Email domain} clientId {Client ID} " +
         "clientSecret {Client secret} " +
@@ -410,7 +410,13 @@ const CIVIL_DATE = /^\d{4}-\d{2}-\d{2}$/;
 /** The record's own changed keys whose value is an id, not a name.
  * `linkedUser` already carries names; it is here so a row written
  * before that was true still reads through the same lookup. */
-const REFERENCE_KEYS = new Set(["assigneeId", "matterId", "registrationId", "linkedUser"]);
+const REFERENCE_KEYS = new Set([
+  "assigneeId",
+  "matterId",
+  "registrationId",
+  "linkedUser",
+  "reminderRecipientIds",
+]);
 
 /**
  * One side of a change, rendered as the record renders it (DES-014).
@@ -508,6 +514,12 @@ function changeValue(
     return CIVIL_DATE.test(value) ? formatShortDate(value, { locale: intl.locale }) : value;
   }
   if (Array.isArray(value)) {
+    if (key === "reminderRecipientIds" && value.length === 0) {
+      return intl.formatMessage({
+        id: "activity.reminderUsualAudience",
+        defaultMessage: "Usual audience",
+      });
+    }
     return intl.formatList(
       value.map((item) => changeValue(intl, key, item, context)),
       { type: "conjunction" },
@@ -2215,6 +2227,18 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   // comment on the same feed and narrates as itself — this entry is the
   // closure, so a resolution with a reply and one without read the same
   // here.
+  "request.expected_by_changed": {
+    icon: CalendarClock,
+    message: defineMessage({
+      id: "activity.request.expectedByChanged",
+      defaultMessage:
+        "{set, select, yes {{actor} set Expected back (estimate) to {date}} other {{actor} cleared Expected back (estimate)}}",
+    }),
+    values: (intl, payload) => ({
+      set: payload.to ? "yes" : "no",
+      date: civilDateIn(intl, payload, "to"),
+    }),
+  },
   "request.assignee_changed": {
     icon: UserPlus,
     message: defineMessage({

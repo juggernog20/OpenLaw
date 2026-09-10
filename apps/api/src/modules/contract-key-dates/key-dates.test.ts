@@ -53,12 +53,20 @@ const CONTRIBUTOR = {
   displayName: "Casey Contributor",
   password: "correct-horse-battery",
 } as const;
+/** A Business User on the team as a watcher: a reminder audience the
+ * morning round never serves (DD-013). */
+const WATCHER = {
+  email: "keydate-watcher@example.com",
+  displayName: "Wanda Watcher",
+  password: "correct-horse-battery",
+} as const;
 
 let harness: TestHarness;
 let memberCookies: Record<string, string>;
 let outsiderCookies: Record<string, string>;
 let contributorCookies: Record<string, string>;
 let contributorId = "";
+let watcherId = "";
 let ndaTypeId = "";
 
 /** One row of the CTR-009 union, as every deadline surface reads it. */
@@ -68,6 +76,8 @@ interface Deadline {
   date: string;
   label: string | null;
   note: string | null;
+  reminderOffsetDays: number[];
+  reminderRecipientIds: string[];
   daysAway: number;
   isNext: boolean;
   unverified: boolean;
@@ -102,6 +112,10 @@ beforeAll(async () => {
   contributorId = contributor.id;
   await harness.db.update(users).set({ role: "contributor" }).where(eq(users.id, contributor.id));
   contributorCookies = await signInCookies(harness.app, CONTRIBUTOR.email, CONTRIBUTOR.password);
+
+  const watcher = await provisionUser(harness.app.auth, WATCHER);
+  watcherId = watcher.id;
+  await harness.db.update(users).set({ role: "business_user" }).where(eq(users.id, watcher.id));
 
   const res = await harness.app.inject({
     method: "GET",
@@ -293,6 +307,57 @@ describe("key dates on a contract (CTR-009)", () => {
 
     const entries = await keyDateEntriesOn(contract.id);
     expect(entries.map((entry) => entry.action)).toEqual(["key_date.added"]);
+  });
+
+  it("narrates nothing when a reminder list comes back in a different order", async () => {
+    const contract = await newContract("Key dates reordered reminders");
+    const id = await add(contract.number, {
+      date: "2027-05-20",
+      label: "Trademark renewal",
+      reminderOffsetDays: [60, 30],
+    });
+    // Ticking a lead time off and back on is the same choice, so the
+    // saved list stands and the audit log stays quiet.
+    const after = await edit(id, { reminderOffsetDays: [30, 60] });
+    expect(after.find((row) => row.keyDateId === id)!.reminderOffsetDays).toEqual([60, 30]);
+    expect((await keyDateEntriesOn(contract.id)).map((entry) => entry.action)).toEqual([
+      "key_date.added",
+    ]);
+
+    const narrowed = await edit(id, { reminderOffsetDays: [30] });
+    expect(narrowed.find((row) => row.keyDateId === id)!.reminderOffsetDays).toEqual([30]);
+    const entries = await keyDateEntriesOn(contract.id);
+    const payload = entries[1]!.payload as { changed: Record<string, unknown> };
+    expect(payload.changed.reminderOffsetDays).toEqual({ from: [60, 30], to: [30] });
+  });
+
+  it("offers no Business User as a reminder recipient, and refuses one that is sent", async () => {
+    const contract = await newContract("Key dates watcher recipients");
+    const joined = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/team`,
+      cookies: memberCookies,
+      payload: { userId: watcherId, role: "watcher" },
+    });
+    expect(joined.statusCode, joined.body).toBe(201);
+
+    const options = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/contracts/${contract.number}/key-date-reminder-options`,
+      cookies: memberCookies,
+    });
+    expect(options.statusCode, options.body).toBe(200);
+    const offered = options.json().recipients as { id: string }[];
+    expect(offered.map((person) => person.id)).not.toContain(watcherId);
+
+    // An explicit selection never falls back to the usual audience, so a
+    // Key date addressed to a Business User alone would remind nobody.
+    const refused = await addRaw(contract.number, {
+      date: "2027-08-01",
+      label: "Watcher only",
+      reminderRecipientIds: [watcherId],
+    });
+    expect(refused.statusCode, refused.body).toBe(400);
   });
 
   it("clears a note back to nothing recorded", async () => {

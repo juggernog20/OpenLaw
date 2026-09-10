@@ -505,6 +505,9 @@ describe("my-requests", () => {
 
   const MINE: HomeRequest[] = [
     {
+      owner: { displayName: "Lee Member" },
+      expectedBy: "2026-10-10",
+      estimatePassed: true,
       id: "rq1",
       number: 45,
       status: "new",
@@ -513,6 +516,9 @@ describe("my-requests", () => {
       createdAt: FIVE_HOURS_AGO,
     },
     {
+      owner: null,
+      expectedBy: null,
+      estimatePassed: false,
       id: "rq2",
       number: 38,
       status: "converted",
@@ -521,6 +527,9 @@ describe("my-requests", () => {
       createdAt: "2026-07-28T09:00:00.000Z",
     },
     {
+      owner: null,
+      expectedBy: null,
+      estimatePassed: false,
       id: "rq3",
       number: 31,
       status: "resolved",
@@ -529,6 +538,9 @@ describe("my-requests", () => {
       createdAt: "2026-07-12T09:00:00.000Z",
     },
     {
+      owner: null,
+      expectedBy: null,
+      estimatePassed: false,
       id: "rq4",
       number: 22,
       status: "declined",
@@ -537,6 +549,14 @@ describe("my-requests", () => {
       createdAt: "2026-06-30T09:00:00.000Z",
     },
   ];
+
+  it("shows ownership and the confirmed estimate on Your requests", async () => {
+    stubApi({ signedIn: REQUESTER, extra: homeWith(MINE) });
+    renderAt("/portal");
+    expect(await screen.findByText("Owner: Lee Member")).toBeInTheDocument();
+    expect(screen.getByText("Estimate passed")).toBeInTheDocument();
+    expect(screen.getByText("Oct 10, 2026")).toBeInTheDocument();
+  });
 
   function homeWith(requests: HomeRequest[]) {
     return portalHome({ requestTypes: SEED_TYPES, requests });

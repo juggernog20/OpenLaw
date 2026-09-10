@@ -56,13 +56,29 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 
   **The read side re-applies the confidentiality predicate on every read** — the list **and** the count, through one predicate composed from `contractTeamScope`. An item about a record walled off after it was written leaves both, silently: no row, no gap, and no number that says something was left out (M10's answer, on a surface DD-014 was never written about). The row itself stays in the table, so opening the wall again brings the item back.
 
-- **Addendum (2026-08-18, M18/8, [#323](https://github.com/juggernog20/OpenLaw/issues/323))** — **The dedup identity names the record, not the date row, and that is a product answer as well as a schema one.** The identity is user, event, entity, the date value, and the offset (M18/1), and `entity` is the contract. So several named key dates that fall on **one record on one day** are **one** bell item and **one** briefing line, not one each — the second insert conflicts with the first and is dropped, and the line the reader gets carries whichever label was written first.
+- **Addendum (2026-08-18, M18/8, [#323](https://github.com/juggernog20/OpenLaw/issues/323))** — **The dedup identity names the record, not the date row, and that is a product answer as well as a schema one.** **Superseded by the #760 addendum below.** The identity is user, event, entity, the date value, and the offset (M18/1), and `entity` is the contract. So several named key dates that fall on **one record on one day** are **one** bell item and **one** briefing line, not one each — the second insert conflicts with the first and is dropped, and the line the reader gets carries whichever label was written first.
 
   It is stated here because the milestone close is where anybody found out. The bell's own sentence is already written at that grain — "A key date on {contract} is coming up" — so the item is true either way; the **briefing** is where the difference shows, because a digest line names the date. The alternative is to widen the identity with `key_date_id`, which would give a reader one line per named date and give an install with a busy record a briefing several lines longer for one day. Neither is obviously right, and nothing decided it: this addendum records what shipped so the choice can be made deliberately rather than discovered again.
 
   **Nothing else collapses.** Two approval requests for one person on one record are still two rows — the partial index only covers rows that carry a reminder date (M18/6) — and a date that **moves** carries a different value and is a different identity, so it fires again.
 
 - **Addendum (2026-08-24, M23 close, [#496](https://github.com/juggernog20/OpenLaw/issues/496))** — **Matter events use the same engine and one continuous wall.** Matter assignment, Task assignment, Activity, comments, Documents, Status changes, and approaching Key dates all enter through the existing `Notifier`. Audience resolution starts with the Matter Manager and explicit team, then DD-014 reach and DD-016 tier narrow it. The same Matter predicate is re-applied on bell reads and sends, so a removed or archived reader gets no row, count, or title leak; Closing alone changes neither audience nor writability.
+
+### NOT-001 addendum: each Key date has its own reminder (2026-09-10, [#760](https://github.com/juggernog20/OpenLaw/issues/760))
+
+Distinct Contract and Matter Key dates produce separate reminders, even when their dates
+and labels match. The bell item and each briefing line name the Key date, so a record with
+several deadlines on one day no longer draws the same sentence twice. This supersedes the
+M18/8 aggregation rule above, which could omit other deadlines on the same record and day.
+
+The reminder identity includes the recipient, event type, record type and ID, Key date ID,
+date value, and offset. Repeating a round does not resend an unchanged reminder. A new
+offset or a rescheduled date still produces a new reminder. Current access and channel
+preferences apply as before.
+
+The index reads the Key date ID already held in each reminder's payload. Upgrading keeps
+existing notification rows and their delivery state. Events other than Key dates keep
+their existing record-based identity. No historical reminder is recreated by migration.
 
 ## NOT-002 — Event catalog: five groups, defaults by interruptiveness
 
@@ -248,7 +264,7 @@ Five email-only section preferences control Approvals, Tasks, Dates, Obligations
 
 - **Status** — Accepted
 - **Date** — 2026-08-05
-- **Decision** — A single global offset list (Settings → Notifications), seeded `7 days / 1 day / day-of`, applied to every tracked date (key dates, notice deadlines, expiries). Admin-tunable; not per-user or per-date in v1. CTR-006's mandated fires are dates within this scheme.
+- **Decision** — A single global offset list (Settings → Notifications), seeded `7 days / 1 day / day-of`, applied to every tracked date (key dates, notice deadlines, expiries). Admin-tunable; the original exclusion of per-date lead times is superseded by the 2026-09-09 and 2026-09-10 addenda below. No per-user list. CTR-006's mandated fires are dates within this scheme.
 - **Rationale** — Configurable-over-fixed applies (nothing branches on the numbers); per-date schedules are config sprawl.
 - **Alternatives considered** — Fixed offsets; per-date custom schedules.
 - **Consequences** — Settings inventory row. Long notice windows may warrant a larger seeded offset later — tune via settings, not code.
@@ -287,6 +303,16 @@ Three Legal Team Members in the focus group typed "remind me 60 days before" int
 **What is not decided.** Time of day on a key date (one tester wanted 09:10, not "Sep 10"); whether an Obligation (ENT) gets the same field; whether a per-date reminder can be earlier than 730 days. Those are for the spec.
 
 **Consequences.** One `jsonb` lead-time list and one recipient list on `contract_key_dates` and `matter_key_dates`, sanitised the way `reminder_offset_days` is. The round's union query reads both lists. The Home dates card and the daily briefing need no change. NOT-004's "not per-date in v1" sentence is superseded by this addendum.
+
+### NOT-004 addendum: per-date lead times and selected recipients (2026-09-10, [#807](https://github.com/juggernog20/OpenLaw/issues/807))
+
+Contract and Matter Key dates now store their own lead-time and recipient lists. Both default to empty, preserving the schedule and audience of existing dates. A per-date list accepts at most twenty whole-day offsets from 0 through 730, deduplicated. Every morning round unions the global and per-date offsets and matches each by equality; the same offset in both lists fires once. An empty or unusable per-date list adds nothing, while the global list retains its existing fallback. Expiry, notice deadlines and Entity Obligations keep the global list alone. Time of day remains outside this change.
+
+An empty recipient list uses the existing reminder audience: the Contract Legal Owner or Matter Manager and the explicit record team. A nonempty list selects a subset of that audience for all of this Key date's reminders, including those at global offsets. The selected subset replaces the default recipients; adding it to an audience that already includes every team member would have no effect. This makes explicit the recipient behavior left open in the preceding addendum. New selections must be active people on the current record team, including its Owner or Manager. A Business User may hold a team row as a watcher and the morning round serves nobody with that role, so Business Users are not offered and a selection naming one is refused. Offering one would let a person pick the single audience the system can never remind, and an explicit selection does not fall back.
+
+Delivery rechecks active accounts, current team membership, DD-014 access and notification preferences. A person removed from the team or archived receives no new reminder. Pending Key-date briefing entries are checked against the current date selection and team before sending; already-delivered entries remain history. If all selected recipients become ineligible, the audience stays empty; it must not fall back to the full team. Editing an unrelated date field preserves the saved recipient choice. Returning to the usual audience is an explicit choice that clears the list.
+
+The Add and Edit Key date dialogs show the global lead times and the combined schedule, allow additional lead times to be added or removed, and explain the recipient selection. No assignee, record access, Task reminder behavior or deadline calculation changes. Per-date reminders continue to use the separate Key date identity established by #760.
 
 ## NOT-005 — Badge: unread count, 9+ cap, read-on-open
 

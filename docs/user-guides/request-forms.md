@@ -20,6 +20,12 @@ Choose **Matter** and a specific Matter type for a Matter form. Choose **Contrac
 
 The **Display name** can change; **Slug** stays fixed. Rename or reorder request types from the list. Archiving a request type takes it out of the Portal's choices and closes its form. In this version the archive dialog reports no usage and offers no replacement, even when Requests still name the type. Those Requests keep that type and stay readable, so check what is still open before you archive. Use **Show archived**, then **Restore**, to offer the type again.
 
+## Publish an estimated turnaround
+
+In the request type editor, set **Turnaround (calendar days)** to a whole number from 0 to 36,500, or leave it blank when no estimate is published. Leave the control or press Enter to save, then check the saved indication. Zero means the submission date; weekends and holidays count as calendar days.
+
+The Portal's request-type card shows this duration as an estimate. On an individual Request, it suggests an **Expected back (estimate)** date from submission in the organization's timezone. A Legal Team Member or Administrator must confirm that suggestion or choose another date. The published turnaround does not overwrite a saved Request estimate or replace the Requester's Needed by date. See [Confirm a return estimate](triage-requests.md#confirm-a-return-estimate).
+
 ## Choose the form fields
 
 1. Under **Form fields**, select **Attach field** and choose a Field, such as **Owning department**.

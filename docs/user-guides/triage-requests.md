@@ -15,7 +15,15 @@ Sign in as a Legal Team Member or Administrator. Business Users [follow their ow
 5. Check the saved assignee. Select their avatar or assignment control to reassign, or choose **Unassigned** and save to clear it. **Cancel** leaves the saved assignment unchanged.
 6. If you need clarification, open **Comments**, choose **Full thread**, enter your message, and select **Comment**. See [Choose who can read a comment](comments-and-activity.md) for audiences, mentions, and attached paper.
 
-Assignment records responsibility without reserving the Request. Another Legal Team Member or Administrator can still decide it. Assignment and replies leave it undecided, and the person assigned during triage does not automatically become the Contract Owner or Matter Manager.
+Assignment records responsibility without reserving the Request. Another Legal Team Member or Administrator can still decide it. Assignment and replies leave it undecided, and the person assigned during triage does not automatically become the Contract Legal Owner or Matter Manager. The Requester sees the saved triage assignee as **Owner** in the Portal; clearing assignment clears that name.
+
+## Confirm a return estimate
+
+On the Request page, find **Expected back (estimate)**. Choose a date, or select **Use suggested date** when a suggestion is available. The suggestion uses the Request type's calendar-day turnaround from the submission date in the organization's timezone. Check the saved indication. Use **Clear estimate** to remove a confirmed date.
+
+The estimate stays separate from the Requester's **Needed by** date. If Needed by is earlier than the suggestion, consider it when choosing a date; the app does not silently move the estimate earlier. Changing the request type's turnaround later does not overwrite an estimate already saved on a Request.
+
+The Requester sees the confirmed date on the Request and under **Your requests**. An Open or In progress Request whose estimate is past shows **Estimate passed**. Legal can change the estimate while a Request is undecided or converted. Resolution or decline makes the estimate read-only and removes the passed-estimate warning. If saving fails, retry the date and confirm the saved result before relying on it. Press Escape in the date control to return to the saved date.
 
 ## Convert to a Contract or Matter
 

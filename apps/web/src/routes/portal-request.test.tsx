@@ -67,6 +67,9 @@ function field(
  * filled in — a suite asserts the one fact it is about. */
 function detail(
   overrides: {
+    owner?: { displayName: string } | null;
+    expectedBy?: string | null;
+    estimatePassed?: boolean;
     status?: RequestStatus;
     declinedReason?: string | null;
     description?: string | null;
@@ -78,6 +81,9 @@ function detail(
 ) {
   return {
     request: {
+      owner: overrides.owner ?? null,
+      expectedBy: overrides.expectedBy ?? null,
+      estimatePassed: overrides.estimatePassed ?? false,
       id: "rq1",
       number: 45,
       status: overrides.status ?? "new",
@@ -1051,4 +1057,25 @@ describe("the conversation", () => {
     expect(await screen.findByText("Comment deleted by its author.")).toBeInTheDocument();
     expect(screen.getByText("Reposting: we are on it.")).toBeInTheDocument();
   });
+});
+
+it("shows Legal's owner and estimate beside the requester's original Needed by date", async () => {
+  stubApi({
+    signedIn: REQUESTER,
+    extra: detailRead(
+      detail({
+        owner: { displayName: "Lee Member" },
+        expectedBy: "2026-10-10",
+        estimatePassed: true,
+        customFields: { needed_by: "2026-10-08" },
+        fields: [{ ...field({ slug: "needed_by", displayName: "Needed by" }), fieldType: "date" }],
+      }),
+    ),
+  });
+  renderAt("/portal/requests/45");
+  expect(await screen.findByText("Owner: Lee Member")).toBeInTheDocument();
+  expect(screen.getByText(/Expected back \(estimate\)/)).toBeInTheDocument();
+  expect(screen.getByText("Estimate passed")).toBeInTheDocument();
+  expect(screen.getByText("Needed by")).toBeInTheDocument();
+  expect(screen.getByText("Oct 10, 2026")).toBeInTheDocument();
 });

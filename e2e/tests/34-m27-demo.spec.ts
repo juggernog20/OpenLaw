@@ -127,9 +127,9 @@ test.describe.serial("M27 deployer journey", () => {
       await expect(main(page).getByLabel(`${PARENT_NAME} ownership percent`)).toHaveValue("100");
 
       await page.goto(`/entities/${subsidiaryId}`);
-      const officers = main(page).getByRole("region", { name: "Officers" });
-      await officers.getByRole("button", { name: "Add officer" }).click();
-      await officers.getByLabel("Officer name").fill(DIRECTOR_NAME);
+      const officers = main(page).getByRole("region", { name: "Directors & Officers" });
+      await officers.getByRole("button", { name: "Add director or officer" }).click();
+      await officers.getByLabel("Director or officer name").fill(DIRECTOR_NAME);
       await officers.getByLabel("Role").selectOption({ label: "Director" });
       await officers.getByLabel("Appointed on").fill("2026-08-01");
       const officerResponse = page.waitForResponse(
@@ -142,7 +142,7 @@ test.describe.serial("M27 deployer journey", () => {
       expect(addedOfficer.status(), await addedOfficer.text()).toBe(201);
       officerId = CreatedOfficer.parse(await addedOfficer.json()).officer.id;
       await expect(
-        officers.getByRole("textbox", { name: `${DIRECTOR_NAME} Officer name` }),
+        officers.getByRole("textbox", { name: `${DIRECTOR_NAME} Director or officer name` }),
       ).toHaveValue(DIRECTOR_NAME);
 
       const dueOn = nextMonthDay();
@@ -171,7 +171,7 @@ test.describe.serial("M27 deployer journey", () => {
       await subsidiaryRow.click();
       await expect(page).toHaveURL(`/entities/${subsidiaryId}`);
       await expect(
-        main(page).getByRole("textbox", { name: `${DIRECTOR_NAME} Officer name` }),
+        main(page).getByRole("textbox", { name: `${DIRECTOR_NAME} Director or officer name` }),
       ).toHaveValue(DIRECTOR_NAME);
 
       await page.goto("/entities?view=chart");

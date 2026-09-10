@@ -16,12 +16,8 @@
  * then read alike because they were one shape from the start rather than
  * two that were reconciled later.
  *
- * **Deliberately flat.** No owner column, because the matters-side owner
- * question is a matters question and nothing on a contract asks it. No
- * per-date reminder schedule, because NOT-004 already fixed one global
- * offset list for every tracked date — key dates, notice deadlines, and
- * expiries alike — and a schedule per row would be that decision made
- * twice.
+ * Key dates have no owner. NOT-004 permits additional reminder lead
+ * times and a selected subset of the record team (#807).
  *
  * **The date is a calendar date, not a moment.** A deadline is a day:
  * "the price review opens on 1 March" is true in every timezone, and a
@@ -37,7 +33,7 @@
  */
 
 import { sql } from "drizzle-orm";
-import { check, date, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { check, date, index, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { contracts } from "./contracts.js";
 import { uuidPk } from "./helpers.js";
 
@@ -64,6 +60,8 @@ export const contractKeyDates = pgTable(
      * absence to test — the rule `contracts.description` already
      * follows. */
     note: text("note"),
+    reminderOffsetDays: jsonb("reminder_offset_days").$type<number[]>().notNull().default([]),
+    reminderRecipientIds: jsonb("reminder_recipient_ids").$type<string[]>().notNull().default([]),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     // Application code owns every write here, so $onUpdate keeps the
     // audit trail honest for writers that forget to set it (org.ts note).
@@ -91,6 +89,14 @@ export const contractKeyDates = pgTable(
     check(
       "contract_key_dates_note_check",
       sql`${table.note} is null or length(btrim(${table.note})) between 1 and 2000`,
+    ),
+    check(
+      "contract_key_dates_reminder_offsets_check",
+      sql`case when jsonb_typeof(${table.reminderOffsetDays}) = 'array' then jsonb_array_length(${table.reminderOffsetDays}) <= 20 and not jsonb_path_exists(${table.reminderOffsetDays}, 'strict $[*] ? (@.type() != "number")') and not jsonb_path_exists(${table.reminderOffsetDays}, 'strict $[*] ? (@.type() == "number") ? (@ < 0 || @ > 730 || @ != @.floor())') else false end`,
+    ),
+    check(
+      "contract_key_dates_reminder_recipients_check",
+      sql`case when jsonb_typeof(${table.reminderRecipientIds}) = 'array' then not jsonb_path_exists(${table.reminderRecipientIds}, 'strict $[*] ? (@.type() != "string")') else false end`,
     ),
   ],
 );

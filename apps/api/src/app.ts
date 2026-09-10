@@ -85,10 +85,13 @@ import {
   knowledgeTypesRoutes,
 } from "./modules/knowledge-types/routes.js";
 import { knowledgeRoutes } from "./modules/knowledge/routes.js";
+import { portalContractRoutes } from "./modules/portal/contracts.js";
+import { contractStakeholderRoutes } from "./modules/contract-stakeholders/routes.js";
 import { portalRoutes } from "./modules/portal/routes.js";
 import { requestConvertRoutes } from "./modules/requests/convert.js";
 import { requestDeclineRoutes } from "./modules/requests/decline.js";
 import { requestDetailRoutes } from "./modules/requests/request-detail.js";
+import { requestEstimateRoutes } from "./modules/requests/estimates.js";
 import { requestAssignmentRoutes } from "./modules/requests/assignment.js";
 import { requestInboxRoutes } from "./modules/requests/inbox.js";
 import { requestResolveRoutes } from "./modules/requests/resolve.js";
@@ -490,7 +493,10 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(requestTypeFieldsRoutes, { prefix: "/api/v1" });
   await app.register(intakeLinksRoutes, { prefix: "/api/v1" });
   await app.register(portalRoutes, { prefix: "/api/v1" });
+  await app.register(portalContractRoutes, { prefix: "/api/v1" });
+  await app.register(contractStakeholderRoutes, { prefix: "/api/v1" });
   await app.register(requestsRoutes, { prefix: "/api/v1" });
+  await app.register(requestEstimateRoutes, { prefix: "/api/v1" });
   await app.register(requestAssignmentRoutes, { prefix: "/api/v1" });
   await app.register(requestInboxRoutes, { prefix: "/api/v1" });
   await app.register(requestDetailRoutes, { prefix: "/api/v1" });

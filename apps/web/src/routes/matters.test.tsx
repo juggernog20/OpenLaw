@@ -617,6 +617,59 @@ describe("the Matters destination", () => {
     );
   });
 
+  it.each([
+    { action: "clear", required: false, expected: null },
+    { action: "leave untouched", required: false, expected: "Finance" },
+    { action: "override", required: false, expected: "People" },
+    { action: "clear", required: true, expected: undefined },
+  ])(
+    "preserves template Field intent: $action, required=$required",
+    async ({ action, required, expected }) => {
+      let posted: unknown;
+      const field = { ...REQUIRED_FIELD, isRequired: required };
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call) => {
+          if (call.url.pathname === "/api/v1/matters/options" && call.method === "GET") {
+            return json(200, {
+              matterTypes: [{ ...TYPE, fields: [field], templates: [TEMPLATE] }],
+              matterStatuses: [],
+              users: [],
+            });
+          }
+          return matterApi((request) => {
+            posted = request.body;
+            return json(201, { matter: matter({ id: "matter-8", number: 8 }) });
+          })(call);
+        },
+      });
+      renderAt("/matters");
+      const user = userEvent.setup();
+      await screen.findByRole("heading", { name: "No matters yet" });
+      await user.click(screen.getAllByRole("button", { name: "New matter" })[0]!);
+      const dialog = await screen.findByRole("dialog");
+      await user.selectOptions(within(dialog).getByLabelText(/^Matter type\*?$/), TYPE.id);
+      await user.selectOptions(within(dialog).getByLabelText("Matter template"), TEMPLATE.id);
+      const control = within(dialog).getByLabelText(/Business unit/);
+      expect(control).toHaveValue("Finance");
+      if (action !== "leave untouched") await user.clear(control);
+      if (action === "override") await user.type(control, "People");
+      await user.click(within(dialog).getByRole("button", { name: "Create" }));
+
+      if (required) {
+        expect(await within(dialog).findByRole("alert")).toHaveTextContent("Fill Business unit.");
+        expect(posted).toBeUndefined();
+      } else {
+        await waitFor(() =>
+          expect(posted).toMatchObject({
+            templateId: TEMPLATE.id,
+            customFields: { "business-unit": expected },
+          }),
+        );
+      }
+    },
+  );
+
   it("keeps the dialog actionable and explains a failed create", async () => {
     stubApi({
       signedIn: MEMBER,

@@ -101,6 +101,9 @@ export function PortalHomePage() {
           </p>
         )}
       </div>
+      <Link to="/portal/contracts" className="text-base font-medium text-link">
+        <FormattedMessage id="portal.contracts.title" defaultMessage="Your Contracts" />
+      </Link>
       <HelpLink surface="portal" contextual />
       <div className="grid gap-section-gap @3xl/page:grid-cols-portal-split">
         {requestTypes.length > 0 ? (
@@ -125,6 +128,15 @@ export function PortalHomePage() {
                 >
                   <span className="flex min-w-0 flex-col gap-1">
                     <span className="text-md font-semibold text-primary">{type.displayName}</span>
+                    {type.turnaroundDays != null && (
+                      <span className="text-sm text-muted">
+                        <FormattedMessage
+                          id="portal.turnaround"
+                          defaultMessage="Estimated turnaround: {days, plural, one {# calendar day} other {# calendar days}}"
+                          values={{ days: type.turnaroundDays }}
+                        />
+                      </span>
+                    )}
                     {type.description !== null && (
                       <span className="text-sm text-muted">{type.description}</span>
                     )}

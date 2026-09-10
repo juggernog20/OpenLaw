@@ -40,6 +40,8 @@ import {
   and,
   asc,
   contracts,
+  contractKeyDates,
+  matterKeyDates,
   contractStatuses,
   desc,
   eq,
@@ -496,6 +498,40 @@ describe("a second round on the same tick", () => {
   });
 });
 
+describe.each([
+  { kind: "Contract", today: "2026-04-16", create: newContract, addDate: addKeyDate },
+  { kind: "Matter", today: "2026-04-18", create: newMatter, addDate: addMatterKeyDate },
+])("distinct $kind Key dates on the same day", ({ kind, today, create, addDate }) => {
+  it("names every date in the bell and briefing and deduplicates repeat rounds", async () => {
+    const record = await create(`${kind} same-day deadlines`);
+    const labels = ["File response", "Attend hearing", "File response"];
+    for (const label of labels) await addDate(record.number, plusDays(today, 1), label);
+
+    await round(at(today, 8));
+    const items = await bellFor(OWNER, record);
+    expect(items).toHaveLength(3);
+    expect(items.map((row) => row.payload.label).sort()).toEqual([...labels].sort());
+    expect(new Set(items.map((row) => row.payload.keyDateId)).size).toBe(3);
+    const briefing = kind === "Contract" ? lastDigestTo(OWNER) : matterDigestsTo(OWNER).at(-1)!;
+    expect(briefing.subject).toBe(
+      `3 dates on your ${kind === "Contract" ? "contracts" : "matters"}`,
+    );
+    for (const label of labels) expect(briefing.text).toContain(label);
+    expect(briefing.text.match(/File response/g)).toHaveLength(2);
+    expect((await rowsFor(OUTSIDER)).filter((row) => row.entityId === record.id)).toEqual([]);
+
+    const second = await round(at(today, 9));
+    expect(second.summary.reminders).toBe(0);
+    expect(second.summary.digests).toBe(0);
+    expect(await bellFor(OWNER, record)).toHaveLength(3);
+
+    await round(at(plusDays(today, 1), 8));
+    const nextOffset = await bellFor(OWNER, record);
+    expect(nextOffset).toHaveLength(6);
+    expect(nextOffset.map((row) => row.payload.offsetDays).sort()).toEqual([0, 0, 0, 1, 1, 1]);
+  });
+});
+
 describe("Matter Key dates in the morning round", () => {
   const TODAY = "2026-04-20";
   let active: MatterRow;
@@ -624,17 +660,7 @@ describe("entity_type is part of the dedup identity", () => {
         { ...base, entityType: "contract" as const },
         { ...base, entityType: "matter" as const },
       ])
-      .onConflictDoNothing({
-        target: [
-          notifications.userId,
-          notifications.eventType,
-          notifications.entityType,
-          notifications.entityId,
-          notifications.reminderDate,
-          notifications.reminderOffsetDays,
-        ],
-        where: sql`reminder_date is not null`,
-      });
+      .onConflictDoNothing();
     const rows = await harness.db
       .select()
       .from(notifications)
@@ -809,6 +835,19 @@ describe("an immediate email whose wake-up was lost", () => {
         ),
       );
     expect(row, "the hand-over's own notification row").toBeDefined();
+    const readEmailedAt = async (): Promise<Date | null> => {
+      const [current] = await harness.db
+        .select({ emailedAt: notifications.emailedAt })
+        .from(notifications)
+        .where(eq(notifications.id, row!.id));
+      return current?.emailedAt ?? null;
+    };
+
+    // The first send hands the message to the mailer and only then marks
+    // the row, so wait for that mark before clearing it. Clearing the
+    // column while the mark is still in flight puts a fresh timestamp
+    // back on the row, and the round then reads an email nobody owes.
+    await settles("the hand-over email's own mark", async () => (await readEmailedAt()) !== null);
     await harness.db
       .update(notifications)
       .set({
@@ -828,11 +867,12 @@ describe("an immediate email whose wake-up was lost", () => {
         harness.mailer.messagesTo(OUTSIDER.email).filter((m) => m.text.includes(contract.title))
           .length > delivered,
     );
-    const [settled] = await harness.db
-      .select({ emailedAt: notifications.emailedAt })
-      .from(notifications)
-      .where(eq(notifications.id, row!.id));
-    expect(settled!.emailedAt).not.toBeNull();
+    // The mark lands after the message, so settle on the column rather
+    // than reading it the moment the mailer has the mail.
+    await settles(
+      "the re-asked hand-over email's own mark",
+      async () => (await readEmailedAt()) !== null,
+    );
   });
 });
 
@@ -959,5 +999,209 @@ describe("the scheduled shape", () => {
     await settles("the scheduled round", () =>
       harness.jobLog.some((line) => line.message === "the scheduled morning round finished"),
     );
+  });
+});
+
+describe.each([
+  { kind: "contracts", today: "2026-11-02", create: newContract },
+  { kind: "matters", today: "2026-11-04", create: newMatter },
+])("per-date reminder lead times on $kind", ({ kind, today, create }) => {
+  it("adds an early reminder and deduplicates the global ladder", async () => {
+    const record = await create("Own reminder ladder");
+    const response = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/${kind}/${record.number}/key-dates`,
+      cookies: as(OWNER),
+      payload: {
+        date: plusDays(today, 60),
+        label: "Renew trademark",
+        reminderOffsetDays: [60, 7, 60],
+        reminderRecipientIds: [],
+      },
+    });
+    expect(response.statusCode, response.body).toBe(201);
+    expect(response.json().deadlines[0].reminderOffsetDays).toEqual([60, 7]);
+    await round(at(today, 8));
+    expect((await bellFor(OWNER, record)).map((row) => row.payload.offsetDays)).toEqual([60]);
+    await round(at(today, 9));
+    expect(await bellFor(OWNER, record)).toHaveLength(1);
+    // The database also refuses malformed offsets from writers outside the API.
+    const table = kind === "contracts" ? contractKeyDates : matterKeyDates;
+    await expect(
+      harness.db
+        .update(table)
+        .set({ reminderOffsetDays: sql`'[60, "59", -1, 1.5, 731]'::jsonb` })
+        .where(eq(table.id, response.json().deadlines[0].keyDateId)),
+    ).rejects.toMatchObject({ cause: { code: "23514" } });
+    await round(at(plusDays(today, 1), 8));
+    expect(await bellFor(OWNER, record)).toHaveLength(1);
+    await round(at(plusDays(today, 53), 8));
+    expect((await bellFor(OWNER, record)).map((row) => row.payload.offsetDays).sort()).toEqual(
+      [7, 60].sort(),
+    );
+  });
+});
+
+describe.each([
+  { kind: "contracts", patchPath: "key-dates", today: "2027-03-01", create: newContract },
+  { kind: "matters", patchPath: "matter-key-dates", today: "2027-03-04", create: newMatter },
+])("per-date reminder recipients on $kind", ({ kind, patchPath, today, create }) => {
+  it("validates choices, narrows the audience, and rechecks departed team members", async () => {
+    const record = await create("Selected reminder recipients");
+    const url = `/api/v1/${kind}/${record.number}/key-dates`;
+    const write = (payload: Record<string, unknown>) =>
+      harness.app.inject({
+        method: "POST",
+        url,
+        cookies: as(OWNER),
+        payload: { date: plusDays(today, 1), label: "Filing", ...payload },
+      });
+    for (const offsets of [[-1], [1.5], [731], ["60"]]) {
+      expect((await write({ reminderOffsetDays: offsets })).statusCode).toBe(400);
+    }
+    expect((await write({ reminderRecipientIds: [idOf(OUTSIDER)] })).statusCode).toBe(400);
+    const joined = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/${kind}/${record.number}/team`,
+      cookies: as(OWNER),
+      payload: { userId: idOf(OUTSIDER), role: "member" },
+    });
+    expect(joined.statusCode, joined.body).toBe(201);
+    const options = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/${kind}/${record.number}/key-date-reminder-options`,
+      cookies: as(OWNER),
+    });
+    expect(options.statusCode, options.body).toBe(200);
+    expect(options.json().recipients.map((person: { id: string }) => person.id)).toEqual(
+      expect.arrayContaining([idOf(OWNER), idOf(OUTSIDER)]),
+    );
+    const created = await write({
+      reminderOffsetDays: [730, 0, 730],
+      reminderRecipientIds: [idOf(OWNER), idOf(OWNER)],
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const date = created.json().deadlines.find((row: { label: string }) => row.label === "Filing");
+    expect(date.reminderOffsetDays).toEqual([730, 0]);
+    expect(date.reminderRecipientIds).toEqual([idOf(OWNER)]);
+    const patch = (payload: Record<string, unknown>) =>
+      harness.app.inject({
+        method: "PATCH",
+        url: `/api/v1/${patchPath}/${date.keyDateId}`,
+        cookies: as(OWNER),
+        payload,
+      });
+    await round(at(today, 8));
+    expect(await bellFor(OWNER, record)).toHaveLength(1);
+    expect(await bellFor(OUTSIDER, record)).toHaveLength(0);
+    const changed = await patch({ reminderRecipientIds: [idOf(OUTSIDER)] });
+    expect(changed.statusCode, changed.body).toBe(200);
+    expect(changed.json().deadlines[0].reminderOffsetDays).toEqual([730, 0]);
+    await round(at(plusDays(today, 1), 8));
+    expect(await bellFor(OWNER, record)).toHaveLength(1);
+    expect(await bellFor(OUTSIDER, record)).toHaveLength(1);
+    const removed = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/${kind}/${record.number}/team/${idOf(OUTSIDER)}/member`,
+      cookies: as(OWNER),
+    });
+    expect(removed.statusCode, removed.body).toBe(200);
+    expect((await patch({ date: plusDays(today, 2) })).statusCode).toBe(200);
+    await round(at(plusDays(today, 2), 8));
+    expect(await bellFor(OUTSIDER, record)).toHaveLength(1);
+    expect(await bellFor(OWNER, record)).toHaveLength(1);
+    expect((await patch({ reminderRecipientIds: [] })).statusCode).toBe(200);
+    await round(at(plusDays(today, 2), 9));
+    expect(await bellFor(OWNER, record)).toHaveLength(2);
+  });
+});
+
+describe.each([
+  {
+    kind: "contracts",
+    patchPath: "key-dates",
+    today: "2027-04-01",
+    change: "remove",
+    create: newContract,
+  },
+  {
+    kind: "contracts",
+    patchPath: "key-dates",
+    today: "2027-04-04",
+    change: "reselect",
+    create: newContract,
+  },
+  {
+    kind: "matters",
+    patchPath: "matter-key-dates",
+    today: "2027-04-07",
+    change: "remove",
+    create: newMatter,
+  },
+  {
+    kind: "matters",
+    patchPath: "matter-key-dates",
+    today: "2027-04-10",
+    change: "reselect",
+    create: newMatter,
+  },
+])("pending Key-date mail on $kind after $change", ({ kind, patchPath, today, change, create }) => {
+  it("rechecks the current audience before delivery and keeps delivered history", async () => {
+    const record = await create("Pending reminder audience");
+    expect(
+      (
+        await harness.app.inject({
+          method: "POST",
+          url: `/api/v1/${kind}/${record.number}/team`,
+          cookies: as(OWNER),
+          payload: { userId: idOf(OUTSIDER), role: "member" },
+        })
+      ).statusCode,
+    ).toBe(201);
+    const add = async (label: string) => {
+      const response = await harness.app.inject({
+        method: "POST",
+        url: `/api/v1/${kind}/${record.number}/key-dates`,
+        cookies: as(OWNER),
+        payload: { label, date: plusDays(today, 7), reminderRecipientIds: [idOf(OUTSIDER)] },
+      });
+      expect(response.statusCode, response.body).toBe(201);
+      return response.json().deadlines.find((row: { label: string }) => row.label === label)
+        .keyDateId as string;
+    };
+    const sentId = await add("Already delivered");
+    await round(at(today, 8));
+    const sent = (await rowsFor(OUTSIDER)).find((row) => row.payload.keyDateId === sentId)!;
+    expect(sent.emailedAt).not.toBeNull();
+    const pendingId = await add("Pending private deadline");
+    await round(at(today, 9));
+    const pending = (await rowsFor(OUTSIDER)).find((row) => row.payload.keyDateId === pendingId)!;
+    expect(pending.emailOwed).toBe(true);
+    expect(pending.emailedAt).toBeNull();
+    const changed =
+      change === "remove"
+        ? await harness.app.inject({
+            method: "DELETE",
+            url: `/api/v1/${kind}/${record.number}/team/${idOf(OUTSIDER)}/member`,
+            cookies: as(OWNER),
+          })
+        : await harness.app.inject({
+            method: "PATCH",
+            url: `/api/v1/${patchPath}/${pendingId}`,
+            cookies: as(OWNER),
+            payload: { reminderRecipientIds: [idOf(OWNER)] },
+          });
+    expect(changed.statusCode, changed.body).toBe(200);
+    const before = harness.mailer.messagesTo(OUTSIDER.email).length;
+    await round(at(plusDays(today, 1), 8));
+    expect(
+      harness.mailer
+        .messagesTo(OUTSIDER.email)
+        .slice(before)
+        .some((message) => message.text.includes("Pending private deadline")),
+    ).toBe(false);
+    const after = await rowsFor(OUTSIDER);
+    expect(after.find((row) => row.id === pending.id)!.emailSkippedAt).not.toBeNull();
+    expect(after.find((row) => row.id === sent.id)!.emailedAt).toEqual(sent.emailedAt);
   });
 });

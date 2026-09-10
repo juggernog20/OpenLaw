@@ -4,13 +4,14 @@
  * text-on-background token pair drops below its WCAG 2.2 AA threshold:
  *
  *   - 4.5:1 for body-size text (DES-006 ramp is 11–14px in pills,
- *     badges, links, and copy — all under the 18px large-text cutoff).
- *   - 3:1 for graphical objects and non-body roles: the file-type icon
- *     squares, the avatar initials treatment (DES-018/DES-019), and
- *     `--text-subtle`, whose only roles are placeholder and disabled
- *     text (DES-005). Disabled text is exempt under WCAG 1.4.3; we hold
- *     placeholders to the 3:1 non-text floor instead of exempting them.
- *     `--text-subtle` is never body copy.
+ *     badges, avatar initials, links, and copy — all under the 18px
+ *     large-text cutoff).
+ *   - 3:1 for graphical objects and non-body roles. Those are the
+ *     file-type icon squares, the DES-034 stage glyph and the DES-041
+ *     timeline fills, and `--text-subtle`, whose only roles are
+ *     placeholder and disabled text (DES-005). Disabled text is exempt
+ *     under WCAG 1.4.3; we hold placeholders to the 3:1 non-text floor
+ *     instead of exempting them. `--text-subtle` is never body copy.
  *
  * Failures are fixed by adjusting the failing token in
  * styles/themes/<theme>.css — never by relaxing the check (DES-011).
@@ -88,9 +89,9 @@ PAIRS.push(
 // than the banner, so the row's own text and the DES-009-paired badge
 // sitting on top of it both keep reading.
 PAIRS.push(["text-primary", "legal-only-bg", BODY], ["text-muted", "legal-only-bg", BODY]);
-// Avatar initials — graphical identifier per DES-018/DES-019; the name
-// always accompanies the avatar in accessible contexts.
-PAIRS.push(["avatar-fg", "avatar-bg", UI]);
+// Visible avatar initials use the small-text threshold, even when the
+// accessible name comes from the surrounding control (DES-011, #756).
+PAIRS.push(["avatar-fg", "avatar-bg", BODY]);
 // The stage pipeline's check glyph (DES-034) — a meaningful graphical
 // object drawn straight on the strip's bg-control, outside the
 // success family's own bg/fg pairing. The chevron separators are

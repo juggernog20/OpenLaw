@@ -66,7 +66,11 @@ Set your timezone in [Update your profile and personal settings](personal-settin
 
 Administrators configure reminder lead times for tracked dates. The initial list is seven days before, one day before, and on the date; your organization may have changed it. The date, eligible audience, current access, and your preferences determine whether you receive a reminder. Due-today and overdue Tasks in the briefing are separate from that lead-time list.
 
-Multiple Key dates on the same record with the same date can share one reminder. Check the record's full Key dates list; the reminder may name only one of those entries.
+Legal Team Members and Administrators can also set additional lead times when adding or editing a Contract or Matter Key date. The dialog shows the global reminders and their combined schedule. Additional lead times are whole days from 0 to 730, with up to 20 per Key date. A lead time present in both lists produces one reminder; removing an additional lead time does not remove a global one. Contract expiry, notice deadlines, and Entity Obligations continue to use the global list.
+
+A Key date's recipient checkboxes can narrow its reminders to selected people from the record's team, including its Owner or Matter Manager. With no selection, the usual record audience applies. Selected people must still be active and on the team when reminders are checked, and must retain access and permit the notification. If every selected person has left, reminders do not widen to the usual audience. Editing the Key date and choosing **Use the usual audience** restores that default explicitly.
+
+Each Contract and Matter Key date gets its own reminder, even when several share the same record and date. The bell item and the briefing line both name the Key date. Repeated checks do not send the same reminder again, but each configured lead time and a rescheduled date can produce a new reminder.
 
 See [Configure reminders and use the Audit log](reminders-and-audit.md) for the Administrator's configuration procedure. Changing a lead time affects later checks; it does not guarantee recovery of every reminder missed while the app or worker was stopped.
 

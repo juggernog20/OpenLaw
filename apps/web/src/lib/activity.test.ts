@@ -732,6 +732,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   },
   "request.declined": { number: 42 },
   "request.resolved": { number: 42 },
+  "request.expected_by_changed": { number: 42, from: null, to: "2026-09-15" },
   "request.assignee_changed": { number: 42, assignee: "Nadia Counsel", from: null, to: "u2" },
   "request.converted": { number: 42, contractNumber: 51 },
   "request.thread_moved": { number: 42, contractNumber: 51 },
@@ -949,6 +950,21 @@ describe("AI field confirmation narration", () => {
       }).sentence,
     ).toBe("Nadia Counsel confirmed the AI-written value for Governing law");
   });
+});
+
+it("names a Key date's selected recipients and the usual audience", () => {
+  const entry: NarratableEntry = {
+    action: "key_date.edited",
+    actor: ACTOR,
+    payload: {
+      keyDateId: "date",
+      label: "Renewal",
+      changed: { reminderRecipientIds: { from: [], to: ["person"] } },
+    },
+  };
+  expect(
+    narrateActivity(intl, entry, { referenceNames: { person: "Casey Counsel" } }).changes,
+  ).toEqual([{ label: "Reminder recipients", from: "Usual audience", to: "Casey Counsel" }]);
 });
 
 describe("the record's own id-valued and slug-valued changes", () => {
