@@ -17,7 +17,7 @@ export const CORE_ANALYSIS_TARGETS = [
   {
     slug: "term_type",
     defaultPrompt:
-      "Extract whether the Contract has a fixed term, auto-renews, or continues indefinitely.",
+      'Extract the Contract term type. Return exactly "fixed" for a fixed term, "auto_renew" for automatic renewal, or "evergreen" for an indefinite term.',
     type: "term_type",
   },
   {

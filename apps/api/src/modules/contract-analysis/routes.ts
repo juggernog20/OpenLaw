@@ -105,6 +105,46 @@ export async function latestAnalysisRun(db: Executor, contractId: string, user: 
 const requireMember = requireRole("administrator", "legal_team_member");
 
 export const contractAnalysisRoutes: FastifyPluginAsyncZod = async (app) => {
+  app.get(
+    "/contracts/:number/analysis/:runId",
+    {
+      preHandler: requireRole("administrator", "legal_team_member", "contributor"),
+      schema: {
+        operationId: "getContractAnalysisRun",
+        summary: "Read an analysis run and its evidence when its source Document is accessible",
+        tags: ["contracts"],
+        params: NumberParams.extend({ runId: z.string().min(1).max(200) }),
+        response: {
+          200: z.object({ run: AnalysisRunSchema, documentId: z.string() }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request) => {
+      const reached = await reachedContract(app.db, request.user, request.params.number);
+      if (!reached) throw httpError(404, NO_CONTRACT);
+      const [row] = await app.db
+        .select({
+          run: contractAnalysisRuns,
+          versionNumber: documentVersions.versionNumber,
+          documentId: documents.id,
+        })
+        .from(contractAnalysisRuns)
+        .innerJoin(documentVersions, eq(contractAnalysisRuns.versionId, documentVersions.id))
+        .innerJoin(documents, eq(documentVersions.documentId, documents.id))
+        .where(
+          and(
+            eq(contractAnalysisRuns.id, request.params.runId),
+            eq(contractAnalysisRuns.contractId, reached.id),
+            documentAudienceScope(app.db, request.user),
+          ),
+        )
+        .limit(1);
+      if (!row) throw httpError(404, "Analysis evidence is not available.");
+      return { run: toAnalysisRun(row.run, row.versionNumber), documentId: row.documentId };
+    },
+  );
+
   app.post(
     "/contracts/:number/analysis",
     {

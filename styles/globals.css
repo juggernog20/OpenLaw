@@ -41,6 +41,13 @@
   --color-border-strong: var(--border-strong);
   --color-border-on-inverted: var(--border-on-inverted);
 
+  /* AI provenance (DES-070 addendum). */
+  --color-ai-field-border-start: var(--ai-field-border-start);
+  --color-ai-field-border-middle: var(--ai-field-border-middle);
+  --color-ai-field-border-end: var(--ai-field-border-end);
+  --color-ai-field-border-fade: var(--ai-field-border-fade);
+  --color-ai-evidence-fg: var(--ai-evidence-fg);
+
   /* ------------------------------------------------------------------ *
    * Text                                                               *
    * ------------------------------------------------------------------ */
@@ -288,6 +295,69 @@
   :focus-visible {
     outline: var(--ring-width) solid var(--ring-color);
     outline-offset: 2px;
+  }
+}
+
+/* A quiet provenance cue; the normal control and focus outline stay visible. */
+.ai-field[data-ai-generated="true"] {
+  position: relative;
+  isolation: isolate;
+  border-radius: var(--radius-button);
+  box-shadow:
+    -2px 0 7px -3px color-mix(in srgb, var(--ai-field-border-start) 50%, transparent),
+    2px 1px 8px -3px color-mix(in srgb, var(--ai-field-border-end) 50%, transparent);
+  --ai-field-gradient: linear-gradient(
+    115deg,
+    var(--ai-field-border-start),
+    var(--ai-field-border-middle) 45%,
+    var(--ai-field-border-end) 75%,
+    var(--ai-field-border-fade)
+  );
+}
+
+.ai-field[data-ai-generated="true"]::before,
+.ai-field[data-ai-generated="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: var(--ai-field-gradient);
+  padding: 1px;
+  mask:
+    linear-gradient(black 0 0) content-box,
+    linear-gradient(black 0 0);
+  mask-composite: exclude;
+}
+
+.ai-field[data-ai-generated="true"]::before {
+  inset: -2px;
+  padding: 2px;
+  filter: blur(3px);
+  opacity: 0.45;
+}
+
+.ai-field[data-ai-generated="true"]::after {
+  opacity: 0.75;
+}
+
+.ai-evidence-trigger {
+  color: var(--ai-evidence-fg);
+}
+
+@media (forced-colors: active) {
+  .ai-field[data-ai-generated="true"] {
+    box-shadow: none;
+    outline: 1px solid CanvasText;
+  }
+
+  .ai-field[data-ai-generated="true"]::before,
+  .ai-field[data-ai-generated="true"]::after {
+    display: none;
+  }
+
+  .ai-evidence-trigger {
+    color: ButtonText;
   }
 }
 

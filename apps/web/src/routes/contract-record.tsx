@@ -247,6 +247,9 @@ import {
   ConfirmUnverified,
   UnverifiedMarker,
 } from "../components/contracts/ai-analysis-card";
+import { AiField } from "../components/ui/ai-field";
+import { AiFieldEvidence } from "../components/contracts/ai-field-evidence";
+import { coreAnalysisLabel } from "../lib/core-analysis-labels";
 import { CounterpartyPicker, type CounterpartyPick } from "../components/counterparty-picker";
 import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
 import { DocPanel } from "../components/documents/doc-panel";
@@ -921,7 +924,12 @@ function ContractRecord() {
    * is open changes the panel's own header, and a document that leaves
    * the listing takes the panel with it.
    */
-  const [reading, setReading] = useState<{ documentId: string; versionId: string } | null>(() =>
+  const [reading, setReading] = useState<{
+    documentId: string;
+    versionId: string;
+    findQuery?: string;
+    citationKey?: string;
+  } | null>(() =>
     documentLanding
       ? { documentId: documentLanding.document.id, versionId: documentLanding.versionId }
       : null,
@@ -1163,10 +1171,58 @@ function ContractRecord() {
     analysis.available && analysisRunnable && analysis.latestRun?.state !== "pending";
   const unverifiedMarker = (slug: string) =>
     saved.aiUnverified?.[slug] ? <UnverifiedMarker /> : null;
-  const confirmationControl = (slug: string) =>
-    saved.aiUnverified?.[slug] && analysisConfirmable ? (
-      <ConfirmUnverified onConfirm={() => confirmAnalysisField(slug)} />
-    ) : null;
+  const confirmationControl = (slug: string) => {
+    const marker = saved.aiUnverified?.[slug];
+    if (!marker) return null;
+    const coreLabel = coreAnalysisLabel(slug);
+    const label = coreLabel
+      ? intl.formatMessage(coreLabel)
+      : (attached.find((field) => field.slug === slug)?.displayName ?? slug);
+    return (
+      <>
+        {analysisConfirmable && <ConfirmUnverified onConfirm={() => confirmAnalysisField(slug)} />}
+        <AiFieldEvidence
+          key={`${marker.runId}:${slug}`}
+          field={label}
+          slug={slug}
+          contractNumber={saved.number}
+          runId={marker.runId}
+          onOpen={async (documentId, versionId, quote, trigger, signal) => {
+            const document = [...paper, ...filed].find(
+              (row) =>
+                row.id === documentId && row.versions.some((version) => version.id === versionId),
+            );
+            if (!document) {
+              const landing = await readDocumentLanding(
+                { entityType: "contract", number: saved.number },
+                documentId,
+                versionId,
+              );
+              if (!landing || signal.aborted) return false;
+              if (paper.some((row) => row.id === documentId)) {
+                setPaper((current) =>
+                  current.map((row) => (row.id === documentId ? landing.document : row)),
+                );
+              } else {
+                setFiled((current) => [
+                  ...current.filter((row) => row.id !== documentId),
+                  landing.document,
+                ]);
+              }
+            }
+            readingTrigger.current = trigger;
+            setReading({
+              documentId,
+              versionId,
+              findQuery: quote,
+              citationKey: crypto.randomUUID(),
+            });
+            return true;
+          }}
+        />
+      </>
+    );
+  };
   /**
    * Work waiting in the three sections that carry a count chip on the
    * tab strip. Unresolved approvals (pending, or a rejection nobody
@@ -2109,15 +2165,17 @@ function ContractRecord() {
           layer={
             open && (
               <DocPanel
+                key={reading?.citationKey ?? open.version.id}
                 documentId={open.document.id}
                 title={open.document.title}
                 version={open.version}
                 previousVersion={previousComparableVersion(open.document, open.version)}
                 initialFind={
-                  documentLanding?.document.id === open.document.id &&
+                  reading?.findQuery ??
+                  (documentLanding?.document.id === open.document.id &&
                   documentLanding.versionId === open.version.id
                     ? documentFindQuery
-                    : null
+                    : null)
                 }
                 onClose={closeReading}
                 onDockedChange={(docked) => {
@@ -2497,23 +2555,25 @@ function ContractRecord() {
                         {unverifiedMarker("term_type")}
                       </div>
                       <div className="flex items-center gap-2">
-                        <select
-                          id="contract-term-type"
-                          value={saved.termType}
-                          className={CONTROL_CLASS}
-                          disabled={frozen}
-                          onChange={(event) =>
-                            void commit("termType", {
-                              termType: event.target.value as TermType,
-                            })
-                          }
-                        >
-                          {TERM_TYPES.map((option) => (
-                            <option key={option} value={option}>
-                              {termTypeLabel(intl, option)}
-                            </option>
-                          ))}
-                        </select>
+                        <AiField active={Boolean(saved.aiUnverified?.term_type)} className="flex-1">
+                          <select
+                            id="contract-term-type"
+                            value={saved.termType}
+                            className={CONTROL_CLASS}
+                            disabled={frozen}
+                            onChange={(event) =>
+                              void commit("termType", {
+                                termType: event.target.value as TermType,
+                              })
+                            }
+                          >
+                            {TERM_TYPES.map((option) => (
+                              <option key={option} value={option}>
+                                {termTypeLabel(intl, option)}
+                              </option>
+                            ))}
+                          </select>
+                        </AiField>
                         <StatusNote
                           status={fieldStatus.termType ?? "idle"}
                           detail={fieldError.termType}
@@ -2801,12 +2861,11 @@ function ContractRecord() {
                 frozen={frozen}
                 businessEditable={!archived && contributor}
                 aiUnverified={saved.aiUnverified}
-                canConfirm={analysisConfirmable}
+                reviewControl={confirmationControl}
                 status={fieldStatus}
                 error={fieldError}
                 onStatus={note}
                 onCommit={commitCustomField}
-                onConfirm={confirmAnalysisField}
               />
             )}
             {/* The record's paper (M11/2, M11/3), in the section the
@@ -3214,9 +3273,7 @@ function CounterpartiesField({
         <Label htmlFor="contract-counterparty">
           <FormattedMessage id="contracts.form.counterparties" defaultMessage="Counterparties" />
         </Label>
-        {marker}
         <StatusNote status={status} detail={error} />
-        {confirmation}
       </div>
       {parties.length > 0 && (
         <ul
@@ -3229,9 +3286,11 @@ function CounterpartiesField({
           {parties.map((party) => (
             <li
               key={party.id}
-              className="flex h-9 items-center gap-2 border-b border-border-default px-2.5 last:border-b-0"
+              className="ai-field flex h-9 items-center gap-2 border-b border-border-default px-2.5 last:border-b-0"
+              data-ai-generated={(Boolean(marker) && party.isPrimary) || undefined}
             >
               <span className="truncate text-base">{party.name}</span>
+              {party.isPrimary && marker}
               {/* The disambiguator: two organizations do share a name. */}
               {party.jurisdiction && (
                 <span className="shrink-0 text-xs text-muted">{party.jurisdiction}</span>
@@ -3274,6 +3333,7 @@ function CounterpartiesField({
                     <X size={16} aria-hidden="true" />
                   </Button>
                 )}
+                {party.isPrimary && confirmation}
               </span>
             </li>
           ))}
@@ -3471,7 +3531,6 @@ function ValueField({
         </span>
         {marker}
         <StatusNote status={status} detail={error} />
-        {confirmation}
       </div>
       <div
         role="group"
@@ -3492,57 +3551,65 @@ function ValueField({
           if (event.key === "Escape") revert();
         }}
       >
-        <Input
-          id="contract-value-amount"
-          type="number"
-          inputMode="decimal"
-          min={0}
-          step={step}
-          className="w-40"
-          disabled={frozen}
-          aria-label={intl.formatMessage({
-            id: "contracts.value.amount",
-            defaultMessage: "Amount",
-          })}
-          value={draft.amount}
-          onChange={(event) => setDraft((current) => ({ ...current, amount: event.target.value }))}
-        />
-        <CurrencySelect
-          id="contract-value-currency"
-          className="w-56"
-          disabled={frozen}
-          aria-label={intl.formatMessage({
-            id: "contracts.value.currency",
-            defaultMessage: "Currency",
-          })}
-          value={draft.currency}
-          onValueChange={(currency) => setDraft((current) => ({ ...current, currency }))}
-          placeholder={intl.formatMessage({
-            id: "contracts.value.currencyPlaceholder",
-            defaultMessage: "Currency…",
-          })}
-        />
-        <select
-          id="contract-value-cadence"
-          className={cn(CONTROL_CLASS, "w-40")}
-          disabled={frozen}
-          aria-label={intl.formatMessage({
-            id: "contracts.value.cadence",
-            defaultMessage: "Cadence",
-          })}
-          value={draft.cadence}
-          onChange={(event) =>
-            setDraft((current) => ({ ...current, cadence: event.target.value as ValueCadence }))
-          }
-        >
-          {/* No empty option: an amount always says what it is per, and
+        <AiField active={Boolean(marker)} className="w-40">
+          <Input
+            id="contract-value-amount"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step={step}
+            disabled={frozen}
+            aria-label={intl.formatMessage({
+              id: "contracts.value.amount",
+              defaultMessage: "Amount",
+            })}
+            value={draft.amount}
+            onChange={(event) =>
+              setDraft((current) => ({ ...current, amount: event.target.value }))
+            }
+          />
+        </AiField>
+        <AiField active={Boolean(marker)} className="w-56">
+          <CurrencySelect
+            id="contract-value-currency"
+            className="w-full"
+            disabled={frozen}
+            aria-label={intl.formatMessage({
+              id: "contracts.value.currency",
+              defaultMessage: "Currency",
+            })}
+            value={draft.currency}
+            onValueChange={(currency) => setDraft((current) => ({ ...current, currency }))}
+            placeholder={intl.formatMessage({
+              id: "contracts.value.currencyPlaceholder",
+              defaultMessage: "Currency…",
+            })}
+          />
+        </AiField>
+        <AiField active={Boolean(marker)} className="w-40">
+          <select
+            id="contract-value-cadence"
+            className={CONTROL_CLASS}
+            disabled={frozen}
+            aria-label={intl.formatMessage({
+              id: "contracts.value.cadence",
+              defaultMessage: "Cadence",
+            })}
+            value={draft.cadence}
+            onChange={(event) =>
+              setDraft((current) => ({ ...current, cadence: event.target.value as ValueCadence }))
+            }
+          >
+            {/* No empty option: an amount always says what it is per, and
               a one-off is a cadence, not the absence of one (CTR-010). */}
-          {VALUE_CADENCES.map((cadence) => (
-            <option key={cadence} value={cadence}>
-              {cadenceLabel(intl, cadence)}
-            </option>
-          ))}
-        </select>
+            {VALUE_CADENCES.map((cadence) => (
+              <option key={cadence} value={cadence}>
+                {cadenceLabel(intl, cadence)}
+              </option>
+            ))}
+          </select>
+        </AiField>
+        <span className="ms-auto flex items-center gap-2">{confirmation}</span>
       </div>
       {/* Only once there is a value to read back. Empty, the three
           controls are the whole field: they already say the amount is
@@ -3585,12 +3652,11 @@ function FieldsCard({
   frozen,
   businessEditable,
   aiUnverified,
-  canConfirm,
+  reviewControl,
   status,
   error,
   onStatus,
   onCommit,
-  onConfirm,
 }: Readonly<{
   fields: readonly AttachedField[];
   values: CustomFieldValues;
@@ -3601,14 +3667,13 @@ function FieldsCard({
   /** A live Contributor may edit only business-tagged Fields. */
   businessEditable: boolean;
   aiUnverified: ContractRow["aiUnverified"];
-  canConfirm: boolean;
+  reviewControl: (slug: string) => React.ReactNode;
   status: Partial<Record<FieldKey, FieldStatus>>;
   error: Partial<Record<FieldKey, string | undefined>>;
   onStatus: (key: FieldKey, status: FieldStatus, detail?: string) => void;
   /** Fire and forget: the row reads the outcome from its own
    * micro-state, which `onStatus` has already been handed. */
   onCommit: (slug: string, value: CustomFieldValue | null) => void;
-  onConfirm: (slug: string) => Promise<string | undefined>;
 }>) {
   return (
     <section
@@ -3641,11 +3706,7 @@ function FieldsCard({
               entities={entities}
               frozen={frozen && !(businessEditable && field.fieldTag === "business")}
               marker={Boolean(aiUnverified?.[field.slug])}
-              confirmation={
-                aiUnverified?.[field.slug] && canConfirm ? (
-                  <ConfirmUnverified onConfirm={() => onConfirm(field.slug)} />
-                ) : null
-              }
+              confirmation={reviewControl(field.slug)}
               status={status[`field:${field.slug}`] ?? "idle"}
               error={error[`field:${field.slug}`]}
               onStatus={(next, detail) => onStatus(`field:${field.slug}`, next, detail)}
@@ -3767,30 +3828,32 @@ function CustomFieldRow({
       </div>
       <div className="flex min-w-0 flex-1 items-center gap-2">
         <div className="min-w-0 flex-1">
-          <CustomFieldControl
-            id={controlId}
-            field={field}
-            draft={draft}
-            disabled={frozen}
-            people={people}
-            entities={entities}
-            describedBy={helpId}
-            onDraft={(next) => {
-              setDraft(next);
-              if (immediate) commitDraft(next);
-            }}
-            onBlur={immediate ? undefined : () => commitDraft(draft)}
-            onKeyDown={(event) => {
-              if (event.key === "Escape") revert();
-              // A textarea's Enter is a newline, and the record page is
-              // not a form, so only the single-line boxes take it as a
-              // commit.
-              if (event.key === "Enter" && !immediate && field.fieldType !== "long_text") {
-                event.preventDefault();
-                commitDraft(draft);
-              }
-            }}
-          />
+          <AiField active={marker} className={field.fieldType === "boolean" ? "w-fit" : undefined}>
+            <CustomFieldControl
+              id={controlId}
+              field={field}
+              draft={draft}
+              disabled={frozen}
+              people={people}
+              entities={entities}
+              describedBy={helpId}
+              onDraft={(next) => {
+                setDraft(next);
+                if (immediate) commitDraft(next);
+              }}
+              onBlur={immediate ? undefined : () => commitDraft(draft)}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") revert();
+                // A textarea's Enter is a newline, and the record page is
+                // not a form, so only the single-line boxes take it as a
+                // commit.
+                if (event.key === "Enter" && !immediate && field.fieldType !== "long_text") {
+                  event.preventDefault();
+                  commitDraft(draft);
+                }
+              }}
+            />
+          </AiField>
         </div>
         <StatusNote status={status} detail={error} />
         {confirmation}
@@ -4114,36 +4177,38 @@ function TermField({
         {marker}
       </div>
       <div className="flex items-center gap-2">
-        {type === "date" ? (
-          <DatePicker
-            id={id}
-            value={draft}
-            disabled={frozen}
-            onChange={(next) => {
-              onDraft(next);
-              onCommit(next);
-            }}
-            onRevert={onRevert}
-          />
-        ) : (
-          <Input
-            id={id}
-            type="number"
-            // A count of months or days is a whole number, and the
-            // keypad a phone offers should say so.
-            inputMode="numeric"
-            min={min}
-            step={1}
-            value={draft}
-            disabled={frozen}
-            onChange={(event) => onDraft(event.target.value)}
-            onBlur={() => onCommit()}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") onCommit();
-              if (event.key === "Escape") onRevert();
-            }}
-          />
-        )}
+        <AiField active={Boolean(marker)} className="flex-1">
+          {type === "date" ? (
+            <DatePicker
+              id={id}
+              value={draft}
+              disabled={frozen}
+              onChange={(next) => {
+                onDraft(next);
+                onCommit(next);
+              }}
+              onRevert={onRevert}
+            />
+          ) : (
+            <Input
+              id={id}
+              type="number"
+              // A count of months or days is a whole number, and the
+              // keypad a phone offers should say so.
+              inputMode="numeric"
+              min={min}
+              step={1}
+              value={draft}
+              disabled={frozen}
+              onChange={(event) => onDraft(event.target.value)}
+              onBlur={() => onCommit()}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") onCommit();
+                if (event.key === "Escape") onRevert();
+              }}
+            />
+          )}
+        </AiField>
         <StatusNote status={status} detail={error} />
         {confirmation}
       </div>

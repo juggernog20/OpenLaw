@@ -8,8 +8,8 @@
  * Notable substitutions from the standard Light/Dark vocabulary:
  *   - Confidentiality marker uses terracotta-brown (--confidential-fg
  *     = #7F5D32), not purple. Warm keeps purple out of its core
- *     palette (the assigned status family's mauve is the one
- *     exception), so the marker would clash. Per DES-005 this is
+ *     palette except for assigned status mauve and the AI treatment
+ *     added by DES-070, so the marker would clash. Per DES-005 this is
  *     intentional. Shifted one hue step from --text-link to maintain
  *     visual distinction between lock markers and hyperlinks, then
  *     darkened to clear the DES-011 gate (4.71:1 on the banner tan).
@@ -40,6 +40,13 @@
   --border-muted: #efe9dd;
   --border-strong: #d3c9b6; /* cream ramp one step past default */
   --border-on-inverted: #d8d0c0;
+
+  /* DES-070 deliberately adds a soft purple AI gradient to Warm. */
+  --ai-field-border-start: #ae91c9;
+  --ai-field-border-middle: #9466b5;
+  --ai-field-border-end: #bd8cc9;
+  --ai-field-border-fade: #e1d3e8;
+  --ai-evidence-fg: #795099;
 
   /* Text */
   --text-primary: #2d2a24;

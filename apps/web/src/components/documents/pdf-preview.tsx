@@ -140,6 +140,15 @@ export function PdfPreview({
   const [findQuery, setFindQuery] = useState(seededFind);
   const [pageTexts, setPageTexts] = useState<readonly string[] | null>(null);
   const [currentFindIndex, setCurrentFindIndex] = useState(0);
+  const [seenFind, setSeenFind] = useState(seededFind);
+  if (seenFind !== seededFind) {
+    setSeenFind(seededFind);
+    if (allowFind && seededFind) {
+      setFindQuery(seededFind);
+      setFindOpen(true);
+      setCurrentFindIndex(0);
+    }
+  }
   const well = useRef<HTMLDivElement>(null);
   const findInput = useRef<HTMLInputElement>(null);
   const findToggle = useRef<HTMLButtonElement>(null);
@@ -160,9 +169,8 @@ export function PdfPreview({
 
   // A new address is a new document, and the page, the zoom and the
   // find below reset with it during render, before the open effect
-  // runs. Keyed on the address alone: the find seed goes null when a
-  // tab change drops the landing from the address while the docked
-  // panel stays open, and only a new document reads the seed again.
+  // runs. A tab change can drop the find seed while the docked panel
+  // stays open; that leaves the reader's current search intact.
   const [openedSrc, setOpenedSrc] = useState(src);
   if (openedSrc !== src) {
     setOpenedSrc(src);
@@ -453,14 +461,18 @@ export function PdfPreview({
               aria-live="polite"
               className="shrink-0 text-xs font-medium tabular-nums text-muted"
             >
-              <FormattedMessage
-                id="docpanel.find.count"
-                defaultMessage="{current} of {total}"
-                values={{
-                  current: matches.length === 0 ? 0 : currentFindIndex + 1,
-                  total: matches.length,
-                }}
-              />
+              {pageTexts !== null && findQuery.trim() && matches.length === 0 ? (
+                <FormattedMessage id="docpanel.find.noMatches" defaultMessage="No matches" />
+              ) : (
+                <FormattedMessage
+                  id="docpanel.find.count"
+                  defaultMessage="{current} of {total}"
+                  values={{
+                    current: matches.length === 0 ? 0 : currentFindIndex + 1,
+                    total: matches.length,
+                  }}
+                />
+              )}
             </span>
             <Button
               variant="ghost"
@@ -760,8 +772,16 @@ const PdfPage = memo(function PdfPage({
  * (DD-001). The bytes come from the preview read, same-origin, so the
  * session cookie rides the request without anything being said here.
  */
+let pdfLibrary: Promise<typeof import("pdfjs-dist")> | undefined;
+function loadPdfLibrary() {
+  return (pdfLibrary ??= import("pdfjs-dist").catch((error: unknown) => {
+    pdfLibrary = undefined;
+    throw error;
+  }));
+}
+
 async function openPdf(src: string): Promise<LoadedDocument> {
-  const pdfjs = await import("pdfjs-dist");
+  const pdfjs = await loadPdfLibrary();
   pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
   const task = pdfjs.getDocument({
     url: src,
@@ -830,30 +850,30 @@ function textContentString(items: readonly unknown[]): string {
   return items
     .map((item) => {
       if (!item || typeof item !== "object" || !("str" in item)) return "";
-      return typeof item.str === "string" ? item.str : "";
+      return typeof item.str === "string"
+        ? item.str + ("hasEOL" in item && item.hasEOL ? "\n" : "")
+        : "";
     })
     .join("");
 }
 
-function occurrenceStarts(text: string, query: string): number[] {
-  if (query.length === 0) return [];
-  const starts: number[] = [];
-  const haystack = text.toLocaleLowerCase();
-  const needle = query.toLocaleLowerCase();
-  let from = 0;
-  while (from <= haystack.length - needle.length) {
-    const start = haystack.indexOf(needle, from);
-    if (start < 0) break;
-    starts.push(start);
-    from = start + needle.length;
-  }
-  return starts;
+function occurrenceRanges(text: string, query: string): Array<{ start: number; end: number }> {
+  if (!query.trim()) return [];
+  const pattern = query
+    .trim()
+    .split(/\s+/u)
+    .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join("\\s+");
+  return Array.from(text.matchAll(new RegExp(pattern, "giu")), (match) => ({
+    start: match.index,
+    end: match.index + match[0].length,
+  }));
 }
 
 function findTextMatches(texts: readonly string[], query: string): FindMatch[] {
   const matches: FindMatch[] = [];
   for (const [pageIndex, text] of texts.entries()) {
-    const pageMatchCount = occurrenceStarts(text, query).length;
+    const pageMatchCount = occurrenceRanges(text, query).length;
     for (let occurrence = 0; occurrence < pageMatchCount; occurrence += 1) {
       matches.push({ index: matches.length, pageNumber: pageIndex + 1 });
     }
@@ -885,24 +905,30 @@ function highlightTextLayer(
   layer.normalize();
   if (query.length === 0 || matches.length === 0) return;
 
-  const walker = layer.ownerDocument.createTreeWalker(layer, NodeFilter.SHOW_TEXT);
+  const walker = layer.ownerDocument.createTreeWalker(
+    layer,
+    NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
+  );
   const nodes: Array<{ node: Text; start: number; end: number }> = [];
   let text = "";
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (node instanceof HTMLBRElement) {
+      text += "\n";
+      continue;
+    }
     if (!(node instanceof Text) || node.data.length === 0) continue;
     const start = text.length;
     text += node.data;
     nodes.push({ node, start, end: text.length });
   }
 
-  const starts = occurrenceStarts(text, query);
+  const ranges = occurrenceRanges(text, query);
   for (
-    let occurrence = Math.min(starts.length, matches.length) - 1;
+    let occurrence = Math.min(ranges.length, matches.length) - 1;
     occurrence >= 0;
     occurrence -= 1
   ) {
-    const start = starts[occurrence]!;
-    const end = start + query.length;
+    const { start, end } = ranges[occurrence]!;
     const match = matches[occurrence]!;
     for (let nodeIndex = nodes.length - 1; nodeIndex >= 0; nodeIndex -= 1) {
       const entry = nodes[nodeIndex]!;
@@ -921,6 +947,9 @@ function highlightTextLayer(
       mark.append(matched);
     }
   }
+  layer
+    .querySelector<HTMLElement>(`[data-pdf-find-match="${currentFindIndex}"]`)
+    ?.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" });
 }
 
 /**
@@ -966,7 +995,7 @@ async function drawPage(options: {
   container.style.setProperty("--scale-round-x", "1px");
   container.style.setProperty("--scale-round-y", "1px");
 
-  const { TextLayer } = await import("pdfjs-dist");
+  const { TextLayer } = await loadPdfLibrary();
   if (!options.isLive()) return;
   const textContent = await page.getTextContent();
   if (!options.isLive()) return;

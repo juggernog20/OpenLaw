@@ -59,7 +59,12 @@ vi.mock("pdfjs-dist", () => ({
       numPages: PDF_PAGE_TEXT.length,
       loadingTask: { destroy: () => Promise.resolve() },
       getPage: (pageNumber: number) => {
-        const items = (PDF_PAGE_TEXT[pageNumber - 1] ?? []).map((str) => ({ str }));
+        const items = (PDF_PAGE_TEXT[pageNumber - 1] ?? []).flatMap((str) =>
+          str.split("\n").map((line, index, lines) => ({
+            str: line,
+            hasEOL: index < lines.length - 1,
+          })),
+        );
         return Promise.resolve({
           getViewport: ({ scale }: { scale: number }) => ({
             width: 600 * scale,
@@ -73,12 +78,12 @@ vi.mock("pdfjs-dist", () => ({
   }),
   TextLayer: class MockTextLayer {
     readonly options: {
-      textContentSource: { items: Array<{ str?: string }> };
+      textContentSource: { items: Array<{ str?: string; hasEOL?: boolean }> };
       container: HTMLElement;
     };
 
     constructor(options: {
-      textContentSource: { items: Array<{ str?: string }> };
+      textContentSource: { items: Array<{ str?: string; hasEOL?: boolean }> };
       container: HTMLElement;
     }) {
       this.options = options;
@@ -89,6 +94,7 @@ vi.mock("pdfjs-dist", () => ({
         const span = document.createElement("span");
         span.textContent = item.str ?? "";
         this.options.container.append(span);
+        if (item.hasEOL) this.options.container.append(document.createElement("br"));
       }
       return Promise.resolve();
     }
@@ -1146,6 +1152,219 @@ describe("the /contracts/:number record page", () => {
       ]);
     });
 
+    it.each([
+      ["term_type", "Term type", "/contracts/42"],
+      ["payment_terms", "Payment terms", "/contracts/42/fields"],
+    ])("opens the originating run's evidence for %s", async (slug, label, path) => {
+      const api = recordApi(
+        contractRow({
+          customFields: { payment_terms: "Net 30" },
+          aiUnverified: {
+            [slug]: { runId: "original-run", writtenAt: "2026-08-01T00:00:00.000Z" },
+          },
+        }),
+        undefined,
+        undefined,
+        undefined,
+        { available: true, latestRun: analysisRun({ id: "newer-run" }) },
+      );
+      const reads: string[] = [];
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call) => {
+          if (
+            call.url.pathname === "/api/v1/contracts/42/documents" &&
+            !call.url.searchParams.has("folder")
+          ) {
+            return json(200, {
+              documents: [
+                {
+                  id: "source-doc",
+                  title: "Original source",
+                  isPrimary: true,
+                  archivedAt: null,
+                  versions: [
+                    {
+                      id: "source-version",
+                      versionNumber: 3,
+                      renderFamily: "pdf",
+                      originalFilename: "original.pdf",
+                      mimeType: "application/pdf",
+                      byteSize: 1000,
+                    },
+                  ],
+                },
+              ],
+              nextCursor: null,
+            });
+          }
+          if (call.url.pathname === "/api/v1/contracts/42/analysis/original-run") {
+            reads.push(call.url.pathname);
+            return json(200, {
+              documentId: "source-doc",
+              run: analysisRun({
+                id: "original-run",
+                versionId: "source-version",
+                model: "original-model",
+                outcome: {
+                  written: [slug],
+                  kept: [],
+                  invalid: [],
+                  unsupported: [],
+                  results: [
+                    {
+                      slug,
+                      value: "original value",
+                      evidence: "The exact passage from the original document.",
+                      outcome: "written",
+                    },
+                  ],
+                },
+              }),
+            });
+          }
+          return api.handler(call);
+        },
+      });
+      const { router } = renderAt(path);
+      const user = userEvent.setup();
+      const trigger = await screen.findByRole("button", { name: `View AI evidence for ${label}` });
+      expect(screen.getByLabelText(label).closest("[data-ai-generated]")).toHaveAttribute(
+        "data-ai-generated",
+        "true",
+      );
+      const pill = screen.getByText("Unverified");
+      expect(pill.querySelector("svg")).toHaveAttribute("width", "12");
+      expect(pill.querySelector("svg")).toHaveAttribute("height", "12");
+      expect(reads).toHaveLength(0);
+      await user.click(trigger);
+      const viewer = await screen.findByRole("complementary", {
+        name: "Original source, version 3",
+      });
+      expect(router.state.location.pathname).toBe(path);
+      expect(router.state.location.search).toBe("");
+      expect(
+        await within(viewer).findByRole("searchbox", { name: "Find in document" }),
+      ).toHaveValue("The exact passage from the original document.");
+      expect(await within(viewer).findByText("No matches")).toBeInTheDocument();
+      await user.click(within(viewer).getByRole("button", { name: "Close the document" }));
+      await waitFor(() => expect(trigger).toHaveFocus());
+    });
+
+    it("explains unavailable evidence without showing another run's quote", async () => {
+      const api = recordApi(
+        contractRow({ aiUnverified: { term_type: { runId: "restricted-run" } } }),
+      );
+      stubApi({
+        signedIn: CONTRIBUTOR,
+        extra: (call) =>
+          call.url.pathname.endsWith("/analysis/restricted-run")
+            ? problem(404, "Analysis evidence is not available.")
+            : api.handler(call),
+      });
+      renderAt("/contracts/42");
+      await userEvent
+        .setup()
+        .click(await screen.findByRole("button", { name: "View AI evidence for Term type" }));
+      expect(await screen.findByRole("alert")).toHaveTextContent("Source evidence is unavailable");
+      expect(screen.queryByRole("link", { name: "Open source document" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Confirm" })).not.toBeInTheDocument();
+    });
+
+    it("marks only the AI primary Counterparty and removes its treatment on confirmation", async () => {
+      const api = recordApi(
+        contractRow({ aiUnverified: { counterparty: { runId: "original-run" } } }),
+        undefined,
+        [party("cp-helix", true), party("cp-orion", false)],
+      );
+      stubApi({ signedIn: MEMBER, extra: api.handler });
+      renderAt("/contracts/42");
+      const list = await screen.findByRole("list", { name: "Counterparties" });
+      const [primary, secondary] = within(list).getAllByRole("listitem");
+      expect(primary).toHaveAttribute("data-ai-generated", "true");
+      expect(within(primary!).getByText("Unverified")).toBeVisible();
+      expect(within(primary!).getByRole("button", { name: /View AI evidence/ })).toBeVisible();
+      expect(secondary).not.toHaveAttribute("data-ai-generated");
+      expect(within(secondary!).queryByText("Unverified")).not.toBeInTheDocument();
+      expect(within(secondary!).queryByRole("button", { name: /View AI evidence/ })).toBeNull();
+      await userEvent.setup().click(within(primary!).getByRole("button", { name: "Confirm" }));
+      await waitFor(() => expect(primary).not.toHaveAttribute("data-ai-generated"));
+      expect(screen.queryByText("Unverified")).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /View AI evidence/ })).toBeNull();
+    });
+
+    it("explains when the originating run has no saved quote", async () => {
+      const api = recordApi(contractRow({ aiUnverified: { term_type: { runId: "legacy-run" } } }));
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call) =>
+          call.url.pathname.endsWith("/analysis/legacy-run")
+            ? json(200, {
+                documentId: "source-doc",
+                run: analysisRun({
+                  outcome: { written: ["term_type"], kept: [], invalid: [], unsupported: [] },
+                }),
+              })
+            : api.handler(call),
+      });
+      const { router } = renderAt("/contracts/42");
+      const user = userEvent.setup();
+      const trigger = await screen.findByRole("button", { name: "View AI evidence for Term type" });
+      await user.click(trigger);
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "No source quote was saved for this field.",
+      );
+      expect(router.state.location.pathname).toBe("/contracts/42");
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(trigger).toHaveFocus());
+    });
+
+    it("does not open a citation after its loading popover is dismissed", async () => {
+      const api = recordApi(contractRow({ aiUnverified: { term_type: { runId: "slow-run" } } }));
+      let finish!: (response: Response) => void;
+      const pending = new Promise<Response>((resolve) => {
+        finish = resolve;
+      });
+      let documentReads = 0;
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call) => {
+          if (call.url.pathname.endsWith("/analysis/slow-run")) return pending;
+          if (call.url.pathname === "/api/v1/contracts/42/documents") documentReads += 1;
+          return api.handler(call);
+        },
+      });
+      renderAt("/contracts/42");
+      const user = userEvent.setup();
+      const trigger = await screen.findByRole("button", { name: "View AI evidence for Term type" });
+      const before = documentReads;
+      await user.click(trigger);
+      expect(await screen.findByText("Opening cited passage…")).toBeVisible();
+      await user.keyboard("{Escape}");
+      await act(async () => {
+        finish(
+          json(200, {
+            documentId: "source-doc",
+            run: analysisRun({
+              versionId: "source-version",
+              outcome: {
+                written: ["term_type"],
+                kept: [],
+                invalid: [],
+                unsupported: [],
+                results: [
+                  { slug: "term_type", evidence: "Fixed term", value: "fixed", outcome: "written" },
+                ],
+              },
+            }),
+          }),
+        );
+        await pending;
+      });
+      expect(documentReads).toBe(before);
+      expect(trigger).toHaveFocus();
+    });
+
     it("removes one marker from the confirmation response", async () => {
       const outcome = {
         written: ["term_type", "value"],
@@ -1182,7 +1401,12 @@ describe("the /contracts/:number record page", () => {
       await user.click(within(evidence.closest("li")!).getByRole("button", { name: "Confirm" }));
       await waitFor(() => expect(api.posts).toContain("confirm term_type"));
       expect(within(evidence.closest("li")!).queryByText("Unverified")).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: "View AI evidence for Term type" }),
+      ).not.toBeInTheDocument();
       expect(screen.getAllByText("Unverified")).not.toHaveLength(0);
+      expect(screen.getByLabelText("Term type").closest("[data-ai-generated]")).toBeNull();
+      expect(screen.getByLabelText("Amount").closest("[data-ai-generated]")).not.toBeNull();
     });
 
     it("confirms every marker from the card header", async () => {
@@ -1204,6 +1428,9 @@ describe("the /contracts/:number record page", () => {
       await userEvent.setup().click(await screen.findByRole("button", { name: "Confirm all" }));
       await waitFor(() => expect(api.posts).toContain("confirm all"));
       expect(screen.queryByText("Unverified")).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: "View AI evidence for Payment terms" }),
+      ).not.toBeInTheDocument();
       expect(screen.queryByRole("button", { name: "Confirm all" })).not.toBeInTheDocument();
     });
 
@@ -7961,6 +8188,82 @@ describe("the doc panel (M12/2)", () => {
     await user.click(within(reading).getByRole("button", { name: "Close find" }));
     expect(openFind).toHaveFocus();
   });
+
+  it.each([false, true])(
+    "centres a split-span AI citation with PDF line wrap %s",
+    async (wrapped) => {
+      const original = PDF_PAGE_TEXT[1]!;
+      if (wrapped) {
+        PDF_PAGE_TEXT[1] = [
+          "A second termi",
+          "nation\nright appears here. The final termination right follows.",
+        ];
+      }
+      try {
+        const quote = "A second termination\nright appears here.";
+        const record = recordApi(
+          contractRow({ aiUnverified: { term_type: { runId: "citation-run" } } }),
+        );
+        stubApi({
+          signedIn: MEMBER,
+          extra: (call) => {
+            if (call.url.pathname === "/api/v1/contracts/42/documents")
+              return json(200, { documents: [document()], nextCursor: null });
+            if (call.url.pathname === "/api/v1/contracts/42/analysis/citation-run")
+              return json(200, {
+                documentId: "pdoc-1",
+                run: analysisRun({
+                  versionId: "pv-1",
+                  outcome: {
+                    written: ["term_type"],
+                    kept: [],
+                    invalid: [],
+                    unsupported: [],
+                    results: [
+                      { slug: "term_type", evidence: quote, value: "fixed", outcome: "written" },
+                    ],
+                  },
+                }),
+              });
+            return record.handler(call);
+          },
+        });
+        const scroll = vi.spyOn(Element.prototype, "scrollIntoView");
+        const { router } = renderAt("/contracts/42");
+        await userEvent
+          .setup()
+          .click(await screen.findByRole("button", { name: "View AI evidence for Term type" }));
+        const reading = await panel(/master services agreement, version 1/);
+        expect(router.state.location.pathname).toBe("/contracts/42");
+        expect(await within(reading).findByText("1 of 1")).toBeVisible();
+        await waitFor(() => {
+          const marks = reading.querySelectorAll<HTMLElement>(
+            '[data-page-number="2"] mark[data-pdf-find-match="0"]',
+          );
+          expect(
+            Array.from(marks)
+              .map((mark) => mark.textContent)
+              .join(""),
+          ).toBe(
+            wrapped
+              ? "A second terminationright appears here."
+              : "A second termination right appears here.",
+          );
+          expect(
+            scroll.mock.instances.some((element, index) => {
+              const options = scroll.mock.calls[index]?.[0];
+              return (
+                element === marks[0] && typeof options === "object" && options.block === "center"
+              );
+            }),
+          ).toBe(true);
+        });
+        scroll.mockRestore();
+      } finally {
+        PDF_PAGE_TEXT[1] = original;
+      }
+    },
+  );
 
   it("routes Ctrl+F and Cmd+F to document find only while the PDF reader is open", async () => {
     stubApi({ signedIn: MEMBER, extra: panelApi([document()]) });

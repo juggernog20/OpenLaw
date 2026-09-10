@@ -199,6 +199,8 @@ function coerce(target: AnalysisTarget, raw: unknown): CustomFieldValue | object
         .trim()
         .toLocaleLowerCase("en-US")
         .replace(/[\s-]+/g, "_");
+      if (value === "fixed_term") return "fixed";
+      if (value === "auto_renewing") return "auto_renew";
       return (TERM_TYPES as readonly string[]).includes(value) ? value : null;
     }
     case "date":
@@ -489,10 +491,12 @@ async function applyAnswers(
             ),
           ),
         tx
-          .select({ id: contractCounterparties.counterpartyId })
+          .select({
+            id: contractCounterparties.counterpartyId,
+            isPrimary: contractCounterparties.isPrimary,
+          })
           .from(contractCounterparties)
-          .where(eq(contractCounterparties.contractId, row.id))
-          .limit(1),
+          .where(eq(contractCounterparties.contractId, row.id)),
       ]);
       if (matches.length === 1 && linked.length === 0) {
         await tx.insert(contractCounterparties).values({
@@ -503,6 +507,12 @@ async function applyAnswers(
         flags.counterparty = flag(counterparty.evidence, run.id);
         outcome.written.push("counterparty");
         noteResult("counterparty", counterparty, "written", name);
+      } else if (
+        matches.length === 1 &&
+        linked.some((party) => party.id === matches[0]!.id && party.isPrimary)
+      ) {
+        outcome.kept.push("counterparty");
+        noteResult("counterparty", counterparty, "kept", name);
       } else {
         outcome.unmatched = name;
         noteResult("counterparty", counterparty, "unmatched", name);
