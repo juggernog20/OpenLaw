@@ -398,11 +398,11 @@ Six of the nine Business User testers said the same thing: the request page says
 
 ### Addendum (2026-09-10, #806) — confirmed estimates and calendar-day turnaround
 
-The expected return date is an **estimate**, labelled “Expected back (estimate)”. Needed by stays the requester's requested date, displayed with their submitted values; it never pulls Legal's estimate earlier. The open specification questions in the 2026-09-09 addendum are settled by this addendum.
+The expected return date is an **estimate**, labelled "Expected back (estimate)". Needed by stays the requester's requested date, displayed with their submitted values; it never pulls Legal's estimate earlier. The open specification questions in the 2026-09-09 addendum are settled by this addendum.
 
 Request types carry nullable **Turnaround (calendar days)**, a whole number from zero through 36,500. Blank means no suggestion; zero suggests the submission date. Triage is offered the submission date in the organization's default timezone plus that many calendar days, including weekends and holidays. Choosing the suggestion confirms it; reading a Request or changing a type, turnaround, or timezone setting never writes or overwrites a saved estimate.
 
-Member+ may set or clear the estimate while the requester-facing status is Open or In progress. Conversion preserves it. Resolved and Declined Requests retain a read-only estimate. A date before today in the organization's timezone carries neutral “Estimate passed” text only while Open or In progress. This adds no status, notification, or overdue styling.
+Member+ may set or clear the estimate while the requester-facing status is Open or In progress. Conversion preserves it. Resolved and Declined Requests retain a read-only estimate. A date before today in the organization's timezone carries neutral "Estimate passed" text only while Open or In progress. This adds no status, notification, or overdue styling.
 
 The requester sees only the triage owner's display name, on their own Request and Your requests. Clearing assignment clears that name. Conversion ownership remains independent of this projection.
 

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** INT-003: Request estimates use the organization’s calendar, including across DST. */
+/** INT-003: Request estimates use the organization's calendar, including across DST. */
 import { orgSettings, type Executor } from "@openlaw/db";
 import { shiftDays } from "../../lib/contract-term.js";
 
