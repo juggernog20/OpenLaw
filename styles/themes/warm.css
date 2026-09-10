@@ -22,7 +22,9 @@
  * DES-011 contrast gate (#42): muted/subtle/link text, the success/
  * warning/info/danger status foregrounds, the confidentiality marker,
  * and the nav's muted chrome text. Same pattern as DES-018's severe
- * derivation. Back-port to the .pen when the mocks next get touched.
+ * derivation. The avatar foreground goes further than a step (#756);
+ * see its own note below. Back-port to the .pen when the mocks next
+ * get touched.
  */
 
 [data-theme="warm"] {
@@ -97,9 +99,12 @@
   --legal-only-bg: #f6efe3;
 
   /* Avatar: Warm overrides DES-018's light blue with the terracotta
-   * accent (DES-019). Blue is the one hue Warm's palette refuses. */
+   * accent (DES-019). Blue is the one hue Warm's palette refuses. The
+   * initials are dark, not DES-019's cream (#756). Cream reads 3.11:1
+   * on this terracotta, and the initials are 11px, so they take the
+   * dark accent foreground for 4.87:1. */
   --avatar-bg: #c97b5c;
-  --avatar-fg: #fbfaf7;
+  --avatar-fg: #1f2328;
 
   /* Shell chrome colors (DES-019, #44). Warm's chrome is layered light
    * surfaces, so every strip carries a separating border, the search box
