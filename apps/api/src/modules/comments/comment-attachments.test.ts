@@ -3,7 +3,7 @@
 /** Comment paper (CMT-011) at the HTTP and storage seams. */
 
 import { readdir } from "node:fs/promises";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   and,
   activityLog,
@@ -209,12 +209,13 @@ function download(
   entityId: string,
   commentId: string,
   attachmentId: string,
+  preview = false,
 ) {
   return harness.app.inject({
     method: "GET",
     url:
       `/api/v1/comments/${commentId}/attachments/${attachmentId}` +
-      `?entityType=${entityType}&entityId=${entityId}`,
+      `?entityType=${entityType}&entityId=${entityId}${preview ? "&preview=true" : ""}`,
     cookies,
   });
 }
@@ -564,6 +565,121 @@ describe("corrections", () => {
     const hidden = await download(memberCookies, "contract", contract.id, comment.id, attachmentId);
     expect(hidden.statusCode, hidden.body).toBe(404);
   });
+
+  it("downloads and previews return 404 while redaction has removed the blob but not committed", async () => {
+    const contract = await contractWithContributor("Paper being redacted");
+    const posted = await postMultipart(
+      memberCookies,
+      "contract",
+      contract.id,
+      "Wrong record.",
+      "legal_only",
+      [{ filename: "wrong.pdf", content: "%PDF-wrong" }],
+    );
+    expect(posted.statusCode, posted.body).toBe(201);
+    const comment = posted.json().comment as { id: string; attachments: { id: string }[] };
+    const attachmentId = comment.attachments[0]!.id;
+    let markRemoved!: () => void;
+    const removed = new Promise<void>((resolve) => {
+      markRemoved = resolve;
+    });
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const deleteBlob = harness.app.storage.delete.bind(harness.app.storage);
+    const heldDelete = vi.spyOn(harness.app.storage, "delete").mockImplementation(async (ref) => {
+      await deleteBlob(ref);
+      markRemoved();
+      await held;
+    });
+    const redaction = harness.app
+      .inject({
+        method: "POST",
+        url: `/api/v1/comments/${comment.id}/redact`,
+        cookies: adminCookies,
+      })
+      .then((response) => response);
+    try {
+      await Promise.race([
+        removed,
+        redaction.then((response) => {
+          throw new Error(`Redaction finished before the storage barrier: ${response.statusCode}`);
+        }),
+      ]);
+      // The other connection still sees the live row while its blob is gone.
+      const thread = await readThread(memberCookies, "contract", contract.id);
+      expect(
+        thread.json().comments.find((row: { id: string }) => row.id === comment.id),
+      ).toMatchObject({
+        redactedAt: null,
+        attachments: [{ id: attachmentId }],
+      });
+      for (const cookies of [memberCookies, adminCookies]) {
+        for (const preview of [false, true]) {
+          const response = await download(
+            cookies,
+            "contract",
+            contract.id,
+            comment.id,
+            attachmentId,
+            preview,
+          );
+          expect(response.statusCode, response.body).toBe(404);
+          expect(response.headers["content-type"]).toContain("application/problem+json");
+          expect(response.headers["content-disposition"]).toBeUndefined();
+          expect(response.json()).toMatchObject({
+            status: 404,
+            detail: "No comment attachment exists with this id.",
+          });
+        }
+      }
+    } finally {
+      release();
+      heldDelete.mockRestore();
+      const response = await redaction;
+      expect(response.statusCode, response.body).toBe(200);
+    }
+    const after = await download(memberCookies, "contract", contract.id, comment.id, attachmentId);
+    expect(after.statusCode, after.body).toBe(404);
+  });
+
+  it.each([false, true])(
+    "keeps unrelated storage failures as errors (preview=%s)",
+    async (preview) => {
+      const contract = await contractWithContributor("Unavailable storage");
+      const posted = await postMultipart(
+        memberCookies,
+        "contract",
+        contract.id,
+        "Paper to read.",
+        "legal_only",
+        [{ filename: "paper.pdf", content: "%PDF-paper" }],
+      );
+      expect(posted.statusCode, posted.body).toBe(201);
+      const comment = posted.json().comment as { id: string; attachments: { id: string }[] };
+      const failedRead = vi
+        .spyOn(harness.app.storage, "get")
+        .mockRejectedValueOnce(new Error("Storage unavailable"));
+      try {
+        const response = await download(
+          memberCookies,
+          "contract",
+          contract.id,
+          comment.id,
+          comment.attachments[0]!.id,
+          preview,
+        );
+        expect(response.statusCode, response.body).toBe(500);
+        expect(response.headers["content-type"]).toContain("application/problem+json");
+        expect(response.headers["content-disposition"]).toBeUndefined();
+        expect(response.json()).toMatchObject({ status: 500 });
+        expect(response.json()).not.toHaveProperty("detail");
+      } finally {
+        failedRead.mockRestore();
+      }
+    },
+  );
 
   it("redact deletes attachment blobs and rows with the body", async () => {
     const contract = await contractWithContributor("Redacted paper");

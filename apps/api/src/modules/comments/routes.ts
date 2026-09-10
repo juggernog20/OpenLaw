@@ -132,6 +132,7 @@ import {
 } from "../../lib/document-versions.js";
 import { conversionFormatOf, previewContentType } from "../../lib/render-family.js";
 import { DocEngineError } from "../../lib/doc-engine/engine.js";
+import { BlobNotFoundError } from "../../lib/storage/adapter.js";
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import {
   asUploadRefusal,
@@ -1571,12 +1572,23 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         throw httpError(404, "No comment attachment exists with this id.");
       }
 
+      const readSource = async () => {
+        try {
+          return await app.storage.get(row.fileRef);
+        } catch (error) {
+          // Redaction removes bytes before committing the attachment-row deletion.
+          if (error instanceof BlobNotFoundError)
+            throw httpError(404, "No comment attachment exists with this id.");
+          throw error;
+        }
+      };
+
       if (request.query.preview === "true") {
         const nativeType = previewContentType("application/octet-stream", row.filename);
         const convertFrom = conversionFormatOf("application/octet-stream", row.filename);
         if (!nativeType && !convertFrom)
           throw httpError(415, "A preview is not available for this file type.");
-        const source = await app.storage.get(row.fileRef);
+        const source = await readSource();
         let preview = source;
         if (convertFrom) {
           try {
@@ -1599,13 +1611,14 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         return reply.send(preview);
       }
 
+      const source = await readSource();
       reply.header("content-type", "application/octet-stream");
       reply.header("content-disposition", attachmentDisposition(row.filename));
       reply.header("x-content-type-options", "nosniff");
       // The blob never changes, but who reaches it does: a tier narrowed
       // or a comment redacted must not leave a copy in a shared cache.
       reply.header("cache-control", "private, max-age=0, must-revalidate");
-      return reply.send(await app.storage.get(row.fileRef));
+      return reply.send(source);
     },
   );
 
