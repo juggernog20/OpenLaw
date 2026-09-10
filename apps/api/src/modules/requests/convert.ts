@@ -92,6 +92,8 @@ import { MAX_CONTRACT_TITLE_LENGTH, MAX_MATTER_TITLE_LENGTH } from "@openlaw/sha
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import { CounterpartyNameSchema, findOrCreateCounterparty } from "../../lib/counterparty-link.js";
+import { acceptedConversionProvenance } from "./conversion-draft.js";
+import { matters } from "@openlaw/db";
 import { CustomFieldsInput, selectAttachedFields } from "../../lib/custom-fields.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { createContract } from "../contracts/create.js";
@@ -155,6 +157,9 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
              * and editable there. Its target-aware bound is checked after
              * the locked Request has resolved the conversion module. */
             title: z.string(),
+            description: z.string().trim().max(10000).nullable().optional(),
+            conversionDraftId: z.string().optional(),
+            aiAccepted: z.array(z.string()).max(100).optional(),
             /** Overrides the configured target type. */
             contractTypeId: z.string().min(1).optional(),
             /** The matter sibling of contractTypeId. Supplying this on a
@@ -302,6 +307,13 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
             }
 
             const customFields = { ...carried, ...(answers ?? {}) };
+            if (
+              target.module !== "matter" &&
+              (request.body.description !== undefined ||
+                request.body.conversionDraftId ||
+                request.body.aiAccepted?.length)
+            )
+              throw httpError(400, "Conversion drafts currently prepare Matters only.");
             const born =
               target.module === "contract"
                 ? await createContract(tx, {
@@ -326,7 +338,10 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                     // contract and the I8 matter modal.
                     title,
                     matterTypeId: target.typeId,
-                    description: row.description,
+                    description:
+                      request.body.description === undefined
+                        ? row.description
+                        : request.body.description,
                     ...(chosenTemplateId === undefined ? {} : { templateId: chosenTemplateId }),
                     customFields,
                     priority: request.body.priority ?? row.urgency,
@@ -334,6 +349,29 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                     managerId: request.user.id,
                     isConfidential: false,
                   });
+            const provenance =
+              target.module === "matter"
+                ? await acceptedConversionProvenance(tx, {
+                    id: request.body.conversionDraftId,
+                    accepted: request.body.aiAccepted,
+                    actorId: request.user.id,
+                    requestId: held.id,
+                    typeId: target.typeId,
+                    values: {
+                      title: born.row.title,
+                      description: born.row.description,
+                      priority: born.row.priority,
+                      matter_type: target.typeId,
+                      needed_by: neededBy,
+                      ...Object.fromEntries(
+                        Object.entries(born.row.customFields).map(([slug, value]) => [
+                          `field:${slug}`,
+                          value,
+                        ]),
+                      ),
+                    },
+                  })
+                : null;
             const record = {
               module: target.module,
               id: born.row.id,
@@ -372,9 +410,21 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
               });
             }
             if (neededBy !== undefined) {
-              await addNeededByKeyDate(tx, { record, date: neededBy, actorId: request.user.id });
+              const keyDateId = await addNeededByKeyDate(tx, {
+                record,
+                date: neededBy,
+                actorId: request.user.id,
+              });
+              if (provenance?.needed_by) provenance.needed_by.keyDateId = keyDateId;
             }
 
+            if (target.module === "matter" && provenance) {
+              if (born.row.title !== title) delete provenance.title;
+              await tx
+                .update(matters)
+                .set({ aiUnverified: Object.keys(provenance).length ? provenance : null })
+                .where(eq(matters.id, born.row.id));
+            }
             // CMT-001's thread, moved onto the record beside the paper
             // (#422). Tiers are preserved because the write does not
             // touch them, and each reader's place in the conversation
@@ -495,7 +545,7 @@ async function linkPrimaryCounterparty(
 async function addNeededByKeyDate(
   tx: Transaction,
   input: { record: ConversionRecordReference; date: string; actorId: string },
-): Promise<void> {
+): Promise<string> {
   const [created] =
     input.record.module === "contract"
       ? await tx
@@ -514,6 +564,7 @@ async function addNeededByKeyDate(
     visibility: RECORD_ACTIVITY_TIER,
     payload: { keyDateId: created!.id, label: NEEDED_BY_LABEL, date: input.date },
   });
+  return created!.id;
 }
 
 /** Explicit choices override the Request type; omitted choices use its live default. */

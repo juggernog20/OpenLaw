@@ -377,7 +377,10 @@ async function applyAnswers(
     const prepared = new Map<string, PreparedAnswer>();
     for (const target of targets) {
       const answer = answerBySlug.get(target.slug);
-      if (!evidenceIsSupported(targetText.text, answer?.evidence)) {
+      if (
+        (answer?.sourceId !== undefined && answer.sourceId !== targetText.versionId) ||
+        !evidenceIsSupported(targetText.text, answer?.evidence)
+      ) {
         outcome.unsupported.push(target.slug);
         noteResult(target.slug, answer, "unsupported");
         continue;
@@ -675,7 +678,18 @@ export async function handleContractAnalysis(
       return { provider, targetText, truncated, sentText, targets };
     });
     const { provider, targetText, truncated, sentText, targets } = prepared;
-    const extractions = await provider.extract(sentText, targets);
+    const extractions = await provider.extract(
+      [
+        {
+          id: targetText.versionId,
+          revision: targetText.versionId,
+          label: "Contract document",
+          kind: "document",
+          text: sentText,
+        },
+      ],
+      targets,
+    );
     await applyAnswers(
       deps,
       {

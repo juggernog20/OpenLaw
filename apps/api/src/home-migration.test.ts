@@ -137,7 +137,7 @@ async function existingRows(db: Db): Promise<unknown> {
         where id = 'home-existing-contract-task'),
       'approval', (select to_jsonb(a.*) from contract_approvals a
         where id = 'home-existing-approval'),
-      'matter', (select to_jsonb(m.*) - 'search_vector' from matters m
+      'matter', (select to_jsonb(m.*) - 'search_vector' - 'ai_unverified' from matters m
         where id = 'home-existing-matter'),
       'matterTask', (select to_jsonb(t.*) - 'description' from matter_tasks t
         where id = 'home-existing-matter-task')

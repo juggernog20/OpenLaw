@@ -107,7 +107,7 @@ import {
 import { api } from "../lib/api";
 import { readRegistry } from "../lib/entities";
 import { useCommentApplet } from "../components/comments/comment-applet";
-import { ConvertDialog } from "../components/intake/convert-dialog";
+import { PreparedConvertDialog } from "../components/intake/prepared-convert-dialog";
 import { CustomFieldValueText } from "../components/intake/custom-field-value";
 import { RequestAssignment } from "../components/inbox/request-assignment";
 import { ResolveDialog } from "../components/intake/resolve-dialog";
@@ -169,11 +169,12 @@ export async function inboxRequestLoader({ params }: LoaderFunctionArgs) {
   // Entities a required `entity` one offers. Both ride the loader rather
   // than the dialog, so opening the dialog is instant and still writes
   // nothing (INT-007).
-  const [res, options, matterOptions, registry] = await Promise.all([
+  const [res, options, matterOptions, registry, workflow] = await Promise.all([
     api.GET("/api/v1/requests/{number}", { params: { path: { number } } }),
     api.GET("/api/v1/contracts/options"),
     api.GET("/api/v1/matters/options"),
     readRegistry(),
+    api.GET("/api/v1/conversion-drafts/settings").catch(() => null),
   ]);
   if (res.response.status === 404) return redirect("/inbox");
   if (!res.data || !options.data || !matterOptions.data || !registry.data) {
@@ -182,6 +183,7 @@ export async function inboxRequestLoader({ params }: LoaderFunctionArgs) {
   return {
     user,
     ...res.data,
+    matterPreparation: workflow?.data?.matterPreparation ?? false,
     contractTypes: options.data.contractTypes,
     matterTypes: matterOptions.data.matterTypes,
     people: options.data.users,
@@ -195,6 +197,7 @@ export function InboxRequestPage() {
     request,
     fields,
     customFieldRefs,
+    matterPreparation,
     attachments,
     contractTypes,
     matterTypes,
@@ -342,7 +345,8 @@ export function InboxRequestPage() {
       }
     >
       {(disposing === "contract" || disposing === "matter") && (
-        <ConvertDialog
+        <PreparedConvertDialog
+          enabled={matterPreparation}
           initialTargetModule={disposing}
           reference={reference}
           request={request}

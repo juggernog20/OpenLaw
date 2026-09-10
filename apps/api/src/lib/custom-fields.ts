@@ -56,7 +56,7 @@ import {
   type Transaction,
 } from "@openlaw/db";
 import { httpError } from "./problem.js";
-import type { TypeFieldsTable } from "./type-field-routes.js";
+import type { TypeFieldsTable } from "./type-fields.js";
 
 /**
  * One stored value, in the four shapes the nine field types reduce to.

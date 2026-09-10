@@ -75,6 +75,7 @@ import {
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import { setMatterParent } from "../../lib/matter-relations.js";
 import { resolveStaffRefs, StaffRequestCustomFieldRefsSchema } from "../requests/projection.js";
+import { ConversionProvenanceSchema } from "../../lib/conversion-draft.js";
 import { createMatter } from "./create.js";
 
 const requireMember = requireRole("administrator", "legal_team_member");
@@ -117,6 +118,7 @@ const MatterRowSchema = z.object({
   manager: PersonSchema.nullable(),
   priority: SeveritySchema,
   risk: SeveritySchema.nullable(),
+  aiUnverified: ConversionProvenanceSchema.optional(),
   customFields: CustomFieldsSchema,
   openedAt: z.iso.datetime(),
   closedAt: z.iso.datetime().nullable(),
@@ -200,6 +202,13 @@ function toRow(
       : null,
     priority: row.priority,
     risk: row.risk,
+    aiUnverified: row.aiUnverified
+      ? Object.fromEntries(
+          Object.entries(row.aiUnverified).filter(
+            ([slug]) => !slug.startsWith("field:") || slug.slice(6) in customFields,
+          ),
+        )
+      : null,
     customFields,
     openedAt: row.openedAt.toISOString(),
     closedAt: row.closedAt?.toISOString() ?? null,
@@ -1084,6 +1093,21 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           confidentialityChange = body.isConfidential;
         }
 
+        if (target.aiUnverified) {
+          const flags = { ...target.aiUnverified };
+          for (const [key, slug] of Object.entries({
+            title: "title",
+            description: "description",
+            priority: "priority",
+            matterTypeId: "matter_type",
+          }))
+            if (key in body) delete flags[slug];
+          for (const slug of Object.keys(body.customFields ?? {})) delete flags[`field:${slug}`];
+          if (body.matterTypeId !== undefined)
+            for (const slug of Object.keys(flags))
+              if (slug.startsWith("field:")) delete flags[slug];
+          patch.aiUnverified = Object.keys(flags).length ? flags : null;
+        }
         let row: Matter = target;
         if (Object.keys(patch).length > 0) {
           const [written] = await tx

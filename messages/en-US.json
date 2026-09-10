@@ -440,6 +440,9 @@
   "activity.matter.createdFromRequest": {
     "defaultMessage": "{actor} created this matter from {request}"
   },
+  "activity.matter.fieldConfirmed": {
+    "defaultMessage": "{actor} confirmed an AI-written value"
+  },
   "activity.matter.parentRemoved": {
     "defaultMessage": "{actor} took this Matter out from under {parent}"
   },
@@ -2170,6 +2173,54 @@
   },
   "contracts.valueWithCadence": {
     "defaultMessage": "{cadence, select, monthly {{amount} /month} annually {{amount} /year} other {{amount}}}"
+  },
+  "conversion.attachmentsOmitted": {
+    "defaultMessage": "Attachments were not read. Review the Request's paper before converting."
+  },
+  "conversion.budgetOmitted": {
+    "defaultMessage": "Some sources exceeded the reading limit and were omitted. Review the original Request too."
+  },
+  "conversion.conflicts": {
+    "defaultMessage": "Conflicting sources need your review:"
+  },
+  "conversion.draft": {
+    "defaultMessage": "Conversion draft"
+  },
+  "conversion.evidence": {
+    "defaultMessage": "View source evidence"
+  },
+  "conversion.evidenceLoading": {
+    "defaultMessage": "Loading source…"
+  },
+  "conversion.evidenceUnavailable": {
+    "defaultMessage": "The source is unavailable or has changed."
+  },
+  "conversion.failed": {
+    "defaultMessage": "Preparation could not finish. Retry or continue manually."
+  },
+  "conversion.gettingMatterReady": {
+    "defaultMessage": "Getting matter ready…"
+  },
+  "conversion.manual": {
+    "defaultMessage": "Continue manually"
+  },
+  "conversion.restrictedOmitted": {
+    "defaultMessage": "Restricted messages and Legal or reference Fields were omitted to keep Matter values safe for broader readers."
+  },
+  "conversion.settings": {
+    "defaultMessage": "Request conversion"
+  },
+  "conversion.settingsFailed": {
+    "defaultMessage": "The conversion setting could not be saved."
+  },
+  "conversion.settingsMatter": {
+    "defaultMessage": "Prepare Matter conversions with AI"
+  },
+  "conversion.targetBudgetOmitted": {
+    "defaultMessage": "Some Fields exceeded the preparation limit. Complete them manually."
+  },
+  "conversion.targetLabel": {
+    "defaultMessage": "{slug, select, title {Title} description {Description} matter_type {Matter type} priority {Priority} needed_by {Needed by} other {Value}}"
   },
   "convert.alreadyConvertedRecord": {
     "defaultMessage": "It became {record}."

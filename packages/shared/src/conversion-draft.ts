@@ -1,0 +1,20 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+/** Source-bound Matter conversion suggestions and unverified values (INT-008). */
+
+/** INT-008: a proposal reviewed before the ordinary conversion creates a record. */
+export interface ConversionCitation {
+  sourceId: string;
+  revision: string;
+  quote: string;
+}
+export interface ConversionSuggestion {
+  value: string | number | boolean | string[];
+  citations: ConversionCitation[];
+}
+export interface ConversionProvenance {
+  draftId: string;
+  writtenAt: string;
+  targetTypeId: string;
+  keyDateId?: string;
+}
+export type ConversionProvenanceMap = Record<string, ConversionProvenance>;

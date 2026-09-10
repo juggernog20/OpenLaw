@@ -25,6 +25,7 @@ import {
   contractTypeFields,
   count,
   eq,
+  conversionDrafts,
   entities,
   entityTypeFields,
   fields,
@@ -388,6 +389,23 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         if (body.displayName !== undefined) wants("displayName", body.displayName.trim());
         if (body.description !== undefined) {
           wants("description", body.description?.trim() || null);
+        }
+        if (body.fieldTag === "legal" && target.fieldTag === "business") {
+          const dependencies = await tx.execute<{ present: boolean }>(sql`
+            select exists (
+              select 1 from ${matters} m
+              cross join lateral jsonb_each(coalesce(m.ai_unverified, '{}'::jsonb)) marker
+              join ${conversionDrafts} draft on draft.id = marker.value->>'draftId'
+              cross join lateral jsonb_array_elements(coalesce(draft.suggestions->marker.key->'citations', '[]'::jsonb)) citation
+              where citation->>'sourceId' = 'field:' || draft.request_id || ':' || ${target.slug}
+                and marker.key <> ${`field:${target.slug}`}
+            ) as present
+          `);
+          if (dependencies.rows[0]?.present)
+            throw httpError(
+              409,
+              "Review and confirm or edit the unverified Matter values derived from this Field before marking it Legal. No Field tag was changed.",
+            );
         }
         if (body.fieldTag !== undefined) wants("fieldTag", body.fieldTag);
         if (body.options !== undefined) {

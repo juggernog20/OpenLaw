@@ -1284,6 +1284,13 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       defaultMessage: "{actor} could not complete an AI analysis of this contract",
     }),
   },
+  "matter.field_confirmed": {
+    icon: Check,
+    message: defineMessage({
+      id: "activity.matter.fieldConfirmed",
+      defaultMessage: "{actor} confirmed an AI-written value",
+    }),
+  },
   "contract.field_confirmed": {
     icon: Check,
     message: defineMessage({

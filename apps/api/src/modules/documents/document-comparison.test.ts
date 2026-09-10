@@ -521,6 +521,7 @@ describe("a Word comparison", () => {
   it("does not queue an existing pending pair again", async () => {
     const asks: string[] = [];
     const jobs: JobQueue = {
+      requestConversionDraft: async () => {},
       requestTextExtraction: async () => {},
       requestDisplayConversion: async () => {},
       requestDocumentComparison: async (comparisonId) => {

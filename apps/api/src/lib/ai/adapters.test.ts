@@ -32,7 +32,11 @@ interface CapturedRequest {
 /** Names the request field a stricter model refuses, in OpenAI's own words. */
 type Refusal = (body: Record<string, unknown>) => string | null;
 
-async function startServer(protocol: Protocol, refuse: Refusal = () => null) {
+async function startServer(
+  protocol: Protocol,
+  refuse: Refusal = () => null,
+  extractionReply = FENCED_REPLY,
+) {
   const requests: CapturedRequest[] = [];
   const server: Server = createServer(async (request, response) => {
     const chunks: Buffer[] = [];
@@ -66,7 +70,7 @@ async function startServer(protocol: Protocol, refuse: Refusal = () => null) {
     }
 
     const serialized = JSON.stringify(body);
-    const reply = serialized.includes("Contract text:") ? FENCED_REPLY : '{"ok":true}';
+    const reply = serialized.includes("Contract text:") ? extractionReply : '{"ok":true}';
     response.statusCode = 200;
     response.end(
       JSON.stringify(
@@ -130,8 +134,8 @@ function sharedAssertions(protocol: Protocol, request: CapturedRequest | undefin
   }
 }
 
-async function protocolHarness(protocol: Protocol) {
-  const server = await startServer(protocol);
+async function protocolHarness(protocol: Protocol, extractionReply = FENCED_REPLY) {
+  const server = await startServer(protocol, () => null, extractionReply);
   const config = {
     preset: protocol === "openai" ? ("openai" as const) : protocol,
     protocol:
@@ -151,6 +155,7 @@ async function protocolHarness(protocol: Protocol) {
         ? createOpenAiCompatibleProvider
         : createGeminiProvider;
   return {
+    requests: server.requests,
     provider: build(config),
     refusingProvider: build({ ...config, apiKey: INVALID_KEY }),
     assertLastExtractionRequest: () => sharedAssertions(protocol, server.requests.at(-1)),
@@ -305,3 +310,58 @@ describe("OpenAI reasoning-model request fields", () => {
     }
   });
 });
+
+for (const protocol of ["anthropic", "openai", "gemini"] as const) {
+  it(`${protocol} preserves source boundaries and named citations`, async () => {
+    const harness = await protocolHarness(
+      protocol,
+      JSON.stringify({
+        term_type: {
+          value: "fixed",
+          sourceId: "source-b",
+          evidence: "fixed term",
+          citations: [{ sourceId: "source-b", quote: "fixed term" }],
+        },
+      }),
+    );
+    try {
+      const result = await harness.provider.extract(
+        [
+          {
+            id: "source-a",
+            revision: "rev-a",
+            label: "Request answer",
+            kind: "request",
+            text: "The agreement is required.",
+          },
+          {
+            id: "source-b",
+            revision: "rev-b",
+            label: "Conversation correction",
+            kind: "message",
+            author: "Counsel",
+            createdAt: "2026-09-11T00:00:00Z",
+            text: "Correction: use a fixed term.",
+          },
+        ],
+        [{ slug: "term_type", prompt: "Extract the term type." }],
+      );
+      expect(result).toEqual([
+        {
+          slug: "term_type",
+          value: "fixed",
+          sourceId: "source-b",
+          evidence: "fixed term",
+          citations: [{ sourceId: "source-b", quote: "fixed term" }],
+        },
+      ]);
+      const request = JSON.stringify(harness.requests.at(-1)?.body);
+      expect(request).toContain("source-a");
+      expect(request).toContain("source-b");
+      expect(request).toContain("rev-b");
+      expect(request).toContain("Counsel");
+    } finally {
+      await harness.stop();
+    }
+  });
+}

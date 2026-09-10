@@ -1040,3 +1040,93 @@ describe("a lost race (INT-007, TECH-020)", () => {
     expect(within(dialog).queryByText(/^It became/)).toBeNull();
   });
 });
+
+describe("Matter Conversion drafts", () => {
+  function preparedApi(pending = false) {
+    const base = requestApi();
+    const draft = {
+      id: "draft-1",
+      targetTypeId: "mt-dispute",
+      state: pending ? "pending" : "ready",
+      suggestions: {
+        title: {
+          value: "Prepared response",
+          citations: [{ sourceId: "message:1", revision: "rev", quote: "Prepare a response" }],
+        },
+        description: {
+          value: "A response is needed.",
+          citations: [{ sourceId: "message:1", revision: "rev", quote: "Prepare a response" }],
+        },
+        "field:governing_law": {
+          value: "England",
+          citations: [{ sourceId: "message:1", revision: "rev", quote: "England" }],
+        },
+      },
+      conflicts: {},
+      warnings: [],
+      failure: null,
+    };
+    return {
+      ...base,
+      handler: (call: StubCall) => {
+        if (call.url.pathname === "/api/v1/conversion-drafts/settings")
+          return json(200, { matterPreparation: true });
+        if (call.url.pathname.endsWith("/conversion-drafts")) return json(202, { draft });
+        if (call.url.pathname.endsWith("/conversion-drafts/draft-1")) return json(200, { draft });
+        if (call.url.pathname.includes("/evidence/"))
+          return json(200, {
+            available: true,
+            citations: [
+              {
+                sourceId: "message:1",
+                label: "Nadia Counsel — September 11",
+                text: "Prepare a response in England",
+                quote: "Prepare a response",
+              },
+            ],
+          });
+        return base.handler(call);
+      },
+    };
+  }
+  it("shows editable prefill and cited markers, then submits edits as human values", async () => {
+    const user = userEvent.setup();
+    const api = preparedApi();
+    open(api);
+    await openDisposition(user, "Convert to matter");
+    const title = await screen.findByDisplayValue("Prepared response");
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getAllByText("Unverified")).toHaveLength(3);
+    await user.click(within(dialog).getAllByRole("button", { name: "View source evidence" })[0]!);
+    expect(await screen.findByText("Nadia Counsel — September 11")).toBeVisible();
+    await user.keyboard("{Escape}");
+    await user.clear(title);
+    await user.type(title, "Human opening title");
+    expect(within(dialog).getAllByText("Unverified")).toHaveLength(2);
+    await user.selectOptions(within(dialog).getByLabelText(/^Matter type/), "mt-employment");
+    expect(within(dialog).getAllByText("Unverified")).toHaveLength(2);
+    await user.click(within(dialog).getByRole("button", { name: "Convert to matter" }));
+    await waitFor(() => expect(api.conversions).toHaveLength(1));
+    expect(api.conversions[0]).toMatchObject({
+      title: "Human opening title",
+      matterTypeId: "mt-employment",
+      description: "A response is needed.",
+      conversionDraftId: "draft-1",
+      aiAccepted: ["description", "field:governing_law"],
+      customFields: { governing_law: "England" },
+    });
+  });
+  it("keeps manual continuation usable while preparation waits", async () => {
+    const user = userEvent.setup();
+    const api = preparedApi(true);
+    open(api);
+    await openDisposition(user, "Convert to matter");
+    expect(await screen.findByText("Getting matter ready…")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Continue manually" }));
+    const title = screen.getByLabelText("Title", { exact: false });
+    await user.clear(title);
+    await user.type(title, "My manual title");
+    expect(screen.queryByText("Unverified")).not.toBeInTheDocument();
+    expect(title).toHaveValue("My manual title");
+  });
+});

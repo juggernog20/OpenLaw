@@ -28,6 +28,7 @@ import type { SigningResolver } from "../lib/signing/resolver.js";
 import type { AiResolver } from "../lib/ai/resolver.js";
 import { requestAutomaticContractAnalysis } from "./automatic-contract-analysis.js";
 import { runBackfillSweep } from "./backfill.js";
+import { handleConversionDraft, sweepConversionDrafts } from "./conversion-draft.js";
 import { handleContractAnalysis } from "./contract-analysis.js";
 import type { DerivationDeps } from "./derivations.js";
 import { handleDisplayConversion } from "./display-conversion.js";
@@ -404,6 +405,9 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // leave one job between them rather than two messages.
       await boss.send(JOB_QUEUES.notificationEmail, job, { singletonKey: notificationId });
     },
+    async requestConversionDraft(draftId: string): Promise<void> {
+      await boss.send(JOB_QUEUES.conversionDraft, { draftId }, { singletonKey: draftId });
+    },
     async requestContractAnalysis(contractId: string, runId: string): Promise<boolean> {
       const job: ContractAnalysisJob = { contractId, runId };
       const jobId = await boss.send(JOB_QUEUES.contractAnalysis, job, {
@@ -485,6 +489,12 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
     await boss.updateQueue(JOB_QUEUES.notificationEmail, {
       notify: true,
       ...NOTIFICATION_EMAIL_QUEUE_OPTIONS,
+    });
+    await boss.createQueue(JOB_QUEUES.conversionDraft, {
+      policy: "short",
+      notify: true,
+      retryLimit: 0,
+      expireInSeconds: 180,
     });
     await boss.createQueue(JOB_QUEUES.contractAnalysis, {
       policy: "short",
@@ -676,6 +686,18 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
         },
       );
       await boss.work(
+        JOB_QUEUES.conversionDraft,
+        oneAtATime,
+        async (jobs: JobWithMetadata<{ draftId: string }>[]) => {
+          for (const job of jobs)
+            await handleConversionDraft(
+              { db: handlers.db, resolveAiProvider: handlers.resolveAiProvider },
+              job.data.draftId,
+            );
+        },
+      );
+      await sweepConversionDrafts(handlers.db, queue);
+      await boss.work(
         JOB_QUEUES.contractAnalysis,
         oneAtATime,
         async (jobs: JobWithMetadata<ContractAnalysisJob>[]) => {
@@ -696,6 +718,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // of the OCR somebody is waiting on. It takes no metadata and no
       // burst: there is only ever one of it.
       await boss.work(JOB_QUEUES.backfillSweep, { batchSize: 1 }, async () => {
+        await sweepConversionDrafts(handlers.db, queue);
         const summary = await runBackfillSweep({ db: handlers.db, log }, queue, {
           signal: sweeping.signal,
         });

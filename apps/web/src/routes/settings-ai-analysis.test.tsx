@@ -124,6 +124,7 @@ function isPromptSaveRequest(value: unknown): value is PromptSaveRequest {
 
 function connector(overrides: Partial<AiResponse["connector"]> = {}): AiResponse["connector"] {
   return {
+    matterPreparation: false,
     configured: true,
     enabled: true,
     preset: "openai",
@@ -139,6 +140,7 @@ function connector(overrides: Partial<AiResponse["connector"]> = {}): AiResponse
 
 function unconfigured(): AiResponse["connector"] {
   return connector({
+    matterPreparation: false,
     configured: false,
     enabled: false,
     preset: null,
@@ -179,6 +181,11 @@ function connectorApi(
           disabledAt: stored.disabledAt,
         });
       }
+      return json(200, { connector: stored, presets: PRESETS });
+    }
+    if (call.url.pathname === "/api/v1/ai-connector/workflows" && call.method === "PATCH") {
+      saves.push(call.body);
+      stored = { ...stored, ...(call.body as { matterPreparation: boolean }) };
       return json(200, { connector: stored, presets: PRESETS });
     }
     if (call.url.pathname === "/api/v1/ai-field-prompts") {
@@ -534,4 +541,16 @@ describe("the provider model selector", () => {
     expect(screen.getByText(/Enter the deployment name from Azure/)).toBeVisible();
     expect(screen.getByLabelText("Model")).toHaveAttribute("maxlength", "300");
   });
+});
+
+it("persists the independent Matter preparation switch without changing provider settings", async () => {
+  const user = userEvent.setup();
+  const saves: unknown[] = [];
+  stubApi({ signedIn: ADMIN, extra: connectorApi({}, saves) });
+  renderAt("/settings/ai-analysis");
+  const toggle = await screen.findByRole("switch", { name: "Prepare Matter conversions with AI" });
+  expect(toggle).not.toBeChecked();
+  await user.click(toggle);
+  await waitFor(() => expect(toggle).toBeChecked());
+  expect(saves).toEqual([{ matterPreparation: true }]);
 });
