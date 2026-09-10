@@ -309,6 +309,8 @@ function capturingLogger(lines: JobLogLine[]): PipelineLogger {
 
 /** What a suite may vary about the app the harness builds. */
 export interface HarnessOptions {
+  /** Keep the real queue but omit consumers when a test controls worker execution. */
+  runPipelineWorkers?: boolean;
   /**
    * The upload ceiling in bytes. Left unset, the production default
    * applies. A suite that has to see an oversized upload refused sets a
@@ -441,16 +443,19 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
     // request does, through the stored connector row.
     pipeline = await startPipeline({
       connectionString: container.getConnectionUri(),
-      handlers: {
-        db,
-        storage,
-        docEngine,
-        resolveSigningProvider,
-        resolveAiProvider,
-        resolveMailer,
-        baseUrl: TEST_AUTH_CONFIG.baseUrl,
-        log: capturingLogger(jobLog),
-      },
+      handlers:
+        options.runPipelineWorkers === false
+          ? undefined
+          : {
+              db,
+              storage,
+              docEngine,
+              resolveSigningProvider,
+              resolveAiProvider,
+              resolveMailer,
+              baseUrl: TEST_AUTH_CONFIG.baseUrl,
+              log: capturingLogger(jobLog),
+            },
       log: capturingLogger(jobLog),
     });
     // The seam's own lines join the pipeline's, so a suite reads why a

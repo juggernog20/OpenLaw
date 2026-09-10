@@ -26,7 +26,9 @@ let requestTypeId: string;
 const answers: Record<string, Omit<AiExtraction, "slug">> = {};
 const provider = new FakeAiProvider({ answers });
 beforeAll(async () => {
-  harness = await startHarness({ aiDriverFactory: () => provider });
+  // These cases control the boundary between scheduling and execution.
+  // Live consumers would race the explicit handler calls for the same lease.
+  harness = await startHarness({ aiDriverFactory: () => provider, runPipelineWorkers: false });
   await harness.app.inject({ method: "POST", url: "/api/v1/auth/setup", payload: TEST_ADMIN });
   cast = await dispositionScaffold(harness);
   const [type] = await harness.db.select().from(matterTypes).limit(1);
@@ -337,8 +339,15 @@ it("blocks narrowing a cited source until its unverified derivative is reviewed"
   expect((await retag()).statusCode).toBe(200);
 });
 it("checks disablement again at execution without calling AI", async () => {
+  await harness.db.update(aiConnector).set({ matterPreparation: true });
   const row = await ask();
   const made = await prepare(row.number);
+  expect(made.statusCode, made.body).toBe(202);
+  const [scheduled] = await harness.db
+    .select()
+    .from(conversionDrafts)
+    .where(eq(conversionDrafts.id, made.json().draft.id));
+  expect(scheduled).toMatchObject({ state: "pending", startedAt: null });
   await harness.db.update(aiConnector).set({ matterPreparation: false });
   const count = provider.extractions.length;
   await handleConversionDraft(
@@ -426,4 +435,53 @@ it("preserves provenance on no-op Matter resends and clears only edited values",
     priority: marker,
     matter_type: marker,
   });
+});
+
+it("leaves an active lease to its owner and resolves connector disablement live", async () => {
+  await harness.db.update(aiConnector).set({ matterPreparation: true });
+  const row = await ask();
+  const made = await prepare(row.number);
+  expect(made.statusCode, made.body).toBe(202);
+  const id = made.json().draft.id;
+  let markEntered!: () => void;
+  const entered = new Promise<void>((resolve) => {
+    markEntered = resolve;
+  });
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let resolutions = 0;
+  const deps = {
+    db: harness.db,
+    resolveAiProvider: async () => {
+      resolutions += 1;
+      markEntered();
+      await held;
+      return harness.resolveAiProvider();
+    },
+  };
+  const count = provider.extractions.length;
+  const owner = handleConversionDraft(deps, id);
+  try {
+    await entered;
+    await handleConversionDraft(deps, id);
+    const [held] = await harness.db
+      .select()
+      .from(conversionDrafts)
+      .where(eq(conversionDrafts.id, id));
+    expect(held!.state).toBe("pending");
+    expect(held!.startedAt).not.toBeNull();
+    expect(resolutions).toBe(1);
+    await harness.db.update(aiConnector).set({ disabledAt: new Date() });
+  } finally {
+    release();
+    await owner;
+  }
+  const [finished] = await harness.db
+    .select()
+    .from(conversionDrafts)
+    .where(eq(conversionDrafts.id, id));
+  expect(finished!.state).toBe("failed");
+  expect(provider.extractions).toHaveLength(count);
 });
