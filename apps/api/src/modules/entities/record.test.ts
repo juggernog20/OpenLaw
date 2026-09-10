@@ -151,6 +151,7 @@ const entityActivity = (id: string) =>
 describe("the Entity Overview read and PATCH", () => {
   it("commits the three share-capital fields per field and records each change", async () => {
     const entity = await newEntity("Capital Record Ltd");
+    await patchEntity(entity.id, { parValueCurrency: "usd" });
     for (const [key, value] of [
       ["sharesAuthorized", 1_000_000],
       ["sharesIssued", 640_000],
@@ -166,11 +167,45 @@ describe("the Entity Overview read and PATCH", () => {
       sharesAuthorized: 1_000_000,
       sharesIssued: 640_000,
       parValue: 100,
+      parValueCurrency: "USD",
     });
     const changes = (await entityActivity(entity.id))
       .filter((row) => row.action === "entity.updated")
       .map((row) => Object.keys((row.payload as { changed: object }).changed));
-    expect(changes).toEqual([["sharesAuthorized"], ["sharesIssued"], ["parValue"]]);
+    expect(changes).toEqual([
+      ["parValueCurrency"],
+      ["sharesAuthorized"],
+      ["sharesIssued"],
+      ["parValue"],
+    ]);
+  });
+
+  it("requires a valid currency for par value and saves both with their audit changes", async () => {
+    const entity = await newEntity("Currency Capital Ltd");
+    expect((await patchEntity(entity.id, { parValue: 100 })).statusCode).toBe(400);
+    expect(
+      (await patchEntity(entity.id, { parValue: 100, parValueCurrency: "ZZZ" })).statusCode,
+    ).toBe(400);
+    const saved = await patchEntity(entity.id, { parValue: 125050, parValueCurrency: "aed" });
+    expect(saved.statusCode, saved.body).toBe(200);
+    expect((await readEntity(entity.id)).json().entity).toMatchObject({
+      parValue: 125050,
+      parValueCurrency: "AED",
+    });
+    expect((await patchEntity(entity.id, { parValueCurrency: null })).statusCode).toBe(400);
+    const updates = (await entityActivity(entity.id)).filter(
+      (row) => row.action === "entity.updated",
+    );
+    expect(updates).toHaveLength(1);
+    expect(updates[0]!.payload).toMatchObject({
+      changed: {
+        parValue: { from: null, to: 125050 },
+        parValueCurrency: { from: null, to: "AED" },
+      },
+    });
+    expect(
+      (await patchEntity(entity.id, { parValue: null, parValueCurrency: null })).statusCode,
+    ).toBe(200);
   });
 
   it("rejects negative, fractional, and unsafe share-capital values", async () => {

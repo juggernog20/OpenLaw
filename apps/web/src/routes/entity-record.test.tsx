@@ -56,6 +56,7 @@ function entityRow(overrides: Partial<Record<string, unknown>> = {}) {
     sharesAuthorized: null,
     sharesIssued: null,
     parValue: null,
+    parValueCurrency: null,
     customFields: {},
     isConfidential: false,
     archivedAt: null,
@@ -220,6 +221,57 @@ describe("the /entities/:entityId record page", () => {
     await user.type(authorized, "1000000");
     await user.tab();
     await waitFor(() => expect(api.patches).toContainEqual({ sharesAuthorized: 1_000_000 }));
+    expect(authorized).toHaveValue("1,000,000");
+  });
+
+  it("edits par value in major units and saves its currency, respecting currency precision", async () => {
+    const api = recordApi(entityRow({ parValue: 123456, parValueCurrency: "USD" }));
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/entities/e1");
+    const user = userEvent.setup();
+    const amount = await screen.findByRole("textbox", { name: "Par value" });
+    expect(amount).toHaveValue("1,234.56");
+    const currency = screen.getByRole("combobox", { name: "Currency" });
+    await user.selectOptions(currency, "BHD");
+    await waitFor(() =>
+      expect(api.patches).toContainEqual({ parValue: 1234560, parValueCurrency: "BHD" }),
+    );
+    expect(amount).toHaveValue("1,234.56");
+    await user.clear(amount);
+    await user.type(amount, "1.234");
+    await user.tab();
+    await waitFor(() =>
+      expect(api.patches).toContainEqual({ parValue: 1234, parValueCurrency: "BHD" }),
+    );
+    await user.selectOptions(currency, "JPY");
+    expect(
+      await screen.findByText("Enter a non-negative amount with up to 0 decimal places."),
+    ).toBeInTheDocument();
+    expect(currency).toHaveValue("BHD");
+    await user.clear(amount);
+    await user.type(amount, "1000");
+    await user.tab();
+    await waitFor(() =>
+      expect(api.patches).toContainEqual({ parValue: 1000000, parValueCurrency: "BHD" }),
+    );
+    await user.selectOptions(currency, "JPY");
+    await waitFor(() =>
+      expect(api.patches).toContainEqual({ parValue: 1000, parValueCurrency: "JPY" }),
+    );
+    expect(amount).toHaveValue("1,000");
+  });
+
+  it("assigns a currency to legacy par values without guessing or changing their stored units", async () => {
+    const api = recordApi(entityRow({ parValue: 100 }));
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/entities/e1");
+    const user = userEvent.setup();
+    const amount = await screen.findByRole("textbox", { name: "Par value" });
+    expect(amount).toBeDisabled();
+    await user.selectOptions(screen.getByRole("combobox", { name: "Currency" }), "USD");
+    await waitFor(() => expect(amount).toHaveValue("1"));
+    expect(api.patches).toContainEqual({ parValue: 100, parValueCurrency: "USD" });
+    expect(amount).toBeEnabled();
   });
 
   it("routes all six DES-032 sections and renders the shipped Obligations tab", async () => {

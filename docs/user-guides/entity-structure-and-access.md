@@ -9,10 +9,10 @@ Legal Team Members and Administrators can maintain reachable, live Entities. Onl
 ## Maintain share capital
 
 1. Open the Entity's **Overview** and find **Share capital**.
-2. Enter **Authorized shares**, **Issued shares**, and **Par value (minor units)** as needed. Each accepts a whole number of zero or more; leave a value blank when it is unknown.
+2. Enter **Authorized shares** and **Issued shares** as whole numbers of zero or more. For **Par value**, choose a **Currency** and enter the amount in that currency—for example, 1.25 for USD 1.25. Leave an amount blank when it is unknown.
 3. Move focus away or press Enter to save each value. Check its saved result. Press Escape to abandon an unsaved edit.
 
-Par value is entered in minor units, as the label states. The card has no currency selector, share classes, shareholder register, or full capitalization table. Agree the currency context for your corporate records before entering a value; do not treat these three values as a complete register. Negative or fractional values are refused without replacing the saved value.
+Numbers display thousands separators when you leave the field. Par value accepts the selected currency’s decimal precision; negative amounts and excess decimal places are refused. Changing currency keeps the displayed amount without converting exchange rates. Older records need a currency selected before editing par value; their stored minor-unit amount is preserved when assigning the first currency. Share classes, shareholder registers, and full capitalization tables are not included.
 
 ## Read the ownership chart
 

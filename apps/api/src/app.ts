@@ -97,6 +97,7 @@ import { listViewsRoutes } from "./modules/list-views/routes.js";
 import { notificationsRoutes, portalNotificationsRoutes } from "./modules/notifications/routes.js";
 import { morningRoundTriggerRoutes } from "./modules/notifications/round-trigger.js";
 import { onboardingRoutes } from "./modules/onboarding/routes.js";
+import { currencyRoutes } from "./modules/org/currencies.js";
 import { orgRoutes } from "./modules/org/routes.js";
 import { usersRoutes } from "./modules/users/routes.js";
 import { emailSettingsRoutes } from "./modules/email-settings/routes.js";
@@ -468,6 +469,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(authRoutes, { prefix: "/api/v1" });
   await app.register(onboardingRoutes, { prefix: "/api/v1" });
   await app.register(orgRoutes, { prefix: "/api/v1" });
+  await app.register(currencyRoutes, { prefix: "/api/v1" });
   await app.register(usersRoutes, { prefix: "/api/v1" });
   await app.register(emailSettingsRoutes, { prefix: "/api/v1" });
   await app.register(signingConnectorRoutes, { prefix: "/api/v1" });

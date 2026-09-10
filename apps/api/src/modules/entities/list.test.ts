@@ -291,3 +291,35 @@ describe("the managed Entity registry", () => {
     }
   });
 });
+
+describe("entity name search", () => {
+  it("filters before pagination and combines with the other filters", async () => {
+    const found = await list({ q: "pAGED entity 48" });
+    expect(found.entities.map((row) => row.legalName)).toEqual(["Paged Entity 48"]);
+    expect(found.nextCursor).toBeNull();
+    expect((await list({ q: "Paged", type: llcId })).entities).toEqual([]);
+  });
+
+  it("escapes wildcard characters and omits confidential entities for administrators too", async () => {
+    await harness.db.insert(entities).values([
+      { id: "search-public", legalName: "Search 100%_Ltd", entityTypeId: corporationId },
+      {
+        id: "search-private",
+        legalName: "Search Confidential Ltd",
+        entityTypeId: corporationId,
+        isConfidential: true,
+      },
+    ]);
+    expect((await list({ q: "%_" })).entities.map((row) => row.id)).toEqual(["search-public"]);
+    const cookies = await signInCookies(harness.app, ADMIN.email, ADMIN.password);
+    const response = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/entities?q=Search",
+      cookies,
+    });
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.json().entities.map((row: { id: string }) => row.id)).toEqual([
+      "search-public",
+    ]);
+  });
+});

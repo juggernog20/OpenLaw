@@ -622,7 +622,7 @@ export function EntityRecordPage() {
                   frozen={frozen}
                   status={commits.status}
                   error={commits.error}
-                  onCommit={(key, value) => void commit(key, { [key]: value })}
+                  onCommit={(key, patch) => commit(key, patch)}
                 />
                 <EntityFieldsCard
                   entity={saved}

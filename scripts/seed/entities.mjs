@@ -165,6 +165,7 @@ export async function seedEntities(admin, context, log) {
             sharesAuthorized: entity.definition.sharesAuthorized,
             sharesIssued: entity.definition.sharesIssued,
             parValue: 1,
+            parValueCurrency: "USD",
           }
         : {}),
       // A couple of the holding companies hold sensitive structure, which

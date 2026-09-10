@@ -32,6 +32,7 @@ export const orgSettings = pgTable(
     name: text("name").notNull().default(""),
     /** The org logo as a data: URI; NULL until one is uploaded. */
     logo: text("logo"),
+    currenciesInUse: jsonb("currencies_in_use").$type<string[]>().notNull().default([]),
     /** BCP 47 tag; the display locale until per-user locales exist (DES-013). */
     defaultLocale: text("default_locale").notNull().default("en-US"),
     /** IANA zone name; the display timezone until a user sets their own (DES-014). */

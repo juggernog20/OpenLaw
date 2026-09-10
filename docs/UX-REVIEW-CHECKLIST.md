@@ -13,8 +13,11 @@ An interaction is complete only after it has been manually tested and any agreed
 
 ## Current review checkpoint — 10 September 2026
 
-- Next flow: **Matter Overview → Confidentiality**. The current browser page does not determine the review sequence.
+- Next flow: **Entity Overview → Share capital**. The current browser page does not determine the review sequence.
+- Blair approved the Entity Manage access component (10 September): person picker, adding/removing access, and the access list.
+- Blair approved entity search across Calendar, List, and Chart (10 September).
 - Blair approved the Matter archive and restore flow (10 September).
+- Entity selectors contrast fix (10 September), awaiting review: selected Calendar/List/Chart and Due-date list/Month labels and icons, plus calendar entries, use a 25% orange background with fully opaque primary text in all themes.
 - Confidentiality policy updated at Blair’s request (10 September): administrators require team membership/ownership for confidential Matters and Contracts, or an explicit grant for confidential Entities. Includes private documents and audit access. Awaiting UX review.
 - Blair approved the Matter History applet UX (10 September): changes, authors, timestamps, and before/after presentation. Pagination and failure-state checks remain separate.
 - Blair approved the People and Files picker tabs and the latest chat UX changes (10 September): attachment preview, Matter filing, and bringing Contract chat into line. Shared component approval does not mark every granular correction, failure-state, or permission check below as manually tested.
@@ -457,6 +460,7 @@ Route: `/entities`
 
 - [ ] Page review complete
 - [ ] Switch between Calendar, List, and Chart and reopen the selected view from its URL.
+- [x] Search entities by name across Calendar, List, and Chart; switch views with the search retained, then clear it. Chart results retain each matching entity’s ownership chain.
 - [ ] In Calendar, switch Due-date list / Month; use Previous month, Next month, and Today.
 - [ ] Filter the calendar by Entity, Assignee, From/To, and Include completed; Apply or clear the filters.
 - [ ] Open an obligation or Entity from a due-date row or calendar entry.
@@ -464,6 +468,7 @@ Route: `/entities`
 - [ ] Show archived Entities and restore an archived Entity from its list row.
 - [ ] Sort the list and use Show more; complete the shared Columns and Views checks below.
 - [ ] In Chart, drag to pan, use the wheel to zoom, and choose Fit to window.
+  - Wide-chart feedback: replaced automatic shrinking with a readable initial view, pointer-centred zoom, visible zoom controls and a 100% reset, an overview map, and a canvas that fills the available height. Entity names wrap within their cards. Single click highlights ancestors and descendants while dimming unrelated branches; double click opens the entity, with Space/Enter keyboard equivalents and Clear highlight. Automated navigation checks passed; awaiting UX review.
 - [ ] Use arrow keys to pan, Shift+arrow for a larger step, +/− to zoom, and 0 to fit; open an Entity node.
 - [ ] Open Register entity; enter legal name, type, status, jurisdiction, formation date, registration number, tax ID, agent, and address.
 - [ ] Cancel registration; separately register an Entity and open it, correcting any required-field refusal.
@@ -488,8 +493,11 @@ Route: `/entities/:entityId`
 - [ ] Edit Formation jurisdiction, Formed on, Registration no., Tax ID, Registered agent, and Registered address.
 - [ ] Commit inline edits and cancel an unfinished edit with Escape; correct a rejected save.
 - [ ] Set or clear confidentiality; open Manage access as Administrator.
-- [ ] Grant an eligible Legal Team Member access and remove an existing grant; close the access dialog.
+  - Blair approved the wording “Confidential — restrict to the access list” (10 September). Manage access component also approved; confidentiality toggle checks remain outstanding.
+- [x] Grant an eligible Legal Team Member access and remove an existing grant; close the access dialog.
+  - Blair approved the Manage access component (10 September).
 - [ ] Edit Authorized shares, Issued shares, and Par value; correct invalid numeric values.
+  - Blair requested thousands separators and a currency for par value. Share counts now use grouped formatting; par value has a saved currency selector and accepts major-unit amounts with currency-specific precision. Currency now shares the same row as the three amounts on wide screens, following Blair’s spacing feedback. Existing amounts retain their stored units without an assumed currency. Awaiting UX review.
 - [ ] Edit or clear each attached custom field and inspect required/type validation.
 - [ ] Add an officer with name, role, appointment/resignation dates, and optional linked user.
 - [ ] Edit an officer's details, record a resignation, and toggle Show former.

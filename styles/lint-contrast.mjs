@@ -43,11 +43,7 @@ const STATUS_FAMILIES = [
 
 /* The pair matrix — every text/surface and status bg/fg pair the design
  * system actually uses (DES-005, DES-009, DES-018, DES-019), plus the
- * DES-011 suspect pairs. Each entry: [fg token, bg token, threshold].
- *
- * `--text-on-accent` × `--accent` is NOT checked yet: nothing renders
- * on the accent fill today, and the pair fails badly (2.5:1 in Light).
- * Add it here when mention chips land, after the pair is fixed. */
+ * DES-011 suspect pairs. Each entry: [fg token, bg token, threshold]. */
 const PAIRS = [];
 
 // Content text on the four content surfaces.
@@ -74,6 +70,7 @@ PAIRS.push(
   ["chrome-nav-muted", "chrome-nav-bg", BODY],
   ["chrome-brand-fg", "chrome-brand-chip", BODY],
   ["text-on-cta", "cta-primary", BODY],
+  ["text-on-accent", "accent", BODY],
 );
 // Status pills — paired fg on bg, all eight families.
 for (const family of STATUS_FAMILIES) {

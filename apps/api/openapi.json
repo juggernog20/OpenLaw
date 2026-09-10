@@ -51992,6 +51992,16 @@
           {
             "schema": {
               "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "in": "query",
+            "name": "q",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
               "enum": ["true", "false"]
             },
             "in": "query",
@@ -52158,6 +52168,9 @@
                               }
                             ]
                           },
+                          "parValueCurrency": {
+                            "type": ["string", "null"]
+                          },
                           "customFields": {
                             "type": "object",
                             "propertyNames": {
@@ -52246,6 +52259,7 @@
                           "sharesAuthorized",
                           "sharesIssued",
                           "parValue",
+                          "parValueCurrency",
                           "customFields",
                           "isConfidential",
                           "archivedAt",
@@ -52422,6 +52436,9 @@
                             }
                           ]
                         },
+                        "parValueCurrency": {
+                          "type": ["string", "null"]
+                        },
                         "customFields": {
                           "type": "object",
                           "propertyNames": {
@@ -52488,6 +52505,7 @@
                         "sharesAuthorized",
                         "sharesIssued",
                         "parValue",
+                        "parValueCurrency",
                         "customFields",
                         "isConfidential",
                         "archivedAt",
@@ -52805,6 +52823,9 @@
                             }
                           ]
                         },
+                        "parValueCurrency": {
+                          "type": ["string", "null"]
+                        },
                         "customFields": {
                           "type": "object",
                           "propertyNames": {
@@ -52871,6 +52892,7 @@
                         "sharesAuthorized",
                         "sharesIssued",
                         "parValue",
+                        "parValueCurrency",
                         "customFields",
                         "isConfidential",
                         "archivedAt",
@@ -53162,6 +53184,9 @@
                       }
                     ]
                   },
+                  "parValueCurrency": {
+                    "type": ["string", "null"]
+                  },
                   "customFields": {
                     "type": "object",
                     "propertyNames": {
@@ -53306,6 +53331,9 @@
                             }
                           ]
                         },
+                        "parValueCurrency": {
+                          "type": ["string", "null"]
+                        },
                         "customFields": {
                           "type": "object",
                           "propertyNames": {
@@ -53372,6 +53400,7 @@
                         "sharesAuthorized",
                         "sharesIssued",
                         "parValue",
+                        "parValueCurrency",
                         "customFields",
                         "isConfidential",
                         "archivedAt",
@@ -53643,6 +53672,9 @@
                             }
                           ]
                         },
+                        "parValueCurrency": {
+                          "type": ["string", "null"]
+                        },
                         "customFields": {
                           "type": "object",
                           "propertyNames": {
@@ -53709,6 +53741,7 @@
                         "sharesAuthorized",
                         "sharesIssued",
                         "parValue",
+                        "parValueCurrency",
                         "customFields",
                         "isConfidential",
                         "archivedAt",
@@ -53842,6 +53875,9 @@
                             }
                           ]
                         },
+                        "parValueCurrency": {
+                          "type": ["string", "null"]
+                        },
                         "customFields": {
                           "type": "object",
                           "propertyNames": {
@@ -53908,6 +53944,7 @@
                         "sharesAuthorized",
                         "sharesIssued",
                         "parValue",
+                        "parValueCurrency",
                         "customFields",
                         "isConfidential",
                         "archivedAt",

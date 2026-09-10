@@ -1,0 +1,1 @@
+ALTER TABLE "entities" ADD COLUMN "par_value_currency" text;

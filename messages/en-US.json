@@ -3335,6 +3335,15 @@
   "entities.calendar.unassigned": {
     "defaultMessage": "Unassigned"
   },
+  "entities.chart.actualSize": {
+    "defaultMessage": "Reset zoom to 100%"
+  },
+  "entities.chart.clearHighlight": {
+    "defaultMessage": "Clear highlight"
+  },
+  "entities.chart.confidential": {
+    "defaultMessage": "Confidential Entity"
+  },
   "entities.chart.description": {
     "defaultMessage": "Majority Holdings form the solid tree. Secondary Holdings use dashed lines."
   },
@@ -3342,10 +3351,13 @@
     "defaultMessage": "Fit to window"
   },
   "entities.chart.instructions": {
-    "defaultMessage": "Use the arrow keys to pan, plus and minus to zoom, and zero to fit the chart."
+    "defaultMessage": "Use the arrow keys to pan, plus and minus to zoom, and zero to fit the chart. On an entity, press Space to highlight its structure chain or Enter to open it. Press Escape to clear the highlight."
   },
   "entities.chart.label": {
     "defaultMessage": "Entity ownership chart"
+  },
+  "entities.chart.navigationHint": {
+    "defaultMessage": "Drag to move · Scroll to zoom · Single click to highlight entity · Double click to open entity"
   },
   "entities.chart.noJurisdiction": {
     "defaultMessage": "No jurisdiction"
@@ -3353,8 +3365,17 @@
   "entities.chart.open": {
     "defaultMessage": "Open {name}"
   },
+  "entities.chart.overview": {
+    "defaultMessage": "Chart overview — select an area to move there"
+  },
   "entities.chart.title": {
     "defaultMessage": "Entity ownership chart"
+  },
+  "entities.chart.zoomIn": {
+    "defaultMessage": "Zoom in"
+  },
+  "entities.chart.zoomOut": {
+    "defaultMessage": "Zoom out"
   },
   "entities.confidential.banner": {
     "defaultMessage": "Confidential entity — only people with an access grant can access this entity."
@@ -3363,7 +3384,7 @@
     "defaultMessage": "Confidential entity"
   },
   "entities.confidential.field": {
-    "defaultMessage": "Confidential — restrict to the grant list"
+    "defaultMessage": "Confidential — restrict to the access list"
   },
   "entities.confidential.manage": {
     "defaultMessage": "Manage access"
@@ -3827,14 +3848,23 @@
   "entities.record.shareCapital.authorized": {
     "defaultMessage": "Authorized shares"
   },
+  "entities.record.shareCapital.chooseCurrency": {
+    "defaultMessage": "Choose currency"
+  },
+  "entities.record.shareCapital.currency": {
+    "defaultMessage": "Currency"
+  },
   "entities.record.shareCapital.invalid": {
     "defaultMessage": "Enter a whole number of zero or more."
+  },
+  "entities.record.shareCapital.invalidAmount": {
+    "defaultMessage": "Enter a non-negative amount with up to {digits} decimal places."
   },
   "entities.record.shareCapital.issued": {
     "defaultMessage": "Issued shares"
   },
   "entities.record.shareCapital.parValue": {
-    "defaultMessage": "Par value (minor units)"
+    "defaultMessage": "Par value"
   },
   "entities.record.shareCapital.title": {
     "defaultMessage": "Share capital"
@@ -3868,6 +3898,15 @@
   },
   "entities.restricted": {
     "defaultMessage": "Restricted Entity"
+  },
+  "entities.search": {
+    "defaultMessage": "Search entities by name"
+  },
+  "entities.search.clear": {
+    "defaultMessage": "Clear entity search"
+  },
+  "entities.search.empty": {
+    "defaultMessage": "No entities match your search."
   },
   "entities.statusLabel": {
     "defaultMessage": "{status, select, active {Active} dormant {Dormant} dissolved {Dissolved} divested {Divested} other {Unknown}}"

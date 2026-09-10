@@ -24336,6 +24336,7 @@ export interface operations {
   listEntities: {
     parameters: {
       query?: {
+        q?: string;
         includeArchived?: "true" | "false";
         type?: string;
         status?: "active" | "dormant" | "dissolved" | "divested";
@@ -24374,6 +24375,7 @@ export interface operations {
               sharesAuthorized: number | null;
               sharesIssued: number | null;
               parValue: number | null;
+              parValueCurrency: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -24452,6 +24454,7 @@ export interface operations {
               sharesAuthorized: number | null;
               sharesIssued: number | null;
               parValue: number | null;
+              parValueCurrency: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -24622,6 +24625,7 @@ export interface operations {
               sharesAuthorized: number | null;
               sharesIssued: number | null;
               parValue: number | null;
+              parValueCurrency: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -24714,6 +24718,7 @@ export interface operations {
           sharesAuthorized?: number | null;
           sharesIssued?: number | null;
           parValue?: number | null;
+          parValueCurrency?: string | null;
           customFields?: {
             [key: string]: (string | number | boolean | string[]) | null;
           };
@@ -24746,6 +24751,7 @@ export interface operations {
               sharesAuthorized: number | null;
               sharesIssued: number | null;
               parValue: number | null;
+              parValueCurrency: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -24847,6 +24853,7 @@ export interface operations {
               sharesAuthorized: number | null;
               sharesIssued: number | null;
               parValue: number | null;
+              parValueCurrency: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -24905,6 +24912,7 @@ export interface operations {
               sharesAuthorized: number | null;
               sharesIssued: number | null;
               parValue: number | null;
+              parValueCurrency: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
