@@ -26,8 +26,10 @@ The current Contract Task screen has no reordering control. Complete, edit, assi
 
 1. Open **Key dates** and select **Add date**.
 2. Enter **Date**, name the **Event**, and add **Note (optional)** if useful.
-3. Select **Add date**, then check the date, event, and **Key date** source.
-4. Use that row's actions to **Edit date** or **Remove date**. Cancel leaves the saved date unchanged.
+3. Under **Reminders**, check the global lead times and the combined schedule for this date. To add one, enter **Additional lead time (days before)** and select **Add lead time**. Use whole days from 0 to 730; 0 means on the date. You can add up to 20 lead times. **Remove** removes an additional lead time; the global reminders still apply.
+4. Leave the recipient checkboxes clear to use the usual audience: the Contract Owner and its team. Select people to send this Key date's reminders only to those people. Their current access and notification preferences still apply; selecting someone grants no access.
+5. Select **Add date**, then check the date, event, and **Key date** source.
+6. Use that row's actions to **Edit date** or **Remove date**. Cancel leaves the saved date unchanged.
 
 Rows marked **Derived** come from the term. Change expiry or the notice period on **Overview** to change them; they are not editable as separate Key dates. The list combines those derived dates with your Key dates and identifies the next deadline. Task due dates remain separate from Key dates and do not create Key-date reminders. For an unarchived Contract that has not ended, the record's **Next deadline** chooses the earliest unfinished Task due date, including overdue Tasks, upcoming Key date, expiry date or notice deadline.
 
@@ -35,7 +37,7 @@ Rows marked **Derived** come from the term. Change expiry or the notice period o
 
 Home can show assigned open Tasks and approaching Contract dates in their respective sections. Follow their links back to the correct Task or Contract. A Task assignment and a Key date do not promise the same notification recipients or delivery time. Use [Manage notifications and reminders](notifications.md) for the shared rules, preferences, and cases where no email is sent.
 
-Several Key dates on one Contract can share a date. Check the full Key dates list even if a reminder names only one event for that Contract and day.
+Each Key date gets its own reminder, including when several on one Contract share a date. The reminder names its event. A lead time present in both the global and additional lists fires only once for that Key date. Selected recipients who leave the team or become inactive are excluded; an empty eligible selection does not fall back to everyone. Use **Use the usual audience** when you deliberately want to return to the default recipients.
 
 ## If an action is unavailable
 

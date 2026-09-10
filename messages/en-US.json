@@ -35,6 +35,9 @@
   "action.reload": {
     "defaultMessage": "Reload"
   },
+  "action.remove": {
+    "defaultMessage": "Remove"
+  },
   "action.rename": {
     "defaultMessage": "Rename"
   },
@@ -330,7 +333,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} turnaroundDays {Turnaround (calendar days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} turnaroundDays {Turnaround (calendar days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -502,6 +505,9 @@
   },
   "activity.reminderOffset": {
     "defaultMessage": "{days, plural, =0 {day of} one {# day} other {# days}}"
+  },
+  "activity.reminderUsualAudience": {
+    "defaultMessage": "Usual audience"
   },
   "activity.request.assigneeChanged": {
     "defaultMessage": "{assigned, select, yes {{actor} assigned {assignee} to triage this request} other {{actor} cleared the triage assignment}}"
@@ -4531,6 +4537,42 @@
   },
   "keyDates.needLabel": {
     "defaultMessage": "Name what the date is."
+  },
+  "keyDates.reminders.add": {
+    "defaultMessage": "Add lead time"
+  },
+  "keyDates.reminders.addOffset": {
+    "defaultMessage": "Additional lead time (days before)"
+  },
+  "keyDates.reminders.departed": {
+    "defaultMessage": "Some selected recipients have left the team and will not be reminded."
+  },
+  "keyDates.reminders.effective": {
+    "defaultMessage": "This date will remind: {ladder}"
+  },
+  "keyDates.reminders.global": {
+    "defaultMessage": "Global reminders: {ladder}"
+  },
+  "keyDates.reminders.loadFailed": {
+    "defaultMessage": "The current reminder ladder and team could not be loaded."
+  },
+  "keyDates.reminders.loading": {
+    "defaultMessage": "Loading reminder ladder and team…"
+  },
+  "keyDates.reminders.recipientHelp": {
+    "defaultMessage": "With no selection, reminders go to the Owner or Matter Manager and record team. Select people to send this Key date's reminders only to them. Current access and personal preferences still apply."
+  },
+  "keyDates.reminders.remove": {
+    "defaultMessage": "Remove {offset}"
+  },
+  "keyDates.reminders.removeUnavailable": {
+    "defaultMessage": "Remove unavailable recipients"
+  },
+  "keyDates.reminders.reset": {
+    "defaultMessage": "Use the usual audience"
+  },
+  "keyDates.reminders.title": {
+    "defaultMessage": "Reminders"
   },
   "keyDates.remove": {
     "defaultMessage": "Remove date"

@@ -952,6 +952,21 @@ describe("AI field confirmation narration", () => {
   });
 });
 
+it("names a Key date's selected recipients and the usual audience", () => {
+  const entry: NarratableEntry = {
+    action: "key_date.edited",
+    actor: ACTOR,
+    payload: {
+      keyDateId: "date",
+      label: "Renewal",
+      changed: { reminderRecipientIds: { from: [], to: ["person"] } },
+    },
+  };
+  expect(
+    narrateActivity(intl, entry, { referenceNames: { person: "Casey Counsel" } }).changes,
+  ).toEqual([{ label: "Reminder recipients", from: "Usual audience", to: "Casey Counsel" }]);
+});
+
 describe("the record's own id-valued and slug-valued changes", () => {
   it("names a Task's assignee from the mount's reference names, and the id when nothing names it", () => {
     const entry: NarratableEntry = {

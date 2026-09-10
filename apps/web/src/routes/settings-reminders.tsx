@@ -4,10 +4,8 @@
  * Organization · Notifications (#322, NOT-004): the one reminder-offset
  * list, in the DES-020 list-editor's value-list variant (DES-052).
  *
- * **One list, for every tracked date.** Key dates, notice deadlines, and
- * expiries all fire on these numbers — NOT-004 declined per-date
- * schedules and per-user ones, so a long notice window is tuned here
- * rather than in code.
+ * These global lead times apply to every tracked date. Contract and
+ * Matter Key dates can add their own lead times in their dialogs.
  *
  * **A row is a value, not a named thing.** Nothing points at "7 days
  * before", so it is removed rather than archived and there is no name to

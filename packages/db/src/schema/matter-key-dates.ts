@@ -2,7 +2,7 @@
 
 /** One civil, named Key date on a Matter (MTR-004). */
 import { sql } from "drizzle-orm";
-import { check, date, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { check, date, index, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { uuidPk } from "./helpers.js";
 import { matters } from "./matters.js";
 
@@ -16,6 +16,8 @@ export const matterKeyDates = pgTable(
     date: date("date").notNull(),
     label: text("label").notNull(),
     note: text("note"),
+    reminderOffsetDays: jsonb("reminder_offset_days").$type<number[]>().notNull().default([]),
+    reminderRecipientIds: jsonb("reminder_recipient_ids").$type<string[]>().notNull().default([]),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()

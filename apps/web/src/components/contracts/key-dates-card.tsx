@@ -39,16 +39,12 @@
  * putting the date back is one dialog away. That is the same reasoning
  * that leaves an approval's cancel unconfirmed (DES-035 clause 10).
  *
- * **No owner column and no reminder column** (CTR-009, NOT-004). The
- * mock draws both. Neither has a datum behind it: key dates are
- * deliberately flat, and one global offset list already governs every
- * tracked date, so a per-row reminder cell would describe a rule the
- * product does not have. The mock's note row goes with them — it
- * describes M18's delivery, and a surface that explains a rule it does
- * not yet apply is a surface that is wrong (DES-035 clause 13).
+ * Reminder lead times and a selected team audience are edited alongside
+ * the date, label, and note in the Add and Edit dialogs (NOT-004, #807).
  */
 
 import { useState } from "react";
+import { KeyDateReminderFields, type KeyDateReminderDraft } from "../key-date-reminder-fields";
 import { useRecord } from "../record-context";
 import { FormattedMessage, useIntl, defineMessage, type IntlShape } from "react-intl";
 import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
@@ -456,6 +452,10 @@ function KeyDateDialog({
   onConfirm: (input: KeyDateInput) => Promise<string | null>;
 }>) {
   const intl = useIntl();
+  const [reminders, setReminders] = useState<KeyDateReminderDraft>({
+    reminderOffsetDays: row?.reminderOffsetDays ?? [],
+    reminderRecipientIds: row?.reminderRecipientIds ?? [],
+  });
   const [draft, setDraft] = useState<DraftInput>({
     date: row?.date ?? "",
     label: row?.label ?? "",
@@ -492,6 +492,19 @@ function KeyDateDialog({
       return;
     }
     const refusal = await onConfirm({
+      ...reminders,
+      reminderOffsetDays:
+        row &&
+        JSON.stringify(row.reminderOffsetDays ?? []) ===
+          JSON.stringify(reminders.reminderOffsetDays)
+          ? undefined
+          : reminders.reminderOffsetDays,
+      reminderRecipientIds:
+        row &&
+        JSON.stringify(row.reminderRecipientIds ?? []) ===
+          JSON.stringify(reminders.reminderRecipientIds)
+          ? undefined
+          : reminders.reminderRecipientIds,
       date: draft.date,
       label: draft.label.trim(),
       note: draft.note.trim() || null,
@@ -567,13 +580,7 @@ function KeyDateDialog({
               onChange={(event) => change({ note: event.target.value })}
             />
           </div>
-          {/* No reminder note here. NOT-004's one global offset list is
-              what this surface will not do per date, but nothing in this
-              build reminds anybody of anything and there is no Settings
-              control to point at — so the note would send a reader to a
-              screen that does not exist. It arrives with the delivery
-              that makes it true (M18), the rule DES-035 clause 13 sets
-              and this milestone already followed twice. */}
+          <KeyDateReminderFields value={reminders} onChange={setReminders} />
           {error && (
             <p id={ERROR_ID} role="alert" className="text-xs text-status-danger-fg">
               {error.message}

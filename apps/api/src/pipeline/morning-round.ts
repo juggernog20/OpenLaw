@@ -71,6 +71,8 @@ import {
   lt,
   lte,
   ne,
+  or,
+  gte,
   notifications,
   entities,
   entityObligations,
@@ -88,6 +90,11 @@ import type { AuthenticatedUser } from "../auth/user.js";
 import { derivedDateUnverified } from "../lib/ai-unverified.js";
 import { civilDate, civilInstant, daysBetween } from "../lib/contract-term.js";
 import type { MailerResolver } from "../lib/mailer.js";
+import {
+  currentKeyDateRecipients,
+  ownReminderRecipients,
+  selectedKeyDateRecipients,
+} from "../lib/key-date-reminders.js";
 import { recordActivity } from "../lib/activity.js";
 import {
   contractRecordAudience,
@@ -278,6 +285,7 @@ interface DueKeyDate extends DueDateFields {
   eventType: "date.key_date_approaching";
   keyDateId: string;
   label: string;
+  reminderRecipientIds: string[];
 }
 
 /** One open obligation, already addressed to its assignee or the Administrator fallback. */
@@ -478,13 +486,18 @@ async function raiseReminders(
         : await matterRecordAudience(deps.db, first.entityId);
     // A record that went while the round was running is about nobody.
     if (!audience) continue;
-    const userIds = audience.userIds.filter((userId) => inCohort.has(userId));
-    if (userIds.length === 0) continue;
+    const defaultUserIds = audience.userIds.filter((userId) => inCohort.has(userId));
+    if (defaultUserIds.length === 0) continue;
 
     try {
       written += await deps.notifier.notifying(async (tx) => {
         let rows = 0;
         for (const date of dates) {
+          const selected =
+            date.eventType === "date.key_date_approaching" ? date.reminderRecipientIds : [];
+          // Explicit selections narrow the current team; a removed person is never re-added.
+          const userIds = selectedKeyDateRecipients(defaultUserIds, selected);
+          if (userIds.length === 0) continue;
           if (date.entityType === MATTER_ENTITY) {
             if (date.eventType !== "date.key_date_approaching" || !("matterNumber" in audience)) {
               continue;
@@ -599,16 +612,32 @@ async function dueDates(db: Db, today: string, offsets: readonly number[]): Prom
       ),
     );
 
+  // JSON containment matches only the exact numeric offset. The date bounds exclude
+  // invalid negative or excessive stored lead times without casting untrusted JSON.
+  const keyDateDue = (
+    date: typeof contractKeyDates.date | typeof matterKeyDates.date,
+    own: typeof contractKeyDates.reminderOffsetDays | typeof matterKeyDates.reminderOffsetDays,
+  ) =>
+    or(
+      inArray(date, dates),
+      and(
+        gte(date, today),
+        lte(date, civilDate(civilInstant(today) + 730 * DAY_MS)),
+        sql`${own} @> jsonb_build_array(${date} - ${today}::date)`,
+      ),
+    );
+
   const keyDates = await db
     .select({
       contractId: contractKeyDates.contractId,
       date: contractKeyDates.date,
       keyDateId: contractKeyDates.id,
       label: contractKeyDates.label,
+      reminderRecipientIds: contractKeyDates.reminderRecipientIds,
     })
     .from(contractKeyDates)
     .innerJoin(contracts, eq(contractKeyDates.contractId, contracts.id))
-    .where(and(live, inArray(contractKeyDates.date, dates)));
+    .where(and(live, keyDateDue(contractKeyDates.date, contractKeyDates.reminderOffsetDays)));
 
   const due: DueDate[] = [];
   for (const row of expiries) {
@@ -635,8 +664,9 @@ async function dueDates(db: Db, today: string, offsets: readonly number[]): Prom
       entityId: row.contractId,
       eventType: "date.key_date_approaching",
       date: row.date,
-      offsetDays: offsetOf.get(row.date)!,
+      offsetDays: daysBetween(today, row.date),
       keyDateId: row.keyDateId,
+      reminderRecipientIds: ownReminderRecipients(row.reminderRecipientIds),
       label: row.label,
     });
   }
@@ -646,6 +676,7 @@ async function dueDates(db: Db, today: string, offsets: readonly number[]): Prom
       date: matterKeyDates.date,
       keyDateId: matterKeyDates.id,
       label: matterKeyDates.label,
+      reminderRecipientIds: matterKeyDates.reminderRecipientIds,
     })
     .from(matterKeyDates)
     .innerJoin(matters, eq(matterKeyDates.matterId, matters.id))
@@ -654,7 +685,7 @@ async function dueDates(db: Db, today: string, offsets: readonly number[]): Prom
       and(
         eq(matterStatuses.category, "open"),
         isNull(matters.archivedAt),
-        inArray(matterKeyDates.date, dates),
+        keyDateDue(matterKeyDates.date, matterKeyDates.reminderOffsetDays),
       ),
     );
   for (const row of matterDates) {
@@ -663,8 +694,9 @@ async function dueDates(db: Db, today: string, offsets: readonly number[]): Prom
       entityId: row.matterId,
       eventType: "date.key_date_approaching",
       date: row.date,
-      offsetDays: offsetOf.get(row.date)!,
+      offsetDays: daysBetween(today, row.date),
       keyDateId: row.keyDateId,
+      reminderRecipientIds: ownReminderRecipients(row.reminderRecipientIds),
       label: row.label,
     });
   }
@@ -933,6 +965,20 @@ async function sendBriefing(
     if (!reachable.has(row.entityId)) {
       skipping.push(row.id);
       continue;
+    }
+    if (
+      row.eventType === "date.key_date_approaching" &&
+      (row.entityType === CONTRACT_ENTITY || row.entityType === MATTER_ENTITY)
+    ) {
+      const keyDateId = row.payload.keyDateId;
+      const recipients =
+        typeof keyDateId === "string"
+          ? await currentKeyDateRecipients(deps.db, row.entityType, row.entityId, keyDateId)
+          : [];
+      if (!recipients.includes(person.id)) {
+        skipping.push(row.id);
+        continue;
+      }
     }
     const line = digestRow(row, person.today);
     // A row with no number or no title has no address, and a line

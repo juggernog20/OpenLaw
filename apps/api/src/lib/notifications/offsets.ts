@@ -3,10 +3,8 @@
 /**
  * NOT-004's reminder-offset list, as the one place that reads it.
  *
- * **One list, for every tracked date.** Key dates (CTR-009), notice
- * deadlines and expiries (CTR-006) all fire on the same offsets: NOT-004
- * declined per-date schedules, and the key-dates table says so in its own
- * header. So there is one column, one read, and one answer.
+ * Global lead times apply to every tracked date. Contract and Matter
+ * Key dates may add lead times of their own (NOT-004, #807).
  *
  * **It is read live, on every round** — the read-on-every-decision
  * pattern the mailer resolver and the signing connector already follow.

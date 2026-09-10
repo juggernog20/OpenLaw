@@ -43,7 +43,7 @@
       },
       {
         "id": "notifications",
-        "contentSha256": "96e9c7750f35ee5b6979baacf3ac12e2be2c5b717092d86cca51f600ca8eaad7"
+        "contentSha256": "a963ebf7616e19f7fb32fa344cca5c7e557169ec53a9c593918c2c07c28a5054"
       },
       {
         "id": "submit-request",
@@ -91,7 +91,7 @@
       },
       {
         "id": "contract-tasks-and-dates",
-        "contentSha256": "05701bf7e4daa6099cca5ced8e61e360dbef0641fd53aa93c031bbcb29a59d67"
+        "contentSha256": "969a4d05959805398fca2a5ee985f6b502895030df7c05004c59aaee2a6d263a"
       },
       {
         "id": "contract-relations-and-ending",
@@ -111,7 +111,7 @@
       },
       {
         "id": "matter-work",
-        "contentSha256": "020bf3cc086bafd7efbd28255bb5c607fb5864836abef8e58d17336ae12a2836"
+        "contentSha256": "dfb977ad854cbff21fe4c798c4068bac779aa19650f98372e7a5facb3bf1b22c"
       },
       {
         "id": "contributor-guide",

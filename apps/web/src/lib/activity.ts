@@ -366,7 +366,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} " +
         "defaultLocale {Default language} defaultTimezone {Default timezone} " +
         "authMode {Sign-in method} allowedEmailDomains {Allowed email domains} " +
-        "reminderOffsetDays {Reminder lead times} " +
+        "reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} " +
         "smtpUrl {SMTP server} smtpFrom {From address} " +
         "issuer {Issuer} domain {Email domain} clientId {Client ID} " +
         "clientSecret {Client secret} " +
@@ -410,7 +410,13 @@ const CIVIL_DATE = /^\d{4}-\d{2}-\d{2}$/;
 /** The record's own changed keys whose value is an id, not a name.
  * `linkedUser` already carries names; it is here so a row written
  * before that was true still reads through the same lookup. */
-const REFERENCE_KEYS = new Set(["assigneeId", "matterId", "registrationId", "linkedUser"]);
+const REFERENCE_KEYS = new Set([
+  "assigneeId",
+  "matterId",
+  "registrationId",
+  "linkedUser",
+  "reminderRecipientIds",
+]);
 
 /**
  * One side of a change, rendered as the record renders it (DES-014).
@@ -508,6 +514,12 @@ function changeValue(
     return CIVIL_DATE.test(value) ? formatShortDate(value, { locale: intl.locale }) : value;
   }
   if (Array.isArray(value)) {
+    if (key === "reminderRecipientIds" && value.length === 0) {
+      return intl.formatMessage({
+        id: "activity.reminderUsualAudience",
+        defaultMessage: "Usual audience",
+      });
+    }
     return intl.formatList(
       value.map((item) => changeValue(intl, key, item, context)),
       { type: "conjunction" },
