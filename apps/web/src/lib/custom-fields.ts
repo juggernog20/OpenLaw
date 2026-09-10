@@ -133,6 +133,7 @@ export function unansweredRequired(
 export function commitsOnChange(field: AttachedField): boolean {
   return (
     field.fieldType === "boolean" ||
+    field.fieldType === "currency" ||
     field.fieldType === "single_select" ||
     field.fieldType === "multi_select" ||
     field.fieldType === "user" ||

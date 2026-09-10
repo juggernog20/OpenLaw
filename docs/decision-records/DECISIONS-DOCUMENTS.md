@@ -353,3 +353,19 @@ is nonzero or it has subfolders. Empty folders keep their alignment, actions, an
 targets. Folders containing only inaccessible Documents appear empty under the same rule.
 The row counts subfolders as well as Documents, so a parent with children does not read Empty.
 This supersedes the earlier always-present folder chevron behavior.
+
+### DOC-010 / DOC-011 UX review addendum — upload results and bulk actions (2026-09-09)
+
+Matter and Contract Documents share these behaviors:
+
+- Successful batch uploads close after refreshing the document list. Failed files,
+  cancelled files, unreadable folders, or failed folder creation keep the results open.
+  A successful retry closes the dialog once every item has succeeded.
+- Single and bulk deletion require typing `delete`. The dialog identifies the affected
+  Documents and explains that all versions are deleted. The API still receives the
+  displayed title as a concurrency guard, so a concurrent rename can refuse deletion.
+  Administrator permissions and existing deletion protections continue to apply.
+- Checkboxes select Documents, with a select-visible control and a toolbar for Move,
+  Archive, Restore for archived selections, and Administrator Delete. The selection can
+  span loaded folders. Each action uses existing per-Document routes with bounded
+  concurrency, refreshes once, and retains failed Documents as the selection with errors.

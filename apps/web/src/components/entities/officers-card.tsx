@@ -135,7 +135,10 @@ export function OfficersCard({
     >
       <header className="flex min-h-section-header items-center justify-between gap-3 border-b border-border-default bg-section-header px-4 py-2">
         <h2 id={headingId} className="text-base font-semibold">
-          <FormattedMessage id="entities.record.officers.title" defaultMessage="Officers" />
+          <FormattedMessage
+            id="entities.record.officers.title"
+            defaultMessage="Directors & Officers"
+          />
         </h2>
         <div className="flex items-center gap-3">
           {!adding ? <StatusNote status={status} detail={error} /> : null}
@@ -152,7 +155,10 @@ export function OfficersCard({
           {!frozen ? (
             <Button size="sm" variant="secondary" onClick={() => setAdding((current) => !current)}>
               <Plus size={16} aria-hidden="true" />
-              <FormattedMessage id="entities.record.officers.add" defaultMessage="Add officer" />
+              <FormattedMessage
+                id="entities.record.officers.add"
+                defaultMessage="Add director or officer"
+              />
             </Button>
           ) : null}
         </div>
@@ -161,7 +167,10 @@ export function OfficersCard({
         <div className="grid grid-cols-1 gap-3 border-b border-border-muted bg-canvas p-4 @2xl/page:grid-cols-4">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="new-officer-name">
-              <FormattedMessage id="entities.record.officers.name" defaultMessage="Officer name" />
+              <FormattedMessage
+                id="entities.record.officers.name"
+                defaultMessage="Director or officer name"
+              />
             </Label>
             <Input
               id="new-officer-name"
@@ -235,7 +244,7 @@ export function OfficersCard({
         <p className="p-4 text-base text-muted">
           <FormattedMessage
             id="entities.record.officers.empty"
-            defaultMessage="No current officers."
+            defaultMessage="No current directors or officers."
           />
         </p>
       ) : (
@@ -290,7 +299,7 @@ function OfficerRow({
         aria-label={label(
           intl.formatMessage({
             id: "entities.record.officers.name",
-            defaultMessage: "Officer name",
+            defaultMessage: "Director or officer name",
           }),
         )}
         value={name}

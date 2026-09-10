@@ -56,6 +56,7 @@ function entityRow(overrides: Partial<Record<string, unknown>> = {}) {
     sharesAuthorized: null,
     sharesIssued: null,
     parValue: null,
+    parValueCurrency: null,
     customFields: {},
     isConfidential: false,
     archivedAt: null,
@@ -81,7 +82,12 @@ function recordApi(
   const posts: string[] = [];
   const handler = (call: StubCall): Response | undefined => {
     if (call.url.pathname === "/api/v1/entities/e1" && call.method === "GET") {
-      return json(200, { entity: row, fields: [], customFieldRefs: { users: [], entities: [] } });
+      return json(200, {
+        entity: row,
+        canManageAccess: true,
+        fields: [],
+        customFieldRefs: { users: [], entities: [] },
+      });
     }
     if (call.url.pathname === "/api/v1/entities/types" && call.method === "GET") {
       return json(200, { entityTypes: TYPE_OPTIONS });
@@ -109,7 +115,12 @@ function recordApi(
         ...body,
         ...(body.entityTypeId === "t-llc" ? { entityTypeName: "LLC" } : {}),
       };
-      return json(200, { entity: row, fields: [], customFieldRefs: { users: [], entities: [] } });
+      return json(200, {
+        entity: row,
+        canManageAccess: true,
+        fields: [],
+        customFieldRefs: { users: [], entities: [] },
+      });
     }
     if (call.url.pathname === "/api/v1/entities/e1/archive" && call.method === "POST") {
       posts.push("archive");
@@ -154,14 +165,14 @@ describe("the /entities/:entityId record page", () => {
     renderAt("/entities/e1");
     const user = userEvent.setup();
 
-    expect(await screen.findByRole("region", { name: "Confidential Entity" })).toHaveTextContent(
-      "Administrators and granted Legal Team Members see it",
+    expect(await screen.findByRole("region", { name: "Confidential entity" })).toHaveTextContent(
+      "only people with an access grant can access this entity.",
     );
     expect(screen.getByText("CONFI")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Manage access" }));
     expect(await screen.findByRole("dialog", { name: "Confidential access" })).toBeInTheDocument();
     expect(screen.getByText("Nadia Counsel")).toBeInTheDocument();
-    await user.selectOptions(screen.getByRole("combobox", { name: "Legal Team Member" }), "u4");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Person" }), "u4");
     await user.click(screen.getByRole("button", { name: "Grant access" }));
     await waitFor(() => expect(writes).toEqual([{ userId: "u4" }]));
   });
@@ -203,13 +214,70 @@ describe("the /entities/:entityId record page", () => {
     renderAt("/entities/e1");
     const user = userEvent.setup();
 
-    for (const heading of ["Registry", "Share capital", "Fields", "Officers", "Registrations"]) {
+    for (const heading of [
+      "Registry",
+      "Share capital",
+      "Fields",
+      "Directors & Officers",
+      "Registrations",
+    ]) {
       expect(await screen.findByRole("heading", { name: heading })).toBeInTheDocument();
     }
     const authorized = screen.getByLabelText("Authorized shares");
     await user.type(authorized, "1000000");
     await user.tab();
     await waitFor(() => expect(api.patches).toContainEqual({ sharesAuthorized: 1_000_000 }));
+    expect(authorized).toHaveValue("1,000,000");
+  });
+
+  it("edits par value in major units and saves its currency, respecting currency precision", async () => {
+    const api = recordApi(entityRow({ parValue: 123456, parValueCurrency: "USD" }));
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/entities/e1");
+    const user = userEvent.setup();
+    const amount = await screen.findByRole("textbox", { name: "Par value" });
+    expect(amount).toHaveValue("1,234.56");
+    const currency = screen.getByRole("combobox", { name: "Currency" });
+    await user.selectOptions(currency, "BHD");
+    await waitFor(() =>
+      expect(api.patches).toContainEqual({ parValue: 1234560, parValueCurrency: "BHD" }),
+    );
+    expect(amount).toHaveValue("1,234.56");
+    await user.clear(amount);
+    await user.type(amount, "1.234");
+    await user.tab();
+    await waitFor(() =>
+      expect(api.patches).toContainEqual({ parValue: 1234, parValueCurrency: "BHD" }),
+    );
+    await user.selectOptions(currency, "JPY");
+    expect(
+      await screen.findByText("Enter a non-negative amount with up to 0 decimal places."),
+    ).toBeInTheDocument();
+    expect(currency).toHaveValue("BHD");
+    await user.clear(amount);
+    await user.type(amount, "1000");
+    await user.tab();
+    await waitFor(() =>
+      expect(api.patches).toContainEqual({ parValue: 1000000, parValueCurrency: "BHD" }),
+    );
+    await user.selectOptions(currency, "JPY");
+    await waitFor(() =>
+      expect(api.patches).toContainEqual({ parValue: 1000, parValueCurrency: "JPY" }),
+    );
+    expect(amount).toHaveValue("1,000");
+  });
+
+  it("assigns a currency to legacy par values without guessing or changing their stored units", async () => {
+    const api = recordApi(entityRow({ parValue: 100 }));
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/entities/e1");
+    const user = userEvent.setup();
+    const amount = await screen.findByRole("textbox", { name: "Par value" });
+    expect(amount).toBeDisabled();
+    await user.selectOptions(screen.getByRole("combobox", { name: "Currency" }), "USD");
+    await waitFor(() => expect(amount).toHaveValue("1"));
+    expect(api.patches).toContainEqual({ parValue: 100, parValueCurrency: "USD" });
+    expect(amount).toBeEnabled();
   });
 
   it("routes all six DES-032 sections and renders the shipped Obligations tab", async () => {
@@ -388,13 +456,15 @@ describe("the /entities/:entityId record page", () => {
     renderAt("/entities/e1");
     const user = userEvent.setup();
 
-    expect(await screen.findByText("No current officers.")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Add officer" }));
-    await user.type(screen.getByLabelText("Officer name"), "Dana Director");
+    expect(await screen.findByText("No current directors or officers.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Add director or officer" }));
+    await user.type(screen.getByLabelText("Director or officer name"), "Dana Director");
     await user.type(screen.getByLabelText("Appointed on"), "2025-02-03");
     await user.selectOptions(screen.getByLabelText("Linked user"), "u2");
     await user.click(screen.getByRole("button", { name: "Add" }));
-    expect(await screen.findByLabelText("Dana Director Officer name")).toHaveValue("Dana Director");
+    expect(await screen.findByLabelText("Dana Director Director or officer name")).toHaveValue(
+      "Dana Director",
+    );
     expect(writes).toEqual([
       {
         method: "POST",
@@ -418,7 +488,7 @@ describe("the /entities/:entityId record page", () => {
         body: { resignedOn: "2026-08-29" },
       }),
     );
-    expect(await screen.findByText("No current officers.")).toBeInTheDocument();
+    expect(await screen.findByText("No current directors or officers.")).toBeInTheDocument();
 
     // The former toggle reads the row back; remove deletes it.
     await user.click(screen.getByRole("checkbox", { name: "Show former" }));
@@ -429,7 +499,7 @@ describe("the /entities/:entityId record page", () => {
         path: "/api/v1/entities/e1/officers/o1",
       }),
     );
-    expect(await screen.findByText("No current officers.")).toBeInTheDocument();
+    expect(await screen.findByText("No current directors or officers.")).toBeInTheDocument();
   });
 
   it("adds a registration, changes its status, and shows a refused row edit", async () => {

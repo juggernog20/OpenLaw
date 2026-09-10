@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** M22/5's editable matter record: one commit per field and recoverable lifecycle acts. */
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Briefcase, ChevronRight, Settings } from "lucide-react";
 import { defineMessage, FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import {
   Link,
   redirect,
   useLoaderData,
+  useLocation,
   useNavigate,
   useParams,
   type LoaderFunctionArgs,
@@ -29,7 +30,7 @@ import { formatFullDate } from "../lib/format";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
 import {
   MATTER_SEVERITIES,
-  MATTER_STATUS_PILL,
+  matterStatusPill,
   matterReference,
   matterSeverityLabel,
   type MatterField,
@@ -43,6 +44,7 @@ import {
   documentLandingParams,
   previousComparableVersion,
   readDocumentLanding,
+  type ContractDocument,
 } from "../lib/documents";
 import { canReadMatters, isMemberPlus } from "../lib/roles";
 import { requireUser, useSignOut } from "../lib/session";
@@ -234,6 +236,22 @@ export function MatterRecordPage() {
     setReadingCovers(false);
     readingDocked.current = true;
   }, [tab]);
+
+  const location = useLocation();
+  const landedNavigation = useRef(location.key);
+  useEffect(() => {
+    if (landedNavigation.current === location.key) return;
+    landedNavigation.current = location.key;
+    const target = loader.documentLanding;
+    if (!target) return;
+    // Apply a completed navigation once; background revalidation must not reopen the reader.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPaper((rows) => rows.map((row) => (row.id === target.document.id ? target.document : row)));
+    setFiled((rows) => [...rows.filter((row) => row.id !== target.document.id), target.document]);
+    setReading({ documentId: target.document.id, versionId: target.versionId });
+    setReadingCovers(false);
+    readingDocked.current = true;
+  }, [location.key, loader.documentLanding]);
 
   function closeReading() {
     setReading(null);
@@ -509,12 +527,52 @@ export function MatterRecordPage() {
     audienceLocked,
     onTeam: setTeam,
   });
+  const loadFilingDocuments = useCallback(async () => {
+    const rows: ContractDocument[] = [];
+    let cursor: string | undefined;
+    const seen = new Set<string>();
+    for (let page = 0; page < 1000; page += 1) {
+      const { data } = await api.GET("/api/v1/matters/{number}/documents", {
+        params: { path: { number: saved.number }, query: { cursor } },
+      });
+      if (!data) throw new Error("Could not read Matter documents");
+      rows.push(...data.documents);
+      if (!data.nextCursor) return rows;
+      if (seen.has(data.nextCursor)) throw new Error("Repeated document cursor");
+      seen.add(data.nextCursor);
+      cursor = data.nextCursor;
+    }
+    throw new Error("Document page limit");
+  }, [saved.number]);
+  const refreshFiledPaper = useCallback(async () => {
+    const documents = await loadFilingDocuments();
+    setPaper(documents.filter((document) => document.folderId === null));
+    setPaperCursor(null);
+    setFiled(documents.filter((document) => document.folderId !== null));
+  }, [loadFilingDocuments]);
+  const filingContext = useMemo(
+    () => ({
+      documents: [...paper, ...filed].map(({ id, title }) => ({ id, title })),
+      loadDocuments: loadFilingDocuments,
+      recordHref: `/matters/${saved.number}/documents`,
+      canFile: isMemberPlus(user.role) && !frozen,
+      onOpen: (documentId: string, versionId: string) => {
+        const document = [...paper, ...filed].find((row) => row.id === documentId);
+        if (!document?.versions.some((version) => version.id === versionId)) return false;
+        setReading({ documentId, versionId });
+        return true;
+      },
+      onPaperFiled: refreshFiledPaper,
+    }),
+    [paper, filed, loadFilingDocuments, saved.number, user.role, frozen, refreshFiledPaper],
+  );
   const chatApplet = useCommentApplet({
     entityType: "matter",
     entityId: saved.id,
     role: user.role,
     viewerId: user.id,
     confidential: saved.isConfidential,
+    filing: filingContext,
   });
   const historyApplet = useActivityApplet({
     entityType: "matter",
@@ -638,7 +696,7 @@ export function MatterRecordPage() {
                   {saved.title}
                 </h1>
                 <span
-                  className={`inline-flex shrink-0 rounded-pill px-2 py-0.5 text-xs font-medium ${MATTER_STATUS_PILL[saved.statusCategory]}`}
+                  className={`inline-flex shrink-0 rounded-pill px-2 py-0.5 text-xs font-medium ${matterStatusPill(saved)}`}
                 >
                   {saved.statusName}
                 </span>

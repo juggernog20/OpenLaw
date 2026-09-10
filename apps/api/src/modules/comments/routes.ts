@@ -95,6 +95,8 @@ import {
   commentRevisions,
   comments,
   contracts,
+  matters,
+  matterTeam,
   COMMENT_VISIBILITIES,
   count,
   desc,
@@ -128,6 +130,8 @@ import {
   requestDerivations,
   versionStorageKey,
 } from "../../lib/document-versions.js";
+import { conversionFormatOf, previewContentType } from "../../lib/render-family.js";
+import { DocEngineError } from "../../lib/doc-engine/engine.js";
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import {
   asUploadRefusal,
@@ -1204,7 +1208,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "reach gate; a never-converted Request owns no Documents and is refused. The bytes " +
           "are copied to a key minted from the destination ids, their media type is read from " +
           "the blob, and the shared Version insert records every derivation an upload owes. " +
-          "The paper and the attachment marker commit together under the Contract row lock, " +
+          "The paper and the attachment marker commit together under the owning record row lock, " +
           "so the same attachment cannot grow two rounds",
         tags: ["comments"],
         params: CommentParams.extend({ attachmentId: RecordIdSchema }),
@@ -1226,7 +1230,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
       if (source.filedDocumentId !== null || source.filedVersionId !== null) {
         await refuseFiled(app.db, request.user, source);
       }
-      if (source.commentEntityType !== "contract") {
+      if (source.commentEntityType !== "contract" && source.commentEntityType !== "matter") {
         throw httpError(409, "This thread's record does not own Documents.");
       }
 
@@ -1278,28 +1282,49 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           if (attachment.filedDocumentId !== null || attachment.filedVersionId !== null) {
             await refuseFiled(tx, request.user, attachment);
           }
-          if (held.entityType !== "contract") {
+          if (held.entityType !== "contract" && held.entityType !== "matter") {
             throw httpError(409, "This thread's record does not own Documents.");
           }
 
           // Audience was just re-asked through the comment. Now hold the
-          // owning row: version numbering, primary designation, and both
-          // destination forms serialize behind this lock.
-          const [contract] = await tx
-            .select({
-              id: contracts.id,
-              managerId: contracts.managerId,
-              primaryDocumentId: contracts.primaryDocumentId,
-              archivedAt: contracts.archivedAt,
-            })
-            .from(contracts)
-            .where(eq(contracts.id, held.entityId))
-            .limit(1)
-            .for("update");
-          if (!contract) throw httpError(404, NO_ATTACHMENT);
-          if (contract.archivedAt !== null) {
-            throw httpError(409, "This contract is archived. Restore it before filing paper.");
+          // owning row: version numbering and both destination forms
+          // serialize behind this lock.
+          const [owner] =
+            held.entityType === "contract"
+              ? await tx
+                  .select({
+                    id: contracts.id,
+                    managerId: contracts.managerId,
+                    primaryDocumentId: contracts.primaryDocumentId,
+                    archivedAt: contracts.archivedAt,
+                  })
+                  .from(contracts)
+                  .where(eq(contracts.id, held.entityId))
+                  .limit(1)
+                  .for("update")
+              : await tx
+                  .select({
+                    id: matters.id,
+                    managerId: matters.managerId,
+                    primaryDocumentId: sql<string | null>`null`,
+                    archivedAt: matters.archivedAt,
+                  })
+                  .from(matters)
+                  .where(eq(matters.id, held.entityId))
+                  .limit(1)
+                  .for("update");
+          if (!owner) throw httpError(404, NO_ATTACHMENT);
+          if (owner.archivedAt !== null) {
+            throw httpError(
+              409,
+              `This ${held.entityType} is archived. Restore it before filing paper.`,
+            );
           }
+          await reachedThread(tx, request.user, request.query);
+          const ownerValues =
+            held.entityType === "contract" ? { contractId: owner.id } : { matterId: owner.id };
+          const ownerColumn =
+            held.entityType === "contract" ? documents.contractId : documents.matterId;
 
           let title: string;
           let versionNumber: number;
@@ -1312,25 +1337,38 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
             // flags it afterwards. Filing sets the flag in the same act,
             // so it asks the same question here: a Member off the team
             // would otherwise file paper they cannot reach.
-            if (
-              isConfidential &&
-              (await documentConfidentialityWrite(tx, request.user, {
-                contractId: contract.id,
-                contractManagerId: contract.managerId,
-                createdBy: request.user.id,
-                isConfidential,
-              })) !== "allowed"
-            ) {
+            const canFileConfidential =
+              held.entityType === "contract"
+                ? (await documentConfidentialityWrite(tx, request.user, {
+                    contractId: owner.id,
+                    contractManagerId: owner.managerId,
+                    createdBy: request.user.id,
+                    isConfidential,
+                  })) === "allowed"
+                : request.user.role === "administrator" ||
+                  owner.managerId === request.user.id ||
+                  (
+                    await tx
+                      .select({ userId: matterTeam.userId })
+                      .from(matterTeam)
+                      .where(
+                        and(
+                          eq(matterTeam.matterId, owner.id),
+                          eq(matterTeam.userId, request.user.id),
+                        ),
+                      )
+                      .limit(1)
+                  ).length > 0;
+            if (isConfidential && !canFileConfidential) {
               throw httpError(
                 403,
-                "Only an Administrator, the contract's Owner, or someone on its team can file " +
-                  "Confidential paper. Clear the flag, or ask to be named on the contract.",
+                "Only an Administrator or someone on the record team can file Confidential paper.",
               );
             }
             await tx.insert(documents).values({
               id: documentId,
               title,
-              contractId: contract.id,
+              ...ownerValues,
               isConfidential,
               folderId: null,
               createdBy: request.user.id,
@@ -1346,7 +1384,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
               .where(
                 and(
                   eq(documents.id, documentId),
-                  eq(documents.contractId, contract.id),
+                  eq(ownerColumn, owner.id),
                   documentAudienceScope(tx, request.user),
                 ),
               )
@@ -1382,8 +1420,8 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
 
           if (request.body.destination === "new_document") {
             await recordActivity(tx, {
-              entityType: "contract",
-              entityId: contract.id,
+              entityType: held.entityType,
+              entityId: owner.id,
               actorId: request.user.id,
               action: "document.created",
               visibility: RECORD_ACTIVITY_TIER,
@@ -1395,14 +1433,14 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
                 sourceCommentId: held.id,
               },
             });
-            if (contract.primaryDocumentId === null) {
+            if (held.entityType === "contract" && owner.primaryDocumentId === null) {
               await tx
                 .update(contracts)
                 .set({ primaryDocumentId: documentId })
-                .where(eq(contracts.id, contract.id));
+                .where(eq(contracts.id, owner.id));
               await recordActivity(tx, {
                 entityType: "contract",
-                entityId: contract.id,
+                entityId: owner.id,
                 actorId: request.user.id,
                 action: "document.primary_set",
                 visibility: RECORD_ACTIVITY_TIER,
@@ -1415,22 +1453,23 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
                 },
               });
             }
-            await app.notifier.documentAdded(tx, {
-              contractId: contract.id,
-              actorId: request.user.id,
-              actorName: request.user.displayName,
-              documentId,
-              documentTitle: title,
-              isConfidential,
-            });
+            if (held.entityType === "contract")
+              await app.notifier.documentAdded(tx, {
+                contractId: owner.id,
+                actorId: request.user.id,
+                actorName: request.user.displayName,
+                documentId,
+                documentTitle: title,
+                isConfidential,
+              });
           } else {
             await tx
               .update(documents)
               .set({ updatedAt: new Date() })
               .where(eq(documents.id, documentId));
             await recordActivity(tx, {
-              entityType: "contract",
-              entityId: contract.id,
+              entityType: held.entityType,
+              entityId: owner.id,
               actorId: request.user.id,
               action: "document.version_added",
               visibility: RECORD_ACTIVITY_TIER,
@@ -1443,16 +1482,17 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
                 sourceCommentId: held.id,
               },
             });
-            await app.notifier.documentVersionAdded(tx, {
-              contractId: contract.id,
-              actorId: request.user.id,
-              actorName: request.user.displayName,
-              documentId,
-              documentTitle: title,
-              isConfidential,
-              versionId,
-              versionNumber,
-            });
+            if (held.entityType === "contract")
+              await app.notifier.documentVersionAdded(tx, {
+                contractId: owner.id,
+                actorId: request.user.id,
+                actorName: request.user.displayName,
+                documentId,
+                documentTitle: title,
+                isConfidential,
+                versionId,
+                versionNumber,
+              });
           }
 
           await tx
@@ -1482,7 +1522,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "downloadCommentAttachment",
         summary:
-          "Download one live comment attachment through the same audience " +
+          "Download one live comment attachment, or preview it with preview=true, through the same audience " +
           "arm and tier that exposed its comment. The entity reference is " +
           "the address the reader used for the thread, so a Requester can " +
           "continue through a converted Request while the stored comment " +
@@ -1490,7 +1530,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "either tombstone all answer 404",
         tags: ["comments"],
         params: CommentParams.extend({ attachmentId: RecordIdSchema }),
-        querystring: EntityRefQuery,
+        querystring: EntityRefQuery.extend({ preview: z.enum(["true"]).optional() }),
         produces: ["application/octet-stream"],
         response: {
           200: z.any().meta({ type: "string", format: "binary" }),
@@ -1529,6 +1569,34 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         !audience.tiers.includes(row.visibility)
       ) {
         throw httpError(404, "No comment attachment exists with this id.");
+      }
+
+      if (request.query.preview === "true") {
+        const nativeType = previewContentType("application/octet-stream", row.filename);
+        const convertFrom = conversionFormatOf("application/octet-stream", row.filename);
+        if (!nativeType && !convertFrom)
+          throw httpError(415, "A preview is not available for this file type.");
+        const source = await app.storage.get(row.fileRef);
+        let preview = source;
+        if (convertFrom) {
+          try {
+            preview = await app.docEngine.convertToPdf(source, convertFrom);
+          } catch (error) {
+            source.destroy();
+            if (error instanceof DocEngineError)
+              throw httpError(
+                422,
+                "This attachment could not be previewed. Download the original file instead.",
+              );
+            throw error;
+          }
+        }
+        reply.header("content-type", nativeType ?? "application/pdf");
+        reply.header("content-disposition", "inline");
+        reply.header("x-content-type-options", "nosniff");
+        reply.header("content-security-policy", "default-src 'none'; sandbox");
+        reply.header("cache-control", "private, no-store");
+        return reply.send(preview);
       }
 
       reply.header("content-type", "application/octet-stream");

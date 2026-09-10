@@ -236,9 +236,8 @@ const requireMember = requireRole("administrator", "legal_team_member");
  * as well (CTR-021). The role alone opens no contract: `teamScope`
  * narrows the answer to the contracts the Contributor holds a
  * `contract_team` row on, and takes a confidential contract away from
- * anyone outside its named team and its Owner (DD-014) — except an
- * Administrator, who reaches every contract with no team row and no
- * Owner assignment at all. Business Users stay refused on every contract
+ * anyone outside its named team and its Owner, including Administrators
+ * (DD-014). Business Users stay refused on every contract
  * surface.
  */
 const requireContractReader = requireRole("administrator", "legal_team_member", "contributor");
@@ -536,8 +535,8 @@ const ContractRowSchema = z.object({
       }),
     )
     .nullable(),
-  /** DD-014's opt-in gate. `true` means only the named team, the Owner,
-   * and Administrators reach this record at all — so every viewer who
+  /** DD-014's opt-in gate. `true` means only the named team and Owner
+   * reach this record at all — so every viewer who
    * receives this row already reaches it, and the flag is here to be
    * drawn (DES-009's marker and banner), never to be inferred from. */
   isConfidential: z.boolean(),
@@ -1567,7 +1566,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           "exactly the contracts they hold a contract_team row on, " +
           "archived and ended ones behind the same flags. A " +
           "confidential contract is listed only for its named team, " +
-          "its Owner, and Administrators — silently absent for " +
+          "or its Owner — silently absent for " +
           "everyone else, so no count can reveal it",
         tags: ["contracts"],
         querystring: z
@@ -1875,7 +1874,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           "restore stays reachable. A Contributor reads a contract they " +
           "hold a contract_team row on, and is answered 404 on one they " +
           "do not. A confidential contract answers the same 404 to " +
-          "anyone outside its named team, its Owner, and Administrators",
+          "anyone outside its named team and Owner",
         tags: ["contracts"],
         params: NumberParams,
         response: { 200: ContractRecordEnvelope, default: problemResponse },

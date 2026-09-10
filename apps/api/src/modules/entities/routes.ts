@@ -24,6 +24,7 @@ import {
   and,
   asc,
   entities,
+  entityGrants,
   entityHoldings,
   entityObligations,
   entityTypeFields,
@@ -53,7 +54,14 @@ import {
   CustomFieldsSchema,
   selectAttachedFields,
 } from "../../lib/custom-fields.js";
-import { entityReachScope, NO_ENTITY, reachedEntity } from "../../lib/entity-access.js";
+import {
+  canManageEntityAccess,
+  hasLiveEntityGrant,
+  entityReachScope,
+  NO_ENTITY,
+  reachedEntity,
+} from "../../lib/entity-access.js";
+import { escapeLikePattern } from "../../lib/like.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { resolveStaffRefs, StaffRequestCustomFieldRefsSchema } from "../requests/projection.js";
 import { entityRecordChildRoutes } from "./record-routes.js";
@@ -64,6 +72,12 @@ import { entityGrantRoutes } from "./grant-routes.js";
 /** ENT-004's access floor: the whole registry is Member+. */
 const requireMember = requireRole("administrator", "legal_team_member");
 const PAGE_SIZE = 50;
+const ISO_4217 = new Set(Intl.supportedValuesOf("currency"));
+const CurrencySchema = z
+  .string()
+  .trim()
+  .transform((code) => code.toUpperCase())
+  .refine((code) => ISO_4217.has(code), { message: "Choose a valid currency." });
 const CursorSchema = z.string().min(1).max(64);
 
 const EntityRowSchema = z.object({
@@ -82,6 +96,7 @@ const EntityRowSchema = z.object({
   sharesAuthorized: z.number().int().nullable(),
   sharesIssued: z.number().int().nullable(),
   parValue: z.number().int().nullable(),
+  parValueCurrency: z.string().nullable(),
   customFields: CustomFieldsSchema,
   isConfidential: z.boolean(),
   archivedAt: z.iso.datetime().nullable(),
@@ -122,6 +137,7 @@ const PersonOptionSchema = z.object({
 });
 
 const EntityRecordEnvelope = z.object({
+  canManageAccess: z.boolean().optional(),
   entity: EntityRowSchema,
   fields: z.array(AttachedCustomFieldSchema),
   customFieldRefs: StaffRequestCustomFieldRefsSchema,
@@ -149,6 +165,7 @@ function toRow(row: Entity, entityTypeName: string) {
     sharesAuthorized: row.sharesAuthorized,
     sharesIssued: row.sharesIssued,
     parValue: row.parValue,
+    parValueCurrency: row.parValueCurrency,
     customFields: row.customFields ?? {},
     isConfidential: row.isConfidential,
     archivedAt: row.archivedAt?.toISOString() ?? null,
@@ -285,6 +302,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
           "signing-entity picker seam",
         tags: ["entities"],
         querystring: z.object({
+          q: z.string().trim().min(1).max(200).optional(),
           includeArchived: z.enum(["true", "false"]).optional(),
           type: z.string().min(1).max(64).optional(),
           status: z.enum(ENTITY_STATUSES).optional(),
@@ -323,6 +341,9 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         .where(
           and(
             request.query.includeArchived === "true" ? undefined : isNull(entities.archivedAt),
+            request.query.q
+              ? sql`${entities.legalName} ilike ${`%${escapeLikePattern(request.query.q)}%`}`
+              : undefined,
             request.query.type ? eq(entities.entityTypeId, request.query.type) : undefined,
             request.query.status ? eq(entities.status, request.query.status) : undefined,
             request.query.jurisdiction
@@ -513,6 +534,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
       );
       return {
         entity: toRow(row.entity, row.entityTypeName),
+        canManageAccess: await canManageEntityAccess(app.db, request.user, row.entity),
         fields: attached,
         customFieldRefs: await resolveStaffRefs(
           app.db,
@@ -584,6 +606,19 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
             status: body.status ?? "active",
           })
           .returning();
+        await tx.insert(entityGrants).values({ entityId: created!.id, userId: request.user.id });
+        await recordActivity(tx, {
+          entityType: "entity",
+          entityId: created!.id,
+          actorId: request.user.id,
+          action: "entity_grant.added",
+          visibility: "legal_only",
+          payload: {
+            legalName: created!.legalName,
+            userId: request.user.id,
+            userName: request.user.displayName,
+          },
+        });
         // The record's own feed entry (DD-017), atomically with the
         // insert. Legal Only: the registry is a Member+ surface (ENT-004).
         await recordActivity(tx, {
@@ -630,6 +665,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
           sharesAuthorized: ShareCapitalSchema.nullable().optional(),
           sharesIssued: ShareCapitalSchema.nullable().optional(),
           parValue: ShareCapitalSchema.nullable().optional(),
+          parValueCurrency: CurrencySchema.nullable().optional(),
           customFields: CustomFieldsInput.optional(),
           isConfidential: z.boolean().optional(),
         }),
@@ -665,8 +701,17 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
             ? body.isConfidential
             : undefined;
         if (confidentialityChange !== undefined) {
-          if (request.user.role !== "administrator") {
-            throw httpError(403, "Only an Administrator can change Entity confidentiality.");
+          if (!(await canManageEntityAccess(tx, request.user, target))) {
+            throw httpError(
+              403,
+              "Only an access grantee or an administrator of an open entity can change confidentiality.",
+            );
+          }
+          if (confidentialityChange && !(await hasLiveEntityGrant(tx, target.id))) {
+            throw httpError(
+              409,
+              "Grant at least one person access before making this entity confidential.",
+            );
           }
           patch.isConfidential = confidentialityChange;
         }
@@ -719,6 +764,24 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         if (body.formedOn !== undefined && body.formedOn !== target.formedOn) {
           patch.formedOn = body.formedOn;
           changed.formedOn = { from: target.formedOn, to: body.formedOn };
+        }
+
+        const parValue = body.parValue === undefined ? target.parValue : body.parValue;
+        const currency =
+          body.parValueCurrency === undefined ? target.parValueCurrency : body.parValueCurrency;
+        if (
+          (body.parValue !== undefined || body.parValueCurrency !== undefined) &&
+          parValue !== null &&
+          !currency
+        ) {
+          throw httpError(400, "Choose a currency for the par value.");
+        }
+        if (
+          body.parValueCurrency !== undefined &&
+          body.parValueCurrency !== target.parValueCurrency
+        ) {
+          patch.parValueCurrency = body.parValueCurrency;
+          changed.parValueCurrency = { from: target.parValueCurrency, to: body.parValueCurrency };
         }
 
         for (const key of ["sharesAuthorized", "sharesIssued", "parValue"] as const) {

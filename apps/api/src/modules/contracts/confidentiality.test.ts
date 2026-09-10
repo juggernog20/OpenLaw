@@ -826,6 +826,7 @@ describe("who may set and clear the flag (M10/2, DD-014)", () => {
     expect(created.statusCode, created.body).toBe(201);
     const contract = created.json().contract as ContractRow;
     await putOnTeam(contract.number, idOf(TEAMMATE), "member");
+    await putOnTeam(contract.number, idOf(ADMIN), "member");
     await setOwner(contract.number, idOf(OWNER));
     return contract;
   }
@@ -1088,11 +1089,8 @@ describe("who still mutates a confidential contract (M10/3)", () => {
     for (const [who, cookies, onTeam, creatorCookies] of [
       ["a team Member", memberCookies, true, adminCookies],
       ["the Owner with no team row", ownerCookies, false, adminCookies],
-      // Made by a Legal Team Member on purpose: the Administrator then
-      // holds no `creator` row and is not the Owner, so their reach here
-      // is the role alone (DD-014) — the row a creator would hold could
-      // not stand in for it.
-      ["the Administrator with neither", adminCookies, false, memberCookies],
+      // The administrator reaches this record through its creator team row.
+      ["an explicitly added Administrator", adminCookies, false, adminCookies],
     ] as const) {
       const walled = await newContract(`Confi writes: ${who} keeps working`, creatorCookies);
       await setOwner(walled.number, idOf(OWNER));
@@ -1189,7 +1187,7 @@ describe("who still mutates a confidential contract (M10/3)", () => {
     it("lets the Owner and the Administrator change it, because the audience is theirs", async () => {
       for (const [who, cookies, creatorCookies] of [
         ["the Owner with no team row", ownerCookies, adminCookies],
-        ["the Administrator with neither", adminCookies, memberCookies],
+        ["an explicitly added Administrator", adminCookies, adminCookies],
       ] as const) {
         const walled = await newContract(`Confi roster: ${who} decides`, creatorCookies);
         await setOwner(walled.number, idOf(OWNER));

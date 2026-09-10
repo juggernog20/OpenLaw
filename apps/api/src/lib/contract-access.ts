@@ -46,7 +46,7 @@
  * **document** on a record they already reach (DD-014, DOC-008). It
  * composes in front of the record's gate the same way — a viewer must
  * pass both — and it is answered out of the same audience rule, because
- * "the named team, the Owner, and Administrators" is one sentence and
+ * "the named team and the Owner" is one sentence and
  * two copies of it would drift. There is no document team: the flag
  * narrows what the contract already allows and never widens it.
  */
@@ -112,11 +112,8 @@ function contractsTheyAreOn(db: Executor, user: AuthenticatedUser): SQL {
 /**
  * How far one viewer sees across the contract table (CTR-021, DD-014).
  *
- * An Administrator sees every contract, confidential or not, so nothing
- * narrows and this answers `undefined` — which drops out of the
- * `and(...)` it is composed into. DD-014 states that as a rule with no
- * exception: an Administrator who must be walled off from a record needs
- * a role change, not a per-record carve-out.
+ * Administrators and Legal Team Members reach open contracts. Confidential
+ * contracts require a team row or ownership, regardless of administrator role.
  *
  * A Contributor sees exactly the contracts they hold a `contract_team`
  * row on, whichever role that row carries: DD-015 makes the Contributor
@@ -150,7 +147,6 @@ function contractsTheyAreOn(db: Executor, user: AuthenticatedUser): SQL {
 export function contractTeamScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
   switch (user.role) {
     case "administrator":
-      return undefined;
     case "legal_team_member":
       return or(
         eq(contracts.isConfidential, false),
@@ -163,7 +159,7 @@ export function contractTeamScope(db: Executor, user: AuthenticatedUser): SQL | 
       return sql`false`;
     default: {
       // A role with no case would fall off the end and answer
-      // `undefined` — the Administrator's whole-table grant. This makes
+      // `undefined` — an unrestricted grant. This makes
       // the compiler refuse that instead: a role added to the union
       // must be answered here before the build passes.
       const unanswered: never = user.role;
@@ -371,17 +367,9 @@ function namedOnTheOwningMatter(db: Executor, user: AuthenticatedUser): SQL {
  * a record they already reach. Composing them the other way round would
  * be a widening, and DD-014's flag only ever narrows.
  *
- * An Administrator sees every document on every contract, so nothing
- * narrows and this answers `undefined` — DD-014's no-exception rule, one
- * level down.
- *
- * Everybody else reaches a confidential document when the owning
- * contract names them: a `contract_team` row of any role, or the Owner
- * clause CTR-022 added. A document that is not confidential is reached
- * by whoever reaches its contract, exactly as before. For a Contributor
- * this adds nothing at all — the team row the flag asks for is the row
- * they already had to hold to reach the contract — which is the flag
- * never widening anybody's access, said again where it could go wrong.
+ * Confidential documents require membership of the owning record's named
+ * audience, including for administrators. Entity documents inherit the
+ * entity's grant gate without a separate per-document audience.
  *
  * A Business User reaches no contract, so they reach no document. It is
  * answered here anyway, for the reason the contract scope gives: a role
@@ -397,7 +385,6 @@ function namedOnTheOwningMatter(db: Executor, user: AuthenticatedUser): SQL {
 export function documentAudienceScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
   switch (user.role) {
     case "administrator":
-      return undefined;
     case "legal_team_member":
     case "contributor":
       return or(
@@ -409,6 +396,7 @@ export function documentAudienceScope(db: Executor, user: AuthenticatedUser): SQ
         // applied before every consumer of this scope runs, so a document
         // arriving here already sits on an Entity the viewer reaches.
         isNotNull(documents.entityId),
+        user.role === "administrator" ? isNotNull(documents.knowledgeItemId) : undefined,
       );
     case "business_user":
       return sql`false`;
@@ -467,7 +455,7 @@ interface Standing {
  *
  * One function serves both levels of DD-014's flag. A confidential
  * contract and a confidential document have the same audience — the
- * contract's named team, the contract's Owner, and Administrators — so
+ * contract's named team and Owner — so
  * they are one rule asked twice rather than two rules that could drift.
  * `isConfidential` is whichever flag is being asked about; `person` is
  * always their standing on the **owning contract**, because a document
@@ -476,7 +464,6 @@ interface Standing {
 function inNamedAudience(person: Standing, isConfidential: boolean): boolean {
   switch (person.role) {
     case "administrator":
-      return true;
     case "legal_team_member":
       return !isConfidential || person.onTeam || person.isOwner;
     // The team row is the Contributor's whole grant, and it satisfies
@@ -503,8 +490,8 @@ export interface ContractAudience {
   tiers: readonly CommentVisibility[];
   /**
    * Whether this viewer is inside the audience of a **confidential
-   * document** on this record (DD-014, DOC-008) — an Administrator, or
-   * somebody the contract names by a team row or as its Owner.
+   * document** on this record (DD-014, DOC-008) — somebody the contract
+   * names by a team row or as its Owner.
    *
    * It is one fact about a person and a record, so it is read here with
    * the reach answer rather than asked again per row. The feed is what
@@ -579,8 +566,8 @@ export async function contractAudience(
  * so an omitted entry never leaves the database and no page count can
  * announce that something was left out.
  *
- * `undefined` for a viewer already inside the audience — an
- * Administrator, or somebody the contract names — which drops out of the
+ * `undefined` for a viewer already inside the audience — somebody the
+ * contract names — which drops out of the
  * `and(...)` it composes into.
  *
  * The match is on the payload's own document keys — `documentId`, and
@@ -601,15 +588,9 @@ export async function contractAudience(
  * it was erased, which is the leak the flag exists to prevent, delivered
  * late.
  *
- * The cost is stated plainly: after an erasure, a viewer the contract
- * does not name loses the story of an **open** document too. That is
- * over-hiding rather than leaking, it is bounded to the rarest act in
- * the product, and DOC-010's own accountability surface — the
- * Administrator's audit log, which reads the table with no record scope
- * — is untouched by any of this. The alternative was a marker written
- * into the erasure's payload and read back by a self-join, which is a
- * rule a later writer can forget to keep, and forgetting it would be
- * silent.
+ * After erasure, off-team viewers lose entries naming even an open document,
+ * because its former audience can no longer be checked. The audit log retains
+ * those entries for the owning record's named audience.
  */
 export function confidentialDocumentEntryScope(
   audience: Pick<ContractAudience, "seesConfidentialDocuments">,
@@ -816,7 +797,7 @@ export interface MentionCandidate {
  * refused.
  *
  * On a confidential contract the list narrows to the named team, the
- * Owner, and Administrators — automatically, because it is the same rule
+ * Owner — automatically, because it is the same rule
  * the row scope applies, and CMT-007 wanted exactly that set. No
  * endpoint changes, and no confirmation offers to add anybody: DES-009's
  * add-as-watcher clause is superseded here.

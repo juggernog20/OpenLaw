@@ -673,6 +673,20 @@
       "when": 1788902516947,
       "tag": "0095_signing_update_mode",
       "breakpoints": true
+    },
+    {
+      "idx": 96,
+      "version": "7",
+      "when": 1789023198450,
+      "tag": "0096_entity_par_value_currency",
+      "breakpoints": true
+    },
+    {
+      "idx": 97,
+      "version": "7",
+      "when": 1789031726092,
+      "tag": "0097_currencies_in_use",
+      "breakpoints": true
     }
   ]
 }

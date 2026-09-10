@@ -93,6 +93,43 @@ function calendarApi(rows: unknown[] = obligations, queries: URLSearchParams[] =
 }
 
 describe("the Entities compliance calendar", () => {
+  it("searches entity names, retains the query in view switches, and clears it", async () => {
+    const other = {
+      ...obligations[0],
+      id: "other",
+      entityId: "other",
+      entity: { id: "other", legalName: "Different Company" },
+      label: "Other annual filing",
+    };
+    stubApi({ signedIn: MEMBER, extra: calendarApi([...obligations, other]) });
+    const { router } = renderAt("/entities");
+    const user = userEvent.setup();
+    const search = await screen.findByRole("searchbox", { name: "Search entities by name" });
+    await user.type(search, "Aldgate");
+    await waitFor(() => expect(screen.queryByText("Other annual filing")).not.toBeInTheDocument());
+    expect(screen.getByText("Overdue annual return")).toBeInTheDocument();
+    expect(search).toHaveFocus();
+    expect(new URLSearchParams(router.state.location.search).get("q")).toBe("Aldgate");
+    expect(screen.getByRole("link", { name: "Chart" })).toHaveAttribute(
+      "href",
+      "/entities?view=chart&q=Aldgate",
+    );
+    expect(screen.getByRole("link", { name: "List" })).toHaveAttribute(
+      "href",
+      "/entities?view=list&q=Aldgate",
+    );
+    await user.click(screen.getByRole("link", { name: "Month" }));
+    await screen.findByRole("grid");
+    expect(new URLSearchParams(router.state.location.search).get("q")).toBe("Aldgate");
+    expect(await screen.findByRole("searchbox", { name: "Search entities by name" })).toHaveValue(
+      "Aldgate",
+    );
+    await user.click(screen.getByRole("button", { name: "Clear entity search" }));
+    await waitFor(() =>
+      expect(new URLSearchParams(router.state.location.search).has("q")).toBe(false),
+    );
+  });
+
   it("opens on the due-date list with filters and the severe overdue treatment", async () => {
     stubApi({ signedIn: MEMBER, extra: calendarApi() });
     renderAt("/entities");
@@ -192,7 +229,7 @@ describe("the Entities compliance calendar", () => {
     expect(within(gridRows[0]!).getAllByRole("columnheader")).toHaveLength(7);
     expect(within(gridRows[1]!).getAllByRole("gridcell")).toHaveLength(7);
     expect(within(grid).getByText("Licence renewal")).toBeInTheDocument();
-    expect(within(grid).getByText("Licence renewal")).toHaveClass("text-link");
+    expect(within(grid).getByText("Licence renewal")).toHaveClass("text-primary");
     expect(screen.getByRole("button", { name: "Today" })).toBeInTheDocument();
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Next month" }));

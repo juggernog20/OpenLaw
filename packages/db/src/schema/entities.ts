@@ -57,6 +57,7 @@ export const entities = pgTable(
     sharesIssued: bigint("shares_issued", { mode: "number" }),
     /** Minor currency units, matching Contract value storage. */
     parValue: bigint("par_value", { mode: "number" }),
+    parValueCurrency: text("par_value_currency"),
     /** Values keyed by catalog Field slug for this Entity's type. Never
      * NULL: the same `{}` floor `matters` and `contracts` carry, so
      * readers index the object without a null branch. */

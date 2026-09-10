@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** Administrator maintenance for the explicit readers of one Confidential Entity. */
+/** Manage the explicit readers of a confidential entity. */
 import { useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Trash2 } from "lucide-react";
@@ -90,7 +90,7 @@ export function EntityGrantsDialog({
         <p id="entity-grants-description" className="mt-1 text-sm text-muted">
           <FormattedMessage
             id="entities.grants.description"
-            defaultMessage="Administrators always have access. Grant Legal Team Members access here."
+            defaultMessage="Only people listed here can access this entity when it is confidential. Administrators also need a grant."
           />
         </p>
         <div className="mt-4 flex flex-col gap-4">
@@ -121,7 +121,7 @@ export function EntityGrantsDialog({
             <select
               aria-label={intl.formatMessage({
                 id: "entities.grants.person",
-                defaultMessage: "Legal Team Member",
+                defaultMessage: "Person",
               })}
               className={CONTROL_CLASS}
               value={selected}

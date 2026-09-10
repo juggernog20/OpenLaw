@@ -6,7 +6,7 @@ import {
   CreateAttachments,
   useCreateAttachments,
 } from "../components/documents/create-attachments";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Form,
   Link,
@@ -28,7 +28,10 @@ import {
   List,
   Network,
   Plus,
+  Search,
+  X,
 } from "lucide-react";
+import { matchesEntityName, searchEntityChart } from "../lib/entity-search";
 import { api } from "../lib/api";
 import { civilToday, formatFullDate } from "../lib/format";
 import {
@@ -97,13 +100,14 @@ function isEntitySortKey(value: string): value is EntityListSortKey {
   return (ENTITY_LIST_SORT_KEYS as readonly string[]).includes(value);
 }
 
-function listQuery(layout: Layout): EntitiesQuery {
+function listQuery(layout: Layout, q = ""): EntitiesQuery {
   const filters = entityListFilters(layout.filters);
   const sort =
     layout.sort && isEntitySortKey(layout.sort.key)
       ? { key: layout.sort.key, dir: layout.sort.dir }
       : null;
   return {
+    ...(q ? { q } : {}),
     ...(filters.type ? { type: filters.type } : {}),
     ...(isEntityStatus(filters.status) ? { status: filters.status } : {}),
     ...(filters.jurisdiction ? { jurisdiction: filters.jurisdiction } : {}),
@@ -117,9 +121,9 @@ function sameQuery(a: Layout, b: Layout): boolean {
   return JSON.stringify(listQuery(a)) === JSON.stringify(listQuery(b));
 }
 
-function querySearch(layout: Layout): string {
+function querySearch(layout: Layout, q = ""): string {
   const params = new URLSearchParams({ view: "list" });
-  for (const [key, value] of Object.entries(listQuery(layout))) params.set(key, String(value));
+  for (const [key, value] of Object.entries(listQuery(layout, q))) params.set(key, String(value));
   return `?${params.toString()}`;
 }
 
@@ -159,6 +163,7 @@ export async function entitiesLoader({ request }: LoaderFunctionArgs) {
   // disabled surface, no surface. The API's 403 stands behind this.
   if (!isMemberPlus(user.role)) return redirect("/");
   const url = new URL(request.url);
+  const q = (url.searchParams.get("q") ?? "").trim().slice(0, 200);
   const requestedView = url.searchParams.get("view");
   const view: "calendar" | "list" | "chart" =
     requestedView === "chart" ? "chart" : requestedView === "list" ? "list" : "calendar";
@@ -178,7 +183,7 @@ export async function entitiesLoader({ request }: LoaderFunctionArgs) {
     // The List view pages; the Calendar's Entity picker and the count
     // under the title need the whole reachable registry.
     view === "list"
-      ? api.GET("/api/v1/entities", { params: { query: listQuery(parsed.layout) } })
+      ? api.GET("/api/v1/entities", { params: { query: listQuery(parsed.layout, q) } })
       : readRegistry(),
     api.GET("/api/v1/entities/types"),
     view === "chart" ? api.GET("/api/v1/entities/chart") : Promise.resolve(undefined),
@@ -216,6 +221,7 @@ export async function entitiesLoader({ request }: LoaderFunctionArgs) {
     activeViewId: opensOn?.id ?? null,
     fromUrl: parsed.fromUrl,
     search: url.search,
+    q,
     listOptions: listOptions?.data,
     loadKey: ++loads,
   };
@@ -239,7 +245,7 @@ export function entitiesShouldRevalidate({
 }
 
 /** Calendar, registry list, or ownership chart; the current link is marked. */
-function ViewSwitch({ view }: Readonly<{ view: "calendar" | "list" | "chart" }>) {
+function ViewSwitch({ view, q }: Readonly<{ view: "calendar" | "list" | "chart"; q: string }>) {
   const intl = useIntl();
   const options = [
     [
@@ -272,9 +278,9 @@ function ViewSwitch({ view }: Readonly<{ view: "calendar" | "list" | "chart" }>)
       {options.map(([key, to, Icon, label]) => (
         <Link
           key={key}
-          to={to}
+          to={q ? `${to}${to.includes("?") ? "&" : "?"}${new URLSearchParams({ q })}` : to}
           aria-current={view === key ? "page" : undefined}
-          className="inline-flex items-center gap-1.5 rounded-chip px-2.5 text-sm aria-[current=page]:bg-accent aria-[current=page]:font-medium"
+          className="inline-flex items-center gap-1.5 rounded-chip px-2.5 text-sm aria-[current=page]:bg-accent/25 aria-[current=page]:text-primary aria-[current=page]:font-medium"
         >
           <Icon size={14} aria-hidden="true" />
           {label}
@@ -309,7 +315,11 @@ function EntitiesPageState() {
   const [views, setViews] = useState<SavedView[]>(loaded.views);
   const [activeViewId, setActiveViewId] = useState<string | null>(loaded.activeViewId);
   const [registerOpen, setRegisterOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [requestBusy, setBusy] = useState(false);
+  const [searchBusy, setSearchBusy] = useState(false);
+  const [search, setSearch] = useState(loaded.q);
+  const [appliedSearch, setAppliedSearch] = useState(loaded.q);
+  const busy = requestBusy || searchBusy;
   const [listError, setListError] = useState<string | null>(null);
   const [pageError, setPageError] = useState(false);
   const [appended, setAppended] = useState<{ count: number; from: string } | null>(null);
@@ -320,20 +330,74 @@ function EntitiesPageState() {
     : builtInLayout(CATALOGUE);
   const modified = !sameLayout(layout, storedLayout);
   const filters = entityListFilters(layout.filters);
-  const narrowed = Object.values(filters).some(Boolean);
+  const narrowed = Boolean(appliedSearch) || Object.values(filters).some(Boolean);
   const hasArchivedRow = rows.some((row) => row.archivedAt !== null);
 
   /** The working registry — archived rows never count (they are data
    * mistakes, not entities), whichever view is showing. */
-  const liveCount = rows.filter((row) => row.archivedAt === null).length;
+  const matchingRows = rows.filter((row) => matchesEntityName(row.legalName, appliedSearch));
+  const liveCount = matchingRows.filter((row) => row.archivedAt === null).length;
+  const matchingCalendar = loaded.calendar.filter((row) =>
+    matchesEntityName(row.entity.legalName, appliedSearch),
+  );
+  const matchingChart = useMemo(
+    () => (chart ? searchEntityChart(chart, appliedSearch) : undefined),
+    [chart, appliedSearch],
+  );
 
   const signOut = useSignOut("/auth/login");
 
   useEffect(() => {
     if (view !== "list" || loaded.fromUrl) return;
-    const search = querySearch(loaded.layout);
+    const search = querySearch(loaded.layout, loaded.q);
     if (search !== loaded.search) mirrorSearch(navigate, search);
-  }, [loaded.fromUrl, loaded.layout, loaded.search, navigate, view]);
+  }, [loaded.fromUrl, loaded.layout, loaded.search, loaded.q, navigate, view]);
+
+  useEffect(() => {
+    const q = search.trim();
+    if (q === appliedSearch || requestBusy) return;
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      if (view === "list") {
+        setSearchBusy(true);
+        setListError(null);
+        const result = await api
+          .GET("/api/v1/entities", {
+            params: { query: listQuery(layout, q) },
+            signal: controller.signal,
+          })
+          .catch(() => undefined);
+        if (controller.signal.aborted) return;
+        setSearchBusy(false);
+        if (!result?.data) {
+          setListError(
+            intl.formatMessage({
+              id: "entities.list.error",
+              defaultMessage: "The registry could not be read. Try again.",
+            }),
+          );
+          return;
+        }
+        setRows(result.data.entities);
+        setCursor(result.data.nextCursor);
+        setAppended(null);
+        setPageError(false);
+      }
+      setAppliedSearch(q);
+      if (view === "list") mirrorSearch(navigate, querySearch(layout, q));
+      else {
+        const params = new URLSearchParams(loaded.search);
+        if (q) params.set("q", q);
+        else params.delete("q");
+        mirrorSearch(navigate, params.size ? `?${params}` : "");
+      }
+    }, 250);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+      setSearchBusy(false);
+    };
+  }, [search, appliedSearch, requestBusy, layout, view, loaded.search, navigate, intl]);
 
   async function commit(next: Layout, nextActiveId: string | null = activeViewId) {
     if (sameQuery(layout, next)) {
@@ -345,7 +409,7 @@ function EntitiesPageState() {
     setBusy(true);
     setListError(null);
     const { data } = await api
-      .GET("/api/v1/entities", { params: { query: listQuery(next) } })
+      .GET("/api/v1/entities", { params: { query: listQuery(next, appliedSearch) } })
       .catch(() => ({ data: undefined }));
     setBusy(false);
     if (!data) {
@@ -363,7 +427,7 @@ function EntitiesPageState() {
     setActiveViewId(nextActiveId);
     setAppended(null);
     setPageError(false);
-    mirrorSearch(navigate, querySearch(next));
+    mirrorSearch(navigate, querySearch(next, appliedSearch));
   }
 
   function setFilter<K extends keyof EntityListFilters>(key: K, value: EntityListFilters[K]) {
@@ -379,7 +443,9 @@ function EntitiesPageState() {
     setBusy(true);
     setPageError(false);
     const { data } = await api
-      .GET("/api/v1/entities", { params: { query: { ...listQuery(layout), cursor } } })
+      .GET("/api/v1/entities", {
+        params: { query: { ...listQuery(layout, appliedSearch), cursor } },
+      })
       .catch(() => ({ data: undefined }));
     setBusy(false);
     if (!data) {
@@ -498,24 +564,65 @@ function EntitiesPageState() {
           }
           actions={
             <>
-              <ViewSwitch view={view} />
+              <ViewSwitch view={view} q={search.trim()} />
               {listControls}
             </>
           }
           primaryAction={registerButton}
           filters={
-            view === "list" && loaded.listOptions ? (
-              <EntityListFilterBar
-                filters={filters}
-                types={entityTypes}
-                options={loaded.listOptions}
-                busy={busy}
-                empty={rows.length === 0}
-                error={listError}
-                onFilter={setFilter}
-                onClear={clearFilters}
-              />
-            ) : undefined
+            <div className="flex flex-col gap-3">
+              <div className="relative w-full max-w-96">
+                <Search
+                  size={16}
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted"
+                />
+                <Input
+                  type="search"
+                  maxLength={200}
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") setSearch("");
+                  }}
+                  aria-label={intl.formatMessage({
+                    id: "entities.search",
+                    defaultMessage: "Search entities by name",
+                  })}
+                  placeholder={intl.formatMessage({
+                    id: "entities.search",
+                    defaultMessage: "Search entities by name",
+                  })}
+                  className="pl-8 pr-8 [&::-webkit-search-cancel-button]:hidden"
+                />
+                {search && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 -translate-y-1/2"
+                    aria-label={intl.formatMessage({
+                      id: "entities.search.clear",
+                      defaultMessage: "Clear entity search",
+                    })}
+                    onClick={() => setSearch("")}
+                  >
+                    <X size={14} aria-hidden="true" />
+                  </Button>
+                )}
+              </div>
+              {view === "list" && loaded.listOptions ? (
+                <EntityListFilterBar
+                  filters={filters}
+                  types={entityTypes}
+                  options={loaded.listOptions}
+                  busy={busy}
+                  empty={rows.length === 0}
+                  error={listError}
+                  onFilter={setFilter}
+                  onClear={clearFilters}
+                />
+              ) : null}
+            </div>
           }
         />
       }
@@ -523,29 +630,41 @@ function EntitiesPageState() {
       <PageTitle title={intl.formatMessage({ id: "entities.title", defaultMessage: "Entities" })} />
       {view === "calendar" ? (
         <ComplianceCalendar
-          rows={loaded.calendar}
+          rows={matchingCalendar}
           entities={rows}
           users={loaded.obligationOptions.users}
-          filters={loaded.filters}
+          filters={{ ...loaded.filters, q: appliedSearch || undefined }}
           initialView={loaded.calendarView}
           initialMonth={loaded.month}
         />
-      ) : view === "chart" && chart ? (
-        <EntityChart chart={chart} />
+      ) : view === "chart" && matchingChart ? (
+        matchingChart.nodes.length ? (
+          <EntityChart key={appliedSearch} chart={matchingChart} />
+        ) : (
+          <div className="rounded-card border border-border-default bg-raised p-8 text-center text-muted">
+            <FormattedMessage
+              id="entities.search.empty"
+              defaultMessage="No entities match your search."
+            />
+          </div>
+        )
       ) : (
         <div className="flex flex-col gap-4">
-          {rows.length === 0 ? (
+          {matchingRows.length === 0 ? (
             <EmptyRegistry
               narrowed={narrowed}
               busy={busy}
-              onClear={clearFilters}
+              onClear={() => {
+                setSearch("");
+                clearFilters();
+              }}
               onRegister={() => setRegisterOpen(true)}
             />
           ) : (
             <ManagedTable
               catalogue={CATALOGUE}
               layout={layout}
-              rows={rows}
+              rows={matchingRows}
               rowKey={(row) => row.id}
               onLayoutChange={(next) => void commit(next)}
               onRowActivate={(row) => void navigate(`/entities/${row.id}`)}
@@ -635,6 +754,7 @@ function ComplianceCalendar({
   entities: EntityRow[];
   users: readonly { id: string; displayName: string }[];
   filters: {
+    q?: string;
     entity?: string;
     assignee?: string;
     from?: string;
@@ -646,7 +766,12 @@ function ComplianceCalendar({
 }>) {
   const intl = useIntl();
   const filtered = Boolean(
-    filters.entity || filters.assignee || filters.from || filters.to || filters.includeCompleted,
+    filters.q ||
+    filters.entity ||
+    filters.assignee ||
+    filters.from ||
+    filters.to ||
+    filters.includeCompleted,
   );
   // Switching between the list and the month keeps the filters the
   // reader has already set; only Clear all drops them.
@@ -656,7 +781,7 @@ function ComplianceCalendar({
   held.set("calendar", "month");
   const monthHref = `/entities?${held.toString()}`;
   const displayClass =
-    "rounded-chip px-2.5 py-1 text-sm aria-[current=page]:bg-accent aria-[current=page]:font-medium";
+    "rounded-chip px-2.5 py-1 text-sm aria-[current=page]:bg-accent/25 aria-[current=page]:text-primary aria-[current=page]:font-medium";
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
@@ -691,6 +816,7 @@ function ComplianceCalendar({
           method="get"
           className="mt-3 grid grid-cols-1 gap-3 @xl/page:grid-cols-[1fr_1fr_10rem_10rem_auto_auto]"
         >
+          {filters.q ? <input type="hidden" name="q" value={filters.q} /> : null}
           {initialView === "month" ? <input type="hidden" name="calendar" value="month" /> : null}
           <CalendarSelect
             id="calendar-entity"
@@ -1033,7 +1159,7 @@ function MonthCalendar({
                       <Link
                         key={row.id}
                         to={`/entities/${row.entityId}/obligations`}
-                        className={`rounded-chip px-1.5 py-1 text-xs hover:underline ${row.overdue ? "bg-status-severe-bg text-status-severe-fg" : "bg-accent text-link"}`}
+                        className={`rounded-chip px-1.5 py-1 text-xs hover:underline ${row.overdue ? "bg-status-severe-bg text-status-severe-fg" : "bg-accent/25 text-primary"}`}
                       >
                         {row.label}
                       </Link>

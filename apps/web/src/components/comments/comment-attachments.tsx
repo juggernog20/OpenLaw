@@ -4,15 +4,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import { FileCheck2, Paperclip, X } from "lucide-react";
+import { Download, FileCheck2, Paperclip, X } from "lucide-react";
 import { MAX_COMMENT_ATTACHMENTS } from "@openlaw/shared";
 import { fileCommentAttachment, type Comment, type CommentEntityType } from "../../lib/comments";
 import { DOCUMENT_VERSION_KINDS, type HandSetDocumentVersionKind } from "../../lib/documents";
-import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
+import { CONTROL_CLASS } from "../../lib/form-controls";
 import { problem } from "../../lib/problem";
 import { ConfidentialToggle } from "../confidential-toggle";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
+import { AutoResizeTextarea } from "../auto-resize-textarea";
+import { AttachmentPreview } from "./attachment-preview";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 
@@ -147,6 +149,18 @@ export function CommentAttachmentRows({
   const [filingAttachment, setFilingAttachment] = useState<
     NonNullable<Comment["attachments"]>[number] | null
   >(null);
+  const [previewAttachment, setPreviewAttachment] = useState<
+    NonNullable<Comment["attachments"]>[number] | null
+  >(null);
+  const fileLabel = filing?.recordHref.startsWith("/matters/")
+    ? intl.formatMessage({
+        id: "comments.attachments.fileMatter",
+        defaultMessage: "File to Matter",
+      })
+    : intl.formatMessage({
+        id: "comments.attachments.fileContract",
+        defaultMessage: "File to Contract",
+      });
   if (!comment.attachments?.length) return null;
   return (
     <ul
@@ -160,22 +174,34 @@ export function CommentAttachmentRows({
         <li key={attachment.id} className="flex min-w-0 flex-col gap-0.5 text-sm">
           <span className="flex min-w-0 items-center gap-1.5">
             <Paperclip size={16} className="shrink-0 text-muted" aria-hidden="true" />
-            <a
-              className="truncate text-link underline-offset-2 hover:underline"
-              href={commentAttachmentHref(comment.id, attachment.id, entityType, entityId)}
-              download={attachment.filename}
+            <button
+              type="button"
+              className="min-w-0 truncate rounded-button text-left text-link underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-link"
+              onClick={() => setPreviewAttachment(attachment)}
             >
               {attachment.filename}
-            </a>
+            </button>
+            <Button asChild variant="ghost" size="sm" className="ms-auto shrink-0">
+              <a
+                href={commentAttachmentHref(comment.id, attachment.id, entityType, entityId)}
+                download={attachment.filename}
+                aria-label={intl.formatMessage(
+                  { id: "comments.attachments.download", defaultMessage: "Download {filename}" },
+                  { filename: attachment.filename },
+                )}
+              >
+                <Download size={16} aria-hidden="true" />
+              </a>
+            </Button>
             {filing?.canFile && onChanged && !attachment.filed && (
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="ms-auto shrink-0"
+                className="shrink-0"
                 onClick={() => setFilingAttachment(attachment)}
               >
-                <FormattedMessage id="comments.attachments.file" defaultMessage="File" />
+                {fileLabel}
               </Button>
             )}
           </span>
@@ -189,7 +215,7 @@ export function CommentAttachmentRows({
                   destination: filing ? (
                     <a
                       className="truncate text-link underline-offset-2 hover:underline"
-                      href={filing.recordHref}
+                      href={`${filing.recordHref}?${new URLSearchParams({ doc: attachment.filed.documentId, version: attachment.filed.versionId })}`}
                       onClick={(event) => {
                         const opened = filing.onOpen(
                           attachment.filed!.documentId,
@@ -215,6 +241,23 @@ export function CommentAttachmentRows({
           )}
         </li>
       ))}
+      {previewAttachment && (
+        <AttachmentPreview
+          key={previewAttachment.id}
+          filename={previewAttachment.filename}
+          href={commentAttachmentHref(comment.id, previewAttachment.id, entityType, entityId)}
+          onClose={() => setPreviewAttachment(null)}
+          fileLabel={fileLabel}
+          {...(filing?.canFile && onChanged && !previewAttachment.filed
+            ? {
+                onFile: () => {
+                  setFilingAttachment(previewAttachment);
+                  setPreviewAttachment(null);
+                },
+              }
+            : {})}
+        />
+      )}
       {filingAttachment && filing && onChanged && (
         <FilingDialog
           comment={comment}
@@ -410,9 +453,8 @@ function FilingDialog({
                 <Label htmlFor="comment-filing-note">
                   <FormattedMessage id="comments.filing.note" defaultMessage="Note" />
                 </Label>
-                <textarea
+                <AutoResizeTextarea
                   id="comment-filing-note"
-                  className={TEXTAREA_CLASS}
                   maxLength={2000}
                   value={note}
                   placeholder={intl.formatMessage({

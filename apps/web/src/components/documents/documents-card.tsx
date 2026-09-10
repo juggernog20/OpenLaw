@@ -125,6 +125,8 @@
  * (CTR-022) — so that item is drawn for those three and nobody else.
  */
 
+import { BulkDocumentActions } from "./bulk-document-actions";
+import { Checkbox } from "../ui/checkbox";
 import { useDocumentDrag } from "./use-document-drag";
 import { Fragment, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { useRecord } from "../record-context";
@@ -310,6 +312,8 @@ const FOLDER_SKELETON_ROWS = 3;
  * same fifteen through two call sites is how the two come to differ.
  */
 interface RowContext {
+  selected: ReadonlySet<string>;
+  onSelect: (documentId: string, selected: boolean) => void;
   documentDrag: ReturnType<typeof useDocumentDrag<ContractDocument>>;
   showKind: boolean;
   designations: boolean;
@@ -555,6 +559,7 @@ export function DocumentsCard({
   /** The folder dialog that is open, or none. */
   const [folderDialog, setFolderDialog] = useState<FolderDialog | null>(null);
   /** The document a "Move to folder" dialog is open for, or none. */
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [filing, setFiling] = useState<ContractDocument | null>(null);
   const [composer, setComposer] = useState<Composer | null>(null);
   /**
@@ -1364,9 +1369,44 @@ export function DocumentsCard({
   );
   const showActionColumn = showHeaderActions || comparisonActions;
 
+  const knownDocuments = new Map(
+    [...documents, ...[...listings.values()].flatMap((listing) => listing.documents)].map(
+      (document) => [document.id, document],
+    ),
+  );
+  const selectedDocuments = [...knownDocuments.values()].filter((document) =>
+    selected.has(document.id),
+  );
+  const visibleDocuments = [
+    ...documents,
+    ...[...listings]
+      .filter(([folderId]) => {
+        let folder = folders.find((candidate) => candidate.id === folderId);
+        for (let depth = 0; folder && depth <= folders.length; depth += 1) {
+          if (!openFolders.has(folder.id)) return false;
+          if (folder.parentId === null) return true;
+          folder = folders.find((candidate) => candidate.id === folder?.parentId);
+        }
+        return false;
+      })
+      .flatMap(([, listing]) => listing.documents),
+  ];
+  function selectDocument(documentId: string, checked: boolean) {
+    setSelected((current) => {
+      const next = new Set(current);
+      if (checked) next.add(documentId);
+      else next.delete(documentId);
+      return next;
+    });
+  }
+  const allSelected =
+    visibleDocuments.length > 0 && visibleDocuments.every((document) => selected.has(document.id));
+
   /** Everything a document row draws from, built once and handed to
    * every listing — the record root's and each open folder's. */
   const rowContext: RowContext = {
+    selected,
+    onSelect: selectDocument,
     documentDrag,
     showKind: record.entityType !== "matter",
     designations: supportsDesignations(record.entityType),
@@ -1537,6 +1577,22 @@ export function DocumentsCard({
           </div>
         )}
       </header>
+      {!frozen && selectedDocuments.length > 0 && (
+        <BulkDocumentActions
+          documents={selectedDocuments}
+          folders={folders}
+          canMove={record.entityType !== "knowledge_item"}
+          canDelete={canErase}
+          busy={busy}
+          onBusy={setBusy}
+          onClear={() => setSelected(new Set())}
+          onFinished={async (failedIds) => {
+            await applyPaper();
+            setSelected(new Set(failedIds));
+          }}
+        />
+      )}
+
       {/* A record with folders on it but no paper still draws the
           table: the folders are the record's organization, and hiding
           them behind the paper's empty state would say the tree is not
@@ -1556,7 +1612,35 @@ export function DocumentsCard({
             <thead>
               <tr className="text-start text-sm font-medium text-muted">
                 <th scope="col" className="px-4 py-2 text-start font-medium">
-                  <FormattedMessage id="documents.column.name" defaultMessage="Name" />
+                  <span className="flex items-center gap-3">
+                    {!frozen && (
+                      <Checkbox
+                        aria-label={intl.formatMessage({
+                          id: "documents.selectAll",
+                          defaultMessage: "Select visible documents",
+                        })}
+                        disabled={busy || visibleDocuments.length === 0}
+                        checked={
+                          allSelected
+                            ? true
+                            : visibleDocuments.some((document) => selected.has(document.id))
+                              ? "indeterminate"
+                              : false
+                        }
+                        onCheckedChange={() =>
+                          setSelected((current) => {
+                            const next = new Set(current);
+                            for (const document of visibleDocuments) {
+                              if (allSelected) next.delete(document.id);
+                              else next.add(document.id);
+                            }
+                            return next;
+                          })
+                        }
+                      />
+                    )}
+                    <FormattedMessage id="documents.column.name" defaultMessage="Name" />
+                  </span>
                 </th>
                 {record.entityType !== "matter" && (
                   <th scope="col" className="w-32 px-4 py-2 text-start font-medium">
@@ -1835,6 +1919,7 @@ function DocumentRows({
               tabIndex={document.id === rows.appended?.from ? -1 : undefined}
               className={cn(
                 "border-t border-border-default",
+                rows.selected.has(document.id) && "bg-hover",
                 rows.documentDrag.source?.id === document.id && "opacity-50",
               )}
               draggable={!rows.frozen && !rows.busy && rows.folders && !document.archivedAt}
@@ -1849,6 +1934,19 @@ function DocumentRows({
             >
               <td className="px-4 py-2.5">
                 <span className="flex items-start gap-1">
+                  {!rows.frozen && (
+                    <Checkbox
+                      className="me-2 mt-1"
+                      aria-label={rows.intl.formatMessage(
+                        { id: "documents.select", defaultMessage: "Select {title}" },
+                        { title: document.title },
+                      )}
+                      checked={rows.selected.has(document.id)}
+                      disabled={rows.busy}
+                      onCheckedChange={(checked) => rows.onSelect(document.id, checked === true)}
+                    />
+                  )}
+
                   {depth > 0 && (
                     <span
                       aria-hidden="true"
@@ -2225,6 +2323,8 @@ function FolderRows({
               >
                 <td className="px-4 py-2.5">
                   <span className="flex items-center gap-1">
+                    {!rows.frozen && <span className="me-2 size-4 shrink-0" aria-hidden="true" />}
+
                     {/* 18px a level, drawn as a spacer at the head of the
                         cell rather than as padding on the row: one rule
                         for both row kinds, and nothing positioned by
@@ -3302,20 +3402,7 @@ function DocumentActions({
   );
 }
 
-/**
- * DOC-010's typed confirmation: the Administrator types the name of what
- * they are destroying.
- *
- * Proportionate to what it takes. Archiving is one click, because it
- * destroys nothing; this removes the record, every round of the chain,
- * and every stored file, and there is no undo — so the dialog names the
- * consequence before the verb and asks for the document's own name, in
- * full, before the button will do anything (DES-025's normalization
- * point 2 names this as the pattern DOC-010 asks for).
- *
- * The typed value is sent to the seam rather than only checked here: the
- * dialog can be skipped, and the seam is where the rule has to hold.
- */
+/** Confirm deletion with a fixed word while identifying the document in the warning. */
 function DeleteDialog({
   document,
   busy,
@@ -3331,12 +3418,12 @@ function DeleteDialog({
   const intl = useIntl();
   const [typed, setTyped] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const matches = typed.trim() === document.title.trim();
+  const matches = typed.trim().toLowerCase() === "delete";
 
   async function submit() {
     if (busy || !matches) return;
     setError(null);
-    setError(await onConfirm(typed.trim()));
+    setError(await onConfirm(document.title));
   }
 
   return (
@@ -3365,8 +3452,7 @@ function DeleteDialog({
           <Label htmlFor="document-delete-confirm">
             <FormattedMessage
               id="documents.delete.confirmLabel"
-              defaultMessage="Type {title} to confirm"
-              values={{ title: document.title }}
+              defaultMessage='Type "delete" to confirm'
             />
           </Label>
           <Input
@@ -3377,11 +3463,6 @@ function DeleteDialog({
             // mount inside a click handler, not a page load.
             autoFocus
             autoComplete="off"
-            // The filename's ceiling, not the rename field's: a title
-            // seeded from a long filename can run past 200, and the box
-            // has to be able to hold every name a document can carry —
-            // a shorter cap would leave this button disabled forever.
-            maxLength={255}
             onChange={(event) => {
               setTyped(event.target.value);
               setError(null);

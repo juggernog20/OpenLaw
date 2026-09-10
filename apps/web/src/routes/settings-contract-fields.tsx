@@ -64,6 +64,7 @@ const FIELD_TYPES = [
   "text",
   "long_text",
   "number",
+  "currency",
   "date",
   "boolean",
   "single_select",
@@ -104,7 +105,7 @@ function typeLabel(intl: IntlShape, fieldType: FieldType): string {
       id: "settings.contractFields.typeLabel",
       defaultMessage:
         "{type, select, text {Text} long_text {Long text} number {Number} " +
-        "date {Date} boolean {Boolean} single_select {Single select} " +
+        "date {Date} currency {Currency} boolean {Boolean} single_select {Single select} " +
         "multi_select {Multi select} user {User} entity {Entity} other {Unknown}}",
     },
     { type: fieldType },

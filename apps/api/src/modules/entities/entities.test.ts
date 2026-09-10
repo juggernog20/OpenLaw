@@ -171,7 +171,7 @@ describe("the ENT-004 access floor", () => {
       url: `/api/v1/entities/${id}/grants`,
       cookies: memberCookies,
     });
-    expect(memberGrantRead.statusCode, memberGrantRead.body).toBe(403);
+    expect(memberGrantRead.statusCode, memberGrantRead.body).toBe(404);
     const added = await harness.app.inject({
       method: "POST",
       url: `/api/v1/entities/${id}/grants`,

@@ -1409,6 +1409,49 @@ describe("the /contracts/:number record page", () => {
     );
   });
 
+  it("adds a currency without saving or discarding the unfinished contract value", async () => {
+    const api = recordApi(
+      contractRow({ value: { amount: 10000, currency: "USD", cadence: "one_time" } }),
+    );
+    let currencies = ["USD"];
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/org/currencies") {
+          if (call.method === "POST")
+            currencies = [...currencies, (call.body as { code: string }).code];
+          return json(200, { currencies, canManage: true });
+        }
+        return api.handler(call);
+      },
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+    const amount = await screen.findByLabelText("Amount");
+    await user.clear(amount);
+    await user.type(amount, "250");
+    const picker = screen.getByLabelText("Currency");
+    await user.selectOptions(picker, "__add_currency__");
+    let dialog = await screen.findByRole("dialog", { name: "Add new currency" });
+    expect(api.patches).toEqual([]);
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    expect(amount).toHaveValue(250);
+    expect(api.patches).toEqual([]);
+    await user.selectOptions(picker, "__add_currency__");
+    dialog = await screen.findByRole("dialog", { name: "Add new currency" });
+    await user.type(within(dialog).getByRole("searchbox"), "euro");
+    await user.click(within(dialog).getByRole("button", { name: "EUR Euro" }));
+    await waitFor(() => expect(picker).toHaveValue("EUR"));
+    expect(api.patches).toEqual([]);
+    expect(amount).toHaveValue(250);
+    await leaveValueGroup(user);
+    await waitFor(() =>
+      expect(api.patches).toEqual([
+        { value: { amount: 25000, currency: "EUR", cadence: "one_time" } },
+      ]),
+    );
+  });
+
   it("commits the amount, the currency, and the cadence as one PATCH", async () => {
     const api = recordApi(contractRow());
     stubApi({ signedIn: MEMBER, extra: api.handler });
@@ -3279,17 +3322,17 @@ describe("the contract record's comment applet (M9/2)", () => {
       "Hold the 1x cap.",
       "Signature date is the 14th.",
     ]);
-    expect(within(rows[0]!).getByText("Working team")).toBeInTheDocument();
-    expect(within(rows[1]!).getByText("Legal only")).toBeInTheDocument();
-    expect(within(rows[2]!).getByText("Full thread")).toBeInTheDocument();
+    expect(within(rows[0]!).getByText("Internal team")).toBeInTheDocument();
+    expect(within(rows[1]!).getByText("Legal Only")).toBeInTheDocument();
+    expect(within(rows[2]!).getByText("Contract Team")).toBeInTheDocument();
     expect(within(rows[2]!).getByText("Casey Contributor")).toBeInTheDocument();
     // CMT-003: the tier reads peripherally, not by squinting at a badge
     // — the row is washed and the badge carries DES-009's lock.
     expect(rows[1]).toHaveClass("bg-legal-only-bg");
     expect(rows[0]).not.toHaveClass("bg-legal-only-bg");
     // Asserted structurally, for the reason this suite's header gives.
-    expect(within(rows[1]!).getByText("Legal only").querySelector("svg")).not.toBeNull();
-    expect(within(rows[0]!).getByText("Working team").querySelector("svg")).toBeNull();
+    expect(within(rows[1]!).getByText("Legal Only").querySelector("svg")).not.toBeNull();
+    expect(within(rows[0]!).getByText("Internal team").querySelector("svg")).toBeNull();
 
     // The panel header counts what is on screen — the filtered set is
     // all there is, so no total can leak a hidden row.
@@ -3309,7 +3352,7 @@ describe("the contract record's comment applet (M9/2)", () => {
     expect(screen.queryByRole("list", { name: "Comments" })).not.toBeInTheDocument();
   });
 
-  it("offers a Legal Team Member three segments, preset to Working team, each naming its audience", async () => {
+  it("offers a Legal Team Member two segments, preset to Contract Team, each naming its audience", async () => {
     const user = userEvent.setup();
     stubApi({ signedIn: MEMBER, extra: pageApi(commentsApi()) });
     renderAt("/contracts/42");
@@ -3319,18 +3362,19 @@ describe("the contract record's comment applet (M9/2)", () => {
     const segments = within(panel).getAllByRole("radio");
     expect(segments.map((segment) => segment.getAttribute("value"))).toEqual([
       "legal_only",
-      "working_team",
       "full_thread",
     ]);
     // DD-016: a record page opens on the working group, so the common
     // case needs no decision.
-    expect(within(panel).getByRole("radio", { name: "Working team" })).toBeChecked();
+    expect(within(panel).getByRole("radio", { name: "Contract Team" })).toBeChecked();
     expect(
-      within(panel).getByText("Visible to the legal team and Contributors on this record."),
+      within(panel).getByText(
+        "Visible to the legal team, Contract team members, and the requester.",
+      ),
     ).toBeInTheDocument();
 
     // The audience is named before the post, never after it (CMT-003).
-    await user.click(within(panel).getByRole("radio", { name: "Legal only" }));
+    await user.click(within(panel).getByRole("radio", { name: "Legal Only" }));
     expect(
       within(panel).getByText("Visible to Administrators and Legal Team Members."),
     ).toBeInTheDocument();
@@ -3344,7 +3388,7 @@ describe("the contract record's comment applet (M9/2)", () => {
     await openChat(user);
 
     const panel = await screen.findByRole("complementary", { name: "Comments" });
-    await user.click(within(panel).getByRole("radio", { name: "Legal only" }));
+    await user.click(within(panel).getByRole("radio", { name: "Legal Only" }));
     await user.type(within(panel).getByLabelText("New comment"), "Hold the 1x cap.");
     await user.click(within(panel).getByRole("button", { name: "Comment" }));
 
@@ -3364,7 +3408,7 @@ describe("the contract record's comment applet (M9/2)", () => {
     );
     expect(rows).toHaveLength(2);
     expect(within(rows[1]!).getByText("Hold the 1x cap.")).toBeInTheDocument();
-    expect(within(rows[1]!).getByText("Legal only")).toBeInTheDocument();
+    expect(within(rows[1]!).getByText("Legal Only")).toBeInTheDocument();
     // The box empties, so the next comment starts clean.
     expect(within(panel).getByLabelText("New comment")).toHaveValue("");
   });
@@ -3381,7 +3425,9 @@ describe("the contract record's comment applet (M9/2)", () => {
     renderAt("/contracts/42");
     await openChat(user);
 
-    expect(await screen.findByRole("link", { name: "counterparty markup.pdf" })).toHaveAttribute(
+    expect(
+      await screen.findByRole("link", { name: "Download counterparty markup.pdf" }),
+    ).toHaveAttribute(
       "href",
       "/api/v1/comments/c-paper/attachments/a-paper?entityType=contract&entityId=c1",
     );
@@ -3404,10 +3450,88 @@ describe("the contract record's comment applet (M9/2)", () => {
     expect(form.get("entityType")).toBe("contract");
     expect(form.get("entityId")).toBe("c1");
     expect((form.getAll("file") as File[]).map((file) => file.name)).toEqual(["round-two.pdf"]);
-    expect(await within(panel).findByRole("link", { name: "round-two.pdf" })).toBeInTheDocument();
+    expect(await within(panel).findByRole("button", { name: "round-two.pdf" })).toBeInTheDocument();
     expect(
       within(panel).queryByRole("list", { name: "Files attached to this comment" }),
     ).toBeNull();
+  });
+
+  it("posts person and document mentions together and preserves the file link when editing", async () => {
+    const user = userEvent.setup();
+    const comments = commentsApi();
+    const base = pageApi(comments);
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/documents")
+          return json(200, {
+            documents: [
+              {
+                id: "doc-sample",
+                title: "Sample Arrangement Agreement",
+                owner: {
+                  kind: "matter",
+                  id: "m-12",
+                  number: 12,
+                  reference: "M-12",
+                  title: "Advice",
+                },
+                currentVersion: { id: "version-sample" },
+              },
+            ],
+            nextCursor: null,
+          });
+        return base(call);
+      },
+    });
+    renderAt("/contracts/42");
+    await openChat(user);
+    const panel = await screen.findByRole("complementary", { name: "Comments" });
+    const box = await within(panel).findByRole("textbox", { name: "New comment" });
+    await user.type(box, "@Nadia");
+    await user.click(await within(panel).findByRole("option", { name: "Nadia Counsel" }));
+    await user.type(box, "please look at @Sample");
+    expect(within(panel).getByRole("tab", { name: "People" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(within(panel).getByText("No matching people")).toBeInTheDocument();
+    await user.click(within(panel).getByRole("tab", { name: "Files" }));
+    expect(box).toHaveFocus();
+    expect(box).toHaveValue("@Nadia Counsel please look at @Sample");
+    expect(within(panel).getByRole("tab", { name: "Files" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    await user.click(
+      await within(panel).findByRole("option", { name: /Sample Arrangement Agreement/ }),
+    );
+    await user.click(within(panel).getByRole("button", { name: "Comment" }));
+    await waitFor(() => expect(comments.posts).toHaveLength(1));
+    const href = "/matters/12/documents?doc=doc-sample&version=version-sample";
+    expect(comments.posts[0]).toMatchObject({
+      body: `@Nadia Counsel please look at [@Sample Arrangement Agreement](${href})`,
+      mentions: ["u2"],
+    });
+    expect(
+      await screen.findByRole("link", { name: "Sample Arrangement Agreement" }),
+    ).toHaveAttribute("href", href);
+    await user.click(screen.getByRole("button", { name: "Comment actions" }));
+    await user.click(screen.getByRole("menuitem", { name: "Edit" }));
+    const edit = screen.getByRole("textbox", { name: "Edit comment" });
+    expect(edit).toHaveValue("@Nadia Counsel please look at @Sample Arrangement Agreement");
+    await user.type(edit, " today.");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(comments.corrections).toHaveLength(1));
+    expect(comments.corrections[0]).toMatchObject({
+      body: {
+        body: `@Nadia Counsel please look at [@Sample Arrangement Agreement](${href}) today.`,
+      },
+    });
+    expect(screen.getByRole("link", { name: "Sample Arrangement Agreement" })).toHaveAttribute(
+      "href",
+      href,
+    );
   });
 
   it("keeps the draft and shows the generic refusal for a non-JSON upload 413", async () => {
@@ -3455,7 +3579,7 @@ describe("the contract record's comment applet (M9/2)", () => {
     await openChat(user);
 
     const panel = await screen.findByRole("complementary", { name: "Comments" });
-    await user.click(within(panel).getByRole("button", { name: "File" }));
+    await user.click(within(panel).getByRole("button", { name: "File to Contract" }));
     const dialog = await screen.findByRole("dialog", { name: "File attachment" });
     expect(within(dialog).getByLabelText("Document name")).toHaveValue("first-draft.pdf");
     const confidential = within(dialog).getByRole("switch", {
@@ -3483,8 +3607,10 @@ describe("the contract record's comment applet (M9/2)", () => {
       await within(panel).findByRole("link", {
         name: "Counterparty paper, version 1",
       }),
-    ).toHaveAttribute("href", "/contracts/42/documents");
-    expect(within(panel).queryByRole("button", { name: "File" })).not.toBeInTheDocument();
+    ).toHaveAttribute("href", "/contracts/42/documents?doc=doc-filed&version=ver-filed");
+    expect(
+      within(panel).queryByRole("button", { name: "File to Contract" }),
+    ).not.toBeInTheDocument();
   });
 
   it("files another attachment as a new Version and proposes Confidential off outside Legal Only", async () => {
@@ -3521,7 +3647,7 @@ describe("the contract record's comment applet (M9/2)", () => {
     await openChat(user);
 
     const panel = await screen.findByRole("complementary", { name: "Comments" });
-    await user.click(within(panel).getByRole("button", { name: "File" }));
+    await user.click(within(panel).getByRole("button", { name: "File to Contract" }));
     const dialog = await screen.findByRole("dialog", { name: "File attachment" });
     expect(
       within(dialog).getByRole("switch", {
@@ -3567,7 +3693,7 @@ describe("the contract record's comment applet (M9/2)", () => {
     renderAt("/contracts/42");
     await openChat(user);
     const panel = await screen.findByRole("complementary", { name: "Comments" });
-    await user.click(within(panel).getByRole("button", { name: "File" }));
+    await user.click(within(panel).getByRole("button", { name: "File to Contract" }));
 
     const dialog = await screen.findByRole("dialog", { name: "File attachment" });
     expect(await within(dialog).findByRole("alert")).toHaveTextContent(
@@ -3592,7 +3718,7 @@ describe("the contract record's comment applet (M9/2)", () => {
     renderAt("/contracts/42");
     await openChat(user);
     const memberPanel = await screen.findByRole("complementary", { name: "Comments" });
-    await user.click(within(memberPanel).getByRole("button", { name: "File" }));
+    await user.click(within(memberPanel).getByRole("button", { name: "File to Contract" }));
     const dialog = await screen.findByRole("dialog", { name: "File attachment" });
     await user.click(within(dialog).getByRole("button", { name: "File" }));
     expect(
@@ -3627,11 +3753,13 @@ describe("the contract record's comment applet (M9/2)", () => {
     renderAt("/contracts/42");
     await openChat(user);
     const panel = await screen.findByRole("complementary", { name: "Comments" });
-    expect(within(panel).queryByRole("button", { name: "File" })).not.toBeInTheDocument();
+    expect(
+      within(panel).queryByRole("button", { name: "File to Contract" }),
+    ).not.toBeInTheDocument();
     expect(within(panel).getByRole("link", { name: "Negotiation, version 2" })).toBeVisible();
   });
 
-  it("gives a Contributor two segments and no trace of a Legal Only comment", async () => {
+  it("gives a Contributor the Contract Team audience and no trace of a Legal Only comment", async () => {
     const user = userEvent.setup();
     // The API filtered at query time, so the Legal Only row is not in
     // the answer at all — there is no placeholder here to render.
@@ -3658,14 +3786,14 @@ describe("the contract record's comment applet (M9/2)", () => {
       within(panel)
         .getAllByRole("radio")
         .map((radio) => radio.getAttribute("value")),
-    ).toEqual(["working_team", "full_thread"]);
-    expect(within(panel).queryByRole("radio", { name: "Legal only" })).not.toBeInTheDocument();
+    ).toEqual(["full_thread"]);
+    expect(within(panel).queryByRole("radio", { name: "Legal Only" })).not.toBeInTheDocument();
 
     const rows = within(await screen.findByRole("list", { name: "Comments" })).getAllByRole(
       "listitem",
     );
     expect(rows).toHaveLength(2);
-    expect(within(panel).queryByText("Legal only")).not.toBeInTheDocument();
+    expect(within(panel).queryByText("Legal Only")).not.toBeInTheDocument();
     expect(panel.textContent).not.toContain("1x cap");
     // The count is the filtered set's, so it hides no gap either.
     expect(within(panel).getByRole("img", { name: "2 comments" })).toBeInTheDocument();
@@ -3696,7 +3824,7 @@ describe("the contract record's comment applet (M9/2)", () => {
           entityType: "contract",
           entityId: "c1",
           body: "Procurement has the PO ready.",
-          visibility: "working_team",
+          visibility: "full_thread",
           mentions: [],
         },
       ]);
@@ -3799,7 +3927,9 @@ describe("the contract record's comment applet (M9/2)", () => {
       const { panel, box } = await composerIn(user);
 
       await user.type(box, "@Cas");
-      const list = await within(panel).findByRole("listbox", { name: "People you can mention" });
+      const list = await within(panel).findByRole("listbox", {
+        name: "People and files you can mention",
+      });
       // Narrowed to what was typed: the other candidate is not offered.
       expect(within(list).getAllByRole("option")).toHaveLength(1);
       expect(within(list).getByRole("option", { name: "Casey Contributor" })).toBeInTheDocument();
@@ -3811,6 +3941,31 @@ describe("the contract record's comment applet (M9/2)", () => {
       // a chip rather than as raw text.
       const mentioned = within(panel).getByRole("list", { name: "Mentioned" });
       expect(within(mentioned).getByText("Casey Contributor")).toBeInTheDocument();
+    });
+
+    it("switches picker tabs by keyboard without losing the query", async () => {
+      const user = userEvent.setup();
+      const base = pageApi(commentsApi());
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call) =>
+          call.url.pathname === "/api/v1/documents"
+            ? json(200, { documents: [], nextCursor: null })
+            : base(call),
+      });
+      renderAt("/contracts/42");
+      const { panel, box } = await composerIn(user);
+      await user.type(box, "@Nadia");
+      await user.tab();
+      expect(within(panel).getByRole("tab", { name: "People" })).toHaveFocus();
+      await user.keyboard("{ArrowRight}");
+      expect(within(panel).getByRole("tab", { name: "Files" })).toHaveFocus();
+      expect(await within(panel).findByText("No matching files")).toBeInTheDocument();
+      expect(box).toHaveValue("@Nadia");
+      await user.keyboard("{ArrowLeft}{ArrowDown}{Enter}");
+      expect(box).toHaveValue("@Nadia Counsel ");
+      await user.type(box, "please review this.");
+      expect(within(panel).queryByRole("tablist")).not.toBeInTheDocument();
     });
 
     it("picks the active row with Enter rather than posting a half-written comment", async () => {
@@ -3842,7 +3997,7 @@ describe("the contract record's comment applet (M9/2)", () => {
             entityType: "contract",
             entityId: "c1",
             body: "@Casey Contributor what did procurement say?",
-            visibility: "working_team",
+            visibility: "full_thread",
             mentions: ["u3"],
           },
         ]);
@@ -3872,7 +4027,7 @@ describe("the contract record's comment applet (M9/2)", () => {
             entityType: "contract",
             entityId: "c1",
             body: "over to you.",
-            visibility: "working_team",
+            visibility: "full_thread",
             mentions: [],
           },
         ]);
@@ -3886,16 +4041,15 @@ describe("the contract record's comment applet (M9/2)", () => {
       renderAt("/contracts/42");
       const { panel, box } = await composerIn(user);
 
-      await user.click(within(panel).getByRole("radio", { name: "Legal only" }));
+      await user.click(within(panel).getByRole("radio", { name: "Legal Only" }));
       await user.type(box, "@Casey{Enter}what did procurement say?");
       await user.click(within(panel).getByRole("button", { name: "Comment" }));
 
       const dialog = await screen.findByRole("dialog");
       expect(within(dialog).getByText("Widen the audience?")).toBeInTheDocument();
-      // It names the person, and it offers Working team — the narrowest
-      // tier that includes them, never a jump to Full thread.
+      // Promotion names the Contract Team audience, including the Requester.
       expect(dialog.textContent).toContain("Casey Contributor cannot see a legal only comment");
-      expect(dialog.textContent).toContain("working team");
+      expect(dialog.textContent).toContain("contract team");
       expect(dialog.textContent).not.toContain("full thread");
       // Nothing is posted while the question is open.
       expect(comments.posts).toEqual([]);
@@ -3907,7 +4061,7 @@ describe("the contract record's comment applet (M9/2)", () => {
             entityType: "contract",
             entityId: "c1",
             body: "@Casey Contributor what did procurement say?",
-            visibility: "working_team",
+            visibility: "full_thread",
             mentions: ["u3"],
           },
         ]);
@@ -3921,7 +4075,7 @@ describe("the contract record's comment applet (M9/2)", () => {
       renderAt("/contracts/42");
       const { panel, box } = await composerIn(user);
 
-      await user.click(within(panel).getByRole("radio", { name: "Legal only" }));
+      await user.click(within(panel).getByRole("radio", { name: "Legal Only" }));
       await user.type(box, "@Casey{Enter}what did procurement say?");
       await user.click(within(panel).getByRole("button", { name: "Comment" }));
 
@@ -3942,7 +4096,7 @@ describe("the contract record's comment applet (M9/2)", () => {
           "Casey Contributor",
         ),
       ).toBeInTheDocument();
-      expect(within(panel).getByRole("radio", { name: "Legal only" })).toBeChecked();
+      expect(within(panel).getByRole("radio", { name: "Legal Only" })).toBeChecked();
     });
 
     it("asks nothing when everybody named already hears the selected tier", async () => {
@@ -3952,7 +4106,7 @@ describe("the contract record's comment applet (M9/2)", () => {
       renderAt("/contracts/42");
       const { panel, box } = await composerIn(user);
 
-      await user.click(within(panel).getByRole("radio", { name: "Legal only" }));
+      await user.click(within(panel).getByRole("radio", { name: "Legal Only" }));
       await user.type(box, "@Nadia{Enter}hold the 1x cap.");
       await user.click(within(panel).getByRole("button", { name: "Comment" }));
 
@@ -4019,7 +4173,7 @@ describe("the contract record's comment applet (M9/2)", () => {
       const { panel, box } = await composerIn(user);
 
       // No Legal Only segment to select, so no mention can need one.
-      expect(within(panel).queryByRole("radio", { name: "Legal only" })).not.toBeInTheDocument();
+      expect(within(panel).queryByRole("radio", { name: "Legal Only" })).not.toBeInTheDocument();
       await user.type(box, "@Nadia{Enter}we are ready.");
       await user.click(within(panel).getByRole("button", { name: "Comment" }));
 
@@ -4029,7 +4183,7 @@ describe("the contract record's comment applet (M9/2)", () => {
             entityType: "contract",
             entityId: "c1",
             body: "@Nadia Counsel we are ready.",
-            visibility: "working_team",
+            visibility: "full_thread",
             mentions: ["u2"],
           },
         ]);
@@ -4584,8 +4738,7 @@ describe("the contract record's comment applet (M9/2)", () => {
    * and nothing offers to widen the audience of the record itself.
    */
   describe("inside a confidential record (M10/5)", () => {
-    const NOTICE =
-      "Confidential contract — whichever audience you pick, only the contract team, the Owner, and Administrators can read it.";
+    const NOTICE = "Confidential contract — only the contract team and owner can read it.";
 
     /** The record seam with the flag set, plus the thread's. */
     function confidentialPage(comments: ReturnType<typeof commentsApi>) {
@@ -4641,11 +4794,11 @@ describe("the contract record's comment applet (M9/2)", () => {
       // The tier line still says which room; the notice says the whole
       // panel is inside a wall.
       expect(
-        screen.getByText("Visible to the legal team and Contributors on this record."),
+        screen.getByText("Visible to the legal team, Contract team members, and the requester."),
       ).toBeInTheDocument();
 
       // Every segment, and the statement holds at each of them.
-      for (const segment of ["Legal only", "Full thread"]) {
+      for (const segment of ["Legal Only", "Contract Team"]) {
         await user.click(screen.getByRole("radio", { name: segment }));
         expect(screen.getByText(NOTICE)).toBeInTheDocument();
       }
@@ -4682,7 +4835,7 @@ describe("the contract record's comment applet (M9/2)", () => {
             entityType: "contract",
             entityId: "c1",
             body: "@Casey Contributor please look",
-            visibility: "working_team",
+            visibility: "full_thread",
             mentions: ["u3"],
           },
         ]),
@@ -5705,7 +5858,7 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
 
     const strip = await screen.findByRole("region", { name: BANNER });
     expect(strip).toHaveTextContent(
-      "Confidential contract — the contract team, the Owner, and Administrators see it.",
+      "Confidential contract — only the contract team and owner can access this contract.",
     );
     // The existing tokens, not a hand-picked colour or height.
     expect(strip).toHaveClass("bg-confidential-bg");
@@ -7092,7 +7245,57 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(await menuVerbs(user, section, "board_pack.pdf")).not.toContain("Mark confidential");
   });
 
-  it("takes a typed name before it destroys a document, and sends it to the seam", async () => {
+  it("selects documents and archives them together, retaining only failed selections", async () => {
+    const api = documentsApi([DRAFT, THEIRS]);
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (
+          call.method === "POST" &&
+          call.url.pathname === `/api/v1/documents/${THEIRS.id}/archive`
+        )
+          return problem(409, "This document cannot be archived.");
+        return api.handler(call);
+      },
+    });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+    const section = await documentsSection();
+    await user.click(within(section).getByRole("checkbox", { name: "Select visible documents" }));
+    expect(within(section).getByText("2 selected")).toBeVisible();
+    expect(within(section).queryByRole("button", { name: "Delete" })).not.toBeInTheDocument();
+    await user.click(within(section).getByRole("button", { name: "Archive" }));
+    expect(await within(section).findByText(/This document cannot be archived/)).toBeVisible();
+    expect(within(section).getByText("1 selected")).toBeVisible();
+    expect(within(section).getByRole("checkbox", { name: `Select ${THEIRS.title}` })).toBeChecked();
+    expect(
+      within(section).queryByRole("checkbox", { name: `Select ${DRAFT.title}` }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("requires delete once to delete the selected documents", async () => {
+    const api = documentsApi([DRAFT, THEIRS]);
+    stubApi({ signedIn: ADMIN, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+    const section = await documentsSection();
+    await user.click(within(section).getByRole("checkbox", { name: `Select ${DRAFT.title}` }));
+    await user.click(within(section).getByRole("checkbox", { name: `Select ${THEIRS.title}` }));
+    await user.click(within(section).getByRole("button", { name: "Delete" }));
+    const dialog = await screen.findByRole("dialog");
+    const confirm = within(dialog).getByRole("button", { name: "Delete" });
+    expect(confirm).toBeDisabled();
+    await user.type(within(dialog).getByLabelText('Type "delete" to confirm'), "delete");
+    await user.click(confirm);
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
+    expect(api.writes.filter((write) => write.url.endsWith(":DELETE"))).toEqual([
+      { url: `/api/v1/documents/${DRAFT.id}:DELETE`, body: { confirmTitle: DRAFT.title } },
+      { url: `/api/v1/documents/${THEIRS.id}:DELETE`, body: { confirmTitle: THEIRS.title } },
+    ]);
+    expect(within(section).queryByRole("checkbox", { name: /^Select / })).not.toBeInTheDocument();
+  });
+
+  it("requires delete and sends the displayed document title as the deletion guard", async () => {
     const api = documentsApi([DRAFT, THEIRS]);
     stubApi({ signedIn: ADMIN, extra: api.handler });
     renderAt("/contracts/42/documents");
@@ -7114,17 +7317,16 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     });
     expect(confirm).toBeDisabled();
 
-    // A near miss is not the name.
-    const box = within(dialog).getByLabelText("Type Orion_MSA_2026_draft.docx to confirm");
-    await user.type(box, "Orion_MSA_2026_draft.doc");
+    // A partial confirmation cannot submit.
+    const box = within(dialog).getByLabelText('Type "delete" to confirm');
+    await user.type(box, "delet");
     expect(confirm).toBeDisabled();
-    await user.type(box, "x");
+    await user.type(box, "e");
     await waitFor(() => expect(confirm).toBeEnabled());
     await user.click(confirm);
 
     await waitFor(() => expect(api.writes).toHaveLength(1));
-    // The typed name rides to the seam: the dialog is one half of the
-    // rule, and the seam is where it holds.
+    // The server still checks the displayed title to catch a concurrent rename.
     expect(api.writes[0]).toEqual({
       url: "/api/v1/documents/doc-1:DELETE",
       body: { confirmTitle: "Orion_MSA_2026_draft.docx" },
@@ -7154,10 +7356,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     await act(user, section, "Orion_MSA_2026_draft.docx", "Delete");
 
     const dialog = await screen.findByRole("dialog");
-    await user.type(
-      within(dialog).getByLabelText("Type Orion_MSA_2026_draft.docx to confirm"),
-      "Orion_MSA_2026_draft.docx",
-    );
+    await user.type(within(dialog).getByLabelText('Type "delete" to confirm'), "delete");
     await user.click(
       within(dialog).getByRole("button", { name: "Delete Orion_MSA_2026_draft.docx" }),
     );
@@ -7519,9 +7718,48 @@ describe("the doc panel (M12/2)", () => {
     expect(openFind).toHaveFocus();
   });
 
-  it("opens the PDF find bar from a search landing, pre-filled at the first match", async () => {
+  it("routes Ctrl+F and Cmd+F to document find only while the PDF reader is open", async () => {
     stubApi({ signedIn: MEMBER, extra: panelApi([document()]) });
-    renderAt("/contracts/42/documents?doc=pdoc-1&version=pv-1&find=termination");
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+    const list = await section();
+    expect(fireEvent.keyDown(window, { key: "f", ctrlKey: true })).toBe(true);
+    await user.click(
+      within(list).getByRole("button", { name: "Orion Cloud — master services agreement" }),
+    );
+    const reading = await panel(/master services agreement, version 1/);
+    await within(reading).findByRole("button", { name: "Find in document" });
+    expect(fireEvent.keyDown(window, { key: "f", ctrlKey: true })).toBe(false);
+    const input = within(reading).getByRole("searchbox", { name: "Find in document" });
+    expect(input).toHaveFocus();
+    await user.type(input, "termination");
+    await user.click(within(reading).getByRole("button", { name: "Next page" }));
+    expect(fireEvent.keyDown(window, { key: "f", metaKey: true })).toBe(false);
+    expect(input).toHaveFocus();
+    expect((input as HTMLInputElement).selectionStart).toBe(0);
+    expect((input as HTMLInputElement).selectionEnd).toBe(11);
+    expect(fireEvent.keyDown(window, { key: "F", ctrlKey: true, shiftKey: true })).toBe(true);
+    await user.keyboard("{Escape}");
+    expect(within(reading).queryByRole("searchbox")).not.toBeInTheDocument();
+    expect(fireEvent.keyDown(window, { key: "f", ctrlKey: true })).toBe(false);
+    expect(within(reading).getByRole("searchbox")).toHaveFocus();
+    await user.keyboard("{Escape}{Escape}");
+    await waitFor(() => expect(reading).not.toBeInTheDocument());
+    expect(fireEvent.keyDown(window, { key: "f", ctrlKey: true })).toBe(true);
+  });
+
+  it.each([
+    "/contracts/42",
+    "/contracts/42/documents",
+    "/contracts/42/documents?doc=pdoc-1&version=pv-1&find=termination",
+  ])("opens the linked document and find bar from %s", async (start) => {
+    stubApi({ signedIn: MEMBER, extra: panelApi([document()]) });
+    const { router } = renderAt(start);
+    await screen.findByRole("toolbar", { name: "Applets" });
+    if (!start.includes("?"))
+      await act(async () => {
+        await router.navigate("/contracts/42/documents?doc=pdoc-1&version=pv-1&find=termination");
+      });
 
     const reading = await panel(/master services agreement, version 1/);
     expect(within(reading).getByRole("searchbox", { name: "Find in document" })).toHaveValue(
@@ -9209,6 +9447,28 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
     expect(within(section).getByText("signed.pdf")).toBeVisible();
   });
 
+  it("moves selected documents into one folder", async () => {
+    const api = filingApi(
+      [document("doc-1", "one.pdf"), document("doc-2", "two.pdf")],
+      [folder("f-1", "Executed")],
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+    const section = await documentsSection();
+    await user.click(within(section).getByRole("checkbox", { name: "Select visible documents" }));
+    await user.click(within(section).getByRole("button", { name: "Move" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.selectOptions(within(dialog).getByLabelText("File in"), "f-1");
+    await user.click(within(dialog).getByRole("button", { name: "Move" }));
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
+    expect(api.writes).toEqual([
+      { url: "/api/v1/documents/doc-1", body: { folderId: "f-1" } },
+      { url: "/api/v1/documents/doc-2", body: { folderId: "f-1" } },
+    ]);
+    expect(await within(section).findByText("2 documents")).toBeVisible();
+  });
+
   it("files a document into a folder from its own menu", async () => {
     const api = filingApi([document("doc-1", "signed.pdf")], [folder("f-1", "Executed")]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
@@ -9590,8 +9850,8 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
     expect(within(dialog).getByText("MSA_2019_signed.pdf")).toBeVisible();
     expect(within(dialog).getByText("SOW1_2020_signed.pdf")).toBeVisible();
     expect(within(dialog).getByText("Record root")).toBeVisible();
-    expect(within(dialog).getByText("Set by the drop")).toBeVisible();
-    expect(within(dialog).getByText("Nothing is created until you import.")).toBeVisible();
+    expect(within(dialog).queryByText("Set by the drop")).toBeNull();
+    expect(within(dialog).queryByText("Nothing is created until you import.")).toBeNull();
     expect(api.uploaded).toEqual([]);
   });
 
@@ -9617,9 +9877,7 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
     // One kind rode with every file of the batch, and it is the one the
     // dialog collected.
     expect(api.uploaded.map((one) => one.kind)).toEqual(["executed", "executed"]);
-    // The dialog closes only on Done, so a reader who retried can see
-    // whether the second attempt worked (DES-033 §11).
-    await user.click(await within(dialog).findByRole("button", { name: "Done" }));
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
     // Both rows land, both as new documents at version 1, and the
     // section counts them.
     expect(await within(section).findByText("one.pdf")).toBeVisible();
@@ -9657,7 +9915,7 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
     await user.click(within(dialog).getByRole("button", { name: "Import 3 files" }));
 
     await waitFor(() => expect(api.uploaded).toHaveLength(3));
-    await user.click(await within(dialog).findByRole("button", { name: "Done" }));
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
     // The designation is the seam's, taken by whichever file landed
     // first — the batch never asks for it and never sets it twice.
     expect(await within(section).findByText("three.pdf")).toBeVisible();
@@ -9683,7 +9941,9 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
     // One file failed and says why, in the seam's own sentence. The
     // other one landed: a refusal costs its own file and nothing else.
     expect(await within(dialog).findByText("The storage driver did not answer.")).toBeVisible();
-    expect(within(dialog).getByRole("heading", { name: "Imported 1 of 2 files" })).toBeVisible();
+    expect(
+      await within(dialog).findByRole("heading", { name: "Imported 1 of 2 files" }),
+    ).toBeVisible();
     expect(api.names().toSorted()).toEqual(["one.pdf", "two.pdf"]);
 
     await user.click(within(dialog).getByRole("button", { name: "Retry two.pdf" }));
@@ -9691,9 +9951,7 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
     // Only the failed file went again, so nothing can land twice.
     await waitFor(() => expect(api.uploaded).toHaveLength(3));
     expect(api.names().at(-1)).toBe("two.pdf");
-    expect(
-      await within(dialog).findByRole("heading", { name: "Imported 2 of 2 files" }),
-    ).toBeVisible();
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
     // The run re-reads the record's paper and its folders after its last
     // row settles. Waited out here, so no fetch outlives the stub.
     await waitFor(() => expect(api.quiet()).toBe(true));
@@ -9726,7 +9984,9 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
     expect(within(dialog).queryByRole("button", { name: /^Retry/ })).toBeNull();
     // The rest of the batch went on regardless — the ceiling is per
     // file, not per drop.
-    expect(within(dialog).getByRole("heading", { name: "Imported 1 of 2 files" })).toBeVisible();
+    expect(
+      await within(dialog).findByRole("heading", { name: "Imported 1 of 2 files" }),
+    ).toBeVisible();
     await user.click(within(dialog).getByRole("button", { name: "Done" }));
     expect(await within(section).findByText("small.pdf")).toBeVisible();
     // The run re-reads the record's paper and its folders after its last
@@ -9758,7 +10018,9 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
     // way, and the same file earns the same answer every time, so no
     // retry is offered for any of them (DES-033 §11).
     expect(within(dialog).queryByRole("button", { name: /^Retry/ })).toBeNull();
-    expect(within(dialog).getByRole("heading", { name: "Imported 1 of 2 files" })).toBeVisible();
+    expect(
+      await within(dialog).findByRole("heading", { name: "Imported 1 of 2 files" }),
+    ).toBeVisible();
     await user.click(within(dialog).getByRole("button", { name: "Done" }));
     // The run re-reads the record's paper and its folders after its last
     // row settles. Waited out here, so no fetch outlives the stub.
@@ -9880,7 +10142,7 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
     const dialog = await screen.findByRole("dialog");
     await user.click(within(dialog).getByRole("button", { name: "Import 1 file" }));
     await waitFor(() => expect(api.uploaded).toHaveLength(1));
-    await user.click(await within(dialog).findByRole("button", { name: "Done" }));
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
 
     // The record root has the new document, and the folder still
     // answers what is in it when it is opened again.
@@ -10337,8 +10599,7 @@ describe("dropping a folder tree on the contract record (M13/5, DOC-011, DES-033
     // record root, because that is where the drop said the files go.
     // Read off the readout strip itself, because the version-kind
     // control below it offers a kind called Executed too.
-    const readout = within(dialog).getByText("Set by the drop").parentElement!;
-    expect(within(readout).getByText("Executed")).toBeVisible();
+    expect(within(dialog).getByText("Executed", { selector: "span" })).toBeVisible();
     expect(within(dialog).queryByText("Record root")).toBeNull();
     await user.click(within(dialog).getByRole("button", { name: "Import 2 files" }));
 
@@ -10353,7 +10614,18 @@ describe("dropping a folder tree on the contract record (M13/5, DOC-011, DES-033
 
   it("draws each file's destination on its own row while the import runs", async () => {
     const api = dropApi();
-    stubApi({ signedIn: MEMBER, extra: api.handler });
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.method === "POST" && call.url.pathname === "/api/v1/contracts/42/documents")
+          return held.then(() => api.handler(call)!);
+        return api.handler(call);
+      },
+    });
     renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
@@ -10365,7 +10637,9 @@ describe("dropping a folder tree on the contract record (M13/5, DOC-011, DES-033
     // The path before the name, so a long import of a nested tree reads
     // as the tree rather than as a list of names (DES-033 §11).
     expect(await within(dialog).findByText("Legacy/Executed/")).toBeVisible();
-    await waitFor(() => expect(api.uploaded).toHaveLength(1));
+    release();
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
+    expect(api.uploaded).toHaveLength(1);
   });
 
   it("refuses one bad path at the seam and lands the rest of the drop", async () => {

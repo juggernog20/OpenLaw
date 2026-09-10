@@ -11,11 +11,8 @@
  * about a list. The destination readout says where that structure lands:
  * the record root, or the folder row the drop landed on.
  *
- * **One dialog, three moments.** The reader confirmed one thing and is
- * watching one thing, so the confirmation *becomes* the progress list
- * and then the report: three dialogs for one import would be three
- * places to look. The head, the body and the foot each say what the
- * moment they are in is about.
+ * The confirmation becomes the progress list. Successful imports close
+ * after the record refreshes; failures remain open for review and retry.
  *
  * **One batch, one kind, no note** (DOC-011). The confirmation shows
  * what will be created and collects a single version kind applied to
@@ -209,7 +206,6 @@ export function BatchDialog({
   emptyFolders,
   unreadable,
   destination,
-  source,
   onLanded,
   onClose,
 }: Readonly<{
@@ -251,6 +247,7 @@ export function BatchDialog({
   /** Whether Import has been pressed. Before it, nothing has been sent
    * and Cancel creates nothing. */
   const [started, setStarted] = useState(false);
+  const [processing, setProcessing] = useState(false);
   /** Set by "Cancel remaining". A worker checks it before it takes the
    * next file, so what is already in flight finishes — a request that
    * has left cannot be recalled, and pretending otherwise would leave
@@ -272,7 +269,7 @@ export function BatchDialog({
   const retryable = failed.filter((row) => row.retryable);
   const inFlight = rows.filter((row) => row.state === "uploading").length;
   const queued = rows.filter((row) => row.state === "queued").length;
-  const settled = started && inFlight === 0 && queued === 0;
+  const settled = started && !processing && inFlight === 0 && queued === 0;
 
   /** The retry a drawn row offers. Defined once here rather than inside
    * the row loop, so no function that reads the run refs is built
@@ -307,10 +304,12 @@ export function BatchDialog({
       const made = await recreateEmptyFolders();
       running.current = false;
       await onLanded();
-      if (made) onClose();
+      if (made && unreadable.length === 0) onClose();
       return;
     }
     const byId = new Map(rows.map((row) => [row.id, row]));
+    const successful = new Set(rows.filter((row) => row.state === "done").map((row) => row.id));
+    setProcessing(true);
     running.current = true;
     cancelled.current = false;
     setStarted(true);
@@ -322,7 +321,7 @@ export function BatchDialog({
     // The empty directories first, and only on the first run: they are
     // part of the structure that was dropped, so they should be there
     // whether or not every file lands. A retry is about files.
-    if (firstRun) await recreateEmptyFolders();
+    const foldersSucceeded = firstRun ? await recreateEmptyFolders() : folderError === null;
     await runBounded(ids, BATCH_CONCURRENCY, async (id) => {
       const row = byId.get(id);
       if (!row) return;
@@ -352,6 +351,7 @@ export function BatchDialog({
         destination: { folderId: destination?.id ?? null, path: row.path },
       });
       if (outcome.ok) {
+        successful.add(id);
         mark(id, { state: "done", reason: null, retryable: false });
         return;
       }
@@ -366,11 +366,11 @@ export function BatchDialog({
         retryable: retryCouldSucceed(outcome.status),
       });
     });
-    running.current = false;
-    // Once, at the end. Every file that landed is a document on the
-    // record, and a batch on a record with no paper has just decided
-    // which of them the record calls its instrument (CTR-014).
+    // Refresh the document list before closing; keep successful runs out of the results state.
     await onLanded();
+    if (successful.size === rows.length && foldersSucceeded && unreadable.length === 0) onClose();
+    running.current = false;
+    setProcessing(false);
   }
 
   /**
@@ -473,14 +473,6 @@ export function BatchDialog({
                   <span className="min-w-0 truncate">{destination.name}</span>
                 ) : (
                   <FormattedMessage id="documents.batch.root" defaultMessage="Record root" />
-                )}
-                {source === "drop" && (
-                  <span className="ms-auto shrink-0 text-xs text-muted">
-                    <FormattedMessage
-                      id="documents.batch.setByDrop"
-                      defaultMessage="Set by the drop"
-                    />
-                  </span>
                 )}
               </span>
               {/* Said once, above the tree it is true of: a folder drop
@@ -656,40 +648,37 @@ export function BatchDialog({
               // browser has not read it.
               <FormattedMessage
                 id="documents.batch.derivations"
-                defaultMessage="Text extraction and OCR run in the background after every file lands."
+                defaultMessage="Uploaded files become searchable once processing finishes."
               />
             ) : settled ? (
               <FormattedMessage
                 id="documents.batch.retryNote"
-                defaultMessage="Retry re-uploads only the file you pick. A file over the size ceiling stays refused until it is made smaller."
+                defaultMessage="Retry uploads the selected file again. Files over the size limit must be reduced before retrying."
               />
             ) : (
               <FormattedMessage
                 id="documents.batch.carriesOn"
-                defaultMessage="A file that fails costs that file. The rest of the import carries on."
+                defaultMessage="If a file fails to upload, the remaining files continue uploading."
               />
             )}
           </p>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-xs text-muted">
-              {!started ? (
-                <FormattedMessage
-                  id="documents.batch.nothingYet"
-                  defaultMessage="Nothing is created until you import."
-                />
-              ) : settled ? (
-                <FormattedMessage
-                  {...BATCH_COPY[record.entityType].onRecord}
-                  values={{ count: landed }}
-                />
-              ) : (
-                <FormattedMessage
-                  id="documents.batch.keepOpen"
-                  defaultMessage="Keep this dialog open until the import finishes."
-                />
-              )}
-            </p>
-            <div className="flex items-center gap-2">
+            {started && (
+              <p className="text-xs text-muted">
+                {settled ? (
+                  <FormattedMessage
+                    {...BATCH_COPY[record.entityType].onRecord}
+                    values={{ count: landed }}
+                  />
+                ) : (
+                  <FormattedMessage
+                    id="documents.batch.keepOpen"
+                    defaultMessage="Keep this dialog open until the import finishes."
+                  />
+                )}
+              </p>
+            )}
+            <div className="ms-auto flex items-center gap-2">
               {!started && (
                 <>
                   <Button type="button" variant="secondary" onClick={onClose}>

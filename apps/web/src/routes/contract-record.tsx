@@ -135,17 +135,19 @@
  * Users are bounced home, and the API's 403 is the real refusal.
  */
 
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { CurrencySelect } from "../components/currency-select";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   Link,
   redirect,
   useLoaderData,
+  useLocation,
   useNavigate,
   useParams,
   useRevalidator,
   type LoaderFunctionArgs,
 } from "react-router";
-import { FormattedMessage, defineMessage, useIntl, type IntlShape } from "react-intl";
+import { FormattedMessage, defineMessage, useIntl } from "react-intl";
 import { ChevronRight, FileText, PenLine, Settings, X } from "lucide-react";
 import { RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE, SOFT_GATE_PROBLEM_TYPE } from "@openlaw/shared";
 import { api } from "../lib/api";
@@ -193,13 +195,7 @@ import {
   type CustomFieldValue,
   type CustomFieldValues,
 } from "../lib/custom-fields";
-import {
-  currencyFractionDigits,
-  currencyOptions,
-  formatShortDate,
-  toMajorUnits,
-  toMinorUnits,
-} from "../lib/format";
+import { currencyFractionDigits, formatShortDate, toMajorUnits, toMinorUnits } from "../lib/format";
 import {
   APPROVAL_PILL,
   isUnresolved,
@@ -1237,6 +1233,22 @@ export function ContractRecordPage() {
   useEffect(() => {
     if (!readingDocked.current) closeReading();
   }, [tab]);
+
+  const location = useLocation();
+  const landedNavigation = useRef(location.key);
+  useEffect(() => {
+    if (landedNavigation.current === location.key) return;
+    landedNavigation.current = location.key;
+    const target = documentLanding;
+    if (!target) return;
+    // Apply a completed navigation once; background revalidation must not reopen the reader.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPaper((rows) => rows.map((row) => (row.id === target.document.id ? target.document : row)));
+    setFiled((rows) => [...rows.filter((row) => row.id !== target.document.id), target.document]);
+    setReading({ documentId: target.document.id, versionId: target.versionId });
+    setReadingCovers(false);
+    readingDocked.current = true;
+  }, [location.key, documentLanding]);
 
   /** Closes the panel. Focus goes back to the control that opened it —
    * DES-010's restore-to-trigger rule, wired by hand because the panel
@@ -3206,51 +3218,6 @@ function CounterpartiesField({
   );
 }
 
-/**
- * The currency picker's rows, composed once per locale and kept. There
- * are some three hundred ISO 4217 codes, and each row's label is an
- * ICU message — composing them per render, or even per mount, is three
- * hundred formats for a list that cannot change while the page is
- * open. The cache is keyed on the locale, which is what the labels
- * depend on.
- */
-const currencyRowCache = new Map<string, readonly { code: string; label: string }[]>();
-
-function currencyRows(intl: IntlShape): readonly { code: string; label: string }[] {
-  let rows = currencyRowCache.get(intl.locale);
-  if (!rows) {
-    rows = currencyOptions({ locale: intl.locale }).map((currency) => ({
-      code: currency.code,
-      // The code leads: it is what a contract quotes, and it is what
-      // tells two "dollar" currencies apart.
-      label: intl.formatMessage(
-        { id: "contracts.value.currencyOption", defaultMessage: "{code} — {name}" },
-        { code: currency.code, name: currency.displayName },
-      ),
-    }));
-    currencyRowCache.set(intl.locale, rows);
-  }
-  return rows;
-}
-
-/**
- * The rows as the picker's options. Memoized away from the field that
- * hosts them, so a keystroke in the amount box reconciles three
- * controls rather than three hundred options that cannot have changed.
- */
-const CurrencyOptions = memo(function CurrencyOptions() {
-  const intl = useIntl();
-  return (
-    <>
-      {currencyRows(intl).map((currency) => (
-        <option key={currency.code} value={currency.code}>
-          {currency.label}
-        </option>
-      ))}
-    </>
-  );
-});
-
 /** What the three controls hold between commits. The amount is a
  * string, in major units, because that is what a person types and an
  * empty box is a state a number cannot hold. */
@@ -3448,27 +3415,21 @@ function ValueField({
           value={draft.amount}
           onChange={(event) => setDraft((current) => ({ ...current, amount: event.target.value }))}
         />
-        <select
+        <CurrencySelect
           id="contract-value-currency"
-          className={cn(CONTROL_CLASS, "w-56")}
+          className="w-56"
           disabled={frozen}
           aria-label={intl.formatMessage({
             id: "contracts.value.currency",
             defaultMessage: "Currency",
           })}
           value={draft.currency}
-          onChange={(event) =>
-            setDraft((current) => ({ ...current, currency: event.target.value }))
-          }
-        >
-          <option value="">
-            {intl.formatMessage({
-              id: "contracts.value.currencyPlaceholder",
-              defaultMessage: "Currency…",
-            })}
-          </option>
-          <CurrencyOptions />
-        </select>
+          onValueChange={(currency) => setDraft((current) => ({ ...current, currency }))}
+          placeholder={intl.formatMessage({
+            id: "contracts.value.currencyPlaceholder",
+            defaultMessage: "Currency…",
+          })}
+        />
         <select
           id="contract-value-cadence"
           className={cn(CONTROL_CLASS, "w-40")}

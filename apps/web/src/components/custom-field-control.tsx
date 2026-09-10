@@ -20,6 +20,7 @@
 import { FormattedMessage, useIntl } from "react-intl";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
 import type { AttachedField, CustomFieldDraft } from "../lib/custom-fields";
+import { CurrencySelect } from "./currency-select";
 import { Checkbox } from "./ui/checkbox";
 import { Input } from "./ui/input";
 import { NumberInput } from "./number-input";
@@ -119,6 +120,19 @@ export function CustomFieldControl({
     case "boolean":
       return (
         <Switch {...shared} checked={draft === true} onCheckedChange={(next) => onDraft(next)} />
+      );
+    case "currency":
+      return (
+        <CurrencySelect
+          {...shared}
+          value={text}
+          onValueChange={onDraft}
+          onKeyDown={onKeyDown}
+          placeholder={intl.formatMessage({
+            id: "contracts.field.selectPlaceholder",
+            defaultMessage: "Not set",
+          })}
+        />
       );
     case "single_select":
       return (

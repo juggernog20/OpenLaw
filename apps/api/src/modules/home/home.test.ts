@@ -1104,14 +1104,11 @@ describe("GET /api/v1/home", () => {
     });
     expect(obligationsIn(await home(CONTRIBUTOR))).toBeUndefined();
     // …and because that assignee reaches it, the row stays off the
-    // Administrator fallback. Only the walled and unowned rows land there.
+    // Administrator fallback. The confidential row also stays hidden without a grant.
     expect(obligationsIn(await home(ADMIN))).toMatchObject({
       type: "obligations",
-      total: 2,
-      rows: [
-        { label: "Secret filing", isUnassigned: false },
-        { label: "Unowned filing", isUnassigned: true },
-      ],
+      total: 1,
+      rows: [{ label: "Unowned filing", isUnassigned: true }],
     });
   });
 

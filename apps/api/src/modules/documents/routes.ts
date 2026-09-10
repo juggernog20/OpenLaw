@@ -47,7 +47,7 @@
  * does not replace it** (M11/6, DD-014). A viewer must pass both gates:
  * the contract's, and then the document's. `documentAudienceScope`
  * narrows one sensitive file to the contract's named team, the
- * contract's Owner, and Administrators, even on a contract that is open
+ * contract's Owner, even on a contract that is open
  * to everyone. It rides beside the contract scope in every read here, so
  * a document outside a viewer's audience is absent from the list, absent
  * from the count the list is taken from, and answered 404 on the
@@ -510,7 +510,7 @@ const DocumentSchema = z.object({
   archivedAt: z.iso.datetime({ offset: true }).nullable(),
   /**
    * DD-014's per-document flag: whether this one file is narrowed to
-   * the contract's named team, its Owner, and Administrators — even
+   * the contract's named team and Owner — even
    * when the contract itself is open.
    *
    * It is only ever `true` for a viewer who is inside that audience,
@@ -1871,7 +1871,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "The paper on one matter, newest first, with each document's complete version chain. " +
           "Access is inherited from the matter and a confidential document narrows to its team, " +
-          "Matter Manager, and Administrators. Administrators, Legal Team Members, and Contributors " +
+          "or Matter Manager. Administrators, Legal Team Members, and Contributors " +
           "may read matter paper. Primary and executed designations are contract concepts.",
         tags: ["documents"],
         params: NumberParams,
@@ -2602,7 +2602,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "(DD-017), naming what changed. isConfidential is the third " +
           "field, and it is not one of those two: it sets or clears " +
           "DD-014's per-document flag, which narrows this one file to " +
-          "the contract's named team, its Owner, and Administrators, " +
+          "the contract's named team and Owner, " +
           "even on an open contract. It has an actor set narrower than " +
           "the route's — an Administrator, the person who uploaded the " +
           "document, and the contract's Owner — and anybody else who " +

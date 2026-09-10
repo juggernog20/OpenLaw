@@ -654,11 +654,11 @@ function RecentDocuments({ documents }: Readonly<{ documents: RepositoryDocument
       <h2 className="text-sm font-semibold text-primary">
         <FormattedMessage id="documents.recent.title" defaultMessage="Recent" />
       </h2>
-      <ul className="rounded-card border border-border-default bg-raised">
+      <ul className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_10rem_max-content] gap-x-4 rounded-card border border-border-default bg-raised">
         {documents.map((document, index) => (
           <li
             key={document.id}
-            className={index === 0 ? undefined : "border-t border-border-default"}
+            className={`col-span-full grid grid-cols-subgrid ${index === 0 ? "" : "border-t border-border-default"}`}
           >
             <Link
               to={documentLandingPath(document)}
@@ -669,10 +669,10 @@ function RecentDocuments({ documents }: Readonly<{ documents: RepositoryDocument
                 },
                 { title: document.title },
               )}
-              className="flex min-h-11 items-center gap-4 px-4 py-2 text-sm hover:bg-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-link"
+              className="col-span-full grid min-h-11 grid-cols-subgrid items-center gap-x-4 px-4 py-2 text-sm hover:bg-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-link"
             >
-              <span className="min-w-0 flex-1 truncate font-medium">{document.title}</span>
-              <span className="min-w-0 flex-1 truncate text-muted">
+              <span className="min-w-0 truncate font-medium">{document.title}</span>
+              <span className="min-w-0 truncate text-muted">
                 <FormattedMessage
                   id="documents.list.owner"
                   defaultMessage="{reference} · {title}"
@@ -682,7 +682,7 @@ function RecentDocuments({ documents }: Readonly<{ documents: RepositoryDocument
                   }}
                 />
               </span>
-              <span className="flex min-w-40 shrink-0 items-center gap-2 text-muted">
+              <span className="flex min-w-0 items-center gap-2 text-muted">
                 <Avatar
                   name={document.currentVersion.uploadedBy.displayName}
                   image={document.currentVersion.uploadedBy.image}

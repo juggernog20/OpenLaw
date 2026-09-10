@@ -136,6 +136,25 @@ async function expectQuery(queries: URLSearchParams[], key: string, value: strin
 }
 
 describe("the Entity registry managed list", () => {
+  it("includes entity search in filtering and pagination without losing input focus", async () => {
+    const api = surface({ nextPage: true });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    const { router } = renderAt("/entities?view=list");
+    const user = userEvent.setup();
+    const search = await screen.findByRole("searchbox", { name: "Search entities by name" });
+    await user.type(search, "Aldgate");
+    await waitFor(() => expect(api.queries.at(-1)?.get("q")).toBe("Aldgate"));
+    await waitFor(() =>
+      expect(new URLSearchParams(router.state.location.search).get("q")).toBe("Aldgate"),
+    );
+    expect(search).toHaveFocus();
+    await user.selectOptions(screen.getByRole("combobox", { name: "Status" }), "dormant");
+    await waitFor(() => expect(api.queries.at(-1)?.get("status")).toBe("dormant"));
+    expect(api.queries.at(-1)?.get("q")).toBe("Aldgate");
+    await user.click(screen.getByRole("button", { name: "Show more" }));
+    await waitFor(() => expect(api.queries.at(-1)?.get("cursor")).toBe("entity-1"));
+    expect(api.queries.at(-1)?.get("q")).toBe("Aldgate");
+  });
   it("switches Calendar, List, and Chart in the sub-bar and remembers the view in the URL", async () => {
     const user = userEvent.setup();
     const api = surface();

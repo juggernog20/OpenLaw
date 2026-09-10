@@ -70,7 +70,7 @@ export function ConfidentialToggle({
           ) : record === "entity" ? (
             <FormattedMessage
               id="entities.confidential.field"
-              defaultMessage="Confidential — restrict to the grant list"
+              defaultMessage="Confidential — restrict to the access list"
             />
           ) : (
             <FormattedMessage

@@ -22,6 +22,7 @@ import { api } from "../lib/api";
 import { problem, type ProblemResult } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import { PageTitle } from "../components/page-title";
+import { CurrenciesSettingsCard } from "../components/currencies-settings-card";
 import { SettingsCard } from "../components/settings-card";
 import { StatusNote, type FieldStatus } from "../components/status-note";
 import { TimezonePicker } from "../components/timezone-picker";
@@ -32,13 +33,19 @@ import { Label } from "../components/ui/label";
 export async function settingsGeneralLoader() {
   const user = await requireUser();
   if (user.role !== "administrator") return redirect("/settings/profile");
-  const [general, onboarding] = await Promise.all([
+  const [general, onboarding, currencies] = await Promise.all([
     api.GET("/api/v1/org/general"),
     api.GET("/api/v1/onboarding"),
+    api.GET("/api/v1/org/currencies"),
   ]);
   if (!general.data) throw new Error("The organization settings could not be read.");
   if (!onboarding.data) throw new Error("The setup checklist could not be read.");
-  return { general: general.data.general, onboarding: onboarding.data };
+  if (!currencies.data) throw new Error("The currencies in use could not be read.");
+  return {
+    general: general.data.general,
+    onboarding: onboarding.data,
+    currencies: currencies.data.currencies,
+  };
 }
 
 type OnboardingSteps =
@@ -172,7 +179,7 @@ const selectClassName =
   "h-8 w-80 max-w-full rounded-button border border-border-default bg-raised px-2 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link disabled:pointer-events-none disabled:opacity-50";
 
 export function SettingsGeneralPage() {
-  const { general, onboarding } = useLoaderData<typeof settingsGeneralLoader>();
+  const { general, onboarding, currencies } = useLoaderData<typeof settingsGeneralLoader>();
   const intl = useIntl();
   const revalidator = useRevalidator();
 
@@ -357,6 +364,7 @@ export function SettingsGeneralPage() {
           </p>
         </div>
       </SettingsCard>
+      <CurrenciesSettingsCard initialCurrencies={currencies} />
     </>
   );
 }

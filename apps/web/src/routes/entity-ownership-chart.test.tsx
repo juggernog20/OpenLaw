@@ -208,7 +208,41 @@ describe("the Entity Ownership tab", () => {
 });
 
 describe("/entities?view=chart", () => {
-  it("draws a muted nameless node for an unreachable Entity", async () => {
+  it("keeps a wide chart readable and restores actual size after fitting it", async () => {
+    const children = Array.from({ length: 30 }, (_, index) => ({
+      ...node(rows.child),
+      id: `child-${index}`,
+      legalName: `Subsidiary ${index}`,
+      primaryOwnerId: "parent",
+    }));
+    const chart = {
+      nodes: [{ ...node(rows.parent), primaryOwnerId: null }, ...children],
+      edges: children.map((child) => ({
+        ownerEntityId: "parent",
+        ownedEntityId: child.id,
+        ownershipPercent: 100,
+      })),
+    };
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/entities/chart" ? json(200, chart) : recordReads(call),
+    });
+    renderAt("/entities?view=chart");
+    const user = userEvent.setup();
+    const region = await screen.findByRole("region", { name: "Entity ownership chart" });
+    expect(region).toHaveAttribute("data-zoom", "1");
+    await user.click(screen.getByRole("button", { name: "Fit to window" }));
+    expect(Number(region.getAttribute("data-zoom"))).toBeLessThan(0.2);
+    await user.click(screen.getByRole("button", { name: "Reset zoom to 100%" }));
+    expect(region).toHaveAttribute("data-zoom", "1");
+    await user.click(screen.getByRole("button", { name: "Zoom in" }));
+    expect(Number(region.getAttribute("data-zoom"))).toBeGreaterThan(1);
+    await user.click(screen.getByRole("button", { name: "Zoom out" }));
+    expect(region).toHaveAttribute("data-zoom", "1");
+  });
+
+  it("labels an unreachable Entity as confidential without exposing its name", async () => {
     const chart = {
       nodes: [
         { ...node(rows.parent), primaryOwnerId: null },
@@ -222,7 +256,7 @@ describe("/entities?view=chart", () => {
         call.url.pathname === "/api/v1/entities/chart" ? json(200, chart) : recordReads(call),
     });
     renderAt("/entities?view=chart");
-    expect(await screen.findByLabelText("Restricted Entity")).toHaveAttribute(
+    expect(await screen.findByLabelText("Confidential Entity")).toHaveAttribute(
       "data-restricted",
       "true",
     );
@@ -291,7 +325,23 @@ describe("/entities?view=chart", () => {
     expect(region.getAttribute("data-pan-x")).not.toBe(before);
     await user.click(screen.getByRole("button", { name: "Fit to window" }));
 
-    await user.click(screen.getByRole("link", { name: "Open UAE Subsidiary" }));
+    const selected = screen.getByRole("link", { name: "Open UAE Subsidiary" });
+    await user.click(selected);
+    expect(router.state.location.pathname).toBe("/entities");
+    expect(selected).toHaveAttribute("aria-current", "true");
+    expect(selected.closest("g[data-highlighted]")).toHaveAttribute("data-highlighted", "true");
+    expect(
+      screen.getByRole("link", { name: "Open Delaware Parent" }).closest("g[data-highlighted]"),
+    ).toHaveAttribute("data-highlighted", "true");
+    expect(
+      screen.getByRole("link", { name: "Open Minority Owner" }).closest("g[data-highlighted]"),
+    ).toHaveAttribute("data-highlighted", "true");
+    expect(
+      screen.getByRole("link", { name: "Open Other Candidate" }).closest("g[data-highlighted]"),
+    ).toHaveAttribute("data-highlighted", "false");
+    await user.click(screen.getByRole("button", { name: "Clear highlight" }));
+    expect(screen.queryByRole("button", { name: "Clear highlight" })).not.toBeInTheDocument();
+    await user.dblClick(selected);
     await waitFor(() => expect(router.state.location.pathname).toBe("/entities/child"));
     expect(await screen.findByRole("heading", { level: 1, name: "UAE Subsidiary" })).toBeVisible();
   });

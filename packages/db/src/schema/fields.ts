@@ -34,13 +34,14 @@ export const FIELD_MODULE_SCOPES = ["matter", "contract", "entity", "global"] as
 export type FieldModuleScope = (typeof FIELD_MODULE_SCOPES)[number];
 
 /**
- * The nine CTR-016 field types. Immutable after creation — archive and
+ * The supported custom-field types. Immutable after creation — archive and
  * recreate instead; there is no silent value coercion.
  */
 export const FIELD_TYPES = [
   "text",
   "long_text",
   "number",
+  "currency",
   "date",
   "boolean",
   "single_select",
@@ -56,7 +57,7 @@ export const SELECT_FIELD_TYPES = ["single_select", "multi_select"] as const;
 /**
  * What one custom-field value looks like once stored (CTR-016). Every
  * record module keys these by field slug in its own `custom_fields`
- * jsonb, so the four shapes below cover all nine field types: `number`
+ * jsonb, so the four shapes below cover all field types: `number`
  * is a number, `boolean` is a boolean, `multi_select` is an array of
  * option labels, and everything else — including `date` as an ISO
  * calendar date and `user`/`entity` as the referenced row's id — is a
@@ -110,7 +111,7 @@ export const fields = pgTable(
     ),
     check(
       "fields_field_type_check",
-      sql`${table.fieldType} in ('text', 'long_text', 'number', 'date', 'boolean', 'single_select', 'multi_select', 'user', 'entity')`,
+      sql`${table.fieldType} in ('text', 'long_text', 'number', 'currency', 'date', 'boolean', 'single_select', 'multi_select', 'user', 'entity')`,
     ),
     check("fields_field_tag_check", sql`${table.fieldTag} in ('business', 'legal')`),
     // Options ride exactly the select types: a non-null jsonb array on

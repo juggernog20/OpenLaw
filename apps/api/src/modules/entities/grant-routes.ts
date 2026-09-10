@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** Administrator-only maintenance of ENT-004's explicit Entity readers. */
+/** Maintenance of the explicit Entity access grants. */
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
@@ -9,6 +9,7 @@ import {
   entityGrants,
   eq,
   isNull,
+  inArray,
   sql,
   users,
   type Executor,
@@ -16,10 +17,16 @@ import {
 } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
-import { NO_ENTITY, reachedEntity, type LockedEntity } from "../../lib/entity-access.js";
+import {
+  canManageEntityAccess,
+  hasLiveEntityGrant,
+  NO_ENTITY,
+  reachedEntity,
+  type LockedEntity,
+} from "../../lib/entity-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
-const requireAdministrator = requireRole("administrator");
+const requireAccessManager = requireRole("administrator", "legal_team_member");
 const EntityParams = z.object({ id: z.string().min(1).max(64) });
 const GrantParams = EntityParams.extend({ userId: z.string().min(1).max(64) });
 const GrantPersonSchema = z.object({
@@ -40,6 +47,11 @@ async function lockedEntity(
 ) {
   const entity = await reachedEntity(tx, user, id, { lock: true });
   if (!entity) throw httpError(404, NO_ENTITY);
+  if (!(await canManageEntityAccess(tx, user, entity)))
+    throw httpError(
+      403,
+      "Only an access grantee or an administrator of an open entity can manage access.",
+    );
   if (entity.archivedAt) {
     throw httpError(409, "This entity is archived. Restore it before changing grants.");
   }
@@ -71,7 +83,7 @@ export const entityGrantRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     "/entities/:id/grants",
     {
-      preHandler: requireAdministrator,
+      preHandler: requireAccessManager,
       schema: {
         operationId: "listEntityGrants",
         tags: ["entities"],
@@ -82,6 +94,11 @@ export const entityGrantRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const entity = await reachedEntity(app.db, request.user, request.params.id);
       if (!entity) throw httpError(404, NO_ENTITY);
+      if (!(await canManageEntityAccess(app.db, request.user, entity)))
+        throw httpError(
+          403,
+          "Only an access grantee or an administrator of an open entity can manage access.",
+        );
       const [grants, candidates] = await Promise.all([
         grantRows(app.db, entity.id),
         app.db
@@ -92,7 +109,12 @@ export const entityGrantRoutes: FastifyPluginAsyncZod = async (app) => {
             archivedAt: users.archivedAt,
           })
           .from(users)
-          .where(and(eq(users.role, "legal_team_member"), isNull(users.archivedAt)))
+          .where(
+            and(
+              inArray(users.role, ["administrator", "legal_team_member"]),
+              isNull(users.archivedAt),
+            ),
+          )
           .orderBy(asc(sql`lower(${users.displayName})`), asc(users.id)),
       ]);
       return { grants: grants.map(toPerson), candidates: candidates.map(toPerson) };
@@ -102,7 +124,7 @@ export const entityGrantRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     "/entities/:id/grants",
     {
-      preHandler: requireAdministrator,
+      preHandler: requireAccessManager,
       schema: {
         operationId: "addEntityGrant",
         tags: ["entities"],
@@ -126,8 +148,15 @@ export const entityGrantRoutes: FastifyPluginAsyncZod = async (app) => {
           .where(eq(users.id, request.body.userId))
           .limit(1)
           .for("update");
-        if (!target || target.archivedAt || target.role !== "legal_team_member") {
-          throw httpError(400, "An Entity grant must name a live Legal Team Member.");
+        if (
+          !target ||
+          target.archivedAt ||
+          !["administrator", "legal_team_member"].includes(target.role)
+        ) {
+          throw httpError(
+            400,
+            "An Entity grant must name a live Legal Team Member or Administrator.",
+          );
         }
         const inserted = await tx
           .insert(entityGrants)
@@ -145,7 +174,7 @@ export const entityGrantRoutes: FastifyPluginAsyncZod = async (app) => {
   app.delete(
     "/entities/:id/grants/:userId",
     {
-      preHandler: requireAdministrator,
+      preHandler: requireAccessManager,
       schema: {
         operationId: "removeEntityGrant",
         tags: ["entities"],
@@ -169,6 +198,12 @@ export const entityGrantRoutes: FastifyPluginAsyncZod = async (app) => {
           .limit(1)
           .for("update", { of: entityGrants });
         if (!target) throw httpError(404, "No Entity grant exists for this person.");
+        if (entity.isConfidential && !(await hasLiveEntityGrant(tx, entity.id, target.id))) {
+          throw httpError(
+            409,
+            "Grant another person access before removing the last person from a confidential entity.",
+          );
+        }
         await tx
           .delete(entityGrants)
           .where(and(eq(entityGrants.entityId, entity.id), eq(entityGrants.userId, target.id)));

@@ -4,7 +4,7 @@
 import type { EntityChart } from "../../lib/entities";
 
 export const CHART_NODE_WIDTH = 220;
-export const CHART_NODE_HEIGHT = 112;
+export const CHART_NODE_HEIGHT = 132;
 const HORIZONTAL_GAP = 48;
 const VERTICAL_GAP = 76;
 const PADDING = 40;
@@ -21,6 +21,27 @@ export interface EntityChartLayout {
   height: number;
 }
 
+/** Ancestors and descendants of the selected entity, without including its siblings. */
+export function entityStructureChain(chart: EntityChart, selectedId: string): Set<string> {
+  const chain = new Set([selectedId]);
+  for (const direction of ["ancestors", "descendants"] as const) {
+    const visited = new Set([selectedId]);
+    const pending = [selectedId];
+    while (pending.length) {
+      const current = pending.pop()!;
+      for (const edge of chart.edges) {
+        const from = direction === "ancestors" ? edge.ownedEntityId : edge.ownerEntityId;
+        const to = direction === "ancestors" ? edge.ownerEntityId : edge.ownedEntityId;
+        if (from !== current || visited.has(to)) continue;
+        visited.add(to);
+        chain.add(to);
+        pending.push(to);
+      }
+    }
+  }
+  return chain;
+}
+
 /**
  * The majority Holdings form a forest because the API rejects cycles and
  * chooses at most one primary owner per node. Leaves claim horizontal slots;
@@ -29,7 +50,10 @@ export interface EntityChartLayout {
  * The returned nodes follow placement order (root, then its children, depth
  * first), so DOM and keyboard focus order follow the tree.
  */
-export function layoutEntityChart(chart: EntityChart): EntityChartLayout {
+export function layoutEntityChart(
+  chart: EntityChart,
+  { width: nodeWidth = CHART_NODE_WIDTH, height: nodeHeight = CHART_NODE_HEIGHT } = {},
+): EntityChartLayout {
   const nameOf = (node: EntityChart["nodes"][number]) =>
     node.restricted ? node.id : node.legalName;
   const byId = new Map(chart.nodes.map((node) => [node.id, node]));
@@ -65,15 +89,15 @@ export function layoutEntityChart(chart: EntityChart): EntityChartLayout {
     const held = children.get(id) ?? [];
     let center: number;
     if (held.length === 0) {
-      center = cursor + CHART_NODE_WIDTH / 2;
-      cursor += CHART_NODE_WIDTH + HORIZONTAL_GAP;
+      center = cursor + nodeWidth / 2;
+      cursor += nodeWidth + HORIZONTAL_GAP;
     } else {
       const centers = held.map((child) => place(child, depth + 1));
       center = (centers[0]! + centers.at(-1)!) / 2;
     }
     positions.set(id, {
-      x: center - CHART_NODE_WIDTH / 2,
-      y: PADDING + depth * (CHART_NODE_HEIGHT + VERTICAL_GAP),
+      x: center - nodeWidth / 2,
+      y: PADDING + depth * (nodeHeight + VERTICAL_GAP),
     });
     return center;
   }
@@ -86,13 +110,12 @@ export function layoutEntityChart(chart: EntityChart): EntityChartLayout {
   const unconnected = chart.nodes
     .filter((node) => !connected.has(node.id))
     .sort((a, b) => nameOf(a).localeCompare(nameOf(b)));
-  const bottomY =
-    PADDING + (roots.length > 0 ? deepest + 1 : 0) * (CHART_NODE_HEIGHT + VERTICAL_GAP);
+  const bottomY = PADDING + (roots.length > 0 ? deepest + 1 : 0) * (nodeHeight + VERTICAL_GAP);
   if (unconnected.length > 0) cursor = PADDING;
   for (const node of unconnected) {
     order.push(node.id);
     positions.set(node.id, { x: cursor, y: bottomY });
-    cursor += CHART_NODE_WIDTH + HORIZONTAL_GAP;
+    cursor += nodeWidth + HORIZONTAL_GAP;
   }
 
   // Pre-order: each root, then its subtree, then the unconnected row. Nodes
@@ -106,7 +129,7 @@ export function layoutEntityChart(chart: EntityChart): EntityChartLayout {
     ...(positions.get(id) ?? { x: PADDING, y: PADDING }),
     unconnected: !connected.has(id),
   }));
-  const right = Math.max(PADDING, ...nodes.map((node) => node.x + CHART_NODE_WIDTH));
-  const bottom = Math.max(PADDING, ...nodes.map((node) => node.y + CHART_NODE_HEIGHT));
+  const right = Math.max(PADDING, ...nodes.map((node) => node.x + nodeWidth));
+  const bottom = Math.max(PADDING, ...nodes.map((node) => node.y + nodeHeight));
   return { nodes, width: right + PADDING, height: bottom + PADDING };
 }

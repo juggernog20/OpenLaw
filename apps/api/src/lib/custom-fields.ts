@@ -40,6 +40,7 @@
  * route it arrived at.
  */
 
+import { CurrencySchema } from "./currencies.js";
 import { z } from "zod";
 import {
   and,
@@ -280,6 +281,11 @@ export function coerceCustomFieldValue(
     case "boolean": {
       if (typeof raw !== "boolean") return refuse("answer this yes or no.");
       return raw;
+    }
+    case "currency": {
+      if (typeof raw === "string" && raw.trim() === "") return null;
+      const parsed = CurrencySchema.safeParse(raw);
+      return parsed.success ? parsed.data : refuse("choose a valid currency.");
     }
     case "single_select": {
       if (typeof raw !== "string") return refuse("pick one of the options.");

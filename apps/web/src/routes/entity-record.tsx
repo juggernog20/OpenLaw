@@ -121,6 +121,7 @@ export async function entityRecordLoader({ params, request }: LoaderFunctionArgs
     user,
     tab: (params.tab ?? "overview") as EntityTab,
     entity: record.data.entity,
+    canManageAccess: record.data.canManageAccess ?? false,
     fields: record.data.fields,
     customFieldRefs: record.data.customFieldRefs,
     entityTypes: types.data.entityTypes,
@@ -340,9 +341,7 @@ export function EntityRecordPage() {
             <ConfidentialBanner
               record="entity"
               manageTeamHref={
-                loaded.user.role === "administrator"
-                  ? `/entities/${saved.id}#entity-access`
-                  : undefined
+                loaded.canManageAccess ? `/entities/${saved.id}#entity-access` : undefined
               }
             />
           ) : undefined
@@ -597,7 +596,7 @@ export function EntityRecordPage() {
                       id="entity-confidential"
                       record="entity"
                       confidential={saved.isConfidential}
-                      disabled={frozen || loaded.user.role !== "administrator"}
+                      disabled={frozen || !loaded.canManageAccess}
                       status={
                         <StatusNote
                           status={commits.status.isConfidential ?? "idle"}
@@ -608,7 +607,7 @@ export function EntityRecordPage() {
                         void commit("isConfidential", { isConfidential })
                       }
                     />
-                    {loaded.user.role === "administrator" ? (
+                    {loaded.canManageAccess ? (
                       <Button variant="secondary" onClick={() => setGrantsOpen(true)}>
                         <FormattedMessage
                           id="entities.confidential.manage"
@@ -623,7 +622,7 @@ export function EntityRecordPage() {
                   frozen={frozen}
                   status={commits.status}
                   error={commits.error}
-                  onCommit={(key, value) => void commit(key, { [key]: value })}
+                  onCommit={(key, patch) => commit(key, patch)}
                 />
                 <EntityFieldsCard
                   entity={saved}

@@ -3,9 +3,8 @@
 /**
  * The Entity reach predicate (ENT-004, DD-014).
  *
- * Administrators reach every Entity. Legal Team Members reach open
- * Entities and Confidential Entities carrying an explicit entity_grants
- * row for them. Contributors and Business Users reach none. Every Entity
+ * Administrators and Legal Team Members reach open Entities. Confidential
+ * Entities require an explicit entity_grants row for either role. Contributors and Business Users reach none. Every Entity
  * read composes this predicate before ordering, paging, or projection.
  */
 import {
@@ -15,6 +14,8 @@ import {
   entityGrants,
   eq,
   inArray,
+  isNull,
+  users,
   or,
   sql,
   type CommentVisibility,
@@ -30,7 +31,6 @@ export const NO_ENTITY = "No entity exists with this id.";
 export function entityReachScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
   switch (user.role) {
     case "administrator":
-      return undefined;
     case "legal_team_member":
       return or(
         eq(entities.isConfidential, false),
@@ -107,4 +107,42 @@ export async function entityAudience(
     tiers: COMMENT_VISIBILITIES,
     seesConfidentialDocuments: true,
   };
+}
+
+/** Access management belongs to explicit grantees; administrators can configure open entities. */
+export async function canManageEntityAccess(
+  db: Executor,
+  user: AuthenticatedUser,
+  entity: Pick<Entity, "id" | "isConfidential">,
+): Promise<boolean> {
+  if (user.role === "administrator" && !entity.isConfidential) return true;
+  if (user.role !== "administrator" && user.role !== "legal_team_member") return false;
+  const [grant] = await db
+    .select({ userId: entityGrants.userId })
+    .from(entityGrants)
+    .where(and(eq(entityGrants.entityId, entity.id), eq(entityGrants.userId, user.id)))
+    .limit(1);
+  return grant !== undefined;
+}
+
+/** A confidential entity must retain at least one active person who can manage access. */
+export async function hasLiveEntityGrant(
+  db: Executor,
+  entityId: string,
+  excluding?: string,
+): Promise<boolean> {
+  const [grant] = await db
+    .select({ userId: entityGrants.userId })
+    .from(entityGrants)
+    .innerJoin(users, eq(users.id, entityGrants.userId))
+    .where(
+      and(
+        eq(entityGrants.entityId, entityId),
+        isNull(users.archivedAt),
+        inArray(users.role, ["administrator", "legal_team_member"]),
+        excluding ? sql`${entityGrants.userId} <> ${excluding}` : undefined,
+      ),
+    )
+    .limit(1);
+  return grant !== undefined;
 }

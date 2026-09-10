@@ -67,6 +67,8 @@ The web chart uses a dependency-free SVG layout. A compact layered forest places
 
 ## ENT-004 — Access: global for legal staff; DD-014 confidential flag for the rare case
 
+**Amended 10 September 2026:** the DD-014 administrator bypass is removed. Confidential Entities require a grant for administrators too. New Entity creators receive a recorded grant; explicit grantees can manage access. The DD-014 amendment in [DECISIONS.md](DECISIONS.md) supersedes the original administrator exceptions below.
+
 - **Status** — Accepted
 - **Date** — 2026-08-06
 - **Decision** — All entities visible to Member+; no per-entity grants. `is_confidential` (DD-014) covers sensitive cases (undisclosed acquisition vehicles): visible to Admins + a grant list, rendered as "restricted entity" elsewhere (MTR-015 convention). Contributors and Business Users have no Entities module access.

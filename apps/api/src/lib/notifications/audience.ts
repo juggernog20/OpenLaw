@@ -133,7 +133,7 @@ export type { RequestSide };
  * the record's named people, which is what a confidential document's own
  * scope answers. Today that set and the group-2 audience below coincide
  * — a document has no team of its own, so its audience is the contract's
- * named team, its Owner, and Administrators — and the gate is asked
+ * named team and Owner — and the gate is asked
  * anyway, because "only the document's audience" has to be a property of
  * the code rather than of the two rules happening to agree.
  *
@@ -197,9 +197,8 @@ export async function entityReachedBy(
         isNull(users.archivedAt),
         isNull(entities.archivedAt),
         or(
-          eq(users.role, "administrator"),
           and(
-            eq(users.role, "legal_team_member"),
+            inArray(users.role, ["administrator", "legal_team_member"]),
             or(eq(entities.isConfidential, false), isNotNull(entityGrants.userId)),
           ),
         ),
@@ -224,11 +223,9 @@ export interface RecordAudience {
    * `watcher`, and `contributor` all count, because each of them is a
    * row somebody put on the record on purpose.
    *
-   * An Administrator is **not** here by role. They reach every contract
-   * (DD-014), which is why the wall lets them through, but reaching a
-   * record is not the same as being on it — and a bell that told every
-   * Administrator about every status change on every contract would be
-   * the ambient noise NOT-002's defaults exist to avoid.
+   * Administrators are included through ownership or team membership,
+   * just like other staff. Merely reaching an open record does not
+   * subscribe someone to its notifications.
    */
   userIds: readonly string[];
 }
@@ -588,10 +585,7 @@ function staffScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
     and(eq(notifications.eventType, "briefing.ready"), eq(notifications.userId, user.id)),
     and(
       eq(notifications.entityType, CONTRACT_ENTITY),
-      // An Administrator reaches every contract, so the subquery would be
-      // the whole table and the clause only cost. `contractTeamScope`
-      // answering `undefined` is that fact, read here rather than
-      // restated as a role check of this module's own.
+      // Apply the shared record scope to stored notifications as well as fan-out.
       scope === undefined
         ? undefined
         : inArray(
