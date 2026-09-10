@@ -78,7 +78,11 @@ export async function validateKeyDateRecipients(
   const options = await keyDateReminderOptions(db, kind, id);
   const allowed = new Set(options.recipients.map((person) => person.id));
   if (selected.some((person) => !allowed.has(person))) {
-    throw httpError(400, "Choose reminder recipients from the record's current team.");
+    throw httpError(
+      400,
+      "Choose reminder recipients from the record's current team. " +
+        "Business Users receive no reminders and cannot be chosen.",
+    );
   }
 }
 
