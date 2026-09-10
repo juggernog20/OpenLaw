@@ -25,6 +25,7 @@ test("every Contract Status stays reachable in crowded menus at viewport edges (
   const createdStatuses: string[] = [];
   let contractNumber: number | undefined;
   let savedStatus: string | undefined;
+  let walkthroughPassed = false;
   const stamp = Date.now();
   try {
     const stages = ["draft", "review", "approval", "signature", "active", "ended"] as const;
@@ -49,12 +50,11 @@ test("every Contract Status stays reachable in crowded menus at viewport edges (
       data: { title: `E2E crowded Status menu ${stamp}`, contractTypeId: type!.id },
     });
     expect(created.status(), await created.text()).toBe(201);
-    contractNumber = z
-      .object({ contract: z.object({ number: z.number() }) })
-      .parse(await created.json()).contract.number;
-    savedStatus = z
-      .object({ contract: z.object({ statusId: z.string() }) })
-      .parse(await created.json()).contract.statusId;
+    const contract = z
+      .object({ contract: z.object({ number: z.number(), statusId: z.string() }) })
+      .parse(await created.json()).contract;
+    contractNumber = contract.number;
+    savedStatus = contract.statusId;
     const selectedId = createdStatuses[18]!;
     const selected = await page.request.patch(`/api/v1/contracts/${contractNumber}`, {
       data: { statusId: selectedId },
@@ -104,6 +104,7 @@ test("every Contract Status stays reachable in crowded menus at viewport edges (
         await expect(trigger).toBeFocused();
       });
     }
+    walkthroughPassed = true;
   } finally {
     test.setTimeout(test.info().timeout + 30_000);
     const failures: string[] = [];
@@ -121,6 +122,11 @@ test("every Contract Status stays reachable in crowded menus at viewport edges (
       const response = await page.request.post(`/api/v1/contract-statuses/${id}/archive`);
       if (!response.ok()) failures.push(`Status cleanup: ${response.status()}`);
     }
-    expect(failures).toEqual([]);
+    // Cleanup runs whatever happened above, but a cleanup error must not
+    // replace the menu failure that caused it. Report it as the test's own
+    // failure only when the walkthrough itself passed; otherwise leave the
+    // real error standing and say what the run left behind.
+    if (walkthroughPassed) expect(failures).toEqual([]);
+    else if (failures.length > 0) console.warn(`#768 cleanup left work behind: ${failures}`);
   }
 });
