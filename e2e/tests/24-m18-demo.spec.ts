@@ -635,8 +635,10 @@ test.describe("M18 demo path", () => {
       await ownerBell.click();
       const centre = notificationCentre(ownerPage);
       await expect(centre).toBeVisible();
+      // Unanchored: an unread row says so at the front of its own name
+      // (DES-049, 2026-09-09), and every row here is unread.
       const briefingRow = centre.getByRole("link", {
-        name: /^Your daily briefing is ready/,
+        name: /Your daily briefing is ready/,
       });
       await expect(briefingRow).toHaveAttribute("href", "/");
       const deadlineRow = centre.getByRole("link", {

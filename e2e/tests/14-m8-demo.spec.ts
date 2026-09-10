@@ -411,13 +411,18 @@ test.describe.serial("M8 demo path", () => {
         .parse(await (await created).json()).contract.number;
       await expect(dialog).toBeHidden();
 
-      // It took a reference from the CTR-003 sequence, and the row
-      // opens the record at that reference (`/contracts/42`).
+      // It took a reference from the CTR-003 sequence, and creating
+      // lands on the record at that reference (`/contracts/42`), rather
+      // than leaving the person to find their own row (2026-09-09).
+      await expect(page).toHaveURL(new RegExp(`/contracts/${number}$`));
+      await expect(page.getByRole("heading", { level: 1, name: title })).toBeVisible();
+
+      // The list carries the same reference, and its row opens it.
+      await page.goto("/contracts");
       const listRow = page.getByRole("row").filter({ hasText: title });
       await expect(listRow).toContainText(`C-${number}`);
       await listRow.getByRole("link", { name: title }).click();
       await expect(page).toHaveURL(new RegExp(`/contracts/${number}$`));
-      await expect(page.getByRole("heading", { level: 1, name: title })).toBeVisible();
 
       // The Owner: one accountable person, set from the picker and
       // committed on its own (CTR-004, DES-017).

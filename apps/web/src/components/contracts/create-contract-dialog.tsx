@@ -127,8 +127,12 @@ export function CreateContractDialog({
   const owners = users.filter((person) => isMemberPlus(person.role));
   /** The Owner (CTR-004). Seeded once, like the title: the person may
    * clear it, and a seed that re-applied itself would put them back. */
+  // The person opening this dialog is the likely Owner, so the picker
+  // starts on them and can be cleared. A routed renewal is the
+  // exception: a successor is born unassigned, like every other fact it
+  // does not inherit (CTR-015 at birth, CTR-004).
   const [managerId, setManagerId] = useState(
-    owners.some((person) => person.id === viewerId) ? viewerId : "",
+    !renewalOf && owners.some((person) => person.id === viewerId) ? viewerId : "",
   );
   /** The fields' drafts, keyed by slug. They survive switching
    * types and back — a name typed once should not have to be typed
