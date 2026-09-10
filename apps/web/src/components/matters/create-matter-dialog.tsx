@@ -120,13 +120,14 @@ export function CreateMatterDialog({
       missing.push(intl.formatMessage({ id: "matters.field.title", defaultMessage: "Title" }));
     if (!matterTypeId)
       missing.push(intl.formatMessage({ id: "matters.field.type", defaultMessage: "Matter type" }));
-    const customFields: Record<string, CustomFieldValue> = {};
+    const customFields: Record<string, CustomFieldValue | null> = {};
     const invalidNumbers: string[] = [];
     for (const field of fields) {
       const parsed = toValue(field, drafts[field.slug] ?? emptyDraft(field));
       if ("error" in parsed) invalidNumbers.push(field.displayName);
-      else if (parsed.value !== null) customFields[field.slug] = parsed.value;
-      else if (field.isRequired) missing.push(field.displayName);
+      else if (parsed.value === null && field.isRequired) missing.push(field.displayName);
+      // Null overrides a template default when the person clears its Field.
+      else customFields[field.slug] = parsed.value;
     }
     if (invalidNumbers.length || missing.length) {
       const pieces = [

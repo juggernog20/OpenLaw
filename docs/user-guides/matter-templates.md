@@ -24,7 +24,7 @@ Next configure a Matter-targeting [Request form](request-forms.md), submit a fic
 
 Conversion starts the title from the Request's Summary and Priority from its Urgency. It leaves Risk and Matter Manager unset, even when the template has a Risk default. A Manager-targeted Task is therefore unassigned after conversion. The template's title prefix and Priority do not replace the Request's title and Urgency. Set the Manager, Risk, and Task assignments on the created Matter when needed.
 
-Values explicitly supplied at creation take precedence over template defaults. In this version, clearing an optional Field that has a template default in the creation dialog can allow that default to return after saving. Check the created Matter and clear the optional value on its Overview if necessary.
+Values explicitly supplied at creation take precedence over template defaults. Clearing an optional Field in the creation dialog keeps it empty on the saved Matter. Untouched defaults still apply. Required Fields must have a value before creation.
 
 ## Change or archive a template
 
