@@ -828,11 +828,13 @@ describe("an immediate email whose wake-up was lost", () => {
         harness.mailer.messagesTo(OUTSIDER.email).filter((m) => m.text.includes(contract.title))
           .length > delivered,
     );
-    const [settled] = await harness.db
-      .select({ emailedAt: notifications.emailedAt })
-      .from(notifications)
-      .where(eq(notifications.id, row!.id));
-    expect(settled!.emailedAt).not.toBeNull();
+    await settles("the re-asked hand-over email's delivery timestamp", async () => {
+      const [settled] = await harness.db
+        .select({ emailedAt: notifications.emailedAt })
+        .from(notifications)
+        .where(eq(notifications.id, row!.id));
+      return settled?.emailedAt != null;
+    });
   });
 });
 
