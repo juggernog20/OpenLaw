@@ -1102,7 +1102,15 @@ const REVIEW_RESPONSES = {
   "/api/v1/officer-roles": { officerRoles: [TYPE_ROW] },
   "/api/v1/knowledge/types": { knowledgeTypes: [TYPE_ROW] },
   "/api/v1/request-types": {
-    requestTypes: [{ ...TYPE_ROW, targetModule: null, targetTypeId: null, formFieldCount: 0 }],
+    requestTypes: [
+      {
+        ...TYPE_ROW,
+        turnaroundDays: null,
+        targetModule: null,
+        targetTypeId: null,
+        formFieldCount: 0,
+      },
+    ],
   },
   "/api/v1/fields": {
     fields: [

@@ -100,6 +100,8 @@
  * dressed as a fact.
  */
 
+import { requestAssignees } from "./projection.js";
+import { requestCalendar } from "./calendar.js";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import type { FastifyRequest } from "fastify";
 import type { AuthenticatedUser } from "../../auth/guards.js";
@@ -190,6 +192,9 @@ const RequestTypeRefSchema = z.object({
  * block draws: the reference, the one-line ask, the front door it came
  * through, where it got to, and how old it is. */
 const MyRequestRowSchema = z.object({
+  owner: z.object({ displayName: z.string() }).nullable(),
+  expectedBy: z.iso.date().nullable(),
+  estimatePassed: z.boolean(),
   id: z.string(),
   /** Rendered R-###; it is also what the detail is addressed by. */
   number: z.number().int(),
@@ -410,9 +415,12 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
           typeId: requestTypes.id,
           typeSlug: requestTypes.slug,
           typeDisplayName: requestTypes.displayName,
+          expectedBy: requests.expectedBy,
+          owner: { displayName: requestAssignees.displayName },
         })
         .from(requests)
         .innerJoin(requestTypes, eq(requests.requestTypeId, requestTypes.id))
+        .leftJoin(requestAssignees, eq(requests.assigneeId, requestAssignees.id))
         // DD-013 as a `where` clause: the Requester is the session, and
         // the route offers no other filter to be widened by a query
         // string. Archived Requests are absent by the house rule that
@@ -430,7 +438,8 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         // home draws the block whole — there is no "load more" in I5 to
         // recover the tail with.
         .orderBy(desc(requests.createdAt), desc(requests.number));
-      return { requests: rows.map(toRow) };
+      const { today } = await requestCalendar(app.db);
+      return { requests: rows.map((row) => toRow(row, today)) };
     },
   );
 
@@ -486,9 +495,12 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
           typeId: requestTypes.id,
           typeSlug: requestTypes.slug,
           typeDisplayName: requestTypes.displayName,
+          expectedBy: requests.expectedBy,
+          owner: { displayName: requestAssignees.displayName },
         })
         .from(requests)
         .innerJoin(requestTypes, eq(requests.requestTypeId, requestTypes.id))
+        .leftJoin(requestAssignees, eq(requests.assigneeId, requestAssignees.id))
         .where(
           and(
             eq(requests.number, request.params.number),
@@ -508,7 +520,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
       ]);
       return {
         request: {
-          ...toRow(row),
+          ...toRow(row, (await requestCalendar(app.db)).today),
           description: row.description,
           urgency: row.urgency,
           customFields: row.customFields,
@@ -822,18 +834,26 @@ const AttachmentUploadForm = z.any().meta({
 });
 
 /** The joined row, reshaped into the answer's nested request type. */
-function toRow<T extends RequestRowColumns>(row: T) {
+function toRow<T extends RequestRowColumns>(row: T, today: string) {
   return {
     id: row.id,
     number: row.number,
     status: row.status,
     summary: row.summary,
+    owner: row.owner,
+    expectedBy: row.expectedBy,
+    estimatePassed:
+      row.expectedBy !== null &&
+      row.expectedBy < today &&
+      (row.status === "new" || row.status === "converted"),
     createdAt: row.createdAt.toISOString(),
     requestType: { id: row.typeId, slug: row.typeSlug, displayName: row.typeDisplayName },
   };
 }
 
 interface RequestRowColumns {
+  owner: { displayName: string } | null;
+  expectedBy: string | null;
   id: string;
   number: number;
   status: (typeof REQUEST_STATUSES)[number];

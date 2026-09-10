@@ -1885,6 +1885,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/requests/{number}/expected-by": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Set or clear Legal's return estimate on an open or in-progress Request */
+    patch: operations["setRequestEstimate"];
+    trace?: never;
+  };
   "/api/v1/requests/assignees": {
     parameters: {
       query?: never;
@@ -11317,6 +11334,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              turnaroundDays: number | null;
               targetModule: ("matter" | "contract") | null;
               targetTypeId: string | null;
               formFieldCount: number;
@@ -11366,6 +11384,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              turnaroundDays: number | null;
               targetModule: ("matter" | "contract") | null;
               targetTypeId: string | null;
               formFieldCount: number;
@@ -11411,6 +11430,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              turnaroundDays: number | null;
               targetModule: ("matter" | "contract") | null;
               targetTypeId: string | null;
               formFieldCount: number;
@@ -11472,6 +11492,7 @@ export interface operations {
         "application/json": {
           displayName?: string;
           description?: string | null;
+          turnaroundDays?: number | null;
           targetModule?: ("matter" | "contract") | null;
           targetTypeId?: string | null;
         };
@@ -11494,6 +11515,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              turnaroundDays: number | null;
               targetModule: ("matter" | "contract") | null;
               targetTypeId: string | null;
               formFieldCount: number;
@@ -11543,6 +11565,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              turnaroundDays: number | null;
               targetModule: ("matter" | "contract") | null;
               targetTypeId: string | null;
               formFieldCount: number;
@@ -11594,6 +11617,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              turnaroundDays: number | null;
               targetModule: ("matter" | "contract") | null;
               targetTypeId: string | null;
               formFieldCount: number;
@@ -11639,6 +11663,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              turnaroundDays: number | null;
               targetModule: ("matter" | "contract") | null;
               targetTypeId: string | null;
               formFieldCount: number;
@@ -12181,6 +12206,7 @@ export interface operations {
         content: {
           "application/json": {
             requestTypes: {
+              turnaroundDays: number | null;
               id: string;
               slug: string;
               displayName: string;
@@ -12264,6 +12290,7 @@ export interface operations {
         content: {
           "application/json": {
             requestType: {
+              turnaroundDays: number | null;
               id: string;
               slug: string;
               displayName: string;
@@ -12565,6 +12592,11 @@ export interface operations {
         content: {
           "application/json": {
             requests: {
+              owner: {
+                displayName: string;
+              } | null;
+              expectedBy: string | null;
+              estimatePassed: boolean;
               id: string;
               number: number;
               /** @enum {string} */
@@ -12610,6 +12642,11 @@ export interface operations {
         content: {
           "application/json": {
             request: {
+              owner: {
+                displayName: string;
+              } | null;
+              expectedBy: string | null;
+              estimatePassed: boolean;
               id: string;
               number: number;
               /** @enum {string} */
@@ -12805,6 +12842,96 @@ export interface operations {
       };
     };
   };
+  setRequestEstimate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          expectedBy: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            request: {
+              id: string;
+              number: number;
+              /** @enum {string} */
+              status: "new" | "converted" | "resolved" | "declined";
+              summary: string;
+              description: string | null;
+              /** @enum {string} */
+              urgency: "low" | "medium" | "high" | "critical";
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              declinedReason: string | null;
+              createdAt: string;
+              requestType: {
+                id: string;
+                displayName: string;
+                targetModule: ("matter" | "contract") | null;
+                targetTypeId: string | null;
+                targetTypeName: string | null;
+              };
+              requester: {
+                id: string;
+                displayName: string;
+                email: string;
+                image: string | null;
+              };
+              assignee: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              } | null;
+              expectedBy: string | null;
+              suggestedExpectedBy: string | null;
+              convertedContract: {
+                number: number;
+              } | null;
+              convertedRecord:
+                | (
+                    | {
+                        /** @enum {string} */
+                        module: "contract";
+                        number: number;
+                      }
+                    | {
+                        /** @enum {string} */
+                        module: "matter";
+                        number: number;
+                      }
+                  )
+                | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   requestAssigneeOptions: {
     parameters: {
       query?: never;
@@ -12896,6 +13023,8 @@ export interface operations {
                 displayName: string;
                 image: string | null;
               } | null;
+              expectedBy: string | null;
+              suggestedExpectedBy: string | null;
               convertedContract: {
                 number: number;
               } | null;
@@ -13016,6 +13145,8 @@ export interface operations {
                 displayName: string;
                 image: string | null;
               } | null;
+              expectedBy: string | null;
+              suggestedExpectedBy: string | null;
               convertedContract: {
                 number: number;
               } | null;
@@ -13185,6 +13316,8 @@ export interface operations {
                 displayName: string;
                 image: string | null;
               } | null;
+              expectedBy: string | null;
+              suggestedExpectedBy: string | null;
               convertedContract: {
                 number: number;
               } | null;
@@ -13320,6 +13453,8 @@ export interface operations {
                 displayName: string;
                 image: string | null;
               } | null;
+              expectedBy: string | null;
+              suggestedExpectedBy: string | null;
               convertedContract: {
                 number: number;
               } | null;
@@ -13466,6 +13601,8 @@ export interface operations {
                 displayName: string;
                 image: string | null;
               } | null;
+              expectedBy: string | null;
+              suggestedExpectedBy: string | null;
               convertedContract: {
                 number: number;
               } | null;

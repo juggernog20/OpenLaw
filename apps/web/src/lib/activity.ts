@@ -362,7 +362,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "displayName {Name} display_name {Display name} name {Name} " +
         "role {Role} email {Email} " +
         "stage {Stage} moduleScope {Scope} isRequired {Required} " +
-        "targetModule {Target} targetType {Target type} " +
+        "targetModule {Target} targetType {Target type} turnaroundDays {Turnaround (calendar days)} " +
         "theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} " +
         "defaultLocale {Default language} defaultTimezone {Default timezone} " +
         "authMode {Sign-in method} allowedEmailDomains {Allowed email domains} " +
@@ -2215,6 +2215,18 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   // comment on the same feed and narrates as itself — this entry is the
   // closure, so a resolution with a reply and one without read the same
   // here.
+  "request.expected_by_changed": {
+    icon: CalendarClock,
+    message: defineMessage({
+      id: "activity.request.expectedByChanged",
+      defaultMessage:
+        "{set, select, yes {{actor} set Expected back (estimate) to {date}} other {{actor} cleared Expected back (estimate)}}",
+    }),
+    values: (intl, payload) => ({
+      set: payload.to ? "yes" : "no",
+      date: civilDateIn(intl, payload, "to"),
+    }),
+  },
   "request.assignee_changed": {
     icon: UserPlus,
     message: defineMessage({
