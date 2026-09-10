@@ -238,19 +238,9 @@ async function openCreateDialog(user: ReturnType<typeof userEvent.setup>) {
   await user.click(within(subbar).getByRole("button", { name: "Create contract" }));
 }
 
-/**
- * Runs an action that starts a navigation and, inside the same act
- * scope, waits for the router to reach a URL `arrived` accepts and go
- * idle. Renders the router schedules while the scope is open queue
- * behind it and commit before this returns, so the list's read-version
- * bump has landed by the time the test clicks again.
- *
- * A waitFor on router.state outside act is not enough. The router
- * settles outside React, and the render it schedules can still be
- * pending when the next click lands. That click starts a list read the
- * late bump then discards, and the URL keeps the old filter. This is
- * the gap 98e894b6 narrowed and CI still fell into.
- */
+/** Waits for navigation and its React commit before asserting settled UI.
+ * Router state can become idle while the previous DOM is still visible.
+ * list-navigation.test.tsx covers interactions during that gap. */
 async function navigated(
   router: ReturnType<typeof renderAt>["router"],
   action: () => Promise<void>,
@@ -662,9 +652,7 @@ describe("the /contracts destination", () => {
     expect(await screen.findByText("C-42")).toBeInTheDocument();
     expect(screen.queryByText("C-9")).not.toBeInTheDocument();
 
-    // The toggle re-reads with includeEnded and the deal appears. Each
-    // toggle settles its navigation before the next click: a chip click
-    // that lands before the list's re-render commits is dropped.
+    // The toggle re-reads with includeEnded and the deal appears.
     await toggleListFlag(user, "Show ended", { router, flag: "includeEnded" });
     expect(await screen.findByText("C-9")).toBeInTheDocument();
 
