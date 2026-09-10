@@ -99,7 +99,7 @@
   /* Avatar: Warm overrides DES-018's light blue with the terracotta
    * accent (DES-019). Blue is the one hue Warm's palette refuses. */
   --avatar-bg: #c97b5c;
-  --avatar-fg: #fbfaf7;
+  --avatar-fg: #1f2328;
 
   /* Shell chrome colors (DES-019, #44). Warm's chrome is layered light
    * surfaces, so every strip carries a separating border, the search box
