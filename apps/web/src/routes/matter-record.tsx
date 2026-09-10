@@ -337,16 +337,22 @@ function MatterRecord() {
     ...people,
     ...heldPeople.filter((held) => !people.some((row) => row.id === held.id)),
   ];
-  /** The reachable registry, in the order the registry read answered
-   * it. Every Entity-valued Field offers these, whether it holds a
-   * value or not. */
-  const liveEntities = useMemo<FieldReference[]>(
-    () =>
-      loader.entities
-        .filter((entity) => entity.archivedAt === null)
-        .map((entity) => ({ id: entity.id, label: entity.legalName })),
-    [loader.entities],
-  );
+  /** The Entities a Field may newly name, in the order the registry
+   * read answered them. The registry is read once, when the page
+   * loads, but every commit answers with fresh references. A reference
+   * that comes back sealed or archived is the later word about that
+   * Entity, so its stale registry row is dropped here rather than
+   * offered as a choice under a name the viewer may no longer reach. */
+  const liveEntities = useMemo<FieldReference[]>(() => {
+    const overtaken = new Set(
+      customFieldRefs.entities
+        .filter((entity) => entity.restricted || entity.archived)
+        .map((entity) => entity.id),
+    );
+    return loader.entities
+      .filter((entity) => entity.archivedAt === null && !overtaken.has(entity.id))
+      .map((entity) => ({ id: entity.id, label: entity.legalName }));
+  }, [loader.entities, customFieldRefs]);
   /** One Field's choices: the registry, plus its own saved reference
    * when the registry left that out. An archived Entity stays
    * selectable as itself, and a restricted one keeps its mask

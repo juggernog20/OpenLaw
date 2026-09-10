@@ -332,6 +332,77 @@ describe("the editable matter record", () => {
     expect(screen.queryByRole("option", { name: "Restricted Entity" })).not.toBeInTheDocument();
   });
 
+  it("takes the saved reference over the stale registry row that names it", async () => {
+    // The registry is read once, when the page loads. A saved
+    // reference the server has since sealed or archived is the fresher
+    // word about that Entity than the row the registry read returned.
+    const fields = [
+      ENTITY_FIELD,
+      { ...ENTITY_FIELD, slug: "former-vehicle", displayName: "Former vehicle" },
+      { ...ENTITY_FIELD, slug: "secret-vehicle", displayName: "Secret vehicle" },
+    ];
+    const saved = row({
+      matterTypeId: "t-acquisition",
+      matterTypeName: "Acquisition",
+      customFields: { "former-vehicle": "e-archived", "secret-vehicle": "e-sealed" },
+    });
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/12")
+          return json(200, {
+            ...record(saved, [], {
+              users: [],
+              entities: [
+                { id: "e-archived", legalName: "Former Entity", restricted: false, archived: true },
+                { id: "e-sealed", restricted: true },
+              ],
+            }),
+            fields,
+          });
+        if (call.url.pathname === "/api/v1/matters/options") return options();
+        // The stale read still calls both of them live, and still
+        // carries the sealed Entity's name.
+        if (call.url.pathname === "/api/v1/entities")
+          return json(200, {
+            entities: [
+              { id: "e-archived", legalName: "Former Entity", archivedAt: null },
+              { id: "e-sealed", legalName: "Sealed Entity Ltd", archivedAt: null },
+              { id: "e-live", legalName: "Live Entity", archivedAt: null },
+            ],
+            nextCursor: null,
+          });
+        return undefined;
+      },
+    });
+    const user = userEvent.setup();
+    renderAt("/matters/12");
+    const blank = await screen.findByRole("combobox", { name: "Acquisition vehicle" });
+    expect(
+      within(blank)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["Not set", "Live Entity"]);
+    expect(screen.queryByRole("combobox", { name: "Secret vehicle" })).not.toBeInTheDocument();
+    expect(screen.getByText("Restricted Entity")).toBeInTheDocument();
+    expect(screen.queryByText("Sealed Entity Ltd")).not.toBeInTheDocument();
+    const former = screen.getByRole("combobox", { name: "Former vehicle" });
+    expect(former).toHaveValue("e-archived");
+    expect(
+      within(former)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["Not set", "Live Entity", "Former Entity"]);
+
+    await user.selectOptions(screen.getByLabelText("Matter type"), "t-vehicle");
+    const dialog = await screen.findByRole("dialog", { name: "Change matter type to Vehicle" });
+    expect(
+      within(within(dialog).getByLabelText(/Acquisition vehicle/))
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["Not set", "Live Entity"]);
+  });
+
   it("uses the shared Restricted Entity cell for an Entity-valued custom Field", async () => {
     const saved = row({
       matterTypeId: "t-acquisition",
