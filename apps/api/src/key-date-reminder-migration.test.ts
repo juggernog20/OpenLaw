@@ -34,7 +34,7 @@ async function insertOnce(db: Db, row: typeof notifications.$inferInsert) {
     .returning({ id: notifications.id });
 }
 
-it.each(["none", "valid", "swapped", "invalid"])(
+it.each(["none", "valid", "swapped", "invalid", "half-dropped", "renamed"])(
   "preserves delivered reminders and distinguishes new Key dates, staged index=%s",
   async (stage) => {
     const db = await freshDb(container, `key_date_reminder_upgrade_${stage}`);
@@ -69,18 +69,44 @@ it.each(["none", "valid", "swapped", "invalid"])(
           // Rehearse the catalog state left by a failed concurrent index build.
           await db.execute(sql`update pg_index set indisvalid = false
             where indexrelid = 'notifications_reminder_idx_v3'::regclass`);
+        } else if (stage === "half-dropped") {
+          // The other concurrent statement that can be interrupted. A failed
+          // DROP INDEX CONCURRENTLY leaves the old index in place and invalid,
+          // and the retry still has to get past it.
+          await db.execute(sql`update pg_index set indisvalid = false
+            where indexrelid = 'notifications_reminder_idx'::regclass`);
+        } else if (stage === "renamed") {
+          // Every statement ran; only the journal row was lost. The final name
+          // already holds the new definition and no staged index is left.
+          await db.execute(sql`drop index notifications_reminder_idx`);
+          await db.execute(
+            sql`alter index notifications_reminder_idx_v3 rename to notifications_reminder_idx`,
+          );
+          stagedOid = undefined;
         }
       }
       await runMigrations(db);
       const finalOid = (
         await db.execute(sql`select 'notifications_reminder_idx'::regclass::oid as oid`)
       ).rows[0]?.oid;
-      if (stage === "valid" || stage === "swapped") {
-        // A retry must keep the valid guard, including after the old index was dropped.
+      if (stage === "valid" || stage === "swapped" || stage === "half-dropped") {
+        // A retry must keep the valid guard, including after the old index was
+        // dropped or left half-dropped.
         expect(finalOid).toEqual(stagedOid);
       } else if (stage === "invalid") {
         expect(finalOid).not.toEqual(stagedOid);
       }
+      // Whatever the retry found, one valid index is left under the final name.
+      expect(
+        (
+          await db.execute(sql`select indisvalid from pg_index
+            where indexrelid = 'notifications_reminder_idx'::regclass`)
+        ).rows,
+      ).toEqual([{ indisvalid: true }]);
+      expect(
+        (await db.execute(sql`select to_regclass('notifications_reminder_idx_v3') as staged`))
+          .rows[0]?.staged,
+      ).toBeNull();
 
       expect(
         (await db.execute(sql`select to_jsonb(n) as row from notifications n order by id`)).rows,
