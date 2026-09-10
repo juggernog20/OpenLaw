@@ -258,20 +258,20 @@ test.describe.serial("M9 demo path", () => {
       const thread = await openApplet(lawyerPage, "Comments");
       await expect(thread.getByText("Nothing has been said about this record yet.")).toBeVisible();
 
-      // Both tiers, from the three-segment composer. Working team is
-      // what a record page opens on (DD-016), so each of these is a
-      // deliberate move off the preset.
-      await postComment(lawyerPage, thread, "Legal only", LEGAL_ONLY_COMMENT);
-      await postComment(lawyerPage, thread, "Full thread", FULL_THREAD_COMMENT);
+      // Both tiers a Contract composer offers. It opens on Contract Team
+      // (DD-016), so the Legal Only line is a deliberate move off the
+      // preset and the second line is said in the room it opened in.
+      await postComment(lawyerPage, thread, "Legal Only", LEGAL_ONLY_COMMENT);
+      await postComment(lawyerPage, thread, "Contract Team", FULL_THREAD_COMMENT);
 
       // The author hears both, and each row wears the room it was said
       // in (CMT-003).
       const saidRows = panelRows(thread, "Comments");
       await expect(saidRows).toHaveCount(2);
       await expect(saidRows.nth(0)).toContainText(LEGAL_ONLY_COMMENT);
-      await expect(saidRows.nth(0)).toContainText("Legal only");
+      await expect(saidRows.nth(0)).toContainText("Legal Only");
       await expect(saidRows.nth(1)).toContainText(FULL_THREAD_COMMENT);
-      await expect(saidRows.nth(1)).toContainText("Full thread");
+      await expect(saidRows.nth(1)).toContainText("Contract Team");
 
       // A field edit on the record, committed on its own (DES-017).
       const renamed = `${title} — countersigned`;
@@ -340,11 +340,14 @@ test.describe.serial("M9 demo path", () => {
       await expect(heardRows).toHaveCount(1);
       await expect(heardRows.nth(0)).toContainText(FULL_THREAD_COMMENT);
       await expect(theirThread.getByText(LEGAL_ONLY_COMMENT)).toHaveCount(0);
-      await expect(theirThread.getByText("Legal only")).toHaveCount(0);
-      // And no room they are not in is on offer to post into: the
-      // composer has two segments, not three.
-      await expect(theirThread.getByRole("radio", { name: "Legal only" })).toHaveCount(0);
-      await expect(theirThread.getByRole("radio", { name: "Working team" })).toBeChecked();
+      await expect(theirThread.getByText("Legal Only")).toHaveCount(0);
+      // And no room they are not in is on offer to post into. One
+      // segment, and it is the Contract Team.
+      await expect(
+        theirThread.getByRole("group", { name: "Audience" }).getByRole("radio"),
+      ).toHaveCount(1);
+      await expect(theirThread.getByRole("radio", { name: "Legal Only" })).toHaveCount(0);
+      await expect(theirThread.getByRole("radio", { name: "Contract Team" })).toBeChecked();
 
       // Not in the feed. The field edit and the Full Thread comment are
       // both there, so the missing entry is the predicate at work and
