@@ -51,6 +51,12 @@ const TYPES = [
   { id: "t-general", slug: "general", displayName: "General", fields: [] },
   { id: "t-employment", slug: "employment", displayName: "Employment", fields: [FIELD] },
   { id: "t-acquisition", slug: "acquisition", displayName: "Acquisition", fields: [ENTITY_FIELD] },
+  {
+    id: "t-vehicle",
+    slug: "vehicle",
+    displayName: "Vehicle",
+    fields: [{ ...ENTITY_FIELD, isRequired: true }],
+  },
 ];
 const STATUSES = [
   { id: "s-open", slug: "open", displayName: "Open", category: "open", progressionGroup: "open" },
@@ -257,7 +263,15 @@ describe("the editable matter record", () => {
       await waitFor(() =>
         expect(patches).toEqual([{ customFields: { "acquisition-vehicle": "e-first" } }]),
       );
-      await waitFor(() => expect(within(control).getAllByRole("option")).toHaveLength(3));
+      // The saved Entity keeps the registry's place in the list; a
+      // selection does not move it to the end.
+      await waitFor(() =>
+        expect(
+          within(control)
+            .getAllByRole("option")
+            .map((option) => option.textContent),
+        ).toEqual(["Not set", "First Entity", "Second Entity"]),
+      );
       await user.selectOptions(control, "e-second");
       await waitFor(() =>
         expect(patches).toEqual([
@@ -989,6 +1003,62 @@ describe("the editable matter record", () => {
     await waitFor(() =>
       expect(patches).toEqual([
         { matterTypeId: "t-employment", customFields: { "business-unit": "People" } },
+      ]),
+    );
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("offers the reachable registry for a re-type gap on an Entity-valued Field", async () => {
+    let saved = row();
+    const patches: unknown[] = [];
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET")
+          return json(200, record(saved));
+        if (call.url.pathname === "/api/v1/matters/options") return options();
+        if (call.url.pathname === "/api/v1/entities")
+          return json(200, {
+            entities: [{ id: "e-live", legalName: "Live Entity", archivedAt: null }],
+            nextCursor: null,
+          });
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "PATCH") {
+          patches.push(call.body);
+          const body = call.body as { matterTypeId: string; customFields: Record<string, string> };
+          saved = row({
+            ...saved,
+            matterTypeId: body.matterTypeId,
+            matterTypeName: "Vehicle",
+            customFields: body.customFields,
+          });
+          return json(
+            200,
+            record(saved, [], {
+              users: [],
+              entities: [
+                { id: "e-live", legalName: "Live Entity", restricted: false, archived: false },
+              ],
+            }),
+          );
+        }
+        return undefined;
+      },
+    });
+    renderAt("/matters/12");
+    const user = userEvent.setup();
+    await user.selectOptions(await screen.findByLabelText("Matter type"), "t-vehicle");
+    const dialog = await screen.findByRole("dialog", { name: "Change matter type to Vehicle" });
+    const control = within(dialog).getByLabelText(/Acquisition vehicle/);
+    expect(
+      within(control)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["Not set", "Live Entity"]);
+    await user.selectOptions(control, "e-live");
+    await user.click(within(dialog).getByRole("button", { name: "Change type" }));
+    await waitFor(() =>
+      expect(patches).toEqual([
+        { matterTypeId: "t-vehicle", customFields: { "acquisition-vehicle": "e-live" } },
       ]),
     );
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();

@@ -337,16 +337,26 @@ function MatterRecord() {
     ...people,
     ...heldPeople.filter((held) => !people.some((row) => row.id === held.id)),
   ];
-  // Only live registry rows are new choices. Keep this Field's saved archived
-  // reference visible, and mask its saved restricted reference.
-  function entityChoices(value: CustomFieldValue | undefined): FieldReference[] {
+  /** The reachable registry, in the order the registry read answered
+   * it. Every Entity-valued Field offers these, whether it holds a
+   * value or not. */
+  const liveEntities = useMemo<FieldReference[]>(
+    () =>
+      loader.entities
+        .filter((entity) => entity.archivedAt === null)
+        .map((entity) => ({ id: entity.id, label: entity.legalName })),
+    [loader.entities],
+  );
+  /** One Field's choices: the registry, plus its own saved reference
+   * when the registry left that out. An archived Entity stays
+   * selectable as itself, and a restricted one keeps its mask
+   * (DD-016). The saved reference belongs to the Field that holds it,
+   * so it never becomes a choice on a Field beside it. */
+  function entityChoices(value: CustomFieldValue | undefined): readonly FieldReference[] {
     const held = customFieldRefs.entities.find((entity) => entity.id === value);
-    const choices = loader.entities
-      .filter((entity) => entity.archivedAt === null && entity.id !== held?.id)
-      .map((entity) => ({ id: entity.id, label: entity.legalName }));
-    if (!held) return choices;
+    if (!held || liveEntities.some((choice) => choice.id === held.id)) return liveEntities;
     return [
-      ...choices,
+      ...liveEntities,
       held.restricted
         ? {
             id: held.id,
@@ -1230,18 +1240,10 @@ function MatterRecord() {
             target={retypeTo}
             values={saved.customFields}
             people={peopleRefs}
-            entities={customFieldRefs.entities.map((entity) =>
-              entity.restricted
-                ? {
-                    id: entity.id,
-                    label: intl.formatMessage({
-                      id: "entities.restricted",
-                      defaultMessage: "Restricted Entity",
-                    }),
-                    restricted: true,
-                  }
-                : { id: entity.id, label: entity.legalName },
-            )}
+            // The dialog asks only for the target type's unanswered
+            // required Fields. No Field in it holds a saved reference,
+            // so the registry is the whole list.
+            entities={liveEntities}
             onOpenChange={(open) => {
               if (!open) setRetypeTo(null);
             }}
@@ -1286,7 +1288,7 @@ function MatterRecord() {
           <CreateMatterDialog
             matterTypes={matterTypes}
             users={users}
-            entities={loader.entities.map((entity) => ({ id: entity.id, label: entity.legalName }))}
+            entities={liveEntities}
             viewerId={user.id}
             parent={{ number: saved.number, title: saved.title }}
             onOpenChange={setSubMatterOpen}
