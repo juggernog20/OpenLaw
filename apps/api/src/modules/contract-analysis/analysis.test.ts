@@ -493,6 +493,10 @@ describe("the manual Contract analysis run", () => {
     await harness.db
       .delete(contractTeam)
       .where(and(eq(contractTeam.contractId, contract.id), eq(contractTeam.userId, memberId)));
+    await harness.db
+      .update(contracts)
+      .set({ managerId: null })
+      .where(eq(contracts.id, contract.id));
     const [run] = await harness.db
       .insert(contractAnalysisRuns)
       .values({
@@ -536,7 +540,20 @@ describe("the manual Contract analysis run", () => {
       cookies: adminCookies,
     });
     expect(administrator.statusCode, administrator.body).toBe(200);
-    expect(administrator.json().analysis.latestRun.outcome.results).toEqual([
+    expect(administrator.json().analysis.latestRun.outcome).not.toHaveProperty("results");
+
+    await harness.db.insert(contractTeam).values({
+      contractId: contract.id,
+      userId: memberId,
+      role: "member",
+    });
+    const teammate = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/contracts/${String(contract.number)}`,
+      cookies: memberCookies,
+    });
+    expect(teammate.statusCode, teammate.body).toBe(200);
+    expect(teammate.json().analysis.latestRun.outcome.results).toEqual([
       expect.objectContaining({ slug: "effective_date", value: "2027-02-03" }),
     ]);
   });

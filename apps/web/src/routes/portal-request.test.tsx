@@ -916,7 +916,7 @@ describe("the conversation", () => {
     });
     renderAt("/portal/requests/45");
 
-    const existing = await screen.findByRole("link", { name: "draft for requester.pdf" });
+    const existing = await screen.findByRole("link", { name: "Download draft for requester.pdf" });
     expect(existing).toHaveAttribute(
       "href",
       "/api/v1/comments/c-paper/attachments/a-paper?entityType=request&entityId=rq1",

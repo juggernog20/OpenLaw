@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { entities, entityTypes, eq, users } from "@openlaw/db";
+import { entities, entityGrants, entityTypes, eq, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies,
@@ -53,6 +53,8 @@ beforeAll(async () => {
     .values({ legalName: "Entity Paper Ltd", entityTypeId: type!.id })
     .returning({ id: entities.id });
   entityId = entity!.id;
+  const [admin] = await harness.db.select().from(users).where(eq(users.email, TEST_ADMIN.email));
+  await harness.db.insert(entityGrants).values({ entityId, userId: admin!.id });
 });
 
 afterAll(async () => harness.stop());

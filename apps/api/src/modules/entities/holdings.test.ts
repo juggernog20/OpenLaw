@@ -59,11 +59,16 @@ beforeAll(async () => {
 
 afterAll(async () => harness.stop());
 
-async function newEntity(legalName: string, jurisdiction: string | null = null, status = "active") {
+async function newEntity(
+  legalName: string,
+  jurisdiction: string | null = null,
+  status = "active",
+  cookies = memberCookies,
+) {
   const response = await harness.app.inject({
     method: "POST",
     url: "/api/v1/entities",
-    cookies: memberCookies,
+    cookies,
     payload: {
       legalName,
       entityTypeId: corporationId,
@@ -92,7 +97,7 @@ function createHolding(
 describe("Entity Holdings", () => {
   it("keeps topology while rendering an unreachable side as restricted and nameless", async () => {
     const parent = await newEntity("Visible Chart Parent");
-    const secret = await newEntity("Invisible Acquisition Vehicle");
+    const secret = await newEntity("Invisible Acquisition Vehicle", null, "active", adminCookies);
     expect((await createHolding(parent.id, "owned", secret.id, 100)).statusCode).toBe(201);
     const sealed = await harness.app.inject({
       method: "PATCH",
@@ -130,8 +135,8 @@ describe("Entity Holdings", () => {
 
   it("draws no edge between two walled Entities, even when each touches a visible one", async () => {
     const parent = await newEntity("Visible Twin Parent");
-    const first = await newEntity("Walled Twin First");
-    const second = await newEntity("Walled Twin Second");
+    const first = await newEntity("Walled Twin First", null, "active", adminCookies);
+    const second = await newEntity("Walled Twin Second", null, "active", adminCookies);
     expect((await createHolding(parent.id, "owned", first.id, 60)).statusCode).toBe(201);
     expect((await createHolding(parent.id, "owned", second.id, 40)).statusCode).toBe(201);
     expect((await createHolding(first.id, "owned", second.id, 50)).statusCode).toBe(201);
@@ -162,7 +167,7 @@ describe("Entity Holdings", () => {
 
   it("names a walled Entity on a refused loop only as Restricted Entity", async () => {
     const top = await newEntity("Loop Visible Top");
-    const middle = await newEntity("Loop Walled Middle");
+    const middle = await newEntity("Loop Walled Middle", null, "active", adminCookies);
     const bottom = await newEntity("Loop Visible Bottom");
     expect((await createHolding(top.id, "owned", middle.id, 100)).statusCode).toBe(201);
     expect((await createHolding(middle.id, "owned", bottom.id, 100)).statusCode).toBe(201);

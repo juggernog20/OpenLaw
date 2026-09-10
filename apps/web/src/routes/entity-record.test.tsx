@@ -265,6 +265,7 @@ describe("the /entities/:entityId record page", () => {
     const amount = await screen.findByRole("textbox", { name: "Par value" });
     expect(amount).toHaveValue("1,234.56");
     const currency = screen.getByRole("combobox", { name: "Currency" });
+    await within(currency).findByRole("option", { name: /BHD/ });
     await user.selectOptions(currency, "BHD");
     await waitFor(() =>
       expect(api.patches).toContainEqual({ parValue: 1234560, parValueCurrency: "BHD" }),
@@ -301,7 +302,9 @@ describe("the /entities/:entityId record page", () => {
     const user = userEvent.setup();
     const amount = await screen.findByRole("textbox", { name: "Par value" });
     expect(amount).toBeDisabled();
-    await user.selectOptions(screen.getByRole("combobox", { name: "Currency" }), "USD");
+    const currency = screen.getByRole("combobox", { name: "Currency" });
+    await within(currency).findByRole("option", { name: /USD/ });
+    await user.selectOptions(currency, "USD");
     await waitFor(() => expect(amount).toHaveValue("1"));
     expect(api.patches).toContainEqual({ parValue: 100, parValueCurrency: "USD" });
     expect(amount).toBeEnabled();

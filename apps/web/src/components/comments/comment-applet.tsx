@@ -1314,7 +1314,7 @@ function Composer({
     const displayName =
       person?.displayName ??
       (pickedDocuments.some((link) => link.displayName === title && link.href !== href)
-        ? `${title} (${documentOwnerReference(document!.owner)})`
+        ? `${title} (${documentOwnerReference(intl, document!.owner)})`
         : title);
     const before = draft.slice(0, query.start);
     const after = draft.slice(query.start + 1 + query.text.length);
@@ -1629,7 +1629,7 @@ function Composer({
                       <span className="min-w-0">
                         <span className="block truncate">{match.document.title}</span>
                         <span className="block truncate text-xs text-muted">
-                          {documentOwnerReference(match.document.owner)} ·{" "}
+                          {documentOwnerReference(intl, match.document.owner)} ·{" "}
                           {match.document.owner.title}
                         </span>
                       </span>

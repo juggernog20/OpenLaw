@@ -1058,6 +1058,7 @@ it("saves a budget currency independently of the existing amount", async () => {
   renderAt("/matters/12");
   const user = userEvent.setup();
   const picker = await screen.findByRole("combobox", { name: "Budget currency" });
+  await within(picker).findByRole("option", { name: /AED/ });
   expect(screen.getByRole("textbox", { name: "Budget approved" })).toHaveValue("12,345.67");
   await user.selectOptions(picker, "AED");
   await waitFor(() => expect(patches).toEqual([{ customFields: { budget_currency: "AED" } }]));

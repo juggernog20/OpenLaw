@@ -252,7 +252,7 @@ async function sourceRows(
   // additions beside M25's own generated vector.
   const withoutLaterEntityColumns = migrated
     ? sql.raw(
-        " - 'search_vector' - 'shares_authorized' - 'shares_issued' - 'par_value' - 'custom_fields' - 'is_confidential'",
+        " - 'search_vector' - 'shares_authorized' - 'shares_issued' - 'par_value' - 'par_value_currency' - 'custom_fields' - 'is_confidential'",
       )
     : sql.raw("");
   const withoutLaterDocumentColumns = migrated

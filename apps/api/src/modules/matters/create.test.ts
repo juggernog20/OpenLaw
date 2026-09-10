@@ -514,7 +514,7 @@ describe("callable refusal parity", () => {
 });
 
 describe("matter reach", () => {
-  it("404s a confidential matter outside its team and admits its team, manager, and Administrator", async () => {
+  it("404s a confidential matter outside its team, including administrators, and admits its team and manager", async () => {
     const created = await createOverHttp({
       title: "Private advice",
       matterTypeId: plainTypeId,
@@ -564,7 +564,7 @@ describe("matter reach", () => {
           cookies: adminCookies,
         })
       ).statusCode,
-    ).toBe(200);
+    ).toBe(404);
     await harness.db
       .insert(matterTeam)
       .values({ matterId: matter.id, userId: contributorId, role: "contributor" });

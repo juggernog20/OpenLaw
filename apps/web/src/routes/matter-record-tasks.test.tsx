@@ -339,7 +339,7 @@ describe("team-first task picker", () => {
     const modal = within(await screen.findByRole("dialog", { name: "Task details" }));
     expect(
       await modal.findByText(
-        "Confidential matter — whichever audience you pick, only the matter team, the Matter Manager, and Administrators can read it.",
+        "Confidential matter — only the matter team and matter manager can read it.",
       ),
     ).toBeInTheDocument();
     expect(modal.queryByText(/Confidential contract/)).not.toBeInTheDocument();
