@@ -122,6 +122,7 @@ export const JOB_QUEUES = {
   morningRound: "notification.morning-round",
   /** One CTR-008 analysis run, collapsed by Contract while waiting. */
   contractAnalysis: "contract.analysis",
+  conversionDraft: "request.conversion-draft",
 } as const;
 
 /** What the text-extraction queue carries. */
@@ -177,6 +178,7 @@ export interface ContractAnalysisJob {
  * only ever sees this type and never learns that pg-boss is behind it.
  */
 export interface JobQueue {
+  requestConversionDraft(draftId: string): Promise<void>;
   /**
    * Asks for one version's text to be extracted (DOC-005).
    *
@@ -296,5 +298,6 @@ export function createUnconfiguredJobQueue(): JobQueue {
     requestExecutedCopyFetch: refuse,
     requestNotificationEmail: refuse,
     requestContractAnalysis: refuse,
+    requestConversionDraft: refuse,
   };
 }

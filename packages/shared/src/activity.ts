@@ -820,6 +820,7 @@ type MatterPayloads = {
   "matter.created_from_request": { number: number; title: string; requestNumber: number };
   "matter.confidentiality_set": { number: number; title: string };
   "matter.confidentiality_cleared": { number: number; title: string };
+  "matter.field_confirmed": { number: number; title: string; slug: string };
   "matter.updated": {
     number: number;
     title: string;
@@ -1075,7 +1076,7 @@ type AiConnectorPayloads = {
       }
     | {
         preset: string;
-        field: "preset" | "protocol" | "baseUrl" | "model";
+        field: "preset" | "protocol" | "baseUrl" | "model" | "matterPreparation";
         old: unknown;
         new: unknown;
       };

@@ -574,6 +574,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/ai-connector/workflows": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Update AI workflow settings; an empty body changes nothing */
+    patch: operations["updateAiWorkflows"];
+    trace?: never;
+  };
   "/api/v1/ai-connector/models": {
     parameters: {
       query?: never;
@@ -2203,6 +2220,102 @@ export interface paths {
     put?: never;
     /** Resolve a Request without converting it. Requires a nonblank reply explaining the resolution, posted to the requester-visible thread. Records the comment, closure and notifications atomically. Member+ only; already decided Requests return 409. */
     post: operations["resolveRequest"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/conversion-drafts/settings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getConversionDraftSettings"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/requests/{number}/conversion-drafts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["prepareConversionDraft"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/requests/{number}/conversion-drafts/{draftId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getConversionDraft"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/requests/{number}/conversion-drafts/{draftId}/evidence/{slug}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getConversionDraftEvidence"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matters/{number}/conversion-evidence/{slug}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getMatterConversionEvidence"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matters/{number}/conversion-confirm/{slug}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["confirmMatterConversionValue"];
     delete?: never;
     options?: never;
     head?: never;
@@ -6848,6 +6961,7 @@ export interface operations {
         content: {
           "application/json": {
             connector: {
+              matterPreparation: boolean;
               configured: boolean;
               enabled: boolean;
               preset:
@@ -6930,6 +7044,7 @@ export interface operations {
         content: {
           "application/json": {
             connector: {
+              matterPreparation: boolean;
               configured: boolean;
               enabled: boolean;
               preset:
@@ -6999,6 +7114,83 @@ export interface operations {
         content: {
           "application/json": {
             connector: {
+              matterPreparation: boolean;
+              configured: boolean;
+              enabled: boolean;
+              preset:
+                | (
+                    | "anthropic"
+                    | "openai"
+                    | "azure_openai"
+                    | "gemini"
+                    | "openrouter"
+                    | "ollama"
+                    | "custom"
+                  )
+                | null;
+              protocol: ("anthropic_messages" | "openai_chat_completions" | "gemini") | null;
+              baseUrl: string | null;
+              hasApiKey: boolean;
+              model: string | null;
+              disabledAt: string | null;
+              updatedAt: string | null;
+            };
+            presets: {
+              /** @enum {string} */
+              preset:
+                | "anthropic"
+                | "openai"
+                | "azure_openai"
+                | "gemini"
+                | "openrouter"
+                | "ollama"
+                | "custom";
+              label: string;
+              /** @enum {string} */
+              protocol: "anthropic_messages" | "openai_chat_completions" | "gemini";
+              baseUrl: string | null;
+              defaultModel: string;
+              requiresApiKey: boolean;
+              requiresBaseUrl: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateAiWorkflows: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          matterPreparation?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            connector: {
+              matterPreparation: boolean;
               configured: boolean;
               enabled: boolean;
               preset:
@@ -7147,6 +7339,7 @@ export interface operations {
         content: {
           "application/json": {
             connector: {
+              matterPreparation: boolean;
               configured: boolean;
               enabled: boolean;
               preset:
@@ -7216,6 +7409,7 @@ export interface operations {
         content: {
           "application/json": {
             connector: {
+              matterPreparation: boolean;
               configured: boolean;
               enabled: boolean;
               preset:
@@ -9058,6 +9252,14 @@ export interface operations {
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
+              aiUnverified?: {
+                [key: string]: {
+                  draftId: string;
+                  writtenAt: string;
+                  targetTypeId?: string;
+                  keyDateId?: string;
+                };
+              } | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -9155,6 +9357,14 @@ export interface operations {
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
+              aiUnverified?: {
+                [key: string]: {
+                  draftId: string;
+                  writtenAt: string;
+                  targetTypeId?: string;
+                  keyDateId?: string;
+                };
+              } | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -9360,6 +9570,14 @@ export interface operations {
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
+              aiUnverified?: {
+                [key: string]: {
+                  draftId: string;
+                  writtenAt: string;
+                  targetTypeId?: string;
+                  keyDateId?: string;
+                };
+              } | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -9507,6 +9725,14 @@ export interface operations {
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
+              aiUnverified?: {
+                [key: string]: {
+                  draftId: string;
+                  writtenAt: string;
+                  targetTypeId?: string;
+                  keyDateId?: string;
+                };
+              } | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -9799,6 +10025,14 @@ export interface operations {
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
+              aiUnverified?: {
+                [key: string]: {
+                  draftId: string;
+                  writtenAt: string;
+                  targetTypeId?: string;
+                  keyDateId?: string;
+                };
+              } | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -9874,6 +10108,14 @@ export interface operations {
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
+              aiUnverified?: {
+                [key: string]: {
+                  draftId: string;
+                  writtenAt: string;
+                  targetTypeId?: string;
+                  keyDateId?: string;
+                };
+              } | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -9975,6 +10217,7 @@ export interface operations {
               daysAway: number;
               overdue: boolean;
               isNext: boolean;
+              unverified?: boolean;
             }[];
           };
         };
@@ -10030,6 +10273,7 @@ export interface operations {
               daysAway: number;
               overdue: boolean;
               isNext: boolean;
+              unverified?: boolean;
             }[];
           };
         };
@@ -10074,6 +10318,7 @@ export interface operations {
               daysAway: number;
               overdue: boolean;
               isNext: boolean;
+              unverified?: boolean;
             }[];
           };
         };
@@ -10129,6 +10374,7 @@ export interface operations {
               daysAway: number;
               overdue: boolean;
               isNext: boolean;
+              unverified?: boolean;
             }[];
           };
         };
@@ -14338,6 +14584,283 @@ export interface operations {
       };
     };
   };
+  getConversionDraftSettings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterPreparation: boolean;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  prepareConversionDraft: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          targetModule: "matter";
+          targetTypeId: string;
+          retry?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            draft: {
+              id: string;
+              targetTypeId: string;
+              /** @enum {string} */
+              state: "pending" | "ready" | "failed";
+              suggestions: {
+                [key: string]: {
+                  value: string | number | boolean | string[];
+                  citations: {
+                    sourceId: string;
+                    revision: string;
+                    quote: string;
+                  }[];
+                };
+              };
+              conflicts: {
+                [key: string]: {
+                  value: string | number | boolean | string[];
+                  citations: {
+                    sourceId: string;
+                    revision: string;
+                    quote: string;
+                  }[];
+                };
+              };
+              warnings: string[];
+              failure: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getConversionDraft: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        draftId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            draft: {
+              id: string;
+              targetTypeId: string;
+              /** @enum {string} */
+              state: "pending" | "ready" | "failed";
+              suggestions: {
+                [key: string]: {
+                  value: string | number | boolean | string[];
+                  citations: {
+                    sourceId: string;
+                    revision: string;
+                    quote: string;
+                  }[];
+                };
+              };
+              conflicts: {
+                [key: string]: {
+                  value: string | number | boolean | string[];
+                  citations: {
+                    sourceId: string;
+                    revision: string;
+                    quote: string;
+                  }[];
+                };
+              };
+              warnings: string[];
+              failure: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getConversionDraftEvidence: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        draftId: string;
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            available: boolean;
+            citations: {
+              label: string;
+              text: string;
+              quote: string;
+              sourceId: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getMatterConversionEvidence: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            available: boolean;
+            citations: {
+              label: string;
+              text: string;
+              quote: string;
+              sourceId: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  confirmMatterConversionValue: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** @enum {boolean} */
+            ok: true;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   convertRequest: {
     parameters: {
       query?: never;
@@ -14351,6 +14874,9 @@ export interface operations {
       content: {
         "application/json": {
           title: string;
+          description?: string | null;
+          conversionDraftId?: string;
+          aiAccepted?: string[];
           contractTypeId?: string;
           matterTypeId?: string;
           templateId?: string;

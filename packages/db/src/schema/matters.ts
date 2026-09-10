@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** The MTR-002/MTR-003 matter record core, addressed by its own M-number. */
+import type { ConversionProvenanceMap } from "@openlaw/shared";
 import { sql } from "drizzle-orm";
 import {
   boolean,
@@ -41,6 +42,8 @@ export const matters = pgTable(
     priority: text("priority", { enum: SEVERITY_LEVELS }).notNull().default("medium"),
     // Null means risk has not been assessed.
     risk: text("risk", { enum: SEVERITY_LEVELS }),
+    // Null means no retained Unverified value provenance.
+    aiUnverified: jsonb("ai_unverified").$type<ConversionProvenanceMap>(),
     customFields: jsonb("custom_fields")
       .$type<Record<string, CustomFieldValue>>()
       .notNull()

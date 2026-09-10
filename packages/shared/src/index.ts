@@ -578,3 +578,10 @@ export const MAX_COMMENT_BODY_LENGTH = 10_000;
 /** The record must obtain confirmation before reopening a closed Matter. */
 export const MATTER_REOPEN_CONFIRMATION_PROBLEM_TYPE =
   "urn:openlaw:problem:matter-reopen-confirmation";
+
+export type {
+  ConversionCitation,
+  ConversionSuggestion,
+  ConversionProvenance,
+  ConversionProvenanceMap,
+} from "./conversion-draft.js";

@@ -3,6 +3,7 @@
 import {
   AiConfigError,
   AiUnavailableError,
+  type AiSource,
   type AiExtraction,
   type AiExtractionTarget,
   type AiProvider,
@@ -16,7 +17,7 @@ export interface FakeAiProviderOptions {
   protocol?: AiProtocol;
   apiKey?: string | null;
   model?: string;
-  answers?: Readonly<Record<string, { value: unknown; evidence?: string }>>;
+  answers?: Readonly<Record<string, Omit<AiExtraction, "slug">>>;
 }
 
 /** A deterministic provider for API and pipeline suites. */
@@ -24,7 +25,11 @@ export class FakeAiProvider implements AiProvider {
   readonly preset: AiPreset;
   readonly protocol: AiProtocol;
   readonly model: string;
-  readonly extractions: { text: string; targets: readonly AiExtractionTarget[] }[] = [];
+  readonly extractions: {
+    sources: readonly AiSource[];
+    text: string;
+    targets: readonly AiExtractionTarget[];
+  }[] = [];
 
   private readonly apiKey: string | null;
   private readonly answers: FakeAiProviderOptions["answers"];
@@ -38,9 +43,14 @@ export class FakeAiProvider implements AiProvider {
     this.answers = options.answers;
   }
 
-  async extract(text: string, targets: readonly AiExtractionTarget[]): Promise<AiExtraction[]> {
+  async extract(
+    input: string | readonly AiSource[],
+    targets: readonly AiExtractionTarget[],
+  ): Promise<AiExtraction[]> {
     await this.requireReady();
-    this.extractions.push({ text, targets: targets.map((target) => ({ ...target })) });
+    const sources = typeof input === "string" ? [] : input;
+    const text = typeof input === "string" ? input : sources.map((s) => s.text).join("\n");
+    this.extractions.push({ sources, text, targets: targets.map((target) => ({ ...target })) });
     return targets.map((target, index) => {
       const answer = this.answers?.[target.slug];
       if (answer) return { slug: target.slug, ...answer };

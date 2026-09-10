@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** M22/5's editable matter record: one commit per field and recoverable lifecycle acts. */
+import { subscribeLiveEvents } from "../lib/events";
+import { MatterConversionValue } from "../components/intake/matter-conversion-value";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Briefcase, ChevronRight, Settings } from "lucide-react";
 import { defineMessage, FormattedMessage, useIntl, type IntlShape } from "react-intl";
@@ -226,6 +228,42 @@ function MatterRecord() {
   const intl = useIntl();
   const navigate = useNavigate();
   const [saved, setSaved] = useState(loader.matter);
+  useEffect(() => {
+    let active = true;
+    const unsubscribe = subscribeLiveEvents((event) => {
+      if (
+        event.kind !== "record" ||
+        event.entityType !== "matter" ||
+        event.entityId !== saved.id ||
+        ![
+          "matter.field_confirmed",
+          "matter.updated",
+          "key_date.edited",
+          "key_date.removed",
+        ].includes(event.action)
+      )
+        return;
+      void api
+        .GET("/api/v1/matters/{number}", { params: { path: { number: saved.number } } })
+        .then(({ data }) => {
+          if (active && data)
+            setSaved((current) => ({ ...current, aiUnverified: data.matter.aiUnverified }));
+        })
+        .catch(() => {});
+    });
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, [saved.id, saved.number]);
+
+  const confirmedConversion = (slug: string) =>
+    setSaved((current) => {
+      const flags = { ...current.aiUnverified };
+      delete flags[slug];
+      return { ...current, aiUnverified: Object.keys(flags).length ? flags : null };
+    });
+
   const [fields, setFields] = useState(loader.fields);
   const [customFieldRefs, setCustomFieldRefs] = useState(loader.customFieldRefs);
   const [team, setTeam] = useState<MatterTeamMember[]>(loader.team);
@@ -931,45 +969,61 @@ function MatterRecord() {
                   </h2>
                 </header>
                 <div className="flex flex-col gap-4 p-4">
-                  {frozen ? (
-                    <div className="flex flex-col gap-1.5">
-                      <span className="text-sm font-medium text-secondary">
-                        <FormattedMessage id="matters.field.title" defaultMessage="Title" />
-                      </span>
-                      <p className="flex h-8 items-center text-md">{saved.title}</p>
-                    </div>
-                  ) : (
-                    <InlineText
-                      id="matter-title"
-                      label={intl.formatMessage({
-                        id: "matters.field.title",
-                        defaultMessage: "Title",
-                      })}
-                      value={title}
-                      status={fieldStatus.title ?? "idle"}
-                      error={fieldError.title}
-                      onValue={setTitle}
-                      onCommit={() => commitText("title")}
-                      onCancel={() => setTitle(saved.title)}
-                    />
-                  )}
+                  <MatterConversionValue
+                    active={Boolean(saved.aiUnverified?.title)}
+                    number={saved.number}
+                    slug="title"
+                    onConfirmed={!frozen ? confirmedConversion : undefined}
+                  >
+                    {" "}
+                    {frozen ? (
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-sm font-medium text-secondary">
+                          <FormattedMessage id="matters.field.title" defaultMessage="Title" />
+                        </span>
+                        <p className="flex h-8 items-center text-md">{saved.title}</p>
+                      </div>
+                    ) : (
+                      <InlineText
+                        id="matter-title"
+                        label={intl.formatMessage({
+                          id: "matters.field.title",
+                          defaultMessage: "Title",
+                        })}
+                        value={title}
+                        status={fieldStatus.title ?? "idle"}
+                        error={fieldError.title}
+                        onValue={setTitle}
+                        onCommit={() => commitText("title")}
+                        onCancel={() => setTitle(saved.title)}
+                      />
+                    )}
+                  </MatterConversionValue>{" "}
                   <dl className="grid grid-cols-1 gap-4 @2xl/page:grid-cols-2">
-                    <EditableSelectFact
-                      id="matter-type"
-                      label={
-                        <FormattedMessage id="matters.field.type" defaultMessage="Matter type" />
-                      }
-                      frozen={frozen}
-                      value={saved.matterTypeId}
-                      display={saved.matterTypeName}
-                      status={fieldStatus.matterTypeId ?? "idle"}
-                      error={fieldError.matterTypeId}
-                      onChange={pickType}
-                      options={typeOptions.map((type) => ({
-                        value: type.id,
-                        label: type.displayName,
-                      }))}
-                    />
+                    <MatterConversionValue
+                      active={Boolean(saved.aiUnverified?.matter_type)}
+                      number={saved.number}
+                      slug="matter_type"
+                      onConfirmed={!frozen ? confirmedConversion : undefined}
+                    >
+                      {" "}
+                      <EditableSelectFact
+                        id="matter-type"
+                        label={
+                          <FormattedMessage id="matters.field.type" defaultMessage="Matter type" />
+                        }
+                        frozen={frozen}
+                        value={saved.matterTypeId}
+                        display={saved.matterTypeName}
+                        status={fieldStatus.matterTypeId ?? "idle"}
+                        error={fieldError.matterTypeId}
+                        onChange={pickType}
+                        options={typeOptions.map((type) => ({
+                          value: type.id,
+                          label: type.displayName,
+                        }))}
+                      />
+                    </MatterConversionValue>{" "}
                     <EditableSelectFact
                       id="matter-manager"
                       label={
@@ -1006,22 +1060,30 @@ function MatterRecord() {
                         })),
                       ]}
                     />
-                    <EditableSelectFact
-                      id="matter-priority"
-                      label={
-                        <FormattedMessage id="matters.field.priority" defaultMessage="Priority" />
-                      }
-                      frozen={frozen}
-                      value={saved.priority}
-                      display={matterSeverityLabel(intl, saved.priority)}
-                      status={fieldStatus.priority ?? "idle"}
-                      error={fieldError.priority}
-                      onChange={(priority) => void commit("priority", { priority })}
-                      options={MATTER_SEVERITIES.map((severity) => ({
-                        value: severity,
-                        label: matterSeverityLabel(intl, severity),
-                      }))}
-                    />
+                    <MatterConversionValue
+                      active={Boolean(saved.aiUnverified?.priority)}
+                      number={saved.number}
+                      slug="priority"
+                      onConfirmed={!frozen ? confirmedConversion : undefined}
+                    >
+                      {" "}
+                      <EditableSelectFact
+                        id="matter-priority"
+                        label={
+                          <FormattedMessage id="matters.field.priority" defaultMessage="Priority" />
+                        }
+                        frozen={frozen}
+                        value={saved.priority}
+                        display={matterSeverityLabel(intl, saved.priority)}
+                        status={fieldStatus.priority ?? "idle"}
+                        error={fieldError.priority}
+                        onChange={(priority) => void commit("priority", { priority })}
+                        options={MATTER_SEVERITIES.map((severity) => ({
+                          value: severity,
+                          label: matterSeverityLabel(intl, severity),
+                        }))}
+                      />
+                    </MatterConversionValue>{" "}
                     <EditableSelectFact
                       id="matter-risk"
                       label={<FormattedMessage id="matters.field.risk" defaultMessage="Risk" />}
@@ -1097,40 +1159,51 @@ function MatterRecord() {
                   </section>
                 </div>
               </section>
-              <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised">
-                <header className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
-                  <h2 className="text-base font-semibold">
-                    <FormattedMessage id="matters.field.description" defaultMessage="Description" />
-                  </h2>
-                </header>
-                <div className="p-4">
-                  {businessFrozen ? (
-                    <p className="whitespace-pre-wrap text-base text-muted">
-                      {saved.description || notProvided(intl)}
-                    </p>
-                  ) : (
-                    <>
-                      <AutoResizeTextarea
-                        aria-label={intl.formatMessage({
-                          id: "matters.field.description",
-                          defaultMessage: "Description",
-                        })}
-                        className={TEXTAREA_CLASS}
-                        value={description}
-                        onChange={(event) => setDescription(event.target.value)}
-                        onBlur={() => commitText("description")}
-                        onKeyDown={(event) => {
-                          if (event.key === "Escape") setDescription(saved.description ?? "");
-                        }}
+              <MatterConversionValue
+                active={Boolean(saved.aiUnverified?.description)}
+                number={saved.number}
+                slug="description"
+                onConfirmed={!frozen ? confirmedConversion : undefined}
+              >
+                {" "}
+                <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised">
+                  <header className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
+                    <h2 className="text-base font-semibold">
+                      <FormattedMessage
+                        id="matters.field.description"
+                        defaultMessage="Description"
                       />
-                      <StatusNote
-                        status={fieldStatus.description ?? "idle"}
-                        detail={fieldError.description}
-                      />
-                    </>
-                  )}
-                </div>
-              </section>
+                    </h2>
+                  </header>
+                  <div className="p-4">
+                    {businessFrozen ? (
+                      <p className="whitespace-pre-wrap text-base text-muted">
+                        {saved.description || notProvided(intl)}
+                      </p>
+                    ) : (
+                      <>
+                        <AutoResizeTextarea
+                          aria-label={intl.formatMessage({
+                            id: "matters.field.description",
+                            defaultMessage: "Description",
+                          })}
+                          className={TEXTAREA_CLASS}
+                          value={description}
+                          onChange={(event) => setDescription(event.target.value)}
+                          onBlur={() => commitText("description")}
+                          onKeyDown={(event) => {
+                            if (event.key === "Escape") setDescription(saved.description ?? "");
+                          }}
+                        />
+                        <StatusNote
+                          status={fieldStatus.description ?? "idle"}
+                          detail={fieldError.description}
+                        />
+                      </>
+                    )}
+                  </div>
+                </section>
+              </MatterConversionValue>{" "}
               {fields.length > 0 && (
                 <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised">
                   <header className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
@@ -1140,31 +1213,39 @@ function MatterRecord() {
                   </header>
                   <div className="grid grid-cols-1 gap-4 p-4 @2xl/page:grid-cols-2">
                     {fields.map((field) => (
-                      <MatterCustomField
-                        // Keyed by slug, so a re-type onto a type that attaches
-                        // the same field keeps that control's draft.
+                      <MatterConversionValue
                         key={field.slug}
-                        field={field}
-                        saved={saved.customFields[field.slug]}
-                        frozen={
-                          frozen && !(contributor && !archived && field.fieldTag === "business")
-                        }
-                        people={peopleRefs}
-                        entities={entityChoices(saved.customFields[field.slug])}
-                        status={fieldStatus[`field:${field.slug}`] ?? "idle"}
-                        error={fieldError[`field:${field.slug}`]}
-                        onInvalid={(detail) => note(`field:${field.slug}`, "error", detail)}
-                        onCommit={(value) =>
-                          commit(`field:${field.slug}`, {
-                            customFields: { [field.slug]: value },
-                          })
-                        }
-                      />
+                        active={Boolean(saved.aiUnverified?.[`field:${field.slug}`])}
+                        number={saved.number}
+                        slug={`field:${field.slug}`}
+                        onConfirmed={!frozen ? confirmedConversion : undefined}
+                      >
+                        {" "}
+                        <MatterCustomField
+                          // Keyed by slug, so a re-type onto a type that attaches
+                          // the same field keeps that control's draft.
+                          key={field.slug}
+                          field={field}
+                          saved={saved.customFields[field.slug]}
+                          frozen={
+                            frozen && !(contributor && !archived && field.fieldTag === "business")
+                          }
+                          people={peopleRefs}
+                          entities={entityChoices(saved.customFields[field.slug])}
+                          status={fieldStatus[`field:${field.slug}`] ?? "idle"}
+                          error={fieldError[`field:${field.slug}`]}
+                          onInvalid={(detail) => note(`field:${field.slug}`, "error", detail)}
+                          onCommit={(value) =>
+                            commit(`field:${field.slug}`, {
+                              customFields: { [field.slug]: value },
+                            })
+                          }
+                        />
+                      </MatterConversionValue>
                     ))}
                   </div>
                 </section>
               )}
-
               <RelatedMattersCard
                 relations={relations}
                 onChanged={setRelations}
@@ -1201,7 +1282,20 @@ function MatterRecord() {
           )}
           {tab === "key-dates" && (
             <div className="overflow-y-auto px-page-x py-page-y">
-              <MatterKeyDatesCard deadlines={deadlines} onDeadlines={setDeadlines} />
+              <MatterConversionValue
+                active={Boolean(saved.aiUnverified?.needed_by)}
+                number={saved.number}
+                slug="needed_by"
+                onConfirmed={!frozen ? confirmedConversion : undefined}
+              >
+                <MatterKeyDatesCard
+                  deadlines={deadlines}
+                  onDeadlines={(rows) => {
+                    setDeadlines(rows);
+                    if (!rows.some((row) => row.unverified)) confirmedConversion("needed_by");
+                  }}
+                />
+              </MatterConversionValue>
             </div>
           )}
           {tab === "tasks" && (

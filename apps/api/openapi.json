@@ -3486,6 +3486,9 @@
                     "connector": {
                       "type": "object",
                       "properties": {
+                        "matterPreparation": {
+                          "type": "boolean"
+                        },
                         "configured": {
                           "type": "boolean"
                         },
@@ -3557,6 +3560,7 @@
                         }
                       },
                       "required": [
+                        "matterPreparation",
                         "configured",
                         "enabled",
                         "preset",
@@ -3694,6 +3698,9 @@
                     "connector": {
                       "type": "object",
                       "properties": {
+                        "matterPreparation": {
+                          "type": "boolean"
+                        },
                         "configured": {
                           "type": "boolean"
                         },
@@ -3765,6 +3772,7 @@
                         }
                       },
                       "required": [
+                        "matterPreparation",
                         "configured",
                         "enabled",
                         "preset",
@@ -3860,6 +3868,9 @@
                     "connector": {
                       "type": "object",
                       "properties": {
+                        "matterPreparation": {
+                          "type": "boolean"
+                        },
                         "configured": {
                           "type": "boolean"
                         },
@@ -3931,6 +3942,195 @@
                         }
                       },
                       "required": [
+                        "matterPreparation",
+                        "configured",
+                        "enabled",
+                        "preset",
+                        "protocol",
+                        "baseUrl",
+                        "hasApiKey",
+                        "model",
+                        "disabledAt",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "presets": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "preset": {
+                            "type": "string",
+                            "enum": [
+                              "anthropic",
+                              "openai",
+                              "azure_openai",
+                              "gemini",
+                              "openrouter",
+                              "ollama",
+                              "custom"
+                            ]
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "protocol": {
+                            "type": "string",
+                            "enum": ["anthropic_messages", "openai_chat_completions", "gemini"]
+                          },
+                          "baseUrl": {
+                            "type": ["string", "null"]
+                          },
+                          "defaultModel": {
+                            "type": "string"
+                          },
+                          "requiresApiKey": {
+                            "type": "boolean"
+                          },
+                          "requiresBaseUrl": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "preset",
+                          "label",
+                          "protocol",
+                          "baseUrl",
+                          "defaultModel",
+                          "requiresApiKey",
+                          "requiresBaseUrl"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["connector", "presets"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ai-connector/workflows": {
+      "patch": {
+        "operationId": "updateAiWorkflows",
+        "summary": "Update AI workflow settings; an empty body changes nothing",
+        "tags": ["ai-connector"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "matterPreparation": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "connector": {
+                      "type": "object",
+                      "properties": {
+                        "matterPreparation": {
+                          "type": "boolean"
+                        },
+                        "configured": {
+                          "type": "boolean"
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "preset": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "anthropic",
+                                "openai",
+                                "azure_openai",
+                                "gemini",
+                                "openrouter",
+                                "ollama",
+                                "custom"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "protocol": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["anthropic_messages", "openai_chat_completions", "gemini"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "baseUrl": {
+                          "type": ["string", "null"]
+                        },
+                        "hasApiKey": {
+                          "type": "boolean"
+                        },
+                        "model": {
+                          "type": ["string", "null"]
+                        },
+                        "disabledAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "updatedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "matterPreparation",
                         "configured",
                         "enabled",
                         "preset",
@@ -4154,6 +4354,9 @@
                     "connector": {
                       "type": "object",
                       "properties": {
+                        "matterPreparation": {
+                          "type": "boolean"
+                        },
                         "configured": {
                           "type": "boolean"
                         },
@@ -4225,6 +4428,7 @@
                         }
                       },
                       "required": [
+                        "matterPreparation",
                         "configured",
                         "enabled",
                         "preset",
@@ -4322,6 +4526,9 @@
                     "connector": {
                       "type": "object",
                       "properties": {
+                        "matterPreparation": {
+                          "type": "boolean"
+                        },
                         "configured": {
                           "type": "boolean"
                         },
@@ -4393,6 +4600,7 @@
                         }
                       },
                       "required": [
+                        "matterPreparation",
                         "configured",
                         "enabled",
                         "preset",
@@ -8284,6 +8492,38 @@
                               }
                             ]
                           },
+                          "aiUnverified": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "propertyNames": {
+                                  "type": "string"
+                                },
+                                "additionalProperties": {
+                                  "type": "object",
+                                  "properties": {
+                                    "draftId": {
+                                      "type": "string"
+                                    },
+                                    "writtenAt": {
+                                      "type": "string"
+                                    },
+                                    "targetTypeId": {
+                                      "type": "string"
+                                    },
+                                    "keyDateId": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["draftId", "writtenAt"],
+                                  "additionalProperties": false
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "customFields": {
                             "type": "object",
                             "propertyNames": {
@@ -8629,6 +8869,38 @@
                             {
                               "type": "string",
                               "enum": ["low", "medium", "high", "critical"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "aiUnverified": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "object",
+                                "properties": {
+                                  "draftId": {
+                                    "type": "string"
+                                  },
+                                  "writtenAt": {
+                                    "type": "string"
+                                  },
+                                  "targetTypeId": {
+                                    "type": "string"
+                                  },
+                                  "keyDateId": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["draftId", "writtenAt"],
+                                "additionalProperties": false
+                              }
                             },
                             {
                               "type": "null"
@@ -9231,6 +9503,38 @@
                             }
                           ]
                         },
+                        "aiUnverified": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "object",
+                                "properties": {
+                                  "draftId": {
+                                    "type": "string"
+                                  },
+                                  "writtenAt": {
+                                    "type": "string"
+                                  },
+                                  "targetTypeId": {
+                                    "type": "string"
+                                  },
+                                  "keyDateId": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["draftId", "writtenAt"],
+                                "additionalProperties": false
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "customFields": {
                           "type": "object",
                           "propertyNames": {
@@ -9730,6 +10034,38 @@
                             {
                               "type": "string",
                               "enum": ["low", "medium", "high", "critical"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "aiUnverified": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "object",
+                                "properties": {
+                                  "draftId": {
+                                    "type": "string"
+                                  },
+                                  "writtenAt": {
+                                    "type": "string"
+                                  },
+                                  "targetTypeId": {
+                                    "type": "string"
+                                  },
+                                  "keyDateId": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["draftId", "writtenAt"],
+                                "additionalProperties": false
+                              }
                             },
                             {
                               "type": "null"
@@ -10482,6 +10818,38 @@
                             }
                           ]
                         },
+                        "aiUnverified": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "object",
+                                "properties": {
+                                  "draftId": {
+                                    "type": "string"
+                                  },
+                                  "writtenAt": {
+                                    "type": "string"
+                                  },
+                                  "targetTypeId": {
+                                    "type": "string"
+                                  },
+                                  "keyDateId": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["draftId", "writtenAt"],
+                                "additionalProperties": false
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "customFields": {
                           "type": "object",
                           "propertyNames": {
@@ -10721,6 +11089,38 @@
                             {
                               "type": "string",
                               "enum": ["low", "medium", "high", "critical"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "aiUnverified": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "object",
+                                "properties": {
+                                  "draftId": {
+                                    "type": "string"
+                                  },
+                                  "writtenAt": {
+                                    "type": "string"
+                                  },
+                                  "targetTypeId": {
+                                    "type": "string"
+                                  },
+                                  "keyDateId": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["draftId", "writtenAt"],
+                                "additionalProperties": false
+                              }
                             },
                             {
                               "type": "null"
@@ -11006,6 +11406,9 @@
                           },
                           "isNext": {
                             "type": "boolean"
+                          },
+                          "unverified": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -11160,6 +11563,9 @@
                             "type": "boolean"
                           },
                           "isNext": {
+                            "type": "boolean"
+                          },
+                          "unverified": {
                             "type": "boolean"
                           }
                         },
@@ -11318,6 +11724,9 @@
                           },
                           "isNext": {
                             "type": "boolean"
+                          },
+                          "unverified": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -11419,6 +11828,9 @@
                             "type": "boolean"
                           },
                           "isNext": {
+                            "type": "boolean"
+                          },
+                          "unverified": {
                             "type": "boolean"
                           }
                         },
@@ -22985,6 +23397,645 @@
         }
       }
     },
+    "/api/v1/conversion-drafts/settings": {
+      "get": {
+        "operationId": "getConversionDraftSettings",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "matterPreparation": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": ["matterPreparation"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/requests/{number}/conversion-drafts": {
+      "post": {
+        "operationId": "prepareConversionDraft",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "targetModule": {
+                    "type": "string",
+                    "enum": ["matter"]
+                  },
+                  "targetTypeId": {
+                    "type": "string"
+                  },
+                  "retry": {
+                    "type": "boolean"
+                  }
+                },
+                "required": ["targetModule", "targetTypeId"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "draft": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "targetTypeId": {
+                          "type": "string"
+                        },
+                        "state": {
+                          "type": "string",
+                          "enum": ["pending", "ready", "failed"]
+                        },
+                        "suggestions": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                              "value": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "boolean"
+                                  },
+                                  {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  }
+                                ]
+                              },
+                              "citations": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "sourceId": {
+                                      "type": "string"
+                                    },
+                                    "revision": {
+                                      "type": "string"
+                                    },
+                                    "quote": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["sourceId", "revision", "quote"],
+                                  "additionalProperties": false
+                                }
+                              }
+                            },
+                            "required": ["value", "citations"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "conflicts": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                              "value": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "boolean"
+                                  },
+                                  {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  }
+                                ]
+                              },
+                              "citations": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "sourceId": {
+                                      "type": "string"
+                                    },
+                                    "revision": {
+                                      "type": "string"
+                                    },
+                                    "quote": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["sourceId", "revision", "quote"],
+                                  "additionalProperties": false
+                                }
+                              }
+                            },
+                            "required": ["value", "citations"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "warnings": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "failure": {
+                          "type": ["string", "null"]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "targetTypeId",
+                        "state",
+                        "suggestions",
+                        "conflicts",
+                        "warnings",
+                        "failure"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["draft"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/requests/{number}/conversion-drafts/{draftId}": {
+      "get": {
+        "operationId": "getConversionDraft",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "draftId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "draft": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "targetTypeId": {
+                          "type": "string"
+                        },
+                        "state": {
+                          "type": "string",
+                          "enum": ["pending", "ready", "failed"]
+                        },
+                        "suggestions": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                              "value": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "boolean"
+                                  },
+                                  {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  }
+                                ]
+                              },
+                              "citations": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "sourceId": {
+                                      "type": "string"
+                                    },
+                                    "revision": {
+                                      "type": "string"
+                                    },
+                                    "quote": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["sourceId", "revision", "quote"],
+                                  "additionalProperties": false
+                                }
+                              }
+                            },
+                            "required": ["value", "citations"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "conflicts": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                              "value": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "boolean"
+                                  },
+                                  {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  }
+                                ]
+                              },
+                              "citations": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "sourceId": {
+                                      "type": "string"
+                                    },
+                                    "revision": {
+                                      "type": "string"
+                                    },
+                                    "quote": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["sourceId", "revision", "quote"],
+                                  "additionalProperties": false
+                                }
+                              }
+                            },
+                            "required": ["value", "citations"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "warnings": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "failure": {
+                          "type": ["string", "null"]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "targetTypeId",
+                        "state",
+                        "suggestions",
+                        "conflicts",
+                        "warnings",
+                        "failure"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["draft"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/requests/{number}/conversion-drafts/{draftId}/evidence/{slug}": {
+      "get": {
+        "operationId": "getConversionDraftEvidence",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "draftId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "slug",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "available": {
+                      "type": "boolean"
+                    },
+                    "citations": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string"
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "quote": {
+                            "type": "string"
+                          },
+                          "sourceId": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["label", "text", "quote", "sourceId"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["available", "citations"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/matters/{number}/conversion-evidence/{slug}": {
+      "get": {
+        "operationId": "getMatterConversionEvidence",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "slug",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "available": {
+                      "type": "boolean"
+                    },
+                    "citations": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string"
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "quote": {
+                            "type": "string"
+                          },
+                          "sourceId": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["label", "text", "quote", "sourceId"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["available", "citations"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/matters/{number}/conversion-confirm/{slug}": {
+      "post": {
+        "operationId": "confirmMatterConversionValue",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "slug",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [true]
+                    }
+                  },
+                  "required": ["ok"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/requests/{number}/convert": {
       "post": {
         "operationId": "convertRequest",
@@ -23000,6 +24051,27 @@
                 "properties": {
                   "title": {
                     "type": "string"
+                  },
+                  "description": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 10000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "conversionDraftId": {
+                    "type": "string"
+                  },
+                  "aiAccepted": {
+                    "maxItems": 100,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   },
                   "contractTypeId": {
                     "type": "string",

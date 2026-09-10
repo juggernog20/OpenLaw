@@ -9,7 +9,7 @@
  */
 
 import { sql } from "drizzle-orm";
-import { check, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { boolean, check, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { encryptedText } from "../secrets.js";
 import { uuidPk } from "./helpers.js";
 
@@ -37,6 +37,7 @@ export const aiConnector = pgTable(
     /** Write-only through the API and sealed under TECH-022. Ollama may leave it NULL. */
     apiKey: encryptedText("api_key"),
     model: text("model").notNull(),
+    matterPreparation: boolean("matter_preparation").notNull().default(false),
     disabledAt: timestamp("disabled_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })

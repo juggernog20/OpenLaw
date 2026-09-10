@@ -213,7 +213,7 @@ export async function readPersonalDates(
         ${matterKeyDates.date} as date,
         ${matterKeyDates.label} as label,
         null::integer as notice_period_days,
-        false as unverified,
+        coalesce(${matters.aiUnverified}->'needed_by'->>'keyDateId' = ${matterKeyDates.id}, false) as unverified,
         'matter'::text as record_kind,
         ${matters.id} as record_id,
         ${matters.number} as record_number,

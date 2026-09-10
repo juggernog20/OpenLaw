@@ -1323,3 +1323,49 @@ it("saves a budget currency independently of the existing amount", async () => {
   expect(picker).toHaveValue("AED");
   expect(screen.getByRole("textbox", { name: "Budget approved" })).toHaveValue("12,345.67");
 });
+
+it("shows Conversion draft evidence without leaving the Matter and confirms only one value", async () => {
+  const user = userEvent.setup();
+  const flagged = row({
+    aiUnverified: {
+      title: { draftId: "draft-1", writtenAt: "2026-09-11T00:00:00Z" },
+      description: { draftId: "draft-1", writtenAt: "2026-09-11T00:00:00Z" },
+    },
+  });
+  const confirmations: string[] = [];
+  stubApi({
+    signedIn: ADMIN,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/matters/options") return options();
+      if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET")
+        return json(200, record(flagged));
+      if (call.url.pathname.includes("/conversion-evidence/"))
+        return json(200, {
+          available: true,
+          citations: [
+            {
+              label: "Request R-45 description",
+              text: "Investigate the supplier dispute",
+              quote: "supplier dispute",
+              sourceId: "request:45:description",
+            },
+          ],
+        });
+      if (call.url.pathname.includes("/conversion-confirm/")) {
+        confirmations.push(call.url.pathname);
+        return json(200, { ok: true });
+      }
+      return undefined;
+    },
+  });
+  renderAt("/matters/12");
+  await screen.findByLabelText("Title");
+  expect(screen.getAllByText("Unverified")).toHaveLength(2);
+  await user.click(screen.getAllByRole("button", { name: "View source evidence" })[0]!);
+  expect(await screen.findByText("Request R-45 description")).toBeVisible();
+  expect(screen.getByLabelText("Title")).toBeInTheDocument();
+  await user.keyboard("{Escape}");
+  await user.click(screen.getAllByRole("button", { name: "Confirm" })[0]!);
+  await waitFor(() => expect(screen.getAllByText("Unverified")).toHaveLength(1));
+  expect(confirmations).toEqual(["/api/v1/matters/12/conversion-confirm/title"]);
+});

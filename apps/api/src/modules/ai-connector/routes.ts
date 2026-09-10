@@ -35,7 +35,9 @@ const PresetOptionSchema = z.object({
   requiresBaseUrl: z.boolean(),
 });
 
-const ConnectorSchema = z.object({
+const WorkflowSettingsSchema = z.object({ matterPreparation: z.boolean() });
+
+const ConnectorSchema = WorkflowSettingsSchema.extend({
   configured: z.boolean(),
   enabled: z.boolean(),
   preset: z.enum(AI_PRESETS).nullable(),
@@ -71,6 +73,7 @@ function pasted(value: string | undefined): string | null {
 function readConnector(row: AiConnector | undefined): z.infer<typeof ConnectorSchema> {
   if (!row) {
     return {
+      matterPreparation: false,
       configured: false,
       enabled: false,
       preset: null,
@@ -83,6 +86,7 @@ function readConnector(row: AiConnector | undefined): z.infer<typeof ConnectorSc
     };
   }
   return {
+    matterPreparation: row.matterPreparation,
     configured: true,
     enabled: row.disabledAt === null,
     preset: row.preset,
@@ -168,6 +172,46 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async () => envelope(await stored()),
+  );
+
+  app.patch(
+    "/ai-connector/workflows",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "updateAiWorkflows",
+        summary: "Update AI workflow settings; an empty body changes nothing",
+        tags: ["ai-connector"],
+        body: WorkflowSettingsSchema.partial().strict(),
+        response: { 200: ConnectorEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const saved = await app.db.transaction(async (tx) => {
+        const current = await lockedConnector(tx);
+        if (Object.keys(request.body).length === 0) return current;
+        const [row] = await tx
+          .update(aiConnector)
+          .set(request.body)
+          .where(eq(aiConnector.id, current.id))
+          .returning();
+        if (!row) throw httpError(500, "The AI connector could not be updated.");
+        for (const field of Object.keys(request.body) as (keyof z.infer<
+          typeof WorkflowSettingsSchema
+        >)[]) {
+          if (current[field] !== row[field])
+            await recordActivity(tx, {
+              entityType: "system",
+              actorId: request.user.id,
+              action: "ai_connector.updated",
+              visibility: "admin_only",
+              payload: { preset: current.preset, field, old: current[field], new: row[field] },
+            });
+        }
+        return row;
+      });
+      return envelope(saved);
+    },
   );
 
   app.put(
