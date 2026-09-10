@@ -93,6 +93,7 @@ import type { MailerResolver } from "../lib/mailer.js";
 import {
   currentKeyDateRecipients,
   ownReminderRecipients,
+  pendingKeyDateKey,
   selectedKeyDateRecipients,
 } from "../lib/key-date-reminders.js";
 import { recordActivity } from "../lib/activity.js";
@@ -957,6 +958,19 @@ async function sendBriefing(
     else unreadable.add(entityId);
   }
 
+  // Who each owed Key date is for now (#807), asked once for the whole
+  // briefing: two lead times on one date are two rows and one question.
+  const keyDateRecipients = await currentKeyDateRecipients(
+    deps.db,
+    owed.flatMap((row) =>
+      row.eventType === "date.key_date_approaching" &&
+      (row.entityType === CONTRACT_ENTITY || row.entityType === MATTER_ENTITY) &&
+      typeof row.payload.keyDateId === "string"
+        ? [{ kind: row.entityType, recordId: row.entityId, keyDateId: row.payload.keyDateId }]
+        : [],
+    ),
+  );
+
   const rows: DigestRow[] = [];
   let hasDateContent = false;
   const sending: string[] = [];
@@ -973,7 +987,13 @@ async function sendBriefing(
       const keyDateId = row.payload.keyDateId;
       const recipients =
         typeof keyDateId === "string"
-          ? await currentKeyDateRecipients(deps.db, row.entityType, row.entityId, keyDateId)
+          ? (keyDateRecipients.get(
+              pendingKeyDateKey({
+                kind: row.entityType,
+                recordId: row.entityId,
+                keyDateId,
+              }),
+            ) ?? [])
           : [];
       if (!recipients.includes(person.id)) {
         skipping.push(row.id);
