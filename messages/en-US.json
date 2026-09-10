@@ -3579,7 +3579,7 @@
     "defaultMessage": "Tax ID"
   },
   "entities.form.title": {
-    "defaultMessage": "Register entity"
+    "defaultMessage": "Add entity"
   },
   "entities.form.type": {
     "defaultMessage": "Entity type"
@@ -4029,7 +4029,7 @@
     "defaultMessage": "Ownership"
   },
   "entities.register": {
-    "defaultMessage": "Register entity"
+    "defaultMessage": "Add entity"
   },
   "entities.restricted": {
     "defaultMessage": "Restricted Entity"

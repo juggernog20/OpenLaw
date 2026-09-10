@@ -29,8 +29,8 @@ function nextMonthDay(): string {
 }
 
 async function registerEntity(page: Page, legalName: string, jurisdiction: string) {
-  await page.getByRole("button", { name: "Register entity" }).first().click();
-  const dialog = page.getByRole("dialog", { name: "Register entity" });
+  await page.getByRole("button", { name: "Add entity" }).first().click();
+  const dialog = page.getByRole("dialog", { name: "Add entity" });
   await dialog.getByLabel("Legal name").fill(legalName);
   await dialog.getByLabel("Entity type").selectOption({ label: "Corporation" });
   await dialog.getByLabel("Formation jurisdiction").fill(jurisdiction);

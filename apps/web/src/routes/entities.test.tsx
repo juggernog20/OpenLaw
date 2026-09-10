@@ -152,7 +152,7 @@ describe("the /entities destination", () => {
     // The action is offered twice on an empty registry — the sub-bar
     // and the empty state itself; the demo path goes through the latter.
     const user = userEvent.setup();
-    await user.click(screen.getAllByRole("button", { name: "Register entity" }).at(-1)!);
+    await user.click(screen.getAllByRole("button", { name: "Add entity" }).at(-1)!);
     const dialog = await screen.findByRole("dialog");
     await user.type(within(dialog).getByLabelText(/^Legal name\*?$/), "Aldgate UK Ltd");
     await user.selectOptions(within(dialog).getByLabelText(/^Entity type\*?$/), "t-corp");
@@ -182,7 +182,7 @@ describe("the /entities destination", () => {
     renderAt("/entities?view=list");
     const user = userEvent.setup();
     await screen.findByRole("heading", { name: "No Entities yet" });
-    await user.click(screen.getAllByRole("button", { name: "Register entity" })[0]!);
+    await user.click(screen.getAllByRole("button", { name: "Add entity" })[0]!);
     const dialog = await screen.findByRole("dialog");
 
     await user.click(within(dialog).getByRole("button", { name: "Register" }));
@@ -203,7 +203,7 @@ describe("the /entities destination", () => {
     renderAt("/entities?view=list");
     const user = userEvent.setup();
     await screen.findByRole("heading", { name: "No Entities yet" });
-    await user.click(screen.getAllByRole("button", { name: "Register entity" })[0]!);
+    await user.click(screen.getAllByRole("button", { name: "Add entity" })[0]!);
     const dialog = await screen.findByRole("dialog");
 
     await user.type(within(dialog).getByLabelText(/^Legal name\*?$/), "Refused Ltd");

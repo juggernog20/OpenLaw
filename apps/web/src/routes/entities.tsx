@@ -493,7 +493,7 @@ function EntitiesPageState() {
   const registerButton = (
     <Button onClick={() => setRegisterOpen(true)}>
       <Plus size={16} aria-hidden="true" />
-      <FormattedMessage id="entities.register" defaultMessage="Register entity" />
+      <FormattedMessage id="entities.register" defaultMessage="Add entity" />
     </Button>
   );
 
@@ -1244,7 +1244,7 @@ function EmptyRegistry({
       ) : (
         <Button onClick={onRegister}>
           <Plus size={16} aria-hidden="true" />
-          <FormattedMessage id="entities.register" defaultMessage="Register entity" />
+          <FormattedMessage id="entities.register" defaultMessage="Add entity" />
         </Button>
       )}
     </div>
@@ -1361,7 +1361,7 @@ function RegisterEntityDialog({
     >
       <DialogContent aria-describedby={undefined}>
         <DialogTitle>
-          <FormattedMessage id="entities.form.title" defaultMessage="Register entity" />
+          <FormattedMessage id="entities.form.title" defaultMessage="Add entity" />
         </DialogTitle>
         {attachments.created ? (
           <div className="mt-4">

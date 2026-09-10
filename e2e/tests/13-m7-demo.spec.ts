@@ -108,7 +108,7 @@ test.describe.serial("M7 demo path", () => {
       await expect(page).toHaveURL(/\/entities\?view=list$/);
 
       // Register the UK subsidiary with its full identity card.
-      await page.getByRole("button", { name: "Register entity" }).first().click();
+      await page.getByRole("button", { name: "Add entity" }).first().click();
       const dialog = page.getByRole("dialog");
       await dialog.getByLabel("Legal name").fill(legalName);
       await dialog.getByLabel("Entity type").selectOption({ label: "Corporation" });
