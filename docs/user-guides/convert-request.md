@@ -22,11 +22,11 @@ To change modules before confirming, select **Convert to matter instead** or **C
 
 Open the C- or M- reference under **Outcome**. Check the Title, type, and Priority. On a Contract, select **Fields** to check the carried and completed answers. On a Matter, read **Custom fields** on **Overview**. The original Request retains its submitted answers. Its Description is not copied into the new Contract's or Matter's Description.
 
-The new work needs its own ownership and risk choices. The person assigned during triage does not become the Contract Owner or Matter Manager, and the new record has no Risk set. Review the record's access and team before sharing its address.
+The new work needs its own ownership and risk choices. The person assigned during triage does not become the Contract Legal Owner or Matter Manager, and the new record has no Risk set. For a Contract, the Requester becomes its initial Business Owner; Legal Owner remains a separate choice. Review the record's access and team before sharing its address.
 
 Select **Documents**. Each original Request attachment becomes a separate Document at the record root with its first Version. On a Contract, the first promoted attachment becomes the primary Document if none is set. Matters have no primary Document designation. Comment attachments remain in the conversation rather than automatically becoming Documents.
 
-Open **Comments** and check the retained conversation. Its visibility tiers still apply. The Requester keeps the same R- address in the Portal, sees **In progress**, and can read and reply in the Full thread. They retain the original Request attachment downloads, including after Legal uploads later Document Versions. Conversion does not grant a Business User access to the Contract or Matter page.
+Open **Comments** and check the retained conversation. Its visibility tiers still apply. The Requester keeps the same R- address in the Portal, sees **In progress**, and can read and reply in the Full thread. They retain the original Request attachment downloads, including after Legal uploads later Document Versions. Conversion does not grant a Business User access to the staff Contract or Matter page. A converted Contract is also available through [Your Contracts](portal-sign-in.md#read-your-contracts) while the Requester remains its Business Owner or an explicit stakeholder and passes the current access checks. Confidential Contracts still require qualifying team access.
 
 ## When you apply a Matter template
 

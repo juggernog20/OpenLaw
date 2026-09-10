@@ -10,7 +10,7 @@ Keep using your Request's R- reference to follow Legal's response and send furth
 
 1. On the Portal home, find the Request under **Your requests**.
 2. Open it and check the summary and R- reference.
-3. Read its status and the message beneath it.
+3. Read its status, **Owner**, and **Expected back (estimate)**. The same owner and estimate appear under **Your requests**. **Not assigned yet** means no triage assignee is recorded; **Not set yet** means Legal has not confirmed a return estimate.
 4. Read **Conversation** for Legal's replies. Select **Show earlier replies** when you need older messages.
 5. Check **What you submitted** for the saved description, original attachments, urgency, and available additional answers. Select an attachment's filename to download it.
 
@@ -21,7 +21,9 @@ Keep using your Request's R- reference to follow Legal's response and send furth
 | **Resolved**    | Legal answered and closed the Request without conversion. Read the resolution in Conversation. |
 | **Declined**    | Legal declined the Request. Read the reason shown beneath the status.                          |
 
-**In progress** does not show the Contract's or Matter's detailed workflow. The Portal keeps the Request reference and does not provide Business Users with the resulting staff record, its internal details, or internal conversations. Original Request attachments remain downloadable here; they are the files submitted with the Request, not later revisions Legal may upload to a resulting Document.
+**In progress** does not show the Contract's or Matter's detailed workflow. Keep using the Request reference for its conversation. If Legal converts it to a Contract, you become its initial Business Owner and can also use [Your Contracts](portal-sign-in.md#read-your-contracts), subject to current access. That read-only view is separate from the staff record and its internal conversations; conversion to a Matter does not add a Portal Matter view. Original Request attachments remain downloadable here; they are the files submitted with the Request, not later revisions Legal may upload to a resulting Document.
+
+The Request's **Owner** is its current triage assignee, separate from a resulting Contract's Business Owner or Legal Owner. Clearing triage assignment clears the requester-facing name. **Expected back (estimate)** is Legal's confirmed estimate, separate from the **Needed by** date you submitted. A request type's published turnaround suggests a date for Legal to confirm; it does not promise that date or silently replace a saved estimate. **Estimate passed** appears when an Open or In progress Request's saved estimate is in the past. Resolved and Declined Requests do not show that warning.
 
 ## Reply and send further files
 

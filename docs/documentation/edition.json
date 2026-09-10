@@ -19,7 +19,7 @@
       },
       {
         "id": "portal-sign-in",
-        "contentSha256": "9d419eb6c397fcaca5aac93331cb5dd06905f8152446485705714e07995adf7d"
+        "contentSha256": "87afa5102911c8f91958688f279ce73aee26b305ba8ef69315934a12b33fbc85"
       },
       {
         "id": "find-your-work",
@@ -35,7 +35,7 @@
       },
       {
         "id": "roles-and-access",
-        "contentSha256": "d3fcc8fc2ea63b5fb1b5b55e33cceb1c9b1cd8b0ce6d059b61accb6189998e91"
+        "contentSha256": "618e793ef8069680bc6366896c9b191822fbf2d1c9e8f8ba6427196c94ea0ede"
       },
       {
         "id": "comments-and-activity",
@@ -51,7 +51,7 @@
       },
       {
         "id": "follow-request",
-        "contentSha256": "ca5dff1ef7d999e36d8655c3d00ffb6b5a2136427e86f2be168889ca417dbca3"
+        "contentSha256": "dce95bed61d4131144ad8cfce33601bcf0b629b67ba231158718b92286ae65e4"
       },
       {
         "id": "portal-knowledge",
@@ -59,11 +59,11 @@
       },
       {
         "id": "triage-requests",
-        "contentSha256": "b28fe6456b9259168173d057309994db811044beac40c09dcafd96ea7da36eea"
+        "contentSha256": "06fb4c5896330fcbc9e5107384d4118e7b3a70131d4723b64fecec4d99d705ee"
       },
       {
         "id": "convert-request",
-        "contentSha256": "09ba1d034467e55a18a1b06c5942e0485d9282afbfe6b31676e239b470809abe"
+        "contentSha256": "56bc9b56d6360228741d335b342268cd1c75e373e6170ab5e7a362211907284a"
       },
       {
         "id": "create-contract",
@@ -175,7 +175,7 @@
       },
       {
         "id": "request-forms",
-        "contentSha256": "5981f17a9afc7dc219cf98d35d603f7c5491eed8c253b7fbd9e5fab294bd873b"
+        "contentSha256": "5781d87b0603fb8ce08b839079e462e55e299433a8dce9e47da002eb2b52b49a"
       },
       {
         "id": "reminders-and-audit",

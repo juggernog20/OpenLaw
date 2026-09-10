@@ -598,7 +598,8 @@ Columns:
 - `title` — text, not null, free-form, editable per **CTR-003**
 - `contract_type_id` FK → `contract_types.id`, not null per **CTR-002**
 - `status_id` FK → `contract_statuses.id`, not null per **CTR-001**; the contract's **stage** is derived from the status, never stored on the contract
-- `manager_id` FK → `users.id`, nullable (null = unassigned/triage), UI label "Owner" per **CTR-004**
+- `manager_id` FK → `users.id`, nullable (null = unassigned/triage), the existing **CTR-004** Owner responsibility, labelled **Legal Owner** on Contract Overview and the Portal after **DD-021** (#808)
+- `business_owner_id` FK → `users.id`, nullable; one Business Owner, seeded/backfilled from a converted Request's Requester. Supplies Portal Contract access independently of explicit stakeholders; changing or clearing it removes that source of access. Manual assignments require an active person. Existing conversions from archived Requesters retain their historical ownership without granting sign-in access (**DD-021**, #808)
 - `priority` — text enum `low|medium|high|critical` (levels renamed per **DES-018**), not null, default `medium` per **CTR-005**
 - `risk` — text enum `low|medium|high|critical`, nullable (null = not yet assessed) per **CTR-005**
 - `term_type` — text enum `fixed|auto_renew|evergreen`, not null per **CTR-006**, default `fixed`; renewal engine and calendar branch on this. Landed in M16/1
@@ -630,6 +631,20 @@ Term shape per **CTR-006**. The five columns landed in M16/1, migration `0046_co
 - **Backfill.** Existing rows took `fixed`. That is an assertion about them, not a discovery: `fixed` is the least-asserting of the three kinds. Re-type an evergreen contract by editing it.
 - **Derived.** Four answers the record gives sit in no column, and all four are computed where the answer is assembled. The notice deadline above; days remaining (`expiry_date − today`), which goes negative once the expiry has passed; **renewal pending confirmation** (M16/4) — true when the contract is `auto_renew`, is not archived, is not ended, and its `expiry_date` is behind today; and the **proposed roll expiry**, `expiry_date` plus `renewal_period_months`, clamped at the target month's last day — null whenever the contract cannot roll, which is any term that is not `auto_renew` and any `auto_renew` term missing either `expiry_date` or `renewal_period_months`. None of the four needs a job, a sweep, or a clock.
 - **A renewal is not a row.** Confirming a roll (**CTR-007**) moves `expiry_date` and appends one `contract.renewal_confirmed` entry to `activity_log`; nothing else records it. The record's renewal history and its "Last renewal" fact are those entries read back. No renewal table exists, and none is planned.
+
+---
+
+### `contract_stakeholders`
+
+Source: **DD-021**, #808. Explicit people who can read a Contract's narrow Portal view, independently of its Business Owner.
+
+| Column        | Type        | Notes                                                       |
+| ------------- | ----------- | ----------------------------------------------------------- |
+| `contract_id` | text        | FK → `contracts.id`, not null, cascade on Contract deletion |
+| `user_id`     | text        | FK → `users.id`, not null                                   |
+| `created_at`  | timestamptz | not null, defaults to now                                   |
+
+Primary key (`contract_id`, `user_id`); `contract_stakeholders_user_idx` supports a person's Contract list. Member+ maintains entries on a reachable, unarchived Contract. Conversion seeds Business Owner alone, without a duplicate stakeholder entry. The Portal checks current ownership or stakeholder membership, live account, archive state and DD-014 confidentiality on every request; the primary Document's own access rule applies too. This association grants no staff-record access and contains no separate Confidential override.
 
 ---
 
