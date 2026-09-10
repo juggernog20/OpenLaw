@@ -133,7 +133,7 @@ import {
 import { conversionFormatOf, previewContentType } from "../../lib/render-family.js";
 import { DocEngineError } from "../../lib/doc-engine/engine.js";
 import { BlobNotFoundError } from "../../lib/storage/adapter.js";
-import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
+import { httpError, HttpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import {
   asUploadRefusal,
   attachmentDisposition,
@@ -1114,6 +1114,30 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
 
   const NO_ATTACHMENT = "No comment attachment exists with this id.";
 
+  /**
+   * The refusal for an attachment row that names bytes nothing stores.
+   *
+   * A redact removes the blob before it commits the row deletion
+   * (CMT-011, DOC-010), so a read that lands inside that window holds a
+   * live row over a blob that has gone. It answers what the same read
+   * answers once the redact has committed, rather than a server error.
+   *
+   * Logged on the way out, because a lost volume and a database
+   * restored past its files look exactly like this from here, and an
+   * operator has to see those. A 404 alone is never logged.
+   */
+  function attachmentBytesGone(
+    request: FastifyRequest,
+    error: BlobNotFoundError,
+    fileRef: string,
+  ): HttpError {
+    request.log.warn(
+      { err: error, fileRef },
+      "a comment attachment names bytes that are not stored",
+    );
+    return httpError(404, NO_ATTACHMENT);
+  }
+
   /** The attachment and room facts needed before its bytes are copied. */
   async function filableAttachment(
     db: Executor,
@@ -1238,10 +1262,21 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
       const documentId =
         request.body.destination === "new_document" ? uuidv7() : request.body.documentId;
       const versionId = uuidv7();
-      const copied = await copyStoredBlob(app.storage, source.fileRef, {
-        key: versionStorageKey(documentId, versionId),
-        filename: source.filename,
-      });
+      // The copy reads the source outside the lock the transaction below
+      // takes, so it meets the same window the download answers for: a
+      // redact that has removed the bytes and not yet committed. Nothing
+      // lands, which is what the held comment refuses a moment later.
+      let copied;
+      try {
+        copied = await copyStoredBlob(app.storage, source.fileRef, {
+          key: versionStorageKey(documentId, versionId),
+          filename: source.filename,
+        });
+      } catch (error) {
+        if (error instanceof BlobNotFoundError)
+          throw attachmentBytesGone(request, error, source.fileRef);
+        throw error;
+      }
 
       const result = await withStoredBlob(app.storage, request.log, copied.fileRef, () =>
         app.notifier.notifying(async (tx) => {
@@ -1527,8 +1562,9 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "arm and tier that exposed its comment. The entity reference is " +
           "the address the reader used for the thread, so a Requester can " +
           "continue through a converted Request while the stored comment " +
-          "hangs from its Contract. A hidden tier, another attachment, and " +
-          "either tombstone all answer 404",
+          "hangs from its Contract. A hidden tier, another attachment, " +
+          "either tombstone, and a redact that has removed the bytes but " +
+          "not yet committed all answer 404",
         tags: ["comments"],
         params: CommentParams.extend({ attachmentId: RecordIdSchema }),
         querystring: EntityRefQuery.extend({ preview: z.enum(["true"]).optional() }),
@@ -1561,7 +1597,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         )
         .limit(1);
       if (!row || row.deletedAt !== null || row.redactedAt !== null) {
-        throw httpError(404, "No comment attachment exists with this id.");
+        throw httpError(404, NO_ATTACHMENT);
       }
       const audience = await reachedThread(app.db, request.user, request.query);
       if (
@@ -1569,16 +1605,15 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         audience.entityId !== row.commentEntityId ||
         !audience.tiers.includes(row.visibility)
       ) {
-        throw httpError(404, "No comment attachment exists with this id.");
+        throw httpError(404, NO_ATTACHMENT);
       }
 
       const readSource = async () => {
         try {
           return await app.storage.get(row.fileRef);
         } catch (error) {
-          // Redaction removes bytes before committing the attachment-row deletion.
           if (error instanceof BlobNotFoundError)
-            throw httpError(404, "No comment attachment exists with this id.");
+            throw attachmentBytesGone(request, error, row.fileRef);
           throw error;
         }
       };
