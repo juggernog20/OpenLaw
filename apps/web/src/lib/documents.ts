@@ -26,6 +26,8 @@ import { api } from "./api";
 // the string the walk joins on and the string the seam splits on have
 // to be one string.
 import { PATH_SEPARATOR as FOLDER_PATH_SEPARATOR } from "./batch-upload";
+import { contractReference } from "./contracts";
+import { matterReference } from "./matters";
 import { problem, type Problem } from "./problem";
 
 /** The API's answer for one contract's paper, aliased to the generated
@@ -144,16 +146,19 @@ export function documentRecordReference(
   return { entityType: match[1] === "C" ? "contract" : "matter", number };
 }
 
-export function documentOwnerReference(owner: {
-  kind: DocumentOwner;
-  number: number | null;
-  reference: string;
-}): string {
+export function documentOwnerReference(
+  intl: IntlShape,
+  owner: {
+    kind: DocumentOwner;
+    number: number | null;
+    reference: string;
+  },
+): string {
   switch (owner.kind) {
     case "contract":
-      return `C-${String(owner.number!)}`;
+      return contractReference(intl, owner.number!);
     case "matter":
-      return `M-${String(owner.number!)}`;
+      return matterReference(intl, owner.number!);
     case "entity":
     case "knowledge_item":
       return owner.reference;

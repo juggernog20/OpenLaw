@@ -677,7 +677,7 @@ function RecentDocuments({ documents }: Readonly<{ documents: RepositoryDocument
                   id="documents.list.owner"
                   defaultMessage="{reference} · {title}"
                   values={{
-                    reference: documentOwnerReference(document.owner),
+                    reference: documentOwnerReference(intl, document.owner),
                     title: document.owner.title,
                   }}
                 />
