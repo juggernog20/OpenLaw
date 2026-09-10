@@ -23,7 +23,7 @@ On the Request page, find **Expected back (estimate)**. Choose a date, or select
 
 The estimate stays separate from the Requester's **Needed by** date. If Needed by is earlier than the suggestion, consider it when choosing a date; the app does not silently move the estimate earlier. Changing the request type's turnaround later does not overwrite an estimate already saved on a Request.
 
-The Requester sees the confirmed date on the Request and under **Your requests**. An Open or In progress Request whose estimate is past shows **Estimate passed**. Legal can change the estimate while a Request is undecided or converted. Resolution or decline makes the estimate read-only and removes the passed-estimate warning. If saving fails, use the offered retry and confirm the saved result before relying on it.
+The Requester sees the confirmed date on the Request and under **Your requests**. An Open or In progress Request whose estimate is past shows **Estimate passed**. Legal can change the estimate while a Request is undecided or converted. Resolution or decline makes the estimate read-only and removes the passed-estimate warning. If saving fails, retry the date and confirm the saved result before relying on it. Press Escape in the date control to return to the saved date.
 
 ## Convert to a Contract or Matter
 

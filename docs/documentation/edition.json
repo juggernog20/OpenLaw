@@ -19,7 +19,7 @@
       },
       {
         "id": "portal-sign-in",
-        "contentSha256": "87afa5102911c8f91958688f279ce73aee26b305ba8ef69315934a12b33fbc85"
+        "contentSha256": "2808cd899e877d2be94984aedf1ea6983c44f2f85b6e46e20b77dac6e17aab7f"
       },
       {
         "id": "find-your-work",
@@ -59,7 +59,7 @@
       },
       {
         "id": "triage-requests",
-        "contentSha256": "06fb4c5896330fcbc9e5107384d4118e7b3a70131d4723b64fecec4d99d705ee"
+        "contentSha256": "c8960c2893cd5a8df817860535963e2da0afebd42cb125bb9c8699a7f5e497ff"
       },
       {
         "id": "convert-request",

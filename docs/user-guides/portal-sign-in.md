@@ -39,7 +39,7 @@ Another Business User's Request link does not grant you access to that Request. 
 1. Select **Your Contracts** on the Portal home. The list contains unarchived Contracts for which you are the Business Owner or an explicitly added stakeholder, subject to current access rules.
 2. Open a Contract and check its C- reference, title, Counterparty, Stage, Business Owner, Legal Owner, term dates, renewal period, notice deadline and Value. **Not recorded** means Legal has not recorded that fact. **Unverified** means Legal has not yet confirmed the marked value; check it with Legal before relying on it.
 3. Under **Primary Document**, select **Read Document** to open the current Version in the document reader, or **Download** to save it. If no primary Document is available to you, the page says so. Earlier Versions and other Documents are not offered here.
-4. Use **Your Contracts** to return to the list. Use **Show more** when more Contracts are available.
+4. Use **Your Contracts** to return to the list. Use **Next page** when more Contracts are available, or **First page** to return to the beginning.
 
 This page is read-only. It does not expose Tasks, internal Fields, History or Contract conversations. Continue using your own Request conversation when you need to reply to Legal. A Contract's Stage can be more detailed than the status of the Request that led to it.
 
