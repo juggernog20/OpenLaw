@@ -718,9 +718,11 @@ test.describe.serial("M21 demo path", () => {
       await expect(
         portalCentre.getByRole("link", { name: new RegExp(`replied on your request ${SUMMARY}`) }),
       ).toHaveAttribute("href", `/portal/requests/${String(number)}`);
+      // The item names the status it moved to, in the requester's own
+      // vocabulary rather than the enum's (NOT-005, 2026-09-09).
       await expect(
         portalCentre.getByRole("link", {
-          name: new RegExp(`status of your request ${SUMMARY} changed`),
+          name: new RegExp(`Your request ${SUMMARY} is now In progress`),
         }),
       ).toBeVisible();
       await portal.keyboard.press("Escape");
