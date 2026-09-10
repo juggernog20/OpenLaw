@@ -101,6 +101,9 @@ export function PortalHomePage() {
           </p>
         )}
       </div>
+      <Link to="/portal/contracts" className="text-base font-medium text-link">
+        <FormattedMessage id="portal.contracts.title" defaultMessage="Your Contracts" />
+      </Link>
       <HelpLink surface="portal" contextual />
       <div className="grid gap-section-gap @3xl/page:grid-cols-portal-split">
         {requestTypes.length > 0 ? (

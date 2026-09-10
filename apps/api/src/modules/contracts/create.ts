@@ -148,6 +148,9 @@ export interface CreateContractInput {
    * write refuses them.
    */
   managerId?: string | null | undefined;
+  /** Trusted conversion provenance: the Requester, including one archived before
+   * triage. Direct creation leaves this unset; manual assignment requires a live person. */
+  businessOwnerId?: string | null | undefined;
   /** CTR-007's routing. Omitted is the ordinary create: a record that
    * renews nothing and sits under nobody. */
   renewal?: ContractRenewalRouting | null | undefined;
@@ -310,6 +313,7 @@ export async function createContract(
       contractTypeId: contractType.id,
       statusId: draft.id,
       managerId,
+      businessOwnerId: input.businessOwnerId ?? null,
       customFields,
       isConfidential,
       matterId: matter?.id ?? null,

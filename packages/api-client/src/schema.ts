@@ -1799,6 +1799,177 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/portal/contracts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** DD-021: Administrator, Legal Team Member, Contributor or Business User must be the current Business Owner or an explicit stakeholder. Archived records are excluded; Confidential records require named team membership or Legal Owner. Document reads accept only the current Version of the primary Document. List eligible Contracts. */
+    get: operations["listPortalContracts"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/contracts/{number}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** DD-021: Administrator, Legal Team Member, Contributor or Business User must be the current Business Owner or an explicit stakeholder. Archived records are excluded; Confidential records require named team membership or Legal Owner. Document reads accept only the current Version of the primary Document. Read selected Contract facts. */
+    get: operations["readPortalContract"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/contracts/{number}/documents/{documentId}/versions/{versionId}/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** DD-021: Administrator, Legal Team Member, Contributor or Business User must be the current Business Owner or an explicit stakeholder. Archived records are excluded; Confidential records require named team membership or Legal Owner. Document reads accept only the current Version of the primary Document. */
+    get: operations["downloadPortalContractVersion"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/contracts/{number}/documents/{documentId}/versions/{versionId}/preview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** DD-021: Administrator, Legal Team Member, Contributor or Business User must be the current Business Owner or an explicit stakeholder. Archived records are excluded; Confidential records require named team membership or Legal Owner. Document reads accept only the current Version of the primary Document. */
+    get: operations["previewPortalContractVersion"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/contracts/{number}/documents/{documentId}/versions/{versionId}/rendition": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** DD-021: Administrator, Legal Team Member, Contributor or Business User must be the current Business Owner or an explicit stakeholder. Archived records are excluded; Confidential records require named team membership or Legal Owner. Document reads accept only the current Version of the primary Document. */
+    get: operations["readPortalContractRendition"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/contracts/{number}/documents/{documentId}/versions/{versionId}/email": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** DD-021: Administrator, Legal Team Member, Contributor or Business User must be the current Business Owner or an explicit stakeholder. Archived records are excluded; Confidential records require named team membership or Legal Owner. Document reads accept only the current Version of the primary Document. */
+    get: operations["readPortalContractEmail"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/contracts/{number}/documents/{documentId}/versions/{versionId}/attachments/{attachmentIndex}/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** DD-021: Administrator, Legal Team Member, Contributor or Business User must be the current Business Owner or an explicit stakeholder. Archived records are excluded; Confidential records require named team membership or Legal Owner. Document reads accept only the current Version of the primary Document. */
+    get: operations["downloadPortalContractEmailAttachment"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/contracts/{number}/documents/{documentId}/versions/{versionId}/attachments/{attachmentIndex}/preview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** DD-021: Administrator, Legal Team Member, Contributor or Business User must be the current Business Owner or an explicit stakeholder. Archived records are excluded; Confidential records require named team membership or Legal Owner. Document reads accept only the current Version of the primary Document. */
+    get: operations["previewPortalContractEmailAttachment"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/stakeholders": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Administrator or Legal Team Member only; Contributor and Business User refused. Unreachable Contracts return 404. List explicit stakeholders, including on archived Contracts. */
+    get: operations["listContractStakeholders"];
+    put?: never;
+    /** Administrator or Legal Team Member only; Contributor and Business User refused. Unreachable Contracts return 404. Add a live person; archived Contracts return 409. */
+    post: operations["addContractStakeholder"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/stakeholders/{userId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Administrator or Legal Team Member only; Contributor and Business User refused. Unreachable Contracts return 404. Remove an explicit stakeholder; archived Contracts return 409. */
+    delete: operations["removeContractStakeholder"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/requests": {
     parameters: {
       query?: never;
@@ -2013,7 +2184,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage may override the configured type or Re-target to the other module. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request summary, urgency defaulting priority unless overridden, the Request description, risk unset, the converting person as Matter Manager or Contract Owner, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. counterpartyName, contract conversions only, finds or creates the live counterparty of that name (case-insensitive) and links it as the primary; a matter conversion refuses it with 400. neededBy lands one "Needed by" key date on either record, past dates included. Matter conversions may apply a live template for the confirmed type; carried values and triager answers override its defaults. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Request remains the Requester's window. Member+ only */
+    /**
+     * Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage may override the configured type or Re-target to the other module. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request summary, urgency defaulting priority unless overridden, the Request description, risk unset, the converting person as Matter Manager or Contract Owner, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. counterpartyName, contract conversions only, finds or creates the live counterparty of that name (case-insensitive) and links it as the primary; a matter conversion refuses it with 400. neededBy lands one "Needed by" key date on either record, past dates included. Matter conversions may apply a live template for the confirmed type; carried values and triager answers override its defaults. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Request remains the Requester's window. Member+ only
+     * @description Contract conversion makes the Requester its Business Owner, granting Portal reads subject to DD-021 confidentiality. Matter conversion assigns no Business Owner.
+     */
     post: operations["convertRequest"];
     delete?: never;
     options?: never;
@@ -2259,7 +2433,10 @@ export interface paths {
     delete?: never;
     options?: never;
     head?: never;
-    /** Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, the signing entity, priority, risk, the value, the CTR-006 term fields, the type, a custom field, or the status — any live status may follow any other (CTR-001). The value is one field in three parts: amount, currency, and cadence commit together and clear together. Re-typing re-checks the new type's hard-required fields before it commits (CTR-016/MTR-014), so the type and the values that satisfy it may be sent together. The term is five fields with one rule between them (CTR-006): an expiry on an evergreen contract and a renewal period on a contract that does not auto-renew are refused 400 with their own problem types, and a term-type change clears the fields the new type cannot hold, each clear narrated as the edit it is. The Confidential flag (DD-014) commits here too, but only for an Administrator, the contract's creator, or its Owner: anyone else who reaches the record is refused 403, and anyone who does not reach it is answered 404 like a contract that does not exist. A status change that moves the contract past the approval stage while approvals are pending or rejected meets CTR-012's soft gate: it is refused 409 with the unresolved approvals named, and the same commit with `overrideSoftGate` succeeds and is logged as an override. Never on an archived contract */
+    /**
+     * Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, the signing entity, priority, risk, the value, the CTR-006 term fields, the type, a custom field, or the status — any live status may follow any other (CTR-001). The value is one field in three parts: amount, currency, and cadence commit together and clear together. Re-typing re-checks the new type's hard-required fields before it commits (CTR-016/MTR-014), so the type and the values that satisfy it may be sent together. The term is five fields with one rule between them (CTR-006): an expiry on an evergreen contract and a renewal period on a contract that does not auto-renew are refused 400 with their own problem types, and a term-type change clears the fields the new type cannot hold, each clear narrated as the edit it is. The Confidential flag (DD-014) commits here too, but only for an Administrator, the contract's creator, or its Owner: anyone else who reaches the record is refused 403, and anyone who does not reach it is answered 404 like a contract that does not exist. A status change that moves the contract past the approval stage while approvals are pending or rejected meets CTR-012's soft gate: it is refused 409 with the unresolved approvals named, and the same commit with `overrideSoftGate` succeeds and is logged as an override. Never on an archived contract
+     * @description Business Owner assignment is Member+ only: Administrator or Legal Team Member. The person must be live; null clears ownership without removing explicit stakeholders.
+     */
     patch: operations["updateContract"];
     trace?: never;
   };
@@ -12405,6 +12582,533 @@ export interface operations {
       };
     };
   };
+  listPortalContracts: {
+    parameters: {
+      query?: {
+        cursor?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contracts: {
+              number: number;
+              title: string;
+              /** @enum {string} */
+              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              counterparty: string | null;
+              legalOwner: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              } | null;
+              businessOwner: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              renewalPendingConfirmation: boolean;
+              value: {
+                amount: number;
+                currency: string;
+                /** @enum {string} */
+                cadence: "one_time" | "monthly" | "annually";
+              } | null;
+              unverifiedFields: (
+                | "counterparty"
+                | "value"
+                | "effectiveDate"
+                | "expiryDate"
+                | "termType"
+                | "noticePeriodDays"
+                | "renewalPeriodMonths"
+              )[];
+            }[];
+            nextCursor: number | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  readPortalContract: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contract: {
+              number: number;
+              title: string;
+              /** @enum {string} */
+              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              counterparty: string | null;
+              legalOwner: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              } | null;
+              businessOwner: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              renewalPendingConfirmation: boolean;
+              value: {
+                amount: number;
+                currency: string;
+                /** @enum {string} */
+                cadence: "one_time" | "monthly" | "annually";
+              } | null;
+              unverifiedFields: (
+                | "counterparty"
+                | "value"
+                | "effectiveDate"
+                | "expiryDate"
+                | "termType"
+                | "noticePeriodDays"
+                | "renewalPeriodMonths"
+              )[];
+              primaryDocument: {
+                id: string;
+                title: string;
+                version: {
+                  id: string;
+                  versionNumber: number;
+                  /** @enum {string} */
+                  kind:
+                    | "general"
+                    | "draft_ours"
+                    | "draft_theirs"
+                    | "redline_theirs"
+                    | "redline_ours"
+                    | "executed"
+                    | "amendment"
+                    | "generated_redline";
+                  originalFilename: string;
+                  mimeType: string;
+                  /** @enum {string} */
+                  renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                  byteSize: number;
+                };
+              } | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  downloadPortalContractVersion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        documentId: string;
+        versionId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": string;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  previewPortalContractVersion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        documentId: string;
+        versionId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": string;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  readPortalContractRendition: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        documentId: string;
+        versionId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            rendition: {
+              /** @enum {string} */
+              state: "pending" | "ready" | "failed" | "unsupported";
+              updatedAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  readPortalContractEmail: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        documentId: string;
+        versionId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            email: {
+              subject: string | null;
+              from: {
+                name: string | null;
+                address: string | null;
+              } | null;
+              to: {
+                name: string | null;
+                address: string | null;
+              }[];
+              cc: {
+                name: string | null;
+                address: string | null;
+              }[];
+              bcc: {
+                name: string | null;
+                address: string | null;
+              }[];
+              date: string | null;
+              html: string | null;
+              text: string | null;
+              attachments: {
+                index: number;
+                filename: string;
+                mimeType: string;
+                byteSize: number;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                isInline: boolean;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  downloadPortalContractEmailAttachment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        documentId: string;
+        versionId: string;
+        attachmentIndex: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": string;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  previewPortalContractEmailAttachment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        documentId: string;
+        versionId: string;
+        attachmentIndex: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": string;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listContractStakeholders: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            stakeholders: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  addContractStakeholder: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          userId: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            stakeholders: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  removeContractStakeholder: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            stakeholders: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   listInbox: {
     parameters: {
       query?: {
@@ -14189,6 +14893,12 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              businessOwner: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
               entity:
                 | (
                     | {
@@ -14314,6 +15024,12 @@ export interface operations {
               /** @enum {string} */
               stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
               manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              businessOwner: {
                 id: string;
                 displayName: string;
                 image: string | null;
@@ -14578,6 +15294,12 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              businessOwner: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
               entity:
                 | (
                     | {
@@ -14786,6 +15508,7 @@ export interface operations {
           title?: string;
           description?: string | null;
           managerId?: string | null;
+          businessOwnerId?: string | null;
           entityId?: string | null;
           /** @enum {string} */
           priority?: "low" | "medium" | "high" | "critical";
@@ -14831,6 +15554,12 @@ export interface operations {
               /** @enum {string} */
               stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
               manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              businessOwner: {
                 id: string;
                 displayName: string;
                 image: string | null;
@@ -15047,6 +15776,12 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              businessOwner: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
               entity:
                 | (
                     | {
@@ -15154,6 +15889,12 @@ export interface operations {
               /** @enum {string} */
               stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
               manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              businessOwner: {
                 id: string;
                 displayName: string;
                 image: string | null;
@@ -15275,6 +16016,12 @@ export interface operations {
               /** @enum {string} */
               stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
               manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              businessOwner: {
                 id: string;
                 displayName: string;
                 image: string | null;
@@ -15527,6 +16274,12 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              businessOwner: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
               entity:
                 | (
                     | {
@@ -15641,6 +16394,12 @@ export interface operations {
               /** @enum {string} */
               stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
               manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              businessOwner: {
                 id: string;
                 displayName: string;
                 image: string | null;
@@ -15765,6 +16524,12 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              businessOwner: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
               entity:
                 | (
                     | {
@@ -15883,6 +16648,12 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              businessOwner: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
               entity:
                 | (
                     | {
@@ -15990,6 +16761,12 @@ export interface operations {
               /** @enum {string} */
               stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
               manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              businessOwner: {
                 id: string;
                 displayName: string;
                 image: string | null;

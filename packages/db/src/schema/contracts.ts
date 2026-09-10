@@ -103,12 +103,14 @@ export const contracts = pgTable(
     statusId: text("status_id")
       .notNull()
       .references(() => contractStatuses.id),
-    /** CTR-004's single accountable person, labelled **Owner** in the
-     * UI. NULL = unassigned, which reads as triage — a real state a
+    /** CTR-004's single accountable person, labelled **Legal Owner** in
+     * Contract Overview. NULL = unassigned, which reads as triage — a real state a
      * contract sits in until someone takes it, not missing data. The
      * column keeps the `manager_id` name the matter sibling uses
      * (MTR-003), so one query shape serves both records. */
     managerId: text("manager_id").references(() => users.id),
+    /** DD-021: NULL means unassigned, at direct creation or after an explicit clear. */
+    businessOwnerId: text("business_owner_id").references(() => users.id),
     /** CTR-011's our side of the contract: which of our own Entities
      * signs it. NULL until known — a contract is often recorded before
      * anyone decides which subsidiary is on the paper. Their side is
@@ -282,6 +284,7 @@ export const contracts = pgTable(
     // "What is on my desk" — the Owner filter the list offers, and the
     // guard that answers whether a departing person still owns work.
     index("contracts_manager_idx").on(table.managerId),
+    index("contracts_business_owner_idx").on(table.businessOwnerId),
     // "How many contracts hold a value for this field" — the SET-003
     // number the field archive dialog shows. It is a key-existence test
     // (`custom_fields ? slug`) over every row, which is what the

@@ -304,7 +304,7 @@ export const CONVERTED_FAMILIES = [
 
 /** Whether this version has to be converted before the panel can draw
  * it. */
-export function isConverted(version: DocumentVersion): boolean {
+export function isConverted(version: Pick<DocumentVersion, "renderFamily">): boolean {
   return (CONVERTED_FAMILIES as readonly RenderFamily[]).includes(version.renderFamily);
 }
 

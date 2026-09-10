@@ -330,7 +330,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -1649,6 +1649,9 @@
   "contracts.filteredCount": {
     "defaultMessage": "{shown} of {total, plural, one {# contract} other {# contracts}}"
   },
+  "contracts.form.businessOwner": {
+    "defaultMessage": "Business Owner"
+  },
   "contracts.form.counterparties": {
     "defaultMessage": "Counterparties"
   },
@@ -1675,6 +1678,9 @@
   },
   "contracts.form.lastRenewal": {
     "defaultMessage": "Last renewal"
+  },
+  "contracts.form.legalOwner": {
+    "defaultMessage": "Legal Owner"
   },
   "contracts.form.matter": {
     "defaultMessage": "Matter"
@@ -1999,6 +2005,42 @@
   },
   "contracts.stageLabel": {
     "defaultMessage": "{stage, select, draft {Draft} review {Review} approval {Approval} signature {Signature} active {Active} ended {Ended} other {Unknown}}"
+  },
+  "contracts.stakeholders.add": {
+    "defaultMessage": "Add"
+  },
+  "contracts.stakeholders.archived": {
+    "defaultMessage": "(archived)"
+  },
+  "contracts.stakeholders.choose": {
+    "defaultMessage": "Choose a person"
+  },
+  "contracts.stakeholders.empty": {
+    "defaultMessage": "No additional stakeholders."
+  },
+  "contracts.stakeholders.explanation": {
+    "defaultMessage": "The Business Owner and stakeholders can read this Contract in the Portal. Confidential Contracts also require team membership. Stakeholder access continues when the Business Owner changes."
+  },
+  "contracts.stakeholders.person": {
+    "defaultMessage": "Add stakeholder"
+  },
+  "contracts.stakeholders.readError": {
+    "defaultMessage": "Stakeholders could not be read."
+  },
+  "contracts.stakeholders.remove": {
+    "defaultMessage": "Remove"
+  },
+  "contracts.stakeholders.removeNamed": {
+    "defaultMessage": "Remove {name} as stakeholder"
+  },
+  "contracts.stakeholders.retry": {
+    "defaultMessage": "Retry"
+  },
+  "contracts.stakeholders.title": {
+    "defaultMessage": "Stakeholders"
+  },
+  "contracts.stakeholders.writeError": {
+    "defaultMessage": "Stakeholders could not be updated."
   },
   "contracts.team.add": {
     "defaultMessage": "Add team member"
@@ -5554,6 +5596,81 @@
   },
   "portal.businessView.return": {
     "defaultMessage": "Return to legal view"
+  },
+  "portal.contract.back": {
+    "defaultMessage": "Your Contracts"
+  },
+  "portal.contract.counterparty": {
+    "defaultMessage": "Counterparty"
+  },
+  "portal.contract.effectiveDate": {
+    "defaultMessage": "Effective date"
+  },
+  "portal.contract.expiryDate": {
+    "defaultMessage": "Expiry date"
+  },
+  "portal.contract.months": {
+    "defaultMessage": "{count, plural, one {# month} other {# months}}"
+  },
+  "portal.contract.noDocument": {
+    "defaultMessage": "No primary Document is available to you."
+  },
+  "portal.contract.notFound": {
+    "defaultMessage": "Contract not found"
+  },
+  "portal.contract.notRecorded": {
+    "defaultMessage": "Not recorded"
+  },
+  "portal.contract.noticeDeadline": {
+    "defaultMessage": "Notice deadline"
+  },
+  "portal.contract.primaryDocument": {
+    "defaultMessage": "Primary Document"
+  },
+  "portal.contract.readDocument": {
+    "defaultMessage": "Read Document"
+  },
+  "portal.contract.renewalPending": {
+    "defaultMessage": "Renewal is pending confirmation by Legal."
+  },
+  "portal.contract.renewalPeriod": {
+    "defaultMessage": "Renewal period"
+  },
+  "portal.contract.stage": {
+    "defaultMessage": "Stage"
+  },
+  "portal.contract.termType": {
+    "defaultMessage": "Term type"
+  },
+  "portal.contract.unreachable": {
+    "defaultMessage": "This Contract does not exist, or you cannot open it."
+  },
+  "portal.contract.unverifiedExplanation": {
+    "defaultMessage": "Legal has not yet verified the values marked Unverified. Confirm them with Legal before relying on them."
+  },
+  "portal.contract.value": {
+    "defaultMessage": "Value"
+  },
+  "portal.contracts.description": {
+    "defaultMessage": "Contracts where you are the Business Owner or a stakeholder."
+  },
+  "portal.contracts.empty": {
+    "defaultMessage": "No Contracts are available to you."
+  },
+  "portal.contracts.firstPage": {
+    "defaultMessage": "First page"
+  },
+  "portal.contracts.nextPage": {
+    "defaultMessage": "Next page"
+  },
+  "portal.contracts.pagination": {
+    "defaultMessage": "Contract pages"
+  },
+  "portal.contracts.requests": {
+    "defaultMessage": "Your requests"
+  },
+  "portal.contracts.title": {
+    "defaultMessage": "Your Contracts"
   },
   "portal.deflection.heading": {
     "defaultMessage": "Before you submit"

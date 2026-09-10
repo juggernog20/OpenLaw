@@ -727,11 +727,18 @@ function recordApi(
         ...body,
         customFields,
         ...owner,
+        ...("businessOwnerId" in body
+          ? {
+              businessOwner:
+                typeof body.businessOwnerId === "string" ? person(body.businessOwnerId) : null,
+            }
+          : {}),
         ...signatory,
         ...(status ? { statusName: status.displayName, stage: status.stage } : {}),
       };
       // The stored FKs never ride the row back — the joined rows do.
       delete (row as Record<string, unknown>).managerId;
+      delete (row as Record<string, unknown>).businessOwnerId;
       delete (row as Record<string, unknown>).entityId;
       return json(200, { contract: row, ...customEnvelope() });
     }
@@ -1631,13 +1638,118 @@ describe("the /contracts/:number record page", () => {
     ).toBeInTheDocument();
   });
 
+  it("sets and clears the Business Owner separately from the Legal Owner", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+    const owner = await screen.findByLabelText("Business Owner");
+    await user.selectOptions(owner, "u3");
+    await waitFor(() => expect(api.patches).toEqual([{ businessOwnerId: "u3" }]));
+    expect(owner).toHaveValue("u3");
+    expect(screen.getByLabelText("Legal Owner")).toHaveValue("");
+    await user.selectOptions(owner, "");
+    await waitFor(() =>
+      expect(api.patches).toEqual([{ businessOwnerId: "u3" }, { businessOwnerId: null }]),
+    );
+  });
+
+  it("maintains additional stakeholders without changing ownership", async () => {
+    const api = recordApi(contractRow());
+    const writes: unknown[] = [];
+    let stakeholders: unknown[] = [];
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname.startsWith("/api/v1/contracts/42/stakeholders")) {
+          if (call.method === "POST") {
+            writes.push(call.body);
+            stakeholders = [
+              { id: "u3", displayName: "Casey Contributor", image: null, archived: false },
+            ];
+          }
+          if (call.method === "DELETE") {
+            writes.push(call.url.pathname);
+            stakeholders = [];
+          }
+          return json(call.method === "POST" ? 201 : 200, { stakeholders });
+        }
+        return api.handler(call);
+      },
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+    await user.selectOptions(await screen.findByLabelText("Add stakeholder"), "u3");
+    const section = screen.getByRole("region", { name: "Stakeholders" });
+    await user.click(within(section).getByRole("button", { name: "Add" }));
+    await user.click(
+      await within(section).findByRole("button", {
+        name: "Remove Casey Contributor as stakeholder",
+      }),
+    );
+    await waitFor(() =>
+      expect(writes).toEqual([{ userId: "u3" }, "/api/v1/contracts/42/stakeholders/u3"]),
+    );
+    expect(api.patches).toEqual([]);
+    expect(await within(section).findByText("No additional stakeholders.")).toBeInTheDocument();
+  });
+
+  it("reports stakeholder write refusals and retries a failed read", async () => {
+    const api = recordApi(contractRow());
+    let reads = 0;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/contracts/42/stakeholders") {
+          if (call.method === "GET") {
+            reads++;
+            return reads === 1 ? problem(503, "Unavailable") : json(200, { stakeholders: [] });
+          }
+          return problem(409, "This person is already a stakeholder.");
+        }
+        return api.handler(call);
+      },
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+    expect(await screen.findByRole("alert")).toHaveTextContent("Stakeholders could not be read.");
+    await user.click(screen.getByRole("button", { name: "Retry" }));
+    await user.selectOptions(await screen.findByLabelText("Add stakeholder"), "u3");
+    const section = screen.getByRole("region", { name: "Stakeholders" });
+    await user.click(within(section).getByRole("button", { name: "Add" }));
+    expect(await within(section).findByRole("alert")).toHaveTextContent(
+      "This person is already a stakeholder.",
+    );
+    expect(reads).toBe(2);
+  });
+
+  it("shows archived Contract stakeholders without add or remove controls", async () => {
+    const api = recordApi(contractRow({ archivedAt: "2026-09-10T00:00:00.000Z" }));
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/contracts/42/stakeholders"
+          ? json(200, {
+              stakeholders: [
+                { id: "u3", displayName: "Casey Contributor", image: null, archived: false },
+              ],
+            })
+          : api.handler(call),
+    });
+    renderAt("/contracts/42");
+    const section = await screen.findByRole("region", { name: "Stakeholders" });
+    expect(await within(section).findByText("Casey Contributor")).toBeVisible();
+    expect(within(section).queryByRole("button")).not.toBeInTheDocument();
+    expect(within(section).queryByLabelText("Add stakeholder")).not.toBeInTheDocument();
+  });
+
   it("sets the Owner from the picker and clears it back to unassigned", async () => {
     const api = recordApi(contractRow());
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42");
     const user = userEvent.setup();
 
-    const owner = await screen.findByLabelText("Owner");
+    const owner = await screen.findByLabelText("Legal Owner");
     expect(owner).toHaveValue("");
     await user.selectOptions(owner, "u2");
     await waitFor(() => expect(api.patches).toEqual([{ managerId: "u2" }]));
@@ -1654,7 +1766,7 @@ describe("the /contracts/:number record page", () => {
     stubApi({ signedIn: MEMBER, extra: recordApi(contractRow()).handler });
     renderAt("/contracts/42");
 
-    const owner = (await screen.findByLabelText("Owner")) as HTMLSelectElement;
+    const owner = (await screen.findByLabelText("Legal Owner")) as HTMLSelectElement;
     expect([...owner.options].map((option) => option.textContent)).toEqual([
       "Unassigned",
       "Ada Admin",
@@ -1675,7 +1787,7 @@ describe("the /contracts/:number record page", () => {
     });
     renderAt("/contracts/42");
 
-    const owner = await screen.findByLabelText("Owner");
+    const owner = await screen.findByLabelText("Legal Owner");
     expect(owner).toHaveValue("u9");
     expect(
       within(owner as HTMLElement).getByRole("option", { name: "Gone Counsel" }),
@@ -2126,7 +2238,8 @@ describe("the /contracts/:number record page", () => {
     for (const label of [
       "Title",
       "Contract type",
-      "Owner",
+      "Business Owner",
+      "Legal Owner",
       "Our entity",
       "Priority",
       "Risk",
@@ -2902,7 +3015,8 @@ describe("a Contributor on the contract record (M9/1)", () => {
     for (const label of [
       "Title",
       "Contract type",
-      "Owner",
+      "Business Owner",
+      "Legal Owner",
       "Our entity",
       "Priority",
       "Risk",
@@ -2969,7 +3083,7 @@ describe("a Contributor on the contract record (M9/1)", () => {
     // Each one names what is stored, not a blank — the row carries the
     // names, so no options read is needed to draw them.
     expect(await screen.findByLabelText("Contract type")).toHaveDisplayValue("MSA");
-    expect(screen.getByLabelText("Owner")).toHaveDisplayValue("Nadia Counsel");
+    expect(screen.getByLabelText("Legal Owner")).toHaveDisplayValue("Nadia Counsel");
     // The status has no control at all for this viewer (DES-053): the
     // sub-bar pill names it, and the strip is the reading it always
     // was — no trigger to press and none disabled to work out.
@@ -4831,7 +4945,13 @@ describe("the contract record's comment applet (M9/2)", () => {
 
       const box = await screen.findByRole("textbox", { name: "New comment" });
       await user.type(box, "@Casey");
-      await user.click(await screen.findByRole("option", { name: "Casey Contributor" }));
+      await user.click(
+        within(
+          await screen.findByRole("listbox", { name: "People and files you can mention" }),
+        ).getByRole("option", {
+          name: "Casey Contributor",
+        }),
+      );
       await user.type(box, "please look");
       await user.click(screen.getByRole("button", { name: "Comment" }));
 

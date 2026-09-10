@@ -670,7 +670,7 @@ const EmailAttachmentSchema = z.object({
   isInline: z.boolean(),
 });
 
-const EmailSchema = z.object({
+export const EmailSchema = z.object({
   subject: z.string().nullable(),
   from: EmailAddressSchema.nullable(),
   to: z.array(EmailAddressSchema),
