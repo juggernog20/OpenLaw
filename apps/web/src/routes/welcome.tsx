@@ -290,6 +290,7 @@ function OptionButton(
     onClick: () => void;
     title: ReactNode;
     description: ReactNode;
+    disabled?: boolean;
   }>,
 ) {
   return (
@@ -297,8 +298,9 @@ function OptionButton(
       type="button"
       aria-pressed={props.selected}
       onClick={props.onClick}
+      disabled={props.disabled}
       className={cn(
-        "rounded-card border bg-raised p-4 text-start focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link",
+        "rounded-card border bg-raised p-4 text-start focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link disabled:cursor-not-allowed disabled:opacity-60",
         props.selected ? "border-link" : "border-border-default hover:bg-control",
       )}
     >
@@ -341,6 +343,14 @@ export function WelcomePage() {
   const [magicLinkEnabled, setMagicLinkEnabled] = useState(loaded.methods.magicLinkEnabled);
   const [domains, setDomains] = useState<string[]>(loaded.domains);
   const [domainInput, setDomainInput] = useState("");
+  // The DD-010 floor, the same one the Authentication pane holds: built-in
+  // mode has no second portal sign-in method, so magic links stay on. The
+  // pane locks its switch, and it can only restore an off setting when the
+  // mode changes. Without the same floor here the wizard could finish with
+  // built-in mode and the portal shut, and the locked switch would leave
+  // nothing to reopen it.
+  const portalLocked = mode === "built_in";
+  const magicLinkOn = portalLocked || magicLinkEnabled;
 
   // Email step (#37): the resolved SMTP state drives which of the three
   // faces shows: set by environment (read-only), set in the app, or a
@@ -681,8 +691,10 @@ export function WelcomePage() {
         );
         return;
       }
-      if (magicLinkEnabled !== savedMethods.magicLinkEnabled) {
-        const toggled = await api.PATCH("/api/v1/auth/portal", { body: { magicLinkEnabled } });
+      if (magicLinkOn !== savedMethods.magicLinkEnabled) {
+        const toggled = await api.PATCH("/api/v1/auth/portal", {
+          body: { magicLinkEnabled: magicLinkOn },
+        });
         if (!toggled.data) {
           setError(
             (await readProblem(toggled)).detail ??
@@ -1380,10 +1392,11 @@ export function WelcomePage() {
                       />
                     </CardDescription>
                     <OptionButton
-                      selected={magicLinkEnabled}
+                      selected={magicLinkOn}
+                      disabled={portalLocked}
                       onClick={() => setMagicLinkEnabled(!magicLinkEnabled)}
                       title={
-                        magicLinkEnabled ? (
+                        magicLinkOn ? (
                           <FormattedMessage
                             id="welcome.portal.enabled"
                             defaultMessage="Magic-link sign-in is on"

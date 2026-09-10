@@ -6429,7 +6429,7 @@
     "defaultMessage": "Switching modes applies immediately and is recorded in the activity log."
   },
   "settings.auth.noDomains": {
-    "defaultMessage": "No domains allowed yet — the portal is closed."
+    "defaultMessage": "No domains allowed yet. Magic-link sign-in is unavailable."
   },
   "settings.auth.oidc": {
     "defaultMessage": "Identity provider (OIDC)"
@@ -6444,7 +6444,7 @@
     "defaultMessage": "Magic links are the only portal sign-in method in built-in mode, so they can't be turned off."
   },
   "settings.auth.portalOptional": {
-    "defaultMessage": "Turn off to require SSO for everyone. Requesters would then need accounts in your identity provider to reach the portal."
+    "defaultMessage": "Turn off to require SSO for everyone. Business users would then need accounts in your identity provider to reach the portal."
   },
   "settings.auth.providerId": {
     "defaultMessage": "Provider ID"
