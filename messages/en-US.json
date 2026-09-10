@@ -6429,7 +6429,7 @@
     "defaultMessage": "Switching modes applies immediately and is recorded in the activity log."
   },
   "settings.auth.noDomains": {
-    "defaultMessage": "No domains allowed yet — the portal is closed."
+    "defaultMessage": "No domains allowed yet. Magic-link sign-in is unavailable."
   },
   "settings.auth.oidc": {
     "defaultMessage": "Identity provider (OIDC)"
@@ -6444,7 +6444,7 @@
     "defaultMessage": "Magic links are the only portal sign-in method in built-in mode, so they can't be turned off."
   },
   "settings.auth.portalOptional": {
-    "defaultMessage": "Turn off to require SSO for everyone. Requesters would then need accounts in your identity provider to reach the portal."
+    "defaultMessage": "Turn off to require SSO for everyone. Business users would then need accounts in your identity provider to reach the portal."
   },
   "settings.auth.providerId": {
     "defaultMessage": "Provider ID"
@@ -9024,7 +9024,7 @@
     "defaultMessage": "Allowed email domains"
   },
   "welcome.portal.empty": {
-    "defaultMessage": "No domains allowed yet — the portal is closed."
+    "defaultMessage": "No domains allowed yet. Magic-link sign-in is unavailable."
   },
   "welcome.portal.enabled": {
     "defaultMessage": "Magic-link sign-in is on"
@@ -9036,13 +9036,13 @@
     "defaultMessage": "The magic-link setting could not be saved."
   },
   "welcome.portal.hint": {
-    "defaultMessage": "Business users sign in with emailed magic links, restricted to the domains you allow. An empty list admits nobody."
+    "defaultMessage": "Business users can sign in with emailed magic links from the domains you allow. An empty list prevents magic-link sign-in."
   },
   "welcome.portal.remove": {
     "defaultMessage": "Remove {domain}"
   },
   "welcome.portal.toggle.hint": {
-    "defaultMessage": "Select to change. Off closes the portal entirely, even for allowed domains."
+    "defaultMessage": "In built-in mode, turning off magic links closes Portal entry. With OIDC, business users can still sign in with SSO."
   },
   "welcome.progress": {
     "defaultMessage": "Step {current} of {total}"

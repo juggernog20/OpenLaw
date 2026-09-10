@@ -545,7 +545,7 @@ export function SettingsAuthenticationPage() {
           ) : (
             <FormattedMessage
               id="settings.auth.portalOptional"
-              defaultMessage="Turn off to require SSO for everyone. Requesters would then need accounts in your identity provider to reach the portal."
+              defaultMessage="Turn off to require SSO for everyone. Business users would then need accounts in your identity provider to reach the portal."
             />
           )}
         </p>
@@ -604,7 +604,7 @@ export function SettingsAuthenticationPage() {
             <p className="text-sm text-muted">
               <FormattedMessage
                 id="settings.auth.noDomains"
-                defaultMessage="No domains allowed yet — the portal is closed."
+                defaultMessage="No domains allowed yet. Magic-link sign-in is unavailable."
               />
             </p>
           )}
