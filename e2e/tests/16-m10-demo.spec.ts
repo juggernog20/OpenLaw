@@ -94,9 +94,8 @@ const MISSING_ID = "00000000-0000-7000-8000-000000000000";
  * literals: a reminder that misstates who can see the record is worse
  * than none, so the words are part of the acceptance. */
 const BANNER_COPY =
-  "Confidential contract — the contract team, the Owner, and Administrators see it.";
-const COMPOSER_NOTICE =
-  "Confidential contract — whichever audience you pick, only the contract team, the Owner, and Administrators can read it.";
+  "Confidential contract — only the contract team and owner can access this contract.";
+const COMPOSER_NOTICE = "Confidential contract — only the contract team and owner can read it.";
 const FLAG_LABEL = "Confidential — restrict to the contract team";
 
 /** Only what the sweep reads: the title it matches on and the reference

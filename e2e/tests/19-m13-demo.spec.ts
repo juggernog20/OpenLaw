@@ -787,7 +787,7 @@ test.describe.serial("M13 demo path", () => {
       // reports it (DES-033 §9).
       const landing = cancelled.getByRole("group", { name: "Destination" });
       await expect(landing).toContainText("Record root");
-      await expect(landing).toContainText("Set by the drop");
+      await expect(landing.getByRole("combobox")).toHaveCount(0);
       for (const name of CANCELLED_FILES) {
         await expect(cancelled.getByText(name)).toBeVisible();
       }
@@ -826,14 +826,7 @@ test.describe.serial("M13 demo path", () => {
       ).toEqual([]);
 
       await batch.getByRole("button", { name: `Import ${BOOK_FILES.length} files` }).click();
-      await expect(
-        batch.getByRole("heading", {
-          level: 2,
-          name: `Imported ${BOOK_FILES.length} of ${BOOK_FILES.length} files`,
-        }),
-      ).toBeVisible({ timeout: IMPORT_TIMEOUT_MS });
-      await batch.getByRole("button", { name: "Done" }).click();
-      await expect(batch).toBeHidden();
+      await expect(batch).toBeHidden({ timeout: IMPORT_TIMEOUT_MS });
 
       // ---- The screen half: the tree the reader dropped ----
 
@@ -946,13 +939,9 @@ test.describe.serial("M13 demo path", () => {
       // of a version kind in the select below it.
       const readout = onRow.getByRole("group", { name: "Destination" });
       await expect(readout).toContainText(DROP_TARGET_FOLDER);
-      await expect(readout).toContainText("Set by the drop");
+      await expect(readout.getByRole("combobox")).toHaveCount(0);
       await onRow.getByRole("button", { name: "Import 1 file" }).click();
-      await expect(
-        onRow.getByRole("heading", { level: 2, name: "Imported 1 of 1 file" }),
-      ).toBeVisible({ timeout: IMPORT_TIMEOUT_MS });
-      await onRow.getByRole("button", { name: "Done" }).click();
-      await expect(onRow).toBeHidden();
+      await expect(onRow).toBeHidden({ timeout: IMPORT_TIMEOUT_MS });
 
       const afterDrop = await readPaper(importerPage.request, number);
       const afterFolders = await readFolders(importerPage.request, number);
@@ -989,14 +978,7 @@ test.describe.serial("M13 demo path", () => {
         book.getByRole("heading", { level: 2, name: `Import ${VOLUME_FILES} files` }),
       ).toBeVisible();
       await book.getByRole("button", { name: `Import ${VOLUME_FILES} files` }).click();
-      await expect(
-        book.getByRole("heading", {
-          level: 2,
-          name: `Imported ${VOLUME_FILES} of ${VOLUME_FILES} files`,
-        }),
-      ).toBeVisible({ timeout: VOLUME_IMPORT_TIMEOUT_MS });
-      await book.getByRole("button", { name: "Done" }).click();
-      await expect(book).toBeHidden();
+      await expect(book).toBeHidden({ timeout: VOLUME_IMPORT_TIMEOUT_MS });
 
       // Every file landed, and every one of them in its own folder.
       const shelved = await readPaper(importerPage.request, volumeNumber);

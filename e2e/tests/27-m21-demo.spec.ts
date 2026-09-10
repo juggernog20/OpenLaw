@@ -660,8 +660,8 @@ test.describe.serial("M21 demo path", () => {
       // Legal answers on the record, at the tier the requester can hear
       // (DD-016). From here on there is exactly one place to answer.
       const audience = recordThread.getByRole("group", { name: "Audience" });
-      await audience.getByText("Full thread", { exact: true }).click();
-      await expect(recordThread.getByRole("radio", { name: "Full thread" })).toBeChecked();
+      await audience.getByText("Contract Team", { exact: true }).click();
+      await expect(recordThread.getByRole("radio", { name: "Contract Team" })).toBeChecked();
       await recordThread.getByLabel("New comment").fill(STAFF_REPLY);
       const answered = page.waitForResponse(
         (response) =>
