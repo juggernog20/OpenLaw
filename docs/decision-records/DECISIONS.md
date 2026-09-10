@@ -988,27 +988,75 @@ states, compatibility evidence, and support behavior are specified in
 [the publishing design](../documentation/PUBLISHING.md). Existing app permissions
 and organization-authored Knowledge remain governed by their current decisions.
 
+## DD-021: Business Users see the Contracts they are stakeholders on, in the portal
+
+- **Status:** Accepted; spec pending
+- **Date:** 2026-09-09
+- **Source:** [focus group, 2026-09-07](../reviews/focus-group-2026-09-07.md)
+
+### Context
+
+DD-013 gives a Business User the portal and only their own Requests. Four testers on the business side (finance, partnerships, procurement, sales operations) said the same thing in different words: the question they actually have is "what did we agree with X, when does it renew, and what do we owe", and the portal cannot answer it. A finance analyst scored the product 4/10 for that reason alone. Today they raise a Request to ask Legal a question Legal has already answered on the record.
+
+### Decision
+
+A Business User can open, in the portal, the Contracts on which they are the business sponsor or a named stakeholder. The view is read-only: title, counterparty, stage, Owner, term and renewal dates, notice deadline, value, and the current Version of the primary Document, read in the same document viewer the app uses, with download. Nothing else on the record crosses over: no comments below Full Thread, no Tasks, no Fields tagged legal, no History. DD-014 and CTR-018 confidentiality apply unchanged; a Confidential contract is reachable only if the person is on its team.
+
+The stakeholder link is the existing business-sponsor Field plus a stakeholder list on the Contract that Member+ maintains. Being a Requester whose Request converted into the Contract makes that person a stakeholder by default.
+
+### Rationale
+
+The portal's job is to stop the inbox back-and-forth (PRODUCT.md principle 3). "When does this renew" is the most common back-and-forth after "where is my request". Reusing the reader instead of building a portal-flavoured one keeps DOC-001's one-Version-chain honest.
+
+### Consequences
+
+Spec must settle: the list's shape in the portal (one flat list, DD-019 views do not apply), which term fields a Business User sees when they are Unverified (CTR-008 markers stay visible), and whether a stakeholder is notified on stage changes (NOT-002 group). Reporting stays deferred; this is a read on records the person already has a stake in, not a dashboard.
+
+## DD-022: Auto-Docs — a new destination that fills approved templates from a form
+
+- **Status:** Accepted direction; grill and decision record pending
+- **Date:** 2026-09-09
+- **Source:** Blair, on the [focus group, 2026-09-07](../reviews/focus-group-2026-09-07.md)
+
+### Context
+
+CTR-017 deferred contract templates until usage showed which playbooks a team wants. The focus group answered part of that: an account executive wanted a self-serve NDA "today" without waiting on Legal, and four testers asked for templates in some form. Blair's direction is broader than pre-fill: a Business User fills a form, the answers populate an approved template, and the person downloads the finished document.
+
+### Direction
+
+**Auto-Docs** is a new top-level navigation destination in the app and a surface in the portal. Legal maintains approved templates with named fields. A Business User picks a template in the portal, fills its form, and receives a downloadable document, with the Request and Document records that follow to be decided. It reuses the Documents chain (DOC-001), the doc-engine sidecar (DOC-009), the fields catalog (INT-002), and the portal's form machinery.
+
+### What the grill must settle before a spec
+
+Module identity first: is an Auto-Doc a Document owned by a Contract created on the fly, a Knowledge Item of type template, or its own record. Then: who approves a template and how a change is versioned; whether a generated document enters the signature flow (CTR-013) or is download-only; which template format the engine fills (docx merge fields are the likely answer); what Legal sees when a document is generated; and whether generation is a Request in the Inbox or bypasses triage entirely.
+
+### Consequences
+
+Nothing is built until the decision record exists. FUTURE-FEATURES' "Contract templates" row points here.
+
 ## Index of decisions
 
-| #      | Decision                                                                                  | Status   |
-| ------ | ----------------------------------------------------------------------------------------- | -------- |
-| DD-001 | Internal-tool-first development model with portable architecture                          | Accepted |
-| DD-002 | Reference persona — small in-house legal team (2–10 people)                               | Accepted |
-| DD-003 | v1 build queue starts with Contract Lifecycle Management                                  | Accepted |
-| DD-004 | Front-end-driven design pass; full mocks for all modules up front                         | Accepted |
-| DD-005 | Restructure scope into functional modules + cross-cutting capabilities                    | Accepted |
-| DD-006 | Add Entity Management as a functional module                                              | Accepted |
-| DD-007 | Layered data model — Documents → Contracts → Matters; Entities orthogonal                 | Accepted |
-| DD-008 | Separate `entities` and `counterparties` tables, with `parties_view` abstraction          | Accepted |
-| DD-009 | Single-tenant per deployment                                                              | Accepted |
-| DD-010 | Layered intake strategy — ChatOps + magic-link form + email parser                        | Accepted |
-| DD-011 | License — AGPL v3                                                                         | Accepted |
-| DD-012 | Project name — keep "OpenLaw" with documented rename trigger                              | Accepted |
-| DD-013 | Four-role permission model — Administrator, Legal Team Member, Contributor, Business User | Accepted |
-| DD-014 | Sensitive matter gating — confidential flag, opt-in restriction                           | Accepted |
-| DD-015 | Contributor permission grid — read, comment, upload, edit business fields                 | Accepted |
-| DD-016 | Comment visibility — three audience tiers (Legal Only / Working Team / Full Thread)       | Accepted |
-| DD-017 | Activity tracking — two-layer model (per-entity activity feed + system-wide audit log)    | Accepted |
-| DD-018 | Work-model doctrine — dual workspaces with the deliverable rule                           | Accepted |
-| DD-019 | Saved list views — private to one person, one `jsonb` config, saving is an act            | Accepted |
-| DD-020 | Product documentation is public, versioned, and separate from Knowledge                   | Accepted |
+| #      | Decision                                                                                  | Status                            |
+| ------ | ----------------------------------------------------------------------------------------- | --------------------------------- |
+| DD-001 | Internal-tool-first development model with portable architecture                          | Accepted                          |
+| DD-002 | Reference persona — small in-house legal team (2–10 people)                               | Accepted                          |
+| DD-003 | v1 build queue starts with Contract Lifecycle Management                                  | Accepted                          |
+| DD-004 | Front-end-driven design pass; full mocks for all modules up front                         | Accepted                          |
+| DD-005 | Restructure scope into functional modules + cross-cutting capabilities                    | Accepted                          |
+| DD-006 | Add Entity Management as a functional module                                              | Accepted                          |
+| DD-007 | Layered data model — Documents → Contracts → Matters; Entities orthogonal                 | Accepted                          |
+| DD-008 | Separate `entities` and `counterparties` tables, with `parties_view` abstraction          | Accepted                          |
+| DD-009 | Single-tenant per deployment                                                              | Accepted                          |
+| DD-010 | Layered intake strategy — ChatOps + magic-link form + email parser                        | Accepted                          |
+| DD-011 | License — AGPL v3                                                                         | Accepted                          |
+| DD-012 | Project name — keep "OpenLaw" with documented rename trigger                              | Accepted                          |
+| DD-013 | Four-role permission model — Administrator, Legal Team Member, Contributor, Business User | Accepted                          |
+| DD-014 | Sensitive matter gating — confidential flag, opt-in restriction                           | Accepted                          |
+| DD-015 | Contributor permission grid — read, comment, upload, edit business fields                 | Accepted                          |
+| DD-016 | Comment visibility — three audience tiers (Legal Only / Working Team / Full Thread)       | Accepted                          |
+| DD-017 | Activity tracking — two-layer model (per-entity activity feed + system-wide audit log)    | Accepted                          |
+| DD-018 | Work-model doctrine — dual workspaces with the deliverable rule                           | Accepted                          |
+| DD-019 | Saved list views — private to one person, one `jsonb` config, saving is an act            | Accepted                          |
+| DD-020 | Product documentation is public, versioned, and separate from Knowledge                   | Accepted                          |
+| DD-021 | Business Users see the Contracts they are stakeholders on, in the portal                  | Accepted; spec pending            |
+| DD-022 | Auto-Docs — a new destination that fills approved templates from a form                   | Accepted direction; grill pending |

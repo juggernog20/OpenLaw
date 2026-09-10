@@ -316,6 +316,10 @@ The shared Task assignee picker follows CTR-017's UX review addendum: avatar and
 
 The Team panel groups entries by person: one avatar and name, with every held role shown as a tag, including Matter Manager and Creator. A removable role has its own remove control; removing it leaves the person’s other roles intact. Creator and the record’s responsible role remain informational tags.
 
+### Addendum (2026-09-09, [focus group, 2026-09-07](../reviews/focus-group-2026-09-07.md)) — the deliberate create seeds its Matter Manager
+
+Four testers created a Matter or a Contract and found their own new record Unassigned. The rationale above stands: `manager_id` stays nullable, null stays a real state, and nothing invents an owner for work nobody has picked up. What changes is the two acts where a person is plainly taking the work on. The Create matter dialog seeds its Matter Manager picker with the acting person, who can clear it to Unassigned before pressing Create. Conversion from a Request seeds the converting person the same way, as INT-002's 2026-09-06 addendum already records. The Contract side is CTR-004's addendum of the same date, with the Owner picker in the Create contract dialog and `managerId` on `POST /contracts`.
+
 ## MTR-006: External counsel — collaboration via Contributor role; fee tracking deferred
 
 - **Status:** Accepted
@@ -357,6 +361,14 @@ Outside counsel touch matters in two distinct ways: participating in the work (d
 The shipped external-counsel path is the ordinary Contributor path end to end: invite one user, add one `contributor` team row, then use DD-015's business-Field, supporting-Document, comment, and read permissions on that reached Matter. There is no law-firm record, counsel subtype, budget, invoice, or spend field hidden behind the label.
 
 ---
+
+### Addendum (2026-09-09, [focus group, 2026-09-07](../reviews/focus-group-2026-09-07.md)) — a Contributor does not complete a Task
+
+Two Contributors in the focus group (a procurement lead and an HR partner) found a Task assigned to them with a checkbox they could not tick, and rated it their top ask. The counsel who assigned it expected them to be able to.
+
+**Decision, confirmed.** Completing a Task is a legal action and stays Member+ (DD-015). A Contributor may be named as a Task's assignee so the record shows who is doing the work, and may say "done" in the thread, but the tick belongs to a Legal Team Member with access to the record. The UI must say so: a disabled checkbox with no explanation reads as a bug, so the Task row and dialog carry the reason in words for a Contributor.
+
+**Deferred.** Tasks do not appear in the Business Portal today. Showing a requester their own Tasks there, and letting them close one, is recorded in FUTURE-FEATURES rather than decided.
 
 ## MTR-007: Matter ↔ Contract — contracts standalone by default, linked to a matter when part of broader work
 
@@ -795,24 +807,24 @@ The create callable writes `opened_at` once. The status write sets `closed_at` o
 
 ## Index of decisions
 
-| #       | Decision                                                                                            | Status   |
-| ------- | --------------------------------------------------------------------------------------------------- | -------- |
-| MTR-001 | Matter type taxonomy — configurable enum, seeded with 9 default types, Admin-managed                | Accepted |
-| MTR-002 | Matter lifecycle — fixed open/closed system dimension + configurable status labels                  | Accepted |
-| MTR-003 | Matter assignment — one Matter Manager, plus legal team members added as needed                     | Accepted |
-| MTR-004 | Deadlines — first-class named key dates; SLA engine deferred to future                              | Accepted |
-| MTR-005 | Tasks — lightweight checklist, not a task entity                                                    | Accepted |
-| MTR-006 | External counsel — collaboration via Contributor role; fee tracking deferred                        | Accepted |
-| MTR-007 | Matter ↔ Contract — standalone by default, linked when part of broader work                         | Accepted |
-| MTR-008 | Closing is a signal, not a lock; archiving separate; no retention engine in v1                      | Accepted |
-| MTR-009 | Naming — free-text title plus immutable global sequence number (M-42)                               | Accepted |
-| MTR-010 | Tags — deferred out of v1                                                                           | Accepted |
-| MTR-011 | Custom fields — global field catalog with per-type attachment (Jira model)                          | Accepted |
-| MTR-012 | Priority and risk — both first-class default fields on every matter                                 | Accepted |
-| MTR-013 | Matter templates — named template entity per type, pre-fills fields and instantiates task checklist | Accepted |
-| MTR-014 | Custom fields — hard-required per type at creation; conditional logic deferred                      | Accepted |
-| MTR-015 | Matter relationships — parent/child hierarchy plus flat related links; no cascade semantics         | Accepted |
-| MTR-016 | Lifecycle timestamps — opened_at/closed_at maintained on category transitions                       | Accepted |
+| #       | Decision                                                                                            | Status                                                                                           |
+| ------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| MTR-001 | Matter type taxonomy — configurable enum, seeded with 9 default types, Admin-managed                | Accepted                                                                                         |
+| MTR-002 | Matter lifecycle — fixed open/closed system dimension + configurable status labels                  | Accepted                                                                                         |
+| MTR-003 | Matter assignment — one Matter Manager, plus legal team members added as needed                     | Accepted; the deliberate create seeds its Matter Manager per the 2026-09-09 focus-group addendum |
+| MTR-004 | Deadlines — first-class named key dates; SLA engine deferred to future                              | Accepted                                                                                         |
+| MTR-005 | Tasks — lightweight checklist, not a task entity                                                    | Accepted                                                                                         |
+| MTR-006 | External counsel — collaboration via Contributor role; fee tracking deferred                        | Accepted; Task completion confirmed Member+ by the 2026-09-09 focus-group addendum               |
+| MTR-007 | Matter ↔ Contract — standalone by default, linked when part of broader work                         | Accepted                                                                                         |
+| MTR-008 | Closing is a signal, not a lock; archiving separate; no retention engine in v1                      | Accepted                                                                                         |
+| MTR-009 | Naming — free-text title plus immutable global sequence number (M-42)                               | Accepted                                                                                         |
+| MTR-010 | Tags — deferred out of v1                                                                           | Accepted                                                                                         |
+| MTR-011 | Custom fields — global field catalog with per-type attachment (Jira model)                          | Accepted                                                                                         |
+| MTR-012 | Priority and risk — both first-class default fields on every matter                                 | Accepted                                                                                         |
+| MTR-013 | Matter templates — named template entity per type, pre-fills fields and instantiates task checklist | Accepted                                                                                         |
+| MTR-014 | Custom fields — hard-required per type at creation; conditional logic deferred                      | Accepted                                                                                         |
+| MTR-015 | Matter relationships — parent/child hierarchy plus flat related links; no cascade semantics         | Accepted                                                                                         |
+| MTR-016 | Lifecycle timestamps — opened_at/closed_at maintained on category transitions                       | Accepted                                                                                         |
 
 ### MTR-007 UX review addendum — create a linked Contract (2026-09-06)
 

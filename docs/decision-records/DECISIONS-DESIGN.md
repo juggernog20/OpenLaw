@@ -1124,6 +1124,12 @@ The voice register for all component-default and system-generated copy is **ters
 
 ---
 
+### Addendum (2026-09-09, [focus group, 2026-09-07](../reviews/focus-group-2026-09-07.md)) — the not-found register, and the one sentence that refuses to say which
+
+Sixteen of twenty testers met the crash page on an address that was merely wrong, and read "Something went wrong. Reload to try again." as an outage. A wrong address is not an error, so it gets its own page in the register's voice: **"Page not found."** with **"There is nothing at this address."** and one link back to Home (or to the portal home). The crash page keeps its copy for a real failure and gains the same link.
+
+A record the reader cannot open says **"C-42 does not exist, or you cannot open it."** That sentence is deliberate. The API answers one 404 for both cases so that a Confidential record's existence is never confirmed by its refusal (DD-013, DD-014), and the page must not undo that by choosing a word. The sample copy above, "You don't have access to this matter", stays right for the places that do know, such as a wall on a linked record; it is wrong for a bare address.
+
 ## DES-016: Record-page right side — VS Code-style activity bar with page-scoped applets (amends DES-007's rail)
 
 - **Status:** Accepted
@@ -3322,6 +3328,14 @@ The Consequences above said the portal bell renders the same anatomy. It turned 
 **Point 9 has one exception, and it is a Request.** A contract's prompt opens the section it is about because a contract record has routed tabs; a Request's detail is one page with nothing to name, so every group-5 item lands on `/portal/requests/{number}`.
 
 **The trigger sits in a two-glyph cluster on the portal**, before the gear that opens the portal's notification settings (the INT-001 M20/9 addendum). No frame draws it: `intake.pen`'s I5–I7 carry no bell, and the anatomy above is the decision.
+
+### Addendum (2026-09-09, [focus group, 2026-09-07](../reviews/focus-group-2026-09-07.md)) — rows carry an unread marker, because opening the centre no longer reads them
+
+The NOT-005 amendment of the same date withdrew read-on-open: an item is read when the person opens it, and "Mark all read" is the one sweep. Point 8 above rested on read-on-open, so it goes with it. Point 6 also changes in effect: "Mark all read" is still drawn only while something is unread, but that is now every open of a bell with a badge, not only one that outran a page.
+
+**An unread row wears a marker, and it is not a control.** An 8px `rounded-pill` dot in `bg-badge-alert-bg`, the badge's own red, at the row's trailing edge; the whole row is still one link, so DES-011's target floor is untouched. The dot says the same thing the badge says, one row at a time, which is why it takes the badge's token and not a new one. It is not the only cue (DES-011 point 6): the sentence is `font-medium` while unread and `font-normal` once read, and a screen reader hears "Unread" at the start of the row's name through a visually hidden prefix, the DES-021 table pattern. No new tokens.
+
+**The marker goes out when the row is opened**, because the click is the write, and when "Mark all read" lands, because the sweep is the other one. It never goes out merely because the panel was drawn, which was the whole complaint.
 
 ## DES-050: The notification preferences pane — one row per event group, two switch columns (extends DES-017, DES-012, DES-011)
 
