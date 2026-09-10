@@ -993,8 +993,8 @@ it("saves a budget currency independently of the existing amount", async () => {
     fieldId: "f-currency",
     slug: "budget_currency",
     displayName: "Budget currency",
-    fieldType: "single_select",
-    options: ["USD", "AED", "EUR"],
+    fieldType: "currency",
+    options: null,
     isRequired: false,
   };
   const budget = {

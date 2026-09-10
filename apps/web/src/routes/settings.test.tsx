@@ -292,6 +292,7 @@ describe("the setup checklist (#701)", () => {
     expect(headings.map((heading) => heading.textContent)).toEqual([
       "Setup checklist",
       "Organization",
+      "Currencies in use",
     ]);
     const list = screen.getByRole("list", { name: "Outstanding setup steps" });
     expect(within(list).getAllByRole("listitem")).toHaveLength(7);
@@ -345,7 +346,7 @@ describe("the setup checklist (#701)", () => {
             !screen.getByRole("navigation", { name: "Settings sections" }).contains(heading),
         )
         .map((heading) => heading.textContent),
-    ).toEqual(["Organization"]);
+    ).toEqual(["Organization", "Currencies in use"]);
   });
 
   it("drops Organization immediately after its name is saved in General", async () => {

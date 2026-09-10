@@ -110,8 +110,7 @@ export function layoutEntityChart(
   const unconnected = chart.nodes
     .filter((node) => !connected.has(node.id))
     .sort((a, b) => nameOf(a).localeCompare(nameOf(b)));
-  const bottomY =
-    PADDING + (roots.length > 0 ? deepest + 1 : 0) * (nodeHeight + VERTICAL_GAP);
+  const bottomY = PADDING + (roots.length > 0 ? deepest + 1 : 0) * (nodeHeight + VERTICAL_GAP);
   if (unconnected.length > 0) cursor = PADDING;
   for (const node of unconnected) {
     order.push(node.id);

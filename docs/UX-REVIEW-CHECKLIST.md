@@ -13,7 +13,7 @@ An interaction is complete only after it has been manually tested and any agreed
 
 ## Current review checkpoint — 10 September 2026
 
-- Next flow: **Entity Overview → Share capital**. The current browser page does not determine the review sequence.
+- Next flow: **Organization → General → Currencies in use**, then return to **Entity Overview → Share capital**. The current browser page does not determine the review sequence.
 - Blair approved the Entity Manage access component (10 September): person picker, adding/removing access, and the access list.
 - Blair approved entity search across Calendar, List, and Chart (10 September).
 - Blair approved the Matter archive and restore flow (10 September).
@@ -26,6 +26,7 @@ An interaction is complete only after it has been manually tested and any agreed
 - Blair approved the expanded Task detail modal (description, attachments, comments), Matter Tasks list, and earlier Add Task modal. Task rows now sort by due date, with undated Tasks last; Move up/down was removed after Blair’s feedback. Key date Edit form UX and canceling/confirming removal are also approved.
 - Keep the Key dates name. The redundant State column was removed. The standalone record Due date was withdrawn in favor of Tasks, Key dates, and derived Next deadline.
 - Blair approved New contract from Linked Contracts and the Documents page/viewer UX, including the latest upload, deletion-confirmation, and multi-file selection changes (9 September). The latest shared chat changes are also approved. Earlier granular functional checks remain recorded separately; do not repeat approved Documents UX from scratch. Unchecked Key date items remain outstanding.
+- Documentation follow-up: refresh the published Entity structure/access guide for the revised share-capital and currency controls; the publication evidence must be renewed with that guide.
 - Pending implementation: previous-version actions. Proposed menu includes editing version metadata, Download, Compare, reversible archive/restore, and Administrator deletion with dependency protection. This is not built or marked reviewed.
 - Guide one complete UX component at a time, not individual clicks. Routine persistence and validation checks belong in automated tests; their manual checkboxes remain open unless Blair actually reviewed them. Earlier unchecked items are outstanding, not evidence that an approved component needs to be reviewed again from scratch.
 
@@ -664,6 +665,8 @@ Route: `/settings/general`
 - [ ] Choose and upload a logo; inspect file type/size validation.
 - [ ] Choose Default locale and inspect locale-sensitive rendering.
 - [ ] Search/select Default timezone and inspect save feedback.
+- [ ] Manage Currencies in use: search/add a currency, remove one, and check currency pickers in Contract value, Entity par value, and custom Currency fields. Use Add new currency from a picker and return to the unfinished form.
+  - Implemented at Blair’s request: the card lives in Organization → General; administrators manage the list and add inline, all signed-in users read it. Existing saved currencies remain visible. The upgrade initializes the list from recorded values and migrates currency-named ISO option fields to the dedicated Currency type. Awaiting UX review.
 - [ ] Reload to verify organization preferences persist.
 
 ### Organization — Users

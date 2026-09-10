@@ -2036,6 +2036,154 @@
         }
       }
     },
+    "/api/v1/org/currencies": {
+      "get": {
+        "operationId": "getCurrenciesInUse",
+        "tags": ["org"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "currencies": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "canManage": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": ["currencies", "canManage"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "addCurrencyInUse",
+        "tags": ["org"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  }
+                },
+                "required": ["code"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "currencies": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "canManage": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": ["currencies", "canManage"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/org/currencies/{code}": {
+      "delete": {
+        "operationId": "removeCurrencyInUse",
+        "tags": ["org"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "code",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "currencies": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "canManage": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": ["currencies", "canManage"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/users": {
       "get": {
         "operationId": "listUsers",
@@ -5364,6 +5512,7 @@
                               "text",
                               "long_text",
                               "number",
+                              "currency",
                               "date",
                               "boolean",
                               "single_select",
@@ -5475,6 +5624,7 @@
                             "text",
                             "long_text",
                             "number",
+                            "currency",
                             "date",
                             "boolean",
                             "single_select",
@@ -5592,6 +5742,7 @@
                             "text",
                             "long_text",
                             "number",
+                            "currency",
                             "date",
                             "boolean",
                             "single_select",
@@ -5745,6 +5896,7 @@
                               "text",
                               "long_text",
                               "number",
+                              "currency",
                               "date",
                               "boolean",
                               "single_select",
@@ -6608,6 +6760,7 @@
                               "text",
                               "long_text",
                               "number",
+                              "currency",
                               "date",
                               "boolean",
                               "single_select",
@@ -6719,6 +6872,7 @@
                             "text",
                             "long_text",
                             "number",
+                            "currency",
                             "date",
                             "boolean",
                             "single_select",
@@ -6836,6 +6990,7 @@
                             "text",
                             "long_text",
                             "number",
+                            "currency",
                             "date",
                             "boolean",
                             "single_select",
@@ -6989,6 +7144,7 @@
                               "text",
                               "long_text",
                               "number",
+                              "currency",
                               "date",
                               "boolean",
                               "single_select",
@@ -8751,6 +8907,7 @@
                                     "text",
                                     "long_text",
                                     "number",
+                                    "currency",
                                     "date",
                                     "boolean",
                                     "single_select",
@@ -9219,6 +9376,7 @@
                               "text",
                               "long_text",
                               "number",
+                              "currency",
                               "date",
                               "boolean",
                               "single_select",
@@ -9723,6 +9881,7 @@
                               "text",
                               "long_text",
                               "number",
+                              "currency",
                               "date",
                               "boolean",
                               "single_select",
@@ -16539,6 +16698,7 @@
                               "text",
                               "long_text",
                               "number",
+                              "currency",
                               "date",
                               "boolean",
                               "single_select",
@@ -16650,6 +16810,7 @@
                             "text",
                             "long_text",
                             "number",
+                            "currency",
                             "date",
                             "boolean",
                             "single_select",
@@ -16767,6 +16928,7 @@
                             "text",
                             "long_text",
                             "number",
+                            "currency",
                             "date",
                             "boolean",
                             "single_select",
@@ -16920,6 +17082,7 @@
                               "text",
                               "long_text",
                               "number",
+                              "currency",
                               "date",
                               "boolean",
                               "single_select",
@@ -17655,6 +17818,7 @@
                               "text",
                               "long_text",
                               "number",
+                              "currency",
                               "date",
                               "boolean",
                               "single_select",
@@ -18632,6 +18796,7 @@
                               "text",
                               "long_text",
                               "number",
+                              "currency",
                               "date",
                               "boolean",
                               "single_select",
@@ -19681,6 +19846,7 @@
                               "text",
                               "long_text",
                               "number",
+                              "currency",
                               "date",
                               "boolean",
                               "single_select",
@@ -23746,6 +23912,7 @@
                                     "text",
                                     "long_text",
                                     "number",
+                                    "currency",
                                     "date",
                                     "boolean",
                                     "single_select",
@@ -24349,6 +24516,7 @@
                               "text",
                               "long_text",
                               "number",
+                              "currency",
                               "date",
                               "boolean",
                               "single_select",
@@ -25402,6 +25570,7 @@
                               "text",
                               "long_text",
                               "number",
+                              "currency",
                               "date",
                               "boolean",
                               "single_select",
@@ -47508,6 +47677,7 @@
                               "text",
                               "long_text",
                               "number",
+                              "currency",
                               "date",
                               "boolean",
                               "single_select",
@@ -47619,6 +47789,7 @@
                             "text",
                             "long_text",
                             "number",
+                            "currency",
                             "date",
                             "boolean",
                             "single_select",
@@ -47736,6 +47907,7 @@
                             "text",
                             "long_text",
                             "number",
+                            "currency",
                             "date",
                             "boolean",
                             "single_select",
@@ -47889,6 +48061,7 @@
                               "text",
                               "long_text",
                               "number",
+                              "currency",
                               "date",
                               "boolean",
                               "single_select",
@@ -52924,6 +53097,7 @@
                               "text",
                               "long_text",
                               "number",
+                              "currency",
                               "date",
                               "boolean",
                               "single_select",
@@ -53432,6 +53606,7 @@
                               "text",
                               "long_text",
                               "number",
+                              "currency",
                               "date",
                               "boolean",
                               "single_select",
@@ -59075,6 +59250,7 @@
                               "text",
                               "long_text",
                               "number",
+                              "currency",
                               "date",
                               "boolean",
                               "single_select",
@@ -59186,6 +59362,7 @@
                       "text",
                       "long_text",
                       "number",
+                      "currency",
                       "date",
                       "boolean",
                       "single_select",
@@ -59251,6 +59428,7 @@
                             "text",
                             "long_text",
                             "number",
+                            "currency",
                             "date",
                             "boolean",
                             "single_select",
@@ -59434,6 +59612,7 @@
                             "text",
                             "long_text",
                             "number",
+                            "currency",
                             "date",
                             "boolean",
                             "single_select",
@@ -59580,6 +59759,7 @@
                             "text",
                             "long_text",
                             "number",
+                            "currency",
                             "date",
                             "boolean",
                             "single_select",
@@ -59709,6 +59889,7 @@
                             "text",
                             "long_text",
                             "number",
+                            "currency",
                             "date",
                             "boolean",
                             "single_select",
@@ -59838,6 +60019,7 @@
                             "text",
                             "long_text",
                             "number",
+                            "currency",
                             "date",
                             "boolean",
                             "single_select",

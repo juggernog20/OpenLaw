@@ -1,16 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { CurrencySelect } from "../currency-select";
 import { useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import { CONTROL_CLASS } from "../../lib/form-controls";
 import type { EntityRow } from "../../lib/entities";
 import type { CommitOutcome, FieldStatus } from "../../lib/field-commit";
-import {
-  currencyFractionDigits,
-  currencyOptions,
-  toMajorUnits,
-  toMinorUnits,
-} from "../../lib/format";
+import { currencyFractionDigits, toMajorUnits, toMinorUnits } from "../../lib/format";
 import { NumberInput } from "../number-input";
 import { StatusNote } from "../status-note";
 import { Label } from "../ui/label";
@@ -181,25 +176,13 @@ export function ShareCapitalCard({
               defaultMessage="Currency"
             />
           </Label>
-          <select
-            className={CONTROL_CLASS}
+          <CurrencySelect
             id="entity-parValueCurrency"
             value={currency}
+            allowEmpty={false}
             disabled={frozen || status.parValue === "saving"}
-            onChange={(event) => void changeCurrency(event.target.value)}
-          >
-            <option value="" disabled>
-              <FormattedMessage
-                id="entities.record.shareCapital.chooseCurrency"
-                defaultMessage="Choose currency"
-              />
-            </option>
-            {currencyOptions({ locale: intl.locale }).map((option) => (
-              <option key={option.code} value={option.code}>
-                {option.code} — {option.displayName}
-              </option>
-            ))}
-          </select>
+            onValueChange={(code) => void changeCurrency(code)}
+          />
         </div>
       </div>
     </section>

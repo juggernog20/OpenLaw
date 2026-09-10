@@ -676,6 +676,10 @@ export function stubApi(state: ApiState) {
         "/api/v1/request-types": { requestTypes: [] },
         "/api/v1/fields": { fields: [] },
         "/api/v1/org/reminder-offsets": { offsets: [7, 1, 0] },
+        "/api/v1/org/currencies": {
+          currencies: ["USD", "EUR", "GBP", "AED", "BHD", "JPY"],
+          canManage: state.signedIn?.role === "administrator",
+        },
       } satisfies {
         [
           P in
@@ -689,6 +693,7 @@ export function stubApi(state: ApiState) {
             | "/api/v1/request-types"
             | "/api/v1/fields"
             | "/api/v1/org/reminder-offsets"
+            | "/api/v1/org/currencies"
         ]: paths[P]["get"]["responses"][200]["content"]["application/json"];
       };
       const list = Object.entries(lists).find(([path]) => path === call.url.pathname);

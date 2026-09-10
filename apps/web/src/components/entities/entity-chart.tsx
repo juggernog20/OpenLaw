@@ -16,6 +16,7 @@ import {
 } from "./entity-chart-layout";
 
 import { fitChart, MAX_CHART_ZOOM, zoomChart, type ChartView } from "./entity-chart-viewport";
+import { EntityChartExport } from "./entity-chart-export-dialog";
 
 export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
   const intl = useIntl();
@@ -132,6 +133,7 @@ export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
           />
         </p>
         <div className="flex shrink-0 items-center gap-2">
+          <EntityChartExport chart={chart} selectedId={selectedId} />
           {chain && (
             <Button variant="secondary" size="sm" onClick={() => setSelectedId(null)}>
               <X size={14} aria-hidden="true" />

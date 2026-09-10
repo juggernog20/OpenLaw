@@ -1346,6 +1346,9 @@
   "common.cancel": {
     "defaultMessage": "Cancel"
   },
+  "common.remove": {
+    "defaultMessage": "Remove"
+  },
   "confidential.marker": {
     "defaultMessage": "Confidential"
   },
@@ -2087,9 +2090,6 @@
   "contracts.value.currencyMissing": {
     "defaultMessage": "Pick a currency for the amount."
   },
-  "contracts.value.currencyOption": {
-    "defaultMessage": "{code} — {name}"
-  },
   "contracts.value.currencyPlaceholder": {
     "defaultMessage": "Currency…"
   },
@@ -2194,6 +2194,27 @@
   },
   "createAttachments.uploading": {
     "defaultMessage": "Record created. Uploading documents…"
+  },
+  "currencies.add": {
+    "defaultMessage": "Add new currency"
+  },
+  "currencies.available": {
+    "defaultMessage": "Available currencies"
+  },
+  "currencies.choose": {
+    "defaultMessage": "Choose currency"
+  },
+  "currencies.noMatches": {
+    "defaultMessage": "No currencies match your search."
+  },
+  "currencies.retry": {
+    "defaultMessage": "Retry"
+  },
+  "currencies.search": {
+    "defaultMessage": "Search currencies"
+  },
+  "currencies.searchPlaceholder": {
+    "defaultMessage": "Search by currency code or name"
   },
   "datePicker.calendar": {
     "defaultMessage": "Choose a date"
@@ -3347,6 +3368,114 @@
   "entities.chart.description": {
     "defaultMessage": "Majority Holdings form the solid tree. Secondary Holdings use dashed lines."
   },
+  "entities.chart.export.actualSizePreview": {
+    "defaultMessage": "Preview at actual size"
+  },
+  "entities.chart.export.cancel": {
+    "defaultMessage": "Cancel"
+  },
+  "entities.chart.export.chainHint": {
+    "defaultMessage": "Includes this entity, its owners and the entities it owns, through all levels."
+  },
+  "entities.chart.export.count": {
+    "defaultMessage": "{count, plural, one {# entity} other {# entities}} · One page or slide sized to the chart"
+  },
+  "entities.chart.export.currentChart": {
+    "defaultMessage": "Current chart (all search results)"
+  },
+  "entities.chart.export.custom": {
+    "defaultMessage": "custom"
+  },
+  "entities.chart.export.defaultTitle": {
+    "defaultMessage": "Entity structure chart"
+  },
+  "entities.chart.export.description": {
+    "defaultMessage": "Choose a structure and the fields to show on each entity. The export includes the full selected structure, regardless of pan or zoom."
+  },
+  "entities.chart.export.download": {
+    "defaultMessage": "Download chart"
+  },
+  "entities.chart.export.emptyFields": {
+    "defaultMessage": "Fields without a recorded value are omitted. Confidential entities keep their placeholder."
+  },
+  "entities.chart.export.error": {
+    "defaultMessage": "The chart could not be exported. Please try again."
+  },
+  "entities.chart.export.exporting": {
+    "defaultMessage": "Exporting…"
+  },
+  "entities.chart.export.field.formedOn": {
+    "defaultMessage": "Formation date"
+  },
+  "entities.chart.export.field.jurisdiction": {
+    "defaultMessage": "Jurisdiction"
+  },
+  "entities.chart.export.field.parValue": {
+    "defaultMessage": "Par value"
+  },
+  "entities.chart.export.field.registeredAddress": {
+    "defaultMessage": "Registered address"
+  },
+  "entities.chart.export.field.registeredAgent": {
+    "defaultMessage": "Registered agent"
+  },
+  "entities.chart.export.field.registrationNumber": {
+    "defaultMessage": "Registration number"
+  },
+  "entities.chart.export.field.sharesAuthorized": {
+    "defaultMessage": "Authorized shares"
+  },
+  "entities.chart.export.field.sharesIssued": {
+    "defaultMessage": "Issued shares"
+  },
+  "entities.chart.export.field.status": {
+    "defaultMessage": "Status"
+  },
+  "entities.chart.export.field.taxId": {
+    "defaultMessage": "Tax ID"
+  },
+  "entities.chart.export.field.type": {
+    "defaultMessage": "Entity type"
+  },
+  "entities.chart.export.fields": {
+    "defaultMessage": "Entity information"
+  },
+  "entities.chart.export.fitPreview": {
+    "defaultMessage": "Fit preview"
+  },
+  "entities.chart.export.format": {
+    "defaultMessage": "File format"
+  },
+  "entities.chart.export.legalName": {
+    "defaultMessage": "Legal name (always included)"
+  },
+  "entities.chart.export.loadError": {
+    "defaultMessage": "Entity details could not be loaded. Retry to use the latest records and access permissions."
+  },
+  "entities.chart.export.loading": {
+    "defaultMessage": "Loading entity details…"
+  },
+  "entities.chart.export.minorUnits": {
+    "defaultMessage": "{value} minor units"
+  },
+  "entities.chart.export.open": {
+    "defaultMessage": "Export chart"
+  },
+  "entities.chart.export.percentages": {
+    "defaultMessage": "Ownership percentages"
+  },
+  "entities.chart.export.preview": {
+    "defaultMessage": "Export preview"
+  },
+  "entities.chart.export.retry": {
+    "defaultMessage": "Retry"
+  },
+  "entities.chart.export.scope": {
+    "defaultMessage": "Structure to export"
+  },
+  "entities.chart.export.title": {
+    "defaultMessage": "Chart title"
+  },
   "entities.chart.fit": {
     "defaultMessage": "Fit to window"
   },
@@ -3768,16 +3897,16 @@
     "defaultMessage": "Unassigned"
   },
   "entities.record.officers.add": {
-    "defaultMessage": "Add officer"
+    "defaultMessage": "Add director or officer"
   },
   "entities.record.officers.appointedOn": {
     "defaultMessage": "Appointed on"
   },
   "entities.record.officers.empty": {
-    "defaultMessage": "No current officers."
+    "defaultMessage": "No current directors or officers."
   },
   "entities.record.officers.name": {
-    "defaultMessage": "Officer name"
+    "defaultMessage": "Director or officer name"
   },
   "entities.record.officers.remove": {
     "defaultMessage": "Remove {officer}"
@@ -3795,7 +3924,7 @@
     "defaultMessage": "Show former"
   },
   "entities.record.officers.title": {
-    "defaultMessage": "Officers"
+    "defaultMessage": "Directors & Officers"
   },
   "entities.record.officers.user": {
     "defaultMessage": "Linked user"
@@ -3847,9 +3976,6 @@
   },
   "entities.record.shareCapital.authorized": {
     "defaultMessage": "Authorized shares"
-  },
-  "entities.record.shareCapital.chooseCurrency": {
-    "defaultMessage": "Choose currency"
   },
   "entities.record.shareCapital.currency": {
     "defaultMessage": "Currency"
@@ -6414,7 +6540,7 @@
     "defaultMessage": "The field type is immutable after creation."
   },
   "settings.contractFields.typeLabel": {
-    "defaultMessage": "{type, select, text {Text} long_text {Long text} number {Number} date {Date} boolean {Boolean} single_select {Single select} multi_select {Multi select} user {User} entity {Entity} other {Unknown}}"
+    "defaultMessage": "{type, select, text {Text} long_text {Long text} number {Number} date {Date} currency {Currency} boolean {Boolean} single_select {Single select} multi_select {Multi select} user {User} entity {Entity} other {Unknown}}"
   },
   "settings.contractFields.typeMissing": {
     "defaultMessage": "Pick a type for the new field."
@@ -6640,6 +6766,18 @@
   },
   "settings.contracts.title": {
     "defaultMessage": "Contracts"
+  },
+  "settings.currencies.description": {
+    "defaultMessage": "Choose the currencies offered in forms across OpenLaw. Removing a currency keeps existing record values intact."
+  },
+  "settings.currencies.empty": {
+    "defaultMessage": "No currencies added yet."
+  },
+  "settings.currencies.remove": {
+    "defaultMessage": "Remove {code}"
+  },
+  "settings.currencies.title": {
+    "defaultMessage": "Currencies in use"
   },
   "settings.eSignature.chip.connected": {
     "defaultMessage": "Connected"

@@ -333,6 +333,38 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/org/currencies": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getCurrenciesInUse"];
+    put?: never;
+    post: operations["addCurrencyInUse"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/org/currencies/{code}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations["removeCurrencyInUse"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/users": {
     parameters: {
       query?: never;
@@ -5846,6 +5878,110 @@ export interface operations {
       };
     };
   };
+  getCurrenciesInUse: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            currencies: string[];
+            canManage: boolean;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  addCurrencyInUse: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          code: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            currencies: string[];
+            canManage: boolean;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  removeCurrencyInUse: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            currencies: string[];
+            canManage: boolean;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   listUsers: {
     parameters: {
       query?: never;
@@ -7402,6 +7538,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -7461,6 +7598,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -7550,6 +7688,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -7608,6 +7747,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -8004,6 +8144,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -8063,6 +8204,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -8152,6 +8294,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -8210,6 +8353,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -8873,6 +9017,7 @@ export interface operations {
                   | "text"
                   | "long_text"
                   | "number"
+                  | "currency"
                   | "date"
                   | "boolean"
                   | "single_select"
@@ -9001,6 +9146,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -9147,6 +9293,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -11537,6 +11684,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -11596,6 +11744,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -11685,6 +11834,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -11743,6 +11893,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -12129,6 +12280,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -12487,6 +12639,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -12891,6 +13044,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -14338,6 +14492,7 @@ export interface operations {
                   | "text"
                   | "long_text"
                   | "number"
+                  | "currency"
                   | "date"
                   | "boolean"
                   | "single_select"
@@ -14493,6 +14648,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -14750,6 +14906,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -22490,6 +22647,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -22549,6 +22707,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -22638,6 +22797,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -22696,6 +22856,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -24646,6 +24807,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -24772,6 +24934,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -26840,6 +27003,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -26886,6 +27050,7 @@ export interface operations {
             | "text"
             | "long_text"
             | "number"
+            | "currency"
             | "date"
             | "boolean"
             | "single_select"
@@ -26919,6 +27084,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -26987,6 +27153,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -27051,6 +27218,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -27108,6 +27276,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"
@@ -27165,6 +27334,7 @@ export interface operations {
                 | "text"
                 | "long_text"
                 | "number"
+                | "currency"
                 | "date"
                 | "boolean"
                 | "single_select"

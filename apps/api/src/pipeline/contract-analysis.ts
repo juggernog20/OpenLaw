@@ -255,7 +255,10 @@ function coerce(target: AnalysisTarget, raw: unknown): CustomFieldValue | object
       return null;
     }
     case "currency":
-      return typeof raw === "string" && Intl.supportedValuesOf("currency").includes(raw.trim().toUpperCase()) ? raw.trim().toUpperCase() : null;
+      return typeof raw === "string" &&
+        Intl.supportedValuesOf("currency").includes(raw.trim().toUpperCase())
+        ? raw.trim().toUpperCase()
+        : null;
     case "single_select":
       return option(raw, target.options ?? []);
     case "multi_select": {

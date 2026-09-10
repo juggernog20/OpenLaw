@@ -9,7 +9,7 @@
  */
 
 import { pool } from "./client.mjs";
-import { ORG } from "./data.mjs";
+import { ORG, CURRENCIES } from "./data.mjs";
 import {
   APPROVER_GROUPS,
   CONTRACT_KINDS,
@@ -51,6 +51,7 @@ async function ensure(admin, path, payload, existing, envelopeKey) {
 }
 
 export async function configureOrganisation(admin, log) {
+  for (const code of CURRENCIES) await admin.post("/api/v1/org/currencies", { code });
   await admin.patch("/api/v1/org/general", {
     name: ORG.name,
     defaultLocale: ORG.locale,

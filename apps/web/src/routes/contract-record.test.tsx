@@ -1409,6 +1409,49 @@ describe("the /contracts/:number record page", () => {
     );
   });
 
+  it("adds a currency without saving or discarding the unfinished contract value", async () => {
+    const api = recordApi(
+      contractRow({ value: { amount: 10000, currency: "USD", cadence: "one_time" } }),
+    );
+    let currencies = ["USD"];
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/org/currencies") {
+          if (call.method === "POST")
+            currencies = [...currencies, (call.body as { code: string }).code];
+          return json(200, { currencies, canManage: true });
+        }
+        return api.handler(call);
+      },
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+    const amount = await screen.findByLabelText("Amount");
+    await user.clear(amount);
+    await user.type(amount, "250");
+    const picker = screen.getByLabelText("Currency");
+    await user.selectOptions(picker, "__add_currency__");
+    let dialog = await screen.findByRole("dialog", { name: "Add new currency" });
+    expect(api.patches).toEqual([]);
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    expect(amount).toHaveValue(250);
+    expect(api.patches).toEqual([]);
+    await user.selectOptions(picker, "__add_currency__");
+    dialog = await screen.findByRole("dialog", { name: "Add new currency" });
+    await user.type(within(dialog).getByRole("searchbox"), "euro");
+    await user.click(within(dialog).getByRole("button", { name: "EUR Euro" }));
+    await waitFor(() => expect(picker).toHaveValue("EUR"));
+    expect(api.patches).toEqual([]);
+    expect(amount).toHaveValue(250);
+    await leaveValueGroup(user);
+    await waitFor(() =>
+      expect(api.patches).toEqual([
+        { value: { amount: 25000, currency: "EUR", cadence: "one_time" } },
+      ]),
+    );
+  });
+
   it("commits the amount, the currency, and the cadence as one PATCH", async () => {
     const api = recordApi(contractRow());
     stubApi({ signedIn: MEMBER, extra: api.handler });

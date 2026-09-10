@@ -7,8 +7,8 @@ import { problem } from "./problem";
 export type CurrencySettings = { currencies: string[]; canManage: boolean };
 const CHANGED = "openlaw:currencies-changed";
 
-export function notifyCurrenciesChanged() {
-  window.dispatchEvent(new Event(CHANGED));
+export function notifyCurrenciesChanged(settings: CurrencySettings) {
+  window.dispatchEvent(new CustomEvent(CHANGED, { detail: settings }));
 }
 
 /** Mounted pickers refresh together after a settings change or an inline addition. */
@@ -19,16 +19,25 @@ export function useCurrencies() {
   const [attempt, setAttempt] = useState(0);
   const reload = useCallback(() => setAttempt((value) => value + 1), []);
   useEffect(() => {
-    window.addEventListener(CHANGED, reload);
-    return () => window.removeEventListener(CHANGED, reload);
+    const update = (event: Event) => {
+      setSettings((event as CustomEvent<CurrencySettings>).detail);
+      setError(undefined);
+      reload();
+    };
+    window.addEventListener(CHANGED, update);
+    return () => window.removeEventListener(CHANGED, update);
   }, [reload]);
   useEffect(() => {
     const controller = new AbortController();
     void (async () => {
-      const result = await api.GET("/api/v1/org/currencies", { signal: controller.signal }).catch(() => undefined);
+      const result = await api
+        .GET("/api/v1/org/currencies", { signal: controller.signal })
+        .catch(() => undefined);
       if (controller.signal.aborted) return;
-      if (result?.data) { setSettings(result.data); setError(undefined); }
-      else setError((await problem(result)).detail);
+      if (result?.data) {
+        setSettings(result.data);
+        setError(undefined);
+      } else setError((await problem(result)).detail);
       setLoading(false);
     })();
     return () => controller.abort();

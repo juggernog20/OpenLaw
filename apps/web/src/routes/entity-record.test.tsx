@@ -214,7 +214,13 @@ describe("the /entities/:entityId record page", () => {
     renderAt("/entities/e1");
     const user = userEvent.setup();
 
-    for (const heading of ["Registry", "Share capital", "Fields", "Officers", "Registrations"]) {
+    for (const heading of [
+      "Registry",
+      "Share capital",
+      "Fields",
+      "Directors & Officers",
+      "Registrations",
+    ]) {
       expect(await screen.findByRole("heading", { name: heading })).toBeInTheDocument();
     }
     const authorized = screen.getByLabelText("Authorized shares");
@@ -450,13 +456,15 @@ describe("the /entities/:entityId record page", () => {
     renderAt("/entities/e1");
     const user = userEvent.setup();
 
-    expect(await screen.findByText("No current officers.")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Add officer" }));
-    await user.type(screen.getByLabelText("Officer name"), "Dana Director");
+    expect(await screen.findByText("No current directors or officers.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Add director or officer" }));
+    await user.type(screen.getByLabelText("Director or officer name"), "Dana Director");
     await user.type(screen.getByLabelText("Appointed on"), "2025-02-03");
     await user.selectOptions(screen.getByLabelText("Linked user"), "u2");
     await user.click(screen.getByRole("button", { name: "Add" }));
-    expect(await screen.findByLabelText("Dana Director Officer name")).toHaveValue("Dana Director");
+    expect(await screen.findByLabelText("Dana Director Director or officer name")).toHaveValue(
+      "Dana Director",
+    );
     expect(writes).toEqual([
       {
         method: "POST",
@@ -480,7 +488,7 @@ describe("the /entities/:entityId record page", () => {
         body: { resignedOn: "2026-08-29" },
       }),
     );
-    expect(await screen.findByText("No current officers.")).toBeInTheDocument();
+    expect(await screen.findByText("No current directors or officers.")).toBeInTheDocument();
 
     // The former toggle reads the row back; remove deletes it.
     await user.click(screen.getByRole("checkbox", { name: "Show former" }));
@@ -491,7 +499,7 @@ describe("the /entities/:entityId record page", () => {
         path: "/api/v1/entities/e1/officers/o1",
       }),
     );
-    expect(await screen.findByText("No current officers.")).toBeInTheDocument();
+    expect(await screen.findByText("No current directors or officers.")).toBeInTheDocument();
   });
 
   it("adds a registration, changes its status, and shows a refused row edit", async () => {
