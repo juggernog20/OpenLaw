@@ -57,12 +57,12 @@ const COLUMNS: ColumnDef<RepositoryDocument>[] = [
     defaultWidth: 260,
     minWidth: 152,
     sortKey: "owner",
-    render: (row) => (
+    render: (row, intl) => (
       <FormattedMessage
         id="documents.list.owner"
         defaultMessage="{reference} · {title}"
         values={{
-          reference: documentOwnerReference(row.owner),
+          reference: documentOwnerReference(intl, row.owner),
           title: row.owner.title,
         }}
       />

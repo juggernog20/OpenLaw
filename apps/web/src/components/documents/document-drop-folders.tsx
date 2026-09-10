@@ -72,7 +72,14 @@ export function DocumentDropFolders({
         <FormattedMessage id="documents.drag.moveTo" defaultMessage="Move to folder" />
       </h2>
       <p className="mb-3 truncate text-sm text-muted">
-        {documentOwnerReference(owner)} · {owner.title}
+        <FormattedMessage
+          id="documents.list.owner"
+          defaultMessage="{reference} · {title}"
+          values={{
+            reference: documentOwnerReference(intl, owner),
+            title: owner.title,
+          }}
+        />
       </p>
       {failed || missingNumber ? (
         <Button variant="secondary" onClick={() => setAttempt((value) => value + 1)}>

@@ -555,7 +555,9 @@ export function FormalDocumentationPage() {
           <span className="docs-brand-mark" aria-hidden="true">
             <Scale size={24} />
           </span>
-          <strong>openlaw</strong>
+          <strong>
+            <FormattedMessage id="shell.brand" defaultMessage="openlaw" />
+          </strong>
           <span className="docs-brand-divider" aria-hidden="true">
             /
           </span>
