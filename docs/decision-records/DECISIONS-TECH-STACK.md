@@ -1187,7 +1187,7 @@ A DES-046 managed list holds its own rows, so two answers can reach one screen: 
 - `shouldAdoptLoader(loaded)` decides whether a loader answer reaching React replaces what the list shows. It is dropped only when a read started after that loader finished **and** the loader repeats a URL sync the page itself asked for. Where the loader answer wins instead, the read still in flight is dropped with it. The two can never both land, whichever order they arrive in, so no page of the old query is appended to the new list.
 - `noteUrlSync(navigate(...))` marks a navigation the page started. `commit()` and `adopt()` hand it their navigation; it records the loader data that navigation lands with. Without that mark, a Back press or a nav-rail click that settles in the same gap would lose its answer, and the filter chips would describe a URL the reader is no longer on.
 
-The private API is the cost of the fix. A React Router upgrade that renames or drops `UNSAFE_DataRouterContext` breaks this one file, and `routes/list-navigation.test.tsx` holds the 36 controlled cases that a replacement has to pass.
+The private API is the cost of the fix. A React Router upgrade that renames or drops `UNSAFE_DataRouterContext` breaks this one file, and `routes/list-navigation.test.tsx` holds the 39 controlled cases that a replacement has to pass.
 
 ### Consequences
 
