@@ -200,7 +200,9 @@ export function extractionPrompt(
     "Fields:",
     fields,
     "",
-    "Contract text:",
+    // The seam now carries Request answers and thread messages as well as
+    // Contract text, so the label names the input rather than one module.
+    "Sources:",
     typeof text === "string" ? text : JSON.stringify(text),
   ].join("\n");
 }
@@ -247,9 +249,11 @@ export function parseExtractionReply(
         ...(entry.conflict === true ? { conflict: true } : {}),
         ...(Array.isArray(entry.citations)
           ? {
-              citations: entry.citations.filter(
-                (c): c is { sourceId: string; quote: string } =>
-                  isRecord(c) && typeof c.sourceId === "string" && typeof c.quote === "string",
+              // The check above already refused a malformed list. Rebuild each
+              // citation from its two fields so nothing else the provider sent
+              // rides along into storage.
+              citations: (entry.citations as { sourceId: string; quote: string }[]).map(
+                (citation) => ({ sourceId: citation.sourceId, quote: citation.quote }),
               ),
             }
           : {}),

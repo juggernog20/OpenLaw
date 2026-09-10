@@ -490,7 +490,7 @@ export function SettingsAiAnalysisPage() {
                   } else note("workflow", "error", (await problem(result)).detail);
                 } catch {
                   note(
-                    "lifecycle",
+                    "workflow",
                     "error",
                     intl.formatMessage({
                       id: "conversion.settingsFailed",

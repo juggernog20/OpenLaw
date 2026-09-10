@@ -1116,6 +1116,25 @@ describe("Matter Conversion drafts", () => {
       customFields: { governing_law: "England" },
     });
   });
+  it("leaves prepared values behind when the dialog moves to the contract arm", async () => {
+    const user = userEvent.setup();
+    open(preparedApi());
+    await openDisposition(user, "Convert to matter");
+    const dialog = screen.getByRole("dialog");
+    await screen.findByDisplayValue("Prepared response");
+    await user.click(within(dialog).getByRole("button", { name: /Convert to contract instead/ }));
+    // A draft is prepared for one Matter and carries no Contract
+    // provenance, so its text cannot ride onto a Contract unmarked.
+    expect(within(dialog).getByLabelText("Title", { exact: false })).toHaveValue(
+      "Northwind Labs mutual NDA",
+    );
+    expect(within(dialog).queryByText("Unverified")).toBeNull();
+    await user.click(within(dialog).getByRole("button", { name: /Convert to matter instead/ }));
+    expect(within(dialog).getByLabelText("Title", { exact: false })).toHaveValue(
+      "Northwind Labs mutual NDA",
+    );
+    expect(within(dialog).queryByText("Unverified")).toBeNull();
+  });
   it("keeps manual continuation usable while preparation waits", async () => {
     const user = userEvent.setup();
     const api = preparedApi(true);

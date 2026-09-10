@@ -1106,7 +1106,10 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           if (body.matterTypeId !== undefined)
             for (const slug of Object.keys(flags))
               if (slug.startsWith("field:")) delete flags[slug];
-          patch.aiUnverified = Object.keys(flags).length ? flags : null;
+          // Only deletions happen above, so a shorter map is a real change.
+          // Writing an unchanged map would bump updatedAt on a no-op PATCH.
+          if (Object.keys(flags).length !== Object.keys(target.aiUnverified).length)
+            patch.aiUnverified = Object.keys(flags).length ? flags : null;
         }
         let row: Matter = target;
         if (Object.keys(patch).length > 0) {

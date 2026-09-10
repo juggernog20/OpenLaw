@@ -70,7 +70,7 @@ async function startServer(
     }
 
     const serialized = JSON.stringify(body);
-    const reply = serialized.includes("Contract text:") ? extractionReply : '{"ok":true}';
+    const reply = serialized.includes("Sources:") ? extractionReply : '{"ok":true}';
     response.statusCode = 200;
     response.end(
       JSON.stringify(

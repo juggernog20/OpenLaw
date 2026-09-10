@@ -110,9 +110,14 @@ export function ConvertDialog({
   const attachments = useCreateAttachments();
   const suggestions = initialDraft?.suggestions ?? {};
   const [human, setHuman] = useState<Set<string>>(new Set());
+  /** Set once the dialog leaves the matter arm. A Conversion draft is
+   * prepared for one Matter and carries no Contract provenance, so its
+   * proposals stop applying rather than land on a Contract unmarked. */
+  const [dropped, setDropped] = useState(false);
   const humanValue = (slug: string) => setHuman((current) => new Set([...current, slug]));
-  const marked = (slug: string) =>
-    targetModule === "matter" && Boolean(suggestions[slug]) && !human.has(slug);
+  const suggested = (slug: string) =>
+    dropped || targetModule !== "matter" ? undefined : suggestions[slug];
+  const marked = (slug: string) => Boolean(suggested(slug)) && !human.has(slug);
   const marker = (slug: string) =>
     marked(slug) && (
       <ConversionEvidence
@@ -191,6 +196,29 @@ export function ConvertDialog({
   /** Template defaults sit below both carried Request values and what
    * the triager types. `drafts` holds only the latter, so changing a
    * Template changes an untouched default without taking back an edit. */
+  /** Puts the boxes a Conversion draft prefilled back to what the manual
+   * dialog would have shown, and stops applying the draft. Boxes somebody
+   * already edited keep their edit. */
+  function dropPreparedValues() {
+    for (const slug of Object.keys(suggestions)) {
+      if (human.has(slug)) continue;
+      if (slug === "title") setTitle(request.summary);
+      else if (slug === "priority") setPriority(request.urgency);
+      else if (slug === "description") setDescription(request.description ?? "");
+      else if (slug === "needed_by")
+        setNeededBy(collectedText(fields, request, INTAKE_CARRY_SLUGS.neededBy));
+      else if (slug === "matter_type")
+        setPickedIds((current) => ({
+          ...current,
+          matter:
+            request.requestType.targetModule === "matter"
+              ? (request.requestType.targetTypeId ?? "")
+              : "",
+        }));
+    }
+    setDropped(true);
+  }
+
   function seedTemplate(type: MatterTypeOption, nextTemplateId: string) {
     const template = type.templates?.find((candidate) => candidate.id === nextTemplateId);
     setTemplateId(template?.id ?? "");
@@ -254,7 +282,7 @@ export function ConvertDialog({
     if (archivedCarrySlugs.has(field.slug)) return toDraft(field, undefined);
     return toDraft(
       field,
-      suggestions[`field:${field.slug}`]?.value ??
+      suggested(`field:${field.slug}`)?.value ??
         request.customFields[field.slug] ??
         selectedTemplate?.defaultCustomFields[field.slug],
     );
@@ -334,14 +362,14 @@ export function ConvertDialog({
         });
         return;
       }
-      if (drafts[field.slug] !== undefined || suggestions[`field:${field.slug}`])
+      if (drafts[field.slug] !== undefined || suggested(`field:${field.slug}`))
         customFields[field.slug] = parsed.value;
     }
 
     const namedCounterparty = counterpartyName.trim();
     const result = await onConvert({
       title: named,
-      ...(initialDraft && targetModule === "matter"
+      ...(initialDraft && !dropped && targetModule === "matter"
         ? {
             description: description.trim() || null,
             conversionDraftId: initialDraft.id,
@@ -534,7 +562,7 @@ export function ConvertDialog({
               </select>
               {marker("matter_type")}
             </AiField>
-            {initialDraft && targetModule === "matter" && (
+            {initialDraft && !dropped && targetModule === "matter" && (
               <AiField active={marked("description")} className="flex flex-col gap-1.5">
                 <Label htmlFor="convert-description">
                   <FormattedMessage id="matters.field.description" defaultMessage="Description" />
@@ -551,7 +579,7 @@ export function ConvertDialog({
                 {marker("description")}
               </AiField>
             )}
-            {initialDraft && (
+            {initialDraft && !dropped && targetModule === "matter" && (
               <Button
                 type="button"
                 variant="link"
@@ -560,60 +588,66 @@ export function ConvertDialog({
                 <FormattedMessage id="conversion.manual" defaultMessage="Continue manually" />
               </Button>
             )}
-            {initialDraft?.warnings.map((warning) => (
-              <p key={warning} role="status" className="text-sm text-muted">
-                {warning === "restricted_sources" ? (
-                  <FormattedMessage
-                    id="conversion.restrictedOmitted"
-                    defaultMessage="Restricted messages and Legal or reference Fields were omitted to keep Matter values safe for broader readers."
-                  />
-                ) : warning === "attachments_not_read" ? (
-                  <FormattedMessage
-                    id="conversion.attachmentsOmitted"
-                    defaultMessage="Attachments were not read. Review the Request's paper before converting."
-                  />
-                ) : warning === "target_budget" ? (
-                  <FormattedMessage
-                    id="conversion.targetBudgetOmitted"
-                    defaultMessage="Some Fields exceeded the preparation limit. Complete them manually."
-                  />
-                ) : (
-                  <FormattedMessage
-                    id="conversion.budgetOmitted"
-                    defaultMessage="Some sources exceeded the reading limit and were omitted. Review the original Request too."
-                  />
-                )}
-              </p>
-            ))}
-            {initialDraft && Object.keys(initialDraft.conflicts).length > 0 && (
-              <section className="text-sm">
-                <FormattedMessage
-                  id="conversion.conflicts"
-                  defaultMessage="Conflicting sources need your review:"
-                />
-                {Object.keys(initialDraft.conflicts).map((slug) => (
-                  <div key={slug}>
-                    {slug.startsWith("field:") ? (
-                      (matterTypes
-                        .flatMap((type) => type.fields)
-                        .find((field) => `field:${field.slug}` === slug)?.displayName ??
-                      slug.slice(6))
-                    ) : (
-                      <FormattedMessage
-                        id="conversion.targetLabel"
-                        defaultMessage="{slug, select, title {Title} description {Description} matter_type {Matter type} priority {Priority} needed_by {Needed by} other {Value}}"
-                        values={{ slug }}
-                      />
-                    )}
-                    <ConversionEvidence
-                      number={request.number}
-                      draftId={initialDraft.id}
-                      slug={slug}
+            {initialDraft &&
+              !dropped &&
+              targetModule === "matter" &&
+              initialDraft.warnings.map((warning) => (
+                <p key={warning} role="status" className="text-sm text-muted">
+                  {warning === "restricted_sources" ? (
+                    <FormattedMessage
+                      id="conversion.restrictedOmitted"
+                      defaultMessage="Restricted messages and Legal or reference Fields were omitted to keep Matter values safe for broader readers."
                     />
-                  </div>
-                ))}
-              </section>
-            )}
+                  ) : warning === "attachments_not_read" ? (
+                    <FormattedMessage
+                      id="conversion.attachmentsOmitted"
+                      defaultMessage="Attachments were not read. Review the Request's paper before converting."
+                    />
+                  ) : warning === "target_budget" ? (
+                    <FormattedMessage
+                      id="conversion.targetBudgetOmitted"
+                      defaultMessage="Some Fields exceeded the preparation limit. Complete them manually."
+                    />
+                  ) : (
+                    <FormattedMessage
+                      id="conversion.budgetOmitted"
+                      defaultMessage="Some sources exceeded the reading limit and were omitted. Review the original Request too."
+                    />
+                  )}
+                </p>
+              ))}
+            {initialDraft &&
+              !dropped &&
+              targetModule === "matter" &&
+              Object.keys(initialDraft.conflicts).length > 0 && (
+                <section className="text-sm">
+                  <FormattedMessage
+                    id="conversion.conflicts"
+                    defaultMessage="Conflicting sources need your review:"
+                  />
+                  {Object.keys(initialDraft.conflicts).map((slug) => (
+                    <div key={slug}>
+                      {slug.startsWith("field:") ? (
+                        (matterTypes
+                          .flatMap((type) => type.fields)
+                          .find((field) => `field:${field.slug}` === slug)?.displayName ??
+                        slug.slice(6))
+                      ) : (
+                        <FormattedMessage
+                          id="conversion.targetLabel"
+                          defaultMessage="{slug, select, title {Title} description {Description} matter_type {Matter type} priority {Priority} needed_by {Needed by} other {Value}}"
+                          values={{ slug }}
+                        />
+                      )}
+                      <ConversionEvidence
+                        number={request.number}
+                        draftId={initialDraft.id}
+                        slug={slug}
+                      />
+                    </div>
+                  ))}
+                </section>
+              )}
             {matterTarget && (
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="convert-template">
@@ -783,7 +817,9 @@ export function ConvertDialog({
                 type="button"
                 variant="secondary"
                 onClick={() => {
-                  setTargetModule(targetModule === "contract" ? "matter" : "contract");
+                  const next = targetModule === "contract" ? "matter" : "contract";
+                  if (next === "contract" && initialDraft && !dropped) dropPreparedValues();
+                  setTargetModule(next);
                   setError(null);
                 }}
               >
