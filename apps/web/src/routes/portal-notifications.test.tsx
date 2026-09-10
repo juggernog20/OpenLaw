@@ -74,6 +74,11 @@ function portalBellApi(state: {
   stubApi({
     signedIn: REQUESTER,
     extra: (call: StubCall) => {
+      // Where an opened item lands. The Request behind it is not this
+      // suite's, so its page is answered nothing and left to say so.
+      if (call.url.pathname.startsWith("/api/v1/portal/requests/")) {
+        return problem(404, "Not found.");
+      }
       if (!call.url.pathname.includes("notification")) return undefined;
       calls.push({ method: call.method, path: call.url.pathname, body: call.body });
       if (call.url.pathname === "/api/v1/portal/notifications/unread-count") {
@@ -85,10 +90,14 @@ function portalBellApi(state: {
           nextCursor: state.nextCursor ?? null,
         });
       }
+      // The count follows the writes, as a server's would, so the
+      // count re-read a navigation makes agrees with the write before it.
       if (call.url.pathname === "/api/v1/portal/notifications/read" && call.method === "POST") {
-        return json(200, { unread: state.afterRead ?? 0 });
+        state.unread = state.afterRead ?? 0;
+        return json(200, { unread: state.unread });
       }
       if (call.url.pathname === "/api/v1/portal/notifications/read-all" && call.method === "POST") {
+        state.unread = 0;
         return json(200, { unread: 0 });
       }
       return undefined;
@@ -116,21 +125,28 @@ describe("the portal bell (NOT-001, NOT-005)", () => {
     expect(await bell("none unread")).toHaveTextContent("");
   });
 
-  it("marks the page it drew read and takes the badge from the answer", async () => {
+  it("opens without writing, and marks an item read when it is opened", async () => {
     const user = userEvent.setup();
-    const calls = portalBellApi({ unread: 2, items: [item(1), item(2)], afterRead: 0 });
+    const calls = portalBellApi({ unread: 2, items: [item(1), item(2)], afterRead: 1 });
     renderAt("/portal");
 
     await user.click(await bell("2 unread"));
     const centre = await screen.findByRole("dialog", { name: "Notifications" });
     expect(within(centre).getAllByRole("listitem")).toHaveLength(2);
 
-    // One write, carrying exactly the ids just drawn — and addressed to
-    // the portal's own mount.
+    // Drawing the panel is not reading it (the NOT-005 2026-09-09
+    // amendment): no write, and the badge is where it was.
+    expect(calls.filter((call) => call.method === "POST")).toEqual([]);
+    expect(await bell("2 unread")).toBeVisible();
+
+    await user.click(within(centre).getByRole("link", { name: /Unread .*Northwind redline 1/ }));
+
+    // One write, carrying exactly the id opened — and addressed to the
+    // portal's own mount. The badge takes the server's answer.
     expect(calls.filter((call) => call.method === "POST")).toEqual([
-      { method: "POST", path: "/api/v1/portal/notifications/read", body: { ids: ["n1", "n2"] } },
+      { method: "POST", path: "/api/v1/portal/notifications/read", body: { ids: ["n1"] } },
     ]);
-    expect(await bell("none unread")).toBeVisible();
+    expect(await bell("1 unread")).toBeVisible();
   });
 
   it("asks the portal mount and never the staff notification centre", async () => {
@@ -163,6 +179,88 @@ describe("the portal bell (NOT-001, NOT-005)", () => {
     expect(link).toHaveAttribute("href", "/portal/requests/41");
   });
 
+  it("names the new status of a Request in the requester's words", async () => {
+    const user = userEvent.setup();
+    portalBellApi({
+      unread: 2,
+      items: [
+        item(1, {
+          eventType: "request.status_changed",
+          payload: {
+            requestNumber: 41,
+            requestSummary: "Review the Northwind redline 1",
+            from: "new",
+            to: "converted",
+          },
+        }),
+        item(2, {
+          eventType: "request.status_changed",
+          payload: {
+            requestNumber: 42,
+            requestSummary: "Review the Northwind redline 2",
+            from: "new",
+            to: "declined",
+          },
+        }),
+      ],
+    });
+    renderAt("/portal");
+
+    await user.click(await bell("2 unread"));
+    const centre = await screen.findByRole("dialog", { name: "Notifications" });
+
+    // `converted` is Legal's word; "In progress" is the requester's
+    // (INT-003 M20/10).
+    expect(
+      within(centre).getByRole("link", {
+        name: /Your request Review the Northwind redline 1 is now In progress/,
+      }),
+    ).toHaveAttribute("href", "/portal/requests/41");
+    expect(
+      within(centre).getByRole("link", {
+        name: /Your request Review the Northwind redline 2 is now Declined/,
+      }),
+    ).toBeVisible();
+  });
+
+  it("still reads a status-change row whose payload names no status", async () => {
+    const user = userEvent.setup();
+    portalBellApi({
+      unread: 2,
+      items: [
+        // A row written before `to` was snapshotted, and one whose
+        // status this build has no word for.
+        item(1, {
+          eventType: "request.status_changed",
+          payload: { requestNumber: 41, requestSummary: "Review the Northwind redline 1" },
+        }),
+        item(2, {
+          eventType: "request.status_changed",
+          payload: {
+            requestNumber: 42,
+            requestSummary: "Review the Northwind redline 2",
+            to: "parked",
+          },
+        }),
+      ],
+    });
+    renderAt("/portal");
+
+    await user.click(await bell("2 unread"));
+    const centre = await screen.findByRole("dialog", { name: "Notifications" });
+
+    expect(
+      within(centre).getByRole("link", {
+        name: /The status of your request Review the Northwind redline 1 changed/,
+      }),
+    ).toBeVisible();
+    expect(
+      within(centre).getByRole("link", {
+        name: /The status of your request Review the Northwind redline 2 changed/,
+      }),
+    ).toBeVisible();
+  });
+
   it("says what an empty portal bell is about", async () => {
     const user = userEvent.setup();
     portalBellApi({ unread: 0 });
@@ -177,7 +275,7 @@ describe("the portal bell (NOT-001, NOT-005)", () => {
 
   it("zeroes the badge on mark-all-read", async () => {
     const user = userEvent.setup();
-    const calls = portalBellApi({ unread: 3, items: [item(1)], afterRead: 2 });
+    const calls = portalBellApi({ unread: 3, items: [item(1)] });
     renderAt("/portal");
 
     await user.click(await bell("3 unread"));
@@ -185,7 +283,10 @@ describe("the portal bell (NOT-001, NOT-005)", () => {
     await user.click(await screen.findByRole("button", { name: "Mark all read" }));
 
     expect(await bell("none unread")).toBeVisible();
-    expect(calls.some((call) => call.path.endsWith("/portal/notifications/read-all"))).toBe(true);
+    // The sweep is the only write the surface made.
+    expect(calls.filter((call) => call.method === "POST").map((call) => call.path)).toEqual([
+      "/api/v1/portal/notifications/read-all",
+    ]);
   });
 });
 

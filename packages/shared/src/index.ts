@@ -317,6 +317,31 @@ export const MAX_CONTRACT_TITLE_LENGTH = 200;
 export const MAX_MATTER_TITLE_LENGTH = 500;
 
 /**
+ * The seeded request fields the conversion form knows how to land
+ * (INT-002, the 2026-09-09 focus-group addendum).
+ *
+ * "Counterparty name" and "Needed by" are Fields on the seeded request
+ * forms, but on a contract the other side is a counterparty row and a
+ * deadline is a key date, so neither can carry by slug. The dialog
+ * reads these two slugs to prefill its own Counterparty and Needed by
+ * controls and sends what is in the boxes as `counterpartyName` and
+ * `neededBy`. The server reads the body and never the slugs: a form
+ * whose fields are named differently still converts, and the triager
+ * fills the two boxes by hand.
+ */
+export const INTAKE_CARRY_SLUGS = {
+  counterpartyName: "counterparty_name",
+  neededBy: "needed_by",
+} as const;
+
+/**
+ * How long a counterparty's name may be (CTR-011). The add route and
+ * the conversion refuse past it; the boxes that collect one restate it
+ * as `maxLength`.
+ */
+export const MAX_COUNTERPARTY_NAME_LENGTH = 200;
+
+/**
  * How many people one envelope may be sent to (CTR-013).
  *
  * A bound rather than a preference, and a generous one: naming a

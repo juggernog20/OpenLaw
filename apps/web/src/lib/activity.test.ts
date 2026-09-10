@@ -951,6 +951,36 @@ describe("AI field confirmation narration", () => {
   });
 });
 
+describe("the record's own id-valued and slug-valued changes", () => {
+  it("names a Task's assignee from the mount's reference names, and the id when nothing names it", () => {
+    const entry: NarratableEntry = {
+      action: "task.edited",
+      actor: ACTOR,
+      payload: {
+        taskId: "t-1",
+        title: "Draft the NDA",
+        changed: { assigneeId: { from: null, to: "01a07295-user" } },
+      },
+    };
+    expect(
+      narrateActivity(intl, entry, { referenceNames: { "01a07295-user": "Casey Counsel" } })
+        .changes,
+    ).toEqual([{ label: "Assignee", from: "Not set", to: "Casey Counsel" }]);
+    expect(narrateActivity(intl, entry).changes).toEqual([
+      { label: "Assignee", from: "Not set", to: "01a07295-user" },
+    ]);
+  });
+
+  it("says Everyone where the Knowledge Item's audience column says everyone", () => {
+    expect(
+      narrate("knowledge_item.updated", {
+        title: "Contract review playbook",
+        changed: { audience: { from: "legal_only", to: "everyone" } },
+      }).changes,
+    ).toEqual([{ label: "Audience", from: "Legal Only", to: "Everyone" }]);
+  });
+});
+
 describe("core prompt narration", () => {
   it("names the target in the AI analysis pane's words", () => {
     expect(narrate("ai_field_prompt.updated", { slug: "effective_date" }).sentence).toBe(

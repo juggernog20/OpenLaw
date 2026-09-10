@@ -2998,9 +2998,10 @@ describe("a Contributor on the contract record (M9/1)", () => {
     expect(api.posts).toEqual([]);
   });
 
-  it("shows the error page for a contract they hold no team row on", async () => {
+  it("draws the not-found page for a contract they hold no team row on", async () => {
     // The API answers 404, exactly as it does for a contract that does
-    // not exist — the client never learns which it was.
+    // not exist — the client never learns which it was, so the page
+    // says both, inside the shell, with the way back to the list.
     stubApi({
       signedIn: CONTRIBUTOR,
       extra: (call) =>
@@ -3011,8 +3012,15 @@ describe("a Contributor on the contract record (M9/1)", () => {
     renderAt("/contracts/42");
 
     expect(
-      await screen.findByRole("heading", { name: "Something went wrong." }),
+      await screen.findByRole("heading", { level: 1, name: "Contract not found" }),
     ).toBeInTheDocument();
+    expect(screen.getByText("C-42 does not exist, or you cannot open it.")).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Primary" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Back to Contracts" })).toHaveAttribute(
+      "href",
+      "/contracts",
+    );
+    await waitFor(() => expect(document.title).toBe("Contract not found · OpenLaw"));
   });
 });
 

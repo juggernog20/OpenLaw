@@ -813,7 +813,7 @@ describe("an immediate email whose wake-up was lost", () => {
       .update(notifications)
       .set({
         emailedAt: null,
-        createdAt: new Date(Date.now() - LOST_EMAIL_REASK_AFTER_MS - 60_000),
+        createdAt: new Date(at(TODAY, 8).getTime() - LOST_EMAIL_REASK_AFTER_MS - 60_000),
       })
       .where(eq(notifications.id, row!.id));
 

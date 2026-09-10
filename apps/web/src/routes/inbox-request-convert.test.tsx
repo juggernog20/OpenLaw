@@ -36,7 +36,11 @@ function field(
   };
 }
 
-const COUNTERPARTY = field("counterparty", "Counterparty");
+const OPPOSING_PARTY = field("opposing_party", "Opposing party");
+/** The two seeded request fields the dialog lands through its own
+ * boxes rather than as Fields (INT-002, 2026-09-09 addendum). */
+const COUNTERPARTY_NAME = field("counterparty_name", "Counterparty name");
+const NEEDED_BY = field("needed_by", "Needed by", { fieldType: "date" });
 const DEAL_DESK = field("deal_desk_region", "Deal desk region");
 const GOVERNING_LAW = field("governing_law", "Governing law", { isRequired: true });
 const REQUESTING_MANAGER = field("requesting_manager", "Requesting manager", {
@@ -53,7 +57,7 @@ const EMPLOYMENT_TEMPLATE = {
   defaultPriority: "low",
   defaultRisk: "high",
   defaultCustomFields: {
-    counterparty: "Template employer",
+    opposing_party: "Template employer",
     governing_law: "Template forum",
   },
   titlePrefix: "EMP —",
@@ -62,16 +66,24 @@ const EMPLOYMENT_TEMPLATE = {
 };
 
 /** The live contract taxonomy the dialog draws from. NDA carries the
- * counterparty and demands nothing; MSA demands a governing law no
+ * opposing party and demands nothing; MSA demands a governing law no
  * request form collects, which is the gap. */
 const CONTRACT_TYPES = [
   {
     id: "ct-nda",
     slug: "nda",
     displayName: "NDA",
-    fields: [COUNTERPARTY, REQUESTING_MANAGER, CONTRACTING_ENTITY],
+    fields: [OPPOSING_PARTY, REQUESTING_MANAGER, CONTRACTING_ENTITY],
   },
-  { id: "ct-msa", slug: "msa", displayName: "MSA", fields: [COUNTERPARTY, GOVERNING_LAW] },
+  { id: "ct-msa", slug: "msa", displayName: "MSA", fields: [OPPOSING_PARTY, GOVERNING_LAW] },
+  // SOW attaches the two seeded slugs as Fields of its own, so the
+  // dialog lands them through the ordinary carry and draws no box.
+  {
+    id: "ct-sow",
+    slug: "sow",
+    displayName: "SOW",
+    fields: [OPPOSING_PARTY, COUNTERPARTY_NAME, NEEDED_BY],
+  },
 ];
 
 const MATTER_TYPES = [
@@ -79,14 +91,14 @@ const MATTER_TYPES = [
     id: "mt-dispute",
     slug: "dispute",
     displayName: "Dispute",
-    fields: [COUNTERPARTY, GOVERNING_LAW],
+    fields: [OPPOSING_PARTY, GOVERNING_LAW],
     templates: [],
   },
   {
     id: "mt-employment",
     slug: "employment",
     displayName: "Employment",
-    fields: [COUNTERPARTY, GOVERNING_LAW],
+    fields: [OPPOSING_PARTY, GOVERNING_LAW],
     templates: [EMPLOYMENT_TEMPLATE],
   },
 ];
@@ -97,7 +109,7 @@ const request = (overrides: Record<string, unknown> = {}) =>
   staffRequest({
     summary: "Northwind Labs mutual NDA",
     description: "Small vendor, standard terms.",
-    customFields: { counterparty: "Northwind Labs", deal_desk_region: "EMEA" },
+    customFields: { opposing_party: "Northwind Labs", deal_desk_region: "EMEA" },
     ...overrides,
   });
 
@@ -107,10 +119,14 @@ const detail = (
   row: Record<string, unknown>,
   customFieldRefs: unknown = { users: [], entities: [] },
 ) => ({
-  ...(staffDetail(row, [COUNTERPARTY, DEAL_DESK, REQUESTING_MANAGER, CONTRACTING_ENTITY]) as Record<
-    string,
-    unknown
-  >),
+  ...(staffDetail(row, [
+    OPPOSING_PARTY,
+    DEAL_DESK,
+    REQUESTING_MANAGER,
+    CONTRACTING_ENTITY,
+    COUNTERPARTY_NAME,
+    NEEDED_BY,
+  ]) as Record<string, unknown>),
   customFieldRefs,
 });
 
@@ -257,8 +273,8 @@ describe("the prefill (INT-002, MTR-012)", () => {
     const user = userEvent.setup();
     open(requestApi());
     const dialog = await openConvert(user);
-    expect(within(dialog).getByLabelText(/^Counterparty/)).toHaveValue("Northwind Labs");
-    expect(within(dialog).getByText("Counterparty")).toBeInTheDocument();
+    expect(within(dialog).getByLabelText(/^Opposing party/)).toHaveValue("Northwind Labs");
+    expect(within(dialog).getByText("Opposing party")).toBeInTheDocument();
   });
 
   it("prefills editable live references with their names", async () => {
@@ -294,11 +310,11 @@ describe("the prefill (INT-002, MTR-012)", () => {
     const api = requestApi();
     open(api);
     const dialog = await openConvert(user);
-    await user.clear(within(dialog).getByLabelText(/^Counterparty/));
+    await user.clear(within(dialog).getByLabelText(/^Opposing party/));
     await user.selectOptions(within(dialog).getByLabelText(/^Contract type/), "ct-msa");
     await user.type(within(dialog).getByLabelText(/^Governing law/), "England");
     await user.selectOptions(within(dialog).getByLabelText(/^Contract type/), "ct-nda");
-    expect(within(dialog).getByLabelText(/^Counterparty/)).toHaveValue("");
+    expect(within(dialog).getByLabelText(/^Opposing party/)).toHaveValue("");
     await user.selectOptions(within(dialog).getByLabelText(/^Contract type/), "ct-msa");
     expect(within(dialog).getByLabelText(/^Governing law/)).toHaveValue("England");
     await user.clear(within(dialog).getByLabelText(/^Title/));
@@ -311,7 +327,7 @@ describe("the prefill (INT-002, MTR-012)", () => {
           title: "Revised MSA",
           contractTypeId: "ct-msa",
           priority: "low",
-          customFields: { counterparty: null, governing_law: "England" },
+          customFields: { opposing_party: null, governing_law: "England" },
         },
       ]),
     );
@@ -396,7 +412,7 @@ describe("the prefill (INT-002, MTR-012)", () => {
     expect(within(dialog).queryByText("Does not carry into the contract")).toBeNull();
 
     await user.selectOptions(within(dialog).getByLabelText(/^Contract type/), "ct-nda");
-    expect(within(dialog).getByLabelText(/^Counterparty/)).toHaveValue("Northwind Labs");
+    expect(within(dialog).getByLabelText(/^Opposing party/)).toHaveValue("Northwind Labs");
     expect(within(dialog).getByText("Does not carry into the contract")).toBeInTheDocument();
   });
 
@@ -410,6 +426,156 @@ describe("the prefill (INT-002, MTR-012)", () => {
     expect(within(dialog).getByText("Does not carry into the contract")).toBeInTheDocument();
     expect(within(dialog).getByText("Deal desk region")).toBeInTheDocument();
     expect(within(dialog).queryByText(/Nothing is deleted/)).toBeNull();
+  });
+});
+
+describe("the facts that are not Fields (INT-002, focus group 2026-09-07)", () => {
+  /** A Request whose form collected the two seeded fields the dialog
+   * lands through its own boxes, plus one with nowhere to go. */
+  const collected = () =>
+    request({
+      customFields: {
+        counterparty_name: "Helix Labs GmbH",
+        needed_by: "2026-10-01",
+        deal_desk_region: "EMEA",
+      },
+    });
+
+  it("draws Counterparty and Needed by prefilled, sends both, and lists neither as staying behind", async () => {
+    const user = userEvent.setup();
+    const api = requestApi(collected());
+    open(api);
+    const dialog = await openConvert(user);
+    expect(within(dialog).getByLabelText(/^Counterparty$/)).toHaveValue("Helix Labs GmbH");
+    expect(within(dialog).getByLabelText(/^Needed by/)).toHaveValue("2026-10-01");
+
+    // The third value still has nowhere to land, and is the only one named.
+    expect(within(dialog).getByText("Does not carry into the contract")).toBeInTheDocument();
+    expect(within(dialog).getByText("Deal desk region")).toBeInTheDocument();
+    expect(within(dialog).queryByText("Counterparty name")).toBeNull();
+    expect(within(dialog).queryByText(/Needed by,|, Needed by/)).toBeNull();
+
+    await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
+    await waitFor(() => expect(api.conversions).toHaveLength(1));
+    expect(api.conversions[0]).toEqual({
+      title: "Northwind Labs mutual NDA",
+      contractTypeId: "ct-nda",
+      priority: "high",
+      counterpartyName: "Helix Labs GmbH",
+      neededBy: "2026-10-01",
+    });
+  });
+
+  it("sends what the boxes hold after an edit, and nothing for an emptied box", async () => {
+    const user = userEvent.setup();
+    const api = requestApi(collected());
+    open(api);
+    const dialog = await openConvert(user);
+    await user.clear(within(dialog).getByLabelText(/^Counterparty$/));
+    await user.type(within(dialog).getByLabelText(/^Counterparty$/), "Helix Labs AG");
+    await user.clear(within(dialog).getByLabelText(/^Needed by/));
+    // A cleared box carries nothing, so the collected date is named as
+    // staying behind again, after the value that never had a box.
+    expect(within(dialog).getByText("Deal desk region and Needed by")).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
+    await waitFor(() => expect(api.conversions).toHaveLength(1));
+    expect(api.conversions[0]).toEqual({
+      title: "Northwind Labs mutual NDA",
+      contractTypeId: "ct-nda",
+      priority: "high",
+      counterpartyName: "Helix Labs AG",
+    });
+  });
+
+  it("names both collected values as staying behind once both boxes are cleared", async () => {
+    const user = userEvent.setup();
+    const api = requestApi(collected());
+    open(api);
+    const dialog = await openConvert(user);
+    expect(within(dialog).getByText("Deal desk region")).toBeInTheDocument();
+    await user.clear(within(dialog).getByLabelText(/^Counterparty$/));
+    expect(within(dialog).getByText("Deal desk region and Counterparty name")).toBeInTheDocument();
+    await user.clear(within(dialog).getByLabelText(/^Needed by/));
+    expect(
+      within(dialog).getByText("Deal desk region, Counterparty name, and Needed by"),
+    ).toBeInTheDocument();
+    // Typing the name back takes it off the list again.
+    await user.type(within(dialog).getByLabelText(/^Counterparty$/), "Helix Labs AG");
+    expect(within(dialog).getByText("Deal desk region and Needed by")).toBeInTheDocument();
+  });
+
+  it("draws no box for a slug the target type attaches as a Field, and lands it as that Field", async () => {
+    const user = userEvent.setup();
+    const api = requestApi(collected());
+    open(api);
+    const dialog = await openConvert(user);
+    await user.selectOptions(within(dialog).getByLabelText(/^Contract type/), "ct-sow");
+
+    // The dialog's own boxes are gone; the type's Fields stand in their
+    // place, prefilled from what the form collected.
+    expect(dialog.querySelector("#convert-needed-by")).toBeNull();
+    expect(dialog.querySelector("#convert-counterparty")).toBeNull();
+    const neededBy = within(dialog).getByLabelText(/^Needed by/);
+    expect(neededBy).toHaveAttribute("id", "convert-needed_by");
+    expect(neededBy).toHaveValue("2026-10-01");
+    const counterparty = within(dialog).getByLabelText(/^Counterparty name/);
+    expect(counterparty).toHaveAttribute("id", "convert-counterparty_name");
+    expect(counterparty).toHaveValue("Helix Labs GmbH");
+    // Neither is listed as staying behind: the Field carries it.
+    expect(within(dialog).getByText("Deal desk region")).toBeInTheDocument();
+    expect(within(dialog).queryByText(/Needed by,|, Needed by|and Needed by/)).toBeNull();
+    expect(within(dialog).queryByText(/Counterparty name,|, Counterparty name/)).toBeNull();
+
+    // An edit rides the Field, not a dedicated member of the body.
+    await user.clear(neededBy);
+    await user.type(neededBy, "2026-11-15");
+    await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
+    await waitFor(() => expect(api.conversions).toHaveLength(1));
+    expect(api.conversions[0]).toEqual({
+      title: "Northwind Labs mutual NDA",
+      contractTypeId: "ct-sow",
+      priority: "high",
+      customFields: { needed_by: "2026-11-15" },
+    });
+    expect(api.conversions[0]).not.toHaveProperty("neededBy");
+    expect(api.conversions[0]).not.toHaveProperty("counterpartyName");
+  });
+
+  it("draws no Counterparty box on the matter arm, so the name is named as staying behind", async () => {
+    const user = userEvent.setup();
+    const api = requestApi(collected());
+    open(api);
+    const dialog = await openDisposition(user, "Convert to matter");
+    await user.selectOptions(within(dialog).getByLabelText(/^Matter type/), "mt-dispute");
+    expect(within(dialog).queryByLabelText(/^Counterparty$/)).toBeNull();
+    expect(within(dialog).getByLabelText(/^Needed by/)).toHaveValue("2026-10-01");
+    expect(within(dialog).getByText("Does not carry into the matter")).toBeInTheDocument();
+    expect(within(dialog).getByText(/Counterparty name/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/Deal desk region/)).toBeInTheDocument();
+
+    await user.type(within(dialog).getByLabelText(/^Governing law/), "DIFC Courts");
+    await user.click(within(dialog).getByRole("button", { name: "Convert to matter" }));
+    await waitFor(() => expect(api.conversions).toHaveLength(1));
+    expect(api.conversions[0]).toEqual({
+      title: "Northwind Labs mutual NDA",
+      matterTypeId: "mt-dispute",
+      priority: "high",
+      customFields: { governing_law: "DIFC Courts" },
+      neededBy: "2026-10-01",
+    });
+  });
+
+  it("draws both boxes empty when the form collected neither, and sends neither", async () => {
+    const user = userEvent.setup();
+    const api = requestApi();
+    open(api);
+    const dialog = await openConvert(user);
+    expect(within(dialog).getByLabelText(/^Counterparty$/)).toHaveValue("");
+    expect(within(dialog).getByLabelText(/^Needed by/)).toHaveValue("");
+    await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
+    await waitFor(() => expect(api.conversions).toHaveLength(1));
+    expect(api.conversions[0]).not.toHaveProperty("counterpartyName");
+    expect(api.conversions[0]).not.toHaveProperty("neededBy");
   });
 });
 
@@ -549,7 +715,7 @@ describe("editable conversion targets", () => {
     ).toEqual(["No template", "Employment response"]);
     expect(within(dialog).queryByText(/Template adds/)).toBeNull();
     expect(within(dialog).getByLabelText(/^Title/)).toHaveValue("Northwind Labs mutual NDA");
-    expect(within(dialog).getByLabelText(/^Counterparty/)).toHaveValue("Northwind Labs");
+    expect(within(dialog).getByLabelText(/^Opposing party/)).toHaveValue("Northwind Labs");
 
     const forum = within(dialog).getByLabelText(/^Governing law/);
     expect(forum).toHaveValue("");

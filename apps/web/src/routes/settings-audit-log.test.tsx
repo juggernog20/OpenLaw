@@ -104,6 +104,7 @@ const ENTRIES = [
     action: "contract.created",
     entityType: "contract",
     entityId: "c1",
+    entityRef: { number: 42, title: "The Ashford supply agreement" },
     visibility: "working_team",
     actor: BLAIR,
     createdAt: "2026-08-12T07:00:00.000Z",
@@ -284,8 +285,11 @@ describe("what the pane shows", () => {
     expect(within(settingsRow).getByText("Name: Acme → Acme Legal")).toBeVisible();
 
     // And the record's own, which the history applet narrates the same
-    // way — one answer for both surfaces.
-    expect(screen.getByText("Blair Wentworth created this contract")).toBeVisible();
+    // way — one answer for both surfaces. Its Record cell names the
+    // Contract as the product does, and keeps the id an auditor quotes.
+    const contractRow = screen.getByText("Blair Wentworth created this contract").closest("tr")!;
+    expect(within(contractRow).getByText("C-42 · The Ashford supply agreement")).toBeVisible();
+    expect(within(contractRow).getByText("c1")).toBeVisible();
 
     // The envelope's ending, with the words it ended on and no person
     // named: the signers sign on the provider's own ceremony, and the

@@ -830,6 +830,9 @@
   "audit.empty": {
     "defaultMessage": "No entry matches these filters."
   },
+  "audit.entityRef": {
+    "defaultMessage": "{reference} · {title}"
+  },
   "audit.entityType": {
     "defaultMessage": "{type, select, contract {Contract} matter {Matter} document {Document} request {Request} user {User} entity {Entity} system {System} other {{type}}}"
   },
@@ -2111,6 +2114,9 @@
   "convert.archivedReferenceNote": {
     "defaultMessage": "{value} is archived. Pick a live {fieldType, select, user {person} entity {entity} other {value}} to convert."
   },
+  "convert.counterparty": {
+    "defaultMessage": "Counterparty"
+  },
   "convert.failed": {
     "defaultMessage": "The request could not be converted. Try again."
   },
@@ -2125,6 +2131,9 @@
   },
   "convert.needType": {
     "defaultMessage": "Pick a {module, select, matter {matter} other {contract}} type."
+  },
+  "convert.neededBy": {
+    "defaultMessage": "Needed by"
   },
   "convert.otherModule": {
     "defaultMessage": "Convert to {module, select, matter {contract} other {matter}} instead"
@@ -5369,6 +5378,57 @@
   "nav.matters": {
     "defaultMessage": "Matters"
   },
+  "notFound.body": {
+    "defaultMessage": "There is nothing at this address."
+  },
+  "notFound.contract.back": {
+    "defaultMessage": "Back to Contracts"
+  },
+  "notFound.contract.body": {
+    "defaultMessage": "{reference} does not exist, or you cannot open it."
+  },
+  "notFound.contract.title": {
+    "defaultMessage": "Contract not found"
+  },
+  "notFound.entity.back": {
+    "defaultMessage": "Back to Entities"
+  },
+  "notFound.entity.body": {
+    "defaultMessage": "This Entity does not exist, or you cannot open it."
+  },
+  "notFound.entity.title": {
+    "defaultMessage": "Entity not found"
+  },
+  "notFound.home": {
+    "defaultMessage": "Back to Home"
+  },
+  "notFound.knowledge.back": {
+    "defaultMessage": "Back to Knowledge"
+  },
+  "notFound.knowledge.body": {
+    "defaultMessage": "This Knowledge Item does not exist, or you cannot open it."
+  },
+  "notFound.knowledge.title": {
+    "defaultMessage": "Knowledge Item not found"
+  },
+  "notFound.matter.back": {
+    "defaultMessage": "Back to Matters"
+  },
+  "notFound.matter.body": {
+    "defaultMessage": "{reference} does not exist, or you cannot open it."
+  },
+  "notFound.matter.title": {
+    "defaultMessage": "Matter not found"
+  },
+  "notFound.pageTitle": {
+    "defaultMessage": "Page not found"
+  },
+  "notFound.portalHome": {
+    "defaultMessage": "Back to the portal"
+  },
+  "notFound.title": {
+    "defaultMessage": "Page not found"
+  },
   "notifications.approval.requested": {
     "defaultMessage": "{hasActor, select, yes {{actor} asked you to approve {contract}} other {You were asked to approve {contract}}}"
   },
@@ -5394,7 +5454,7 @@
     "defaultMessage": "{hasActor, select, yes {{actor} made you the Owner of {contract}} other {You were made the Owner of {contract}}}"
   },
   "notifications.contract.statusChanged": {
-    "defaultMessage": "{hasActor, select, yes {{actor} changed the status of {contract}} other {The status of {contract} changed}}"
+    "defaultMessage": "{hasStatus, select, yes {{hasActor, select, yes {{actor} changed the status of {contract} to {status}} other {{contract} is now {status}}}} other {{hasActor, select, yes {{actor} changed the status of {contract}} other {The status of {contract} changed}}}}"
   },
   "notifications.contract.taskAssigned": {
     "defaultMessage": "{hasActor, select, yes {{actor} assigned you a task on {contract}} other {You were assigned a task on {contract}}}"
@@ -5460,7 +5520,7 @@
     "defaultMessage": "{hasActor, select, yes {{actor} replied on your request {request}} other {Legal replied on your request {request}}}"
   },
   "notifications.request.statusChanged": {
-    "defaultMessage": "The status of your request {request} changed"
+    "defaultMessage": "{hasStatus, select, yes {Your request {request} is now {status}} other {The status of your request {request} changed}}"
   },
   "notifications.request.submitted": {
     "defaultMessage": "{hasActor, select, yes {{actor} submitted a new request: {request}} other {A new request arrived: {request}}}"
@@ -5476,6 +5536,9 @@
   },
   "notifications.unnamedRecord": {
     "defaultMessage": "a record"
+  },
+  "notifications.unreadRow": {
+    "defaultMessage": "Unread"
   },
   "portal.brand": {
     "defaultMessage": "OpenLaw"

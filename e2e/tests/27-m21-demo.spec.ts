@@ -607,8 +607,8 @@ test.describe.serial("M21 demo path", () => {
       await expect(page.getByRole("heading", { level: 1, name: SUMMARY })).toBeVisible();
 
       // An ordinary contract, born with the values carried: the C-###
-      // sequence, the draft-stage seed, no Owner, no team beyond the
-      // triager's own creator row, no Confidential flag — the M16
+      // sequence, the draft-stage seed, the triager as Owner, no team
+      // beyond their own creator row, no Confidential flag — the M16
       // successor rule's sibling — with the urgency landed as priority
       // and the collected value in its real field.
       const record = await page.request.get(`/api/v1/contracts/${String(contractNumber)}`);
@@ -618,7 +618,9 @@ test.describe.serial("M21 demo path", () => {
       expect(parsed.contract.priority).toBe("high");
       expect(parsed.contract.risk).toBeNull();
       expect(parsed.contract.stage).toBe("draft");
-      expect(parsed.contract.manager).toBeNull();
+      // The triager owns what they picked up, which is what the matter
+      // arm already did (INT-002, 2026-09-09).
+      expect(parsed.contract.manager?.displayName).toBe(ADMIN.displayName);
       expect(parsed.contract.isConfidential).toBe(false);
       expect(parsed.contract.customFields[FIELD_SLUG]).toBe(FIELD_ANSWER);
       // One row, and it is provenance rather than a team: the triager
@@ -716,9 +718,11 @@ test.describe.serial("M21 demo path", () => {
       await expect(
         portalCentre.getByRole("link", { name: new RegExp(`replied on your request ${SUMMARY}`) }),
       ).toHaveAttribute("href", `/portal/requests/${String(number)}`);
+      // The item names the status it moved to, in the requester's own
+      // vocabulary rather than the enum's (NOT-005, 2026-09-09).
       await expect(
         portalCentre.getByRole("link", {
-          name: new RegExp(`status of your request ${SUMMARY} changed`),
+          name: new RegExp(`Your request ${SUMMARY} is now In progress`),
         }),
       ).toBeVisible();
       await portal.keyboard.press("Escape");

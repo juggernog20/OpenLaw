@@ -4,7 +4,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
-import { json, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const MEMBER = {
   id: "member-1",
@@ -473,6 +473,31 @@ describe("the Knowledge library", () => {
 });
 
 describe("a Knowledge record", () => {
+  it("draws the not-found page when the record read answers 404", async () => {
+    const record = recordApi([]);
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/knowledge/knowledge-1" && call.method === "GET"
+          ? problem(404, "No Knowledge Item exists with this id.")
+          : record(call),
+    });
+    renderAt("/knowledge/knowledge-1");
+
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Knowledge Item not found" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("This Knowledge Item does not exist, or you cannot open it."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Primary" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Back to Knowledge" })).toHaveAttribute(
+      "href",
+      "/knowledge",
+    );
+    await waitFor(() => expect(document.title).toBe("Knowledge Item not found · OpenLaw"));
+  });
+
   it("opens the primary row in the doc panel and reuses the Documents card primary action without folders", async () => {
     stubApi({ signedIn: MEMBER, extra: recordApi([]) });
     renderAt("/knowledge/knowledge-1");

@@ -186,8 +186,11 @@ import {
   contractTeamScope,
   CREATOR_TEAM_ROLE,
   NO_CONTRACT,
+  OWNER_REFUSAL,
+  OWNER_ROLES,
   reachesLockedContract,
 } from "../../lib/contract-access.js";
+import { CounterpartyNameSchema, findOrCreateCounterparty } from "../../lib/counterparty-link.js";
 import { entityReachScope } from "../../lib/entity-access.js";
 import { NO_MATTER, reachedMatter } from "../../lib/matter-access.js";
 import {
@@ -294,10 +297,6 @@ function severityRank(column: AnyPgColumn): SQL {
   );
   return sql`case ${column} ${sql.join(arms, sql` `)} end`;
 }
-
-/** Only a Member+ user can be the Owner: the Owner runs the contract,
- * and a read-only viewer cannot run one (CTR-004, DD-013). */
-const OWNER_ROLES = ["administrator", "legal_team_member"] as const;
 
 const SeveritySchema = z.enum(SEVERITY_LEVELS);
 
@@ -689,8 +688,6 @@ const ApproverGroupOptionSchema = z.object({
 });
 
 const TitleSchema = z.string().trim().min(1).max(MAX_CONTRACT_TITLE_LENGTH);
-/** CTR-011's inline creation writes exactly this and nothing else. */
-const CounterpartyNameSchema = z.string().trim().min(1).max(200);
 const DescriptionSchema = z.string().trim().max(10_000);
 /** The number is the path, so it is an integer or it is not a contract. */
 const NumberParams = z.object({ number: z.coerce.number().int().positive() });
@@ -1208,48 +1205,6 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       contract: toRow({ ...context, primaryCounterparty: primaryOf(parties) }),
       counterparties: parties,
     };
-  }
-
-  /**
-   * CTR-011's inline creation: a typed name becomes a counterparty
-   * record. It answers the record we already hold under that name
-   * before it makes a new one, so the typeahead cannot leave two rows
-   * behind for one organization — the client filters the same names out
-   * of its create affordance, and this is the refusal that holds when
-   * two clients disagree.
-   *
-   * The advisory lock is transaction-scoped and keyed on the name, so
-   * two Legal Team Members typing the same unknown name onto two
-   * different contracts at the same moment take turns: the first
-   * creates, the second finds. Locking the contract row cannot do this
-   * — they are on different contracts — and a unique constraint on the
-   * name would be a permanent ruling that two organizations may never
-   * share one, which is not ours to make here.
-   */
-  async function findOrCreateCounterparty(tx: Transaction, rawName: string) {
-    const name = rawName.trim();
-    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(lower(${name})))`);
-    const [existing] = await tx
-      .select({ id: counterparties.id, name: counterparties.name })
-      .from(counterparties)
-      .where(
-        and(
-          isNull(counterparties.archivedAt),
-          // Matched case-insensitively on the name index's own
-          // expression: "helix labs gmbh" is the organization already
-          // filed as "Helix Labs GmbH", not a second one.
-          sql`lower(${counterparties.name}) = lower(${name})`,
-        ),
-      )
-      .orderBy(asc(counterparties.createdAt))
-      .limit(1);
-    if (existing) return { party: existing, born: false };
-
-    const [created] = await tx
-      .insert(counterparties)
-      .values({ name })
-      .returning({ id: counterparties.id, name: counterparties.name });
-    return { party: created!, born: true };
   }
 
   /**
@@ -2003,7 +1958,10 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           "CTR-003 sequence. Everything else is set inline on the record " +
           "afterward — except the Confidential flag (DD-014), which may " +
           "be set here so a sensitive record is never visible to the " +
-          "wrong audience, even briefly. " +
+          "wrong audience, even briefly, and the Owner (CTR-004), which " +
+          "the create dialog seeds with the acting person and which " +
+          "must be a live Administrator or Legal Team Member; omitted or " +
+          "null is unassigned, a real state. " +
           "`renewalOf` routes a renewal into a new record (CTR-007's " +
           "third and fourth vehicles, M16/5): the successor is born " +
           "carrying its predecessor's business facts — our entity, the " +
@@ -2030,6 +1988,13 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
            * the creator is one of the three who may set it. Omitted
            * means open, which is the product's default (DD-014). */
           isConfidential: z.boolean().optional(),
+          /** The Owner the record is born with (CTR-004, focus-group
+           * addendum 2026-09-09). Omitted or null is unassigned, which
+           * stays a real state; a named person must be a live Member+
+           * user or the create is refused. A routed renewal never
+           * copies its predecessor's Owner — only what the body names
+           * is written. */
+          managerId: z.string().nullable().optional(),
           /** CTR-007's routing (M16/5). Omitted is the ordinary create:
            * a record that renews nothing and sits under nobody. */
           renewalOf: RenewalOfSchema.optional(),
@@ -2089,15 +2054,16 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           contractTypeId,
           customFields: request.body.customFields,
           isConfidential: request.body.isConfidential,
+          managerId: request.body.managerId,
           renewal,
           matter,
         });
-        if (!renewal) {
+        if (!renewal && !born.row.managerId) {
           return {
             ...born,
-            // A new contract is unassigned, which of ours signs is not
-            // known yet, and nobody is recorded on the other side; all
-            // three are set on the record afterwards.
+            // A new contract with no Owner named is unassigned, which of
+            // ours signs is not known yet, and nobody is recorded on the
+            // other side; all three are set on the record afterwards.
             manager: null,
             entity: null,
             entityRestricted: false,
@@ -2105,10 +2071,11 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           };
         }
 
-        // The copied facts read back off the row that now holds them,
-        // rather than off the predecessor's context: the entity and the
-        // primary party the answer names have to be the ones this record
-        // was born with, and one joined read is what guarantees it.
+        // The copied facts, and the Owner the body named, read back off
+        // the row that now holds them rather than off the request: the
+        // entity, the primary party, and the Owner the answer names
+        // have to be the ones this record was born with, and one joined
+        // read is what guarantees it.
         const [read] = await selectContracts(tx, request.user)
           .where(eq(contracts.id, born.row.id))
           .limit(1);
@@ -2290,15 +2257,11 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         // ids — the M9 viewer narrates "Owner changed from X to Y".
         let manager = current.manager;
         if (body.managerId !== undefined && body.managerId !== target.managerId) {
-          manager =
-            body.managerId === null
-              ? null
-              : await lockedUser(
-                  tx,
-                  body.managerId,
-                  OWNER_ROLES,
-                  "The Owner must be a live Administrator or Legal Team Member.",
-                );
+          // Null and the empty string both unassign, the reading the
+          // create seam and the Matters door already share.
+          manager = body.managerId
+            ? await lockedUser(tx, body.managerId, OWNER_ROLES, OWNER_REFUSAL)
+            : null;
           patch.managerId = manager?.id ?? null;
           changed.owner = {
             from: current.manager?.displayName ?? null,
@@ -3106,7 +3069,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           party = { id: existing.id, name: existing.name };
         } else {
           const found = await findOrCreateCounterparty(tx, name!);
-          party = found.party;
+          party = found.counterparty;
           born = found.born;
         }
 

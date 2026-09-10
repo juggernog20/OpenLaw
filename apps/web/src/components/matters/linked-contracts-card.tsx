@@ -5,7 +5,12 @@ import { useState } from "react";
 import { useRecord } from "../record-context";
 import { Link } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
-import { contractReference, STAGE_PILL, type ContractTypeOption } from "../../lib/contracts";
+import {
+  contractReference,
+  STAGE_PILL,
+  type ContractTypeOption,
+  type UserOption,
+} from "../../lib/contracts";
 import { api } from "../../lib/api";
 import { readRegistry } from "../../lib/entities";
 import type { FieldReference } from "../custom-field-control";
@@ -28,7 +33,7 @@ export function LinkedContractsCard({
   onContracts: (contracts: LinkedContract[]) => void;
   matterTitle: string;
 }>) {
-  const { record, confidential: matterIsConfidential, frozen } = useRecord();
+  const { record, viewer, confidential: matterIsConfidential, frozen } = useRecord();
   const matterNumber = record.number;
   const editable = !frozen;
   const intl = useIntl();
@@ -38,7 +43,7 @@ export function LinkedContractsCard({
   const [loadingCreate, setLoadingCreate] = useState(false);
   const [createOptions, setCreateOptions] = useState<{
     contractTypes: ContractTypeOption[];
-    people: FieldReference[];
+    users: UserOption[];
     entities: FieldReference[];
   } | null>(null);
 
@@ -53,11 +58,7 @@ export function LinkedContractsCard({
     if (options?.data && registry?.data) {
       setCreateOptions({
         contractTypes: options.data.contractTypes,
-        people: options.data.users.map((person) => ({
-          id: person.id,
-          label: person.displayName,
-          archived: person.archived,
-        })),
+        users: options.data.users,
         entities: registry.data.entities.map((entity) => ({
           id: entity.id,
           label: entity.legalName,
@@ -200,6 +201,7 @@ export function LinkedContractsCard({
       {createOptions && editable && (
         <CreateContractDialog
           {...createOptions}
+          viewerId={viewer.id}
           initialMatter={{
             number: matterNumber,
             title: matterTitle,

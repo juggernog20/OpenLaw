@@ -27,13 +27,15 @@
  * at "9+" for display — the cap is the badge's, not the number's, so
  * this answers the count and the surface decides how to draw it.
  *
- * The two writes are NOT-005's whole read model. **Marking a page read**
- * is what opening the centre does: there is no per-item read ceremony,
- * so the only thing that makes an item read is having been shown it.
- * **Marking everything read** is the affordance that zeroes the badge
- * after a holiday. Both answer the unread count that remains, for the
- * reason `POST /comments/read` does: the badge takes the server's
- * number rather than assuming its own write cleared it.
+ * The two writes are NOT-005's whole read model. **Marking items read**
+ * is what opening one does (the 2026-09-09 amendment): the surface
+ * sends the id of the item the person clicked, and drawing the panel
+ * writes nothing. The route takes a list, so a surface that has more
+ * than one to send can. **Marking everything read** is the one
+ * deliberate sweep, the affordance that zeroes the badge after a
+ * holiday. Both answer the unread count that remains, for the reason
+ * `POST /comments/read` does: the badge takes the server's number
+ * rather than assuming its own write cleared it.
  *
  * **The preferences pair is the pane behind the bell** (inventory row
  * ST3): what each event group does for this person, plus the daily
@@ -262,16 +264,16 @@ const STAFF_BELL: BellMount = {
       "confidentiality predicate, so an item about a since-walled-off " +
       "record leaves the count as silently as it leaves the list",
     read:
-      "Mark the named items read — what opening the notification " +
-      "centre does with the page it just drew (NOT-005). There is no " +
-      "per-item read ceremony, so being shown an item is the only thing " +
-      "that reads it. One page's worth of ids at a time, because the " +
-      "centre draws a page at a time. Ids that are not this person's, " +
-      "are already read, are about a record they can no longer reach, " +
-      "or belong to their portal bell match nothing and are not refused " +
-      "— a refusal would answer whether an id exists. Answers the " +
-      "unread count that remains: normally what the page did not cover, " +
-      "plus whatever landed while it was being read",
+      "Mark the named items read — what opening one from the " +
+      "notification centre does (NOT-005, 2026-09-09 amendment). " +
+      "Drawing the centre writes nothing; the click on an item is the " +
+      "read, so the centre sends that one id. The body is a list of up " +
+      "to one page's worth, because a page is the most the centre ever " +
+      "holds. Ids that are not this person's, are already read, are " +
+      "about a record they can no longer reach, or belong to their " +
+      "portal bell match nothing and are not refused — a refusal would " +
+      "answer whether an id exists. Answers the unread count that " +
+      "remains: what was not sent, plus whatever landed in the meantime",
     readAll:
       "Mark every unread staff item read — the affordance that zeroes " +
       "the badge after a holiday (NOT-005). It covers exactly what the " +
@@ -320,15 +322,16 @@ const PORTAL_BELL: BellMount = {
       "predicate, so an item about an archived Request leaves the count " +
       "as silently as it leaves the list",
     read:
-      "Mark the named portal items read — what opening the portal bell " +
-      "does with the page it just drew (NOT-005). There is no per-item " +
-      "read ceremony, so being shown an item is the only thing that " +
-      "reads it. One page's worth of ids at a time, because the panel " +
-      "draws a page at a time. Ids that are not this person's, are " +
-      "already read, are about a Request they can no longer reach, or " +
-      "belong to their staff notification centre match nothing and are " +
-      "not refused — a refusal would answer whether an id exists. " +
-      "Answers the unread count that remains",
+      "Mark the named portal items read — what opening one from the " +
+      "portal bell does (NOT-005, 2026-09-09 amendment). Drawing the " +
+      "panel writes nothing; the click on an item is the read, so the " +
+      "panel sends that one id. The body is a list of up to one page's " +
+      "worth, because a page is the most the panel ever holds. Ids that " +
+      "are not this person's, are already read, are about a Request " +
+      "they can no longer reach, or belong to their staff notification " +
+      "centre match nothing and are not refused — a refusal would " +
+      "answer whether an id exists. Answers the unread count that " +
+      "remains",
     readAll:
       "Mark every unread portal item read — the affordance that zeroes " +
       "the portal badge (NOT-005). It covers exactly what the badge " +

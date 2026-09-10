@@ -9,11 +9,11 @@
  * trigger's accessible name — the cap is a nudge, not a fact hidden
  * from a screen reader.
  *
- * **Reading is the only ceremony.** Opening the centre marks the page
- * it drew read and takes the badge from the write's own answer; "Show
- * older" does the same for the page it brings; mark-all-read zeroes the
- * rest. There is no per-item control anywhere, because a per-item
- * ceremony is exactly what NOT-005 declined.
+ * **Opening an item is the read.** Drawing the centre writes nothing
+ * (the NOT-005 2026-09-09 amendment); a row's click sends that one id
+ * and takes the badge from the write's own answer; mark-all-read
+ * zeroes the rest. A row not yet opened says so, in its name and with
+ * a marker; the marker is not a control, so the row is still one link.
  *
  * **The wall is not this surface's.** A record walled off after an item
  * was written is silently absent from the list and the count alike
@@ -63,8 +63,14 @@ function item(index: number, over: Partial<BellItem> = {}): BellItem {
   };
 }
 
-/** What the bell's suite wires: a badge, one or two pages, and a record
- * of every write the surface made. */
+/**
+ * What the bell's suite wires: a badge, one or two pages, and a record
+ * of every write the surface made.
+ *
+ * The count follows the writes, as a server's would: a landed write
+ * moves `state.unread` to what it answered, so the count re-read a
+ * navigation makes agrees with the write that came before it.
+ */
 function bellApi(state: {
   unread: number;
   surface?: "staff" | "portal";
@@ -98,13 +104,20 @@ function bellApi(state: {
       }
       if (call.url.pathname === `${root}/read` && call.method === "POST") {
         writes.push({ path: "read", body: call.body });
-        return state.failWrites
-          ? problem(500, "Nope.")
-          : json(200, { unread: state.afterRead ?? 0 });
+        if (state.failWrites) return problem(500, "Nope.");
+        state.unread = state.afterRead ?? 0;
+        return json(200, { unread: state.unread });
       }
       if (call.url.pathname === `${root}/read-all` && call.method === "POST") {
         writes.push({ path: "read-all", body: call.body });
-        return state.failWrites ? problem(500, "Nope.") : json(200, { unread: 0 });
+        if (state.failWrites) return problem(500, "Nope.");
+        state.unread = 0;
+        return json(200, { unread: 0 });
+      }
+      // Where an opened item lands. The record behind it is not this
+      // suite's, so its page is answered nothing and left to say so.
+      if (call.url.pathname.startsWith("/api/v1/contracts/")) {
+        return problem(404, "Not found.");
       }
       return undefined;
     },
@@ -227,7 +240,7 @@ describe("the live bell (M30/2)", () => {
     expect(await within(centre).findAllByRole("listitem")).toHaveLength(1);
   });
 
-  it("does not refresh or mark rows read after the centre closes", async () => {
+  it("does not refresh the list after the centre closes", async () => {
     const user = userEvent.setup();
     const sources = stubEventSource();
     let countReads = 0;
@@ -271,7 +284,7 @@ describe("the live bell (M30/2)", () => {
     const user = userEvent.setup();
     const sources = stubEventSource();
     let listReads = 0;
-    let unread = 1;
+    const unread = 1;
     let answerList: ((response: Response) => void) | null = null;
     stubApi({
       signedIn: MEMBER,
@@ -286,10 +299,6 @@ describe("the live bell (M30/2)", () => {
             answerList = resolve;
           });
         }
-        if (call.url.pathname === "/api/v1/notifications/read" && call.method === "POST") {
-          unread = 0;
-          return json(200, { unread });
-        }
         return undefined;
       },
     });
@@ -301,7 +310,6 @@ describe("the live bell (M30/2)", () => {
 
     // The re-read is in flight: the row the reader is on stays, and so
     // does their focus on it.
-    unread = 1;
     sources[0]!.emit({ kind: "bell", userId: MEMBER.id });
     await waitFor(() => expect(listReads).toBe(2));
     expect(within(centre).getByRole("link", { name: /Acme MSA 1/ })).toHaveFocus();
@@ -320,7 +328,7 @@ describe("the live bell (M30/2)", () => {
     expect(within(centre).getByRole("link", { name: /Acme MSA 1/ })).toHaveFocus();
   });
 
-  it("does not read a centre that a row's navigation closed", async () => {
+  it("sends no write for an already-read row and does not re-read a closed centre", async () => {
     const user = userEvent.setup();
     const sources = stubEventSource();
     let listReads = 0;
@@ -368,6 +376,7 @@ describe("the live bell (M30/2)", () => {
     sources[0]!.emit({ kind: "bell", userId: MEMBER.id });
     expect(await bell("5 unread")).toBeVisible();
     expect(listReads).toBe(1);
+    // The row was read before it was drawn, so opening it wrote nothing.
     expect(writes).toEqual([]);
   });
 
@@ -393,12 +402,11 @@ describe("the live bell (M30/2)", () => {
 });
 
 describe("the notification centre", () => {
-  it("marks the page it drew read and takes the badge from the answer", async () => {
+  it("opens without writing anything, and keeps the badge where it was", async () => {
     const user = userEvent.setup();
     const writes = bellApi({
       unread: 2,
       pages: { first: { notifications: [item(1), item(2)], nextCursor: null } },
-      afterRead: 0,
     });
     renderAt("/");
 
@@ -409,29 +417,97 @@ describe("the notification centre", () => {
     const centre = await screen.findByRole("dialog", { name: "Notifications" });
     expect(within(centre).getAllByRole("listitem")).toHaveLength(2);
 
-    // One write, carrying exactly the ids just drawn.
-    expect(writes).toEqual([{ path: "read", body: { ids: ["n1", "n2"] } }]);
-    // The badge follows the write's own answer rather than its own
-    // arithmetic.
-    expect(await screen.findByRole("button", { name: "Notifications, none unread" })).toBeVisible();
+    // Drawing is not reading: no write went, and the badge still says
+    // what the person has not yet looked at.
+    expect(writes).toEqual([]);
+    expect(await bell("2 unread")).toBeVisible();
+    // The sweep is there whenever something is unread.
+    expect(within(centre).getByRole("button", { name: "Mark all read" })).toBeVisible();
   });
 
-  it("sends no write when the page it drew was already read", async () => {
+  it("marks an item read when it is opened and takes the badge from the answer", async () => {
     const user = userEvent.setup();
     const writes = bellApi({
-      unread: 0,
+      unread: 2,
+      pages: { first: { notifications: [item(1), item(2)], nextCursor: null } },
+      afterRead: 1,
+    });
+    renderAt("/");
+
+    await user.click(await bell("2 unread"));
+    const centre = await screen.findByRole("dialog", { name: "Notifications" });
+    await user.click(within(centre).getByRole("link", { name: /Acme MSA 1/ }));
+
+    // One write, carrying exactly the id opened — and the centre closes
+    // behind the reader.
+    expect(writes).toEqual([{ path: "read", body: { ids: ["n1"] } }]);
+    expect(screen.queryByRole("dialog", { name: "Notifications" })).not.toBeInTheDocument();
+    // The badge follows the write's own answer rather than its own
+    // arithmetic. Re-queried on each try: the record the row opened
+    // redraws the shell around the bell.
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Notifications, 1 unread" })).toBeVisible(),
+    );
+  });
+
+  it("draws neither rows nor the empty copy while the centre's page is pending", async () => {
+    const user = userEvent.setup();
+    let resolvePage!: (response: Response) => void;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/notifications/unread-count") {
+          return json(200, { unread: 2 });
+        }
+        if (call.url.pathname === "/api/v1/notifications" && call.method === "GET") {
+          return new Promise<Response>((resolve) => {
+            resolvePage = resolve;
+          });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/");
+    await user.click(await bell("2 unread"));
+    const centre = await screen.findByRole("dialog", { name: "Notifications" });
+
+    // No page yet. Nothing is not the same as empty: the caught-up line
+    // would tell the reader there is nothing to see while two rows are
+    // on their way.
+    expect(within(centre).queryByRole("listitem")).not.toBeInTheDocument();
+    expect(within(centre).queryByText(/Nothing to catch up on/)).not.toBeInTheDocument();
+
+    resolvePage(json(200, { notifications: [item(1), item(2)], nextCursor: null }));
+    await waitFor(() => expect(within(centre).getAllByRole("listitem")).toHaveLength(2));
+    expect(within(centre).queryByText(/Nothing to catch up on/)).not.toBeInTheDocument();
+  });
+
+  it("says which rows are unread, in the name and with a marker", async () => {
+    const user = userEvent.setup();
+    bellApi({
+      unread: 1,
       pages: {
         first: {
-          notifications: [item(1, { readAt: "2026-08-18T12:30:00.000Z" })],
+          notifications: [item(1), item(2, { readAt: "2026-08-18T12:30:00.000Z" })],
           nextCursor: null,
         },
       },
     });
     renderAt("/");
 
-    await user.click(await bell("none unread"));
-    await screen.findByRole("dialog", { name: "Notifications" });
-    expect(writes).toEqual([]);
+    await user.click(await bell("1 unread"));
+    const centre = await screen.findByRole("dialog", { name: "Notifications" });
+
+    // A screen reader hears the state at the start of the row's name;
+    // a read row says nothing about it.
+    expect(
+      within(centre).getByRole("link", {
+        name: /^Unread Nadia Counsel asked you to approve Acme MSA 1/,
+      }),
+    ).toBeVisible();
+    expect(
+      within(centre).getByRole("link", { name: /^Nadia Counsel asked you to approve Acme MSA 2/ }),
+    ).toBeVisible();
   });
 
   it("narrates each item and deep-links it to its record's section", async () => {
@@ -477,7 +553,7 @@ describe("the notification centre", () => {
     await user.click(await bell("1 unread"));
     const centre = await screen.findByRole("dialog", { name: "Notifications" });
     expect(
-      within(centre).getByRole("link", { name: /^Your daily briefing is ready/ }),
+      within(centre).getByRole("link", { name: /^Unread Your daily briefing is ready/ }),
     ).toHaveAttribute("href", "/");
   });
 
@@ -678,8 +754,8 @@ describe("the notification centre", () => {
     // Absent, not disabled, once the list is complete (DES-026).
     expect(within(centre).queryByRole("button", { name: "Show older" })).not.toBeInTheDocument();
 
-    // The page just brought is read too, and only its own ids go.
-    expect(writes.map((write) => write.body)).toEqual([{ ids: ["n1"] }, { ids: ["n2"] }]);
+    // Bringing a page reads nothing, any more than opening did.
+    expect(writes).toEqual([]);
     // DES-031 clause 4: focus lands on the first row of the page just
     // brought, so a keyboard reader is told the list grew.
     expect(within(centre).getAllByRole("link")[1]).toHaveFocus();
@@ -690,19 +766,18 @@ describe("the notification centre", () => {
     const writes = bellApi({
       unread: 5,
       pages: { first: { notifications: [item(1)], nextCursor: null } },
-      // The page's own write leaves four behind, which is what the
-      // mark-all-read affordance is for (NOT-005).
-      afterRead: 4,
     });
     renderAt("/");
 
     await user.click(await bell("5 unread"));
     const centre = await screen.findByRole("dialog", { name: "Notifications" });
-    await screen.findByRole("button", { name: "Notifications, 4 unread" });
 
     await user.click(within(centre).getByRole("button", { name: "Mark all read" }));
     expect(await screen.findByRole("button", { name: "Notifications, none unread" })).toBeVisible();
-    expect(writes.at(-1)?.path).toBe("read-all");
+    // The sweep is the only write: opening the centre sent nothing.
+    expect(writes.map((write) => write.path)).toEqual(["read-all"]);
+    // The rows follow the sweep, so no marker is left on screen.
+    expect(within(centre).queryByRole("link", { name: /^Unread/ })).not.toBeInTheDocument();
     // Nothing left to clear, so the control goes.
     expect(within(centre).queryByRole("button", { name: "Mark all read" })).not.toBeInTheDocument();
   });
@@ -721,15 +796,24 @@ describe("the notification centre", () => {
 
     await user.click(await bell("3 unread"));
     const centre = await screen.findByRole("dialog", { name: "Notifications" });
-    expect(writes.map((write) => write.path)).toEqual(["read"]);
-    expect(await bell("3 unread")).toBeVisible();
 
     await user.click(within(centre).getByRole("button", { name: "Mark all read" }));
-    expect(writes.map((write) => write.path)).toEqual(["read", "read-all"]);
+    expect(writes.map((write) => write.path)).toEqual(["read-all"]);
     expect(await bell("3 unread")).toBeVisible();
+    // The row keeps its marker: nothing was read.
+    expect(within(centre).getByRole("link", { name: /^Unread/ })).toBeVisible();
+
+    await user.click(within(centre).getByRole("link", { name: /^Unread/ }));
+    await waitFor(() => expect(writes.map((write) => write.path)).toEqual(["read-all", "read"]));
+    // Re-queried on each try: the record the row opened redraws the
+    // shell around the bell, so an element found once can be detached
+    // before it is read.
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Notifications, 3 unread" })).toBeInTheDocument(),
+    );
   });
 
-  it("offers no per-item read control (NOT-005 declined one)", async () => {
+  it("keeps the row one link: the unread marker is not a control", async () => {
     const user = userEvent.setup();
     bellApi({
       unread: 1,
@@ -740,8 +824,8 @@ describe("the notification centre", () => {
     await user.click(await bell("1 unread"));
     const centre = await screen.findByRole("dialog", { name: "Notifications" });
     const row = within(centre).getAllByRole("listitem")[0]!;
-    // The row is one link and nothing else: no dismiss, no mark, no
-    // overflow menu.
+    // The row is one link and nothing else: no dismiss, no mark button,
+    // no overflow menu. Opening the link is the read.
     expect(within(row).getAllByRole("link")).toHaveLength(1);
     expect(within(row).queryAllByRole("button")).toHaveLength(0);
   });

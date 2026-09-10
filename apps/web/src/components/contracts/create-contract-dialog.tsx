@@ -25,13 +25,26 @@
  * by the create seam, because it is the one place that can copy them and
  * the one place worth asserting them at. The team, the status, and the
  * Confidential flag are never copied at all (CTR-015).
+ *
+ * **The Owner is seeded with the person opening the dialog** (CTR-004
+ * focus-group addendum, 2026-09-09). Four testers found their own new
+ * record Unassigned. Opening this dialog is taking the work on, so the
+ * picker starts on the acting person when they are Member+, and they
+ * can clear it to Unassigned before pressing Create. A routed renewal
+ * gets the same seed: it is the router's record, never the predecessor's
+ * Owner copied across.
  */
 
 import { CreateAttachments, useCreateAttachments } from "../documents/create-attachments";
 import { useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../../lib/api";
-import { contractReference, type ContractRow, type ContractTypeOption } from "../../lib/contracts";
+import {
+  contractReference,
+  type ContractRow,
+  type ContractTypeOption,
+  type UserOption,
+} from "../../lib/contracts";
 import {
   searchCreateMatterCandidates,
   type CreateMatterLinkCandidate,
@@ -45,6 +58,7 @@ import {
 import { CONTROL_CLASS } from "../../lib/form-controls";
 import { problem as readProblem } from "../../lib/problem";
 import { matterReference } from "../../lib/matters";
+import { isMemberPlus } from "../../lib/roles";
 import { ConfidentialToggle } from "../confidential-toggle";
 import { CustomFieldControl, type FieldReference } from "../custom-field-control";
 import { Button } from "../ui/button";
@@ -75,18 +89,22 @@ export interface RenewalPrefill {
 
 export function CreateContractDialog({
   contractTypes,
-  people,
+  users,
   entities,
+  viewerId,
   renewalOf,
   initialMatter,
   onOpenChange,
   onCreated,
 }: Readonly<{
   contractTypes: ContractTypeOption[];
-  /** Choices for a `user` field. */
-  people: readonly FieldReference[];
+  /** The Member+ picker roster. A `user` field offers everyone on it;
+   * the Owner picker offers only the Member+ people (CTR-004). */
+  users: readonly UserOption[];
   /** Choices for an `entity` field — the M7 registry. */
   entities: readonly FieldReference[];
+  /** Who opened the dialog. Seeded as the Owner when eligible. */
+  viewerId: string;
   /** The renewal this create is routing, or undefined for the ordinary
    * create the Contracts list opens. */
   renewalOf?: RenewalPrefill;
@@ -101,6 +119,21 @@ export function CreateContractDialog({
   // would take their edit back.
   const [title, setTitle] = useState(renewalOf?.title ?? "");
   const [contractTypeId, setContractTypeId] = useState(renewalOf?.contractTypeId ?? "");
+  const people: FieldReference[] = users.map((person) => ({
+    id: person.id,
+    label: person.displayName,
+    archived: person.archived,
+  }));
+  const owners = users.filter((person) => isMemberPlus(person.role));
+  /** The Owner (CTR-004). Seeded once, like the title: the person may
+   * clear it, and a seed that re-applied itself would put them back. */
+  // The person opening this dialog is the likely Owner, so the picker
+  // starts on them and can be cleared. A routed renewal is the
+  // exception: a successor is born unassigned, like every other fact it
+  // does not inherit (CTR-015 at birth, CTR-004).
+  const [managerId, setManagerId] = useState(
+    !renewalOf && owners.some((person) => person.id === viewerId) ? viewerId : "",
+  );
   /** The fields' drafts, keyed by slug. They survive switching
    * types and back — a name typed once should not have to be typed
    * again because someone checked another type on the way. */
@@ -200,24 +233,21 @@ export function CreateContractDialog({
       if (parsed.value !== null) customFields[field.slug] = parsed.value;
     }
     setBusy(true);
-    const result = await api
-      .POST("/api/v1/contracts", {
-        body: {
-          title: title.trim(),
-          contractTypeId,
-          customFields,
-          isConfidential: confidential,
-          ...(selectedMatter ? { matterNumber: selectedMatter.number } : {}),
-          // The routing, if this create is one. The seam does the rest
-          // of the copying and writes the link; nothing here derives
-          // either, so the dialog cannot disagree with the record about
-          // what a renewal inherits.
-          ...(renewalOf
-            ? { renewalOf: { number: renewalOf.number, vehicle: renewalOf.vehicle } }
-            : {}),
-        },
-      })
-      .catch(() => undefined);
+    const body = {
+      title: title.trim(),
+      contractTypeId,
+      customFields,
+      isConfidential: confidential,
+      // Unassigned is null, a real state (CTR-004), not an omitted key.
+      managerId: managerId || null,
+      ...(selectedMatter ? { matterNumber: selectedMatter.number } : {}),
+      // The routing, if this create is one. The seam does the rest
+      // of the copying and writes the link; nothing here derives
+      // either, so the dialog cannot disagree with the record about
+      // what a renewal inherits.
+      ...(renewalOf ? { renewalOf: { number: renewalOf.number, vehicle: renewalOf.vehicle } } : {}),
+    };
+    const result = await api.POST("/api/v1/contracts", { body }).catch(() => undefined);
     const { data } = result ?? {};
     setBusy(false);
     if (!data) {
@@ -417,6 +447,29 @@ export function CreateContractDialog({
                 {contractTypes.map((contractType) => (
                   <option key={contractType.id} value={contractType.id}>
                     {contractType.displayName}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="contract-new-owner">
+                <FormattedMessage id="contracts.form.owner" defaultMessage="Owner" />
+              </Label>
+              <select
+                id="contract-new-owner"
+                className={CONTROL_CLASS}
+                value={managerId}
+                onChange={(event) => setManagerId(event.target.value)}
+              >
+                <option value="">
+                  {intl.formatMessage({
+                    id: "contracts.ownerUnassigned",
+                    defaultMessage: "Unassigned",
+                  })}
+                </option>
+                {owners.map((person) => (
+                  <option key={person.id} value={person.id}>
+                    {person.displayName}
                   </option>
                 ))}
               </select>

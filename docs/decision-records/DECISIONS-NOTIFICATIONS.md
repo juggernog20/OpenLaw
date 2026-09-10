@@ -278,6 +278,16 @@ Five email-only section preferences control Approvals, Tasks, Dates, Obligations
 
 - **Addendum (2026-08-24, M23 close, [#496](https://github.com/juggernog20/OpenLaw/issues/496))** — **Matter Key dates join the existing offset list unchanged.** The morning round unions them with Contract Key dates, expiries, and derived notice deadlines, using the same live `[7, 1, 0]` defaults and per-user calendar. Only open, non-archived Matters participate. No per-date schedule, owner, template date, Task-date arm, or new reminder setting was added.
 
+### Addendum (2026-09-09, [focus group, 2026-09-07](../reviews/focus-group-2026-09-07.md)) — a key date can carry its own reminder
+
+Three Legal Team Members in the focus group typed "remind me 60 days before" into a key date's Note field, because the Add key date dialog has Date, Event, and Note and nothing else. A trademark renewal, a regulator deadline, and a notice window all sit outside the seeded 7/1/0 ladder, and none of the three knew the ladder existed. Two of them said they would keep the date in their own calendar until the record could remind them.
+
+**Decision.** The global offset list stays the default and still applies to every tracked date. A key date (MTR-004, CTR-009) may **additionally** carry its own lead times and its own recipients. A per-date lead time is one more offset in the same round, matched by equality like the others and deduplicated against the global list. A per-date recipient is a person on the record's team; the default recipient set is unchanged (the reminder's existing audience rule). The dialog shows the ladder that will fire, global and own, so the person adding the date sees what the system will do.
+
+**What is not decided.** Time of day on a key date (one tester wanted 09:10, not "Sep 10"); whether an Obligation (ENT) gets the same field; whether a per-date reminder can be earlier than 730 days. Those are for the spec.
+
+**Consequences.** One `jsonb` lead-time list and one recipient list on `contract_key_dates` and `matter_key_dates`, sanitised the way `reminder_offset_days` is. The round's union query reads both lists. The Home dates card and the daily briefing need no change. NOT-004's "not per-date in v1" sentence is superseded by this addendum.
+
 ## NOT-005 — Badge: unread count, 9+ cap, read-on-open
 
 - **Status** — Accepted
@@ -300,6 +310,16 @@ Five email-only section preferences control Approvals, Tasks, Dates, Obligations
   **Two bells means two badges, and marking one read leaves the other alone.** That is a property of the API's scope (the NOT-001 M20/9 addendum) rather than of this surface, which counts nothing itself and draws only what it is answered.
 
   **A group-5 item addresses the Request itself and names no section.** Point 9 of DES-049 makes a contract's prompt open the section it is about, because a contract record has routed tabs; a Request's detail is one page, so `/portal/requests/{number}` is the whole address.
+
+### Amendment (2026-09-09, [focus group, 2026-09-07](../reviews/focus-group-2026-09-07.md)) — read-on-open is withdrawn; an item is read when it is opened
+
+Ten of twenty testers, across Member+, Contributors, and Business Users, reported the same moment: they opened the bell to see what was new, every badge cleared, and they had lost the list of things they had not yet looked at. The rationale above still holds, the feed is the durable history, but the ceremony people wanted was not per-item marking. It was for the badge to mean "not yet looked at", which read-on-open cannot deliver.
+
+**Decision.** Opening the centre marks nothing. An item is marked read when the person opens it, which is the deep-link click, and **Mark all read** stays as the one deliberate sweep. The unread count therefore falls one at a time, or all at once by choice, and never merely because the panel was drawn. The portal bell is the same component and follows.
+
+**The API does not change.** `POST /notifications/read` already takes a list of ids; the surface now sends one id at the click instead of a page's worth at the open. `POST /notifications/read-all` is unchanged. The wall, the not-refused foreign id, and the server-answered count all stand.
+
+**The text of a status-change item names the new status.** "The status of your request R-12 changed" told four testers nothing; the item now says what it changed to, in the requester-facing vocabulary the INT-003 M20/10 addendum chose. This is copy on an existing payload, not a new event.
 
 ## NOT-006 — The morning digest's anatomy and its delivery rules
 
@@ -489,8 +509,8 @@ A successful send appends `user.briefing_sent` with `approvalCount`, `taskCount`
 | NOT-001 | One system, two surfaces: bell + email for staff and portal users  | Accepted; the portal surface built and its read rule added by the M20/8 and M20/9 addenda; the absent Administrator override recorded by the M20/10 addendum                                                                                                                                                                    |
 | NOT-002 | Event catalog: five groups, defaults by interruptiveness           | Accepted; group 5's four events added by M20/8 addendum; group 4's first event and its opt-in email by the M21/4 addendum; group 1's `request` arm by the M21/5 addendum; the reply promise following a conversion onto the record by the M21/11 addendum; the side default and the archived-Request arm by the M21/12 addendum |
 | NOT-003 | Timing: direct events immediate; date reminders in a daily digest  | Accepted; the M29 close records the built cross-module briefing amendment                                                                                                                                                                                                                                                       |
-| NOT-004 | Reminder lead times: admin-configurable offsets, seeded 7/1/0      | Accepted                                                                                                                                                                                                                                                                                                                        |
-| NOT-005 | Badge: unread count, 9+ cap, read-on-open                          | Accepted                                                                                                                                                                                                                                                                                                                        |
+| NOT-004 | Reminder lead times: admin-configurable offsets, seeded 7/1/0      | Accepted; per-date lead times and recipients added by the 2026-09-09 focus-group addendum                                                                                                                                                                                                                                       |
+| NOT-005 | Badge: unread count, 9+ cap, read-on-open                          | Accepted; read-on-open withdrawn by the 2026-09-09 amendment, an item is read when opened                                                                                                                                                                                                                                       |
 | NOT-006 | The morning digest's anatomy and its delivery rules                | Accepted; the M29 close records the built six-section anatomy amendment                                                                                                                                                                                                                                                         |
 | NOT-007 | Email delivery is at-least-once; duplicate accepted over drop      | Accepted                                                                                                                                                                                                                                                                                                                        |
 | NOT-008 | The daily briefing: cross-module morning email replaces the digest | Accepted; Knowledge built in M28/6 and the six-section briefing completed in M29/7                                                                                                                                                                                                                                              |

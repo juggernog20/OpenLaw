@@ -1752,7 +1752,7 @@ function Composer({
       {confidential && (
         <p className="flex items-start gap-1 text-xs text-confidential">
           <ConfidentialMarker variant="micro" className="mt-0.5" />
-          {entityType === "matter" ? (
+          {entityType === "matter" || entityType === "matter_task" ? (
             <FormattedMessage
               id="comments.matter.confidentialNotice"
               defaultMessage="Confidential matter — only the matter team and matter manager can read it."

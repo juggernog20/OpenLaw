@@ -329,6 +329,21 @@ describe("team-first task picker", () => {
       picker.queryByRole("button", { name: "Add someone to the team…" }),
     ).not.toBeInTheDocument();
   });
+
+  it("states the confidential bound in the Matter's own words on a Task's thread", async () => {
+    const api = recordApi([task()], matter({ isConfidential: true }));
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/matters/12/tasks");
+    const user = userEvent.setup();
+    await user.click((await section()).getByRole("button", { name: "Draft response" }));
+    const modal = within(await screen.findByRole("dialog", { name: "Task details" }));
+    expect(
+      await modal.findByText(
+        "Confidential matter — whichever audience you pick, only the matter team, the Matter Manager, and Administrators can read it.",
+      ),
+    ).toBeInTheDocument();
+    expect(modal.queryByText(/Confidential contract/)).not.toBeInTheDocument();
+  });
 });
 
 it("opens a task in a detail modal and saves its description", async () => {

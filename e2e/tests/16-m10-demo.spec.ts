@@ -408,14 +408,18 @@ test.describe.serial("M10 demo path", () => {
       // made answers — compared character for character, because "no
       // placeholder revealing that it exists" is the acceptance and one
       // different word would be the leak.
+      // The page names the number the reader typed and nothing else, so
+      // the two bodies are compared with that number masked.
+      const maskNumber = (text: string) => text.replace(/C-\d+/g, "C-#");
       await outsiderPage.goto(`/contracts/${contract.number}`);
-      await expect(outsiderPage).toHaveTitle("Something went wrong · OpenLaw");
+      await expect(outsiderPage).toHaveTitle("Contract not found · OpenLaw");
       const walledOff = await outsiderPage.locator("body").innerText();
       await outsiderPage.goto(`/contracts/${MISSING_NUMBER}`);
-      await expect(outsiderPage).toHaveTitle("Something went wrong · OpenLaw");
-      expect(await outsiderPage.locator("body").innerText()).toBe(walledOff);
+      await expect(outsiderPage).toHaveTitle("Contract not found · OpenLaw");
+      expect(maskNumber(await outsiderPage.locator("body").innerText())).toBe(
+        maskNumber(walledOff),
+      );
       expect(walledOff).not.toContain(title);
-      expect(walledOff).not.toContain(String(contract.number));
       expect(walledOff.toLowerCase()).not.toContain("confidential");
 
       // ---- And the same answers from the seam ----

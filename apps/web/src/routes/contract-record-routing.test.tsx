@@ -382,6 +382,9 @@ describe("the child and successor vehicles (CTR-007 §3, §4)", () => {
           contractTypeId: "t-nda",
           customFields: {},
           isConfidential: false,
+          // No Owner: a routed renewal is born unassigned, unlike the
+          // create the Contracts list opens (CTR-004, 2026-09-09).
+          managerId: null,
           // The routing, and nothing about what it copies: the seam owns
           // the prefill, so this page cannot disagree with it.
           renewalOf: { number: 42, vehicle: "successor" },

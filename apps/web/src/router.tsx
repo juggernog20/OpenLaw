@@ -30,6 +30,13 @@ import { InboxPage, inboxLoader } from "./routes/inbox";
 import { InboxRequestPage, inboxRequestLoader } from "./routes/inbox-request";
 import { LinkExpiredPage, linkExpiredLoader } from "./routes/link-expired";
 import { LoginPage, loginLoader } from "./routes/login";
+import {
+  NotFoundPage,
+  notFoundLoader,
+  PortalNotFoundPage,
+  portalNotFoundLoader,
+  SettingsNotFoundPane,
+} from "./routes/not-found";
 import { PortalHomePage, portalHomeLoader } from "./routes/portal";
 import { PortalRequestFormPage, portalRequestFormLoader } from "./routes/portal-request-form";
 import { PortalRequestPage, portalRequestLoader } from "./routes/portal-request";
@@ -536,6 +543,8 @@ export const routes: RouteObject[] = [
         loader: settingsAiAnalysisLoader,
         element: <SettingsAiAnalysisPage />,
       },
+      // A pane address nothing answers to, drawn beside the rail.
+      { path: "*", element: <SettingsNotFoundPane /> },
     ],
   },
   {
@@ -605,6 +614,17 @@ export const routes: RouteObject[] = [
           </KeyedByParam>
         ),
       },
+      // A portal address nothing answers to, in the portal's own chrome.
+      { path: "*", loader: portalNotFoundLoader, element: <PortalNotFoundPage /> },
     ],
+  },
+  {
+    // Any other address. Without this the router hands an unmatched URL
+    // to the home route's error boundary, which drew the crash page.
+    path: "*",
+    loader: notFoundLoader,
+    element: <NotFoundPage />,
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <></>,
   },
 ];

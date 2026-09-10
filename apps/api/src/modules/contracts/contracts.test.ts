@@ -1185,6 +1185,33 @@ describe("the Owner (CTR-004)", () => {
     expect(cleared.json().contract.manager).toBeNull();
   });
 
+  it("reads an empty string as unassign, the way null and the Matters door do", async () => {
+    const contract = await newContract("Owner cleared by empty string");
+    const assigned = await patchContract(memberCookies, contract.number, {
+      managerId: idOf(MEMBER),
+    });
+    expect(assigned.statusCode, assigned.body).toBe(200);
+
+    // A form that empties its Owner picker sends "", not null. Both
+    // mean the same thing here, so neither is refused as a bad id.
+    const cleared = await patchContract(memberCookies, contract.number, { managerId: "" });
+    expect(cleared.statusCode, cleared.body).toBe(200);
+    expect(cleared.json().contract.manager).toBeNull();
+    const read = await getContract(memberCookies, contract.number);
+    expect(read.json().contract.manager).toBeNull();
+  });
+
+  it("still refuses an id that names nobody, with the Owner refusal", async () => {
+    const contract = await newContract("Owner refusal wording");
+    const refused = await patchContract(adminCookies, contract.number, { managerId: "not-a-user" });
+    expect(refused.statusCode, refused.body).toBe(400);
+    expect(refused.json().detail).toBe(
+      "The Owner must be a live Administrator or Legal Team Member.",
+    );
+    const read = await getContract(adminCookies, contract.number);
+    expect(read.json().contract.manager).toBeNull();
+  });
+
   it("rides the list, so a Legal Team Member can scan who runs what", async () => {
     const contract = await newContract("Owner on the list");
     await patchContract(adminCookies, contract.number, { managerId: idOf(ADMIN) });

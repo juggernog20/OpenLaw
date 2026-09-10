@@ -149,6 +149,32 @@ function options() {
 }
 
 describe("the editable matter record", () => {
+  it("draws the not-found page when the record read answers 404", async () => {
+    // A number nobody holds and a confidential Matter this viewer is
+    // not on are the same 404 (DD-014); the page says both.
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET")
+          return problem(404, "No matter exists with this number.");
+        if (call.url.pathname === "/api/v1/matters/options") return options();
+        return undefined;
+      },
+    });
+    renderAt("/matters/12");
+
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Matter not found" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("M-12 does not exist, or you cannot open it.")).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Primary" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Back to Matters" })).toHaveAttribute(
+      "href",
+      "/matters",
+    );
+    await waitFor(() => expect(document.title).toBe("Matter not found · OpenLaw"));
+  });
+
   it("uses the record actions menu to copy the Matter link and rename from another tab", async () => {
     stubApi({
       signedIn: ADMIN,
