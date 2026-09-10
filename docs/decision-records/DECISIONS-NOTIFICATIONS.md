@@ -67,8 +67,9 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 ### NOT-001 addendum: each Key date has its own reminder (2026-09-10, [#760](https://github.com/juggernog20/OpenLaw/issues/760))
 
 Distinct Contract and Matter Key dates produce separate reminders, even when their dates
-and labels match. Each briefing line names its Key date. This supersedes the M18/8
-aggregation rule above, which could omit other deadlines on the same record and day.
+and labels match. The bell item and each briefing line name the Key date, so a record with
+several deadlines on one day no longer draws the same sentence twice. This supersedes the
+M18/8 aggregation rule above, which could omit other deadlines on the same record and day.
 
 The reminder identity includes the recipient, event type, record type and ID, Key date ID,
 date value, and offset. Repeating a round does not resend an unchanged reminder. A new
