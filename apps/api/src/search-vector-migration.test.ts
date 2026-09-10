@@ -255,6 +255,9 @@ async function sourceRows(
         " - 'search_vector' - 'shares_authorized' - 'shares_issued' - 'par_value' - 'par_value_currency' - 'custom_fields' - 'is_confidential'",
       )
     : sql.raw("");
+  const withoutLaterContractColumns = migrated
+    ? sql.raw(" - 'search_vector' - 'ai_unverified' - 'business_owner_id'")
+    : sql.raw("");
   const withoutLaterDocumentColumns = migrated
     ? sql.raw(" - 'search_vector' - 'entity_id' - 'knowledge_item_id'")
     : sql.raw("");
@@ -266,7 +269,7 @@ async function sourceRows(
     select table_name, rows
     from (
       select 'contracts' as table_name,
-        jsonb_agg(to_jsonb(row)${withoutDerivedSearch} order by row.id) as rows from contracts row
+        jsonb_agg(to_jsonb(row)${withoutLaterContractColumns} order by row.id) as rows from contracts row
       union all
       select 'counterparties',
         jsonb_agg(to_jsonb(row)${withoutDerivedSearch} order by row.id) from counterparties row

@@ -399,7 +399,14 @@ export const portalContractRoutes: FastifyPluginAsyncZod = async (app) => {
         throw httpError(422, "This email could not be read. Download it instead.");
       throw error;
     } finally {
-      stream.destroy();
+      // As the staff reader closes one: a parse that refused part way
+      // leaves the stream open, and a close that fails must not replace
+      // the answer above — tidying up is never the news.
+      try {
+        stream.destroy();
+      } catch (error) {
+        app.log.warn({ err: error, versionId: params.versionId }, "could not close an email");
+      }
     }
   }
   app.get(
