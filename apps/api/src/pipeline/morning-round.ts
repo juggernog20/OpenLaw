@@ -1055,17 +1055,8 @@ async function ensureBriefingReady(
       reminderOffsetDays: 0,
       createdAt: now,
     })
-    .onConflictDoNothing({
-      target: [
-        notifications.userId,
-        notifications.eventType,
-        notifications.entityType,
-        notifications.entityId,
-        notifications.reminderDate,
-        notifications.reminderOffsetDays,
-      ],
-      where: sql`reminder_date is not null`,
-    });
+    // Same reminder index as fanOut; its Key date expression is empty here.
+    .onConflictDoNothing();
 }
 
 /** One owed row as a line of the briefing, or null where the payload

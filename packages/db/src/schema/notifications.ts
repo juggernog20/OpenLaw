@@ -261,7 +261,7 @@ export const notifications = pgTable(
       .where(sql`read_at is null`),
     /**
      * The dedup identity of a date reminder (NOT-003/004): one person,
-     * one event, one entity, one date value, one offset.
+     * one event, one entity, one Key date if applicable, one date value, one offset.
      *
      * Partial, because it is a rule about reminders and nothing else —
      * two approval requests for the same person on the same contract
@@ -276,6 +276,7 @@ export const notifications = pgTable(
         table.entityId,
         table.reminderDate,
         table.reminderOffsetDays,
+        sql`coalesce(case when "event_type" = 'date.key_date_approaching' then "payload" ->> 'keyDateId' end, '')`,
       )
       .where(sql`reminder_date is not null`),
     check(

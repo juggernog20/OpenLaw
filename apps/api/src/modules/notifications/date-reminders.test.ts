@@ -496,6 +496,40 @@ describe("a second round on the same tick", () => {
   });
 });
 
+describe.each([
+  { kind: "Contract", today: "2026-04-16", create: newContract, addDate: addKeyDate },
+  { kind: "Matter", today: "2026-04-18", create: newMatter, addDate: addMatterKeyDate },
+])("distinct $kind Key dates on the same day", ({ kind, today, create, addDate }) => {
+  it("names every date in the bell and briefing and deduplicates repeat rounds", async () => {
+    const record = await create(`${kind} same-day deadlines`);
+    const labels = ["File response", "Attend hearing", "File response"];
+    for (const label of labels) await addDate(record.number, plusDays(today, 1), label);
+
+    await round(at(today, 8));
+    const items = await bellFor(OWNER, record);
+    expect(items).toHaveLength(3);
+    expect(items.map((row) => row.payload.label).sort()).toEqual([...labels].sort());
+    expect(new Set(items.map((row) => row.payload.keyDateId)).size).toBe(3);
+    const briefing = kind === "Contract" ? lastDigestTo(OWNER) : matterDigestsTo(OWNER).at(-1)!;
+    expect(briefing.subject).toBe(
+      `3 dates on your ${kind === "Contract" ? "contracts" : "matters"}`,
+    );
+    for (const label of labels) expect(briefing.text).toContain(label);
+    expect(briefing.text.match(/File response/g)).toHaveLength(2);
+    expect((await rowsFor(OUTSIDER)).filter((row) => row.entityId === record.id)).toEqual([]);
+
+    const second = await round(at(today, 9));
+    expect(second.summary.reminders).toBe(0);
+    expect(second.summary.digests).toBe(0);
+    expect(await bellFor(OWNER, record)).toHaveLength(3);
+
+    await round(at(plusDays(today, 1), 8));
+    const nextOffset = await bellFor(OWNER, record);
+    expect(nextOffset).toHaveLength(6);
+    expect(nextOffset.map((row) => row.payload.offsetDays).sort()).toEqual([0, 0, 0, 1, 1, 1]);
+  });
+});
+
 describe("Matter Key dates in the morning round", () => {
   const TODAY = "2026-04-20";
   let active: MatterRow;
@@ -624,17 +658,7 @@ describe("entity_type is part of the dedup identity", () => {
         { ...base, entityType: "contract" as const },
         { ...base, entityType: "matter" as const },
       ])
-      .onConflictDoNothing({
-        target: [
-          notifications.userId,
-          notifications.eventType,
-          notifications.entityType,
-          notifications.entityId,
-          notifications.reminderDate,
-          notifications.reminderOffsetDays,
-        ],
-        where: sql`reminder_date is not null`,
-      });
+      .onConflictDoNothing();
     const rows = await harness.db
       .select()
       .from(notifications)
