@@ -23,11 +23,34 @@ export function RequestEstimate({
 }: Readonly<{ request: EstimatedRequest; onSaved: (saved: StaffRequest) => void }>) {
   const [status, setStatus] = useState<FieldStatus>("idle");
   const [error, setError] = useState<string | null>(null);
+  // What the picker shows, which is the saved date until triage picks
+  // another one. A refused pick stays in the box rather than snapping
+  // back to the saved date, so the pick can be retried and Escape is
+  // what puts it back (DES-048).
+  const [draft, setDraft] = useState(request.expectedBy ?? "");
   const pending = useRef(false);
   const editable = request.status === "new" || request.status === "converted";
+  // The Request as the last render saw it. A draft outlives a refusal,
+  // but it must not outlive the record it was a draft of: a colleague
+  // saving another date, or closing the Request, is the saved answer
+  // and the box has to show it. Adjusted during render rather than in
+  // an effect, so no frame draws the stale date.
+  const seen = `${request.expectedBy ?? ""}|${String(editable)}`;
+  const [lastSeen, setLastSeen] = useState(seen);
+  if (lastSeen !== seen) {
+    setLastSeen(seen);
+    setDraft(request.expectedBy ?? "");
+    // The refusal was about a draft that is now gone. Left standing
+    // over the saved date it reads as a lie about it.
+    if (status === "error") {
+      setStatus("idle");
+      setError(null);
+    }
+  }
   async function save(expectedBy: string | null) {
     if (pending.current) return;
     pending.current = true;
+    setDraft(expectedBy ?? "");
     setStatus("saving");
     setError(null);
     const result = await api
@@ -53,9 +76,14 @@ export function RequestEstimate({
       <div className="flex flex-wrap items-center gap-2">
         <DatePicker
           id="request-expected-by"
-          value={request.expectedBy ?? ""}
+          value={draft}
           disabled={!editable || status === "saving"}
           onChange={(next) => void save(next || null)}
+          onRevert={() => {
+            setDraft(request.expectedBy ?? "");
+            setStatus("idle");
+            setError(null);
+          }}
         />
         {editable && request.expectedBy && (
           <Button

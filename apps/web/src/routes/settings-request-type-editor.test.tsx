@@ -617,3 +617,16 @@ it("saves a whole calendar-day turnaround, rejects fractions, and clears back to
     expect(calls.patches).toEqual([{ turnaroundDays: 3 }, { turnaroundDays: null }]),
   );
 });
+
+it("drops the turnaround refusal as soon as the text it was about changes", async () => {
+  const calls = newCalls();
+  openEditor(editorApi(calls));
+  const user = userEvent.setup();
+  const input = await screen.findByLabelText("Turnaround (calendar days)");
+  await user.type(input, "1.5{Enter}");
+  expect(await screen.findByText(/Enter a whole number from 0/)).toBeInTheDocument();
+
+  await user.type(input, "{Backspace}{Backspace}");
+  expect(screen.queryByText(/Enter a whole number from 0/)).not.toBeInTheDocument();
+  expect(calls.patches).toEqual([]);
+});
