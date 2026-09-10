@@ -265,13 +265,25 @@ export function createChartExportModel({
     })),
   };
   const positions = new Map(layout.nodes.map((node) => [node.id, node]));
+  const incoming = new Map<string, string[]>();
+  for (const edge of chart.edges) {
+    if (!positions.has(edge.ownerEntityId) || !positions.has(edge.ownedEntityId)) continue;
+    const owners = incoming.get(edge.ownedEntityId) ?? [];
+    owners.push(edge.ownerEntityId);
+    incoming.set(edge.ownedEntityId, owners);
+  }
+  for (const owners of incoming.values()) {
+    owners.sort((a, b) => positions.get(a)!.x - positions.get(b)!.x || a.localeCompare(b));
+  }
   for (const edge of chart.edges) {
     const owner = positions.get(edge.ownerEntityId);
     const owned = positions.get(edge.ownedEntityId);
     if (!owner || !owned) continue;
     const x1 = owner.x + nodeWidth / 2;
     const y1 = owner.y + nodeHeight + headerHeight;
-    const x2 = owned.x + nodeWidth / 2;
+    const owners = incoming.get(owned.id)!;
+    // Give each owner its own entry point so its percentage stays with its line.
+    const x2 = owned.x + (nodeWidth * (owners.indexOf(owner.id) + 1)) / (owners.length + 1);
     const y2 = owned.y + headerHeight;
     const middle = (y1 + y2) / 2;
     model.edges.push({
@@ -286,8 +298,8 @@ export function createChartExportModel({
     if (percentages)
       model.texts.push({
         text: `${intl.formatNumber(edge.ownershipPercent)}%`,
-        x: (x1 + x2) / 2 + 5,
-        y: middle - 18,
+        x: x2 + 5,
+        y: y2 - 24,
         size: 10,
         color: "555555",
         width: 80,

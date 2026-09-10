@@ -144,6 +144,57 @@ describe("custom chart exports", () => {
     expect(output.edges).toHaveLength(3);
   });
 
+  it("keeps each percentage beside its entity's incoming connector across wide and tall charts", () => {
+    const data = new Map(records);
+    const child = record("child");
+    child.entity.registeredAddress = "Office address ".repeat(40).trim();
+    data.set("child", child);
+    for (const output of [model([]), model(["registeredAddress"], data)]) {
+      const percentages = output.texts.filter((line) => line.text.endsWith("%"));
+      for (const [index, edge] of chart.edges.entries()) {
+        const card = output.cards.find((item) => item.id === edge.ownedEntityId)!;
+        const label = percentages[index]!;
+        const entry = output.edges[index]!.points.at(-1)!;
+        expect(entry).toEqual({ x: card.x + card.width / 2, y: card.y });
+        expect(label.x).toBeGreaterThan(entry.x);
+        expect(label.x + label.width).toBeLessThan(card.x + card.width);
+        expect(label.y + label.size * 1.5).toBeLessThan(card.y);
+        expect(card.y - label.y).toBeLessThan(30);
+      }
+    }
+  });
+
+  it("keeps separate ownership labels on distinct entry points for a jointly owned entity", () => {
+    const joint: EntityChart = {
+      nodes: [node("parent"), node("other"), node("child", "parent")],
+      edges: [
+        { ownerEntityId: "parent", ownedEntityId: "child", ownershipPercent: 60 },
+        { ownerEntityId: "other", ownedEntityId: "child", ownershipPercent: 40 },
+      ],
+    };
+    const output = createChartExportModel({
+      chart: joint,
+      records,
+      fields: [],
+      title: "Joint ownership",
+      percentages: true,
+      intl,
+      measure,
+    });
+    const card = output.cards.find((item) => item.id === "child")!;
+    const labels = output.texts.filter((line) => line.text.endsWith("%"));
+    for (const [index, edge] of output.edges.entries()) {
+      const entry = edge.points.at(-1)!;
+      expect(entry.y).toBe(card.y);
+      expect(entry.x).toBeGreaterThan(card.x);
+      expect(entry.x).toBeLessThan(card.x + card.width);
+      expect(labels[index]!.x).toBe(entry.x + 5);
+    }
+    const sorted = labels.toSorted((a, b) => a.x - b.x);
+    expect(sorted[0]!.x + sorted[0]!.width).toBeLessThan(sorted[1]!.x);
+    expect(output.edges.map((edge) => edge.secondary)).toEqual([false, true]);
+  });
+
   it("includes current directors and officers with their roles only when selected", () => {
     const item = record("child");
     const current = {
