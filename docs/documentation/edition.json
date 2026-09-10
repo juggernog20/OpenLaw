@@ -103,7 +103,7 @@
       },
       {
         "id": "create-matter",
-        "contentSha256": "078e5ac72d41fa7ed55e02131b55dcdb86cb26d646485e64f5a494969e1aef73"
+        "contentSha256": "11c2ddb8f7ebe267841b3731db46da7e6285ca34666740450436ba0a84a102fe"
       },
       {
         "id": "matter-status-and-archive",
@@ -171,7 +171,7 @@
       },
       {
         "id": "matter-templates",
-        "contentSha256": "c458f44480e167baf2930bdad0f03a944b0f10b890c7ff10468543328016f9e9"
+        "contentSha256": "f23aa18f55c97f3a07e7724d05d01ed2988ef01e3ed7a6e4b63ed9904f9eafb1"
       },
       {
         "id": "request-forms",

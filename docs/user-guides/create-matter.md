@@ -24,7 +24,7 @@ After choosing the Matter type, check **Template (optional)**. A type with one a
 
 A template can prefill the title, Priority, Risk, and attached Fields, and the dialog tells you how many Tasks and Key dates it adds. Review those values before creating. Changing or removing the template resets its Priority, Risk, and Field defaults; a title you have typed is preserved unless it still matches the previous template's title prefix.
 
-If you clear an optional Field that the selected template prefills, check it again after creation: the template default currently returns on the saved Matter. Clear that optional Field on **Overview** after creating the Matter, or choose **No template** and enter the intended values before creating. A nonempty replacement value is saved normally.
+You can clear an optional Field that the selected template prefills. It stays empty on the saved Matter. Untouched defaults and replacement values are saved as shown. Required Fields must have a value before you can create the Matter.
 
 After creation, open **Tasks** and **Key dates** and check the instantiated content. Relative offsets are resolved from the Matter's creation date in UTC: an offset of seven days creates a date seven calendar days after that date. A Task aimed at the Matter Manager is assigned to the Manager selected at creation; without a Manager it starts unassigned. A template does not choose the Matter's Status or create a team for you.
 

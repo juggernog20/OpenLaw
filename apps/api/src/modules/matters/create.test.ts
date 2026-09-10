@@ -92,9 +92,9 @@ beforeAll(async () => {
   });
   expect(archive.statusCode, archive.body).toBe(200);
   demandingTypeId = await newType("Matter demanding");
-  requiredSlug = await attachRequiredField(demandingTypeId, "Business unit");
+  requiredSlug = await attachField(demandingTypeId, "Business unit");
   templateTypeId = await newType("Matter templated");
-  templateRequiredSlug = await attachRequiredField(templateTypeId, "Template business unit");
+  templateRequiredSlug = await attachField(templateTypeId, "Template business unit");
   const [template] = await harness.db
     .insert(matterTemplates)
     .values({
@@ -156,7 +156,7 @@ async function newType(displayName: string) {
   return response.json().matterType.id as string;
 }
 
-async function attachRequiredField(typeId: string, displayName: string) {
+async function attachField(typeId: string, displayName: string, isRequired = true) {
   const defined = await harness.app.inject({
     method: "POST",
     url: "/api/v1/fields",
@@ -169,7 +169,7 @@ async function attachRequiredField(typeId: string, displayName: string) {
     method: "POST",
     url: `/api/v1/matter-types/${typeId}/fields`,
     cookies: adminCookies,
-    payload: { fieldId: field.id, isRequired: true },
+    payload: { fieldId: field.id, isRequired },
   });
   expect(attached.statusCode, attached.body).toBe(201);
   return field.slug;
@@ -192,7 +192,7 @@ async function refusalOf(call: Promise<unknown>) {
 async function expectMatchingRefusal(payload: {
   title: string;
   matterTypeId: string;
-  customFields?: Record<string, string>;
+  customFields?: Record<string, string | null>;
   templateId?: string;
 }) {
   const overHttp = await createOverHttp(payload);
@@ -389,6 +389,54 @@ describe("matter creation", () => {
         .from(matterKeyDates)
         .where(eq(matterKeyDates.matterId, callable.row.id)),
     ).toHaveLength(2);
+  });
+
+  it("preserves optional template clears, omitted defaults, and overrides in stored Fields", async () => {
+    const typeId = await newType("Optional template Fields");
+    const slug = await attachField(typeId, "Optional template note", false);
+    const [template] = await harness.db
+      .insert(matterTemplates)
+      .values({
+        matterTypeId: typeId,
+        name: "Optional default",
+        defaultCustomFields: { [slug]: "Default note" },
+      })
+      .returning();
+
+    for (const [customFields, expected] of [
+      [{ [slug]: null }, {}],
+      [{}, { [slug]: "Default note" }],
+      [{ [slug]: "Caller note" }, { [slug]: "Caller note" }],
+    ] as const) {
+      const input = {
+        title: "Template Field intent",
+        matterTypeId: typeId,
+        templateId: template!.id,
+        customFields,
+      };
+      const response = await createOverHttp(input);
+      expect(response.statusCode, response.body).toBe(201);
+      const created = response.json().matter as { number: number; customFields: unknown };
+      expect(created.customFields).toEqual(expected);
+      const saved = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/matters/${created.number}`,
+        cookies: memberCookies,
+      });
+      expect(saved.statusCode, saved.body).toBe(200);
+      expect(saved.json().matter.customFields).toEqual(expected);
+    }
+  });
+
+  it("refuses an explicit clear of a required template Field at both creation seams", async () => {
+    const problem = await expectMatchingRefusal({
+      title: "Required default cleared",
+      matterTypeId: templateTypeId,
+      templateId,
+      customFields: { [templateRequiredSlug]: null },
+    });
+    expect(problem.status).toBe(400);
+    expect(problem.detail).toContain("Template business unit");
   });
 
   it("never validates a template default the caller overrides", async () => {
