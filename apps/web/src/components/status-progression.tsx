@@ -28,7 +28,8 @@ export interface ProgressionMove {
   onPick: (statusId: string) => void;
 }
 
-/** Pointer opening leaves focus on the menu, so reveal the saved selection after placement. */
+/** Radix opens the menu with focus on the menu itself, never on a row, so nothing
+ * brings the saved status into view once the list scrolls. Reveal it after placement. */
 function revealCheckedStatus(content: HTMLDivElement | null) {
   if (!content) return;
   const frame = requestAnimationFrame(() => {
