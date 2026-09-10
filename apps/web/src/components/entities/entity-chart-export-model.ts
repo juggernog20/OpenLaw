@@ -4,7 +4,11 @@ import { defineMessages, type IntlShape } from "react-intl";
 import type { EntityChart, EntityOfficer, EntityRecordEnvelope } from "../../lib/entities";
 import { statusLabel } from "../../lib/entities";
 import { formatFullDate, toMajorUnits } from "../../lib/format";
-import { entityStructureChain, layoutEntityChart } from "./entity-chart-layout";
+import {
+  entityChartIncomingOwners,
+  entityStructureChain,
+  layoutEntityChart,
+} from "./entity-chart-layout";
 
 const FIELD_MESSAGES = defineMessages({
   type: { id: "entities.chart.export.field.type", defaultMessage: "Entity type" },
@@ -265,16 +269,7 @@ export function createChartExportModel({
     })),
   };
   const positions = new Map(layout.nodes.map((node) => [node.id, node]));
-  const incoming = new Map<string, string[]>();
-  for (const edge of chart.edges) {
-    if (!positions.has(edge.ownerEntityId) || !positions.has(edge.ownedEntityId)) continue;
-    const owners = incoming.get(edge.ownedEntityId) ?? [];
-    owners.push(edge.ownerEntityId);
-    incoming.set(edge.ownedEntityId, owners);
-  }
-  for (const owners of incoming.values()) {
-    owners.sort((a, b) => positions.get(a)!.x - positions.get(b)!.x || a.localeCompare(b));
-  }
+  const incoming = entityChartIncomingOwners(chart, positions);
   for (const edge of chart.edges) {
     const owner = positions.get(edge.ownerEntityId);
     const owned = positions.get(edge.ownedEntityId);

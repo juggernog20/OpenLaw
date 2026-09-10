@@ -21,6 +21,24 @@ export interface EntityChartLayout {
   height: number;
 }
 
+/** Order incoming connectors from left to right in the viewer and exports. */
+export function entityChartIncomingOwners(
+  chart: EntityChart,
+  positions: ReadonlyMap<string, { x: number }>,
+): Map<string, string[]> {
+  const incoming = new Map<string, string[]>();
+  for (const edge of chart.edges) {
+    if (!positions.has(edge.ownerEntityId) || !positions.has(edge.ownedEntityId)) continue;
+    const owners = incoming.get(edge.ownedEntityId) ?? [];
+    owners.push(edge.ownerEntityId);
+    incoming.set(edge.ownedEntityId, owners);
+  }
+  for (const owners of incoming.values()) {
+    owners.sort((a, b) => positions.get(a)!.x - positions.get(b)!.x || a.localeCompare(b));
+  }
+  return incoming;
+}
+
 /** Ancestors and descendants of the selected entity, without including its siblings. */
 export function entityStructureChain(chart: EntityChart, selectedId: string): Set<string> {
   const chain = new Set([selectedId]);

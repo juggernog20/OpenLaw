@@ -11,6 +11,7 @@ import { Button } from "../ui/button";
 import {
   CHART_NODE_HEIGHT,
   CHART_NODE_WIDTH,
+  entityChartIncomingOwners,
   entityStructureChain,
   layoutEntityChart,
 } from "./entity-chart-layout";
@@ -36,6 +37,7 @@ export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
   const descriptionId = useId();
   const layout = useMemo(() => layoutEntityChart(chart), [chart]);
   const positions = useMemo(() => new Map(layout.nodes.map((node) => [node.id, node])), [layout]);
+  const incoming = useMemo(() => entityChartIncomingOwners(chart, positions), [chart, positions]);
   const regionRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const drag = useRef<{ pointerId: number; x: number; y: number } | null>(null);
@@ -263,7 +265,9 @@ export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
               const primary = owned.primaryOwnerId === owner.id;
               const x1 = owner.x + CHART_NODE_WIDTH / 2;
               const y1 = owner.y + CHART_NODE_HEIGHT;
-              const x2 = owned.x + CHART_NODE_WIDTH / 2;
+              const owners = incoming.get(owned.id)!;
+              const x2 =
+                owned.x + (CHART_NODE_WIDTH * (owners.indexOf(owner.id) + 1)) / (owners.length + 1);
               const y2 = owned.y;
               const middle = (y1 + y2) / 2;
               return (
@@ -274,7 +278,7 @@ export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
                   className="transition-opacity duration-150 motion-reduce:transition-none"
                 >
                   <path
-                    d={`M ${x1} ${y1} C ${x1} ${middle}, ${x2} ${middle}, ${x2} ${y2}`}
+                    d={`M ${x1} ${y1} V ${middle} H ${x2} V ${y2}`}
                     fill="none"
                     stroke={
                       chain?.has(owner.id) && chain.has(owned.id)
@@ -285,13 +289,8 @@ export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
                     strokeDasharray={primary ? undefined : "7 6"}
                     data-edge-kind={primary ? "primary" : "secondary"}
                   />
-                  <text
-                    x={(x1 + x2) / 2}
-                    y={middle - 5}
-                    textAnchor="middle"
-                    className="fill-muted text-xs"
-                  >
-                    {edge.ownershipPercent}%
+                  <text x={x2 + 5} y={y2 - 14} textAnchor="start" className="fill-muted text-xs">
+                    {intl.formatNumber(edge.ownershipPercent)}%
                   </text>
                 </g>
               );
