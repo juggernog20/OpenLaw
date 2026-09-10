@@ -27,6 +27,7 @@ import {
   KeyDateOffsetsSchema,
   KeyDateRecipientsSchema,
   KeyDateReminderOptionsSchema,
+  chosenList,
   keyDateReminderOptions,
   ownReminderOffsets,
   ownReminderRecipients,
@@ -282,12 +283,16 @@ export const matterKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
         const current = await reachedKeyDate(tx, request.user, request.params.keyDateId);
         if (!current) throw httpError(404, NO_KEY_DATE);
         assertWritable(current.context);
+        const saved = {
+          reminderOffsetDays: ownReminderOffsets(current.reminderOffsetDays),
+          reminderRecipientIds: ownReminderRecipients(current.reminderRecipientIds),
+        };
         const wanted = {
-          reminderOffsetDays:
-            request.body.reminderOffsetDays ?? ownReminderOffsets(current.reminderOffsetDays),
-          reminderRecipientIds:
-            request.body.reminderRecipientIds ??
-            ownReminderRecipients(current.reminderRecipientIds),
+          reminderOffsetDays: chosenList(request.body.reminderOffsetDays, saved.reminderOffsetDays),
+          reminderRecipientIds: chosenList(
+            request.body.reminderRecipientIds,
+            saved.reminderRecipientIds,
+          ),
           date: request.body.date ?? current.date,
           label: request.body.label ?? current.label,
           note: request.body.note === undefined ? current.note : toNote(request.body.note),
@@ -302,8 +307,10 @@ export const matterKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         const changed: ChangedFields = {};
         for (const field of ["reminderOffsetDays", "reminderRecipientIds"] as const) {
-          if (JSON.stringify(wanted[field]) !== JSON.stringify(current[field])) {
-            changed[field] = { from: current[field], to: wanted[field] };
+          // `chosenList` hands the saved list straight back when the
+          // choices match, so identity is the whole comparison.
+          if (wanted[field] !== saved[field]) {
+            changed[field] = { from: saved[field], to: wanted[field] };
           }
         }
         if (wanted.date !== current.date) changed.date = { from: current.date, to: wanted.date };

@@ -76,6 +76,7 @@ import {
   KeyDateOffsetsSchema,
   KeyDateRecipientsSchema,
   KeyDateReminderOptionsSchema,
+  chosenList,
   keyDateReminderOptions,
   ownReminderOffsets,
   ownReminderRecipients,
@@ -509,12 +510,16 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
         // Only what was sent is read, so a surface that edits one field
         // sends one field — the DES-017 rule, said over a row rather
         // than over the record's own columns.
+        const saved = {
+          reminderOffsetDays: ownReminderOffsets(keyDate.reminderOffsetDays),
+          reminderRecipientIds: ownReminderRecipients(keyDate.reminderRecipientIds),
+        };
         const wanted = {
-          reminderOffsetDays:
-            request.body.reminderOffsetDays ?? ownReminderOffsets(keyDate.reminderOffsetDays),
-          reminderRecipientIds:
-            request.body.reminderRecipientIds ??
-            ownReminderRecipients(keyDate.reminderRecipientIds),
+          reminderOffsetDays: chosenList(request.body.reminderOffsetDays, saved.reminderOffsetDays),
+          reminderRecipientIds: chosenList(
+            request.body.reminderRecipientIds,
+            saved.reminderRecipientIds,
+          ),
           date: request.body.date ?? keyDate.date,
           label: request.body.label ?? keyDate.label,
           note: request.body.note === undefined ? keyDate.note : toNote(request.body.note),
@@ -529,8 +534,10 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         const changed: ChangedFields = {};
         for (const field of ["reminderOffsetDays", "reminderRecipientIds"] as const) {
-          if (JSON.stringify(wanted[field]) !== JSON.stringify(keyDate[field])) {
-            changed[field] = { from: keyDate[field], to: wanted[field] };
+          // `chosenList` hands the saved list straight back when the
+          // choices match, so identity is the whole comparison.
+          if (wanted[field] !== saved[field]) {
+            changed[field] = { from: saved[field], to: wanted[field] };
           }
         }
         if (wanted.date !== keyDate.date) changed.date = { from: keyDate.date, to: wanted.date };
