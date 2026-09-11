@@ -57,7 +57,7 @@ import {
   REQUEST_ENTITY,
 } from "../lib/notifications/audience.js";
 import { requestSideOf } from "../lib/notifications/catalog.js";
-import { renderNotificationMail, type MailRecord } from "../lib/notifications/email.js";
+import { origin, renderNotificationMail, type MailRecord } from "../lib/notifications/email.js";
 import type { MailerResolver } from "../lib/mailer.js";
 import { reasonOf } from "./derivations.js";
 import type { PipelineLogger } from "./logger.js";
@@ -293,7 +293,7 @@ async function sendNotificationEmail(
     },
     row.recipientEmail,
     row.recipientRole === "business_user" && row.entityType !== "request"
-      ? `${deps.baseUrl.replace(/\/+$/, "")}/portal`
+      ? `${origin(deps.baseUrl)}/portal`
       : deps.baseUrl,
   );
   // No copy for this event yet — group 3's words arrive with the digest

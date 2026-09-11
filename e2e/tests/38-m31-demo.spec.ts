@@ -346,6 +346,10 @@ test.describe.serial("M31 deployer journey", () => {
       const confirmed = await confirming;
       expect(confirmed.status(), await confirmed.text()).toBe(200);
       await expect(valueResult.getByText("Unverified", { exact: true })).toHaveCount(0);
+      await observer
+        .getByRole("navigation", { name: "Contract sections" })
+        .getByRole("link", { name: "Overview" })
+        .click();
       await expect(markerBeside(observer, "Value")).toHaveCount(0);
       await expect(markerBeside(observer, "Term type")).toBeVisible();
       await expect(markerBeside(observer, "Notice period (days)")).toBeVisible();
