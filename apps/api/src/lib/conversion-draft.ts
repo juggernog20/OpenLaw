@@ -243,21 +243,13 @@ export async function conversionContext(
     .orderBy(asc(typeTable.id));
   if (targetTypeId && !types.some((t) => t.id === targetTypeId))
     throw httpError(409, `Choose a live ${moduleLabel} Type.`);
-  const perType: { typeId: string; fields: Awaited<ReturnType<typeof selectAttachedFields>> }[] =
-    [];
-  for (const type of types)
-    perType.push({
-      typeId: type.id,
-      fields: await selectAttachedFields(db, typeFields, type.id),
-    });
-  const fields = [
-    ...new Map(
-      perType
-        .filter((type) => !targetTypeId || type.typeId === targetTypeId)
-        .flatMap((type) => type.fields)
-        .map((field) => [field.slug, field]),
-    ).values(),
-  ];
+  // A chosen Type answers for itself; only an unanswered target reads
+  // every live Type. The whole context is rebuilt on each freshness
+  // check and on each poll, so a read per Type is a read per second.
+  const asked = targetTypeId ? types.filter((type) => type.id === targetTypeId) : types;
+  const attached: Awaited<ReturnType<typeof selectAttachedFields>>[] = [];
+  for (const type of asked) attached.push(await selectAttachedFields(db, typeFields, type.id));
+  const fields = [...new Map(attached.flat().map((field) => [field.slug, field])).values()];
   const allTargets: AiExtractionTarget[] = [
     {
       slug: "title",
@@ -265,7 +257,7 @@ export async function conversionContext(
     },
     {
       slug: `${targetModule}_type`,
-      prompt: `Choose an eligible ${moduleLabel} Type id only when supported: ${JSON.stringify(targetTypeId ? types.filter((type) => type.id === targetTypeId) : types)}.`,
+      prompt: `Choose an eligible ${moduleLabel} Type id only when supported: ${JSON.stringify(asked)}.`,
     },
     {
       slug: "description",
@@ -321,7 +313,10 @@ export async function conversionContext(
         restricted: a.restricted,
       })),
       types,
-      perType,
+      // The attached Fields the targets were built from, in the same
+      // order as the Types above. Re-attaching a Field the proposal
+      // could use makes the draft stale.
+      attached,
     ]),
   };
 }

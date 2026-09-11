@@ -2986,7 +2986,24 @@ function ContractRecord() {
                 // notice period on the Overview changes what the
                 // derived row's own sentence says about itself.
                 noticePeriodDays={saved.noticePeriodDays}
-                onDeadlines={setDeadlines}
+                onDeadlines={(rows) => {
+                  setDeadlines(rows);
+                  // Moving or renaming the Needed by date reviews it, and
+                  // the seam clears the marker in the same write. The
+                  // union it answers with is what says so, so the row the
+                  // Overview holds drops the flag rather than waiting for
+                  // the next whole-record read.
+                  if (!rows.some((row) => row.source === "key_date" && row.unverified))
+                    setSaved((current) => {
+                      if (!current.aiUnverified?.needed_by) return current;
+                      const rest = { ...current.aiUnverified };
+                      delete rest.needed_by;
+                      return {
+                        ...current,
+                        aiUnverified: Object.keys(rest).length > 0 ? rest : null,
+                      };
+                    });
+                }}
               />
             )}
             {/* The record's task checklist (M17/1, CTR-017):

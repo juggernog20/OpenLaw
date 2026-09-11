@@ -1052,6 +1052,24 @@ it("keeps Contract paper and conversation evidence through one concurrent conver
   const neededDate = deadline
     .json()
     .deadlines.find((d: { label: string }) => d.label === "Needed by");
+  // The edit dialog re-sends the date, the label and the note whatever
+  // it changed, so a reminder-only edit must leave the marker standing.
+  const reminderOnly = await harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/key-dates/${neededDate.keyDateId}`,
+    cookies: cast.memberCookies,
+    payload: {
+      date: neededDate.date,
+      label: neededDate.label,
+      note: neededDate.note,
+      reminderOffsetDays: [7],
+    },
+  });
+  expect(reminderOnly.statusCode, reminderOnly.body).toBe(200);
+  expect(
+    reminderOnly.json().deadlines.find((d: { label: string }) => d.label === "Needed by")
+      .unverified,
+  ).toBe(true);
   const changedDate = await harness.app.inject({
     method: "PATCH",
     url: `/api/v1/key-dates/${neededDate.keyDateId}`,

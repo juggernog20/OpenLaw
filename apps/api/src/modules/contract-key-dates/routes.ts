@@ -553,11 +553,13 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
         // worse than no entry at all.
         if (Object.keys(changed).length > 0) {
           await tx.update(contractKeyDates).set(wanted).where(eq(contractKeyDates.id, keyDate.id));
+          // The date and the label are what the proposal claimed, so
+          // only a change to one of them reviews it. A reminder or a
+          // note edit re-sends both boxes without touching either
+          // value, and the Matter arm reads the same two keys.
           if (
             keyDate.contract.aiUnverified?.needed_by?.keyDateId === keyDate.id &&
-            (request.body.date !== undefined ||
-              request.body.label !== undefined ||
-              request.body.note !== undefined)
+            ("date" in changed || "label" in changed)
           ) {
             await tx
               .update(contracts)
