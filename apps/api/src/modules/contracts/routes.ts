@@ -534,6 +534,7 @@ const ContractRowSchema = z.object({
       z.union([
         z.object({
           runId: z.string(),
+          sourceContext: z.boolean().optional(),
           draftId: z.string().optional(),
           writtenAt: z.iso.datetime(),
         }),
@@ -800,7 +801,7 @@ function publicUnverified(map: Contract["aiUnverified"]) {
       slug,
       entry.draftId !== undefined
         ? { draftId: entry.draftId, writtenAt: entry.writtenAt }
-        : { runId: entry.runId, writtenAt: entry.writtenAt },
+        : { runId: entry.runId, writtenAt: entry.writtenAt, sourceContext: entry.sourceContext },
     ]),
   );
 }
@@ -1935,7 +1936,15 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       for (const slug of slugs) delete remaining[slug];
       await tx
         .update(contracts)
-        .set({ aiUnverified: Object.keys(remaining).length > 0 ? remaining : null })
+        .set({
+          aiUnverified: Object.keys(remaining).length > 0 ? remaining : null,
+          analysisHumanFields: [
+            ...new Set([
+              ...current.row.analysisHumanFields,
+              ...slugs.map((slug) => (slug.startsWith("field:") ? slug.slice(6) : slug)),
+            ]),
+          ],
+        })
         .where(eq(contracts.id, current.row.id));
       await recordActivity(
         tx,
@@ -2592,6 +2601,15 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         if (patch.renewalPeriodMonths !== undefined) {
           humanWrittenSlugs.add("renewal_period_months");
         }
+        if (humanWrittenSlugs.size > 0)
+          patch.analysisHumanFields = [
+            ...new Set([
+              ...target.analysisHumanFields,
+              ...[...humanWrittenSlugs].map((slug) =>
+                slug.startsWith("field:") ? slug.slice(6) : slug,
+              ),
+            ]),
+          ];
         if (target.aiUnverified && humanWrittenSlugs.size > 0) {
           const remaining = { ...target.aiUnverified };
           for (const slug of humanWrittenSlugs) delete remaining[slug];
@@ -3233,6 +3251,16 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           )
           .returning();
         if (!removed) throw httpError(404, "That counterparty is not on this contract.");
+        if (removed.isPrimary && !current.row.analysisHumanFields.includes("counterparty")) {
+          const [updated] = await tx
+            .update(contracts)
+            .set({
+              analysisHumanFields: [...current.row.analysisHumanFields, "counterparty"],
+            })
+            .where(eq(contracts.id, current.row.id))
+            .returning();
+          Object.assign(current.row, updated);
+        }
 
         const [party] = await tx
           .select({ name: counterparties.name })

@@ -1506,6 +1506,28 @@ describe("the /contracts/:number record page", () => {
       expect(screen.queryByRole("button", { name: "Run analysis" })).not.toBeInTheDocument();
     });
 
+    it("confirms a Request-context custom Field with its bare Analysis slug", async () => {
+      const api = recordApi(
+        contractRow({
+          customFields: { payment_terms: "Net 30" },
+          aiUnverified: {
+            payment_terms: {
+              runId: "request-run",
+              sourceContext: true,
+              writtenAt: "2026-09-11T00:00:00Z",
+            },
+          },
+        }),
+      );
+      stubApi({ signedIn: MEMBER, extra: api.handler });
+      renderAt("/contracts/42/fields");
+      const user = userEvent.setup();
+      await user.click(await screen.findByRole("button", { name: "Confirm" }));
+      await waitFor(() => expect(api.posts).toContain("confirm payment_terms"));
+      expect(screen.queryByText("Unverified")).toBeNull();
+      expect(screen.getByLabelText("Payment terms")).toHaveValue("Net 30");
+    });
+
     it("draws and clears a flagged custom Field when its typed edit commits", async () => {
       const api = recordApi(
         contractRow({
@@ -8160,6 +8182,61 @@ describe("the doc panel (M12/2)", () => {
   const section = () => screen.findByRole("region", { name: /^Documents/ });
   const panel = (name: RegExp) => screen.findByRole("complementary", { name });
 
+  it("opens saved Request Analysis evidence in the docked doc panel and restores the sparkle", async () => {
+    const record = recordApi(
+      contractRow({
+        aiUnverified: {
+          term_type: {
+            runId: "request-run",
+            sourceContext: true,
+            writtenAt: "2026-09-11T00:00:00.000Z",
+          },
+        },
+      }),
+    );
+    const quote = "The first termination right is on this page.";
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/contracts/42/documents")
+          return json(200, { documents: [document()], nextCursor: null });
+        if (call.url.pathname === "/api/v1/contracts/42/analysis/request-run/evidence/term_type")
+          return json(200, {
+            available: true,
+            citations: [
+              {
+                sourceId: "attachment:original",
+                label: "Original paper",
+                text: quote,
+                quote,
+                attachment: {
+                  documentId: "pdoc-1",
+                  versionId: "pv-1",
+                  previewHref: "/api/v1/documents/pdoc-1/versions/pv-1/preview",
+                  downloadHref: "/api/v1/documents/pdoc-1/versions/pv-1/download",
+                  method: "native_layer",
+                },
+              },
+            ],
+          });
+        return record.handler(call);
+      },
+    });
+    const user = userEvent.setup();
+    const { router } = renderAt("/contracts/42");
+    const trigger = await screen.findByRole("button", { name: "View source evidence" });
+    await user.click(trigger);
+    expect(
+      await screen.findByRole("complementary", { name: /master services agreement, version 1/ }),
+    ).toBeVisible();
+    expect(await screen.findByRole("searchbox", { name: "Find in document" })).toHaveValue(quote);
+    expect(await screen.findByText("1 of 1")).toBeVisible();
+    expect(screen.queryByRole("dialog", { name: "Source document" })).toBeNull();
+    expect(router.state.location.pathname).toBe("/contracts/42");
+    await user.click(screen.getByRole("button", { name: "Close the document" }));
+    await waitFor(() => expect(trigger).toHaveFocus());
+  });
+
   it("opens a PDF version in the panel from its name, with no download", async () => {
     stubApi({ signedIn: MEMBER, extra: panelApi([document()]) });
     renderAt("/contracts/42/documents");
@@ -11536,4 +11613,71 @@ it("shows Conversion draft evidence beside Contract Overview values without leav
   expect(router.state.location.pathname).toBe("/contracts/42");
   await user.keyboard("{Escape}");
   expect(screen.getByRole("button", { name: "View source evidence" })).toHaveFocus();
+});
+
+it("revalidates post-conversion Analysis without losing a typed title", async () => {
+  const user = userEvent.setup();
+  const api = recordApi(contractRow(), undefined, undefined, undefined, {
+    available: true,
+    latestRun: analysisRun({
+      trigger: "conversion",
+      state: "pending",
+      versionId: null,
+      versionNumber: null,
+    }),
+  });
+  stubApi({ signedIn: MEMBER, extra: api.handler });
+  renderAt("/contracts/42");
+  const title = await screen.findByLabelText("Title");
+  await user.clear(title);
+  await user.type(title, "Unsaved human title");
+  expect(screen.getByText(/Filling Contract Fields from the Request/)).toBeVisible();
+  api.updateRow({ description: "Revalidated Contract description." });
+  api.updateAnalysis({
+    available: true,
+    latestRun: analysisRun({ trigger: "conversion", versionId: null, versionNumber: null }),
+  });
+  await waitFor(
+    () => expect(screen.getByText(/Request-context Analysis completed/)).toBeVisible(),
+    { timeout: 4000 },
+  );
+  expect(screen.getByLabelText("Description")).toHaveValue("Revalidated Contract description.");
+  expect(screen.getByLabelText("Title")).toHaveValue("Unsaved human title");
+});
+
+it("offers a safe retry for a failed Request-context Analysis run", async () => {
+  const user = userEvent.setup();
+  const calls: string[] = [];
+  const api = recordApi(contractRow(), undefined, undefined, undefined, {
+    available: true,
+    latestRun: analysisRun({
+      trigger: "conversion",
+      state: "failed",
+      versionId: null,
+      versionNumber: null,
+    }),
+  });
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) => {
+      if (call.url.pathname.endsWith("/analysis/run-ready/retry") && call.method === "POST") {
+        calls.push(call.url.pathname);
+        return json(202, {
+          run: analysisRun({
+            id: "retried",
+            trigger: "conversion",
+            state: "pending",
+            versionId: null,
+            versionNumber: null,
+          }),
+        });
+      }
+      return api.handler(call);
+    },
+  });
+  renderAt("/contracts/42");
+  expect(await screen.findByText(/The Contract was created successfully/)).toBeVisible();
+  await user.click(screen.getByRole("button", { name: "Retry Request-context Analysis" }));
+  expect(await screen.findByText(/Filling Contract Fields from the Request/)).toBeVisible();
+  expect(calls).toEqual(["/api/v1/contracts/42/analysis/run-ready/retry"]);
 });

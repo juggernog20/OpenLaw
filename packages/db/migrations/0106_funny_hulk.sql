@@ -1,0 +1,1 @@
+ALTER TABLE "contract_analysis_runs" ADD COLUMN "lease_at" timestamp with time zone;

@@ -19,6 +19,7 @@ import {
   documentVersionText,
   eq,
   isNull,
+  lt,
   or,
   sql,
   TERM_TYPES,
@@ -39,12 +40,20 @@ import { buildAnalysisTargets, type AnalysisTarget } from "../lib/analysis-targe
 import { AiConfigError, isTerminalAiError, type AiExtraction } from "../lib/ai/provider.js";
 import type { AiResolver } from "../lib/ai/resolver.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../lib/activity.js";
+import { requestAnalysisContext } from "./conversion-analysis.js";
+import { hash, normalizeQuote, withAttachmentReads } from "../lib/conversion-draft.js";
+import { ATTACHMENT_LIMITS, readConversionAttachments } from "../lib/conversion-attachments.js";
+import type { StorageAdapter } from "../lib/storage/adapter.js";
+import type { DocEngine } from "../lib/doc-engine/engine.js";
+import type { ConversionAnalysisContext, ConversionSuggestion } from "@openlaw/shared";
 import type { PipelineLogger } from "./logger.js";
 
 export interface ContractAnalysisDeps {
   db: Db;
   resolveAiProvider: AiResolver;
   log: PipelineLogger;
+  storage?: StorageAdapter;
+  docEngine?: DocEngine;
 }
 
 export interface ContractAnalysisAttempt {
@@ -297,6 +306,8 @@ function hasValue(row: Contract, slug: string): boolean {
 }
 
 function writable(row: Contract, flags: AiUnverifiedMap, slug: string, termTypeWasSet: boolean) {
+  if (row.analysisHumanFields.includes(slug)) return false;
+  if (flags[`field:${slug}`]?.draftId) return false;
   if (flags[slug]) return true;
   if (slug === "term_type") return !termTypeWasSet;
   return !hasValue(row, slug);
@@ -339,6 +350,7 @@ async function applyAnswers(
   targets: AnalysisTarget[],
   extractions: AiExtraction[],
   model: string,
+  requestSnapshot?: string,
 ): Promise<void> {
   const answerBySlug = new Map(extractions.map((answer) => [answer.slug, answer]));
   await deps.db.transaction(async (tx) => {
@@ -353,6 +365,23 @@ async function applyAnswers(
       throw new AnalysisTargetError("The Contract became frozen before analysis completed.");
     }
 
+    if (run.sourceContext) {
+      const [lease] = await tx
+        .select()
+        .from(contractAnalysisRuns)
+        .where(eq(contractAnalysisRuns.id, run.id))
+        .for("update");
+      if (lease?.state !== "pending" || lease.startedAt?.valueOf() !== run.startedAt?.valueOf())
+        return;
+      const current = await requestAnalysisContext(tx, run, true);
+      const currentTargets = await buildAnalysisTargets(tx, row.contractTypeId);
+      if (current.context.snapshot !== requestSnapshot || hash(currentTargets) !== hash(targets))
+        throw new AnalysisTargetError(
+          "Request sources or Contract Fields changed. Retry the Analysis run.",
+        );
+    }
+    if (row.contractTypeId !== targetText.contractTypeId)
+      throw new AnalysisTargetError("The Contract Type changed before analysis completed.");
     const outcome: ContractAnalysisOutcome = {
       written: [],
       kept: [],
@@ -378,11 +407,14 @@ async function applyAnswers(
     for (const target of targets) {
       const answer = answerBySlug.get(target.slug);
       if (
-        (answer?.sourceId !== undefined && answer.sourceId !== targetText.versionId) ||
-        !evidenceIsSupported(targetText.text, answer?.evidence)
+        answer?.conflict ||
+        (run.sourceContext
+          ? !run.sourceContext.suggestions[target.slug]
+          : (answer?.sourceId !== undefined && answer.sourceId !== targetText.versionId) ||
+            !evidenceIsSupported(targetText.text, answer?.evidence))
       ) {
         outcome.unsupported.push(target.slug);
-        noteResult(target.slug, answer, "unsupported");
+        noteResult(target.slug, run.sourceContext ? undefined : answer, "unsupported");
         continue;
       }
       const value = coerce(target, answer?.value);
@@ -425,7 +457,7 @@ async function applyAnswers(
             patch.renewalPeriodMonths = null;
             delete flags.renewal_period_months;
           }
-          flags.term_type = flag(term.evidence, run.id);
+          flags.term_type = flag(term.evidence, run.id, !!run.sourceContext);
           outcome.written.push("term_type");
           noteResult("term_type", term, "written", term.value);
         }
@@ -475,7 +507,7 @@ async function applyAnswers(
         patch.valueCurrency = value.currency;
         patch.valueCadence = value.cadence;
       }
-      flags[slug] = flag(item.evidence, run.id);
+      flags[slug] = flag(item.evidence, run.id, !!run.sourceContext);
       outcome.written.push(slug);
       noteResult(slug, item, "written", item.value);
     }
@@ -501,13 +533,16 @@ async function applyAnswers(
           .from(contractCounterparties)
           .where(eq(contractCounterparties.contractId, row.id)),
       ]);
-      if (matches.length === 1 && linked.length === 0) {
+      if (row.analysisHumanFields.includes("counterparty")) {
+        outcome.kept.push("counterparty");
+        noteResult("counterparty", counterparty, "kept", name);
+      } else if (matches.length === 1 && linked.length === 0) {
         await tx.insert(contractCounterparties).values({
           contractId: row.id,
           counterpartyId: matches[0]!.id,
           isPrimary: true,
         });
-        flags.counterparty = flag(counterparty.evidence, run.id);
+        flags.counterparty = flag(counterparty.evidence, run.id, !!run.sourceContext);
         outcome.written.push("counterparty");
         noteResult("counterparty", counterparty, "written", name);
       } else if (
@@ -535,7 +570,7 @@ async function applyAnswers(
       const customFields = { ...(patch.customFields ?? row.customFields) };
       customFields[slug] = item.value as CustomFieldValue;
       patch.customFields = customFields;
-      flags[slug] = flag(item.evidence, run.id);
+      flags[slug] = flag(item.evidence, run.id, !!run.sourceContext);
       outcome.written.push(slug);
       noteResult(slug, item, "written", item.value);
     }
@@ -556,7 +591,7 @@ async function applyAnswers(
     const finishedAt = new Date();
     await tx
       .update(contractAnalysisRuns)
-      .set({ state: "ready", outcome, failure: null, finishedAt })
+      .set({ state: "ready", outcome, sourceContext: run.sourceContext, failure: null, finishedAt })
       .where(eq(contractAnalysisRuns.id, run.id));
     await recordActivity(tx, {
       entityType: "contract",
@@ -567,7 +602,7 @@ async function applyAnswers(
         number: row.number,
         title: row.title,
         runId: run.id,
-        versionId: targetText.versionId,
+        versionId: run.sourceContext ? null : targetText.versionId,
         model,
         written: outcome.written,
         kept: outcome.kept,
@@ -579,11 +614,16 @@ async function applyAnswers(
   });
 }
 
-function flag(evidence: string, runId: string) {
-  return { evidence, runId, writtenAt: new Date().toISOString() };
+function flag(evidence: string, runId: string, sourceContext = false) {
+  return { evidence, runId, sourceContext, writtenAt: new Date().toISOString() };
 }
 
-async function failRun(deps: ContractAnalysisDeps, runId: string, reason: string): Promise<void> {
+async function failRun(
+  deps: ContractAnalysisDeps,
+  runId: string,
+  reason: string,
+  lease?: Date | null,
+): Promise<void> {
   await deps.db.transaction(async (tx) => {
     const [run] = await tx
       .select()
@@ -591,7 +631,12 @@ async function failRun(deps: ContractAnalysisDeps, runId: string, reason: string
       .where(eq(contractAnalysisRuns.id, runId))
       .limit(1)
       .for("update");
-    if (!run || run.state !== "pending") return;
+    if (
+      !run ||
+      run.state !== "pending" ||
+      (run.sourceContext && run.startedAt?.valueOf() !== lease?.valueOf())
+    )
+      return;
     const [contract] = await tx
       .select({ number: contracts.number, title: contracts.title })
       .from(contracts)
@@ -633,6 +678,10 @@ export async function handleContractAnalysis(
   if (!run || run.state !== "pending") return;
 
   try {
+    if (run.sourceContext) {
+      await handleRequestAnalysis(deps, run);
+      return;
+    }
     const prepared = await deps.db.transaction(async (tx) => {
       const [contract] = await tx
         .select({
@@ -706,9 +755,154 @@ export async function handleContractAnalysis(
     );
     deps.log.info({ runId: run.id, contractId: run.contractId }, "contract analysis finished");
   } catch (error) {
-    if (!isTerminalAnalysisFailure(error) && attempt.retryCount < attempt.retryLimit) throw error;
-    const reason = reasonOf(error);
-    await failRun(deps, run.id, reason);
-    deps.log.error({ runId: run.id, reason }, "contract analysis failed");
+    if (
+      !run.sourceContext &&
+      !isTerminalAnalysisFailure(error) &&
+      attempt.retryCount < attempt.retryLimit
+    )
+      throw error;
+    const reason = run.sourceContext
+      ? "Request-context Analysis could not finish. Retry after checking the Type, sources and AI settings."
+      : reasonOf(error);
+    await failRun(deps, run.id, reason, run.startedAt);
+    deps.log.error(
+      {
+        runId: run.id,
+        reason,
+        errorType: error instanceof Error ? error.name : typeof error,
+        ...(error instanceof AnalysisTargetError ? { cause: error.message } : {}),
+      },
+      "contract analysis failed",
+    );
+  }
+}
+
+async function handleRequestAnalysis(deps: ContractAnalysisDeps, run: ContractAnalysisRun) {
+  if (!deps.storage || !deps.docEngine)
+    throw new AnalysisTargetError("Source readers unavailable.");
+  const [claimed] = await deps.db
+    .update(contractAnalysisRuns)
+    .set({ startedAt: new Date(), leaseAt: new Date() })
+    .where(
+      and(
+        eq(contractAnalysisRuns.id, run.id),
+        eq(contractAnalysisRuns.state, "pending"),
+        or(
+          isNull(contractAnalysisRuns.startedAt),
+          lt(
+            sql`coalesce(${contractAnalysisRuns.leaseAt}, ${contractAnalysisRuns.startedAt})`,
+            new Date(Date.now() - 180_000),
+          ),
+        ),
+      ),
+    )
+    .returning();
+  if (!claimed) return;
+  run.startedAt = claimed.startedAt;
+  let renewing = Promise.resolve();
+  const heartbeat = setInterval(() => {
+    renewing = renewing
+      .then(async () => {
+        await deps.db
+          .update(contractAnalysisRuns)
+          .set({ leaseAt: new Date() })
+          .where(
+            and(
+              eq(contractAnalysisRuns.id, run.id),
+              eq(contractAnalysisRuns.state, "pending"),
+              eq(contractAnalysisRuns.startedAt, claimed.startedAt!),
+            ),
+          );
+      })
+      .catch(() => {
+        deps.log.warn({ runId: run.id }, "conversion analysis lease renewal failed");
+      });
+  }, 30_000);
+  try {
+    const { context, contract } = await requestAnalysisContext(deps.db, run);
+    const targets = await buildAnalysisTargets(deps.db, contract.contractTypeId);
+    const provider = await deps.resolveAiProvider();
+    if (!provider) throw new AiConfigError("AI connector disabled.");
+    await deps.db
+      .update(contractAnalysisRuns)
+      .set({ model: provider.model, preset: provider.preset })
+      .where(eq(contractAnalysisRuns.id, run.id));
+    const attachmentReads = await readConversionAttachments(
+      { storage: deps.storage, docEngine: deps.docEngine },
+      context.attachments,
+      run.id,
+      ATTACHMENT_LIMITS.totalCharacters -
+        context.sources.reduce((n, source) => n + source.text.length, 0),
+    );
+    withAttachmentReads(context, attachmentReads);
+    const beforeCall = await requestAnalysisContext(deps.db, run);
+    if (
+      beforeCall.context.snapshot !== context.snapshot ||
+      hash(await buildAnalysisTargets(deps.db, contract.contractTypeId)) !== hash(targets)
+    )
+      throw new AnalysisTargetError(
+        "Request sources or Contract Fields changed before extraction.",
+      );
+    let timer: NodeJS.Timeout | undefined;
+    const answers = await Promise.race([
+      provider.extract(context.sources, targets),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new AnalysisTargetError("Analysis timed out.")), 125_000);
+      }),
+    ]).finally(() => clearTimeout(timer));
+    const suggestions: Record<string, ConversionSuggestion> = {};
+    const checked: AiExtraction[] = [];
+    const conflicted = new Set(
+      answers.filter((answer) => answer.conflict).map((answer) => answer.slug),
+    );
+    for (const answer of answers) {
+      if (
+        conflicted.has(answer.slug) ||
+        answer.conflict ||
+        !targets.some((target) => target.slug === answer.slug)
+      )
+        continue;
+      const citations = answer.citations?.length
+        ? answer.citations
+        : answer.sourceId && answer.evidence
+          ? [{ sourceId: answer.sourceId, quote: answer.evidence }]
+          : [];
+      if (!citations.length || citations.length > 20) continue;
+      const valid = citations.flatMap((citation) => {
+        const source = context.sources.find((source) => source.id === citation.sourceId);
+        return source &&
+          citation.quote.trim() &&
+          citation.quote.length <= 4000 &&
+          normalizeQuote(source.text).includes(normalizeQuote(citation.quote))
+          ? [{ ...citation, revision: source.revision }]
+          : [];
+      });
+      if (valid.length !== citations.length) continue;
+      suggestions[answer.slug] = { value: JSON.stringify(answer.value) ?? "", citations: valid };
+      checked.push({ ...answer, evidence: valid.map((citation) => citation.quote).join("\n") });
+    }
+    const sourceContext: ConversionAnalysisContext = {
+      ...run.sourceContext!,
+      attachmentReads,
+      suggestions,
+      warnings: context.warnings,
+    };
+    await applyAnswers(
+      deps,
+      { ...run, sourceContext, model: provider.model, preset: provider.preset },
+      {
+        contractId: contract.id,
+        contractTypeId: contract.contractTypeId,
+        versionId: "",
+        text: "",
+      },
+      targets,
+      checked,
+      provider.model,
+      context.snapshot,
+    );
+  } finally {
+    clearInterval(heartbeat);
+    await renewing;
   }
 }

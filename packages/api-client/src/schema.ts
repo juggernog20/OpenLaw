@@ -2805,6 +2805,38 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/contracts/{number}/analysis/{runId}/evidence/{slug}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getRequestAnalysisEvidence"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/analysis/{runId}/retry": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["retryRequestAnalysis"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contracts/{number}/analysis/{runId}": {
     parameters: {
       query?: never;
@@ -7011,6 +7043,7 @@ export interface operations {
             connector: {
               matterPreparation: boolean;
               contractPreparation: boolean;
+              contractConversionAnalysis: boolean;
               configured: boolean;
               enabled: boolean;
               preset:
@@ -7095,6 +7128,7 @@ export interface operations {
             connector: {
               matterPreparation: boolean;
               contractPreparation: boolean;
+              contractConversionAnalysis: boolean;
               configured: boolean;
               enabled: boolean;
               preset:
@@ -7166,6 +7200,7 @@ export interface operations {
             connector: {
               matterPreparation: boolean;
               contractPreparation: boolean;
+              contractConversionAnalysis: boolean;
               configured: boolean;
               enabled: boolean;
               preset:
@@ -7230,6 +7265,7 @@ export interface operations {
         "application/json": {
           matterPreparation?: boolean;
           contractPreparation?: boolean;
+          contractConversionAnalysis?: boolean;
         };
       };
     };
@@ -7244,6 +7280,7 @@ export interface operations {
             connector: {
               matterPreparation: boolean;
               contractPreparation: boolean;
+              contractConversionAnalysis: boolean;
               configured: boolean;
               enabled: boolean;
               preset:
@@ -7394,6 +7431,7 @@ export interface operations {
             connector: {
               matterPreparation: boolean;
               contractPreparation: boolean;
+              contractConversionAnalysis: boolean;
               configured: boolean;
               enabled: boolean;
               preset:
@@ -7465,6 +7503,7 @@ export interface operations {
             connector: {
               matterPreparation: boolean;
               contractPreparation: boolean;
+              contractConversionAnalysis: boolean;
               configured: boolean;
               enabled: boolean;
               preset:
@@ -15118,6 +15157,7 @@ export interface operations {
           description?: string | null;
           conversionDraftId?: string;
           aiAccepted?: string[];
+          counterpartyCleared?: boolean;
           contractTypeId?: string;
           matterTypeId?: string;
           templateId?: string;
@@ -15956,6 +15996,7 @@ export interface operations {
                 [key: string]:
                   | {
                       runId: string;
+                      sourceContext?: boolean;
                       draftId?: string;
                       /** Format: date-time */
                       writtenAt: string;
@@ -16100,6 +16141,7 @@ export interface operations {
                 [key: string]:
                   | {
                       runId: string;
+                      sourceContext?: boolean;
                       draftId?: string;
                       /** Format: date-time */
                       writtenAt: string;
@@ -16373,6 +16415,7 @@ export interface operations {
                 [key: string]:
                   | {
                       runId: string;
+                      sourceContext?: boolean;
                       draftId?: string;
                       /** Format: date-time */
                       writtenAt: string;
@@ -16475,7 +16518,7 @@ export interface operations {
                 /** @enum {string} */
                 state: "pending" | "ready" | "failed";
                 /** @enum {string} */
-                trigger: "automatic" | "manual";
+                trigger: "automatic" | "manual" | "conversion";
                 requestedBy: string | null;
                 /** @enum {string} */
                 preset:
@@ -16502,6 +16545,7 @@ export interface operations {
                     outcome: "written" | "kept" | "unsupported" | "invalid" | "unmatched";
                   }[];
                 } | null;
+                warnings?: string[];
                 failure: string | null;
                 startedAt: string | null;
                 finishedAt: string | null;
@@ -16646,6 +16690,7 @@ export interface operations {
                 [key: string]:
                   | {
                       runId: string;
+                      sourceContext?: boolean;
                       draftId?: string;
                       /** Format: date-time */
                       writtenAt: string;
@@ -16871,6 +16916,7 @@ export interface operations {
                 [key: string]:
                   | {
                       runId: string;
+                      sourceContext?: boolean;
                       draftId?: string;
                       /** Format: date-time */
                       writtenAt: string;
@@ -16997,6 +17043,7 @@ export interface operations {
                 [key: string]:
                   | {
                       runId: string;
+                      sourceContext?: boolean;
                       draftId?: string;
                       /** Format: date-time */
                       writtenAt: string;
@@ -17132,6 +17179,7 @@ export interface operations {
                 [key: string]:
                   | {
                       runId: string;
+                      sourceContext?: boolean;
                       draftId?: string;
                       /** Format: date-time */
                       writtenAt: string;
@@ -17393,6 +17441,7 @@ export interface operations {
                 [key: string]:
                   | {
                       runId: string;
+                      sourceContext?: boolean;
                       draftId?: string;
                       /** Format: date-time */
                       writtenAt: string;
@@ -17526,6 +17575,7 @@ export interface operations {
                 [key: string]:
                   | {
                       runId: string;
+                      sourceContext?: boolean;
                       draftId?: string;
                       /** Format: date-time */
                       writtenAt: string;
@@ -17659,6 +17709,7 @@ export interface operations {
                 [key: string]:
                   | {
                       runId: string;
+                      sourceContext?: boolean;
                       draftId?: string;
                       /** Format: date-time */
                       writtenAt: string;
@@ -17791,6 +17842,7 @@ export interface operations {
                 [key: string]:
                   | {
                       runId: string;
+                      sourceContext?: boolean;
                       draftId?: string;
                       /** Format: date-time */
                       writtenAt: string;
@@ -17917,6 +17969,7 @@ export interface operations {
                 [key: string]:
                   | {
                       runId: string;
+                      sourceContext?: boolean;
                       draftId?: string;
                       /** Format: date-time */
                       writtenAt: string;
@@ -17935,6 +17988,127 @@ export interface operations {
               createdAt: string;
               /** Format: date-time */
               updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getRequestAnalysisEvidence: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        runId: string;
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            available: boolean;
+            citations: {
+              label: string;
+              text: string;
+              quote: string;
+              sourceId: string;
+              attachment?: {
+                previewHref: string | null;
+                downloadHref: string;
+                documentId: string | null;
+                versionId: string | null;
+                method: ("native_layer" | "converted" | "ocr" | "email_body") | null;
+              };
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  retryRequestAnalysis: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        runId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            run: {
+              id: string;
+              contractId: string;
+              versionId: string | null;
+              versionNumber: number | null;
+              /** @enum {string} */
+              state: "pending" | "ready" | "failed";
+              /** @enum {string} */
+              trigger: "automatic" | "manual" | "conversion";
+              requestedBy: string | null;
+              /** @enum {string} */
+              preset:
+                | "anthropic"
+                | "openai"
+                | "azure_openai"
+                | "gemini"
+                | "openrouter"
+                | "ollama"
+                | "custom";
+              model: string;
+              truncated: boolean;
+              outcome: {
+                written: string[];
+                kept: string[];
+                unsupported: string[];
+                invalid: string[];
+                unmatched?: string;
+                results?: {
+                  slug: string;
+                  value: unknown;
+                  evidence: string | null;
+                  /** @enum {string} */
+                  outcome: "written" | "kept" | "unsupported" | "invalid" | "unmatched";
+                }[];
+              } | null;
+              warnings?: string[];
+              failure: string | null;
+              startedAt: string | null;
+              finishedAt: string | null;
             };
           };
         };
@@ -17977,7 +18151,7 @@ export interface operations {
               /** @enum {string} */
               state: "pending" | "ready" | "failed";
               /** @enum {string} */
-              trigger: "automatic" | "manual";
+              trigger: "automatic" | "manual" | "conversion";
               requestedBy: string | null;
               /** @enum {string} */
               preset:
@@ -18004,6 +18178,7 @@ export interface operations {
                   outcome: "written" | "kept" | "unsupported" | "invalid" | "unmatched";
                 }[];
               } | null;
+              warnings?: string[];
               failure: string | null;
               startedAt: string | null;
               finishedAt: string | null;
@@ -18049,7 +18224,7 @@ export interface operations {
               /** @enum {string} */
               state: "pending" | "ready" | "failed";
               /** @enum {string} */
-              trigger: "automatic" | "manual";
+              trigger: "automatic" | "manual" | "conversion";
               requestedBy: string | null;
               /** @enum {string} */
               preset:
@@ -18076,6 +18251,7 @@ export interface operations {
                   outcome: "written" | "kept" | "unsupported" | "invalid" | "unmatched";
                 }[];
               } | null;
+              warnings?: string[];
               failure: string | null;
               startedAt: string | null;
               finishedAt: string | null;

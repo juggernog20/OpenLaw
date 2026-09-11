@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** CTR-008's shared target vocabulary, answer provenance, and source-text budget. */
-import type { ConversionProvenance } from "./conversion-draft.js";
+import type {
+  ConversionAttachmentRead,
+  ConversionSuggestion,
+  ConversionProvenance,
+} from "./conversion-draft.js";
 
 /** The writer types carried by the seven built-in Contract targets. */
 export const CORE_ANALYSIS_TARGET_TYPES = [
@@ -76,6 +80,7 @@ export type AiUnverifiedEntry =
       runId: string;
       writtenAt: string;
       draftId?: never;
+      sourceContext?: boolean;
       targetTypeId?: never;
       keyDateId?: never;
     }
@@ -108,4 +113,13 @@ export interface ContractAnalysisOutcome {
   unmatched?: string;
   /** Added without a migration: `outcome` is JSON and older runs omit it. */
   results: ContractAnalysisResult[];
+}
+
+/** Original Request evidence retained by a post-conversion Analysis run. */
+export interface ConversionAnalysisContext {
+  requestId: string;
+  targetTypeId: string;
+  attachmentReads: ConversionAttachmentRead[];
+  suggestions: Record<string, ConversionSuggestion>;
+  warnings: string[];
 }

@@ -504,8 +504,10 @@ export function ConvertDialog({
         : { matterTypeId: target.id }),
       ...(selectedTemplate ? { templateId: selectedTemplate.id } : {}),
       ...(Object.keys(customFields).length === 0 ? {} : { customFields }),
-      // An empty box sends nothing: the seam lands what is named and
-      // refuses a name on the matter arm, so the box is not drawn there.
+      // A deliberate clear survives the later Request-context Analysis run.
+      ...(drawsCounterparty && human.has("counterparty") && namedCounterparty === ""
+        ? { counterpartyCleared: true }
+        : {}),
       ...(drawsCounterparty && namedCounterparty !== ""
         ? { counterpartyName: namedCounterparty }
         : {}),

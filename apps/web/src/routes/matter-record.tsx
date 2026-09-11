@@ -926,6 +926,7 @@ function MatterRecord() {
           )}
         />
         <RecordApplets
+          recordKey={saved.id}
           applets={
             user.role === "administrator"
               ? [teamApplet, chatApplet, historyApplet, SETTINGS_APPLET]

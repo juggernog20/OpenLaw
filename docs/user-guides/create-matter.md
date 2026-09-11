@@ -6,11 +6,11 @@ Create a Matter for a piece of legal work that needs its own Matter Manager, Tas
 
 Use a Legal Team Member or Administrator account. Have a title, a live Matter type, and the values that type requires. An Administrator controls the available [types and Fields](types-statuses-fields.md) and [Matter templates](matter-templates.md).
 
-If the work arrived as a Request, use [Request conversion](convert-request.md) and continue on the Matter it creates. Check for existing work before creating another Matter for the same request.
+If the work arrived as a Request, use [Request conversion](convert-request.md) and continue on the Matter it creates. AI preparation can offer a reviewed Conversion draft with source evidence when enabled; manual conversion remains available. The converting person becomes Matter Manager. Check for existing work before creating another Matter for the same request.
 
 ## Create the Matter
 
-Open **Matters** and select **New matter**. Enter **Title**, choose **Matter type**, and fill every Field marked required. Choose a **Matter Manager** or leave **Unassigned** until someone takes responsibility. Matter Managers must be active Legal Team Members or Administrators.
+Open **Matters** and select **New matter**. Enter **Title**, choose **Matter type**, and fill every Field marked required. The **Matter Manager** starts with you. Keep that selection, choose another eligible person, or clear it to **Unassigned**. Matter Managers must be active Legal Team Members or Administrators.
 
 Review **Priority**, **Risk**, **Description**, and **Confidential**. Priority starts at **Medium** and Risk at **Not assessed** unless a template supplies defaults. Complete any Entity or person reference Fields your type offers by selecting the intended record, rather than entering an identifier.
 

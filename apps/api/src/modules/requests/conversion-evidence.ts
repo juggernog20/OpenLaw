@@ -4,6 +4,7 @@ import { z } from "zod";
 import {
   and,
   contracts,
+  commentAttachments,
   documents,
   documentVersions,
   entities,
@@ -84,7 +85,11 @@ export async function conversionEvidence(
   db: Executor,
   user: AuthenticatedUser,
   source: Awaited<ReturnType<typeof conversionSources>>,
-  draft: { id: string; attachmentReads: ConversionAttachmentRead[] },
+  draft: {
+    id: string;
+    attachmentReads: ConversionAttachmentRead[];
+    originalCommentAttachments?: boolean;
+  },
   proposal: ConversionSuggestion | undefined,
 ): Promise<Evidence> {
   const citations: Evidence["citations"] = [];
@@ -107,6 +112,19 @@ export async function conversionEvidence(
     if (!read || !normalizeQuote(read.text).includes(normalizeQuote(citation.quote))) continue;
     const authorized = await authorizedAttachment(db, user, source, read);
     if (!authorized) continue;
+    let commentRoot: string | null = null;
+    if (
+      draft.originalCommentAttachments &&
+      !authorized.version &&
+      read.sourceId.startsWith("message-attachment:")
+    ) {
+      const [file] = await db
+        .select()
+        .from(commentAttachments)
+        .where(eq(commentAttachments.id, read.sourceId.slice("message-attachment:".length)));
+      if (file)
+        commentRoot = `/api/v1/comments/${file.commentId}/attachments/${file.id}?entityType=contract&entityId=${source.row.convertedContractId}`;
+    }
     const root = `/api/v1/requests/${source.row.number}/conversion-drafts/${draft.id}/sources/${encodeURIComponent(read.sourceId)}`;
     const versionRoot = authorized.version
       ? `/api/v1/documents/${authorized.version.documentId}/versions/${authorized.version.versionId}`
@@ -117,8 +135,12 @@ export async function conversionEvidence(
       text: read.text,
       quote: citation.quote,
       attachment: {
-        previewHref: read.previewRef ? `${versionRoot ?? root}/preview` : null,
-        downloadHref: `${versionRoot ?? root}/download`,
+        previewHref: read.previewRef
+          ? commentRoot
+            ? `${commentRoot}&preview=true`
+            : `${versionRoot ?? root}/preview`
+          : null,
+        downloadHref: commentRoot ?? `${versionRoot ?? root}/download`,
         documentId: authorized.version?.documentId ?? null,
         versionId: authorized.version?.versionId ?? null,
         method: read.method ?? null,

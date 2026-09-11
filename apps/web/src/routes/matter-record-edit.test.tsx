@@ -1381,6 +1381,28 @@ it("opens the mapped immutable source on the same Matter and retains an honest e
       if (call.url.pathname === "/api/v1/matters/options") return options();
       if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET")
         return json(200, record(flagged));
+      if (call.url.pathname === "/api/v1/matters/12/documents")
+        return json(200, {
+          documents: [
+            {
+              ...SEARCH_LANDING_DOCUMENT,
+              id: "promoted",
+              title: "Original correspondence.eml",
+              versions: [
+                {
+                  ...SEARCH_LANDING_DOCUMENT.versions[0],
+                  id: "original-version",
+                  originalFilename: "correspondence.eml",
+                  mimeType: "message/rfc822",
+                  renderFamily: "email",
+                },
+              ],
+            },
+          ],
+          nextCursor: null,
+        });
+      if (call.url.pathname === "/api/v1/documents/promoted/versions/original-version/email")
+        return problem(422, "The original email cannot be prepared.");
       if (call.url.pathname.includes("/conversion-evidence/"))
         return json(200, {
           available: true,
@@ -1406,18 +1428,20 @@ it("opens the mapped immutable source on the same Matter and retains an honest e
   const { router } = renderAt("/matters/12");
   const trigger = await screen.findByRole("button", { name: "View source evidence" });
   await user.click(trigger);
-  const panel = await screen.findByRole("dialog", { name: "Source document" });
+  const panel = await screen.findByRole("complementary", {
+    name: "Original correspondence.eml, version 3",
+  });
+  expect(screen.queryByRole("dialog", { name: "Source document" })).toBeNull();
   expect(router.state.location.pathname).toBe("/matters/12");
-  expect(within(panel).getByRole("link", { name: "Download" })).toHaveAttribute(
+  expect(within(panel).getAllByRole("link", { name: "Download" })[0]).toHaveAttribute(
     "href",
     "/api/v1/documents/promoted/versions/original-version/download",
   );
   expect(
-    within(panel).getByText(
-      "This source has no searchable passage preview. Read the quoted text and check the original file.",
+    await within(panel).findByText(
+      "This file could not be prepared for reading here. Download it to read it.",
     ),
   ).toBeVisible();
-  expect(within(panel).getByText("The original message says supplier dispute.")).toBeVisible();
   await user.keyboard("{Escape}");
   await waitFor(() => expect(trigger).toHaveFocus());
 });

@@ -37,6 +37,7 @@ export const aiConnector = pgTable(
     /** Write-only through the API and sealed under TECH-022. Ollama may leave it NULL. */
     apiKey: encryptedText("api_key"),
     model: text("model").notNull(),
+    contractConversionAnalysis: boolean("contract_conversion_analysis").notNull().default(false),
     contractPreparation: boolean("contract_preparation").notNull().default(false),
     matterPreparation: boolean("matter_preparation").notNull().default(false),
     disabledAt: timestamp("disabled_at", { withTimezone: true }),

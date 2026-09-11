@@ -1181,6 +1181,11 @@ function ContractRecord() {
   const frozen = archived || !canEdit;
   const analysisConfirmable = canEdit && !archived;
   const analysisRunnable = analysisConfirmable && saved.endedAt === null;
+  useEffect(() => {
+    if (analysis.latestRun?.state !== "pending") return;
+    const timer = setInterval(() => void revalidate(), 2000);
+    return () => clearInterval(timer);
+  }, [analysis.latestRun?.state, revalidate]);
   const canRunAnalysis =
     analysis.available && analysisRunnable && analysis.latestRun?.state !== "pending";
   const unverifiedMarker = (slug: string) =>
@@ -1190,17 +1195,20 @@ function ContractRecord() {
       saved.aiUnverified?.[slug] ??
       (slug.startsWith("field:") ? saved.aiUnverified?.[slug.slice(6)] : undefined);
     if (!marker) return null;
-    if (marker.draftId)
+    if (marker.draftId || ("sourceContext" in marker && marker.sourceContext)) {
+      const evidenceSlug = marker.runId && slug.startsWith("field:") ? slug.slice(6) : slug;
       return (
         <ConversionEvidence
-          key={`${marker.draftId}:${slug}`}
+          key={`${marker.draftId ?? marker.runId}:${slug}`}
+          runId={marker.runId}
           module="contract"
           showMarker={false}
           number={saved.number}
-          slug={slug}
-          onConfirm={analysisConfirmable ? () => confirmAnalysisField(slug) : undefined}
+          slug={evidenceSlug}
+          onConfirm={analysisConfirmable ? () => confirmAnalysisField(evidenceSlug) : undefined}
         />
       );
+    }
     if (!marker.runId) return null;
     if (slug.startsWith("field:")) slug = slug.slice(6);
     const coreLabel = coreAnalysisLabel(slug);
@@ -1439,14 +1447,19 @@ function ContractRecord() {
     setFieldError((current) => ({ ...current, [key]: detail }));
   }
 
-  async function runAnalysis(): Promise<void> {
+  async function runAnalysis(retryRunId?: string): Promise<void> {
     if (runningAnalysis) return;
     setRunningAnalysis(true);
     setAnalysisRunError(undefined);
-    const result = await api
-      .POST("/api/v1/contracts/{number}/analysis", {
-        params: { path: { number: saved.number } },
-      })
+    const result = await (
+      retryRunId
+        ? api.POST("/api/v1/contracts/{number}/analysis/{runId}/retry", {
+            params: { path: { number: saved.number, runId: retryRunId } },
+          })
+        : api.POST("/api/v1/contracts/{number}/analysis", {
+            params: { path: { number: saved.number } },
+          })
+    )
       .catch(() => undefined)
       .finally(() => setRunningAnalysis(false));
     if (!result?.data) {
@@ -2183,6 +2196,7 @@ function ContractRecord() {
           non-Administrator to their profile, and a door that opens on a
           redirect is worse than no door. */}
         <RecordApplets
+          recordKey={saved.id}
           applets={
             user.role === "administrator"
               ? [teamApplet, chatApplet, historyApplet, SETTINGS_APPLET]
@@ -2876,6 +2890,7 @@ function ContractRecord() {
                   running={runningAnalysis}
                   runError={analysisRunError}
                   onRun={() => void runAnalysis()}
+                  onRetry={() => void runAnalysis(analysis.latestRun?.id)}
                   onConfirm={confirmAnalysisField}
                   onConfirmAll={confirmAllAnalysisFields}
                 />

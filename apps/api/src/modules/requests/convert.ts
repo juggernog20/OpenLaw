@@ -71,6 +71,7 @@
  * anywhere leaves the conversation exactly where the requester left it.
  */
 
+import { reserveConversionAnalysis } from "../../pipeline/conversion-analysis.js";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
@@ -160,6 +161,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
             description: z.string().trim().max(10000).nullable().optional(),
             conversionDraftId: z.string().optional(),
             aiAccepted: z.array(z.string()).max(100).optional(),
+            counterpartyCleared: z.boolean().optional(),
             /** Overrides the configured target type. */
             contractTypeId: z.string().min(1).optional(),
             /** The matter sibling of contractTypeId. Supplying this on a
@@ -214,7 +216,8 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
       // of the commit: the blobs it copied are taken away when the act
       // refuses, and the rounds it appended are asked for their
       // derivations once the act has committed (DOC-012, DOC-004).
-      return withPromotedPaper(
+      let analysisRun: Awaited<ReturnType<typeof reserveConversionAnalysis>> = null;
+      const converted = await withPromotedPaper(
         {
           storage: app.storage,
           notifier: app.notifier,
@@ -422,6 +425,28 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                 .set({ aiUnverified: Object.keys(flags).length ? flags : null })
                 .where(eq(table.id, born.row.id));
             }
+            if (target.module === "contract") {
+              await tx
+                .update(contracts)
+                .set({
+                  analysisHumanFields: [
+                    ...new Set([
+                      ...Object.keys(carried),
+                      ...Object.keys(answers ?? {}),
+                      ...(counterpartyName !== undefined || request.body.counterpartyCleared
+                        ? ["counterparty"]
+                        : []),
+                    ]),
+                  ],
+                })
+                .where(eq(contracts.id, born.row.id));
+              analysisRun = await reserveConversionAnalysis(tx, {
+                contractId: born.row.id,
+                requestId: held.id,
+                targetTypeId: target.typeId,
+                actorId: request.user.id,
+              });
+            }
             // CMT-001's thread, moved onto the record beside the paper
             // (#422). Tiers are preserved because the write does not
             // touch them, and each reader's place in the conversation
@@ -494,6 +519,13 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
             });
           }),
       );
+      // The committed run is the outbox. Reconciliation retries a lost queue ask.
+      const queuedRun = analysisRun as Awaited<ReturnType<typeof reserveConversionAnalysis>>;
+      if (queuedRun)
+        void app.jobs
+          .requestContractAnalysis(queuedRun.contractId, queuedRun.id)
+          .catch(() => false);
+      return converted;
     },
   );
 };

@@ -26,6 +26,7 @@ import {
   count,
   eq,
   conversionDrafts,
+  contractAnalysisRuns,
   entities,
   entityTypeFields,
   fields,
@@ -399,10 +400,12 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
             select exists (
               select 1 from (select ai_unverified from ${matters} union all select ai_unverified from ${contracts}) m
               cross join lateral jsonb_each(coalesce(m.ai_unverified, '{}'::jsonb)) marker
-              join ${conversionDrafts} draft on draft.id = marker.value->>'draftId'
-              cross join lateral jsonb_array_elements(coalesce(draft.suggestions->marker.key->'citations', '[]'::jsonb)) citation
-              where citation->>'sourceId' = 'field:' || draft.request_id || ':' || ${target.slug}
+              left join ${conversionDrafts} draft on draft.id = marker.value->>'draftId'
+              left join ${contractAnalysisRuns} run on run.id = marker.value->>'runId'
+              cross join lateral jsonb_array_elements(coalesce(draft.suggestions->marker.key->'citations', run.source_context->'suggestions'->marker.key->'citations', '[]'::jsonb)) citation
+              where citation->>'sourceId' = 'field:' || coalesce(draft.request_id, run.source_context->>'requestId') || ':' || ${target.slug}
                 and marker.key <> ${`field:${target.slug}`}
+                and marker.key <> ${target.slug}
             ) as present
           `);
           if (dependencies.rows[0]?.present)
