@@ -30,7 +30,7 @@ export const aiFieldPrompts = pgTable("ai_field_prompts", {
     .$onUpdate(() => new Date()),
 });
 
-/** One reading of one Version against one Contract field schema. */
+/** One extraction against one Contract field schema, with its original source context. */
 export const contractAnalysisRuns = pgTable(
   "contract_analysis_runs",
   {
@@ -48,9 +48,12 @@ export const contractAnalysisRuns = pgTable(
     preset: text("preset", { enum: AI_PRESETS }).notNull(),
     model: text("model").notNull(),
     truncated: boolean("truncated").notNull().default(false),
+    /** Null selects Document analysis; a value selects Request-context Analysis. */
     sourceContext: jsonb("source_context").$type<ConversionAnalysisContext>(),
     outcome: jsonb("outcome").$type<ContractAnalysisOutcome>(),
     failure: text("failure"),
+    /** Conversion workers renew this lease while reading sources; startedAt remains the claim token. */
+    leaseAt: timestamp("lease_at", { withTimezone: true }),
     startedAt: timestamp("started_at", { withTimezone: true }),
     finishedAt: timestamp("finished_at", { withTimezone: true }),
   },

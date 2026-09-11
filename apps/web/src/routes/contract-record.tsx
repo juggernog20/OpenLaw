@@ -1195,7 +1195,8 @@ function ContractRecord() {
       saved.aiUnverified?.[slug] ??
       (slug.startsWith("field:") ? saved.aiUnverified?.[slug.slice(6)] : undefined);
     if (!marker) return null;
-    if (marker.draftId || ("sourceContext" in marker && marker.sourceContext))
+    if (marker.draftId || ("sourceContext" in marker && marker.sourceContext)) {
+      const evidenceSlug = marker.runId && slug.startsWith("field:") ? slug.slice(6) : slug;
       return (
         <ConversionEvidence
           key={`${marker.draftId ?? marker.runId}:${slug}`}
@@ -1204,10 +1205,11 @@ function ContractRecord() {
           module="contract"
           showMarker={false}
           number={saved.number}
-          slug={marker.runId && slug.startsWith("field:") ? slug.slice(6) : slug}
-          onConfirm={analysisConfirmable ? () => confirmAnalysisField(slug) : undefined}
+          slug={evidenceSlug}
+          onConfirm={analysisConfirmable ? () => confirmAnalysisField(evidenceSlug) : undefined}
         />
       );
+    }
     if (!marker.runId) return null;
     if (slug.startsWith("field:")) slug = slug.slice(6);
     const coreLabel = coreAnalysisLabel(slug);

@@ -248,6 +248,8 @@ export const contracts = pgTable(
       .default({}),
     /** CTR-008's evidence for values a run wrote and no person has confirmed. */
     aiUnverified: jsonb("ai_unverified").$type<AiUnverifiedMap>(),
+    /** Bare core/catalog slugs (counterparty names its link slot), appended by conversion, edits and confirmations.
+     * [] means no explicit human claim; claims survive clears and later runs. Marker field: prefixes are removed on append. */
     analysisHumanFields: jsonb("analysis_human_fields").$type<string[]>().notNull().default([]),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })

@@ -26,7 +26,7 @@ import {
   reserveConversionAnalysis,
   conversionAnalysisEnabled,
 } from "../../pipeline/conversion-analysis.js";
-import { requestAnalysisEvidence } from "./request-evidence.js";
+import { requestAnalysisEvidence, requestAnalysisEvidenceReader } from "./request-evidence.js";
 import { EvidenceSchema } from "../requests/conversion-evidence.js";
 import { analysisTargetText } from "../../pipeline/contract-analysis.js";
 
@@ -100,8 +100,9 @@ export async function latestAnalysisRun(db: Executor, contractId: string, user: 
     : [];
   if (row.run.sourceContext && row.run.outcome?.results) {
     const results = [];
+    const readEvidence = await requestAnalysisEvidenceReader(db, user, row.run);
     for (const result of row.run.outcome.results) {
-      const evidence = await requestAnalysisEvidence(db, user, row.run, result.slug);
+      const evidence = await readEvidence(result.slug);
       results.push(evidence.available ? result : { ...result, value: null, evidence: null });
     }
     return {

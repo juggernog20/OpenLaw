@@ -1938,7 +1938,12 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         .update(contracts)
         .set({
           aiUnverified: Object.keys(remaining).length > 0 ? remaining : null,
-          analysisHumanFields: [...new Set([...current.row.analysisHumanFields, ...slugs])],
+          analysisHumanFields: [
+            ...new Set([
+              ...current.row.analysisHumanFields,
+              ...slugs.map((slug) => (slug.startsWith("field:") ? slug.slice(6) : slug)),
+            ]),
+          ],
         })
         .where(eq(contracts.id, current.row.id));
       await recordActivity(
@@ -2598,7 +2603,12 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         if (humanWrittenSlugs.size > 0)
           patch.analysisHumanFields = [
-            ...new Set([...target.analysisHumanFields, ...humanWrittenSlugs]),
+            ...new Set([
+              ...target.analysisHumanFields,
+              ...[...humanWrittenSlugs].map((slug) =>
+                slug.startsWith("field:") ? slug.slice(6) : slug,
+              ),
+            ]),
           ];
         if (target.aiUnverified && humanWrittenSlugs.size > 0) {
           const remaining = { ...target.aiUnverified };
@@ -3241,12 +3251,16 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           )
           .returning();
         if (!removed) throw httpError(404, "That counterparty is not on this contract.");
-        await tx
-          .update(contracts)
-          .set({
-            analysisHumanFields: [...new Set([...current.row.analysisHumanFields, "counterparty"])],
-          })
-          .where(eq(contracts.id, current.row.id));
+        if (removed.isPrimary && !current.row.analysisHumanFields.includes("counterparty")) {
+          const [updated] = await tx
+            .update(contracts)
+            .set({
+              analysisHumanFields: [...current.row.analysisHumanFields, "counterparty"],
+            })
+            .where(eq(contracts.id, current.row.id))
+            .returning();
+          Object.assign(current.row, updated);
+        }
 
         const [party] = await tx
           .select({ name: counterparties.name })

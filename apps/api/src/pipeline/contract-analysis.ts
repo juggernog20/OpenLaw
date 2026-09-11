@@ -306,8 +306,7 @@ function hasValue(row: Contract, slug: string): boolean {
 }
 
 function writable(row: Contract, flags: AiUnverifiedMap, slug: string, termTypeWasSet: boolean) {
-  if (row.analysisHumanFields.includes(slug) || row.analysisHumanFields.includes(`field:${slug}`))
-    return false;
+  if (row.analysisHumanFields.includes(slug)) return false;
   if (flags[`field:${slug}`]?.draftId) return false;
   if (flags[slug]) return true;
   if (slug === "term_type") return !termTypeWasSet;
@@ -766,7 +765,15 @@ export async function handleContractAnalysis(
       ? "Request-context Analysis could not finish. Retry after checking the Type, sources and AI settings."
       : reasonOf(error);
     await failRun(deps, run.id, reason, run.startedAt);
-    deps.log.error({ runId: run.id, reason }, "contract analysis failed");
+    deps.log.error(
+      {
+        runId: run.id,
+        reason,
+        errorType: error instanceof Error ? error.name : typeof error,
+        ...(error instanceof AnalysisTargetError ? { cause: error.message } : {}),
+      },
+      "contract analysis failed",
+    );
   }
 }
 
@@ -775,98 +782,127 @@ async function handleRequestAnalysis(deps: ContractAnalysisDeps, run: ContractAn
     throw new AnalysisTargetError("Source readers unavailable.");
   const [claimed] = await deps.db
     .update(contractAnalysisRuns)
-    .set({ startedAt: new Date() })
+    .set({ startedAt: new Date(), leaseAt: new Date() })
     .where(
       and(
         eq(contractAnalysisRuns.id, run.id),
         eq(contractAnalysisRuns.state, "pending"),
         or(
           isNull(contractAnalysisRuns.startedAt),
-          lt(contractAnalysisRuns.startedAt, new Date(Date.now() - 180_000)),
+          lt(
+            sql`coalesce(${contractAnalysisRuns.leaseAt}, ${contractAnalysisRuns.startedAt})`,
+            new Date(Date.now() - 180_000),
+          ),
         ),
       ),
     )
     .returning();
   if (!claimed) return;
   run.startedAt = claimed.startedAt;
-  const { context, contract } = await requestAnalysisContext(deps.db, run);
-  const targets = await buildAnalysisTargets(deps.db, contract.contractTypeId);
-  const provider = await deps.resolveAiProvider();
-  if (!provider) throw new AiConfigError("AI connector disabled.");
-  await deps.db
-    .update(contractAnalysisRuns)
-    .set({ model: provider.model, preset: provider.preset })
-    .where(eq(contractAnalysisRuns.id, run.id));
-  const attachmentReads = await readConversionAttachments(
-    { storage: deps.storage, docEngine: deps.docEngine },
-    context.attachments,
-    run.id,
-    ATTACHMENT_LIMITS.totalCharacters -
-      context.sources.reduce((n, source) => n + source.text.length, 0),
-  );
-  withAttachmentReads(context, attachmentReads);
-  const beforeCall = await requestAnalysisContext(deps.db, run);
-  if (
-    beforeCall.context.snapshot !== context.snapshot ||
-    hash(await buildAnalysisTargets(deps.db, contract.contractTypeId)) !== hash(targets)
-  )
-    throw new AnalysisTargetError("Request sources or Contract Fields changed before extraction.");
-  let timer: NodeJS.Timeout | undefined;
-  const answers = await Promise.race([
-    provider.extract(context.sources, targets),
-    new Promise<never>((_, reject) => {
-      timer = setTimeout(() => reject(new AnalysisTargetError("Analysis timed out.")), 125_000);
-    }),
-  ]).finally(() => clearTimeout(timer));
-  const suggestions: Record<string, ConversionSuggestion> = {};
-  const checked: AiExtraction[] = [];
-  const conflicted = new Set(
-    answers.filter((answer) => answer.conflict).map((answer) => answer.slug),
-  );
-  for (const answer of answers) {
+  let renewing = Promise.resolve();
+  const heartbeat = setInterval(() => {
+    renewing = renewing
+      .then(async () => {
+        await deps.db
+          .update(contractAnalysisRuns)
+          .set({ leaseAt: new Date() })
+          .where(
+            and(
+              eq(contractAnalysisRuns.id, run.id),
+              eq(contractAnalysisRuns.state, "pending"),
+              eq(contractAnalysisRuns.startedAt, claimed.startedAt!),
+            ),
+          );
+      })
+      .catch(() => {
+        deps.log.warn({ runId: run.id }, "conversion analysis lease renewal failed");
+      });
+  }, 30_000);
+  try {
+    const { context, contract } = await requestAnalysisContext(deps.db, run);
+    const targets = await buildAnalysisTargets(deps.db, contract.contractTypeId);
+    const provider = await deps.resolveAiProvider();
+    if (!provider) throw new AiConfigError("AI connector disabled.");
+    await deps.db
+      .update(contractAnalysisRuns)
+      .set({ model: provider.model, preset: provider.preset })
+      .where(eq(contractAnalysisRuns.id, run.id));
+    const attachmentReads = await readConversionAttachments(
+      { storage: deps.storage, docEngine: deps.docEngine },
+      context.attachments,
+      run.id,
+      ATTACHMENT_LIMITS.totalCharacters -
+        context.sources.reduce((n, source) => n + source.text.length, 0),
+    );
+    withAttachmentReads(context, attachmentReads);
+    const beforeCall = await requestAnalysisContext(deps.db, run);
     if (
-      conflicted.has(answer.slug) ||
-      answer.conflict ||
-      !targets.some((target) => target.slug === answer.slug)
+      beforeCall.context.snapshot !== context.snapshot ||
+      hash(await buildAnalysisTargets(deps.db, contract.contractTypeId)) !== hash(targets)
     )
-      continue;
-    const citations = answer.citations?.length
-      ? answer.citations
-      : answer.sourceId && answer.evidence
-        ? [{ sourceId: answer.sourceId, quote: answer.evidence }]
-        : [];
-    if (!citations.length || citations.length > 20) continue;
-    const valid = citations.flatMap((citation) => {
-      const source = context.sources.find((source) => source.id === citation.sourceId);
-      return source &&
-        citation.quote.trim() &&
-        citation.quote.length <= 4000 &&
-        normalizeQuote(source.text).includes(normalizeQuote(citation.quote))
-        ? [{ ...citation, revision: source.revision }]
-        : [];
-    });
-    if (valid.length !== citations.length) continue;
-    suggestions[answer.slug] = { value: JSON.stringify(answer.value) ?? "", citations: valid };
-    checked.push({ ...answer, evidence: valid.map((citation) => citation.quote).join("\n") });
+      throw new AnalysisTargetError(
+        "Request sources or Contract Fields changed before extraction.",
+      );
+    let timer: NodeJS.Timeout | undefined;
+    const answers = await Promise.race([
+      provider.extract(context.sources, targets),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new AnalysisTargetError("Analysis timed out.")), 125_000);
+      }),
+    ]).finally(() => clearTimeout(timer));
+    const suggestions: Record<string, ConversionSuggestion> = {};
+    const checked: AiExtraction[] = [];
+    const conflicted = new Set(
+      answers.filter((answer) => answer.conflict).map((answer) => answer.slug),
+    );
+    for (const answer of answers) {
+      if (
+        conflicted.has(answer.slug) ||
+        answer.conflict ||
+        !targets.some((target) => target.slug === answer.slug)
+      )
+        continue;
+      const citations = answer.citations?.length
+        ? answer.citations
+        : answer.sourceId && answer.evidence
+          ? [{ sourceId: answer.sourceId, quote: answer.evidence }]
+          : [];
+      if (!citations.length || citations.length > 20) continue;
+      const valid = citations.flatMap((citation) => {
+        const source = context.sources.find((source) => source.id === citation.sourceId);
+        return source &&
+          citation.quote.trim() &&
+          citation.quote.length <= 4000 &&
+          normalizeQuote(source.text).includes(normalizeQuote(citation.quote))
+          ? [{ ...citation, revision: source.revision }]
+          : [];
+      });
+      if (valid.length !== citations.length) continue;
+      suggestions[answer.slug] = { value: JSON.stringify(answer.value) ?? "", citations: valid };
+      checked.push({ ...answer, evidence: valid.map((citation) => citation.quote).join("\n") });
+    }
+    const sourceContext: ConversionAnalysisContext = {
+      ...run.sourceContext!,
+      attachmentReads,
+      suggestions,
+      warnings: context.warnings,
+    };
+    await applyAnswers(
+      deps,
+      { ...run, sourceContext, model: provider.model, preset: provider.preset },
+      {
+        contractId: contract.id,
+        contractTypeId: contract.contractTypeId,
+        versionId: "",
+        text: "",
+      },
+      targets,
+      checked,
+      provider.model,
+      context.snapshot,
+    );
+  } finally {
+    clearInterval(heartbeat);
+    await renewing;
   }
-  const sourceContext: ConversionAnalysisContext = {
-    ...run.sourceContext!,
-    attachmentReads,
-    suggestions,
-    warnings: context.warnings,
-  };
-  await applyAnswers(
-    deps,
-    { ...run, sourceContext, model: provider.model, preset: provider.preset },
-    {
-      contractId: contract.id,
-      contractTypeId: contract.contractTypeId,
-      versionId: "",
-      text: "",
-    },
-    targets,
-    checked,
-    provider.model,
-    context.snapshot,
-  );
 }

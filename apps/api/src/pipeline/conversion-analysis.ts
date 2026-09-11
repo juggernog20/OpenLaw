@@ -16,6 +16,7 @@ import {
   eq,
   isNull,
   lt,
+  sql,
   or,
   users,
   type ContractAnalysisRun,
@@ -70,7 +71,10 @@ export async function sweepConversionAnalysis(db: Db, jobs: JobQueue) {
         eq(contractAnalysisRuns.state, "pending"),
         or(
           isNull(contractAnalysisRuns.startedAt),
-          lt(contractAnalysisRuns.startedAt, new Date(Date.now() - 180_000)),
+          lt(
+            sql`coalesce(${contractAnalysisRuns.leaseAt}, ${contractAnalysisRuns.startedAt})`,
+            new Date(Date.now() - 180_000),
+          ),
         ),
       ),
     )

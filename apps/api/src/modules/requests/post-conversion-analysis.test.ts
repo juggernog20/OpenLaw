@@ -409,3 +409,75 @@ it("keeps an explicitly cleared Counterparty empty after conversion", async () =
     .where(eq(contractCounterparties.contractId, contract.id));
   expect(linked).toEqual([]);
 });
+
+it("preserves an explicit clear carried from saved Request answers", async () => {
+  const { contract, runs } = await convert({}, async (id) => {
+    await harness.db
+      .update(requests)
+      .set({ customFields: { post_clear: "" } })
+      .where(eq(requests.id, id));
+    answers.post_clear = {
+      value: "October 1",
+      sourceId: `request:${id}:description`,
+      evidence: "October 1",
+    };
+  });
+  expect(contract.analysisHumanFields).toContain("post_clear");
+  await execute(runs[0]!.id);
+  const [stored] = await harness.db.select().from(contracts).where(eq(contracts.id, contract.id));
+  expect(stored!.customFields.post_clear).toBeUndefined();
+});
+
+it("renews an active worker lease before a sweep can dispatch a competing extraction", async () => {
+  const { sweepConversionAnalysis } = await import("../../pipeline/conversion-analysis.js");
+  const { runs } = await convert();
+  const run = runs[0]!;
+  const extract = provider.extract.bind(provider);
+  let release!: () => void;
+  let started!: () => void;
+  const begun = new Promise<void>((resolve) => {
+    started = resolve;
+  });
+  const hold = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const spy = vi.spyOn(provider, "extract").mockImplementationOnce(async (...args) => {
+    started();
+    await hold;
+    return extract(...args);
+  });
+  vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+  const executing = execute(run.id);
+  try {
+    await begun;
+    const old = new Date(Date.now() - 240_000);
+    await harness.db
+      .update(contractAnalysisRuns)
+      .set({ leaseAt: old })
+      .where(eq(contractAnalysisRuns.id, run.id));
+    await vi.advanceTimersByTimeAsync(30_000);
+    await vi.waitFor(async () => {
+      const [held] = await harness.db
+        .select()
+        .from(contractAnalysisRuns)
+        .where(eq(contractAnalysisRuns.id, run.id));
+      expect(held!.leaseAt!.valueOf()).toBeGreaterThan(old.valueOf());
+    });
+    const dispatch = vi.spyOn(harness.app.jobs, "requestContractAnalysis");
+    await sweepConversionAnalysis(harness.db, harness.app.jobs);
+    expect(dispatch.mock.calls.some(([, id]) => id === run.id)).toBe(false);
+    await execute(run.id);
+    expect(spy).toHaveBeenCalledTimes(1);
+    dispatch.mockRestore();
+  } finally {
+    release();
+    await executing;
+    vi.useRealTimers();
+    spy.mockRestore();
+  }
+  const [ready] = await harness.db
+    .select()
+    .from(contractAnalysisRuns)
+    .where(eq(contractAnalysisRuns.id, run.id));
+  expect(ready!.state).toBe("ready");
+});

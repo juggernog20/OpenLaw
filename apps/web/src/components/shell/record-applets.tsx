@@ -205,6 +205,7 @@ export function RecordApplets({
           input.versionId,
         );
         if (!landing || input.signal?.aborted) return false;
+        setCitationCovers(true);
         setCitation({ landing, recordKey, quote: input.quote, trigger: input.trigger });
         return true;
       }}

@@ -1506,6 +1506,28 @@ describe("the /contracts/:number record page", () => {
       expect(screen.queryByRole("button", { name: "Run analysis" })).not.toBeInTheDocument();
     });
 
+    it("confirms a Request-context custom Field with its bare Analysis slug", async () => {
+      const api = recordApi(
+        contractRow({
+          customFields: { payment_terms: "Net 30" },
+          aiUnverified: {
+            payment_terms: {
+              runId: "request-run",
+              sourceContext: true,
+              writtenAt: "2026-09-11T00:00:00Z",
+            },
+          },
+        }),
+      );
+      stubApi({ signedIn: MEMBER, extra: api.handler });
+      renderAt("/contracts/42/fields");
+      const user = userEvent.setup();
+      await user.click(await screen.findByRole("button", { name: "Confirm" }));
+      await waitFor(() => expect(api.posts).toContain("confirm payment_terms"));
+      expect(screen.queryByText("Unverified")).toBeNull();
+      expect(screen.getByLabelText("Payment terms")).toHaveValue("Net 30");
+    });
+
     it("draws and clears a flagged custom Field when its typed edit commits", async () => {
       const api = recordApi(
         contractRow({
@@ -8172,7 +8194,7 @@ describe("the doc panel (M12/2)", () => {
         },
       }),
     );
-    const quote = "The agreement is for a fixed term";
+    const quote = "The first termination right is on this page.";
     stubApi({
       signedIn: MEMBER,
       extra: (call) => {
@@ -8207,6 +8229,8 @@ describe("the doc panel (M12/2)", () => {
     expect(
       await screen.findByRole("complementary", { name: /master services agreement, version 1/ }),
     ).toBeVisible();
+    expect(await screen.findByRole("searchbox", { name: "Find in document" })).toHaveValue(quote);
+    expect(await screen.findByText("1 of 1")).toBeVisible();
     expect(screen.queryByRole("dialog", { name: "Source document" })).toBeNull();
     expect(router.state.location.pathname).toBe("/contracts/42");
     await user.click(screen.getByRole("button", { name: "Close the document" }));
@@ -11608,6 +11632,7 @@ it("revalidates post-conversion Analysis without losing a typed title", async ()
   await user.clear(title);
   await user.type(title, "Unsaved human title");
   expect(screen.getByText(/Filling Contract Fields from the Request/)).toBeVisible();
+  api.updateRow({ description: "Revalidated Contract description." });
   api.updateAnalysis({
     available: true,
     latestRun: analysisRun({ trigger: "conversion", versionId: null, versionNumber: null }),
@@ -11616,7 +11641,8 @@ it("revalidates post-conversion Analysis without losing a typed title", async ()
     () => expect(screen.getByText(/Request-context Analysis completed/)).toBeVisible(),
     { timeout: 4000 },
   );
-  expect(title).toHaveValue("Unsaved human title");
+  expect(screen.getByLabelText("Description")).toHaveValue("Revalidated Contract description.");
+  expect(screen.getByLabelText("Title")).toHaveValue("Unsaved human title");
 });
 
 it("offers a safe retry for a failed Request-context Analysis run", async () => {

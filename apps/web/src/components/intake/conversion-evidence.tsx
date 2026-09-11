@@ -43,17 +43,20 @@ export function ConversionEvidence({
   async function read() {
     const token = ++currentRead.current;
     sourceRead.current?.abort();
-    sourceRead.current = new AbortController();
+    const controller = new AbortController();
+    sourceRead.current = controller;
     setEvidence(null);
     openedDocument.current = false;
     try {
       const result = runId
         ? await api.GET("/api/v1/contracts/{number}/analysis/{runId}/evidence/{slug}", {
             params: { path: { number, runId, slug } },
+            signal: controller.signal,
           })
         : draftId
           ? await api.GET("/api/v1/requests/{number}/conversion-drafts/{draftId}/evidence/{slug}", {
               params: { path: { number, draftId, slug } },
+              signal: controller.signal,
             })
           : await api.GET(
               module === "matter"
@@ -61,6 +64,7 @@ export function ConversionEvidence({
                 : "/api/v1/contracts/{number}/conversion-evidence/{slug}",
               {
                 params: { path: { number, slug } },
+                signal: controller.signal,
               },
             );
       if (token !== currentRead.current) return;
@@ -74,6 +78,7 @@ export function ConversionEvidence({
         }
       }
     } catch {
+      if (token !== currentRead.current || controller.signal.aborted) return;
       setEvidence({ available: false, citations: [] });
     }
   }
