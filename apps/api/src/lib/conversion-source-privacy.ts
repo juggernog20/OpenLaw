@@ -2,6 +2,7 @@
 /** INT-008: a narrowed source must not leave unreviewed facts in broader record fields. */
 import {
   conversionDrafts,
+  contractAnalysisRuns,
   contracts,
   matters,
   requestAttachments,
@@ -16,8 +17,9 @@ export async function assertConversionDocumentCanNarrow(db: Executor, documentId
     select exists (
       select 1 from (select ai_unverified from ${matters} union all select ai_unverified from ${contracts}) m
       cross join lateral jsonb_each(coalesce(m.ai_unverified, '{}'::jsonb)) marker
-      join ${conversionDrafts} draft on draft.id = marker.value->>'draftId'
-      cross join lateral jsonb_array_elements(coalesce(draft.suggestions->marker.key->'citations', '[]'::jsonb)) citation
+      left join ${conversionDrafts} draft on draft.id = marker.value->>'draftId'
+      left join ${contractAnalysisRuns} run on run.id = marker.value->>'runId'
+      cross join lateral jsonb_array_elements(coalesce(draft.suggestions->marker.key->'citations', run.source_context->'suggestions'->marker.key->'citations', '[]'::jsonb)) citation
       where citation->>'sourceId' in (
         select 'attachment:' || ${requestAttachments.id} from ${requestAttachments}
         join ${documentVersions} on ${documentVersions.id} = ${requestAttachments.promotedVersionId}

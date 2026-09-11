@@ -111,7 +111,10 @@ export function SettingsAiAnalysisPage() {
   }
 
   async function saveWorkflow(
-    patch: { matterPreparation: boolean } | { contractPreparation: boolean },
+    patch:
+      | { matterPreparation: boolean }
+      | { contractPreparation: boolean }
+      | { contractConversionAnalysis: boolean },
   ): Promise<void> {
     note("workflow", "saving");
     try {
@@ -517,6 +520,30 @@ export function SettingsAiAnalysisPage() {
               checked={connector.contractPreparation}
               disabled={!connector.enabled || status.workflow === "saving"}
               onCheckedChange={(contractPreparation) => void saveWorkflow({ contractPreparation })}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-4 p-4">
+            <div>
+              <Label htmlFor="contract-conversion-analysis">
+                <FormattedMessage
+                  id="conversion.settingsAnalysis"
+                  defaultMessage="Fill Contract Fields after conversion"
+                />
+              </Label>
+              <p className="text-sm text-muted">
+                <FormattedMessage
+                  id="conversion.settingsAnalysisHint"
+                  defaultMessage="Run Analysis with the saved Request, conversation and supporting sources. Also works with manual conversion."
+                />
+              </p>
+            </div>
+            <Switch
+              id="contract-conversion-analysis"
+              checked={connector.contractConversionAnalysis}
+              disabled={!connector.enabled || status.workflow === "saving"}
+              onCheckedChange={(contractConversionAnalysis) =>
+                void saveWorkflow({ contractConversionAnalysis })
+              }
             />
           </div>
           <StatusNote status={status.workflow} detail={detail.workflow} />

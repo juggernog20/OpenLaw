@@ -167,7 +167,10 @@ function legacyResults(analysis: ContractAnalysis): ContractAnalysisResult[] {
   ];
 }
 
-function RunSentence({ analysis }: Readonly<{ analysis: ContractAnalysis }>) {
+function RunSentence({
+  analysis,
+  hasDraftValues,
+}: Readonly<{ analysis: ContractAnalysis; hasDraftValues: boolean }>) {
   const intl = useIntl();
   const notRecorded = intl.formatMessage({
     id: "contracts.record.notRecorded",
@@ -175,8 +178,37 @@ function RunSentence({ analysis }: Readonly<{ analysis: ContractAnalysis }>) {
   });
   const run = analysis.latestRun;
   if (!run) {
+    if (hasDraftValues)
+      return (
+        <FormattedMessage
+          id="contracts.analysis.conversionValues"
+          defaultMessage="Conversion draft values are ready for review. Confirm or edit each Unverified value."
+        />
+      );
     return (
       <FormattedMessage id="contracts.analysis.notRun" defaultMessage="No analysis has run yet." />
+    );
+  }
+  if (run.trigger === "conversion") {
+    if (run.state === "pending")
+      return (
+        <FormattedMessage
+          id="contracts.analysis.requestPending"
+          defaultMessage="Filling Contract Fields from the Request and supporting sources…"
+        />
+      );
+    if (run.state === "failed")
+      return (
+        <FormattedMessage
+          id="contracts.analysis.requestFailed"
+          defaultMessage="Request-context Analysis failed. The Contract was created successfully. Check the Type, sources and AI settings, then retry."
+        />
+      );
+    return (
+      <FormattedMessage
+        id="contracts.analysis.requestReady"
+        defaultMessage="Request-context Analysis completed. Review the Unverified values and their source evidence."
+      />
     );
   }
   if (run.state === "pending") {
@@ -219,6 +251,7 @@ export function AiAnalysisCard({
   running,
   runError,
   onRun,
+  onRetry,
   onConfirm,
   onConfirmAll,
 }: Readonly<{
@@ -232,6 +265,7 @@ export function AiAnalysisCard({
   running: boolean;
   runError?: string;
   onRun: () => void;
+  onRetry?: () => void;
   onConfirm: (slug: string) => Promise<string | undefined>;
   onConfirmAll: () => Promise<string | undefined>;
 }>) {
@@ -239,7 +273,7 @@ export function AiAnalysisCard({
   const results = useMemo(() => legacyResults(analysis), [analysis]);
   const flagged = Object.keys(contract.aiUnverified ?? {});
 
-  if (!analysis.available && flagged.length === 0) return null;
+  if (!analysis.available && flagged.length === 0 && !analysis.latestRun) return null;
 
   return (
     <section
@@ -250,6 +284,23 @@ export function AiAnalysisCard({
         <h2 id="contract-ai-analysis-heading" className="me-auto text-base font-semibold">
           <FormattedMessage id="contracts.analysis.heading" defaultMessage="AI analysis" />
         </h2>
+        {canRun &&
+          analysis.latestRun?.trigger === "conversion" &&
+          analysis.latestRun.state === "failed" &&
+          onRetry && (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={running}
+              onClick={onRetry}
+            >
+              <FormattedMessage
+                id="contracts.analysis.retryRequest"
+                defaultMessage="Retry Request-context Analysis"
+              />
+            </Button>
+          )}
         {canRun && (
           <Button type="button" variant="secondary" size="sm" disabled={running} onClick={onRun}>
             <Sparkles size={16} aria-hidden="true" />
@@ -265,9 +316,20 @@ export function AiAnalysisCard({
           />
         )}
       </header>
-      <p className="px-4 py-3 text-sm text-secondary">
-        <RunSentence analysis={analysis} />
+      <p role="status" className="px-4 py-3 text-sm text-secondary">
+        <RunSentence
+          analysis={analysis}
+          hasDraftValues={flagged.some((slug) => !!contract.aiUnverified?.[slug]?.draftId)}
+        />
       </p>
+      {!!analysis.latestRun?.warnings?.length && (
+        <p className="px-4 pb-3 text-sm text-muted">
+          <FormattedMessage
+            id="contracts.analysis.requestOmissions"
+            defaultMessage="Some sources were restricted, unreadable or exceeded reading limits. Review the original Request and supporting Documents."
+          />
+        </p>
+      )}
       {runError && (
         <p role="alert" className="px-4 pb-3 text-sm text-status-danger-fg">
           {runError}

@@ -28,6 +28,7 @@ import type { SigningResolver } from "../lib/signing/resolver.js";
 import type { AiResolver } from "../lib/ai/resolver.js";
 import { requestAutomaticContractAnalysis } from "./automatic-contract-analysis.js";
 import { runBackfillSweep } from "./backfill.js";
+import { sweepConversionAnalysis } from "./conversion-analysis.js";
 import { handleConversionDraft, sweepConversionDrafts } from "./conversion-draft.js";
 import { handleContractAnalysis } from "./contract-analysis.js";
 import type { DerivationDeps } from "./derivations.js";
@@ -709,13 +710,20 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
         },
       );
       await sweepConversionDrafts(handlers.db, queue);
+      await sweepConversionAnalysis(handlers.db, queue);
       await boss.work(
         JOB_QUEUES.contractAnalysis,
         oneAtATime,
         async (jobs: JobWithMetadata<ContractAnalysisJob>[]) => {
           for (const job of jobs) {
             await handleContractAnalysis(
-              { db: handlers.db, resolveAiProvider: handlers.resolveAiProvider, log },
+              {
+                db: handlers.db,
+                resolveAiProvider: handlers.resolveAiProvider,
+                storage: handlers.storage,
+                docEngine: handlers.docEngine,
+                log,
+              },
               {
                 runId: job.data.runId,
                 retryCount: job.retryCount,
@@ -731,6 +739,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // burst: there is only ever one of it.
       await boss.work(JOB_QUEUES.backfillSweep, { batchSize: 1 }, async () => {
         await sweepConversionDrafts(handlers.db, queue);
+        await sweepConversionAnalysis(handlers.db, queue);
         const summary = await runBackfillSweep({ db: handlers.db, log }, queue, {
           signal: sweeping.signal,
         });

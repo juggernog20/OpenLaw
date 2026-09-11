@@ -15,6 +15,9 @@
  */
 
 import { useEffect, useId, useRef, useState, type ReactNode, type TransitionEvent } from "react";
+import { SourceDocumentPanel } from "../intake/source-document-panel";
+import { DocPanel } from "../documents/doc-panel";
+import { readDocumentLanding, type DocumentLanding } from "../../lib/documents";
 import { useIntl } from "react-intl";
 import { cn } from "../../lib/utils";
 import { ActivityBar } from "./activity-bar";
@@ -29,11 +32,13 @@ const CLOSING_RETENTION_MS = 400;
 
 export function RecordApplets({
   applets,
+  recordKey,
   layer,
   contentCovered = false,
   children,
 }: Readonly<{
   applets: readonly Applet[];
+  recordKey?: string;
   /**
    * A wider sibling layer beside the applet panel, or nothing.
    *
@@ -56,6 +61,19 @@ export function RecordApplets({
   /** The record's own content, beside the panel. */
   children: ReactNode;
 }>) {
+  const [citation, setCitation] = useState<{
+    landing: DocumentLanding;
+    recordKey?: string;
+    quote: string;
+    trigger: HTMLElement;
+  } | null>(null);
+  const readingCitation = citation?.recordKey === recordKey ? citation : null;
+  const [citationCovers, setCitationCovers] = useState(true);
+  function closeCitation() {
+    const trigger = citation?.trigger;
+    setCitation(null);
+    requestAnimationFrame(() => trigger?.focus({ preventScroll: true }));
+  }
   const intl = useIntl();
   const generatedPanelId = useId();
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -179,56 +197,85 @@ export function RecordApplets({
   }
 
   return (
-    <div className="relative flex min-h-0 flex-1">
-      {/* Content and layer share one region, and the applet panel and
+    <SourceDocumentPanel.Provider
+      value={async (input) => {
+        const landing = await readDocumentLanding(
+          { entityType: input.module, number: input.number },
+          input.documentId,
+          input.versionId,
+        );
+        if (!landing || input.signal?.aborted) return false;
+        setCitation({ landing, recordKey, quote: input.quote, trigger: input.trigger });
+        return true;
+      }}
+    >
+      <div className="relative flex min-h-0 flex-1">
+        {/* Content and layer share one region, and the applet panel and
           the activity bar are outside it. That is what lets a layer
           overlay: it covers the record content and nothing else, so an
           applet stays on screen beside a document rather than behind
           it, and opening one narrows the layer instead of being hidden
           by it. It is also the box the docking threshold measures —
           the space a layer can actually dock into. */}
-      <div className="@container/record relative flex min-h-0 min-w-0 flex-1">
-        <div inert={contentCovered} className="min-h-0 min-w-0 flex-1">
-          {children}
-        </div>
-        {/* Docked, the record reads on the left and the document on the
+        <div className="@container/record relative flex min-h-0 min-w-0 flex-1">
+          <div
+            inert={readingCitation ? citationCovers : contentCovered}
+            className="min-h-0 min-w-0 flex-1"
+          >
+            {children}
+          </div>
+          {/* Docked, the record reads on the left and the document on the
             right of it, with the applet beyond them both. */}
-        {layer}
-      </div>
-      {/* Always in the row at width 0 when collapsed, so the first open
+          {readingCitation ? (
+            <DocPanel
+              documentId={readingCitation.landing.document.id}
+              title={readingCitation.landing.document.title}
+              version={readingCitation.landing.document.versions.find(
+                (version) => version.id === readingCitation.landing.versionId,
+              )!}
+              initialFind={readingCitation.quote}
+              onClose={closeCitation}
+              onDockedChange={(docked) => setCitationCovers(!docked)}
+            />
+          ) : (
+            layer
+          )}
+        </div>
+        {/* Always in the row at width 0 when collapsed, so the first open
           has a previous frame to interpolate from. Inner column is a
           fixed 320px packed to the trailing edge — the clip growing is
           what reads as the drawer sliding out of the activity bar. */}
-      <div
-        className={cn(
-          "flex min-h-0 shrink-0 justify-end overflow-hidden transition-[width] duration-200 ease-out",
-          expanded ? "w-(--width-panel)" : "w-0",
-        )}
-        onTransitionEnd={onClipTransitionEnd}
-      >
-        {shown ? (
-          <AppletPanel
-            key={shown.id}
-            id={panelId}
-            label={intl.formatMessage(shown.label)}
-            accessory={shown.accessory?.()}
-            inert={!expanded}
-            onClose={close}
-          >
-            {shown.render()}
-          </AppletPanel>
-        ) : null}
+        <div
+          className={cn(
+            "flex min-h-0 shrink-0 justify-end overflow-hidden transition-[width] duration-200 ease-out",
+            expanded ? "w-(--width-panel)" : "w-0",
+          )}
+          onTransitionEnd={onClipTransitionEnd}
+        >
+          {shown ? (
+            <AppletPanel
+              key={shown.id}
+              id={panelId}
+              label={intl.formatMessage(shown.label)}
+              accessory={shown.accessory?.()}
+              inert={!expanded}
+              onClose={close}
+            >
+              {shown.render()}
+            </AppletPanel>
+          ) : null}
+        </div>
+        <ActivityBar
+          applets={applets}
+          activeId={expanded?.id ?? null}
+          panelId={panelId}
+          onToggle={toggle}
+          triggerRef={(id, node) => {
+            if (node) triggers.current.set(id, node);
+            else triggers.current.delete(id);
+          }}
+        />
       </div>
-      <ActivityBar
-        applets={applets}
-        activeId={expanded?.id ?? null}
-        panelId={panelId}
-        onToggle={toggle}
-        triggerRef={(id, node) => {
-          if (node) triggers.current.set(id, node);
-          else triggers.current.delete(id);
-        }}
-      />
-    </div>
+    </SourceDocumentPanel.Provider>
   );
 }

@@ -1445,6 +1445,9 @@
   "contracts.analysis.confirmAll": {
     "defaultMessage": "Confirm all"
   },
+  "contracts.analysis.conversionValues": {
+    "defaultMessage": "Conversion draft values are ready for review. Confirm or edit each Unverified value."
+  },
   "contracts.analysis.counterparty": {
     "defaultMessage": "Counterparty"
   },
@@ -1484,11 +1487,26 @@
   "contracts.analysis.outcome.written": {
     "defaultMessage": "Written"
   },
+  "contracts.analysis.requestFailed": {
+    "defaultMessage": "Request-context Analysis failed. The Contract was created successfully. Check the Type, sources and AI settings, then retry."
+  },
+  "contracts.analysis.requestOmissions": {
+    "defaultMessage": "Some sources were restricted, unreadable or exceeded reading limits. Review the original Request and supporting Documents."
+  },
+  "contracts.analysis.requestPending": {
+    "defaultMessage": "Filling Contract Fields from the Request and supporting sources…"
+  },
+  "contracts.analysis.requestReady": {
+    "defaultMessage": "Request-context Analysis completed. Review the Unverified values and their source evidence."
+  },
   "contracts.analysis.results": {
     "defaultMessage": "Analysis results"
   },
   "contracts.analysis.retryEvidence": {
     "defaultMessage": "Try again"
+  },
+  "contracts.analysis.retryRequest": {
+    "defaultMessage": "Retry Request-context Analysis"
   },
   "contracts.analysis.run": {
     "defaultMessage": "Run analysis"
@@ -2210,6 +2228,9 @@
   "conversion.noLocatedPassage": {
     "defaultMessage": "This source has no searchable passage preview. Read the quoted text and check the original file."
   },
+  "conversion.openSource": {
+    "defaultMessage": "Open source document"
+  },
   "conversion.readingLimits": {
     "defaultMessage": "Up to {sources, number} attachments, {bytes, number} MiB each and {totalBytes, number} MiB total; {characters, number} characters each and {totalCharacters, number} across all sources. Reading allows {sourceSeconds, number} seconds per attachment and {totalSeconds, number} seconds total. Request answers and messages are considered first."
   },
@@ -2218,6 +2239,12 @@
   },
   "conversion.settings": {
     "defaultMessage": "Request conversion"
+  },
+  "conversion.settingsAnalysis": {
+    "defaultMessage": "Fill Contract Fields after conversion"
+  },
+  "conversion.settingsAnalysisHint": {
+    "defaultMessage": "Run Analysis with the saved Request, conversation and supporting sources. Also works with manual conversion."
   },
   "conversion.settingsContract": {
     "defaultMessage": "Prepare Contract conversions with AI"

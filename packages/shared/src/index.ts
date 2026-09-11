@@ -25,6 +25,7 @@ export {
   type AiUnverifiedEntry,
   type AiUnverifiedMap,
   type ContractAnalysisOutcome,
+  type ConversionAnalysisContext,
   type ContractAnalysisResult,
   type ContractAnalysisResultOutcome,
   CONTRACT_ANALYSIS_RESULT_OUTCOMES,

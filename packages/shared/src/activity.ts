@@ -785,7 +785,7 @@ type ContractPayloads = {
     number: number;
     title: string;
     runId: string;
-    versionId: string;
+    versionId: string | null;
     model: string;
     written: string[];
     kept: string[];
@@ -1077,7 +1077,13 @@ type AiConnectorPayloads = {
     | {
         preset: string;
         field:
-          "preset" | "protocol" | "baseUrl" | "model" | "matterPreparation" | "contractPreparation";
+          | "preset"
+          | "protocol"
+          | "baseUrl"
+          | "model"
+          | "matterPreparation"
+          | "contractPreparation"
+          | "contractConversionAnalysis";
         old: unknown;
         new: unknown;
       };

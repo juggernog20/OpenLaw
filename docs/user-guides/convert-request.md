@@ -4,49 +4,35 @@ Create work from a Request and check the values, paper, and conversation that fo
 
 ## Before you start
 
-Sign in as a Legal Team Member or Administrator. [Review the undecided Request](triage-requests.md) and its attachments first. Have a live destination type and any required information the Portal form did not collect. An Administrator configures [request forms](request-forms.md), destination Fields, and optional [Matter templates](matter-templates.md).
+Sign in as a Legal Team Member or Administrator. [Review the undecided Request](triage-requests.md), its answers, conversation and attachments. Have a live destination Type and any required information. An Administrator controls [request forms](request-forms.md), destination Fields, [Matter templates](matter-templates.md) and the three independent [AI conversion switches](configure-analysis.md).
 
-## Choose the destination and complete the form
+## Choose the destination and review the Convert dialog
 
-1. Open the Request from **Inbox**. Check **Converts to**, then open **Triage** and select the matching **Convert to contract** or **Convert to matter** action. Select the other action only to re-target a mis-routed Request.
-2. Check **Title**, which starts with the Request's Summary, and edit it if needed. Check **Priority**, taken from the Request's Urgency. Change Priority on the resulting record if needed; this dialog does not edit it.
-3. Check **Contract type** or **Matter type**. A live type configured for that module is fixed here. If the form left the type open, its configured type was archived, or you chose the other module, choose a live type now.
-4. For a Matter, check **Template (optional)**. The control appears once a Matter type is set and lists **No template** and the type's live templates. Use **No template** to create without one, or select the intended template and review its Task and Key date counts. A type with one template can select it automatically, so check this control before confirming.
-5. Review **Carries into the contract** or **Carries into the matter**. Collected answers carry where the destination type has the corresponding Fields. Review **Does not carry into the contract** or **Does not carry into the matter** for answers that remain on the Request only.
-6. Complete the required Fields the form did not collect. If a carried person or Entity is marked archived, choose the live replacement requested by the dialog. Carried answers are otherwise shown for review; optional record Fields can be completed after conversion.
-7. Select **Convert to contract** or **Convert to matter** to confirm. This decides the Request and creates one record. **Cancel** leaves the Request undecided.
+1. Open the Request from **Inbox**, open **Triage**, then select **Convert to contract** or **Convert to matter**. Re-target only when the work belongs in the other module.
+2. With preparation enabled for that module, wait for **Getting contract ready** or **Getting matter ready**. The Conversion draft can use eligible saved Request answers, current Full thread messages and readable attachments. Explicit conversation corrections can override earlier answers. Restricted or unreadable sources and reading limits can leave gaps. Review the warnings and conflicting facts yourself.
+3. Review the editable Title, Type, Description, Priority, **Needed by**, attached Fields and, for Contracts, Counterparty. Supported AI proposals carry **Unverified**, a purple border and a sparkle. Open a sparkle to inspect its saved source. A Document opens above the Convert dialog, which retains your work. Close the reader to return to that value. A citation is stored evidence, not a new AI explanation.
+4. Choose or confirm the live destination Type. Changing Type prepares its Fields again. Human edits, confirmations and explicit clears stay in place. If preparation fails, retry it or continue manually. With the module's switch off, ordinary manual conversion opens directly. You can also return to manual conversion from preparation.
+5. Review answers that carry into the record and those that stay only on the Request. Complete every required Field. For a Matter, review **Template (optional)** and its Task and Key date counts. A Type with one template can select it automatically. AI does not choose a template.
+6. Select **Convert to contract** or **Convert to matter**. This decides the Request and creates one record. **Cancel** leaves the Request undecided.
 
-To change modules before confirming, select **Convert to matter instead** or **Convert to contract instead** and review the new destination and required answers. Choosing the other module keeps the original Request. It does not first create work in the configured module, and it does not let you convert an already decided Request a second time.
+Switching modules prepares the new destination only when its own switch is enabled. Check the Type, required answers and any template again before submitting. You cannot convert a decided Request a second time.
 
 ## Check the resulting work
 
-Open the C- or M- reference under **Outcome**. Check the Title, type, and Priority. On a Contract, select **Fields** to check the carried and completed answers. On a Matter, read **Custom fields** on **Overview**. The original Request retains its submitted answers. Its Description is not copied into the new Contract's or Matter's Description.
+Open the C- or M- reference under **Outcome**. Check the Title, Type, Priority, Description and **Needed by** Key date. Check **Fields** on a Contract or **Custom fields** on a Matter. The record receives the reviewed Description, including an explicit clear; the original Request retains its submitted answers and Description.
 
-The new work needs its own ownership and risk choices. The person assigned during triage does not become the Contract Legal Owner or Matter Manager, and the new record has no Risk set. For a Contract, the Requester becomes its initial Business Owner; Legal Owner remains a separate choice. Review the record's access and team before sharing its address.
+The converting person becomes the Contract Owner or Matter Manager. A Contract also receives the Requester as its initial Business Owner. Risk remains unset. Review ownership, access and team membership before sharing the record.
 
-Select **Documents**. Each original Request attachment becomes a separate Document at the record root with its first Version. On a Contract, the first promoted attachment becomes the primary Document if none is set. Matters have no primary Document designation. Comment attachments remain in the conversation rather than automatically becoming Documents.
+Each original Request attachment becomes a separate Document at the record root with its first Version. On a Contract, the first promoted attachment becomes the primary Document if none is set. Matters have no primary Document. Comment attachments remain in the conversation until filed as Documents. Comments keep their visibility tiers and original identities. The Requester keeps the same R- address, sees **In progress**, and retains permitted conversation and original attachment downloads.
 
-Open **Comments** and check the retained conversation. Its visibility tiers still apply. The Requester keeps the same R- address in the Portal, sees **In progress**, and can read and reply in the Full thread. They retain the original Request attachment downloads, including after Legal uploads later Document Versions. Conversion does not grant a Business User access to the staff Contract or Matter page. A converted Contract is also available through [Your Contracts](portal-sign-in.md#read-your-contracts) while the Requester remains its Business Owner or an explicit stakeholder and passes the current access checks. Confidential Contracts still require qualifying team access.
+Unchanged accepted proposals remain **Unverified** on the new record. Select a sparkle to inspect the original source. Document Versions open in the same-page doc panel, which docks when space permits. Multiple citations let you choose the source. Request answers and messages show their actual text and context. Confirm a checked value or edit its normal control. These actions remain available when preparation is disabled. Changed, deleted or inaccessible evidence has an unavailable state.
 
-## When you apply a Matter template
+## Fill Contract Fields after conversion
 
-Template Field defaults fill values not supplied by the Request or your answers in the dialog. A carried answer or an answer you enter takes precedence. After you change the template, review the displayed defaults and counts again before confirming.
+The independent **Fill Contract Fields after conversion** switch starts a background Analysis run after successful Contract creation. It also works when Convert dialog preparation is off. It uses the confirmed Type's current core and prompted catalog Fields, saved Request answers, eligible conversation and readable supporting sources. The Contract's **AI analysis** card reports progress, completion, source omissions or failure. The page refreshes completed values while retaining typed drafts.
 
-Conversion keeps the Title you confirmed and the Request's Urgency as Priority; a template's title prefix, default Priority, and default Risk do not replace them in this flow. Risk remains unset. The template can create Tasks and Key dates relative to the Matter's creation date. Check those dates on the new Matter. Tasks configured for the Matter Manager start unassigned because conversion does not set a Matter Manager; assign the work explicitly.
+A failed Analysis run does not undo conversion. Check the Type, sources and AI settings, then select **Retry Request-context Analysis**. Existing human values, confirmations, explicit Convert dialog clears and edits made while Analysis runs are preserved. Review new Unverified values using [Contract analysis](contract-analysis.md). Ordinary manual Contract analysis remains available under its original controls.
 
 ## If conversion is refused
 
-Complete any marked Title, type, or required Field. Replace an archived carried reference using the offered control, even if that Field is optional on the destination type.
-
-If the dialog names an unavailable configured value but offers no way to replace it, cancel and ask an Administrator to check the destination Fields or template. If the refused value is a template default, reopen the dialog, choose another live template or **No template**, and answer the required Fields yourself. Confirm that the chosen configuration meets all required Fields before trying again.
-
-If someone else decided first, close the dialog and read their recorded outcome. A losing conversion creates no second record. If the response is uncertain, reopen the original Request before retrying instead of manually creating another Contract or Matter.
-
-An answer listed as not carrying stays on the Request. Check the destination type's Field configuration before assuming that the resulting record contains it. If promoted paper or conversation appears wrong, retain the R- and C-/M- references when asking for help.
-
-## Related guides
-
-- [Assign and triage Requests](triage-requests.md).
-- [Follow a Request and reply to Legal](follow-request.md).
-- [Choose who can read a comment](comments-and-activity.md).
-- [Work with Document Versions](document-versions.md).
+Read the error and complete the named required values or choose current Types and references. Preparation cannot bypass normal creation checks. If another person already decided the Request, open its Outcome and continue on the existing record. Do not create another record to work around a stale dialog.

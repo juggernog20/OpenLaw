@@ -510,3 +510,15 @@ Type, including optional Fields. Only required Fields carry a star and block cre
 unanswered. Switching Type updates the visible Fields, retains drafts when switching back,
 and submits only the selected Type's Fields. Standalone, Matter-linked, and renewal creation
 use this same form; creating from a Matter preselects the Matter link.
+
+### CTR-008 addendum (2026-09-11, #829) — Analysis after Request conversion
+
+The independent Administrator switch **Fill Contract Fields after conversion** starts off and requires an enabled AI connector. It works with or without Contract Convert dialog preparation. Conversion reserves one durable pending Analysis run in its ordinary transaction. Source reading and provider extraction happen after commit. Queue reconciliation recovers a lost dispatch. Failure never rolls back conversion, and the Contract reports progress, completion, omissions or a safe failure with retry.
+
+This deliberately widens CTR-008's earlier M31 primary-Document-only input. The post-conversion run reads the original saved Request answers, current eligible conversation and readable supporting attachments against the confirmed Contract Type's current effective core and prompted catalog Fields. It remains an Analysis run, an account of extraction and writer outcomes. The before-creation proposal keeps INT-008's separate name, Conversion draft. The earlier consequence saying Matter and Intake AI remain in FUTURE-FEATURES is narrowed by INT-008 and this addendum; autonomous Matter research and unlisted intake workflows remain deferred.
+
+Original promoted primary paper is covered by the conversion run, so its asynchronous derivation cannot queue a competing automatic run. Later Document Versions and explicit manual analysis retain their existing controls. The worker checks the actor's current reach, connector and switch, target Type, source revisions and target prompts again before writing. Restricted answers, Legal Only messages and Confidential paper cannot supply broader record Fields. Each cited quote is checked against the named source. Source omissions are visible. Stored evidence reads recheck current source reach and revisions.
+
+The existing term dependencies, Value group, validation and Counterparty match-only rules apply. Human values and confirmations win. Explicit clears from conversion or subsequent edits remain protected even when a value was already empty, including on retry. The writer keeps Conversion draft custom values and assigns new Analysis values their own run markers. New values carry Unverified, the DES-070 purple treatment and source sparkles. Saved citations use original identities and promoted Versions without an AI call. Document confidentiality and Field-tag narrowing cannot leave unreviewed derived values in broader Fields.
+
+The Contract page revalidates while a run is pending and keeps typed drafts. Retry is explicit after failure and uses the current Type and sources; concurrent retry requests share one pending run. Disabled workflows leave saved evidence and confirm/edit usable. The two graduated FUTURE-FEATURES entries cite INT-008, DES-070 and this CTR-008 addendum.

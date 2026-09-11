@@ -126,6 +126,7 @@ function connector(overrides: Partial<AiResponse["connector"]> = {}): AiResponse
   return {
     matterPreparation: false,
     contractPreparation: false,
+    contractConversionAnalysis: false,
     configured: true,
     enabled: true,
     preset: "openai",
@@ -143,6 +144,7 @@ function unconfigured(): AiResponse["connector"] {
   return connector({
     matterPreparation: false,
     contractPreparation: false,
+    contractConversionAnalysis: false,
     configured: false,
     enabled: false,
     preset: null,
@@ -588,4 +590,24 @@ it("reports a refused Contract preparation change and leaves the switch off", as
   await user.click(toggle);
   expect(await screen.findByText("The AI connector changed. Reload and try again.")).toBeVisible();
   expect(toggle).not.toBeChecked();
+});
+
+it("persists post-conversion filling independently of both preparation switches", async () => {
+  const user = userEvent.setup();
+  const saves: unknown[] = [];
+  stubApi({ signedIn: ADMIN, extra: connectorApi({}, saves) });
+  renderAt("/settings/ai-analysis");
+  const toggle = await screen.findByRole("switch", {
+    name: "Fill Contract Fields after conversion",
+  });
+  expect(toggle).not.toBeChecked();
+  await user.click(toggle);
+  await waitFor(() => expect(toggle).toBeChecked());
+  expect(saves).toEqual([{ contractConversionAnalysis: true }]);
+  expect(
+    screen.getByRole("switch", { name: "Prepare Contract conversions with AI" }),
+  ).not.toBeChecked();
+  expect(
+    screen.getByRole("switch", { name: "Prepare Matter conversions with AI" }),
+  ).not.toBeChecked();
 });
