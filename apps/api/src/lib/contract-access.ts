@@ -69,34 +69,47 @@ export function contractTeamScope(db: Executor, user: AuthenticatedUser): SQL | 
 
 export const NO_CONTRACT = "No contract exists with this number.";
 
+/** One contract this viewer reaches, in the columns the routes ask for.
+ * They are all columns of `contracts`, so one row answers every module. */
 export interface ReachedContract {
   id: string;
-
+  /** CTR-003's reference, the number the caller asked by. */
   number: number;
   title: string;
-
+  /** SET-003's soft delete: a time freezes the record (CTR-021). */
   archivedAt: Date | null;
-
+  /** CTR-004's Legal Owner. */
   managerId: string | null;
-
+  /** CTR-014's instrument, or NULL on a record with no paper yet. */
   primaryDocumentId: string | null;
-
+  /** DD-014's flag, as it stands on this row. */
   isConfidential: boolean;
-
+  /** MTR-007's broader-work container, or NULL while standalone. */
   matterId: string | null;
-
+  /** CTR-006's end of term; always NULL on an evergreen contract. */
   expiryDate: string | null;
-
+  /** CTR-006's action window before expiry, in days. */
   noticePeriodDays: number | null;
-
+  /** CTR-008's source flags for the term-derived dates. */
   aiUnverified: AiUnverifiedMap | null;
   contractTypeId: string;
 }
 
+/** The witness a {@link LockedContract} carries. It is `declare`d and
+ * never assigned, so no value can claim the lock without taking it. */
 declare const contractRowLockHeld: unique symbol;
 
+/** A contract this viewer reaches whose row the caller holds `FOR UPDATE`.
+ * Only {@link reachedContract} with `lock: true` mints one. */
 export type LockedContract = ReachedContract & { readonly [contractRowLockHeld]: true };
 
+/**
+ * One contract this viewer reaches, by number, or `null`. The scope rides
+ * beside the number, so a contract out of reach reads exactly as one that
+ * was never created. `lock` holds the row for the write that follows and
+ * is only offered on a transaction, because `FOR UPDATE` on a pooled
+ * handle is released by its own statement.
+ */
 export async function reachedContract(
   db: Transaction,
   user: AuthenticatedUser,
@@ -219,8 +232,8 @@ function inNamedAudience(person: Standing, isConfidential: boolean): boolean {
     case "administrator":
     case "legal_team_member":
       return !isConfidential || person.onTeam || person.isOwner;
-    // The team row is the Contributor's whole grant, and it satisfies
-    // the flag too — so confidentiality adds nothing to their answer.
+    // The team row is the Business User's whole grant (DD-023), and it
+    // satisfies the flag too, so confidentiality adds nothing here.
     case "business_user":
       return person.onTeam;
     default: {
@@ -232,13 +245,16 @@ function inNamedAudience(person: Standing, isConfidential: boolean): boolean {
   }
 }
 
+/** One viewer's standing on one contract they can reach. */
 export interface ContractAudience {
   entityType: "contract";
-
+  /** The contract's id, re-read here rather than trusted from the client. */
   contractId: string;
-
+  /** The tiers this viewer hears on it; never empty. */
   tiers: readonly CommentVisibility[];
-
+  /** Whether this viewer is inside the audience of a confidential
+   * document on this record (DD-014, DOC-008): named by a team row or
+   * as its Legal Owner. */
   seesConfidentialDocuments: boolean;
 }
 
@@ -301,11 +317,15 @@ export function confidentialDocumentEntryScope(
   return sql`(${backedByAnOpenRow("documentId")} and ${backedByAnOpenRow("fromDocumentId")})`;
 }
 
+/** `unreachable` is answered as a missing record, the same 404 the read
+ * gives. `refused` is a plain 403: the viewer already sees the record. */
 export type ConfidentialityWrite = "allowed" | "refused" | "unreachable";
 
+/** The facts about a contract the flag questions turn on, as every
+ * mutation already holds them on the row it locked. */
 export interface LockedContractFacts {
   id: string;
-
+  /** CTR-004's Legal Owner. */
   managerId: string | null;
   isConfidential: boolean;
 }
@@ -355,13 +375,16 @@ export async function confidentialityWrite(
   return standing.role === "administrator" || standing.isOwner || isCreator ? "allowed" : "refused";
 }
 
+/** The facts about a document the flag questions turn on, read under
+ * the owning contract's lock. */
 export interface LockedDocument {
+  /** DOC-008's owning record, the only place a document's team is. */
   contractId: string;
-
+  /** The owning contract's Legal Owner (CTR-004). */
   contractManagerId: string | null;
-
+  /** Who uploaded the document: DD-014's creator, one level down. */
   createdBy: string;
-
+  /** The document's own flag, not the contract's. */
   isConfidential: boolean;
 }
 
@@ -378,11 +401,13 @@ export async function documentConfidentialityWrite(
     : "refused";
 }
 
+/** One person a comment on this record can address, and the tiers they
+ * would hear it at. */
 export interface MentionCandidate {
   id: string;
   displayName: string;
   image: string | null;
-
+  /** The DD-016 tiers this person hears on this contract; never empty. */
   tiers: readonly CommentVisibility[];
 }
 

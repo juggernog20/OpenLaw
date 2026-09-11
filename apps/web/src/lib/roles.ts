@@ -13,9 +13,16 @@
  * member" from becoming "Legal Team Member" on one of them.
  */
 
-import { defineMessages, type IntlShape, type MessageDescriptor } from "react-intl";
+import { defineMessage, defineMessages, type IntlShape, type MessageDescriptor } from "react-intl";
 
 export type Role = "administrator" | "legal_team_member" | "business_user";
+
+/** DD-023 removed the Contributor account type. Audit entries written
+ * before the migration still carry it, so the label stays readable. */
+const HISTORICAL_CONTRIBUTOR = defineMessage({
+  id: "role.contributorHistorical",
+  defaultMessage: "Contributor",
+});
 
 /** How each role reads. The ids predate this file, so the message
  * catalog did not change when the map moved here. */
@@ -37,10 +44,7 @@ export function roleLabel(intl: IntlShape, role: string): string {
   // The caller's string is whatever a payload holds, and a miss is the
   // case this function exists to answer.
   const catalog: Readonly<Partial<Record<string, MessageDescriptor>>> = ROLE_MESSAGES;
-  const message =
-    role === "contributor"
-      ? { id: "role.contributorHistorical", defaultMessage: "Contributor" }
-      : catalog[role];
+  const message = role === "contributor" ? HISTORICAL_CONTRIBUTOR : catalog[role];
   return message ? intl.formatMessage(message) : role;
 }
 

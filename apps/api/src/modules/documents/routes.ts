@@ -241,9 +241,9 @@ import { boundedQueueAsk } from "../../pipeline/jobs.js";
 import { needsDisplayRendition } from "../../pipeline/display-conversion.js";
 import { extractsText } from "../../pipeline/text-extraction.js";
 
-/** Supporting uploads are the one Document write Contributors receive.
- * Reach still comes from the owning record's live team predicate; the
- * route-level role floor alone grants nothing (DD-015). */
+/** Supporting uploads and record paper reads are the Document surface a
+ * Business User receives (DD-023). Reach still comes from the owning
+ * record's live team predicate; the role floor alone grants nothing. */
 const requireSupportingUploader = requireRole(
   "administrator",
   "legal_team_member",

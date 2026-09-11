@@ -198,11 +198,10 @@ interface CommentEntityArm {
  */
 const contractArm: CommentEntityArm = {
   /**
-   * The contract read floor (CTR-021), which is the comment floor too: a
-   * Contributor takes part in the conversation on a contract they are
-   * on. The role alone opens no thread — `resolve` narrows it to the
-   * records they hold a `contract_team` row on. Business Users are
-   * refused on every contract surface.
+   * The contract reach floor (DD-023), which is the comment floor too: a
+   * Business User takes part in the conversation on a contract they are
+   * on, at Full Thread. The role alone opens no thread; `resolve` narrows
+   * it to the records they hold a `contract_team` row on.
    */
   readerRoles: ["administrator", "legal_team_member", "business_user"],
 

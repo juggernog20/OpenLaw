@@ -236,13 +236,10 @@ import { clearAiUnverified } from "../../lib/ai-unverified.js";
 const requireMember = requireRole("administrator", "legal_team_member");
 
 /**
- * The two read surfaces — the list and the record — take a Contributor
- * as well (CTR-021). The role alone opens no contract: `teamScope`
- * narrows the answer to the contracts the Contributor holds a
- * `contract_team` row on, and takes a confidential contract away from
- * anyone outside its named team and its Owner, including Administrators
- * (DD-014). Business Users stay refused on every contract
- * surface.
+ * The full-app read surfaces are Member+ (DD-023). `teamScope` still
+ * takes a confidential contract away from anyone outside its named team
+ * and its Owner, including Administrators (DD-014). A Business User works
+ * on a contract through the Portal routes, never here.
  */
 const requireContractReader = requireRole("administrator", "legal_team_member");
 
@@ -388,9 +385,8 @@ const PersonSchema = z.object({
   archived: z.boolean(),
 });
 
-/** One `contract_team` row, read back as the person plus their role.
- * The compound key means the same person can appear twice, under two
- * roles — that is membership, not a duplicate. */
+/** One `contract_team` row, read back as the person. DD-023 keeps one
+ * membership per person, so a name appears once. */
 const TeamMemberSchema = PersonSchema;
 
 /** One of our own Entities as the contract record names it (CTR-011):
@@ -3028,10 +3024,12 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireMember,
       schema: {
         operationId: "addContractTeamMember",
-        summary: "Maintain one membership per person on a contract team",
+        summary:
+          "Put a person on the contract team (DD-023). One membership per " +
+          "person; the account type says what the membership lets them do",
         tags: ["contracts"],
         params: NumberParams,
-
+        // Strict: an unknown key is a client bug, not a silent strip.
         body: z.strictObject({
           userId: z.string(),
         }),
@@ -3042,10 +3040,12 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       const { userId } = request.body;
       const team = await app.db.transaction(async (tx) => {
         const current = await lockedContract(tx, request.params.number, request.user);
-
+        // On a walled record this add is an audience decision (CTR-023),
+        // so it is asked before the archived refusal, the same order the
+        // flag's own write takes.
         await assertMayChangeTeam(tx, current, request.user);
         assertEditable(current);
-
+        // Anyone live may join: a Business User's row is their Portal grant.
         const person = await lockedUser(tx, userId, USER_ROLES, "That is not a person we can add.");
 
         const inserted = await tx
@@ -3078,7 +3078,9 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireMember,
       schema: {
         operationId: "removeContractTeamMember",
-        summary: "Maintain one membership per person on a contract team",
+        summary:
+          "Take a person off the contract team (DD-023). A Business User " +
+          "loses Portal access to the record on the next read",
         tags: ["contracts"],
         params: NumberParams.extend({
           userId: z.string(),
@@ -3090,7 +3092,8 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       const { userId } = request.params;
       const team = await app.db.transaction(async (tx) => {
         const current = await lockedContract(tx, request.params.number, request.user);
-
+        // Taking somebody off a walled record's team is the same
+        // decision as putting them on it, read the other way (CTR-023).
         await assertMayChangeTeam(tx, current, request.user);
         assertEditable(current);
         const [removed] = await tx

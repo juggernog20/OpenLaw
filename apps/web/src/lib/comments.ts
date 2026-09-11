@@ -239,7 +239,7 @@ const TIER_COPY: Record<CommentTier, { label: MessageDescriptor; audience: Messa
     label: defineMessage({ id: "comments.tier.workingTeam", defaultMessage: "Working team" }),
     audience: defineMessage({
       id: "comments.audience.workingTeam",
-      defaultMessage: "Visible to the legal team and Contributors on this record.",
+      defaultMessage: "Visible to the legal team on this record. Not shared with Business Users.",
     }),
   },
   full_thread: {
