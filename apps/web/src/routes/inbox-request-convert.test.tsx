@@ -1349,9 +1349,10 @@ describe("Matter Conversion drafts", () => {
           handler: (call: StubCall) => {
             if (call.url.pathname.endsWith("/rendition")) {
               renditionReads += 1;
-              // A read nobody answers is worth waiting through: only the
-              // first arm runs the clock past the bound, and the last one
-              // answers on the retry the panel is supposed to make.
+              // A read nobody answers is worth waiting through. Two arms
+              // run the clock past the panel's bound so they settle on the
+              // first read; the last one answers on the retry the panel is
+              // supposed to make.
               if (result === "ready at deadline" || result === "unreachable to the deadline")
                 clock.mockReturnValue(Date.now() + 60_001);
               if (result === "unreachable to the deadline") return json(404, {});
