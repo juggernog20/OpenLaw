@@ -156,8 +156,8 @@ const DeadlineSchema = z.object({
   /** The earliest date still ahead — CTR-009's "next deadline". Exactly
    * one entry carries it, or none when every date has passed. */
   isNext: z.boolean(),
-  /** True only when a term-derived row reads an AI-written source no
-   * person has confirmed. Key dates are always false. */
+  /** True while a term-derived source or the Conversion draft's Needed by
+   * key date still awaits a person's confirmation. */
   unverified: z.boolean(),
 });
 

@@ -1559,8 +1559,9 @@ describe("Matter Conversion drafts", () => {
 });
 
 describe("Contract and Matter preparation together", () => {
-  function bothApi(suggestType = false) {
-    const calls: { targetModule: "matter" | "contract"; targetTypeId: string }[] = [];
+  function bothApi(suggestType = false, refuseCall = 0) {
+    const calls: { targetModule: "matter" | "contract"; targetTypeId: string; retry?: boolean }[] =
+      [];
     const drafts = new Map<string, unknown>();
     let held: (() => void) | undefined;
     const base = requestApi();
@@ -1574,6 +1575,7 @@ describe("Contract and Matter preparation together", () => {
         if (call.url.pathname.endsWith("/conversion-drafts")) {
           const target = call.body as (typeof calls)[number];
           calls.push(target);
+          if (calls.length === refuseCall) return problem(503, "Preparation is busy.");
           const id = `both-${calls.length}`;
           const proposal = (value: unknown) => ({
             value,
@@ -1613,6 +1615,51 @@ describe("Contract and Matter preparation together", () => {
     };
     return api;
   }
+  it.each([1, 2])(
+    "retries a refused preparation on call %s and preserves human values",
+    async (refuseCall) => {
+      const user = userEvent.setup();
+      const api = bothApi(false, refuseCall);
+      open(api);
+      await openDisposition(user, "Convert to contract");
+      if (refuseCall === 2) {
+        const title = await screen.findByDisplayValue("contract title 1");
+        await user.clear(title);
+        await user.type(title, "Human title");
+        await user.clear(within(screen.getByRole("dialog")).getByLabelText("Description"));
+        await user.clear(within(screen.getByRole("dialog")).getByLabelText(/^Needed by/));
+        await user.selectOptions(
+          within(screen.getByRole("dialog")).getByLabelText(/^Contract type/),
+          "ct-msa",
+        );
+      }
+      expect(
+        await screen.findByText("Preparation could not finish. Retry or continue manually."),
+      ).toBeVisible();
+      await user.click(screen.getByRole("button", { name: "Retry" }));
+      await waitFor(() => expect(api.calls).toHaveLength(refuseCall + 1));
+      expect(api.calls.at(-1)).toMatchObject({ targetModule: "contract", retry: true });
+      await waitFor(() =>
+        expect(screen.getByRole("button", { name: "Convert to contract" })).toBeEnabled(),
+      );
+      expect(
+        screen.queryByText("Preparation could not finish. Retry or continue manually."),
+      ).toBeNull();
+      if (refuseCall === 2) {
+        expect(within(screen.getByRole("dialog")).getByLabelText(/^Title/)).toHaveValue(
+          "Human title",
+        );
+        expect(within(screen.getByRole("dialog")).getByLabelText("Description")).toHaveValue("");
+        expect(within(screen.getByRole("dialog")).getByLabelText(/^Needed by/)).toHaveValue("");
+        expect(within(screen.getByRole("dialog")).getByLabelText(/^Governing law/)).toHaveValue(
+          "England",
+        );
+      } else
+        expect(within(screen.getByRole("dialog")).getByLabelText(/^Title/)).toHaveValue(
+          "contract title 2",
+        );
+    },
+  );
   it.each([false, true])(
     "uses the Request Type as a fallback, not an initial constraint, with suggestion %s",
     async (suggestType) => {

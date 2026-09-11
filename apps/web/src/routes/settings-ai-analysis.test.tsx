@@ -570,3 +570,22 @@ it("persists the independent Contract preparation switch without changing provid
   await waitFor(() => expect(toggle).toBeChecked());
   expect(saves).toEqual([{ contractPreparation: true }]);
 });
+
+it("reports a refused Contract preparation change and leaves the switch off", async () => {
+  const user = userEvent.setup();
+  const base = connectorApi();
+  stubApi({
+    signedIn: ADMIN,
+    extra: (call: StubCall) =>
+      call.url.pathname === "/api/v1/ai-connector/workflows" && call.method === "PATCH"
+        ? problem(409, "The AI connector changed. Reload and try again.")
+        : base(call),
+  });
+  renderAt("/settings/ai-analysis");
+  const toggle = await screen.findByRole("switch", {
+    name: "Prepare Contract conversions with AI",
+  });
+  await user.click(toggle);
+  expect(await screen.findByText("The AI connector changed. Reload and try again.")).toBeVisible();
+  expect(toggle).not.toBeChecked();
+});

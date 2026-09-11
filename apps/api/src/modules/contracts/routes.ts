@@ -531,11 +531,18 @@ const ContractRowSchema = z.object({
   aiUnverified: z
     .record(
       z.string(),
-      z.object({
-        runId: z.string().optional(),
-        draftId: z.string().optional(),
-        writtenAt: z.iso.datetime(),
-      }),
+      z.union([
+        z.object({
+          runId: z.string(),
+          draftId: z.string().optional(),
+          writtenAt: z.iso.datetime(),
+        }),
+        z.object({
+          draftId: z.string(),
+          runId: z.string().optional(),
+          writtenAt: z.iso.datetime(),
+        }),
+      ]),
     )
     .nullable(),
   /** DD-014's opt-in gate. `true` means only the named team and Owner
@@ -786,23 +793,25 @@ function sameValue(
 /** The row's marker map without the evidence quote. The quote is Document
  * text, and only the run's results (audience-gated in `latestAnalysisRun`)
  * may carry it; the row reaches readers the Document may not. */
-function publicUnverified(
-  map: Readonly<Record<string, { runId?: string; draftId?: string; writtenAt: string }>> | null,
-): Record<string, { runId?: string; draftId?: string; writtenAt: string }> | null {
+function publicUnverified(map: Contract["aiUnverified"]) {
   if (!map) return null;
   return Object.fromEntries(
     Object.entries(map).map(([slug, entry]) => [
       slug,
-      { runId: entry.runId, draftId: entry.draftId, writtenAt: entry.writtenAt },
+      entry.draftId !== undefined
+        ? { draftId: entry.draftId, writtenAt: entry.writtenAt }
+        : { runId: entry.runId, writtenAt: entry.writtenAt },
     ]),
   );
 }
 
 function toRow(
   context: ContractContext,
-  customFields: Readonly<Record<string, CustomFieldValue>> = context.row.customFields,
+  customFields: Readonly<Record<string, CustomFieldValue>>,
+  visibleFields: readonly AttachedCustomField[],
 ) {
   const { row } = context;
+  const visibleSlugs = new Set(visibleFields.map((field) => field.slug));
   return {
     id: row.id,
     number: row.number,
@@ -856,7 +865,7 @@ function toRow(
         ? Object.fromEntries(
             Object.entries(row.aiUnverified).filter(
               ([slug, flag]) =>
-                !flag.draftId || !slug.startsWith("field:") || slug.slice(6) in customFields,
+                !flag.draftId || !slug.startsWith("field:") || visibleSlugs.has(slug.slice(6)),
             ),
           )
         : null,
@@ -1225,7 +1234,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
   async function counterpartiesEnvelope(tx: Transaction, context: ContractContext) {
     const parties = await selectCounterparties(tx, context.row.id);
     return {
-      contract: toRow({ ...context, primaryCounterparty: primaryOf(parties) }),
+      contract: await memberRow(tx, { ...context, primaryCounterparty: primaryOf(parties) }),
       counterparties: parties,
     };
   }
@@ -1513,6 +1522,20 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     };
   }
 
+  function hasConversionFields(context: ContractContext) {
+    return Object.entries(context.row.aiUnverified ?? {}).some(
+      ([slug, flag]) => flag.draftId !== undefined && slug.startsWith("field:"),
+    );
+  }
+
+  /** Member-only mutations retain stored values but expose markers only for live Fields. */
+  async function memberRow(db: Executor, context: ContractContext) {
+    const attached = hasConversionFields(context)
+      ? await attachedFieldsOf(db, context.row.contractTypeId)
+      : [];
+    return toRow(context, context.row.customFields, attached);
+  }
+
   /** The whole custom-field half of an answer: the type's attachments
    * and the rows its values name. */
   async function customFieldsEnvelope(
@@ -1635,17 +1658,22 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         // Read one extra row to determine whether to offer another page.
         .limit(PAGE_SIZE + 1);
       const page = rows.slice(0, PAGE_SIZE);
-      const contributorFields =
-        request.user.role === "contributor"
-          ? new Map(
-              await Promise.all(
-                [...new Set(page.map((context) => context.row.contractTypeId))].map(
-                  async (contractTypeId) =>
-                    [contractTypeId, await attachedFieldsOf(app.db, contractTypeId)] as const,
-                ),
-              ),
-            )
-          : null;
+      const attachedByType = new Map(
+        await Promise.all(
+          [
+            ...new Set(
+              page
+                .filter(
+                  (context) => request.user.role === "contributor" || hasConversionFields(context),
+                )
+                .map((context) => context.row.contractTypeId),
+            ),
+          ].map(
+            async (contractTypeId) =>
+              [contractTypeId, await attachedFieldsOf(app.db, contractTypeId)] as const,
+          ),
+        ),
+      );
       const [counted] = await app.db
         .select({ total: sql<number>`count(*)::int` })
         .from(contracts)
@@ -1653,18 +1681,14 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         .where(predicates);
       return {
         total: counted?.total ?? 0,
-        contracts: page.map((context) =>
-          toRow(
-            context,
-            contributorFields
-              ? projectCustomFields(
-                  request.user.role,
-                  contributorFields.get(context.row.contractTypeId) ?? [],
-                  context.row.customFields,
-                ).customFields
-              : context.row.customFields,
-          ),
-        ),
+        contracts: page.map((context) => {
+          const projection = projectCustomFields(
+            request.user.role,
+            attachedByType.get(context.row.contractTypeId) ?? [],
+            context.row.customFields,
+          );
+          return toRow(context, projection.customFields, projection.fields);
+        }),
         // Only when a further row was actually read. A cursor on the
         // last page would send the client for an empty one.
         nextCursor: rows.length > PAGE_SIZE ? (page.at(-1)?.row.id ?? null) : null,
@@ -1875,7 +1899,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         latestAnalysisRun(app.db, row.row.id, request.user),
       ]);
       return {
-        contract: toRow(row, custom.customFields),
+        contract: toRow(row, custom.customFields, custom.fields),
         fields: custom.fields,
         customFieldRefs: custom.customFieldRefs,
         team,
@@ -1929,7 +1953,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         .where(eq(contracts.id, current.row.id))
         .limit(1);
       if (!fresh) throw httpError(404, NO_CONTRACT);
-      return { contract: toRow(fresh) };
+      return { contract: await memberRow(tx, fresh) };
     });
   }
 
@@ -2105,7 +2129,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           .limit(1);
         return read!;
       });
-      return reply.status(201).send({ contract: toRow(created) });
+      return reply.status(201).send({ contract: await memberRow(app.db, created) });
     },
   );
 
@@ -2792,7 +2816,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       // type's fields over the new type's values.
       const projection = projectCustomFields(request.user.role, attached, context.row.customFields);
       return {
-        contract: toRow(context, projection.customFields),
+        contract: toRow(context, projection.customFields, projection.fields),
         fields: projection.fields,
         customFieldRefs: await customFieldRefs(
           app.db,
@@ -2934,7 +2958,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         });
 
         return {
-          contract: toRow({
+          contract: await memberRow(tx, {
             ...current,
             row: updated!,
             nextDeadline: await readNextDeadline(tx, request.user, updated!.id),
@@ -3367,7 +3391,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           nextDeadline: await readNextDeadline(tx, request.user, row!.id),
         };
       });
-      return { contract: toRow(archived) };
+      return { contract: await memberRow(app.db, archived) };
     },
   );
 
@@ -3409,7 +3433,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           nextDeadline: await readNextDeadline(tx, request.user, row!.id),
         };
       });
-      return { contract: toRow(restored) };
+      return { contract: await memberRow(app.db, restored) };
     },
   );
 };

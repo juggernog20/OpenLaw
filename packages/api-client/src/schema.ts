@@ -15953,12 +15953,19 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               aiUnverified: {
-                [key: string]: {
-                  runId?: string;
-                  draftId?: string;
-                  /** Format: date-time */
-                  writtenAt: string;
-                };
+                [key: string]:
+                  | {
+                      runId: string;
+                      draftId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    }
+                  | {
+                      draftId: string;
+                      runId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    };
               } | null;
               isConfidential: boolean;
               endedAt: string | null;
@@ -16090,12 +16097,19 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               aiUnverified: {
-                [key: string]: {
-                  runId?: string;
-                  draftId?: string;
-                  /** Format: date-time */
-                  writtenAt: string;
-                };
+                [key: string]:
+                  | {
+                      runId: string;
+                      draftId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    }
+                  | {
+                      draftId: string;
+                      runId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    };
               } | null;
               isConfidential: boolean;
               endedAt: string | null;
@@ -16356,12 +16370,19 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               aiUnverified: {
-                [key: string]: {
-                  runId?: string;
-                  draftId?: string;
-                  /** Format: date-time */
-                  writtenAt: string;
-                };
+                [key: string]:
+                  | {
+                      runId: string;
+                      draftId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    }
+                  | {
+                      draftId: string;
+                      runId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    };
               } | null;
               isConfidential: boolean;
               endedAt: string | null;
@@ -16622,12 +16643,19 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               aiUnverified: {
-                [key: string]: {
-                  runId?: string;
-                  draftId?: string;
-                  /** Format: date-time */
-                  writtenAt: string;
-                };
+                [key: string]:
+                  | {
+                      runId: string;
+                      draftId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    }
+                  | {
+                      draftId: string;
+                      runId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    };
               } | null;
               isConfidential: boolean;
               endedAt: string | null;
@@ -16840,12 +16868,19 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               aiUnverified: {
-                [key: string]: {
-                  runId?: string;
-                  draftId?: string;
-                  /** Format: date-time */
-                  writtenAt: string;
-                };
+                [key: string]:
+                  | {
+                      runId: string;
+                      draftId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    }
+                  | {
+                      draftId: string;
+                      runId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    };
               } | null;
               isConfidential: boolean;
               endedAt: string | null;
@@ -16959,12 +16994,19 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               aiUnverified: {
-                [key: string]: {
-                  runId?: string;
-                  draftId?: string;
-                  /** Format: date-time */
-                  writtenAt: string;
-                };
+                [key: string]:
+                  | {
+                      runId: string;
+                      draftId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    }
+                  | {
+                      draftId: string;
+                      runId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    };
               } | null;
               isConfidential: boolean;
               endedAt: string | null;
@@ -17087,12 +17129,19 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               aiUnverified: {
-                [key: string]: {
-                  runId?: string;
-                  draftId?: string;
-                  /** Format: date-time */
-                  writtenAt: string;
-                };
+                [key: string]:
+                  | {
+                      runId: string;
+                      draftId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    }
+                  | {
+                      draftId: string;
+                      runId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    };
               } | null;
               isConfidential: boolean;
               endedAt: string | null;
@@ -17341,12 +17390,19 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               aiUnverified: {
-                [key: string]: {
-                  runId?: string;
-                  draftId?: string;
-                  /** Format: date-time */
-                  writtenAt: string;
-                };
+                [key: string]:
+                  | {
+                      runId: string;
+                      draftId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    }
+                  | {
+                      draftId: string;
+                      runId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    };
               } | null;
               isConfidential: boolean;
               endedAt: string | null;
@@ -17467,12 +17523,19 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               aiUnverified: {
-                [key: string]: {
-                  runId?: string;
-                  draftId?: string;
-                  /** Format: date-time */
-                  writtenAt: string;
-                };
+                [key: string]:
+                  | {
+                      runId: string;
+                      draftId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    }
+                  | {
+                      draftId: string;
+                      runId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    };
               } | null;
               isConfidential: boolean;
               endedAt: string | null;
@@ -17593,12 +17656,19 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               aiUnverified: {
-                [key: string]: {
-                  runId?: string;
-                  draftId?: string;
-                  /** Format: date-time */
-                  writtenAt: string;
-                };
+                [key: string]:
+                  | {
+                      runId: string;
+                      draftId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    }
+                  | {
+                      draftId: string;
+                      runId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    };
               } | null;
               isConfidential: boolean;
               endedAt: string | null;
@@ -17718,12 +17788,19 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               aiUnverified: {
-                [key: string]: {
-                  runId?: string;
-                  draftId?: string;
-                  /** Format: date-time */
-                  writtenAt: string;
-                };
+                [key: string]:
+                  | {
+                      runId: string;
+                      draftId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    }
+                  | {
+                      draftId: string;
+                      runId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    };
               } | null;
               isConfidential: boolean;
               endedAt: string | null;
@@ -17837,12 +17914,19 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               aiUnverified: {
-                [key: string]: {
-                  runId?: string;
-                  draftId?: string;
-                  /** Format: date-time */
-                  writtenAt: string;
-                };
+                [key: string]:
+                  | {
+                      runId: string;
+                      draftId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    }
+                  | {
+                      draftId: string;
+                      runId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    };
               } | null;
               isConfidential: boolean;
               endedAt: string | null;

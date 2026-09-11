@@ -110,6 +110,30 @@ export function SettingsAiAnalysisPage() {
     setDetail((current) => ({ ...current, [field]: message }));
   }
 
+  async function saveWorkflow(
+    patch: { matterPreparation: boolean } | { contractPreparation: boolean },
+  ): Promise<void> {
+    note("workflow", "saving");
+    try {
+      const result = await api.PATCH("/api/v1/ai-connector/workflows", {
+        body: patch,
+      });
+      if (result.data) {
+        setConnector(result.data.connector);
+        note("workflow", "saved");
+      } else note("workflow", "error", (await problem(result)).detail);
+    } catch {
+      note(
+        "workflow",
+        "error",
+        intl.formatMessage({
+          id: "conversion.settingsFailed",
+          defaultMessage: "The conversion setting could not be saved.",
+        }),
+      );
+    }
+  }
+
   function choosePreset(next: Preset): void {
     const option = loaded.presets.find((candidate) => candidate.preset === next)!;
     setPreset(next);
@@ -478,27 +502,7 @@ export function SettingsAiAnalysisPage() {
               id="matter-preparation"
               checked={connector.matterPreparation}
               disabled={!connector.enabled || status.workflow === "saving"}
-              onCheckedChange={async (matterPreparation) => {
-                note("workflow", "saving");
-                try {
-                  const result = await api.PATCH("/api/v1/ai-connector/workflows", {
-                    body: { matterPreparation },
-                  });
-                  if (result.data) {
-                    setConnector(result.data.connector);
-                    note("workflow", "saved");
-                  } else note("workflow", "error", (await problem(result)).detail);
-                } catch {
-                  note(
-                    "workflow",
-                    "error",
-                    intl.formatMessage({
-                      id: "conversion.settingsFailed",
-                      defaultMessage: "The conversion setting could not be saved.",
-                    }),
-                  );
-                }
-              }}
+              onCheckedChange={(matterPreparation) => void saveWorkflow({ matterPreparation })}
             />
           </div>
           <div className="flex items-center justify-between gap-4 p-4">
@@ -512,27 +516,7 @@ export function SettingsAiAnalysisPage() {
               id="contract-preparation"
               checked={connector.contractPreparation}
               disabled={!connector.enabled || status.workflow === "saving"}
-              onCheckedChange={async (contractPreparation) => {
-                note("workflow", "saving");
-                try {
-                  const result = await api.PATCH("/api/v1/ai-connector/workflows", {
-                    body: { contractPreparation },
-                  });
-                  if (result.data) {
-                    setConnector(result.data.connector);
-                    note("workflow", "saved");
-                  } else note("workflow", "error", (await problem(result)).detail);
-                } catch {
-                  note(
-                    "workflow",
-                    "error",
-                    intl.formatMessage({
-                      id: "conversion.settingsFailed",
-                      defaultMessage: "The conversion setting could not be saved.",
-                    }),
-                  );
-                }
-              }}
+              onCheckedChange={(contractPreparation) => void saveWorkflow({ contractPreparation })}
             />
           </div>
           <StatusNote status={status.workflow} detail={detail.workflow} />

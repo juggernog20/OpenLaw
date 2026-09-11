@@ -1018,6 +1018,48 @@ it("keeps Contract paper and conversation evidence through one concurrent conver
     .from(contracts)
     .where(eq(contracts.id, original!.convertedContractId!));
   expect(contract!.aiUnverified!["field:contract_opening"]!.draftId).toBe(id);
+  // Detaching hides the marker with its Field but retains both for reattachment.
+  await harness.db.delete(contractTypeFields).where(eq(contractTypeFields.fieldId, field!.id));
+  const detachedReads = await Promise.all([
+    harness.app.inject({
+      url: `/api/v1/contracts/${contract!.number}`,
+      cookies: cast.memberCookies,
+    }),
+    harness.app.inject({ url: "/api/v1/contracts", cookies: cast.memberCookies }),
+    harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/contracts/${contract!.number}`,
+      cookies: cast.memberCookies,
+      payload: { priority: "medium" },
+    }),
+  ]);
+  for (const response of detachedReads) {
+    expect(response.statusCode, response.body).toBe(200);
+    const body = response.json();
+    const row = body.contract ?? body.contracts.find((c: { id: string }) => c.id === contract!.id);
+    expect(row.customFields.contract_opening).toBe("Supported opening");
+    expect(row.aiUnverified).not.toHaveProperty("field:contract_opening");
+    expect(row.aiUnverified.title).toMatchObject({ draftId: id });
+  }
+  for (const action of ["archive", "restore"]) {
+    const response = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract!.number}/${action}`,
+      cookies: cast.memberCookies,
+    });
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.json().contract.aiUnverified).not.toHaveProperty("field:contract_opening");
+  }
+  await harness.db
+    .insert(contractTypeFields)
+    .values({ typeId: type!.id, fieldId: field!.id, displayOrder: 999, isRequired: false });
+  const reattached = await harness.app.inject({
+    url: `/api/v1/contracts/${contract!.number}`,
+    cookies: cast.memberCookies,
+  });
+  expect(reattached.json().contract.aiUnverified["field:contract_opening"]).toMatchObject({
+    draftId: id,
+  });
   const read = await harness.app.inject({
     url: `/api/v1/contracts/${contract!.number}/conversion-evidence/field:contract_opening`,
     cookies: cast.otherMemberCookies,
