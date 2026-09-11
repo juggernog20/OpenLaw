@@ -2645,10 +2645,15 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           // theirs to make. It is M10's ordering, one level down.
           if (body.isConfidential !== undefined) {
             await assertMayFlagConfidential(tx, target, request.user);
-            if (body.isConfidential && !target.isConfidential)
-              await assertConversionDocumentCanNarrow(tx, documentId);
           }
           assertOpenDocument(target);
+          // The INT-008 narrowing refusal is about this document's own
+          // state, not the actor's standing, so it waits until after the
+          // freezes above. An archived document has a plainer reason to
+          // give, and its citations already read as unavailable, so
+          // there is no unreviewed derivative left to protect there.
+          if (body.isConfidential && !target.isConfidential)
+            await assertConversionDocumentCanNarrow(tx, documentId);
 
           const patch: {
             title?: string;

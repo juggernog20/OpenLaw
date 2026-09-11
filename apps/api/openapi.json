@@ -24048,7 +24048,15 @@
                                 "type": ["string", "null"]
                               },
                               "method": {
-                                "type": ["string", "null"]
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "enum": ["native_layer", "converted", "ocr", "email_body"]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
                               }
                             },
                             "required": [
@@ -24152,7 +24160,15 @@
                                 "type": ["string", "null"]
                               },
                               "method": {
-                                "type": ["string", "null"]
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "enum": ["native_layer", "converted", "ocr", "email_body"]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
                               }
                             },
                             "required": [

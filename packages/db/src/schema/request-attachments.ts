@@ -53,12 +53,17 @@ export const requestAttachments = pgTable(
     /** Who attached it. The Requester on the portal. A column of its
      * own because the Request's own `requester_id` answers a different
      * question: who asked, not who put this file here. */
-    promotedVersionId: text("promoted_version_id").references(() => documentVersions.id, {
-      onDelete: "set null",
-    }),
     uploadedBy: text("uploaded_by")
       .notNull()
       .references(() => users.id),
+    /** The immutable Version ordinary conversion promoted this file to,
+     * and null until then (#827). It is what keeps a prepared Matter
+     * value's citation pointing at the same paper after conversion.
+     * `set null` on delete, because DOC-010 erasing that chain leaves
+     * the Request's own retained blob behind and no Version to cite. */
+    promotedVersionId: text("promoted_version_id").references(() => documentVersions.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [

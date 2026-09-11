@@ -102,12 +102,16 @@ function AttachmentSurface({ citation }: Readonly<{ citation: Citation }>) {
     async function poll() {
       const next = await readRenditionState(attachment.documentId!, attachment.versionId!);
       if (!live) return;
-      if (next === "unreachable" || (next === "pending" && Date.now() >= deadline)) {
-        setState("failed");
+      // `unreachable` is a dropped connection, not an answer about the
+      // file, so it waits out the same bound a running conversion does.
+      // Giving up on the first one would tell the reader this source has
+      // no passage preview when the rendition is sitting there ready.
+      if (next === "unreachable" || next === "pending") {
+        if (Date.now() >= deadline) setState("failed");
+        else timer = setTimeout(() => void poll(), DOCUMENT_DERIVATION_POLL_MS);
         return;
       }
       setState(next);
-      if (next === "pending") timer = setTimeout(() => void poll(), DOCUMENT_DERIVATION_POLL_MS);
     }
     void poll();
     return () => {

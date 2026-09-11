@@ -744,6 +744,17 @@ it("reads all eligible paper once, preserves named evidence, and maps promotion 
     .set({ archivedAt: new Date() })
     .where(eq(documents.id, version!.documentId));
   expect((await after()).json()).toEqual({ available: false, citations: [] });
+  // An archived Document gives its own reason rather than the narrowing
+  // refusal: its citations already read as unavailable, so there is no
+  // unreviewed derivative for a person to go and confirm.
+  const archivedNarrowing = await harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/documents/${version!.documentId}`,
+    cookies: cast.memberCookies,
+    payload: { isConfidential: true },
+  });
+  expect(archivedNarrowing.statusCode).toBe(409);
+  expect(archivedNarrowing.json().detail).toContain("archived");
 });
 
 it("reuses cached attachment reads when preparation retries a provider failure", async () => {

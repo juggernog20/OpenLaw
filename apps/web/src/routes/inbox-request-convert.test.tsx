@@ -1335,22 +1335,31 @@ describe("Matter Conversion drafts", () => {
     await waitFor(() => expect(trigger).toHaveFocus());
     expect(screen.getByRole("dialog")).toBe(convert);
   });
-  it.each(["unreachable", "failed", "ready at deadline"])(
+  it.each(["unreachable to the deadline", "failed", "ready at deadline", "unreachable once"])(
     "handles a mapped Office rendition that is %s without losing Convert",
     async (result) => {
       const user = userEvent.setup();
       const base = preparedApi();
       const href = "/api/v1/documents/promoted/versions/immutable/preview";
       const clock = vi.spyOn(Date, "now");
+      let renditionReads = 0;
       try {
         const { router } = open({
           ...base,
           handler: (call: StubCall) => {
             if (call.url.pathname.endsWith("/rendition")) {
-              if (result === "ready at deadline") clock.mockReturnValue(Date.now() + 60_001);
-              return result === "unreachable"
-                ? json(404, {})
-                : json(200, { rendition: { state: result === "failed" ? "failed" : "ready" } });
+              renditionReads += 1;
+              // A read nobody answers is worth waiting through: only the
+              // first arm runs the clock past the bound, and the last one
+              // answers on the retry the panel is supposed to make.
+              if (result === "ready at deadline" || result === "unreachable to the deadline")
+                clock.mockReturnValue(Date.now() + 60_001);
+              if (result === "unreachable to the deadline") return json(404, {});
+              if (result === "unreachable once")
+                return renditionReads === 1
+                  ? json(404, {})
+                  : json(200, { rendition: { state: "ready" } });
+              return json(200, { rendition: { state: result === "failed" ? "failed" : "ready" } });
             }
             if (call.url.pathname.includes("/evidence/"))
               return json(200, {
@@ -1383,10 +1392,15 @@ describe("Matter Conversion drafts", () => {
         })[0]!;
         await user.click(trigger);
         const panel = await screen.findByRole("dialog", { name: "Source document" });
-        if (result === "ready at deadline") {
+        if (result === "ready at deadline" || result === "unreachable once") {
           expect(
-            await within(panel).findByRole("region", { name: "Agreement.docx, pages" }),
+            await within(panel).findByRole(
+              "region",
+              { name: "Agreement.docx, pages" },
+              { timeout: 6000 },
+            ),
           ).toBeVisible();
+          expect(renditionReads).toBe(result === "unreachable once" ? 2 : 1);
         } else {
           expect(
             await within(panel).findByText(

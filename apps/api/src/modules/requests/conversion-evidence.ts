@@ -32,7 +32,10 @@ export const EvidenceSchema = z.object({
           downloadHref: z.string(),
           documentId: z.string().nullable(),
           versionId: z.string().nullable(),
-          method: z.string().nullable(),
+          // The read method the panel routes on, as its own four values
+          // rather than a bare string: a mistyped one has to fail here
+          // and not silently pick the plain-text fallback in the client.
+          method: z.enum(["native_layer", "converted", "ocr", "email_body"]).nullable(),
         })
         .optional(),
     }),

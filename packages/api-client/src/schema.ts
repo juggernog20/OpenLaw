@@ -14862,7 +14862,7 @@ export interface operations {
                 downloadHref: string;
                 documentId: string | null;
                 versionId: string | null;
-                method: string | null;
+                method: ("native_layer" | "converted" | "ocr" | "email_body") | null;
               };
             }[];
           };
@@ -14909,7 +14909,7 @@ export interface operations {
                 downloadHref: string;
                 documentId: string | null;
                 versionId: string | null;
-                method: string | null;
+                method: ("native_layer" | "converted" | "ocr" | "email_body") | null;
               };
             }[];
           };
