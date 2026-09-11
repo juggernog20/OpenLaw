@@ -2195,11 +2195,17 @@
   "conversion.attachmentOmissions": {
     "defaultMessage": "Some attachments could not be fully read. Review the source statuses and original files before converting."
   },
+  "conversion.attachmentReadStatus": {
+    "defaultMessage": "{label}: {status}{hasReason, select, yes { — {reason}} other {}}"
+  },
   "conversion.attachmentReads": {
     "defaultMessage": "Attachment reading details"
   },
   "conversion.budgetOmitted": {
     "defaultMessage": "Some sources exceeded the reading limit and were omitted. Review the original Request too."
+  },
+  "conversion.confirmFailed": {
+    "defaultMessage": "Confirmation could not be saved. Try again."
   },
   "conversion.conflicts": {
     "defaultMessage": "Conflicting sources need your review:"

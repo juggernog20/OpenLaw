@@ -28,9 +28,9 @@ export async function requestAnalysisEvidenceReader(
   db: Executor,
   user: AuthenticatedUser,
   run: ContractAnalysisRun,
-): Promise<(slug: string) => Promise<Evidence>> {
+): Promise<(slug: string) => Promise<Evidence & { authorized: boolean }>> {
   const context = run.sourceContext;
-  const unavailable = { available: false, citations: [] };
+  const unavailable = { authorized: true, available: false, citations: [] };
   if (!context) return async () => unavailable;
   const [contract] = await db
     .select({ typeId: contracts.contractTypeId })
@@ -42,7 +42,6 @@ export async function requestAnalysisEvidenceReader(
     if (error instanceof HttpError && error.statusCode === 404) return null;
     throw error;
   });
-  if (!source || source.row.convertedContractId !== run.contractId) return async () => unavailable;
   return async (slug) => {
     if (!(CORE_ANALYSIS_SLUGS as readonly string[]).includes(slug)) {
       const field = fields.find((field) => field.slug === slug);
@@ -50,18 +49,22 @@ export async function requestAnalysisEvidenceReader(
         !field ||
         (field.fieldTag === "legal" && !["administrator", "legal_team_member"].includes(user.role))
       )
-        return unavailable;
+        return { ...unavailable, authorized: false };
     }
-    return conversionEvidence(
-      db,
-      user,
-      source,
-      {
-        id: run.id,
-        attachmentReads: context.attachmentReads,
-        originalCommentAttachments: true,
-      },
-      context.suggestions[slug],
-    );
+    if (!source || source.row.convertedContractId !== run.contractId) return unavailable;
+    return {
+      authorized: true,
+      ...(await conversionEvidence(
+        db,
+        user,
+        source,
+        {
+          id: run.id,
+          attachmentReads: context.attachmentReads,
+          originalCommentAttachments: true,
+        },
+        context.suggestions[slug],
+      )),
+    };
   };
 }

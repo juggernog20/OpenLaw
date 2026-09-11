@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 /** Durable actor-scoped proposals before Request conversion (INT-008). */
-import { index, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { check, index, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import type { ConversionSuggestion, ConversionAttachmentRead } from "@openlaw/shared";
 import { uuidPk } from "./helpers.js";
 import { requests } from "./requests.js";
@@ -37,11 +38,18 @@ export const conversionDrafts = pgTable(
       .notNull()
       .default([]),
     failure: text("failure"),
+    leaseAt: timestamp("lease_at", { withTimezone: true }),
     startedAt: timestamp("started_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     finishedAt: timestamp("finished_at", { withTimezone: true }),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
   },
   (t) => [
+    check("conversion_drafts_state_check", sql`${t.state} in ('pending', 'ready', 'failed')`),
+    check("conversion_drafts_module_check", sql`${t.targetModule} in ('matter', 'contract')`),
     uniqueIndex("conversion_drafts_snapshot_idx").on(
       t.requestId,
       t.actorId,

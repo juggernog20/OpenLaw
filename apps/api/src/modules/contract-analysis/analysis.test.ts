@@ -673,7 +673,13 @@ describe("the manual Contract analysis run", () => {
     setAnswers({ term_type: { value, evidence } });
     const response = await startRun(contract.number);
     const run = await waitForRun(response.json().run.id as string);
-    expect(run.outcome!.results).toContainEqual({
+    const runRead = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/contracts/${contract.number}/analysis/${run.id}`,
+      cookies: memberCookies,
+    });
+    expect(runRead.statusCode, runRead.body).toBe(200);
+    expect(runRead.json().run.outcome.results).toContainEqual({
       slug: "term_type",
       value: expected,
       evidence,
@@ -698,7 +704,13 @@ describe("the manual Contract analysis run", () => {
     expect(confirmation.statusCode, confirmation.body).toBe(200);
     const rerun = await startRun(contract.number);
     const settled = await waitForRun(rerun.json().run.id as string);
-    expect(settled.outcome!.results).toContainEqual({
+    const rerunRead = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/contracts/${contract.number}/analysis/${settled.id}`,
+      cookies: memberCookies,
+    });
+    expect(rerunRead.statusCode, rerunRead.body).toBe(200);
+    expect(rerunRead.json().run.outcome.results).toContainEqual({
       slug: "term_type",
       value: expected,
       evidence,
@@ -723,8 +735,14 @@ describe("the manual Contract analysis run", () => {
       });
       const response = await startRun(contract.number);
       const run = await waitForRun(response.json().run.id as string);
-      expect(run.outcome!.unmatched).toBe("Acme LLC");
-      expect(run.outcome!.results).toContainEqual(
+      const runRead = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/contracts/${contract.number}/analysis/${run.id}`,
+        cookies: memberCookies,
+      });
+      expect(runRead.statusCode, runRead.body).toBe(200);
+      expect(runRead.json().run.outcome.unmatched).toBe("Acme LLC");
+      expect(runRead.json().run.outcome.results).toContainEqual(
         expect.objectContaining({ slug: "counterparty", outcome: "unmatched" }),
       );
       const read = await harness.app.inject({

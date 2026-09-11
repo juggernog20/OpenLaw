@@ -864,9 +864,23 @@ function toRow(
     aiUnverified: publicUnverified(
       row.aiUnverified
         ? Object.fromEntries(
-            Object.entries(row.aiUnverified).filter(
-              ([slug, flag]) =>
-                !flag.draftId || !slug.startsWith("field:") || visibleSlugs.has(slug.slice(6)),
+            Object.entries(row.aiUnverified).filter(([slug]) =>
+              slug.startsWith("field:")
+                ? visibleSlugs.has(slug.slice(6))
+                : [
+                    "title",
+                    "description",
+                    "priority",
+                    "contract_type",
+                    "counterparty",
+                    "needed_by",
+                    "term_type",
+                    "effective_date",
+                    "expiry_date",
+                    "renewal_period_months",
+                    "notice_period_days",
+                    "value",
+                  ].includes(slug) || visibleSlugs.has(slug),
             ),
           )
         : null,
@@ -2592,7 +2606,25 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         if (body.noticePeriodDays !== undefined) humanWrittenSlugs.add("notice_period_days");
         if (body.value !== undefined) humanWrittenSlugs.add("value");
         for (const slug of Object.keys(body.customFields ?? {})) {
-          humanWrittenSlugs.add(slug);
+          // Older analysis markers use bare custom slugs. A legacy Field
+          // named like a built-in must only clear its namespaced marker.
+          if (
+            ![
+              "title",
+              "description",
+              "priority",
+              "contract_type",
+              "counterparty",
+              "needed_by",
+              "term_type",
+              "effective_date",
+              "expiry_date",
+              "renewal_period_months",
+              "notice_period_days",
+              "value",
+            ].includes(slug)
+          )
+            humanWrittenSlugs.add(slug);
           humanWrittenSlugs.add(`field:${slug}`);
         }
         // A term-type write may clear a dependent even when the body did
@@ -2601,15 +2633,11 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         if (patch.renewalPeriodMonths !== undefined) {
           humanWrittenSlugs.add("renewal_period_months");
         }
-        if (humanWrittenSlugs.size > 0)
-          patch.analysisHumanFields = [
-            ...new Set([
-              ...target.analysisHumanFields,
-              ...[...humanWrittenSlugs].map((slug) =>
-                slug.startsWith("field:") ? slug.slice(6) : slug,
-              ),
-            ]),
-          ];
+        const humanFields = new Set(target.analysisHumanFields);
+        for (const slug of humanWrittenSlugs)
+          humanFields.add(slug.startsWith("field:") ? slug.slice(6) : slug);
+        if (humanFields.size > target.analysisHumanFields.length)
+          patch.analysisHumanFields = [...humanFields];
         if (target.aiUnverified && humanWrittenSlugs.size > 0) {
           const remaining = { ...target.aiUnverified };
           for (const slug of humanWrittenSlugs) delete remaining[slug];
@@ -3251,11 +3279,20 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           )
           .returning();
         if (!removed) throw httpError(404, "That counterparty is not on this contract.");
-        if (removed.isPrimary && !current.row.analysisHumanFields.includes("counterparty")) {
+        if (
+          removed.isPrimary &&
+          (!current.row.analysisHumanFields.includes("counterparty") ||
+            current.row.aiUnverified?.counterparty)
+        ) {
+          const remaining = { ...current.row.aiUnverified };
+          delete remaining.counterparty;
           const [updated] = await tx
             .update(contracts)
             .set({
-              analysisHumanFields: [...current.row.analysisHumanFields, "counterparty"],
+              analysisHumanFields: [
+                ...new Set([...current.row.analysisHumanFields, "counterparty"]),
+              ],
+              aiUnverified: Object.keys(remaining).length ? remaining : null,
             })
             .where(eq(contracts.id, current.row.id))
             .returning();
@@ -3279,7 +3316,6 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           // A person taking the primary off verifies that slot (CTR-008):
           // an analysis run may have linked it, and its marker must not
           // outlive the link.
-          await clearAiUnverified(tx, current.row.id, "counterparty");
           const [next] = await tx
             .select({ id: counterparties.id, name: counterparties.name })
             .from(contractCounterparties)

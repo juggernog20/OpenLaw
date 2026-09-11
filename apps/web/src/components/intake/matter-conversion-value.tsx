@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 /** Matter value markers backed by Conversion draft provenance (INT-008). */
+import { useIntl } from "react-intl";
 import type { ReactNode } from "react";
 import { api } from "../../lib/api";
 import { problem } from "../../lib/problem";
@@ -18,6 +19,7 @@ export function MatterConversionValue({
   children: ReactNode;
   onConfirmed?: (slug: string) => void;
 }>) {
+  const intl = useIntl();
   return (
     <AiField active={active} className="min-w-0">
       {children}
@@ -28,13 +30,20 @@ export function MatterConversionValue({
           onConfirm={
             onConfirmed
               ? async () => {
-                  const result = await api.POST(
-                    "/api/v1/matters/{number}/conversion-confirm/{slug}",
-                    { params: { path: { number, slug } } },
-                  );
-                  if (!result.data) return (await problem(result)).detail;
-                  onConfirmed(slug);
-                  return undefined;
+                  try {
+                    const result = await api.POST(
+                      "/api/v1/matters/{number}/conversion-confirm/{slug}",
+                      { params: { path: { number, slug } } },
+                    );
+                    if (!result.data) return (await problem(result)).detail;
+                    onConfirmed(slug);
+                    return undefined;
+                  } catch {
+                    return intl.formatMessage({
+                      id: "conversion.confirmFailed",
+                      defaultMessage: "Confirmation could not be saved. Try again.",
+                    });
+                  }
                 }
               : undefined
           }

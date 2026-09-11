@@ -952,6 +952,7 @@ function ContractRecord() {
    * DES-010's restore-to-trigger rule, wired by hand because the panel
    * is a plain aside. */
   const readingTrigger = useRef<HTMLElement | null>(null);
+  const citationSequence = useRef(0);
   /** The deliberate focus fallback for a panel opened from a search
    * landing, where no row control was pressed in this page. */
   const documentsSection = useRef<HTMLElement | null>(null);
@@ -1183,9 +1184,21 @@ function ContractRecord() {
   const analysisRunnable = analysisConfirmable && saved.endedAt === null;
   useEffect(() => {
     if (analysis.latestRun?.state !== "pending") return;
-    const timer = setInterval(() => void revalidate(), 2000);
-    return () => clearInterval(timer);
-  }, [analysis.latestRun?.state, revalidate]);
+    let delay = 2000;
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const poll = async () => {
+      await revalidate();
+      if (stopped) return;
+      delay = Math.min(delay * 2, 30_000);
+      timer = setTimeout(() => void poll(), delay);
+    };
+    timer = setTimeout(() => void poll(), delay);
+    return () => {
+      stopped = true;
+      clearTimeout(timer);
+    };
+  }, [analysis.latestRun?.id, analysis.latestRun?.state, revalidate]);
   const canRunAnalysis =
     analysis.available && analysisRunnable && analysis.latestRun?.state !== "pending";
   const unverifiedMarker = (slug: string) =>
@@ -1252,7 +1265,7 @@ function ContractRecord() {
               documentId,
               versionId,
               findQuery: quote,
-              citationKey: crypto.randomUUID(),
+              citationKey: String(++citationSequence.current),
             });
             return true;
           }}

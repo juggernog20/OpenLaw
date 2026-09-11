@@ -11,6 +11,8 @@
  * fire transitionend, so close tests dispatch it on the clip.
  */
 
+import { useContext } from "react";
+import { SourceDocumentPanel } from "../intake/source-document-panel";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -375,4 +377,51 @@ describe("record applets (#47)", () => {
     expect(region).not.toContainElement(screen.getByRole("complementary", { name: "Chat" }));
     expect(region).not.toContainElement(screen.getByRole("toolbar", { name: "Applets" }));
   });
+});
+
+vi.mock("../../lib/documents", () => ({
+  readDocumentLanding: async () => ({
+    document: { id: "doc", title: "Cited document", versions: [{ id: "version" }] },
+    versionId: "version",
+  }),
+}));
+vi.mock("../documents/doc-panel", () => ({
+  DocPanel: () => <aside aria-label="Cited document">Saved citation</aside>,
+}));
+
+function OpenCitation() {
+  const open = useContext(SourceDocumentPanel);
+  return (
+    <button
+      onClick={(event) =>
+        void open?.({
+          module: "matter",
+          number: 1,
+          documentId: "doc",
+          versionId: "version",
+          quote: "Evidence",
+          trigger: event.currentTarget,
+        })
+      }
+    >
+      Open evidence
+    </button>
+  );
+}
+
+it("discards a citation when navigating away, so returning does not reopen it", async () => {
+  const page = (recordKey: string) => (
+    <IntlProvider locale="en-US">
+      <RecordApplets recordKey={recordKey} applets={[]}>
+        <OpenCitation />
+      </RecordApplets>
+    </IntlProvider>
+  );
+  const { rerender } = render(page("matter:1"));
+  await userEvent.setup().click(screen.getByRole("button", { name: "Open evidence" }));
+  expect(await screen.findByRole("complementary", { name: "Cited document" })).toBeVisible();
+  rerender(page("matter:2"));
+  expect(screen.queryByRole("complementary", { name: "Cited document" })).toBeNull();
+  rerender(page("matter:1"));
+  expect(screen.queryByRole("complementary", { name: "Cited document" })).toBeNull();
 });

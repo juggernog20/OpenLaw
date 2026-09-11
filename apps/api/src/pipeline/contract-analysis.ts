@@ -41,7 +41,7 @@ import { AiConfigError, isTerminalAiError, type AiExtraction } from "../lib/ai/p
 import type { AiResolver } from "../lib/ai/resolver.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../lib/activity.js";
 import { requestAnalysisContext } from "./conversion-analysis.js";
-import { hash, normalizeQuote, withAttachmentReads } from "../lib/conversion-draft.js";
+import { checkedCitations, hash, withAttachmentReads } from "../lib/conversion-draft.js";
 import { ATTACHMENT_LIMITS, readConversionAttachments } from "../lib/conversion-attachments.js";
 import type { StorageAdapter } from "../lib/storage/adapter.js";
 import type { DocEngine } from "../lib/doc-engine/engine.js";
@@ -862,22 +862,8 @@ async function handleRequestAnalysis(deps: ContractAnalysisDeps, run: ContractAn
         !targets.some((target) => target.slug === answer.slug)
       )
         continue;
-      const citations = answer.citations?.length
-        ? answer.citations
-        : answer.sourceId && answer.evidence
-          ? [{ sourceId: answer.sourceId, quote: answer.evidence }]
-          : [];
-      if (!citations.length || citations.length > 20) continue;
-      const valid = citations.flatMap((citation) => {
-        const source = context.sources.find((source) => source.id === citation.sourceId);
-        return source &&
-          citation.quote.trim() &&
-          citation.quote.length <= 4000 &&
-          normalizeQuote(source.text).includes(normalizeQuote(citation.quote))
-          ? [{ ...citation, revision: source.revision }]
-          : [];
-      });
-      if (valid.length !== citations.length) continue;
+      const valid = checkedCitations(answer, context.sources);
+      if (!valid) continue;
       suggestions[answer.slug] = { value: JSON.stringify(answer.value) ?? "", citations: valid };
       checked.push({ ...answer, evidence: valid.map((citation) => citation.quote).join("\n") });
     }

@@ -20,7 +20,7 @@ If creation is refused, read the message, fill the named missing or invalid valu
 
 ## Use a template
 
-After choosing the Matter type, check **Template (optional)**. A type with one available template selects it automatically. With several templates, choose the one that fits; choose **No template** to create without one.
+After choosing the Matter type, check **Matter template**. Choose a template explicitly to apply its defaults, Tasks and Key dates, or leave **No template** selected to create without one.
 
 A template can prefill the title, Priority, Risk, and attached Fields, and the dialog tells you how many Tasks and Key dates it adds. Review those values before creating. Changing or removing the template resets its Priority, Risk, and Field defaults; a title you have typed is preserved unless it still matches the previous template's title prefix.
 

@@ -1335,3 +1335,7 @@ CMT-001 Task conversations addendum.
 ### `conversion_drafts` attachment reads (#827)
 
 `attachment_reads` is a non-null JSON array (default `[]`) of original source id/revision, display label, readable/unreadable/unsupported/truncated/omitted status, omission reason, bounded extracted text, and optional media type, read method, byte size and stored display-rendition reference. These are derivations, never Documents. The actor-scoped Conversion draft keeps them for model retries and authorized citation reads. Public draft responses expose status/label/reason and deterministic limits; they never expose storage references or uncited extracted text. Metadata-only source snapshots remain independent of extraction and promotion mapping (INT-008).
+
+### Conversion lifecycle hardening (#824 final review)
+
+Conversion drafts enforce their `pending | ready | failed` states and `matter | contract` targets with CHECK constraints. A nullable `lease_at` is renewed every 30 seconds while preparation runs; `started_at` remains the worker's immutable claim token. Recovery checks pending conversion work once per minute. Drafts and Contract Analysis runs carry non-null `created_at` and `updated_at`; application writes refresh `updated_at`. These internal timestamps are not added to public response schemas. Partial indexes on Matter and Contract IDs where `ai_unverified is not null` support source audience checks without scanning unmarked records. [INT-008, CTR-008]

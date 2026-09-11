@@ -122,7 +122,10 @@ export const JOB_QUEUES = {
   morningRound: "notification.morning-round",
   /** One CTR-008 analysis run, collapsed by Contract while waiting. */
   contractAnalysis: "contract.analysis",
+  /** INT-008 preparation has its own queue so it cannot block Document derivations. */
   conversionDraft: "request.conversion-draft",
+  /** Re-ask abandoned conversion work promptly, once per install. */
+  conversionSweep: "request.conversion-sweep",
 } as const;
 
 /** What the text-extraction queue carries. */
@@ -167,6 +170,11 @@ export interface NotificationEmailJob {
   notificationId: string;
 }
 
+/** Only the durable proposal ID travels through the queue; context is read at execution. */
+export interface ConversionDraftJob {
+  draftId: string;
+}
+
 export interface ContractAnalysisJob {
   contractId: string;
   runId: string;
@@ -178,6 +186,7 @@ export interface ContractAnalysisJob {
  * only ever sees this type and never learns that pg-boss is behind it.
  */
 export interface JobQueue {
+  /** Acknowledges enqueueing, not completion. A refused ask is recovered from the pending row by the conversion sweep. */
   requestConversionDraft(draftId: string): Promise<void>;
   /**
    * Asks for one version's text to be extracted (DOC-005).

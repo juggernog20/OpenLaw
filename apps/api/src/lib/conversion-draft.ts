@@ -320,10 +320,8 @@ export async function conversionContext(
     ]),
   };
 }
-export function checkedSuggestion(
-  answer: AiExtraction,
-  context: Awaited<ReturnType<typeof conversionContext>>,
-): ConversionSuggestion | null {
+/** Exact source identity, quote bounds and normalized matching shared by both conversion passes. */
+export function checkedCitations(answer: AiExtraction, sources: readonly AiSource[]) {
   const citations = answer.citations?.length
     ? answer.citations
     : answer.sourceId && answer.evidence
@@ -331,7 +329,7 @@ export function checkedSuggestion(
       : [];
   if (!citations.length || citations.length > 20) return null;
   const checked = citations.flatMap((citation) => {
-    const source = context.sources.find((s) => s.id === citation.sourceId);
+    const source = sources.find((s) => s.id === citation.sourceId);
     return source &&
       citation.quote.trim() &&
       citation.quote.length <= 4000 &&
@@ -339,7 +337,15 @@ export function checkedSuggestion(
       ? [{ ...citation, revision: source.revision }]
       : [];
   });
-  if (checked.length !== citations.length) return null;
+  return checked.length === citations.length ? checked : null;
+}
+
+export function checkedSuggestion(
+  answer: AiExtraction,
+  context: Awaited<ReturnType<typeof conversionContext>>,
+): ConversionSuggestion | null {
+  const checked = checkedCitations(answer, context.sources);
+  if (!checked) return null;
   const raw = answer.value;
   let value: ConversionSuggestion["value"] | null = null;
   if (answer.conflict) value = "Review conflicting sources";

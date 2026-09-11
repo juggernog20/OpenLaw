@@ -109,7 +109,8 @@ export async function conversionEvidence(
     const read = draft.attachmentReads.find(
       (a) => a.sourceId === citation.sourceId && a.revision === citation.revision,
     );
-    if (!read || !normalizeQuote(read.text).includes(normalizeQuote(citation.quote))) continue;
+    if (!read?.text || !normalizeQuote(read.text).includes(normalizeQuote(citation.quote)))
+      continue;
     const authorized = await authorizedAttachment(db, user, source, read);
     if (!authorized) continue;
     let commentRoot: string | null = null;

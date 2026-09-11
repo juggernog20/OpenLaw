@@ -149,7 +149,7 @@ export function ConversionEvidence({
               <FormattedMessage id="conversion.evidenceLoading" defaultMessage="Loading source…" />
             </p>
           ) : !evidence.available ? (
-            <p>
+            <p role="alert">
               <FormattedMessage
                 id="conversion.evidenceUnavailable"
                 defaultMessage="The source is unavailable or has changed."

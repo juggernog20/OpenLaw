@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-/** Source-bound Matter conversion suggestions and unverified values (INT-008). */
+/** Source-bound record conversion suggestions and unverified values (INT-008). */
 
-/** INT-008: a proposal reviewed before the ordinary conversion creates a record. */
+/** A quoted passage bound to one immutable source revision. */
 export interface ConversionCitation {
   sourceId: string;
   revision: string;
   quote: string;
 }
+/** INT-008: a proposal reviewed before ordinary conversion creates a record. */
 export interface ConversionSuggestion {
   value: string | number | boolean | string[];
   citations: ConversionCitation[];
@@ -26,9 +27,11 @@ export interface ConversionAttachmentRead {
   label: string;
   status: "readable" | "unreadable" | "unsupported" | "truncated" | "omitted";
   reason?: "source_limit" | "byte_limit" | "character_limit" | "runtime_limit" | "restricted";
+  /** Server-side extraction; only authorized matched citations expose source text. */
   text: string;
   mimeType?: string;
   method?: "native_layer" | "converted" | "ocr" | "email_body";
+  /** Server-side storage reference, translated to an authorized attachment URL when read. */
   previewRef?: string;
   byteSize?: number;
 }

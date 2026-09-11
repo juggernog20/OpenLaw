@@ -68,6 +68,7 @@ export function RecordApplets({
     trigger: HTMLElement;
   } | null>(null);
   const readingCitation = citation?.recordKey === recordKey ? citation : null;
+  if (citation && citation.recordKey !== recordKey) setCitation(null);
   const [citationCovers, setCitationCovers] = useState(true);
   function closeCitation() {
     const trigger = citation?.trigger;

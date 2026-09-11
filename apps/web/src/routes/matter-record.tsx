@@ -246,6 +246,7 @@ function MatterRecord() {
       void api
         .GET("/api/v1/matters/{number}", { params: { path: { number: saved.number } } })
         .then(({ data }) => {
+          // Refresh provenance without overwriting an inline edit still being typed.
           if (active && data)
             setSaved((current) => ({ ...current, aiUnverified: data.matter.aiUnverified }));
         })
@@ -1215,6 +1216,7 @@ function MatterRecord() {
                   <div className="grid grid-cols-1 gap-4 p-4 @2xl/page:grid-cols-2">
                     {fields.map((field) => (
                       <MatterConversionValue
+                        // Retain the control's draft if the next Type attaches this same Field.
                         key={field.slug}
                         active={Boolean(saved.aiUnverified?.[`field:${field.slug}`])}
                         number={saved.number}
@@ -1223,9 +1225,6 @@ function MatterRecord() {
                       >
                         {" "}
                         <MatterCustomField
-                          // Keyed by slug, so a re-type onto a type that attaches
-                          // the same field keeps that control's draft.
-                          key={field.slug}
                           field={field}
                           saved={saved.customFields[field.slug]}
                           frozen={

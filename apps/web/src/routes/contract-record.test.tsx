@@ -1341,6 +1341,7 @@ describe("the /contracts/:number record page", () => {
       await user.click(trigger);
       expect(await screen.findByText("Opening cited passage…")).toBeVisible();
       await user.keyboard("{Escape}");
+      expect(trigger).toHaveAttribute("aria-busy", "false");
       await act(async () => {
         finish(
           json(200, {
@@ -1410,7 +1411,7 @@ describe("the /contracts/:number record page", () => {
       await user.keyboard("{Enter}");
       await waitFor(() => expect(asked).toContain(expected));
       // The value was never touched, so Enter left it alone.
-      expect(api.posts.filter((post) => post.startsWith("value"))).toEqual([]);
+      expect(api.patches).toEqual([]);
     });
 
     it("removes one marker from the confirmation response", async () => {
@@ -1476,9 +1477,6 @@ describe("the /contracts/:number record page", () => {
       await userEvent.setup().click(await screen.findByRole("button", { name: "Confirm all" }));
       await waitFor(() => expect(api.posts).toContain("confirm all"));
       expect(screen.queryByText("Unverified")).not.toBeInTheDocument();
-      expect(
-        screen.queryByRole("button", { name: "View AI evidence for Payment terms" }),
-      ).not.toBeInTheDocument();
       expect(screen.queryByRole("button", { name: "Confirm all" })).not.toBeInTheDocument();
     });
 
@@ -8318,6 +8316,9 @@ describe("the doc panel (M12/2)", () => {
     "centres a split-span AI citation with PDF line wrap %s",
     async (wrapped) => {
       const original = PDF_PAGE_TEXT[1]!;
+      const insecureCrypto = vi.spyOn(crypto, "randomUUID").mockImplementation(() => {
+        throw new Error("Unavailable outside a secure context");
+      });
       const scroll = vi.spyOn(Element.prototype, "scrollIntoView");
       if (wrapped) {
         PDF_PAGE_TEXT[1] = [
@@ -8385,6 +8386,7 @@ describe("the doc panel (M12/2)", () => {
         });
       } finally {
         scroll.mockRestore();
+        insecureCrypto.mockRestore();
         PDF_PAGE_TEXT[1] = original;
       }
     },
@@ -11639,7 +11641,7 @@ it("revalidates post-conversion Analysis without losing a typed title", async ()
   });
   await waitFor(
     () => expect(screen.getByText(/Request-context Analysis completed/)).toBeVisible(),
-    { timeout: 4000 },
+    { timeout: 10_000 },
   );
   expect(screen.getByLabelText("Description")).toHaveValue("Revalidated Contract description.");
   expect(screen.getByLabelText("Title")).toHaveValue("Unsaved human title");

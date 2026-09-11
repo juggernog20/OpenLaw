@@ -107,6 +107,7 @@ export const matterKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
       .from(matterKeyDates)
       .where(eq(matterKeyDates.matterId, context.matter.id))
       .orderBy(asc(matterKeyDates.date), asc(matterKeyDates.id));
+    // A Key date mutation may have cleared the marker after context was loaded.
     const [provenance] = await db
       .select({ flags: matters.aiUnverified })
       .from(matters)

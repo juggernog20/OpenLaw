@@ -79,7 +79,7 @@ export function AiFieldEvidence({
     } catch {
       // The error stays beside the field; the record remains usable.
     } finally {
-      if (!controller.signal.aborted) setBusy(false);
+      if (request.current === controller) setBusy(false);
     }
   }
 
@@ -93,7 +93,10 @@ export function AiFieldEvidence({
       onOpenChange={(next) => {
         setOpen(next);
         if (next) void showCitation();
-        else request.current?.abort();
+        else {
+          request.current?.abort();
+          setBusy(false);
+        }
       }}
     >
       <PopoverTrigger asChild>

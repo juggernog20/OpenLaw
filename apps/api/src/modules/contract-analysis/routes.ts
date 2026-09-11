@@ -98,16 +98,36 @@ export async function latestAnalysisRun(db: Executor, contractId: string, user: 
         .where(and(eq(documentVersions.id, row.run.versionId), documentAudienceScope(db, user)))
         .limit(1)
     : [];
-  if (row.run.sourceContext && row.run.outcome?.results) {
-    const results = [];
+  if (row.run.sourceContext && row.run.outcome) {
+    const outcome = row.run.outcome;
     const readEvidence = await requestAnalysisEvidenceReader(db, user, row.run);
-    for (const result of row.run.outcome.results) {
-      const evidence = await readEvidence(result.slug);
-      results.push(evidence.available ? result : { ...result, value: null, evidence: null });
-    }
+    const evidenceBySlug = new Map<string, Awaited<ReturnType<typeof readEvidence>>>();
+    for (const slug of new Set([
+      ...outcome.written,
+      ...outcome.kept,
+      ...outcome.invalid,
+      ...outcome.unsupported,
+      ...(outcome.results ?? []).map((result) => result.slug),
+    ]))
+      evidenceBySlug.set(slug, await readEvidence(slug));
+    const visible = (slug: string) => evidenceBySlug.get(slug)?.authorized === true;
     return {
       ...toAnalysisRun(row.run, row.versionNumber),
-      outcome: { ...row.run.outcome, unmatched: undefined, results },
+      outcome: {
+        ...outcome,
+        written: outcome.written.filter(visible),
+        kept: outcome.kept.filter(visible),
+        invalid: outcome.invalid.filter(visible),
+        unsupported: outcome.unsupported.filter(visible),
+        unmatched: undefined,
+        results: outcome.results
+          ?.filter((result) => visible(result.slug))
+          .map((result) =>
+            evidenceBySlug.get(result.slug)?.available
+              ? result
+              : { ...result, value: null, evidence: null },
+          ),
+      },
     };
   }
   if (!reachableVersion && row.run.outcome?.results) {

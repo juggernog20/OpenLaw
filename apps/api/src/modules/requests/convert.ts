@@ -216,7 +216,9 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
       // of the commit: the blobs it copied are taken away when the act
       // refuses, and the rounds it appended are asked for their
       // derivations once the act has committed (DOC-012, DOC-004).
-      let analysisRun: Awaited<ReturnType<typeof reserveConversionAnalysis>> = null;
+      const analysis: { run: Awaited<ReturnType<typeof reserveConversionAnalysis>> } = {
+        run: null,
+      };
       const converted = await withPromotedPaper(
         {
           storage: app.storage,
@@ -440,7 +442,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                   ],
                 })
                 .where(eq(contracts.id, born.row.id));
-              analysisRun = await reserveConversionAnalysis(tx, {
+              analysis.run = await reserveConversionAnalysis(tx, {
                 contractId: born.row.id,
                 requestId: held.id,
                 targetTypeId: target.typeId,
@@ -520,7 +522,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
           }),
       );
       // The committed run is the outbox. Reconciliation retries a lost queue ask.
-      const queuedRun = analysisRun as Awaited<ReturnType<typeof reserveConversionAnalysis>>;
+      const queuedRun = analysis.run;
       if (queuedRun)
         void app.jobs
           .requestContractAnalysis(queuedRun.contractId, queuedRun.id)

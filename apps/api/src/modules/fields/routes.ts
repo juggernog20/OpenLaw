@@ -16,6 +16,7 @@
  * (DD-017) inside the same transaction.
  */
 
+import { unverifiedConversionCitations } from "../../lib/conversion-source-privacy.js";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
@@ -25,8 +26,6 @@ import {
   contractTypeFields,
   count,
   eq,
-  conversionDrafts,
-  contractAnalysisRuns,
   entities,
   entityTypeFields,
   fields,
@@ -398,14 +397,10 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
           // in another slot would keep a broader audience after retagging.
           const dependencies = await tx.execute<{ present: boolean }>(sql`
             select exists (
-              select 1 from (select ai_unverified from ${matters} union all select ai_unverified from ${contracts}) m
-              cross join lateral jsonb_each(coalesce(m.ai_unverified, '{}'::jsonb)) marker
-              left join ${conversionDrafts} draft on draft.id = marker.value->>'draftId'
-              left join ${contractAnalysisRuns} run on run.id = marker.value->>'runId'
-              cross join lateral jsonb_array_elements(coalesce(draft.suggestions->marker.key->'citations', run.source_context->'suggestions'->marker.key->'citations', '[]'::jsonb)) citation
-              where citation->>'sourceId' = 'field:' || coalesce(draft.request_id, run.source_context->>'requestId') || ':' || ${target.slug}
-                and marker.key <> ${`field:${target.slug}`}
-                and marker.key <> ${target.slug}
+              select 1 from (${unverifiedConversionCitations}) dependency
+              where dependency.citation->>'sourceId' = 'field:' || dependency.request_id || ':' || ${target.slug}
+                and dependency.slug <> ${`field:${target.slug}`}
+                and dependency.slug <> ${target.slug}
             ) as present
           `);
           if (dependencies.rows[0]?.present)

@@ -766,7 +766,7 @@ export function ConvertDialog({
                   )}
                 </p>
               ))}
-            {initialDraft && !dropped && initialDraft.attachmentReads?.length > 0 && (
+            {initialDraft && !dropped && initialDraft.attachmentReads.length > 0 && (
               <details className="text-sm text-muted">
                 <summary>
                   <FormattedMessage
@@ -792,20 +792,28 @@ export function ConvertDialog({
                 <ul>
                   {initialDraft.attachmentReads.map((source) => (
                     <li key={source.sourceId}>
-                      {source.label}: <FormattedMessage {...sourceStatusMessages[source.status]} />
-                      {source.reason && (
-                        <>
-                          {" "}
-                          —{" "}
-                          <FormattedMessage
-                            {...(Object.hasOwn(sourceReasonMessages, source.reason)
-                              ? sourceReasonMessages[
-                                  source.reason as keyof typeof sourceReasonMessages
-                                ]
-                              : sourceReasonMessages.other)}
-                          />
-                        </>
-                      )}
+                      <FormattedMessage
+                        id="conversion.attachmentReadStatus"
+                        defaultMessage="{label}: {status}{hasReason, select, yes { — {reason}} other {}}"
+                        values={{
+                          label: source.label,
+                          status: intl.formatMessage(
+                            Object.hasOwn(sourceStatusMessages, source.status)
+                              ? sourceStatusMessages[source.status]
+                              : sourceStatusMessages.omitted,
+                          ),
+                          hasReason: source.reason ? "yes" : "no",
+                          reason: source.reason
+                            ? intl.formatMessage(
+                                Object.hasOwn(sourceReasonMessages, source.reason)
+                                  ? sourceReasonMessages[
+                                      source.reason as keyof typeof sourceReasonMessages
+                                    ]
+                                  : sourceReasonMessages.other,
+                              )
+                            : "",
+                        }}
+                      />
                     </li>
                   ))}
                 </ul>

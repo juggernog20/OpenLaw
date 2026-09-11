@@ -74,6 +74,9 @@ export const matters = pgTable(
     `),
   },
   (table) => [
+    index("matters_unverified_idx")
+      .on(table.id)
+      .where(sql`${table.aiUnverified} is not null`),
     uniqueIndex("matters_number_unique").on(table.number),
     index("matters_type_idx").on(table.matterTypeId),
     index("matters_status_idx").on(table.statusId),

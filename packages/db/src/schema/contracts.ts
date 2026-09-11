@@ -276,6 +276,9 @@ export const contracts = pgTable(
     `),
   },
   (table) => [
+    index("contracts_unverified_idx")
+      .on(table.id)
+      .where(sql`${table.aiUnverified} is not null`),
     // Identity guarantees distinct numbers; the index is what the
     // number-keyed read (`/contracts/42`) and the list's newest-first
     // ordering ride on.

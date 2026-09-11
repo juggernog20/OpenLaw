@@ -220,3 +220,50 @@ it("deletes a rendition whose storage write finishes after the source deadline",
     vi.useRealTimers();
   }
 });
+
+it("does not charge late bytes from a timed-out stream against following attachments", async () => {
+  vi.useFakeTimers();
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const late = new Readable({ read() {} });
+  vi.spyOn(late, Symbol.asyncIterator).mockImplementation(async function* () {
+    await held;
+    yield Buffer.alloc(ATTACHMENT_LIMITS.totalBytes + 1);
+    return undefined;
+  });
+  try {
+    const pending = readConversionAttachments(
+      {
+        docEngine: engine,
+        storage: {
+          driver: "local",
+          put: async () => "unused",
+          delete: async () => {},
+          get: async (ref) => {
+            if (ref === "0") return late;
+            release();
+            await Promise.resolve();
+            return Readable.from([Buffer.from("%PDF-1.4 Native paper")]);
+          },
+        },
+      },
+      [0, 1, 2].map((id) => ({
+        id: String(id),
+        revision: "rev",
+        label: `${id}.pdf`,
+        fileRef: String(id),
+        restricted: false,
+        versionId: null,
+      })),
+      "draft",
+      ATTACHMENT_LIMITS.totalCharacters,
+    );
+    await vi.advanceTimersByTimeAsync(ATTACHMENT_LIMITS.sourceRuntimeMs);
+    expect((await pending).map((read) => read.status)).toEqual(["omitted", "readable", "readable"]);
+  } finally {
+    release();
+    vi.useRealTimers();
+  }
+});

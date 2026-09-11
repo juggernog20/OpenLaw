@@ -56,6 +56,11 @@ export const contractAnalysisRuns = pgTable(
     leaseAt: timestamp("lease_at", { withTimezone: true }),
     startedAt: timestamp("started_at", { withTimezone: true }),
     finishedAt: timestamp("finished_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
   },
   (table) => [
     index("contract_analysis_runs_contract_idx").on(table.contractId, table.id),

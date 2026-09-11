@@ -392,3 +392,37 @@ it("names the exact evidence properties for source-addressed extraction", () => 
   expect(prompt).toContain('"sourceId":');
   expect(prompt).toContain('"citations":');
 });
+
+for (const protocol of ["anthropic", "openai", "gemini"] as const) {
+  it(`${protocol} preserves a conflict without a proposed value`, async () => {
+    const citations = [{ sourceId: "request:one", quote: "fixed or evergreen" }];
+    const harness = await protocolHarness(
+      protocol,
+      JSON.stringify({ term_type: { conflict: true, citations } }),
+    );
+    try {
+      expect(
+        await harness.provider.extract("fixed or evergreen", [
+          { slug: "term_type", prompt: "Extract term" },
+        ]),
+      ).toEqual([{ slug: "term_type", value: null, conflict: true, citations }]);
+    } finally {
+      await harness.stop();
+    }
+  });
+  for (const citations of ["not a list", [{ sourceId: "request:one" }]]) {
+    it(`${protocol} refuses malformed citations ${JSON.stringify(citations)}`, async () => {
+      const harness = await protocolHarness(
+        protocol,
+        JSON.stringify({ term_type: { conflict: true, citations } }),
+      );
+      try {
+        await expect(
+          harness.provider.extract("fixed", [{ slug: "term_type", prompt: "Extract term" }]),
+        ).rejects.toMatchObject({ name: "AiResponseError" });
+      } finally {
+        await harness.stop();
+      }
+    });
+  }
+}

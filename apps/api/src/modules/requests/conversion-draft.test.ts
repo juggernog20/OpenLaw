@@ -50,8 +50,11 @@ beforeAll(async () => {
     cookies: cast.adminCookies,
     payload: { preset: "openai", model: "fake", apiKey: FAKE_VALID_AI_KEY },
   });
+  const [connector] = await harness.db.select().from(aiConnector);
+  expect(connector!.matterPreparation).toBe(false);
 });
-beforeEach(() => {
+beforeEach(async () => {
+  await harness.db.update(aiConnector).set({ matterPreparation: true, disabledAt: null });
   for (const slug of Object.keys(answers)) delete answers[slug];
 });
 afterAll(async () => {
@@ -79,6 +82,7 @@ async function prepare(number: number, cookies = cast.memberCookies) {
   });
 }
 it("keeps the workflow off by default and refuses unauthorized setting writes", async () => {
+  await harness.db.update(aiConnector).set({ matterPreparation: false });
   const row = await ask();
   expect((await prepare(row.number)).statusCode).toBe(409);
   expect(provider.extractions).toHaveLength(0);
@@ -498,9 +502,31 @@ it("leaves an active lease to its owner and resolves connector disablement live"
     },
   };
   const count = provider.extractions.length;
+  vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
   const owner = handleConversionDraft(deps, id);
   try {
     await entered;
+    const old = new Date(Date.now() - 240_000);
+    await harness.db
+      .update(conversionDrafts)
+      .set({ leaseAt: old })
+      .where(eq(conversionDrafts.id, id));
+    await vi.advanceTimersByTimeAsync(30_000);
+    await vi.waitFor(async () => {
+      const [current] = await harness.db
+        .select()
+        .from(conversionDrafts)
+        .where(eq(conversionDrafts.id, id));
+      expect(current!.leaseAt!.valueOf()).toBeGreaterThan(old.valueOf());
+    });
+    const { sweepConversionDrafts } = await import("../../pipeline/conversion-draft.js");
+    const dispatch = vi.spyOn(harness.app.jobs, "requestConversionDraft");
+    try {
+      await sweepConversionDrafts(harness.db, harness.app.jobs);
+      expect(dispatch.mock.calls.some(([draftId]) => draftId === id)).toBe(false);
+    } finally {
+      dispatch.mockRestore();
+    }
     await handleConversionDraft(deps, id);
     const [held] = await harness.db
       .select()
@@ -513,6 +539,7 @@ it("leaves an active lease to its owner and resolves connector disablement live"
   } finally {
     release();
     await owner;
+    vi.useRealTimers();
   }
   const [finished] = await harness.db
     .select()

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import { afterAll, beforeAll, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, beforeEach, expect, it, vi } from "vitest";
 import {
   aiConnector,
   aiFieldPrompts,
@@ -9,6 +9,9 @@ import {
   contractAnalysisRuns,
   contracts,
   contractTypes,
+  contractTeam,
+  users,
+  sql,
   eq,
   requests,
   requestTypes,
@@ -41,12 +44,33 @@ beforeAll(async () => {
     })
     .returning();
   requestTypeId = rt!.id;
+  const [field] = await harness.db
+    .insert(fields)
+    .values({
+      slug: "post_clear",
+      displayName: "Post clear",
+      moduleScope: "contract",
+      fieldType: "text",
+      fieldTag: "business",
+      aiPrompt: "Extract the effective date wording.",
+    })
+    .returning();
+  await harness.db
+    .insert(contractTypeFields)
+    .values({ typeId, fieldId: field!.id, displayOrder: 999, isRequired: false });
+
   await harness.app.inject({
     method: "PUT",
     url: "/api/v1/ai-connector",
     cookies: cast.adminCookies,
     payload: { preset: "openai", model: "fake", apiKey: FAKE_VALID_AI_KEY },
   });
+  const [connector] = await harness.db.select().from(aiConnector);
+  expect(connector!.contractConversionAnalysis).toBe(false);
+});
+beforeEach(async () => {
+  for (const slug of Object.keys(answers)) delete answers[slug];
+  await harness.db.update(aiConnector).set({ contractConversionAnalysis: true, disabledAt: null });
 });
 afterAll(async () => {
   await harness?.stop();
@@ -107,6 +131,7 @@ async function execute(runId: string) {
   );
 }
 it("defaults off, refuses Member settings writes, and works independently of Convert dialog preparation", async () => {
+  await harness.db.update(aiConnector).set({ contractConversionAnalysis: false });
   expect((await convert()).runs).toHaveLength(0);
   const patch = (cookies: Record<string, string>) =>
     harness.app.inject({
@@ -228,20 +253,6 @@ it("keeps manual null clears made while extraction is running and fills unrelate
   expect(stored!.noticePeriodDays).toBe(30);
 });
 it("preserves explicitly cleared Convert dialog Fields and retries failures safely", async () => {
-  const [field] = await harness.db
-    .insert(fields)
-    .values({
-      slug: "post_clear",
-      displayName: "Post clear",
-      moduleScope: "contract",
-      fieldType: "text",
-      fieldTag: "business",
-      aiPrompt: "Extract the effective date wording.",
-    })
-    .returning();
-  await harness.db
-    .insert(contractTypeFields)
-    .values({ typeId, fieldId: field!.id, displayOrder: 999, isRequired: false });
   const { contract, runs } = await convert({ customFields: { post_clear: null } }, async (id) => {
     answers.post_clear = {
       value: "October 1",
@@ -505,4 +516,95 @@ it("renews an active worker lease before a sweep can dispatch a competing extrac
     .from(contractAnalysisRuns)
     .where(eq(contractAnalysisRuns.id, run.id));
   expect(ready!.state).toBe("ready");
+});
+
+it("omits Legal Field names and outcomes from a Contributor's Analysis response", async () => {
+  const slug = "private_strategy";
+  const [field] = await harness.db
+    .insert(fields)
+    .values({
+      slug,
+      displayName: "Private strategy",
+      moduleScope: "contract",
+      fieldType: "text",
+      fieldTag: "legal",
+      aiPrompt: "Extract the effective date wording.",
+    })
+    .returning();
+  await harness.db
+    .insert(contractTypeFields)
+    .values({ typeId, fieldId: field!.id, displayOrder: 1001, isRequired: false });
+  const { contract, runs } = await convert({}, async (id) => {
+    answers[slug] = {
+      value: "October 1",
+      sourceId: `request:${id}:description`,
+      evidence: "October 1",
+    };
+  });
+  await execute(runs[0]!.id);
+  const get = (cookies: Record<string, string>) =>
+    harness.app.inject({ method: "GET", url: `/api/v1/contracts/${contract.number}`, cookies });
+  const member = await get(cast.memberCookies);
+  expect(member.statusCode, member.body).toBe(200);
+  expect(member.json().analysis.latestRun.outcome.written).toContain(slug);
+  const [viewer] = await harness.db
+    .select()
+    .from(users)
+    .where(eq(users.email, "contributor@example.com"));
+  await harness.db
+    .insert(contractTeam)
+    .values({ contractId: contract.id, userId: viewer!.id, role: "contributor" });
+  const contributor = await get(cast.contributorCookies);
+  expect(contributor.statusCode, contributor.body).toBe(200);
+  expect(contributor.body).not.toContain(slug);
+  expect(contributor.json().contract.customFields).not.toHaveProperty(slug);
+  // Older summaries may retain classification lists without per-target results.
+  await harness.db
+    .update(contractAnalysisRuns)
+    .set({ outcome: sql`${contractAnalysisRuns.outcome} - 'results'` })
+    .where(eq(contractAnalysisRuns.id, runs[0]!.id));
+  const legacy = await get(cast.contributorCookies);
+  expect(legacy.statusCode, legacy.body).toBe(200);
+  expect(legacy.body).not.toContain(slug);
+  expect(legacy.json().analysis.latestRun.outcome.written).toContain("effective_date");
+});
+
+it("keeps the core Value marker when a legacy custom Field named value is edited", async () => {
+  const { contract } = await convert();
+  const [field] = await harness.db
+    .insert(fields)
+    .values({
+      slug: "value",
+      displayName: "Legacy value",
+      moduleScope: "contract",
+      fieldType: "text",
+      fieldTag: "business",
+    })
+    .returning();
+  await harness.db
+    .insert(contractTypeFields)
+    .values({ typeId, fieldId: field!.id, displayOrder: 1002, isRequired: false });
+  const marker = {
+    runId: contract.id,
+    writtenAt: new Date().toISOString(),
+    evidence: "Original value",
+  };
+  await harness.db
+    .update(contracts)
+    .set({ aiUnverified: { value: marker, "field:value": marker } })
+    .where(eq(contracts.id, contract.id));
+  const patch = () =>
+    harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/contracts/${contract.number}`,
+      cookies: cast.memberCookies,
+      payload: { customFields: { value: "Human custom value" } },
+    });
+  const edited = await patch();
+  expect(edited.statusCode, edited.body).toBe(200);
+  expect(edited.json().contract.aiUnverified.value).toMatchObject({ runId: contract.id });
+  expect(edited.json().contract.aiUnverified).not.toHaveProperty("field:value");
+  const repeated = await patch();
+  expect(repeated.statusCode, repeated.body).toBe(200);
+  expect(repeated.json().contract.updatedAt).toBe(edited.json().contract.updatedAt);
 });

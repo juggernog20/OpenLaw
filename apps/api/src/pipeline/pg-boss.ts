@@ -40,6 +40,7 @@ import { handleNotificationEmail } from "./notification-email.js";
 import {
   JOB_QUEUES,
   type ContractAnalysisJob,
+  type ConversionDraftJob,
   type DisplayConversionJob,
   type DocumentComparisonJob,
   type ExecutedCopyFetchJob,
@@ -228,6 +229,7 @@ export interface PipelineHandlers extends DerivationDeps {
  * timezone this install agrees on.
  */
 export const BACKFILL_SWEEP_CRON = "0 4 * * *";
+export const CONVERSION_SWEEP_CRON = "* * * * *";
 
 /** Bounds on one scheduled sweep. */
 export const BACKFILL_SWEEP_QUEUE_OPTIONS = {
@@ -410,7 +412,8 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       await boss.send(JOB_QUEUES.notificationEmail, job, { singletonKey: notificationId });
     },
     async requestConversionDraft(draftId: string): Promise<void> {
-      await boss.send(JOB_QUEUES.conversionDraft, { draftId }, { singletonKey: draftId });
+      const job: ConversionDraftJob = { draftId };
+      await boss.send(JOB_QUEUES.conversionDraft, job, { singletonKey: draftId });
     },
     async requestContractAnalysis(contractId: string, runId: string): Promise<boolean> {
       const job: ContractAnalysisJob = { contractId, runId };
@@ -518,6 +521,11 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
     // walks of the same table for one walk's worth of answer. A tick
     // that lands while a sweep is still going waits for it rather than
     // joining it.
+    await boss.createQueue(JOB_QUEUES.conversionSweep, {
+      policy: "singleton",
+      ...BACKFILL_SWEEP_QUEUE_OPTIONS,
+    });
+    await boss.updateQueue(JOB_QUEUES.conversionSweep, BACKFILL_SWEEP_QUEUE_OPTIONS);
     await boss.createQueue(JOB_QUEUES.backfillSweep, {
       policy: "singleton",
       ...BACKFILL_SWEEP_QUEUE_OPTIONS,
@@ -695,7 +703,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       await boss.work(
         JOB_QUEUES.conversionDraft,
         oneAtATime,
-        async (jobs: JobWithMetadata<{ draftId: string }>[]) => {
+        async (jobs: JobWithMetadata<ConversionDraftJob>[]) => {
           for (const job of jobs)
             await handleConversionDraft(
               {
@@ -737,9 +745,11 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // ones, so an hour-long walk of a large library cannot sit in front
       // of the OCR somebody is waiting on. It takes no metadata and no
       // burst: there is only ever one of it.
-      await boss.work(JOB_QUEUES.backfillSweep, { batchSize: 1 }, async () => {
+      await boss.work(JOB_QUEUES.conversionSweep, { batchSize: 1 }, async () => {
         await sweepConversionDrafts(handlers.db, queue);
         await sweepConversionAnalysis(handlers.db, queue);
+      });
+      await boss.work(JOB_QUEUES.backfillSweep, { batchSize: 1 }, async () => {
         const summary = await runBackfillSweep({ db: handlers.db, log }, queue, {
           signal: sweeping.signal,
         });
@@ -788,6 +798,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // every worker that boots declares the same one and an install
       // running two of them still sweeps once — pg-boss elects a single
       // cron worker and creates one job per tick.
+      await boss.schedule(JOB_QUEUES.conversionSweep, CONVERSION_SWEEP_CRON);
       await boss.schedule(JOB_QUEUES.backfillSweep, BACKFILL_SWEEP_CRON);
       // The same upsert, and the reason #277 moved this sweep here: an
       // in-process timer ran a full round per replica, and this round
@@ -809,7 +820,10 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
             JOB_QUEUES.reconciliationSweep,
             JOB_QUEUES.morningRound,
             JOB_QUEUES.contractAnalysis,
+            JOB_QUEUES.conversionDraft,
+            JOB_QUEUES.conversionSweep,
           ],
+          conversionSweepCron: CONVERSION_SWEEP_CRON,
           backfillSweepCron: BACKFILL_SWEEP_CRON,
           reconciliationSweepCron: RECONCILIATION_SWEEP_CRON,
           morningRoundCron: MORNING_ROUND_CRON,

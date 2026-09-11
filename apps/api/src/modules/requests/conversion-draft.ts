@@ -127,7 +127,18 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
         targetTypeId: request.body.targetTypeId,
         snapshot: context.snapshot,
       };
-      await app.db.insert(conversionDrafts).values(key).onConflictDoNothing();
+      await app.db
+        .insert(conversionDrafts)
+        .values(key)
+        .onConflictDoNothing({
+          target: [
+            conversionDrafts.requestId,
+            conversionDrafts.actorId,
+            conversionDrafts.targetModule,
+            conversionDrafts.targetTypeId,
+            conversionDrafts.snapshot,
+          ],
+        });
       const [found] = await app.db
         .select()
         .from(conversionDrafts)
@@ -140,13 +151,15 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
             eq(conversionDrafts.snapshot, key.snapshot),
           ),
         );
-      let draft = found!;
+      if (!found) throw httpError(409, "Preparation changed. Try again.");
+      let draft = found;
       if (request.body.retry && draft.state === "failed") {
         const [retried] = await app.db
           .update(conversionDrafts)
           .set({
             state: "pending",
             startedAt: null,
+            leaseAt: null,
             finishedAt: null,
             failure: null,
             suggestions: {},
@@ -259,7 +272,7 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
       const row = await reachedMatter(app.db, request.user, request.params.number);
       if (!row || row.archivedAt) throw httpError(404, "The Matter is unavailable.");
       const flag = row.aiUnverified?.[request.params.slug];
-      if (!flag) return { available: false, citations: [] };
+      if (!flag?.draftId) return { available: false, citations: [] };
       if (request.params.slug.startsWith("field:")) {
         const fields = await selectAttachedFields(app.db, matterTypeFields, row.matterTypeId);
         const field = fields.find((f) => `field:${f.slug}` === request.params.slug);

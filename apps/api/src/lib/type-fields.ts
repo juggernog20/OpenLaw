@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-/** Shared Type attachment tables used by Field validation. */
+/** CTR-016: shared Type attachment tables used by Field validation. */
 import type {
   contractTypeFields,
   entityTypeFields,

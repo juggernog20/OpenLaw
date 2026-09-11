@@ -1297,16 +1297,18 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
         defaultMessage: "a field",
       });
       return {
-        field: slug.startsWith("field:")
-          ? (customField(context, slug.slice(6))?.displayName ?? generic)
-          : intl.formatMessage(
-              {
-                id: "conversion.targetLabel",
-                defaultMessage:
-                  "{slug, select, title {Title} description {Description} matter_type {Matter type} priority {Priority} needed_by {Needed by} other {Value}}",
-              },
-              { slug },
-            ),
+        field: !slug
+          ? generic
+          : slug.startsWith("field:")
+            ? (customField(context, slug.slice(6))?.displayName ?? generic)
+            : intl.formatMessage(
+                {
+                  id: "conversion.targetLabel",
+                  defaultMessage:
+                    "{slug, select, title {Title} description {Description} matter_type {Matter type} contract_type {Contract type} counterparty {Counterparty} priority {Priority} needed_by {Needed by} other {Value}}",
+                },
+                { slug },
+              ),
       };
     },
   },

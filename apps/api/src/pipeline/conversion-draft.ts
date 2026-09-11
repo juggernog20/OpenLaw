@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 /** Durable Request conversion preparation with leased work and current-source checks (INT-008). */
-import { and, conversionDrafts, eq, isNull, lt, or, users, type Db } from "@openlaw/db";
+import { and, conversionDrafts, eq, isNull, lt, or, sql, users, type Db } from "@openlaw/db";
 import type { ConversionSuggestion } from "@openlaw/shared";
 import {
   checkedSuggestion,
@@ -28,20 +28,37 @@ export async function handleConversionDraft(
   const now = new Date();
   const [draft] = await deps.db
     .update(conversionDrafts)
-    .set({ startedAt: now })
+    .set({ startedAt: now, leaseAt: now })
     .where(
       and(
         eq(conversionDrafts.id, id),
         eq(conversionDrafts.state, "pending"),
         or(
           isNull(conversionDrafts.startedAt),
-          lt(conversionDrafts.startedAt, new Date(Date.now() - 180_000)),
+          lt(
+            sql`coalesce(${conversionDrafts.leaseAt}, ${conversionDrafts.startedAt})`,
+            new Date(Date.now() - 180_000),
+          ),
         ),
       ),
     )
     .returning();
   if (!draft) return;
   let stage = "authorization";
+  const heartbeat = setInterval(() => {
+    void deps.db
+      .update(conversionDrafts)
+      .set({ leaseAt: new Date() })
+      .where(
+        and(
+          eq(conversionDrafts.id, id),
+          eq(conversionDrafts.state, "pending"),
+          eq(conversionDrafts.startedAt, now),
+        ),
+      )
+      .catch(() => deps.log?.warn({ draftId: id }, "Could not renew conversion preparation lease"));
+  }, 30_000);
+  heartbeat.unref();
   try {
     const [actor] = await deps.db.select().from(users).where(eq(users.id, draft.actorId));
     if (
@@ -145,8 +162,11 @@ export async function handleConversionDraft(
           eq(conversionDrafts.startedAt, now),
         ),
       );
-  } catch {
-    deps.log?.warn({ draftId: id, stage }, "Request conversion preparation failed");
+  } catch (error) {
+    deps.log?.warn(
+      { draftId: id, stage, errorClass: error instanceof Error ? error.name : "unknown" },
+      "Request conversion preparation failed",
+    );
     await deps.db
       .update(conversionDrafts)
       .set({
@@ -163,6 +183,8 @@ export async function handleConversionDraft(
           eq(conversionDrafts.startedAt, now),
         ),
       );
+  } finally {
+    clearInterval(heartbeat);
   }
 }
 export async function sweepConversionDrafts(db: Db, queue: JobQueue) {
@@ -174,7 +196,10 @@ export async function sweepConversionDrafts(db: Db, queue: JobQueue) {
         eq(conversionDrafts.state, "pending"),
         or(
           isNull(conversionDrafts.startedAt),
-          lt(conversionDrafts.startedAt, new Date(Date.now() - 180_000)),
+          lt(
+            sql`coalesce(${conversionDrafts.leaseAt}, ${conversionDrafts.startedAt})`,
+            new Date(Date.now() - 180_000),
+          ),
         ),
       ),
     )

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-/** Bounded reads of Request paper through the ordinary storage and document engine seams. */
+/** INT-008 and DOC-005: bounded Request attachment reads through storage and the document engine. */
 import { uuidv7 } from "uuidv7";
 import { Readable } from "node:stream";
 import type { ConversionAttachmentRead } from "@openlaw/shared";
@@ -153,6 +153,7 @@ export async function readConversionAttachments(
             stream,
             Math.min(ATTACHMENT_LIMITS.bytes, bytesLeft),
             (size) => {
+              controller.signal.throwIfAborted();
               bytesLeft -= size;
             },
           );

@@ -230,7 +230,7 @@ export function parseExtractionReply(
   for (const target of targets) {
     if (!(target.slug in parsed)) continue;
     const entry = parsed[target.slug];
-    if (isRecord(entry) && "value" in entry) {
+    if (isRecord(entry) && ("value" in entry || "conflict" in entry)) {
       if (
         entry.citations !== undefined &&
         (!Array.isArray(entry.citations) ||
@@ -245,7 +245,7 @@ export function parseExtractionReply(
       }
       answers.push({
         slug: target.slug,
-        value: entry.value,
+        value: entry.value ?? null,
         ...(typeof entry.sourceId === "string" ? { sourceId: entry.sourceId } : {}),
         ...(entry.conflict === true ? { conflict: true } : {}),
         ...(Array.isArray(entry.citations)

@@ -1366,3 +1366,9 @@ it("includes the closing note in Matter activity without inventing one for older
     narrate("matter.status_changed", { from: "Open", to: "Closed" }).closingNote,
   ).toBeUndefined();
 });
+
+it("uses the generic Field label for older Matter confirmations without a slug", () => {
+  expect(narrate("matter.field_confirmed", { number: 41, title: "Matter" }).sentence).toContain(
+    "a field",
+  );
+});

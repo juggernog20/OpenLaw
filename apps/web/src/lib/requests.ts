@@ -281,7 +281,7 @@ export async function resolveRequest(number: number, reply: string): Promise<Dis
  * a decline writes nothing before its own: INT-007 has no claim step.
  */
 export interface ConvertRequestInput {
-  /** Null clears the newborn Matter description; omission preserves Request carry-through. */
+  /** Null clears the created record description; omission preserves Request carry-through. */
   description?: string | null;
   conversionDraftId?: string;
   aiAccepted?: string[];
