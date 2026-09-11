@@ -120,7 +120,7 @@ beforeAll(async () => {
 
   const contributor = await provisionUser(harness.app.auth, CONTRIBUTOR);
   contributorId = contributor.id;
-  await harness.db.update(users).set({ role: "contributor" }).where(eq(users.id, contributor.id));
+  await harness.db.update(users).set({ role: "business_user" }).where(eq(users.id, contributor.id));
   contributorCookies = await signInCookies(harness.app, CONTRIBUTOR.email, CONTRIBUTOR.password);
 
   const res = await harness.app.inject({
@@ -536,20 +536,22 @@ describe("the renewal history the record reads back (G.R5)", () => {
 });
 
 describe("who may confirm a roll (CTR-021, DD-015)", () => {
-  it("lets a Contributor on the team read the record and confirm nothing on it", async () => {
+  it("keeps renewal confirmation in Legal while a Business User reads the Portal record", async () => {
     const contract = await lapsed("Roll contributor");
     const joined = await harness.app.inject({
       method: "POST",
       url: `/api/v1/contracts/${contract.number}/team`,
       cookies: memberCookies,
-      payload: { userId: contributorId, role: "contributor" },
+      payload: { userId: contributorId },
     });
     expect(joined.statusCode, joined.body).toBe(201);
 
-    // They read the pending state exactly as a Member does.
-    expect(await read(contract.number, contributorCookies)).toMatchObject({
-      renewalPendingConfirmation: true,
+    const portal = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/portal/contracts/${contract.number}`,
+      cookies: contributorCookies,
     });
+    expect(portal.statusCode, portal.body).toBe(200);
     // They can already see the record, so the refusal is a plain 403.
     const refused = await confirmRaw(
       contract.number,

@@ -12,8 +12,7 @@
  * urgent they said it is, and how long it has waited. The **main
  * column** is what was submitted — the Description, the collected
  * values labelled through the type's live fields, and the paper. The
- * **side column** names the requester and, once a Request has been
- * triaged, what became of it.
+ * **side column** shows what became of a Request once it has been triaged.
  *
  * **The thread is the chat applet**, the same one the contract record
  * mounts, keyed by the Request's own id (CMT-001, CMT-010). A Member+
@@ -65,12 +64,8 @@
  * 5. **An attachment row carries no size and no uploader.** A Request's
  *    attachment stores neither — INT-002 calls them lightweight — and
  *    every file on a Request was put there by its Requester, whom the
- *    hero and the side card already name.
- * 6. **The Requester card carries the name and the email, not I2's
- *    department and previous-request count.** A user has no department
- *    on this model, and a count of somebody's other asks is a claim
- *    about their history that nothing has decided to make.
- * 7. **The activity bar carries the thread alone.** I2 draws a history
+ *    hero already names.
+ * 6. **The activity bar carries the thread alone.** I2 draws a history
  *    slot beside it. Dispositions now narrate on the Request (#418,
  *    #419), but the activity read still has only a `contract` arm — an
  *    applet that opened on a refusal is worse than an absent one, so the
@@ -85,8 +80,7 @@
  * on the contract land in the same thread.
  */
 
-import { RequestEstimate } from "../components/inbox/request-estimate";
-import { HelpLink } from "../components/documentation/help-link";
+import { formatShortDate } from "../lib/format";
 import { useState } from "react";
 import {
   redirect,
@@ -100,6 +94,7 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
+  Download,
   FilePen,
   FileText,
   BriefcaseBusiness,
@@ -107,6 +102,7 @@ import {
 import { api } from "../lib/api";
 import { readRegistry } from "../lib/entities";
 import { useCommentApplet } from "../components/comments/comment-applet";
+import { AttachmentPreview } from "../components/comments/attachment-preview";
 import { PreparedConvertDialog } from "../components/intake/prepared-convert-dialog";
 import { CustomFieldValueText } from "../components/intake/custom-field-value";
 import { RequestAssignment } from "../components/inbox/request-assignment";
@@ -150,6 +146,7 @@ import {
 import { RecordApplets } from "../components/shell/record-applets";
 import { Avatar } from "../components/avatar";
 import { PageTitle } from "../components/page-title";
+import { cn } from "../lib/utils";
 
 export async function inboxRequestLoader({ params }: LoaderFunctionArgs) {
   const user = await requireUser();
@@ -197,6 +194,7 @@ export function InboxRequestPage() {
     matterPreparation,
     contractPreparation,
     attachments,
+    conversion,
     contractTypes,
     matterTypes,
     people,
@@ -221,6 +219,7 @@ export function InboxRequestPage() {
    * Request. A Member+ is in every room on one, so the API answers
    * every tier and the composer offers all three (DD-016). */
   const chatApplet = useCommentApplet({
+    enabled: request.status !== "converted",
     entityType: "request",
     entityId: request.id,
     role: user.role,
@@ -292,7 +291,6 @@ export function InboxRequestPage() {
               {requestStatusLabel(intl, request.status)}
             </span>
           </div>
-          <HelpLink surface="staff" contextual />
           {/* INT-007's disposition surface, and the whole triage
               surface: acting on a Request means choosing its outcome
               then and there. Drawn only while the Request is `new` —
@@ -383,21 +381,19 @@ export function InboxRequestPage() {
           { reference, summary: request.summary },
         )}
       />
-      <RecordApplets applets={[chatApplet]}>
+      <RecordApplets applets={request.status === "converted" ? [] : [chatApplet]}>
         <div className="flex h-full flex-col gap-4 overflow-y-auto px-page-x py-page-y">
           <Hero request={request} />
-          <RequestEstimate
-            key={request.id}
-            request={request}
-            onSaved={() => {
-              void revalidator.revalidate();
-            }}
-          />
           {/* The record box rather than the page: opening the thread
               takes a column out of this row, so the two columns have to
               reflow against what is left of it (DES-012, DES-016). */}
           <div className="@container/body flex flex-col gap-4">
-            <div className="grid grid-cols-1 gap-4 @4xl/body:grid-cols-[minmax(0,1fr)_20rem]">
+            <div
+              className={cn(
+                "grid grid-cols-1 gap-4",
+                request.status !== "new" && "@4xl/body:grid-cols-[minmax(0,1fr)_20rem]",
+              )}
+            >
               <div className="flex min-w-0 flex-col gap-4">
                 {request.description !== null && request.description !== "" && (
                   <Card
@@ -406,12 +402,6 @@ export function InboxRequestPage() {
                       <FormattedMessage
                         id="inbox.request.description"
                         defaultMessage="Description"
-                      />
-                    }
-                    note={
-                      <FormattedMessage
-                        id="inbox.request.fromForm"
-                        defaultMessage="From the portal form"
                       />
                     }
                   >
@@ -435,45 +425,22 @@ export function InboxRequestPage() {
                     customFieldRefs={customFieldRefs}
                   />
                 </Card>
-                <Card
-                  id="attachments"
-                  heading={
-                    <FormattedMessage id="inbox.request.attachments" defaultMessage="Attachments" />
-                  }
-                >
-                  <Attachments number={request.number} attachments={attachments} />
-                </Card>
+                {request.status !== "converted" && (
+                  <Card
+                    id="attachments"
+                    heading={
+                      <FormattedMessage
+                        id="inbox.request.attachments"
+                        defaultMessage="Attachments"
+                      />
+                    }
+                  >
+                    <Attachments number={request.number} attachments={attachments} />
+                  </Card>
+                )}
               </div>
-              <div className="flex min-w-0 flex-col gap-4">
-                <Card
-                  id="requester"
-                  heading={
-                    <FormattedMessage id="inbox.request.requester" defaultMessage="Requester" />
-                  }
-                >
-                  <div className="flex items-center gap-2.5 px-4 py-3">
-                    <Avatar
-                      name={request.requester.displayName}
-                      image={request.requester.image}
-                      className="size-8"
-                    />
-                    <span className="flex min-w-0 flex-col">
-                      <span className="truncate text-base font-medium">
-                        {request.requester.displayName}
-                      </span>
-                      <a
-                        href={`mailto:${request.requester.email}`}
-                        className="truncate rounded-chip text-sm text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
-                      >
-                        {request.requester.email}
-                      </a>
-                    </span>
-                  </div>
-                </Card>
-                {/* Only once there is an outcome to state. A `new`
-                    Request's fate is undecided, which is exactly what
-                    the status pill in the sub-bar already says. */}
-                {request.status !== "new" && (
+              {request.status !== "new" && (
+                <div className="flex min-w-0 flex-col gap-4">
                   <Card
                     id="outcome"
                     heading={
@@ -481,9 +448,21 @@ export function InboxRequestPage() {
                     }
                   >
                     <Outcome request={request} />
+                    {conversion && (
+                      <p className="px-4 pb-3 text-sm text-muted">
+                        <FormattedMessage
+                          id="inbox.request.convertedBy"
+                          defaultMessage="Converted by {person} on {date}"
+                          values={{
+                            person: conversion.by ?? "",
+                            date: formatShortDate(conversion.at),
+                          }}
+                        />
+                      </p>
+                    )}
                   </Card>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -642,20 +621,13 @@ function FormResponses({
   );
 }
 
-/**
- * The paper that travelled with the ask, each name the link that
- * downloads it.
- *
- * A plain anchor rather than a fetch: the address is same-origin and
- * behind the session, so the browser's own download is the whole
- * mechanism. `download` asks it to save under the name the file arrived
- * with, which is the name the response's own disposition already
- * carries.
- */
+/** Submitted files open in the shared attachment viewer, with separate downloads. */
 function Attachments({
   number,
   attachments,
 }: Readonly<{ number: number; attachments: readonly StaffRequestAttachment[] }>) {
+  const intl = useIntl();
+  const [previewAttachment, setPreviewAttachment] = useState<StaffRequestAttachment | null>(null);
   if (attachments.length === 0) {
     return (
       <p className="px-4 py-3 text-base text-muted">
@@ -667,23 +639,45 @@ function Attachments({
     );
   }
   return (
-    <ul className="flex flex-col">
-      {attachments.map((attachment) => (
-        <li
-          key={attachment.id}
-          className="flex items-center gap-2 border-b border-border-muted px-4 py-2.5 last:border-b-0"
-        >
-          <FileText size={16} aria-hidden="true" className="shrink-0 text-muted" />
-          <a
-            download
-            href={staffRequestAttachmentHref(number, attachment.id)}
-            className="min-w-0 rounded-chip break-all text-base text-link underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+    <>
+      <ul className="flex flex-col">
+        {attachments.map((attachment) => (
+          <li
+            key={attachment.id}
+            className="flex items-center gap-2 border-b border-border-muted px-4 py-2.5 last:border-b-0"
           >
-            {attachment.filename}
-          </a>
-        </li>
-      ))}
-    </ul>
+            <FileText size={16} aria-hidden="true" className="shrink-0 text-muted" />
+            <button
+              type="button"
+              onClick={() => setPreviewAttachment(attachment)}
+              className="min-w-0 rounded-chip text-left break-all text-base text-link underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+            >
+              {attachment.filename}
+            </button>
+            <Button asChild variant="ghost" size="sm" className="ms-auto shrink-0">
+              <a
+                download={attachment.filename}
+                href={staffRequestAttachmentHref(number, attachment.id)}
+                aria-label={intl.formatMessage(
+                  { id: "comments.attachments.download", defaultMessage: "Download {filename}" },
+                  { filename: attachment.filename },
+                )}
+              >
+                <Download size={16} aria-hidden="true" />
+              </a>
+            </Button>
+          </li>
+        ))}
+      </ul>
+      {previewAttachment && (
+        <AttachmentPreview
+          key={previewAttachment.id}
+          filename={previewAttachment.filename}
+          href={staffRequestAttachmentHref(number, previewAttachment.id)}
+          onClose={() => setPreviewAttachment(null)}
+        />
+      )}
+    </>
   );
 }
 

@@ -136,6 +136,7 @@
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
+import { originalIntake, OriginalIntakeSchema } from "../requests/original-intake.js";
 import { nextDeadline, NextDeadlineSchema } from "../../lib/next-deadline.js";
 import {
   FilterChoices,
@@ -159,7 +160,6 @@ import {
   contractTypes,
   counterparties,
   CONTRACT_STAGES,
-  CONTRACT_TEAM_ROLES,
   desc,
   entities,
   eq,
@@ -185,13 +185,13 @@ import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import {
   confidentialityWrite,
   contractTeamScope,
-  CREATOR_TEAM_ROLE,
   NO_CONTRACT,
   OWNER_REFUSAL,
   OWNER_ROLES,
   reachesLockedContract,
 } from "../../lib/contract-access.js";
 import { CounterpartyNameSchema, findOrCreateCounterparty } from "../../lib/counterparty-link.js";
+import { recordPerson } from "../../lib/record-person.js";
 import { entityReachScope } from "../../lib/entity-access.js";
 import { NO_MATTER, reachedMatter } from "../../lib/matter-access.js";
 import {
@@ -203,7 +203,7 @@ import {
 import {
   AttachedCustomFieldSchema,
   applyCustomFields,
-  assertContributorCustomFieldWrite,
+  assertBusinessCustomFieldWrite,
   assertRequiredCustomFields,
   CustomFieldsInput,
   CustomFieldsSchema,
@@ -244,7 +244,7 @@ const requireMember = requireRole("administrator", "legal_team_member");
  * (DD-014). Business Users stay refused on every contract
  * surface.
  */
-const requireContractReader = requireRole("administrator", "legal_team_member", "contributor");
+const requireContractReader = requireRole("administrator", "legal_team_member");
 
 const ConfirmAnalysisFieldBody = z.object({
   slug: z.string().trim().min(1).max(200),
@@ -391,7 +391,7 @@ const PersonSchema = z.object({
 /** One `contract_team` row, read back as the person plus their role.
  * The compound key means the same person can appear twice, under two
  * roles — that is membership, not a duplicate. */
-const TeamMemberSchema = PersonSchema.extend({ role: z.enum(CONTRACT_TEAM_ROLES) });
+const TeamMemberSchema = PersonSchema;
 
 /** One of our own Entities as the contract record names it (CTR-011):
  * the id the picker commits and the legal name that goes on the paper.
@@ -438,6 +438,7 @@ const ContractRowSchema = z.object({
   manager: PersonSchema.nullable(),
   /** DD-021 business contact, independent of the Legal Owner; null means unassigned. */
   businessOwner: PersonSchema.nullable(),
+  createdBy: z.string().nullable().optional(),
   /** CTR-011's our side: which of our Entities signs. NULL until known.
    * The list does not draw it (the C1 mock has no such column), but it
    * is a field of the record, and a field rides the row the per-field
@@ -626,6 +627,8 @@ const ContractFieldsEnvelope = ContractEnvelope.extend({
  * here rather than on the row, because only the record renders them —
  * the list would carry joins it never draws. */
 const ContractRecordEnvelope = ContractFieldsEnvelope.extend({
+  originalIntake: OriginalIntakeSchema.nullable().optional(),
+  creator: PersonSchema.nullable().optional(),
   team: z.array(TeamMemberSchema),
   counterparties: z.array(CounterpartySchema),
   /** Every confirmed roll on this record, most recent first (G.R5). It
@@ -824,6 +827,7 @@ function toRow(
     stage: context.stage,
     manager: toPersonOrNull(context.manager),
     businessOwner: toPersonOrNull(context.businessOwner ?? null),
+    createdBy: context.row.createdBy,
     // The projection blanks `legalName` on a signing Entity outside the
     // viewer's reach, so a null name is the restricted case however the
     // context was built.
@@ -1129,13 +1133,12 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         displayName: users.displayName,
         image: users.image,
         archivedAt: users.archivedAt,
-        role: contractTeam.role,
       })
       .from(contractTeam)
       .innerJoin(users, eq(contractTeam.userId, users.id))
       .where(eq(contractTeam.contractId, contractId))
-      .orderBy(asc(sql`lower(${users.displayName})`), asc(contractTeam.role));
-    return rows.map((row) => ({ ...toPerson(row), role: row.role }));
+      .orderBy(asc(sql`lower(${users.displayName})`), asc(users.id));
+    return rows.map(toPerson);
   };
 
   /**
@@ -1679,7 +1682,8 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             ...new Set(
               page
                 .filter(
-                  (context) => request.user.role === "contributor" || hasConversionFields(context),
+                  (context) =>
+                    request.user.role === "business_user" || hasConversionFields(context),
                 )
                 .map((context) => context.row.contractTypeId),
             ),
@@ -1905,16 +1909,19 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         .where(and(eq(contracts.number, request.params.number), teamScope(request.user)))
         .limit(1);
       if (!row) throw httpError(404, NO_CONTRACT);
-      const [team, parties, custom, renewals, provider, latestRun] = await Promise.all([
+      const [team, parties, custom, renewals, provider, latestRun, intake] = await Promise.all([
         selectTeam(app.db, row.row.id),
         selectCounterparties(app.db, row.row.id),
         customFieldsEnvelope(app.db, row, request.user),
         selectRenewals(app.db, row.row.id),
         app.resolveAiProvider(),
         latestAnalysisRun(app.db, row.row.id, request.user),
+        originalIntake(app.db, request.user, "contract", row.row.id),
       ]);
       return {
         contract: toRow(row, custom.customFields, custom.fields),
+        originalIntake: intake,
+        creator: await recordPerson(app.db, row.row.createdBy),
         fields: custom.fields,
         customFieldRefs: custom.customFieldRefs,
         team,
@@ -2163,7 +2170,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "updateContract",
         description:
-          "Business Owner assignment is Member+ only: Administrator or Legal Team Member. The person must be live; null clears ownership without removing explicit stakeholders.",
+          "Business Owner assignment is Member+ only: Administrator or Legal Team Member. The person must be live; null clears ownership without removing team membership.",
         summary:
           "Commit one field of a contract in place (DES-017 per-field " +
           "commits): title, description, the Owner, the signing entity, " +
@@ -2198,7 +2205,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           /** CTR-004's Owner. `null` clears it back to unassigned —
            * a real state (triage), not an absent field. */
           managerId: z.string().nullable().optional(),
-          /** DD-021: Member+ assigns a live person; null clears ownership and preserves stakeholder links. */
+          /** DD-021: Member+ assigns a live person; null clears ownership and preserves team membership. */
           businessOwnerId: z.string().nullable().optional(),
           /** CTR-011's our side. `null` clears it back to not known,
            * which is where every contract starts. */
@@ -2283,8 +2290,8 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       // bell row for it belongs inside the same commit as the column.
       const updated = await app.notifier.notifying(async (tx) => {
         const current = await lockedContract(tx, request.params.number, request.user);
-        let contributorAttached: AttachedCustomField[] | null = null;
-        if (request.user.role === "contributor") {
+        let businessAttached: AttachedCustomField[] | null = null;
+        if (request.user.role === "business_user") {
           const allowed = new Set(["value", "effectiveDate", "customFields"]);
           if (Object.keys(body).some((key) => !allowed.has(key))) {
             throw httpError(
@@ -2293,8 +2300,8 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             );
           }
           if (body.customFields !== undefined) {
-            contributorAttached = await attachedFieldsOf(tx, current.row.contractTypeId);
-            assertContributorCustomFieldWrite(contributorAttached, body.customFields);
+            businessAttached = await attachedFieldsOf(tx, current.row.contractTypeId);
+            assertBusinessCustomFieldWrite(businessAttached, body.customFields);
           }
         }
         // Reach was answered above, for this patch and every other one,
@@ -2531,7 +2538,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         // slug is only writable while the type that attaches it is the
         // type the contract will hold.
         const attached =
-          contributorAttached ??
+          businessAttached ??
           (await attachedFieldsOf(tx, patch.contractTypeId ?? target.contractTypeId));
         if (body.customFields !== undefined || retyped) {
           const applied = await applyCustomFields(
@@ -2747,7 +2754,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
               number: row!.number,
               title: row!.title,
               changed,
-              ...(request.user.role === "contributor" ? { actorRole: request.user.role } : {}),
+              ...(request.user.role === "business_user" ? { actorRole: request.user.role } : {}),
             },
           });
         }
@@ -3021,45 +3028,32 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireMember,
       schema: {
         operationId: "addContractTeamMember",
-        summary:
-          "Put a person on the contract team under a role (CTR-004). The " +
-          "key is contract + person + role, so the same person may hold " +
-          "two roles; the `creator` role is the server's to write",
+        summary: "Maintain one membership per person on a contract team",
         tags: ["contracts"],
         params: NumberParams,
-        // Strict: an unknown key is a client bug, not a silent strip.
+
         body: z.strictObject({
           userId: z.string(),
-          role: z.enum(CONTRACT_TEAM_ROLES),
         }),
         response: { 201: TeamEnvelope, default: problemResponse },
       },
     },
     async (request, reply) => {
-      const { userId, role } = request.body;
+      const { userId } = request.body;
       const team = await app.db.transaction(async (tx) => {
         const current = await lockedContract(tx, request.params.number, request.user);
-        // On a walled record this add is an audience decision (CTR-023),
-        // so it is asked before the archived refusal — the same order the
-        // flag's own write takes, for the same reason.
+
         await assertMayChangeTeam(tx, current, request.user);
         assertEditable(current);
-        if (role === CREATOR_TEAM_ROLE) {
-          throw httpError(400, "The creator is recorded when the contract is created.");
-        }
-        // Anyone live may join a team — external counsel participate as
-        // `contributor` (MTR-006), and a Business User can be a watcher.
+
         const person = await lockedUser(tx, userId, USER_ROLES, "That is not a person we can add.");
 
-        // The compound key is the check: an insert that conflicts wrote
-        // nothing, so an empty return is "they already hold that role" —
-        // one statement, and two concurrent adds cannot both land.
         const inserted = await tx
           .insert(contractTeam)
-          .values({ contractId: current.row.id, userId: person.id, role })
+          .values({ contractId: current.row.id, userId: person.id })
           .onConflictDoNothing()
           .returning();
-        if (inserted.length === 0) throw httpError(409, "This person already holds that role.");
+        if (inserted.length === 0) throw httpError(409, "This person is already on the team.");
         await recordActivity(tx, {
           entityType: "contract",
           entityId: current.row.id,
@@ -3070,7 +3064,6 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             number: current.row.number,
             title: current.row.title,
             member: person.displayName,
-            role,
           },
         });
         return selectTeam(tx, current.row.id);
@@ -3080,45 +3073,31 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
   );
 
   app.delete(
-    "/contracts/:number/team/:userId/:role",
+    "/contracts/:number/team/:userId",
     {
       preHandler: requireMember,
       schema: {
         operationId: "removeContractTeamMember",
-        summary:
-          "Take one role off the contract team (CTR-004). The role is " +
-          "part of the address, so dropping a watcher leaves that same " +
-          "person's member row standing; `creator` is provenance and stays",
+        summary: "Maintain one membership per person on a contract team",
         tags: ["contracts"],
         params: NumberParams.extend({
           userId: z.string(),
-          role: z.enum(CONTRACT_TEAM_ROLES),
         }),
         response: { 200: TeamEnvelope, default: problemResponse },
       },
     },
     async (request) => {
-      const { userId, role } = request.params;
+      const { userId } = request.params;
       const team = await app.db.transaction(async (tx) => {
         const current = await lockedContract(tx, request.params.number, request.user);
-        // Taking somebody off a walled record's team is the same
-        // decision as putting them on it, read the other way (CTR-023).
+
         await assertMayChangeTeam(tx, current, request.user);
         assertEditable(current);
-        if (role === CREATOR_TEAM_ROLE) {
-          throw httpError(409, "The creator stays on the record — it is who made it.");
-        }
         const [removed] = await tx
           .delete(contractTeam)
-          .where(
-            and(
-              eq(contractTeam.contractId, current.row.id),
-              eq(contractTeam.userId, userId),
-              eq(contractTeam.role, role),
-            ),
-          )
+          .where(and(eq(contractTeam.contractId, current.row.id), eq(contractTeam.userId, userId)))
           .returning();
-        if (!removed) throw httpError(404, "Nobody holds that role on this contract.");
+        if (!removed) throw httpError(404, "This person is not on the contract team.");
 
         const [person] = await tx
           .select({ displayName: users.displayName })
@@ -3135,7 +3114,6 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             number: current.row.number,
             title: current.row.title,
             member: person?.displayName ?? userId,
-            role,
           },
         });
         return selectTeam(tx, current.row.id);

@@ -23,11 +23,7 @@ import {
 } from "@openlaw/db";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import { civilToday, shiftDays } from "../../lib/contract-term.js";
-import {
-  MATTER_CREATOR_ROLE,
-  MATTER_MANAGER_REFUSAL,
-  MATTER_MANAGER_ROLES,
-} from "../../lib/matter-access.js";
+import { MATTER_MANAGER_REFUSAL, MATTER_MANAGER_ROLES } from "../../lib/matter-access.js";
 import {
   applyCustomFields,
   assertRequiredCustomFields,
@@ -41,6 +37,7 @@ export interface CreateMatterInput {
   title: string;
   matterTypeId: string;
   managerId?: string | null;
+  businessOwnerId?: string | null;
   priority?: SeverityLevel;
   risk?: SeverityLevel | null;
   description?: string | null;
@@ -185,11 +182,16 @@ export async function createMatter(
       customFields,
       isConfidential: confidential,
       createdBy: input.actorId,
+      businessOwnerId: input.businessOwnerId ?? null,
     })
     .returning();
-  await tx
-    .insert(matterTeam)
-    .values({ matterId: row!.id, userId: input.actorId, role: MATTER_CREATOR_ROLE });
+  await tx.insert(matterTeam).values({ matterId: row!.id, userId: input.actorId });
+  if (input.businessOwnerId) {
+    await tx
+      .insert(matterTeam)
+      .values({ matterId: row!.id, userId: input.businessOwnerId })
+      .onConflictDoNothing();
+  }
   await recordActivity(tx, {
     entityType: "matter",
     entityId: row!.id,

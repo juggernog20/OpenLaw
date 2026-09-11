@@ -25,7 +25,7 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 
 const TITLES = defineMessages({
-  entry: { id: "portal.entry.title", defaultMessage: "Legal request portal" },
+  entry: { id: "portal.entry.title", defaultMessage: "Legal portal" },
 });
 
 export async function portalEntryLoader() {

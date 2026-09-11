@@ -41,12 +41,12 @@ export function documentation(): Plugin {
   }
   function invalidate(server: ViteDevServer, path: string) {
     if (!source(path)) return;
+    for (const id of [RESOLVED, HELP_RESOLVED]) {
+      const module = server.moduleGraph.getModuleById(id);
+      if (module) server.moduleGraph.invalidateModule(module);
+    }
     try {
       compile();
-      for (const id of [RESOLVED, HELP_RESOLVED]) {
-        const module = server.moduleGraph.getModuleById(id);
-        if (module) server.moduleGraph.invalidateModule(module);
-      }
       server.ws.send({ type: "full-reload", path: "*" });
     } catch (error) {
       server.ws.send({ type: "error", err: { message: String(error), stack: "" } });
@@ -63,7 +63,9 @@ export function documentation(): Plugin {
     },
     load(id) {
       if (id !== RESOLVED && id !== HELP_RESOLVED) return;
-      if (failure) throw failure;
+      // A checkout can briefly remove a source file during compilation.
+      // Retry on the next request once the working tree has settled.
+      if (failure) compile();
       const bundle = compilation.bundle;
       const value =
         id === HELP_RESOLVED
@@ -96,7 +98,9 @@ export function documentation(): Plugin {
           next();
           return;
         }
-        if (failure) {
+        try {
+          if (failure) compile();
+        } catch {
           response.statusCode = 503;
           response.end("Documentation build failed. Check the development build output.");
           return;

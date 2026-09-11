@@ -84,7 +84,7 @@ test.describe.serial("M5 demo path", () => {
       member = await onboardActivatedMember(page.request, browser, {
         email,
         displayName: "Riva Member",
-        role: "contributor",
+        role: "legal_team_member",
         password: "their-own-e2e-password",
       });
 

@@ -35,7 +35,7 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { documentVersionText, eq, users } from "@openlaw/db";
+import { documentVersionText, contracts, eq, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import { buildApp } from "../../app.js";
 import { fakeExtractedText, fakeImageOnlyPdf, fakeOcrText } from "../../lib/doc-engine/fake.js";
@@ -132,7 +132,7 @@ beforeAll(async () => {
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
     [OUTSIDER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, user.id));
@@ -173,17 +173,17 @@ async function newContract(title: string): Promise<ContractRow> {
   });
   expect(res.statusCode, res.body).toBe(201);
   const contract = res.json().contract as ContractRow;
-  await putOnTeam(contract.number, idOf(MEMBER), "member");
-  await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
+  await putOnTeam(contract.number, idOf(MEMBER));
+  await putOnTeam(contract.number, idOf(CONTRIBUTOR));
   return contract;
 }
 
-async function putOnTeam(number: number, userId: string, role: string): Promise<void> {
+async function putOnTeam(number: number, userId: string): Promise<void> {
   const res = await harness.app.inject({
     method: "POST",
     url: `/api/v1/contracts/${number}/team`,
     cookies: adminCookies,
-    payload: { userId, role },
+    payload: { userId },
   });
   expect(res.statusCode, res.body).toBe(201);
 }
@@ -566,7 +566,7 @@ describe("hard delete takes what the machine derived", () => {
 });
 
 describe("the text read is behind both gates", () => {
-  it("lets a Contributor on the team read what they may download", async () => {
+  it("lets a Business User on the team read supporting paper they may download", async () => {
     const bytes = nativeTextPdf("a draft the Contributor is on");
     const { document, version } = await contractWithFile("Text · contributor", {
       filename: "draft.pdf",
@@ -575,6 +575,10 @@ describe("the text read is behind both gates", () => {
     });
     expect((await settledText(document.id, version.id)).state).toBe("ready");
 
+    await harness.db
+      .update(contracts)
+      .set({ primaryDocumentId: null })
+      .where(eq(contracts.primaryDocumentId, document.id));
     const res = await readText(contributorCookies, document.id, version.id);
     expect(res.statusCode, res.body).toBe(200);
     expect((res.json().text as TextRow).text).toBe(fakeExtractedText(bytes));
@@ -613,7 +617,7 @@ describe("the text read is behind both gates", () => {
     expect(withoutInstance(refused.json())).toEqual(withoutInstance(control.json()));
   });
 
-  it("refuses a Business User the whole surface, as every document read does", async () => {
+  it("hides document content from a Business User without a team row", async () => {
     const { document, version } = await contractWithFile("Text · business user", {
       filename: "msa.pdf",
       contentType: "application/pdf",
@@ -629,7 +633,7 @@ describe("the text read is behind both gates", () => {
     const cookies = await signInCookies(harness.app, businessUser.email, businessUser.password);
 
     const res = await readText(cookies, document.id, version.id);
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(404);
   });
 
   it("refuses a stranger, before anything is said about text", async () => {

@@ -111,10 +111,10 @@ beforeAll(async () => {
 
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
-    [OUTSIDER, "contributor"],
+    [CONTRIBUTOR, "business_user"],
+    [OUTSIDER, "business_user"],
     [BUSINESS, "business_user"],
-    [SPARE, "contributor"],
+    [SPARE, "business_user"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, user.id));
@@ -164,7 +164,7 @@ async function contractWithTeam(title: string): Promise<{ id: string; number: nu
     method: "POST",
     url: `/api/v1/contracts/${contract.number}/team`,
     cookies: adminCookies,
-    payload: { userId: userIds.get(CONTRIBUTOR.email), role: "contributor" },
+    payload: { userId: userIds.get(CONTRIBUTOR.email) },
   });
   expect(added.statusCode, added.body).toBe(201);
   return contract;
@@ -275,10 +275,10 @@ describe("the record activity feed", () => {
     });
   });
 
-  it("answers 404 for a record the viewer cannot reach, as though it did not exist", async () => {
+  it("refuses Portal History and hides missing staff records", async () => {
     const contract = await newContract("Nobody's contract");
     const refused = await readFeed(outsiderCookies, contract.id);
-    expect(refused.statusCode, refused.body).toBe(404);
+    expect(refused.statusCode, refused.body).toBe(403);
 
     const missing = await readFeed(memberCookies, "no-such-contract");
     expect(missing.statusCode, missing.body).toBe(404);
@@ -292,57 +292,17 @@ describe("the record activity feed", () => {
 });
 
 describe("the tier predicate over the feed", () => {
-  it("gives a Contributor the same feed as a Member minus what they cannot hear", async () => {
-    const contract = await contractWithTeam("Two audiences, one record");
-    const legal = await postComment(
-      memberCookies,
-      contract.id,
-      "Our position on the indemnity cap.",
-      "legal_only",
-    );
-    const working = await postComment(
-      memberCookies,
-      contract.id,
-      "Redline goes back tomorrow.",
-      "working_team",
-    );
-    const full = await postComment(
-      contributorCookies,
-      contract.id,
-      "Confirmed with the requester.",
-      "full_thread",
-    );
-
-    const member = await wholeFeed(memberCookies, contract.id);
-    const contributor = await wholeFeed(contributorCookies, contract.id);
-
-    const commentIds = (page: { entries: FeedEntry[] }) =>
-      page.entries
+  it("keeps History staff-only while preserving all comment tiers", async () => {
+    const record = await contractWithTeam("History stays Legal");
+    for (const tier of ["legal_only", "working_team", "full_thread"] as const)
+      await postComment(memberCookies, record.id, tier, tier);
+    const staff = await wholeFeed(memberCookies, record.id);
+    expect(
+      staff.entries
         .filter((entry) => entry.action === "comment.posted")
-        .map((entry) => entry.payload.commentId);
-
-    // The Member is in every room on this record.
-    expect(commentIds(member)).toEqual([full.id, working.id, legal.id]);
-    // The Contributor is in two of them. The Legal Only comment leaves
-    // no entry at all — not a row, not a placeholder, not a gap.
-    expect(commentIds(contributor)).toEqual([full.id, working.id]);
-    expect(contributor.entries.some((entry) => entry.visibility === "legal_only")).toBe(false);
-    // And the record's own narrative is theirs to read: the working
-    // group can see what happened to the contract.
-    expect(contributor.entries.map((entry) => entry.action)).toContain("contract.created");
-
-    // Every entry the Contributor sees, the Member sees too — the
-    // Contributor's feed is a subset and never a different account of
-    // the same record.
-    const memberIds = new Set(member.entries.map((entry) => entry.id));
-    expect(contributor.entries.every((entry) => memberIds.has(entry.id))).toBe(true);
-    // The difference is exactly the one comment, and no number in
-    // either envelope discloses it: there is no total to subtract.
-    expect(member.entries.length - contributor.entries.length).toBe(1);
-    expect(Object.keys(await feed(contributorCookies, contract.id))).toEqual([
-      "entries",
-      "nextCursor",
-    ]);
+        .map((entry) => entry.visibility),
+    ).toEqual(["full_thread", "working_team", "legal_only"]);
+    expect((await readFeed(contributorCookies, record.id)).statusCode).toBe(403);
   });
 
   it("carries each comment entry at the comment's own tier", async () => {
@@ -363,8 +323,7 @@ describe("the tier predicate over the feed", () => {
       ["comment.posted", "legal_only"],
     ]);
 
-    const contributor = await wholeFeed(contributorCookies, contract.id);
-    expect(contributor.entries.some((entry) => entry.action.startsWith("comment."))).toBe(false);
+    expect((await readFeed(contributorCookies, contract.id)).statusCode).toBe(403);
   });
 
   it("carries no comment text into the log, so a redact leaves nothing behind", async () => {
@@ -427,7 +386,7 @@ describe("the tier a record action writes", () => {
       method: "PATCH",
       url: `/api/v1/users/${userIds.get(SPARE.email)}/role`,
       cookies: adminCookies,
-      payload: { role: "business_user" },
+      payload: { role: "legal_team_member" },
     });
     expect(role.statusCode, role.body).toBe(200);
     const roleRows = await harness.db
@@ -514,7 +473,7 @@ describe("the append-only rule", () => {
       method: "POST",
       url: `/api/v1/contracts/${contract.number}/team`,
       cookies: adminCookies,
-      payload: { userId: userIds.get(MEMBER.email), role: "member" },
+      payload: { userId: userIds.get(MEMBER.email) },
     });
     await harness.app.inject({
       method: "PATCH",

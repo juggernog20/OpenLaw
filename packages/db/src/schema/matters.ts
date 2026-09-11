@@ -39,6 +39,7 @@ export const matters = pgTable(
       .references(() => matterStatuses.id),
     // Null leaves the matter unassigned.
     managerId: text("manager_id").references(() => users.id),
+    businessOwnerId: text("business_owner_id").references(() => users.id),
     priority: text("priority", { enum: SEVERITY_LEVELS }).notNull().default("medium"),
     // Null means risk has not been assessed.
     risk: text("risk", { enum: SEVERITY_LEVELS }),

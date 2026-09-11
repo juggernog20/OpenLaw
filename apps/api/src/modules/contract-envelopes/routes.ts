@@ -148,7 +148,7 @@ import { applyEnvelopeStatus } from "../../lib/signing/transitions.js";
  * too: a Contributor on the team sees whether the record's paper is out
  * for signature. The role alone opens nothing — the reach predicate
  * narrows it to the records they hold a `contract_team` row on. */
-const requireEnvelopeReader = requireRole("administrator", "legal_team_member", "contributor");
+const requireEnvelopeReader = requireRole("administrator", "legal_team_member");
 
 /** Sending is Member+, the same audience approvals use (CTR-013). A
  * Contributor reads but DD-015 gives them no envelope write. */

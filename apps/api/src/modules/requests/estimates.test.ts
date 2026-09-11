@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { afterAll, beforeAll, expect, it } from "vitest";
-import { eq, orgSettings, requests, requestTypes } from "@openlaw/db";
+import { contractTasks, eq, matterTasks, orgSettings, requests, requestTypes } from "@openlaw/db";
 import {
   dispositionScaffold,
   MEMBER,
@@ -95,12 +95,12 @@ it("offers an org-timezone calendar-day suggestion without writing or clamping t
   expect((await estimate(request.number, null)).statusCode).toBe(200);
   expect((await detail(request.number)).expectedBy).toBeNull();
 });
-it("projects only the triage owner's name and the confirmed estimate on both requester reads, including clearing", async () => {
+it("projects the triage owner but ignores legacy estimates on both requester reads", async () => {
   const request = await submit();
   expect(await detail(request.number, true)).toMatchObject({
     owner: null,
-    expectedBy: null,
-    estimatePassed: false,
+    nextDeadline: null,
+    deadlinePassed: false,
   });
   await harness.app.inject({
     method: "PATCH",
@@ -111,8 +111,8 @@ it("projects only the triage owner's name and the confirmed estimate on both req
   await estimate(request.number, "2000-01-01");
   expect(await detail(request.number, true)).toMatchObject({
     owner: { displayName: MEMBER.displayName },
-    expectedBy: "2000-01-01",
-    estimatePassed: true,
+    nextDeadline: null,
+    deadlinePassed: false,
   });
   const list = await harness.app.inject({
     method: "GET",
@@ -121,7 +121,7 @@ it("projects only the triage owner's name and the confirmed estimate on both req
   });
   const row = list.json().requests.find((row: { id: string }) => row.id === request.id);
   expect(row.owner).toEqual({ displayName: MEMBER.displayName });
-  expect(row).toMatchObject({ expectedBy: "2000-01-01", estimatePassed: true });
+  expect(row).toMatchObject({ nextDeadline: null, deadlinePassed: false });
   await harness.app.inject({
     method: "PATCH",
     url: `/api/v1/requests/${request.number}/assignee`,
@@ -129,11 +129,11 @@ it("projects only the triage owner's name and the confirmed estimate on both req
     payload: { assigneeId: null },
   });
   expect((await detail(request.number, true)).owner).toBeNull();
-  for (const status of ["converted", "resolved", "declined"] as const) {
+  for (const status of ["resolved", "declined"] as const) {
     await harness.db.update(requests).set({ status }).where(eq(requests.id, request.id));
     expect(await detail(request.number, true)).toMatchObject({
-      expectedBy: "2000-01-01",
-      estimatePassed: status === "converted",
+      nextDeadline: null,
+      deadlinePassed: false,
     });
   }
 });
@@ -230,7 +230,7 @@ it("audits a changed estimate once, preserves it through conversion, and refuses
   expect(convertedRequest.convertedContract?.number).toBeGreaterThan(0);
   expect(await detail(request.number, true)).toMatchObject({
     status: "converted",
-    expectedBy: "2026-10-15",
+    nextDeadline: null,
   });
   expect((await estimate(request.number, "2026-10-16")).statusCode).toBe(200);
   for (const status of ["resolved", "declined"] as const) {
@@ -239,3 +239,60 @@ it("audits a changed estimate once, preserves it through conversion, and refuses
     expect((await detail(request.number)).expectedBy).toBe("2026-10-16");
   }
 });
+
+it.each(["contract", "matter"] as const)(
+  "moves a converted %s out of Your Requests without exposing Task deadlines",
+  async (module) => {
+    const request = await submit();
+    let matterTypeId: string | undefined;
+    if (module === "matter") {
+      const type = await harness.app.inject({
+        method: "POST",
+        url: "/api/v1/matter-types",
+        cookies: cast.adminCookies,
+        payload: { displayName: "Portal matter" },
+      });
+      expect(type.statusCode, type.body).toBe(201);
+      matterTypeId = type.json().matterType.id;
+    }
+    const converted = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/requests/${request.number}/convert`,
+      cookies: cast.memberCookies,
+      payload: { title: "Plan the work", ...(matterTypeId ? { matterTypeId } : {}) },
+    });
+    expect(converted.statusCode, converted.body).toBe(200);
+    const stored = await cast.stored(request.id);
+    const recordId = (
+      module === "contract" ? stored.convertedContractId : stored.convertedMatterId
+    )!;
+    if (module === "contract")
+      await harness.db.insert(contractTasks).values({
+        contractId: recordId,
+        title: "Private deadline",
+        dueDate: "2000-01-02",
+        displayOrder: 0,
+      });
+    else
+      await harness.db.insert(matterTasks).values({
+        matterId: recordId,
+        title: "Private deadline",
+        dueDate: "2000-01-02",
+        displayOrder: 0,
+      });
+    const response = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/portal/requests/${request.number}`,
+      cookies: cast.requesterCookies,
+    });
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.json().redirectTo.module).toBe(module);
+    expect(response.json().request.nextDeadline).toBeNull();
+    const list = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/portal/requests",
+      cookies: cast.requesterCookies,
+    });
+    expect(list.json().requests.some((row: { id: string }) => row.id === request.id)).toBe(false);
+  },
+);

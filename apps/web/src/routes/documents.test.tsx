@@ -18,12 +18,6 @@ const MEMBER = {
   displayName: "Nadia Counsel",
   role: "legal_team_member",
 };
-const CONTRIBUTOR = {
-  id: "u3",
-  email: "contributor@example.com",
-  displayName: "Casey Contributor",
-  role: "contributor",
-};
 const BUSINESS = {
   id: "u9",
   email: "business@example.com",
@@ -81,7 +75,7 @@ function repositoryApi(pages: Record<string, unknown>[][]) {
 
 describe("the /documents destination", () => {
   it("registers Documents between Contracts and Entities for every Document reader", async () => {
-    for (const signedIn of [ADMIN, MEMBER, CONTRIBUTOR]) {
+    for (const signedIn of [ADMIN, MEMBER]) {
       stubApi({ signedIn });
       const { view } = renderAt("/");
       const nav = await screen.findByRole("navigation");
@@ -89,7 +83,7 @@ describe("the /documents destination", () => {
         .getAllByRole("link")
         .map((link) => link.textContent);
       expect(names.indexOf("Documents")).toBe(names.indexOf("Contracts") + 1);
-      if (signedIn.role !== "contributor") {
+      if (signedIn.role !== "business_user") {
         expect(names.indexOf("Entities")).toBe(names.indexOf("Documents") + 1);
       }
       view.unmount();
@@ -212,21 +206,6 @@ describe("the /documents destination", () => {
           call.method === "POST",
       ),
     ).toBe(true);
-  });
-
-  it("shows Recent but no archived switch or Restore to a Contributor", async () => {
-    const archived = documentRow({
-      id: "archived-document",
-      title: "Wrong upload",
-      archivedAt: "2026-08-29T09:00:00.000Z",
-    });
-    const api = repositoryApi([[archived]]);
-    stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
-    renderAt("/documents");
-
-    expect(await screen.findByRole("region", { name: "Recent documents" })).toBeVisible();
-    expect(screen.queryByRole("switch", { name: "Show archived" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Restore Wrong upload" })).not.toBeInTheDocument();
   });
 
   it("lands Contract and Matter rows on the owning Documents tab with the current Version", async () => {

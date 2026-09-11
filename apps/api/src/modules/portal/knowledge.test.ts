@@ -50,7 +50,7 @@ beforeAll(async () => {
   await harness.app.inject({ method: "POST", url: "/api/v1/auth/setup", payload: TEST_ADMIN });
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
     [REQUESTER, "business_user"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);

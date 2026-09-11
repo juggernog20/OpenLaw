@@ -41,6 +41,6 @@ Each Key date gets its own reminder, including when several on one Contract shar
 
 ## If an action is unavailable
 
-An archived Contract is read-only; restore it before changing Tasks or dates. Contributors can read reached Tasks and dates but cannot perform these legal actions. If a person disappears from the picker, check that they are active and on the team. If saving fails, read the error and reload to confirm what persisted before trying again.
+An archived Contract is read-only; restore it before changing Tasks or dates. Tasks and Key dates remain in the full app; Business Users cannot open these sections. If a person disappears from the picker, check that they are active and on the team. If saving fails, read the error and reload to confirm what persisted before trying again.
 
 [Manage Contract terms and renewals](terms-and-renewals.md) explains the term-derived dates. [Roles and record access](roles-and-access.md) explains team permissions.

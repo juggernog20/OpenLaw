@@ -18,7 +18,7 @@ test("Help stays in the staff and portal shells and preserves keyboard shortcuts
   await expect(page.getByRole("combobox", { name: "Search", exact: true })).toBeFocused();
   await page.goto("/portal/help");
   await expect(page.getByRole("heading", { level: 1, name: "Help", exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Legal request portal" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Legal portal" })).toBeVisible();
   await expect(page.getByRole("combobox", { name: "Search", exact: true })).toHaveCount(0);
   await page.setViewportSize({ width: 1440, height: 900 });
   for (const path of ["/help", "/portal/help"]) {

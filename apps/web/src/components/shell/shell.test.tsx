@@ -64,29 +64,6 @@ describe("app shell chrome", () => {
     expect(links[1]).not.toHaveAttribute("aria-current");
   });
 
-  it("draws a Contributor the scoped record destinations and nothing else", async () => {
-    // A Contributor sees Matters and Contracts; each API narrows those
-    // lists to records they are on the team of. Entities stays Member+.
-    stubApi({
-      signedIn: {
-        id: "u3",
-        email: "casey@example.com",
-        displayName: "Casey Contributor",
-        role: "contributor",
-      },
-    });
-    renderAt("/");
-
-    const nav = await screen.findByRole("navigation");
-    const links = within(nav).getAllByRole("link");
-    expect(links.map((link) => link.textContent)).toEqual([
-      "Home",
-      "Matters",
-      "Contracts",
-      "Documents",
-    ]);
-  });
-
   it("never draws the shell for a Business User at all (INT-001)", async () => {
     // ENT-004's floor used to read here as a nav carrying Home alone.
     // The portal took the whole question over (#376): a Business User's
@@ -98,7 +75,7 @@ describe("app shell chrome", () => {
     renderAt("/");
 
     await screen.findByRole("heading", { name: "What do you need from Legal?" });
-    expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "Primary" })).not.toBeInTheDocument();
   });
 
   it("renders the page sub-bar with the page title as the page's h1", async () => {

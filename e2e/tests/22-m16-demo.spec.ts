@@ -174,7 +174,7 @@ const ConfirmedRenewalSchema = z.object({
 
 const ContractRecord = z.object({
   contract: ContractSchema,
-  team: z.array(z.object({ displayName: z.string(), role: z.string() })),
+  team: z.array(z.object({ displayName: z.string() })),
   renewals: z.array(ConfirmedRenewalSchema),
 });
 

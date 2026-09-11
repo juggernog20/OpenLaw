@@ -12,12 +12,6 @@ const MEMBER = {
   displayName: "Mina Member",
   role: "legal_team_member",
 };
-const CONTRIBUTOR = {
-  id: "u-contributor",
-  email: "contributor@example.com",
-  displayName: "Casey Contributor",
-  role: "contributor",
-};
 const BUSINESS = {
   id: "u-business",
   email: "business@example.com",
@@ -307,8 +301,8 @@ describe("the Matters destination", () => {
     expect(screen.getAllByRole("button", { name: "New matter" })).toHaveLength(1);
   });
 
-  it("is visible to a Legal Team Member and a Contributor, but absent for a Business User", async () => {
-    for (const signedIn of [MEMBER, CONTRIBUTOR]) {
+  it("shows the staff Matters destination to Legal and sends Business Users to the Portal", async () => {
+    for (const signedIn of [MEMBER]) {
       stubApi({ signedIn, extra: matterApi() });
       renderAt("/matters");
       expect(await screen.findByRole("heading", { level: 1, name: "Matters" })).toBeInTheDocument();
@@ -317,7 +311,7 @@ describe("the Matters destination", () => {
           name: "Matters",
         }),
       ).toBeInTheDocument();
-      if (signedIn.role === "contributor")
+      if (signedIn.role === "business_user")
         expect(screen.queryByRole("button", { name: "New matter" })).not.toBeInTheDocument();
       cleanup();
     }
@@ -696,42 +690,6 @@ describe("the Matters destination", () => {
       "Matter creation is temporarily unavailable.",
     );
     expect(create).toBeEnabled();
-  });
-});
-
-describe("the matter hero", () => {
-  it("leaves business inputs editable and omits legal Fields for a Contributor", async () => {
-    stubApi({
-      signedIn: CONTRIBUTOR,
-      extra: (call) =>
-        call.url.pathname === "/api/v1/matters/7"
-          ? json(200, {
-              matter: matter({ customFields: { "business-unit": "People" } }),
-              fields: [REQUIRED_FIELD],
-              customFieldRefs: { users: [], entities: [] },
-              team: [
-                {
-                  id: CONTRIBUTOR.id,
-                  displayName: CONTRIBUTOR.displayName,
-                  image: null,
-                  archived: false,
-                  role: "contributor",
-                },
-              ],
-            })
-          : undefined,
-    });
-    renderAt("/matters/7");
-    expect(
-      await screen.findByRole("heading", { level: 1, name: "Employment advice" }),
-    ).toBeInTheDocument();
-    for (const text of ["M-7", "Open", "Employment", "Unassigned", "Medium", "Not assessed"]) {
-      expect(screen.getAllByText(text).length).toBeGreaterThan(0);
-    }
-    expect(screen.getByLabelText("Description")).toBeEnabled();
-    expect(screen.getByLabelText(/Business unit/)).toBeEnabled();
-    expect(screen.queryByText("Sponsor")).not.toBeInTheDocument();
-    expect(screen.queryByText("Sam Sponsor")).not.toBeInTheDocument();
   });
 });
 

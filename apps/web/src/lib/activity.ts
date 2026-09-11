@@ -1384,26 +1384,38 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     changes: (intl, payload, context) => directChange(intl, payload, "contractType", context),
   },
+  "contract.portal_access_excluded": {
+    icon: Users,
+    message: defineMessage({
+      id: "activity.contract.portalAccessExcluded",
+      defaultMessage: "Migration kept {member} outside this Confidential record's audience",
+    }),
+    values: (intl, payload) => ({ member: named(intl, payload, "member") }),
+  },
   "contract.team_added": {
     icon: Users,
     message: defineMessage({
       id: "activity.contract.teamAdded",
-      defaultMessage: "{actor} added {member} to the team as {role}",
+      defaultMessage:
+        "{actor} added {member} to the team{legacy, select, yes { as {role}} other {}}",
     }),
     values: (intl, payload) => ({
       member: named(intl, payload, "member"),
       role: teamRole(intl, payload),
+      legacy: typeof payload.role === "string" ? "yes" : "no",
     }),
   },
   "contract.team_removed": {
     icon: Users,
     message: defineMessage({
       id: "activity.contract.teamRemoved",
-      defaultMessage: "{actor} took {member} off the team as {role}",
+      defaultMessage:
+        "{actor} took {member} off the team{legacy, select, yes { as {role}} other {}}",
     }),
     values: (intl, payload) => ({
       member: named(intl, payload, "member"),
       role: teamRole(intl, payload),
+      legacy: typeof payload.role === "string" ? "yes" : "no",
     }),
   },
   "contract.counterparty_added": {
@@ -1513,26 +1525,38 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     changes: (intl, payload, context) => directChange(intl, payload, "matterType", context),
   },
+  "matter.portal_access_excluded": {
+    icon: Users,
+    message: defineMessage({
+      id: "activity.matter.portalAccessExcluded",
+      defaultMessage: "Migration kept {member} outside this Confidential record's audience",
+    }),
+    values: (intl, payload) => ({ member: named(intl, payload, "member") }),
+  },
   "matter.team_added": {
     icon: Users,
     message: defineMessage({
       id: "activity.matter.teamAdded",
-      defaultMessage: "{actor} added {member} to the team as {role}",
+      defaultMessage:
+        "{actor} added {member} to the team{legacy, select, yes { as {role}} other {}}",
     }),
     values: (intl, payload) => ({
       member: named(intl, payload, "member"),
       role: teamRole(intl, payload),
+      legacy: typeof payload.role === "string" ? "yes" : "no",
     }),
   },
   "matter.team_removed": {
     icon: Users,
     message: defineMessage({
       id: "activity.matter.teamRemoved",
-      defaultMessage: "{actor} took {member} off the team as {role}",
+      defaultMessage:
+        "{actor} took {member} off the team{legacy, select, yes { as {role}} other {}}",
     }),
     values: (intl, payload) => ({
       member: named(intl, payload, "member"),
       role: teamRole(intl, payload),
+      legacy: typeof payload.role === "string" ? "yes" : "no",
     }),
   },
   "matter.status_reassigned": {

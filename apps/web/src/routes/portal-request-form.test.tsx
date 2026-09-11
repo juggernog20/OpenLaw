@@ -202,9 +202,7 @@ describe("the request type's form", () => {
   it("sends an unauthenticated visitor to the entry screen", async () => {
     stubApi({ signedIn: null });
     renderAt("/portal/new/contract_review");
-    expect(
-      await screen.findByRole("heading", { name: "Legal request portal" }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Legal portal" })).toBeInTheDocument();
   });
 
   it("sends a requester after an archived type back to the picker", async () => {

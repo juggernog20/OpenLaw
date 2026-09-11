@@ -41,7 +41,7 @@ beforeAll(async () => {
     .limit(1);
   adminId = administrator!.id;
   for (const [name, role] of [
-    ["Teammate", "contributor"],
+    ["Teammate", "legal_team_member"],
     ["Outsider", "legal_team_member"],
   ] as const) {
     const email = `${name.toLowerCase()}@task-comments.example`;
@@ -77,13 +77,9 @@ describe.each(["matter", "contract"] as const)("%s Task details", (module) => {
     expect(created.statusCode, created.body).toBe(201);
     const record = created.json()[module];
     if (module === "matter")
-      await harness.db
-        .insert(matterTeam)
-        .values({ matterId: record.id, userId: teammateId, role: "contributor" });
+      await harness.db.insert(matterTeam).values({ matterId: record.id, userId: teammateId });
     else
-      await harness.db
-        .insert(contractTeam)
-        .values({ contractId: record.id, userId: teammateId, role: "contributor" });
+      await harness.db.insert(contractTeam).values({ contractId: record.id, userId: teammateId });
     const add = await harness.app.inject({
       method: "POST",
       url: `/api/v1/${module}s/${record.number}/tasks`,
@@ -125,6 +121,7 @@ describe.each(["matter", "contract"] as const)("%s Task details", (module) => {
     expect(thread.statusCode, thread.body).toBe(200);
     expect(thread.json().comments.map((row: { body: string }) => row.body)).toEqual([
       "Please review this before Friday.",
+      "Legal strategy",
     ]);
     expect(
       (

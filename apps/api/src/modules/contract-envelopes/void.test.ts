@@ -365,7 +365,7 @@ const addToTeam = (number: number, userId: string) =>
     method: "POST",
     url: `/api/v1/contracts/${String(number)}/team`,
     cookies: as(SENDER),
-    payload: { userId, role: "member" },
+    payload: { userId },
   });
 
 /** Walls a record off straight in the column: a fixture that makes a

@@ -4,7 +4,7 @@ Archive a Document to remove it from ordinary lists while keeping its Version hi
 
 ## Before you start
 
-Legal Team Members and Administrators can archive and restore Documents they can reach. Contributors can read permitted paper and supply supporting uploads, but cannot archive, restore, or delete it. Business Users have no managed-Document deletion controls.
+Legal Team Members and Administrators can archive and restore Documents they can reach. Business Users can read permitted paper and supply supporting uploads, but cannot archive, restore, or delete it. Business Users have no managed-Document deletion controls.
 
 Restore an archived owning record before changing its Documents through the normal record controls. Closing a Matter or ending a Contract is separate from archiving it.
 

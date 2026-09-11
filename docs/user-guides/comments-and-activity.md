@@ -4,7 +4,7 @@ Keep a conversation with its Contract, Matter, or Request, and choose the audien
 
 ## Before you start
 
-- Administrators and Legal Team Members can use conversations on work they can reach. Contributors need access to the specific Contract or Matter.
+- Administrators and Legal Team Members can use conversations on work they can reach. Business Users need access to the specific Contract or Matter.
 - Business Users reply on their own Request in the Portal. They do not need access to the Contract or Matter that Legal creates from it.
 - Check the record number and title before you write or attach paper. See [Understand roles and record access](roles-and-access.md) if a record is unavailable.
 
@@ -15,13 +15,13 @@ Keep a conversation with its Contract, Matter, or Request, and choose the audien
 3. Write in **New comment**.
 4. Select **Comment** and check that the post appears under your name with the intended tier.
 
-| Audience         | Who can read it                                                                                                             |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| **Legal only**   | Administrators and Legal Team Members who can reach the work. Contributors cannot choose or read this tier.                 |
-| **Working team** | The permitted Legal users and Contributors on the record. The originating Business User does not see it in the Portal.      |
-| **Full thread**  | The working audience and the originating Requester through their Portal conversation, where the record came from a Request. |
+| Audience         | Who can read it                                                                                                                    |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **Legal only**   | Administrators and Legal Team Members who can reach the work. Business Users cannot choose or read this tier.                      |
+| **Working team** | Legal users who can reach the record. Business Users do not see this tier in the Portal.                                           |
+| **Full thread**  | Legal users who can reach the record and its current Business User team members. A never-converted Request includes its Requester. |
 
-Record access still applies to the Legal and Contributor views. A tier does not add someone to a team. Full Thread keeps the originating Requester's Portal window on the conversation after conversion; it does not grant them the record page outside the Portal.
+Record access applies to every tier. Full Thread on a Contract or Matter reaches the Business Users currently on its team. A later-added person can read its Full Thread history. A removed person loses it, including through an old Request link. A never-converted Request keeps its Requester audience.
 
 Comments form one chronological conversation. Use **Show older** when earlier comments are available. The Comments badge counts unread comments you can see, excluding your own posts and removed comments. Reading the loaded conversation updates that count.
 
@@ -45,7 +45,7 @@ An edit changes the text of an existing comment, not its selected recipients. Po
 
 Attachments have the comment's audience. They are conversation paper, with no Document Version chain of their own. A failed post does not mean the paper has been filed. Keep the draft, check the error, and retry after correcting the cause. Check for an existing post before retrying to avoid sending it twice.
 
-On a Contract conversation, Administrators and Legal Team Members can use **File** on an attachment that has not been filed yet to put it on the Contract as a new Document or a new Version. Matter and Request conversations do not offer File. Contributors and Business Users cannot file it. Filing is a separate action; the attachment remains on the thread and shows its filing destination. See [Upload Documents and add Document Versions](document-versions.md) for that procedure.
+On a Contract conversation, Administrators and Legal Team Members can use **File** on an attachment that has not been filed yet to put it on the Contract as a new Document or a new Version. Matter and Request conversations do not offer File. Business Users cannot file it. Filing is a separate action; the attachment remains on the thread and shows its filing destination. See [Upload Documents and add Document Versions](document-versions.md) for that procedure.
 
 ## Edit or remove a post
 

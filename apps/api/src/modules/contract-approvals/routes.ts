@@ -112,7 +112,7 @@ import { httpError, problemResponse } from "../../lib/problem.js";
  * too: a Contributor on the team sees who has been asked to sign the
  * record off. The role alone opens nothing — the reach predicate
  * narrows it to the records they hold a `contract_team` row on. */
-const requireApprovalReader = requireRole("administrator", "legal_team_member", "contributor");
+const requireApprovalReader = requireRole("administrator", "legal_team_member");
 
 /** Asking, deciding, and cancelling are Member+ in M14, as putting
  * paper on a record is. A Contributor reads the roster but DD-015 gives

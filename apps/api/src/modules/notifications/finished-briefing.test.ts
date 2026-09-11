@@ -110,7 +110,7 @@ beforeAll(async () => {
     [DEFAULT_MEMBER, "legal_team_member"],
     [OPTED_MEMBER, "legal_team_member"],
     [MUTED_MEMBER, "legal_team_member"],
-    [EMPTY_CONTRIBUTOR, "contributor"],
+    [EMPTY_CONTRIBUTOR, "business_user"],
     [REQUESTER, "business_user"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
@@ -151,8 +151,8 @@ beforeAll(async () => {
     })
     .returning({ id: contracts.id });
   await harness.db.insert(contractTeam).values([
-    { contractId: contract!.id, userId: idOf(DEFAULT_MEMBER), role: "member" },
-    { contractId: contract!.id, userId: idOf(OPTED_MEMBER), role: "member" },
+    { contractId: contract!.id, userId: idOf(DEFAULT_MEMBER) },
+    { contractId: contract!.id, userId: idOf(OPTED_MEMBER) },
   ]);
   await harness.db.insert(contractApprovals).values([
     {

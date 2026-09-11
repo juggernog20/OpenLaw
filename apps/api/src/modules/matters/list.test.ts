@@ -78,7 +78,7 @@ beforeAll(async () => {
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
     [OUTSIDER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
     [BUSINESS, "business_user"],
   ] as const) {
     const person = await provisionUser(harness.app.auth, fixture);
@@ -144,7 +144,6 @@ beforeAll(async () => {
   await harness.db.insert(matterTeam).values({
     matterId: visibleIds[0]!,
     userId: contributorId,
-    role: "contributor",
   });
 }, 180_000);
 
@@ -257,10 +256,19 @@ describe("the Matters list", () => {
     expect(answer.matters.some((row) => row.id === completeRequiredId)).toBe(false);
   });
 
-  it("keeps a Contributor to their matter_team rows", async () => {
-    const answer = await list(contributorCookies);
-    expect(answer.matters.map((row) => row.id)).toEqual([visibleIds[0]]);
-    expect(answer.counts).toEqual({ open: 0, onHold: 1 });
+  it("lists only named team records in Your Matters", async () => {
+    const response = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/portal/matters",
+      cookies: contributorCookies,
+    });
+    expect(response.statusCode, response.body).toBe(200);
+    const answer = response.json();
+    const [expected] = await harness.db
+      .select({ number: matters.number })
+      .from(matters)
+      .where(eq(matters.id, visibleIds[0]!));
+    expect(answer.matters.map((row: { number: number }) => row.number)).toEqual([expected!.number]);
   });
 
   it("refuses a Business User the Matters collection", async () => {
@@ -324,7 +332,6 @@ describe("the Matters list", () => {
       new Set(visibleIds),
     );
     expect((await list(memberCookies, { manager: "me", priority: "critical" })).total).toBe(0);
-    expect((await list(contributorCookies, query)).total).toBe(1);
     expect(
       (await list(memberCookies, { openedFrom: "2000-01-01", openedTo: "2000-01-01" })).total,
     ).toBe(0);
@@ -374,18 +381,13 @@ describe("the Matters list", () => {
     }
   });
 
-  it("offers filter labels only from records the reader can reach", async () => {
+  it("keeps staff filter metadata out of the Portal", async () => {
     const response = await harness.app.inject({
       method: "GET",
       url: "/api/v1/matters/filter-options",
       cookies: contributorCookies,
     });
-    expect(response.statusCode, response.body).toBe(200);
-    expect(response.json()).toEqual({
-      types: [{ id: plainTypeId, displayName: "Matter list plain" }],
-      statuses: [{ id: onHoldStatusId, displayName: "On hold" }],
-      people: [],
-    });
+    expect(response.statusCode, response.body).toBe(403);
     const refused = await harness.app.inject({
       method: "GET",
       url: "/api/v1/matters/filter-options",
@@ -428,16 +430,16 @@ describe("the Matters list", () => {
     const deadlineOf = (answer: MatterListAnswer, id: string) =>
       answer.matters.find((row) => row.id === id)!.nextDeadline;
 
-    const active = await list(contributorCookies);
+    const active = await list(memberCookies, { sort: "number", dir: "asc" });
     expect(deadlineOf(active, visibleIds[0]!)).toEqual({
       date: today,
       label: "Today deadline",
       source: "key_date",
     });
-    const bounded = await list(contributorCookies, { deadlineFrom: today, deadlineTo: today });
+    const bounded = await list(memberCookies, { deadlineFrom: today, deadlineTo: today });
     expect(bounded.matters.map((row) => row.id)).toEqual([visibleIds[0]]);
     expect(bounded.total).toBe(1);
-    expect((await list(contributorCookies, { deadlineFrom: "2099-01-01" })).total).toBe(0);
+    expect((await list(memberCookies, { deadlineFrom: "2099-01-01" })).total).toBe(0);
     const pastOnly = await list(memberCookies, { manager: memberId });
     expect(deadlineOf(pastOnly, visibleIds[1]!)).toBeNull();
 
@@ -445,14 +447,16 @@ describe("the Matters list", () => {
       .update(matters)
       .set({ statusId: closedStatusId, closedAt: new Date() })
       .where(eq(matters.id, visibleIds[0]!));
-    const closed = await list(contributorCookies, { includeClosed: "true" });
+    const closed = await list(memberCookies, { includeClosed: "true", sort: "number", dir: "asc" });
     expect(deadlineOf(closed, visibleIds[0]!)).toBeNull();
 
     await harness.db
       .update(matters)
       .set({ statusId: openStatusId, closedAt: null })
       .where(eq(matters.id, visibleIds[0]!));
-    expect(deadlineOf(await list(contributorCookies), visibleIds[0]!)).toEqual({
+    expect(
+      deadlineOf(await list(memberCookies, { sort: "number", dir: "asc" }), visibleIds[0]!),
+    ).toEqual({
       date: today,
       label: "Today deadline",
       source: "key_date",

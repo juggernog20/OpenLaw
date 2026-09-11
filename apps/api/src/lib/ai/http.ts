@@ -31,7 +31,13 @@ export const PROBE_BOUND: AiCallBound = { maxTokens: 1024, timeoutMs: 30_000 };
  * An extraction returns one value and one quote per field, after any
  * thinking, and may wait on a local model working through a long contract.
  */
-export const EXTRACTION_BOUND: AiCallBound = { maxTokens: 8192, timeoutMs: 120_000 };
+// Five minutes, not two: a 50,000-character Request with a justification
+// per field is a 13k-token prompt and up to 8,192 output tokens, and one
+// such answer took 113 seconds on a fast model and over 120 on a slow one.
+// The worker renews the draft's lease every 30 seconds while it waits, so
+// the client keeps waiting too; a call that has run past this bound is a
+// stall, not a slow answer.
+export const EXTRACTION_BOUND: AiCallBound = { maxTokens: 8192, timeoutMs: 300_000 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -197,6 +203,7 @@ export function extractionPrompt(
       ? 'Each entry must use the properties "value" and "evidence", where "evidence" is an exact supporting quote. Example shape: {"term_type":{"value":"fixed","evidence":"a fixed term"}}.'
       : 'Each entry must use the properties "value", "sourceId", and "evidence". "sourceId" is the exact source id; "evidence" is an exact supporting quote from that source. Example shape: {"needed_by":{"value":"2026-10-02","sourceId":"message:123","evidence":"by October 2, 2026"}}. For synthesis or conflicts, use "citations": [{"sourceId":"message:123","quote":"exact supporting passage"}]. Example values are format examples, never facts.',
     "A later statement overrides an earlier fact only when it explicitly corrects that fact. For unresolved contradictions return conflict: true and cite the conflicting passages; do not choose a value.",
+    'Include a "justification" for each supported value: one or two short sentences explaining why the cited facts support this field, at most 1000 characters. Explain the conclusion, not your internal deliberation. Do not just repeat the value or copy the whole source. Use short, relevant quotes for citations.',
     "Use null when the sources do not support a value. Return no prose.",
     "Only the supplied passages were considered. Sources can be omitted or truncated; never claim complete analysis of every attachment or document.",
     "",
@@ -259,6 +266,9 @@ export function parseExtractionReply(
             }
           : {}),
         ...(typeof entry.evidence === "string" ? { evidence: entry.evidence } : {}),
+        ...(typeof entry.justification === "string" && entry.justification.trim().length <= 1000
+          ? { justification: entry.justification.trim() }
+          : {}),
       });
     } else {
       // Weak compatible models sometimes return the scalar directly.

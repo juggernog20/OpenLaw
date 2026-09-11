@@ -1,6 +1,6 @@
 # Find your work on Home
 
-Use Home to find work that needs your attention. These steps apply to Administrators, Legal Team Members, and Contributors. Your role, assignments, and record access determine which sections appear.
+Use Home to find work that needs your attention. These steps apply to Administrators and Legal Team Members. Your role, assignments, and record access determine which sections appear.
 
 ## Open work from Home
 
@@ -22,7 +22,7 @@ Home omits sections with no matching work. **Welcome to OpenLaw** means nothing 
 | Your contracts           | Contracts for which you are the Owner.                                                                   |
 | Your matters             | Matters for which you are the Matter Manager.                                                            |
 
-Home is a personal summary. Use a module's list to browse other reachable records. A Contributor's access to one record does not grant access to its parent or related records.
+Home is a personal summary. Use a module's list to browse other reachable records. A Business User's access to one record does not grant access to its parent or related records.
 
 ## Open all your Tasks
 
@@ -33,7 +33,7 @@ Home is a personal summary. Use a module's list to browse other reachable record
 
 The list contains open Tasks assigned to you, ordered by due date, with undated Tasks after dated ones. **No open Tasks assigned to you.** means the list is empty. If the Home card is absent, no matching Tasks are available there.
 
-Administrators and Legal Team Members can use a Task's completion control on **Your Tasks** when the work is done. Contributors can open their assigned Tasks here but cannot mark them done. **Undo** reopens the Task you just completed. Wait for the completion or reopened message before continuing. If saving fails, follow the displayed retry instruction.
+Administrators and Legal Team Members can use a Task's completion control on **Your Tasks** when the work is done. **Undo** reopens the Task you just completed. Wait for the completion or reopened message before continuing. If saving fails, follow the displayed retry instruction.
 
 Task due dates belong to Tasks. They do not become Key dates and do not feed **Dates approaching**. Use that section's **View all** to open **Your dates**, a calendar of record dates.
 

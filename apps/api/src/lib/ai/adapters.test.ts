@@ -323,6 +323,7 @@ for (const protocol of ["anthropic", "openai", "gemini"] as const) {
           value: "fixed",
           sourceId: "source-b",
           evidence: "fixed term",
+          justification: "The later message explicitly specifies a fixed term.",
           citations: [{ sourceId: "source-b", quote: "fixed term" }],
         },
       }),
@@ -355,6 +356,7 @@ for (const protocol of ["anthropic", "openai", "gemini"] as const) {
           value: "fixed",
           sourceId: "source-b",
           evidence: "fixed term",
+          justification: "The later message explicitly specifies a fixed term.",
           citations: [{ sourceId: "source-b", quote: "fixed term" }],
         },
       ]);

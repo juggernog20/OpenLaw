@@ -20,12 +20,7 @@ import {
 import { encryptedText } from "../secrets.js";
 import { uuidPk } from "./helpers.js";
 
-export const USER_ROLES = [
-  "administrator",
-  "legal_team_member",
-  "contributor",
-  "business_user",
-] as const;
+export const USER_ROLES = ["administrator", "legal_team_member", "business_user"] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
 /** The three shipped UI themes (DES-001); Light is the default (DES-002). */
@@ -71,7 +66,7 @@ export const users = pgTable(
     uniqueIndex("users_email_unique").on(sql`lower(${table.email})`),
     check(
       "users_role_check",
-      sql`${table.role} in ('administrator', 'legal_team_member', 'contributor', 'business_user')`,
+      sql`${table.role} in ('administrator', 'legal_team_member', 'business_user')`,
     ),
     check("users_theme_check", sql`${table.theme} in ('light', 'warm', 'dark')`),
   ],

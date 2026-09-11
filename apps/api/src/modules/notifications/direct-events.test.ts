@@ -106,7 +106,7 @@ beforeAll(async () => {
     const user = await provisionUser(harness.app.auth, fixture);
     await harness.db
       .update(users)
-      .set({ role: fixture === CONTRIBUTOR ? "contributor" : "legal_team_member" })
+      .set({ role: fixture === CONTRIBUTOR ? "business_user" : "legal_team_member" })
       .where(eq(users.id, user.id));
     userIds.set(fixture.email, user.id);
     cookies.set(fixture.email, await signInCookies(harness.app, fixture.email, fixture.password));
@@ -174,7 +174,10 @@ async function assignOwner(
 async function bell(fixture: { email: string }): Promise<BellItem[]> {
   const res = await harness.app.inject({
     method: "GET",
-    url: "/api/v1/notifications",
+    url:
+      fixture.email === CONTRIBUTOR.email
+        ? "/api/v1/portal/notifications"
+        : "/api/v1/notifications",
     cookies: as(fixture),
   });
   expect(res.statusCode, res.body).toBe(200);
@@ -244,12 +247,12 @@ const wallOff = (contractId: string) =>
 /** Puts somebody on a contract's team, which is what puts a Contributor
  * on the record at all and a Member+ inside a walled record's
  * audience. */
-async function addToTeam(number: number, userId: string, role = "member"): Promise<void> {
+async function addToTeam(number: number, userId: string): Promise<void> {
   const res = await harness.app.inject({
     method: "POST",
     url: `/api/v1/contracts/${number}/team`,
     cookies: as(ACTOR),
-    payload: { userId, role },
+    payload: { userId },
   });
   expect(res.statusCode, res.body).toBe(201);
 }
@@ -517,11 +520,11 @@ describe("being mentioned in a comment (CMT-007)", () => {
   });
 
   it("a Legal Only mention reaches nobody the tier excludes", async () => {
-    // The Contributor is on the record's team, so they reach it and
+    // The Business User is on the record's team, so they reach it and
     // hear the working-team tier — and no role puts them in the Legal
     // Only room (DD-016).
     const contract = await newContract("Direct · behind the tier");
-    await addToTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
+    await addToTeam(contract.number, idOf(CONTRIBUTOR));
     const before = (await rowsFor(CONTRIBUTOR)).length;
 
     // Naming them at a tier they cannot hear is refused outright
@@ -538,8 +541,8 @@ describe("being mentioned in a comment (CMT-007)", () => {
     // And the tier is what excluded them, not the record: the same
     // words at the tier they are in the room for do reach them.
     await comment(contract, {
-      body: "For the working team.",
-      visibility: "working_team",
+      body: "For the business team.",
+      visibility: "full_thread",
       mentions: [idOf(CONTRIBUTOR)],
     });
     expect((await bellFor(CONTRIBUTOR, contract)).map((row) => row.eventType)).toEqual([

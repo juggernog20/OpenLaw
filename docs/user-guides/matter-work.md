@@ -4,7 +4,7 @@ Keep internal to-dos in **Tasks**, named deadlines in **Key dates**, and connect
 
 ## Before you start
 
-Use a Legal Team Member or Administrator account that can read the Matter. The Matter must be unarchived to change this work. A closed Matter stays editable. Contributors can read these sections but cannot change Tasks, Key dates, or relationships; see [Contributor work](contributor-guide.md) for the actions they can take.
+Use a Legal Team Member or Administrator account that can read the Matter. The Matter must be unarchived to change this work. A closed Matter stays editable. Business Users use the Portal and cannot open these sections; see [Portal record work](contributor-guide.md) for the actions they can take.
 
 ## Maintain Tasks
 

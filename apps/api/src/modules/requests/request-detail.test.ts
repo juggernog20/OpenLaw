@@ -31,6 +31,7 @@ import {
   type RequestStatus,
 } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
+import { fakeComparisonDocx } from "../../lib/doc-engine/fake.js";
 import {
   signInCookies as harnessSignInCookies,
   startHarness,
@@ -81,7 +82,7 @@ beforeAll(async () => {
   for (const [fixture, role] of [
     [REQUESTER, "business_user"],
     [MEMBER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, user.id));
@@ -603,9 +604,7 @@ describe("the trail from ask to work (DD-014, CTR-018)", () => {
       .select({ id: users.id })
       .from(users)
       .where(eq(users.email, MEMBER.email));
-    await harness.db
-      .insert(contractTeam)
-      .values({ contractId: contract.id, userId: member!.id, role: "member" });
+    await harness.db.insert(contractTeam).values({ contractId: contract.id, userId: member!.id });
     const { id, number } = await submit({ summary: "Something quiet, shared" });
     await convert(id, contract.id);
 
@@ -677,6 +676,67 @@ describe("the paper, listed and downloaded through the staff mount", () => {
     expect(portal.body).toBe(res.body);
     expect(portal.headers["content-type"]).toBe(res.headers["content-type"]);
     expect(portal.headers["content-disposition"]).toBe(res.headers["content-disposition"]);
+  });
+
+  it.each([
+    ["paper.pdf", Buffer.from("%PDF-1.7 preview"), "application/pdf"],
+    ["image.png", Buffer.from("image bytes"), "image/png"],
+    ["agreement.docx", fakeComparisonDocx(), "application/pdf"],
+  ])("previews %s through the request access checks", async (filename, bytes, contentType) => {
+    const { number } = await submit({ summary: "Preview attachment" });
+    const attachmentId = await attach(number, filename, bytes);
+    const url = `/api/v1/requests/${number}/attachments/${attachmentId}?preview=true`;
+    const response = await harness.app.inject({ method: "GET", url, cookies: memberCookies });
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.headers["content-type"]).toBe(contentType);
+    expect(response.headers["content-disposition"]).toBe("inline");
+    expect(response.headers["cache-control"]).toBe("private, no-store");
+    expect(response.headers["x-content-type-options"]).toBe("nosniff");
+    expect(response.headers["content-security-policy"]).toBe("default-src 'none'; sandbox");
+    if (filename.endsWith(".docx")) expect(response.body).toMatch(/^%PDF-/);
+    else expect(response.rawPayload).toEqual(bytes);
+    for (const cookies of [contributorCookies, requesterCookies]) {
+      expect((await harness.app.inject({ method: "GET", url, cookies })).statusCode).toBe(403);
+    }
+    const other = await submit({ summary: "Another request" });
+    expect(
+      (
+        await harness.app.inject({
+          method: "GET",
+          url: `/api/v1/requests/${other.number}/attachments/${attachmentId}?preview=true`,
+          cookies: memberCookies,
+        })
+      ).statusCode,
+    ).toBe(404);
+    await harness.db
+      .update(requests)
+      .set({ archivedAt: new Date() })
+      .where(eq(requests.number, number));
+    expect(
+      (await harness.app.inject({ method: "GET", url, cookies: memberCookies })).statusCode,
+    ).toBe(404);
+  });
+
+  it.each([
+    ["unsafe.svg", 415],
+    ["broken.docx", 422],
+  ] as const)("keeps %s downloadable when preview is unavailable", async (filename, status) => {
+    const { number } = await submit({ summary: "Unavailable preview" });
+    const bytes = Buffer.from("not a previewable document");
+    const id = await attach(number, filename, bytes);
+    const url = `/api/v1/requests/${number}/attachments/${id}`;
+    expect(
+      (
+        await harness.app.inject({
+          method: "GET",
+          url: `${url}?preview=true`,
+          cookies: memberCookies,
+        })
+      ).statusCode,
+    ).toBe(status);
+    const download = await harness.app.inject({ method: "GET", url, cookies: memberCookies });
+    expect(download.statusCode).toBe(200);
+    expect(download.rawPayload).toEqual(bytes);
   });
 
   it("answers 404 for an attachment id belonging to another Request", async () => {

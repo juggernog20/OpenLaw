@@ -29,12 +29,6 @@ const MEMBER = {
   displayName: "Nadia Counsel",
   role: "legal_team_member",
 };
-const CONTRIBUTOR = {
-  id: "u3",
-  email: "contributor@example.com",
-  displayName: "Casey Contributor",
-  role: "contributor",
-};
 
 const TYPE_OPTIONS = [
   { id: "t-corp", slug: "corporation", displayName: "Corporation" },
@@ -341,15 +335,6 @@ describe("the /entities destination", () => {
       "The registry could not be read. Try again.",
     );
     expect(screen.getByRole("switch", { name: "Show archived" })).not.toBeChecked();
-  });
-
-  it("bounces a Contributor home and draws them no Entities nav item", async () => {
-    stubApi({ signedIn: CONTRIBUTOR });
-    renderAt("/entities?view=list");
-    // The home page renders instead of the registry.
-    expect(await screen.findByRole("heading", { level: 1, name: "Home" })).toBeInTheDocument();
-    const nav = screen.getByRole("navigation", { name: "Primary" });
-    expect(within(nav).queryByRole("link", { name: "Entities" })).not.toBeInTheDocument();
   });
 
   it("sends an unauthenticated visitor to login", async () => {

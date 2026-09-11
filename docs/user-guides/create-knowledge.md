@@ -4,7 +4,7 @@ Build your organization's library of templates, precedents, playbooks, and guida
 
 ## Before you start
 
-Sign in as a Legal Team Member or Administrator and open **Knowledge**. An Administrator must have configured at least one active Knowledge type. Contributors cannot author or browse the staff Knowledge library; Business Users read items made available through the [Business Portal](portal-knowledge.md).
+Sign in as a Legal Team Member or Administrator and open **Knowledge**. An Administrator must have configured at least one active Knowledge type. Business Users cannot author or browse the staff Knowledge library; Business Users read items made available through the [Business Portal](portal-knowledge.md).
 
 Knowledge contains your organization's know-how. OpenLaw **Help** contains product instructions. Help search does not search your Knowledge Items or their files.
 

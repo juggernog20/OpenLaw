@@ -173,7 +173,7 @@ beforeAll(async () => {
     const user = await provisionUser(harness.app.auth, fixture);
     await harness.db
       .update(users)
-      .set({ role: fixture === CONTRIBUTOR ? "contributor" : "legal_team_member" })
+      .set({ role: fixture === CONTRIBUTOR ? "business_user" : "legal_team_member" })
       .where(eq(users.id, user.id));
     userIds.set(fixture.email, user.id);
     cookies.set(fixture.email, await signInCookies(harness.app, fixture.email, fixture.password));
@@ -216,12 +216,12 @@ function statusBySlug(slug: string): { id: string; stage: string } {
 
 /** Puts somebody on a contract's team, which is what makes the record
  * about them (NOT-001). */
-async function addToTeam(number: number, userId: string, role = "member"): Promise<void> {
+async function addToTeam(number: number, userId: string): Promise<void> {
   const res = await harness.app.inject({
     method: "POST",
     url: `/api/v1/contracts/${String(number)}/team`,
     cookies: as(ACTOR),
-    payload: { userId, role },
+    payload: { userId },
   });
   expect(res.statusCode, res.body).toBe(201);
 }
@@ -274,7 +274,10 @@ async function moveTo(
 async function bell(fixture: { email: string }): Promise<BellItem[]> {
   const res = await harness.app.inject({
     method: "GET",
-    url: "/api/v1/notifications",
+    url:
+      fixture.email === CONTRIBUTOR.email
+        ? "/api/v1/portal/notifications"
+        : "/api/v1/notifications",
     cookies: as(fixture),
   });
   expect(res.statusCode, res.body).toBe(200);
@@ -454,13 +457,13 @@ describe("a comment on a record (DD-016, NOT-002 group 2)", () => {
     expect(await recordRowsFor(ACTOR, contract)).toEqual([]);
   });
 
-  it("a Legal Only comment produces no bell item for a Contributor", async () => {
-    // The Contributor is on the record's team, so the record is about
+  it("a Legal Only comment produces no bell item for a Business User", async () => {
+    // The Business User is on the record's team, so the record is about
     // them and they hear the working-team tier. No role puts them in the
     // Legal Only room (DD-016), and a sentence about a comment may go
     // exactly as far as the comment does.
     const contract = await newRecord("Ambient · behind the tier");
-    await addToTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
+    await addToTeam(contract.number, idOf(CONTRIBUTOR));
     const before = (await recordRowsFor(CONTRIBUTOR, contract)).length;
 
     await comment(contract, {
@@ -472,9 +475,9 @@ describe("a comment on a record (DD-016, NOT-002 group 2)", () => {
 
     // It is the tier that excluded them and not the record: the Legal
     // Team Members on the same record did hear it, and the same words at
-    // the tier the Contributor is in the room for reach them too.
+    // the tier the Business User is in the room for reach them too.
     expect(await eventsFor(OWNER, contract)).toContain("comment.posted");
-    await comment(contract, { body: "For the working team.", visibility: "working_team" });
+    await comment(contract, { body: "For the business team.", visibility: "full_thread" });
     expect(await eventsFor(CONTRIBUTOR, contract)).toEqual(["comment.posted"]);
   });
 

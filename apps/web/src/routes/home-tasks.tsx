@@ -210,7 +210,7 @@ export function HomeTasksPage() {
           <HomeTasksCard
             section={{ type: "tasks", total: page.total, rows: page.rows }}
             showViewAll={false}
-            onComplete={user.role === "contributor" ? undefined : (row) => void completeTask(row)}
+            onComplete={user.role === "business_user" ? undefined : (row) => void completeTask(row)}
             busy={busy}
             checkedTaskKey={pendingKey ?? (departure ? taskKey(departure) : undefined)}
             exitingTaskKey={departure ? taskKey(departure) : undefined}

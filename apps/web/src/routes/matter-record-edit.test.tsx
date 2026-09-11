@@ -12,12 +12,6 @@ const ADMIN = {
   displayName: "Ada Admin",
   role: "administrator",
 };
-const CONTRIBUTOR = {
-  id: "u-contributor",
-  email: "contributor@example.com",
-  displayName: "Casey Contributor",
-  role: "contributor",
-};
 const MEMBER = {
   id: "u-member",
   displayName: "Mina Member",
@@ -468,77 +462,6 @@ describe("the editable matter record", () => {
     expect(screen.queryByText("Mark as executed")).not.toBeInTheDocument();
   });
 
-  it("offers a Contributor only supporting upload actions on Matter paper", async () => {
-    const document = {
-      id: "doc-supporting",
-      title: "supporting.pdf",
-      description: null,
-      isPrimary: false,
-      isConfidential: false,
-      folderId: null,
-      archivedAt: null,
-      createdBy: { id: MEMBER.id, displayName: MEMBER.displayName, image: null, archived: false },
-      createdAt: "2026-08-23T09:00:00.000Z",
-      updatedAt: "2026-08-23T09:00:00.000Z",
-      versions: [
-        {
-          id: "ver-supporting",
-          versionNumber: 1,
-          kind: "draft_ours",
-          note: null,
-          originalFilename: "supporting.pdf",
-          mimeType: "application/pdf",
-          renderFamily: "pdf",
-          byteSize: 24,
-          checksumSha256: "a".repeat(64),
-          uploadedBy: {
-            id: MEMBER.id,
-            displayName: MEMBER.displayName,
-            image: null,
-            archived: false,
-          },
-          createdAt: "2026-08-23T09:00:00.000Z",
-          isCurrent: true,
-          isExecuted: false,
-        },
-      ],
-    };
-    stubApi({
-      signedIn: CONTRIBUTOR,
-      extra: (call) => {
-        if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET") {
-          return json(
-            200,
-            record(row(), [{ ...CONTRIBUTOR, image: null, archived: false, role: "contributor" }]),
-          );
-        }
-        if (call.url.pathname === "/api/v1/matters/12/documents" && call.method === "GET") {
-          return json(200, { documents: [document], nextCursor: null });
-        }
-        if (call.url.pathname === "/api/v1/matters/12/folders" && call.method === "GET") {
-          return json(200, { folders: [] });
-        }
-        if (call.url.pathname === "/api/v1/comments/unread") return json(200, { unread: 0 });
-        return undefined;
-      },
-    });
-    renderAt("/matters/12/documents");
-    const user = userEvent.setup();
-
-    const section = await screen.findByRole("region", { name: /^Documents/ });
-    expect(within(section).getByRole("button", { name: "Upload" })).toBeVisible();
-    expect(within(section).queryByRole("button", { name: "New folder" })).not.toBeInTheDocument();
-    await user.click(within(section).getByRole("button", { name: "Actions for supporting.pdf" }));
-    const menu = await screen.findByRole("menu");
-    expect(
-      within(menu)
-        .getAllByRole("menuitem")
-        .map((item) => item.textContent),
-    ).toEqual(["Add version"]);
-    expect(within(section).queryByRole("combobox")).not.toBeInTheDocument();
-    expect(within(section).queryByRole("switch")).not.toBeInTheDocument();
-  });
-
   it("lands on the Documents section from its own address", async () => {
     stubApi({
       signedIn: ADMIN,
@@ -702,75 +625,6 @@ describe("the editable matter record", () => {
       expect.arrayContaining([
         "GET /api/v1/comments?entityType=matter&entityId=m-12",
         "GET /api/v1/activity?entityType=matter&entityId=m-12",
-      ]),
-    );
-  });
-
-  it("lets a Contributor edit the description and projected business Fields only", async () => {
-    const patches: unknown[] = [];
-    let saved = row({
-      matterTypeId: "t-employment",
-      matterTypeName: "Employment",
-      customFields: { "business-unit": "People" },
-    });
-    stubApi({
-      signedIn: CONTRIBUTOR,
-      extra: (call) => {
-        if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET") {
-          return json(200, {
-            matter: saved,
-            fields: [FIELD],
-            customFieldRefs: { users: [], entities: [] },
-            team: [],
-          });
-        }
-        if (call.url.pathname === "/api/v1/matters/12" && call.method === "PATCH") {
-          patches.push(call.body);
-          const body = call.body as Record<string, unknown>;
-          saved = {
-            ...saved,
-            ...body,
-            customFields: {
-              ...saved.customFields,
-              ...((body.customFields as Record<string, string> | undefined) ?? {}),
-            },
-          };
-          return json(200, {
-            matter: saved,
-            fields: [FIELD],
-            customFieldRefs: { users: [], entities: [] },
-            team: [],
-          });
-        }
-        if (call.url.pathname === "/api/v1/comments/unread") return json(200, { unread: 0 });
-        return undefined;
-      },
-    });
-    renderAt("/matters/12");
-    const user = userEvent.setup();
-
-    expect(
-      await screen.findByRole("heading", { level: 1, name: "Editable advice" }),
-    ).toBeInTheDocument();
-    expect(screen.queryByLabelText("Title")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /move matter$/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole("combobox", { name: "Matter type" })).not.toBeInTheDocument();
-
-    const description = screen.getByLabelText("Description");
-    const businessUnit = screen.getByLabelText(/Business unit/);
-    expect(description).toBeEnabled();
-    expect(businessUnit).toBeEnabled();
-    await user.clear(description);
-    await user.type(description, "Business supplied context");
-    await user.tab();
-    await user.clear(businessUnit);
-    await user.type(businessUnit, "Operations");
-    await user.tab();
-
-    await waitFor(() =>
-      expect(patches).toEqual([
-        { description: "Business supplied context" },
-        { customFields: { "business-unit": "Operations" } },
       ]),
     );
   });
@@ -1155,13 +1009,10 @@ describe("the editable matter record", () => {
           return options();
         if (call.url.pathname === "/api/v1/matters/12/team" && call.method === "POST") {
           calls.push(call);
-          team = [...team, { ...MEMBER, role: (call.body as { role: string }).role }];
+          team = [...team, MEMBER];
           return json(201, { team });
         }
-        if (
-          call.url.pathname === "/api/v1/matters/12/team/u-member/watcher" &&
-          call.method === "DELETE"
-        ) {
+        if (call.url.pathname === "/api/v1/matters/12/team/u-member" && call.method === "DELETE") {
           calls.push(call);
           team = [creator];
           return json(200, { team });
@@ -1190,8 +1041,8 @@ describe("the editable matter record", () => {
     await user.click(await screen.findByRole("button", { name: "Add team member" }));
     const add = await screen.findByRole("dialog", { name: "Add team member" });
     await user.selectOptions(within(add).getByLabelText(/^Person\*?$/), MEMBER.id);
-    await user.selectOptions(within(add).getByLabelText("Role"), "watcher");
-    await user.click(within(add).getByRole("button", { name: "Add to team" }));
+    expect(within(add).queryByLabelText("Role")).not.toBeInTheDocument();
+    await user.click(within(add).getByRole("button", { name: "Add" }));
     expect(
       within(screen.getByRole("complementary", { name: "Matter team" })).getByText(
         MEMBER.displayName,
@@ -1200,7 +1051,7 @@ describe("the editable matter record", () => {
     await user.click(screen.getByRole("button", { name: /Take Mina Member off/ }));
     await waitFor(() =>
       expect(
-        calls.some((call) => call.method === "DELETE" && call.url.pathname.endsWith("/watcher")),
+        calls.some((call) => call.method === "DELETE" && call.url.pathname.endsWith("/u-member")),
       ).toBe(true),
     );
 
@@ -1431,7 +1282,7 @@ it("opens the mapped immutable source on the same Matter and retains an honest e
   const panel = await screen.findByRole("complementary", {
     name: "Original correspondence.eml, version 3",
   });
-  expect(screen.queryByRole("dialog", { name: "Source document" })).toBeNull();
+  expect(screen.queryByRole("dialog", { name: "Unverified value" })).toBeNull();
   expect(router.state.location.pathname).toBe("/matters/12");
   expect(within(panel).getAllByRole("link", { name: "Download" })[0]).toHaveAttribute(
     "href",
@@ -1444,4 +1295,42 @@ it("opens the mapped immutable source on the same Matter and retains an honest e
   ).toBeVisible();
   await user.keyboard("{Escape}");
   await waitFor(() => expect(trigger).toHaveFocus());
+});
+
+it("toggles the current and requester descriptions without replacing the saved matter description", async () => {
+  const user = userEvent.setup();
+  let saved = row();
+  const patches: unknown[] = [];
+  stubApi({
+    signedIn: ADMIN,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/matters/options") return options();
+      if (call.url.pathname !== "/api/v1/matters/12") return undefined;
+      if (call.method === "PATCH") {
+        patches.push(call.body);
+        saved = { ...saved, ...(call.body as Partial<typeof saved>) };
+        return json(200, record(saved));
+      }
+      return json(200, {
+        ...record(saved),
+        originalIntake: { number: 100, description: "Requester context omitted from the summary." },
+      });
+    },
+  });
+  renderAt("/matters/12");
+  const toggle = await screen.findByRole("switch", { name: "Show requester description" });
+  expect(screen.getByLabelText("Description")).toHaveValue("Initial description");
+  await user.click(toggle);
+  expect(screen.getByText("Requester context omitted from the summary.")).toBeVisible();
+  expect(screen.queryByRole("textbox", { name: "Description" })).toBeNull();
+  await user.click(toggle);
+  expect(screen.getByLabelText("Description")).toHaveValue("Initial description");
+  expect(patches).toEqual([]);
+  const current = screen.getByLabelText("Description");
+  await user.clear(current);
+  await user.type(current, "Lawyer's updated description");
+  await user.click(toggle);
+  await waitFor(() => expect(patches).toEqual([{ description: "Lawyer's updated description" }]));
+  await user.click(toggle);
+  expect(screen.getByLabelText("Description")).toHaveValue("Lawyer's updated description");
 });

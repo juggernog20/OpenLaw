@@ -50,7 +50,7 @@ beforeAll(async () => {
   await harness.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, member.id));
   cookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
   const contributor = await provisionUser(harness.app.auth, CONTRIBUTOR);
-  await harness.db.update(users).set({ role: "contributor" }).where(eq(users.id, contributor.id));
+  await harness.db.update(users).set({ role: "business_user" }).where(eq(users.id, contributor.id));
   contributorCookies = await signInCookies(harness.app, CONTRIBUTOR.email, CONTRIBUTOR.password);
 
   const [entityType] = await harness.db.select({ id: entityTypes.id }).from(entityTypes).limit(1);

@@ -21,14 +21,13 @@ import {
 } from "@openlaw/db";
 import type { AuthenticatedUser } from "../auth/user.js";
 
-export const MATTER_CREATOR_ROLE = "creator";
 export const MATTER_MANAGER_ROLES = new Set<string>(["administrator", "legal_team_member"]);
 export const MATTER_MANAGER_REFUSAL =
   "The Matter Manager must be a live Legal Team Member or Administrator.";
 export const NO_MATTER = "No matter exists with this number.";
 
 const MEMBER_PLUS = new Set(["administrator", "legal_team_member"]);
-const WORKING_TIERS: readonly CommentVisibility[] = ["working_team", "full_thread"];
+const PORTAL_TIERS: readonly CommentVisibility[] = ["full_thread"];
 
 function mattersTheyAreOn(db: Executor, user: AuthenticatedUser): SQL {
   return inArray(
@@ -49,10 +48,8 @@ export function matterTeamScope(db: Executor, user: AuthenticatedUser): SQL | un
         mattersTheyAreOn(db, user),
         eq(matters.managerId, user.id),
       );
-    case "contributor":
-      return mattersTheyAreOn(db, user);
     case "business_user":
-      return sql`false`;
+      return and(isNull(matters.archivedAt), mattersTheyAreOn(db, user));
     default: {
       const unanswered: never = user.role;
       throw new Error(`No matter reach rule for role: ${unanswered}`);
@@ -98,19 +95,23 @@ export async function matterConfidentialityWrite(
   matter: Pick<Matter, "id" | "managerId" | "isConfidential">,
 ): Promise<MatterConfidentialityWrite> {
   const held = await db
-    .select({ role: matterTeam.role })
+    .select({ userId: matterTeam.userId })
     .from(matterTeam)
     .where(and(eq(matterTeam.matterId, matter.id), eq(matterTeam.userId, user.id)));
   const onTeam = held.length > 0;
   const isManager = matter.managerId === user.id;
   const reaches =
-    user.role === "contributor"
+    user.role === "business_user"
       ? onTeam
       : MEMBER_PLUS.has(user.role) && (!matter.isConfidential || onTeam || isManager);
   if (!reaches) return "unreachable";
-  return user.role === "administrator" ||
-    isManager ||
-    held.some((row) => row.role === MATTER_CREATOR_ROLE)
+  if (!MEMBER_PLUS.has(user.role)) return "refused";
+  const [record] = await db
+    .select({ createdBy: matters.createdBy })
+    .from(matters)
+    .where(eq(matters.id, matter.id))
+    .limit(1);
+  return user.role === "administrator" || isManager || record?.createdBy === user.id
     ? "allowed"
     : "refused";
 }
@@ -151,8 +152,8 @@ export async function matterAudience(
   if (!row) return null;
   const tiers = MEMBER_PLUS.has(user.role)
     ? COMMENT_VISIBILITIES
-    : user.role === "contributor"
-      ? WORKING_TIERS
+    : user.role === "business_user"
+      ? PORTAL_TIERS
       : [];
   return tiers.length > 0
     ? {
@@ -171,7 +172,11 @@ export async function matterMentionCandidates(
   only?: readonly string[],
 ): Promise<MatterMentionCandidate[]> {
   const [matter] = await db
-    .select({ managerId: matters.managerId, isConfidential: matters.isConfidential })
+    .select({
+      archivedAt: matters.archivedAt,
+      managerId: matters.managerId,
+      isConfidential: matters.isConfidential,
+    })
     .from(matters)
     .where(eq(matters.id, matterId))
     .limit(1);
@@ -194,7 +199,7 @@ export async function matterMentionCandidates(
         isNull(users.archivedAt),
         or(
           and(inArray(users.role, ["administrator", "legal_team_member"]), memberReach),
-          and(eq(users.role, "contributor"), onTeam),
+          and(eq(users.role, "business_user"), onTeam, matter.archivedAt ? sql`false` : undefined),
         ),
         only ? inArray(users.id, [...only]) : undefined,
       ),
@@ -204,6 +209,6 @@ export async function matterMentionCandidates(
     id: row.id,
     displayName: row.displayName,
     image: row.image,
-    tiers: MEMBER_PLUS.has(row.role) ? COMMENT_VISIBILITIES : WORKING_TIERS,
+    tiers: MEMBER_PLUS.has(row.role) ? COMMENT_VISIBILITIES : PORTAL_TIERS,
   }));
 }

@@ -1,59 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * The request thread (CMT-001, INT-007, #381), from the I7 frame of
- * intake.pen: the Conversation card between the status banner and "What
- * you submitted".
- *
- * It is the same thread the staff applet draws, read through the same
- * routes, and it is a second surface rather than a second machinery: one
- * `request` audience arm answers who is in the room, and this component
- * only decides how the portal says it.
- *
- * **The thread is live from submission** (INT-007). A Request that is
- * still `new` takes the clarifying back-and-forth, so the card draws
- * whatever the status is and consults none of them.
- *
- * **And it stays live after a conversion, on the record** (CMT-001,
- * #422). A conversion moves the comment rows onto the contract the
- * Request became, and the `request` audience arm follows that
- * back-link. So this card goes on asking for the thread by the
- * Request's own id, and the answer it gets is the record's
- * conversation. There is no branch here and no second address: which
- * record the rows hang off is the seam's answer, and a card that had to
- * know would be a second place for CMT-001 to be forgotten.
- *
- * **Everything here is Full Thread, and that is the API's doing rather
- * than this component's.** The `request` arm puts a Requester in one
- * room (DD-016), so the read already carries Full Thread comments alone
- * — a Legal Only note never leaves the database — and a post at any
- * other tier would be refused. That is why the composer has no tier
- * picker: a chooser with one option is not a choice, and drawing three
- * segments would offer two rooms nobody would be let into.
- *
- * **No badge, no tier badges, and no corrections.** The portal is one
- * room, so a badge naming it would name the only room there is. The
- * three corrections (CMT-008) are a staff affordance the mock does not
- * draw, and a requester who wants to take something back replies again.
- *
- * ### Recorded normalization points (I7 deviations accepted)
- *
- * 1. I7's "Attach a file" becomes CMT-011's shared chosen-file control:
- *    up to five removable chips, with each posted file drawn under the
- *    reply it travelled with.
- * 2. I7 draws every message in one body with no end to it. The read is
- *    paged from the newest end (CTR-024), so a thread past one page
- *    carries a control that walks back into the older conversation.
- *    Without it a long thread would silently lose its own beginning.
- * 3. I7's author pill reads "You" or "Legal". Both are kept, because on
- *    a Request the audience is the Requester plus Member+ staff and
- *    there is nobody else an author could be.
- * 4. I7 draws a thread that already has messages. A thread with none
- *    says so, in DES-003's one-glyph-one-sentence form, rather than
- *    opening on a bare reply box under a "Conversation" head: a
- *    requester who has just asked should read that nothing has been
- *    said yet, not wonder whether the page failed to load it.
- */
+/** Shared Portal conversation for Requests and records under DD-023. */
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MessageSquare } from "lucide-react";
@@ -83,14 +30,16 @@ export interface LoadedThread {
   nextCursor: string | null;
 }
 
-export function RequestThread({
-  requestId,
+export function PortalThread({
+  entityId,
+  entityType,
   viewerId,
   thread,
 }: Readonly<{
   /** The Request the thread hangs off, by its own id — the reference
    * every comment route is keyed by (CMT-010), never the R-### number. */
-  requestId: string;
+  entityId: string;
+  entityType: "request" | "contract" | "matter";
   /** Who is reading, so a row can say "You" of its own author. */
   viewerId: string;
   thread: LoadedThread | null;
@@ -116,7 +65,7 @@ export function RequestThread({
   const refreshNewest = useCallback(async () => {
     const issue = (newestIssued.current += 1);
     const throughId = commentsRef.current[0]?.id;
-    const data = await readCommentWindow("request", requestId, throughId);
+    const data = await readCommentWindow(entityType, entityId, throughId, "full_thread");
     if (issue < newestLanded.current) return;
     if (!data) {
       // A failed newer read must not make an older valid answer stale:
@@ -128,7 +77,7 @@ export function RequestThread({
     setReadFailed(false);
     setComments((current) => mergeCommentWindow(current, data.comments));
     if (commentsRef.current[0]?.id === throughId) setCursor(data.nextCursor);
-  }, [requestId]);
+  }, [entityId, entityType]);
 
   useEffect(
     () =>
@@ -160,7 +109,7 @@ export function RequestThread({
     setOlderFailed(false);
     const { data } = await api
       .GET("/api/v1/comments", {
-        params: { query: { entityType: "request", entityId: requestId, cursor } },
+        params: { query: { entityType, entityId, cursor, visibility: "full_thread" } },
       })
       .catch(() => ({ data: undefined }))
       .finally(() => setLoadingOlder(false));
@@ -242,13 +191,15 @@ export function RequestThread({
                 comment={comment}
                 viewerId={viewerId}
                 landed={comment.id === landed}
-                requestId={requestId}
+                entityType={entityType}
+                entityId={entityId}
               />
             ))}
           </ul>
         )}
         <Composer
-          requestId={requestId}
+          entityType={entityType}
+          entityId={entityId}
           onPosted={(comment) =>
             // Keep the live read's row if it arrived before the posting response.
             setComments((current) => mergeCommentWindow([comment], current))
@@ -279,7 +230,8 @@ function Message({
   comment,
   viewerId,
   landed,
-  requestId,
+  entityId,
+  entityType,
 }: Readonly<{
   comment: Comment;
   viewerId: string;
@@ -287,7 +239,8 @@ function Message({
    * "Show earlier replies" press just brought in. */
   landed: boolean;
   /** The portal address that resolved the thread, including after conversion. */
-  requestId: string;
+  entityId: string;
+  entityType: "request" | "contract" | "matter";
 }>) {
   const intl = useIntl();
   const mine = comment.author.id === viewerId;
@@ -353,7 +306,7 @@ function Message({
           </p>
         )}
         {removed === null && (
-          <CommentAttachmentRows comment={comment} entityType="request" entityId={requestId} />
+          <CommentAttachmentRows comment={comment} entityType={entityType} entityId={entityId} />
         )}
       </div>
     </li>
@@ -370,9 +323,14 @@ function Message({
  * through it.
  */
 function Composer({
-  requestId,
+  entityId,
+  entityType,
   onPosted,
-}: Readonly<{ requestId: string; onPosted: (comment: Comment) => void }>) {
+}: Readonly<{
+  entityId: string;
+  entityType: "request" | "contract" | "matter";
+  onPosted: (comment: Comment) => void;
+}>) {
   const intl = useIntl();
   const [draft, setDraft] = useState("");
   const [files, setFiles] = useState<File[]>([]);
@@ -391,8 +349,8 @@ function Composer({
     setError(null);
     const result = await sendComment(
       {
-        entityType: "request",
-        entityId: requestId,
+        entityType,
+        entityId: entityId,
         body,
         visibility: "full_thread",
       },
@@ -456,4 +414,11 @@ function Composer({
       )}
     </form>
   );
+}
+
+export function RequestThread({
+  requestId,
+  ...props
+}: Readonly<{ requestId: string; viewerId: string; thread: LoadedThread | null }>) {
+  return <PortalThread {...props} entityType="request" entityId={requestId} />;
 }

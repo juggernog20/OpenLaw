@@ -6,7 +6,7 @@
       "id": "V-C01",
       "coverage": ["C01"],
       "articles": ["staff-sign-in"],
-      "roles": ["legal_team_member", "administrator", "contributor"],
+      "roles": ["legal_team_member", "administrator"],
       "environment": "pilot",
       "prerequisites": [
         "Invited account, Mailpit activation message, and a separate authenticated session."
@@ -58,7 +58,7 @@
       "id": "V-C03",
       "coverage": ["C03"],
       "articles": ["find-your-work"],
-      "roles": ["legal_team_member", "administrator", "contributor"],
+      "roles": ["legal_team_member", "administrator"],
       "environment": "pilot",
       "prerequisites": ["Seeded Tasks, Key dates, and records reached by each role."],
       "actions": [
@@ -82,7 +82,7 @@
       "id": "V-C04",
       "coverage": ["C04"],
       "articles": ["search-and-views"],
-      "roles": ["legal_team_member", "administrator", "contributor"],
+      "roles": ["legal_team_member", "administrator"],
       "environment": "pilot",
       "prerequisites": [
         "Two visible records, a confidential record outside reach, and a Document with extracted unique text."
@@ -108,7 +108,7 @@
       "id": "V-C05",
       "coverage": ["C05"],
       "articles": ["personal-settings"],
-      "roles": ["legal_team_member", "administrator", "contributor"],
+      "roles": ["legal_team_member", "administrator"],
       "environment": "pilot",
       "prerequisites": ["Separate personal accounts with known initial timezone and appearance."],
       "actions": [
@@ -132,7 +132,7 @@
       "id": "V-C06",
       "coverage": ["C06"],
       "articles": ["roles-and-access"],
-      "roles": ["legal_team_member", "administrator", "contributor", "business_user"],
+      "roles": ["legal_team_member", "administrator", "business_user"],
       "environment": "pilot",
       "prerequisites": [
         "Non-Confidential and Confidential Contracts/Matters, separate named teams, and a Confidential Entity with explicit Grants."
@@ -158,7 +158,7 @@
       "id": "V-C07",
       "coverage": ["C07"],
       "articles": ["comments-and-activity"],
-      "roles": ["legal_team_member", "administrator", "contributor", "business_user"],
+      "roles": ["legal_team_member", "administrator", "business_user"],
       "environment": "conversations",
       "prerequisites": [
         "A reached Contract, Matter, and Request conversation, plus small fictional attachments."
@@ -184,7 +184,7 @@
       "id": "V-C08",
       "coverage": ["C08"],
       "articles": ["notifications"],
-      "roles": ["legal_team_member", "administrator", "contributor", "business_user"],
+      "roles": ["legal_team_member", "administrator", "business_user"],
       "environment": "conversations",
       "prerequisites": [
         "Separate role accounts, Mailpit, and a controlled event that produces a notification."
@@ -641,7 +641,7 @@
       "id": "V-C25",
       "coverage": ["C25"],
       "articles": ["contributor-guide"],
-      "roles": ["contributor"],
+      "roles": ["business_user"],
       "environment": "pilot",
       "prerequisites": [
         "Ravi is on one Contract and Matter team and absent from comparable records."
@@ -665,7 +665,7 @@
       "id": "V-C26",
       "coverage": ["C26"],
       "articles": ["document-versions"],
-      "roles": ["legal_team_member", "administrator", "contributor"],
+      "roles": ["legal_team_member", "administrator"],
       "environment": "conversations",
       "prerequisites": [
         "Reached owning records, PDF/Word fixtures, two Versions, and comment paper."
@@ -691,7 +691,7 @@
       "id": "V-C27",
       "coverage": ["C27"],
       "articles": ["document-folders"],
-      "roles": ["legal_team_member", "administrator", "contributor"],
+      "roles": ["legal_team_member", "administrator"],
       "environment": "conversations",
       "prerequisites": [
         "A reached record, nested local folders, valid files, and one intentionally failing file."
@@ -717,7 +717,7 @@
       "id": "V-C28",
       "coverage": ["C28"],
       "articles": ["document-previews"],
-      "roles": ["legal_team_member", "administrator", "contributor", "business_user"],
+      "roles": ["legal_team_member", "administrator", "business_user"],
       "environment": "conversations",
       "prerequisites": [
         "Real PDF, DOCX, scanned PDF, unsupported file, and an isolated processing-failure fixture."
@@ -743,7 +743,7 @@
       "id": "V-C29",
       "coverage": ["C29"],
       "articles": ["compare-versions"],
-      "roles": ["legal_team_member", "administrator", "contributor"],
+      "roles": ["legal_team_member", "administrator"],
       "environment": "analysis-workflow",
       "prerequisites": [
         "Two Word Versions and a PDF/Word pair with known small differences, plus a plain TXT/PDF pair for the unsupported-format check."
@@ -769,7 +769,7 @@
       "id": "V-C30",
       "coverage": ["C30"],
       "articles": ["document-repository"],
-      "roles": ["legal_team_member", "administrator", "contributor"],
+      "roles": ["legal_team_member", "administrator"],
       "environment": "conversations",
       "prerequisites": [
         "Documents under several owner kinds, including a hidden owner and an archived Document."
@@ -1245,7 +1245,7 @@
       "id": "V-C49",
       "coverage": ["C49"],
       "articles": ["troubleshooting"],
-      "roles": ["legal_team_member", "administrator", "contributor", "business_user"],
+      "roles": ["legal_team_member", "administrator", "business_user"],
       "environment": "authoring",
       "prerequisites": [
         "Named app error fixtures from access, upload, preview, notifications, approvals, signing, and Analysis scenarios."
@@ -1271,7 +1271,7 @@
       "id": "V-C50",
       "coverage": ["C50"],
       "articles": ["reference"],
-      "roles": ["legal_team_member", "administrator", "contributor", "business_user", "operator"],
+      "roles": ["legal_team_member", "administrator", "business_user", "operator"],
       "environment": "authoring",
       "prerequisites": [
         "The target build's glossary, configured labels, role fixtures, and file-behavior examples."
@@ -1297,7 +1297,7 @@
       "id": "V-C51",
       "coverage": ["C51"],
       "articles": ["versions-and-support"],
-      "roles": ["legal_team_member", "administrator", "contributor", "business_user", "operator"],
+      "roles": ["legal_team_member", "administrator", "business_user", "operator"],
       "environment": "authoring",
       "prerequisites": [
         "Installed documentation edition, standalone export, and an older or unavailable article link."
@@ -1375,7 +1375,7 @@
       "id": "V-C54",
       "coverage": ["C54"],
       "articles": ["archive-and-delete-documents"],
-      "roles": ["legal_team_member", "administrator", "contributor"],
+      "roles": ["legal_team_member", "administrator"],
       "environment": "conversations",
       "prerequisites": [
         "Disposable Documents with multiple Versions and independent Administrator/Member/Contributor sessions."
@@ -1427,7 +1427,7 @@
       "id": "V-HELP",
       "coverage": ["C03", "C09", "C12", "C51"],
       "articles": [],
-      "roles": ["anonymous", "administrator", "legal_team_member", "contributor", "business_user"],
+      "roles": ["anonymous", "administrator", "legal_team_member", "business_user"],
       "environment": "publication",
       "prerequisites": ["Help and formal readers plus verified intake pilot articles."],
       "actions": [

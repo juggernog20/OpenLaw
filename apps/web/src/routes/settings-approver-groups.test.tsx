@@ -40,7 +40,7 @@ const USERS = [
     id: "u3",
     email: "robin@example.com",
     displayName: "Robin Procurement",
-    role: "contributor",
+    role: "business_user",
   },
   { id: "u4", email: "sam@example.com", displayName: "Sam Gone", role: "legal_team_member" },
 ].map((user) => ({

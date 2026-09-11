@@ -53,6 +53,7 @@ import {
   MATTER_ENTITY,
   reachedBy,
   requestReachedBy,
+  notificationScope,
   REQUEST_ENTITY,
 } from "../lib/notifications/audience.js";
 import { requestSideOf } from "../lib/notifications/catalog.js";
@@ -185,6 +186,9 @@ async function sendNotificationEmail(
       emailSkippedAt: notifications.emailSkippedAt,
       recipientEmail: users.email,
       recipientName: users.displayName,
+      recipientRole: users.role,
+      recipientTheme: users.theme,
+      recipientTimezone: users.timezone,
       recipientArchivedAt: users.archivedAt,
     })
     .from(notifications)
@@ -211,6 +215,30 @@ async function sendNotificationEmail(
   // addressed them — its Requester for group 5 (DD-013), a triager for
   // group 4 (INT-006) — which is the only fact about reach that can
   // change after the row was written.
+  if (row.recipientRole === "business_user") {
+    const [visible] = await deps.db
+      .select({ id: notifications.id })
+      .from(notifications)
+      .where(
+        and(
+          eq(notifications.id, row.id),
+          notificationScope(
+            deps.db,
+            {
+              id: row.userId,
+              role: row.recipientRole,
+              email: row.recipientEmail,
+              displayName: row.recipientName,
+              theme: row.recipientTheme,
+              timezone: row.recipientTimezone,
+            },
+            "portal",
+          ),
+        ),
+      )
+      .limit(1);
+    if (!visible) return "unreachable";
+  }
   const payload = row.payload;
   let record: MailRecord;
   if (row.entityType === CONTRACT_ENTITY) {
@@ -264,7 +292,9 @@ async function sendNotificationEmail(
       details: payload,
     },
     row.recipientEmail,
-    deps.baseUrl,
+    row.recipientRole === "business_user" && row.entityType !== "request"
+      ? `${deps.baseUrl.replace(/\/+$/, "")}/portal`
+      : deps.baseUrl,
   );
   // No copy for this event yet — group 3's words arrive with the digest
   // (NOT-003). Terminal, because no retry writes copy.

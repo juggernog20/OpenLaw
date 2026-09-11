@@ -34,7 +34,7 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { documentVersionRenditions, eq, users } from "@openlaw/db";
+import { documentVersionRenditions, contracts, eq, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import { fakeConversionText } from "../../lib/doc-engine/fake.js";
 import { DOCX_MIME_TYPE, PPTX_MIME_TYPE, officePackage } from "../../testing/fixtures/office.js";
@@ -142,7 +142,7 @@ beforeAll(async () => {
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
     [OUTSIDER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, user.id));
@@ -182,17 +182,17 @@ async function newContract(title: string): Promise<ContractRow> {
   });
   expect(res.statusCode, res.body).toBe(201);
   const contract = res.json().contract as ContractRow;
-  await putOnTeam(contract.number, idOf(MEMBER), "member");
-  await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
+  await putOnTeam(contract.number, idOf(MEMBER));
+  await putOnTeam(contract.number, idOf(CONTRIBUTOR));
   return contract;
 }
 
-async function putOnTeam(number: number, userId: string, role: string): Promise<void> {
+async function putOnTeam(number: number, userId: string): Promise<void> {
   const res = await harness.app.inject({
     method: "POST",
     url: `/api/v1/contracts/${number}/team`,
     cookies: adminCookies,
-    payload: { userId, role },
+    payload: { userId },
   });
   expect(res.statusCode, res.body).toBe(201);
 }
@@ -638,7 +638,7 @@ describe("hard delete takes the rendition too", () => {
 });
 
 describe("the rendition read is behind both gates", () => {
-  it("lets a Contributor on the team read what they may download", async () => {
+  it("lets a Business User on the team read supporting paper they may download", async () => {
     const { document, version } = await contractWithFile("Rendition · contributor", {
       filename: "draft.docx",
       contentType: DOCX,
@@ -646,6 +646,10 @@ describe("the rendition read is behind both gates", () => {
     });
     expect((await settledRendition(document.id, version.id)).state).toBe("ready");
 
+    await harness.db
+      .update(contracts)
+      .set({ primaryDocumentId: null })
+      .where(eq(contracts.primaryDocumentId, document.id));
     const res = await readRendition(contributorCookies, document.id, version.id);
     expect(res.statusCode, res.body).toBe(200);
     expect((res.json().rendition as RenditionRow).state).toBe("ready");
@@ -692,7 +696,7 @@ describe("the rendition read is behind both gates", () => {
     expect(withoutInstance(refused.json())).toEqual(withoutInstance(control.json()));
   });
 
-  it("refuses a Business User the whole surface, as every document read does", async () => {
+  it("hides document content from a Business User without a team row", async () => {
     const { document, version } = await contractWithFile("Rendition · business user", {
       filename: "msa.docx",
       contentType: DOCX,
@@ -707,7 +711,7 @@ describe("the rendition read is behind both gates", () => {
     await harness.db.update(users).set({ role: "business_user" }).where(eq(users.id, user.id));
     const cookies = await signInCookies(harness.app, businessUser.email, businessUser.password);
 
-    expect((await readRendition(cookies, document.id, version.id)).statusCode).toBe(403);
+    expect((await readRendition(cookies, document.id, version.id)).statusCode).toBe(404);
   });
 
   it("refuses a stranger, before anything is said about a conversion", async () => {

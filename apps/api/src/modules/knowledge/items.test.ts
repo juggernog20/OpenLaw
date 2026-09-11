@@ -58,7 +58,7 @@ beforeAll(async () => {
 
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
     [BUSINESS, "business_user"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
@@ -218,7 +218,7 @@ describe("Knowledge Item create, read, and inline updates", () => {
       cookies: contributorCookies,
       query: { entityType: "knowledge_item", entityId: id },
     });
-    expect(contributorFeed.statusCode, contributorFeed.body).toBe(404);
+    expect(contributorFeed.statusCode, contributorFeed.body).toBe(403);
   });
 
   it("requires live types and real folders", async () => {

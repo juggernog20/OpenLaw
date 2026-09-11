@@ -50,7 +50,7 @@ beforeAll(async () => {
   for (const [fixture, role] of [
     [ACTOR, "legal_team_member"],
     [MEMBER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
     [OUTSIDER, "legal_team_member"],
   ] as const) {
     const person = await provisionUser(harness.app.auth, fixture);
@@ -90,7 +90,7 @@ async function privateMatter(title: string): Promise<{ id: string; number: numbe
     method: "POST",
     url: `/api/v1/matters/${matter.number}/team`,
     cookies: as(ACTOR),
-    payload: { userId: idOf(CONTRIBUTOR), role: "contributor" },
+    payload: { userId: idOf(CONTRIBUTOR) },
   });
   expect(added.statusCode, added.body).toBe(201);
   return matter;
@@ -136,7 +136,10 @@ function unread(fixture: { email: string }, matterId: string) {
 async function bell(fixture: { email: string }, matterId: string) {
   const response = await harness.app.inject({
     method: "GET",
-    url: "/api/v1/notifications",
+    url:
+      fixture.email === CONTRIBUTOR.email
+        ? "/api/v1/portal/notifications"
+        : "/api/v1/notifications",
     cookies: as(fixture),
   });
   expect(response.statusCode, response.body).toBe(200);
@@ -226,7 +229,7 @@ describe("a matter speaks", () => {
 
   it("uploads and downloads an attachment at the comment's matter tier", async () => {
     const matter = await privateMatter("Advice with paper");
-    const posted = await paper(matter.id);
+    const posted = await paper(matter.id, "full_thread");
     expect(posted.statusCode, posted.body).toBe(201);
     const comment = posted.json().comment as {
       id: string;

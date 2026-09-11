@@ -52,11 +52,10 @@ export async function prepareTaskAssignee(
     if (verdict !== "allowed")
       throw httpError(403, "You cannot add people to this confidential record's team.");
   }
-  const role = person.role === "contributor" ? "contributor" : "member";
   if (kind === "contract") {
-    await tx.insert(contractTeam).values({ contractId: record.id, userId: assigneeId, role });
+    await tx.insert(contractTeam).values({ contractId: record.id, userId: assigneeId });
   } else {
-    await tx.insert(matterTeam).values({ matterId: record.id, userId: assigneeId, role });
+    await tx.insert(matterTeam).values({ matterId: record.id, userId: assigneeId });
   }
   await recordActivity(tx, {
     entityType: kind,
@@ -64,6 +63,6 @@ export async function prepareTaskAssignee(
     actorId: actor.id,
     action: kind === "contract" ? "contract.team_added" : "matter.team_added",
     visibility: RECORD_ACTIVITY_TIER,
-    payload: { number: record.number, title: record.title, member: person.displayName, role },
+    payload: { number: record.number, title: record.title, member: person.displayName },
   });
 }

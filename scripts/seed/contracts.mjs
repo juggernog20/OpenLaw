@@ -27,7 +27,7 @@ import {
 import { COMMENT_LINES, contractDocument, counterpartyRedline } from "./prose.mjs";
 import { registerDocument } from "./ai-stub.mjs";
 import { customFields } from "./custom-fields.mjs";
-import { contributors, memberPlus } from "./people.mjs";
+import { businessUsers, memberPlus } from "./people.mjs";
 import { documentFile, postComment, uploadDocument, uploadVersion } from "./uploads.mjs";
 import { addMonths, daysFromToday, iso } from "./time.mjs";
 
@@ -284,7 +284,7 @@ function draftFor(plan, reference, ourEntity, fields) {
 export async function seedContracts(admin, context, log) {
   const { random, taxonomy, people, fields, attached, entities, plans, analysisEnabled } = context;
   const staff = memberPlus(people);
-  const helpers = contributors(people);
+  const helpers = businessUsers(people);
   const entityRows = [...entities.values()].filter((row) => row.definition.status === "active");
   const contracts = [];
 
@@ -347,16 +347,12 @@ export async function seedContracts(admin, context, log) {
       staff.filter((person) => person.id !== owner.id),
       random.int(1, 3),
     )) {
-      const role = random.weighted([
-        ["member", 4],
-        ["watcher", 2],
-      ]);
-      await author.post(`${at}/team`, { userId: member.id, role });
+      await author.post(`${at}/team`, { userId: member.id });
       team.push(member);
     }
     if (random.chance(0.16) && helpers.length > 0) {
       const helper = random.pick(helpers);
-      await author.post(`${at}/team`, { userId: helper.id, role: "contributor" });
+      await author.post(`${at}/team`, { userId: helper.id });
     }
 
     contracts.push({

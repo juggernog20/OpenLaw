@@ -46,7 +46,7 @@ beforeAll(async () => {
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
     [OUTSIDER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
   ] as const) {
     const person = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, person.id));
@@ -108,7 +108,7 @@ async function addToMatter(number: number) {
     method: "POST",
     url: `/api/v1/matters/${number}/team`,
     cookies: memberCookies,
-    payload: { userId: contributorId, role: "contributor" },
+    payload: { userId: contributorId },
   });
   expect(response.statusCode, response.body).toBe(201);
 }
@@ -118,7 +118,7 @@ async function addToContract(number: number) {
     method: "POST",
     url: `/api/v1/contracts/${number}/team`,
     cookies: memberCookies,
-    payload: { userId: contributorId, role: "contributor" },
+    payload: { userId: contributorId },
   });
   expect(response.statusCode, response.body).toBe(201);
 }
@@ -264,7 +264,10 @@ describe("link cardinality, races, and narration", () => {
   it("hides archived links for all viewers and restores them without losing the Matter link", async () => {
     const matter = await createMatter("Archive linked contracts");
     await addToMatter(matter.number);
-    const born = await createContract("Archive linked contract", { matterNumber: matter.number });
+    const born = await createContract("Archive linked contract", {
+      matterNumber: matter.number,
+      isConfidential: true,
+    });
     expect(born.statusCode, born.body).toBe(201);
     const contract = born.json().contract as { id: string; number: number };
     const list = async (cookies: Record<string, string>) => {
@@ -279,7 +282,7 @@ describe("link cardinality, races, and narration", () => {
     expect(await list(memberCookies)).toEqual([
       expect.objectContaining({ number: contract.number }),
     ]);
-    expect(await list(contributorCookies)).toEqual([{ restricted: true }]);
+    expect(await list(outsiderCookies)).toEqual([{ restricted: true }]);
     const archived = await harness.app.inject({
       method: "POST",
       url: `/api/v1/contracts/${contract.number}/archive`,
@@ -287,7 +290,7 @@ describe("link cardinality, races, and narration", () => {
     });
     expect(archived.statusCode, archived.body).toBe(200);
     expect(await list(memberCookies)).toEqual([]);
-    expect(await list(contributorCookies)).toEqual([]);
+    expect(await list(outsiderCookies)).toEqual([]);
     const restored = await harness.app.inject({
       method: "POST",
       url: `/api/v1/contracts/${contract.number}/restore`,
@@ -297,7 +300,7 @@ describe("link cardinality, races, and narration", () => {
     expect(await list(memberCookies)).toEqual([
       expect.objectContaining({ number: contract.number }),
     ]);
-    expect(await list(contributorCookies)).toEqual([{ restricted: true }]);
+    expect(await list(outsiderCookies)).toEqual([{ restricted: true }]);
   });
 
   it("links and unlinks from the one Contract datum and writes one Activity entry per act", async () => {
@@ -429,17 +432,18 @@ describe("independent reach and Confidentiality", () => {
     const matter = await createMatter("Contributor sees Matter");
     const born = await createContract("Contributor cannot see Contract", {
       matterNumber: matter.number,
+      isConfidential: true,
     });
     expect(born.statusCode, born.body).toBe(201);
     await addToMatter(matter.number);
     const contractsRead = await harness.app.inject({
       method: "GET",
       url: `/api/v1/matters/${matter.number}/contracts`,
-      cookies: contributorCookies,
+      cookies: outsiderCookies,
     });
     expect(contractsRead.json().contracts).toEqual([{ restricted: true }]);
 
-    const otherMatter = await createMatter("Contributor cannot see Matter");
+    const otherMatter = await createMatter("Contributor cannot see Matter", true);
     const otherBorn = await createContract("Contributor sees Contract", {
       matterNumber: otherMatter.number,
     });
@@ -448,13 +452,13 @@ describe("independent reach and Confidentiality", () => {
     const matterRead = await harness.app.inject({
       method: "GET",
       url: `/api/v1/contracts/${otherContract.number}/matter`,
-      cookies: contributorCookies,
+      cookies: outsiderCookies,
     });
     expect(matterRead.json()).toEqual({ matter: { restricted: true } });
     const activity = await harness.app.inject({
       method: "GET",
       url: `/api/v1/activity?entityType=contract&entityId=${otherContract.id}`,
-      cookies: contributorCookies,
+      cookies: outsiderCookies,
     });
     expect(activity.statusCode, activity.body).toBe(200);
     const linkedEntry = activity

@@ -19,6 +19,7 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { INBOX_SORT_KEYS } from "@openlaw/shared";
 import {
   contracts,
   contractTeam,
@@ -93,7 +94,7 @@ beforeAll(async () => {
   for (const [fixture, role] of [
     [REQUESTER, "business_user"],
     [MEMBER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, user.id));
@@ -141,12 +142,13 @@ async function plant(row: {
   slug?: string;
   convertedContractId?: string;
   archivedAt?: Date;
+  requesterId?: string;
 }) {
   const [planted] = await harness.db
     .insert(requests)
     .values({
       requestTypeId: typeIds.get(row.slug ?? "nda_request")!,
-      requesterId,
+      requesterId: row.requesterId ?? requesterId,
       summary: row.summary,
       description: "The ask, in full.",
       urgency: row.urgency,
@@ -184,6 +186,96 @@ async function readInbox(
 const HOUR = 60 * 60 * 1000;
 const NOW = new Date("2026-08-20T12:00:00.000Z");
 const ago = (hours: number) => new Date(NOW.getTime() - hours * HOUR);
+
+describe("Inbox column sorting", () => {
+  it("orders every column in both directions across pages, including ties and joined names", async () => {
+    await clearRequests();
+    const people = await harness.db.select().from(users);
+    const types = await harness.db.select().from(requestTypes);
+    const planted: (Awaited<ReturnType<typeof plant>> & { type: string; requester: string })[] = [];
+    for (let i = 0; i < 57; i += 1) {
+      const person = people[i % people.length]!;
+      const type = types[i % types.length]!;
+      const urgency = (["medium", "critical", "low", "high"] as const)[i % 4]!;
+      const status = (["resolved", "new", "declined", "converted"] as const)[i % 4]!;
+      const row = await plant({
+        summary: ["zebra", "Alpha", "beta"][i % 3]!,
+        urgency,
+        status,
+        createdAt: ago(i % 5),
+        slug: type.slug,
+        requesterId: person.id,
+      });
+      planted.push({
+        ...row,
+        type: type.displayName.toLowerCase(),
+        requester: person.displayName.toLowerCase(),
+      });
+    }
+    for (const sort of INBOX_SORT_KEYS) {
+      for (const dir of ["asc", "desc"] as const) {
+        const value = (row: (typeof planted)[number]): string | number => {
+          switch (sort) {
+            case "summary":
+              return row.summary.toLowerCase();
+            case "urgency":
+              return ["low", "medium", "high", "critical"].indexOf(row.urgency);
+            case "status":
+              return ["new", "converted", "resolved", "declined"].indexOf(row.status);
+            case "createdAt":
+              return row.createdAt.getTime();
+            default:
+              return row[sort];
+          }
+        };
+        const expected = [...planted].sort((a, b) => {
+          const left = value(a);
+          const right = value(b);
+          const comparison = left < right ? -1 : left > right ? 1 : 0;
+          return comparison * (dir === "asc" ? 1 : -1) || a.number - b.number;
+        });
+        const query = { sort, dir, includeTriaged: "true" };
+        const first = await readInbox(memberCookies, query);
+        expect(first.statusCode, first.body).toBe(200);
+        expect(first.requests).toHaveLength(50);
+        expect(first.nextCursor).not.toBeNull();
+        const second = await readInbox(memberCookies, { ...query, cursor: first.nextCursor! });
+        expect(second.statusCode, second.body).toBe(200);
+        expect(second.nextCursor).toBeNull();
+        expect(
+          [...first.requests, ...second.requests].map((row) => row.id),
+          `${sort} ${dir}`,
+        ).toEqual(expected.map((row) => row.id));
+      }
+    }
+    const filtered = await readInbox(memberCookies, {
+      sort: "summary",
+      dir: "desc",
+      urgency: "critical",
+    });
+    expect(filtered.statusCode, filtered.body).toBe(200);
+    expect(filtered.requests.length).toBeGreaterThan(0);
+    expect(
+      filtered.requests.every((row) => row.urgency === "critical" && row.status === "new"),
+    ).toBe(true);
+    const missing = await readInbox(memberCookies, {
+      sort: "type",
+      cursor: "missing",
+      includeTriaged: "true",
+    });
+    expect(missing.statusCode, missing.body).toBe(200);
+    expect(missing.requests).toEqual([]);
+  });
+
+  it("rejects unknown sort columns and directions", async () => {
+    for (const query of [{ sort: "unknown" }, { sort: "summary", dir: "sideways" }] as Record<
+      string,
+      string
+    >[]) {
+      expect((await readInbox(memberCookies, query)).statusCode).toBe(400);
+    }
+  });
+});
 
 describe("who may open the Inbox (INT-006, DD-013)", () => {
   it("answers an Administrator and a Legal Team Member", async () => {
@@ -454,9 +546,7 @@ describe("the trail from ask to work (DD-014, CTR-018)", () => {
       .select({ id: users.id })
       .from(users)
       .where(eq(users.email, MEMBER.email));
-    await harness.db
-      .insert(contractTeam)
-      .values({ contractId: contract.id, userId: member!.id, role: "member" });
+    await harness.db.insert(contractTeam).values({ contractId: contract.id, userId: member!.id });
     await plant({
       summary: "Something quiet, shared",
       urgency: "high",

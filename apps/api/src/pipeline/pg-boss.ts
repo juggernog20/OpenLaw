@@ -175,12 +175,12 @@ export const NOTIFICATION_EMAIL_QUEUE_OPTIONS = {
   retryBackoff: true,
 } as const;
 
-/** One bounded attempt; the durable sweep recovers abandoned preparation. */
-export const CONVERSION_DRAFT_QUEUE_OPTIONS = { retryLimit: 0, expireInSeconds: 180 };
+/** Sectioned extraction can span several calls; row leases recover abandoned preparation. */
+export const CONVERSION_DRAFT_QUEUE_OPTIONS = { retryLimit: 0, expireInSeconds: 3600 };
 
-/** One provider call, with the pipeline's three-attempt backoff. */
+/** Request-context analysis can span several source sections, with the usual retry backoff. */
 export const CONTRACT_ANALYSIS_QUEUE_OPTIONS = {
-  expireInSeconds: 300,
+  expireInSeconds: 3600,
   retryLimit: 2,
   retryDelay: 30,
   retryBackoff: true,

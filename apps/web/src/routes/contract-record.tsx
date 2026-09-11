@@ -135,8 +135,7 @@
  * Users are bounced home, and the API's 403 is the real refusal.
  */
 
-import { StakeholdersField } from "../components/contracts/stakeholders-field";
-import { CurrencySelect } from "../components/currency-select";
+import { ValueField } from "../components/contracts/value-field";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   Link,
@@ -154,13 +153,10 @@ import { RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE, SOFT_GATE_PROBLEM_TYPE } from "@open
 import { api } from "../lib/api";
 import { readRegistry } from "../lib/entities";
 import {
-  cadenceLabel,
   contractReference,
   daysRemainingLabel,
   type ContractCounterparty,
   type ContractAnalysis,
-  type ContractValue,
-  formatContractValue,
   riskLabel,
   severityLabel,
   SEVERITY_LEVELS,
@@ -168,14 +164,12 @@ import {
   STAGE_PILL,
   TERM_TYPES,
   termTypeLabel,
-  VALUE_CADENCES,
   type ContractRow,
   type ContractStatusOption,
   type ContractTeamMember,
   type ContractTypeOption,
   type SeverityLevel,
   type TermType,
-  type ValueCadence,
   type UserOption,
 } from "../lib/contracts";
 import {
@@ -196,7 +190,7 @@ import {
   type CustomFieldValue,
   type CustomFieldValues,
 } from "../lib/custom-fields";
-import { currencyFractionDigits, formatShortDate, toMajorUnits, toMinorUnits } from "../lib/format";
+import { formatShortDate } from "../lib/format";
 import {
   APPROVAL_PILL,
   isUnresolved,
@@ -214,7 +208,7 @@ import {
   type ContractDocument,
 } from "../lib/documents";
 import type { ContractFolder } from "../lib/folders";
-import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
+import { CONTROL_CLASS } from "../lib/form-controls";
 import { subscribeLiveEvents } from "../lib/events";
 import { problem as readProblem } from "../lib/problem";
 import { cn } from "../lib/utils";
@@ -249,6 +243,10 @@ import {
 } from "../components/contracts/ai-analysis-card";
 import { AiField } from "../components/ui/ai-field";
 import { ConversionEvidence } from "../components/intake/conversion-evidence";
+import {
+  DescriptionSourceToggle,
+  RequesterDescription,
+} from "../components/intake/description-source-toggle";
 import { AiFieldEvidence } from "../components/contracts/ai-field-evidence";
 import { coreAnalysisLabel } from "../lib/core-analysis-labels";
 import { CounterpartyPicker, type CounterpartyPick } from "../components/counterparty-picker";
@@ -263,6 +261,7 @@ import { StatusNote, type FieldStatus } from "../components/status-note";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
+import { AutoResizeTextarea } from "../components/auto-resize-textarea";
 import { Label } from "../components/ui/label";
 import { RecordContext, type RecordFacts } from "../components/record-context";
 
@@ -395,6 +394,8 @@ export async function contractRecordLoader({ params, request }: LoaderFunctionAr
     user,
     canEdit,
     contract: record.data.contract,
+    creator: record.data.creator ?? null,
+    originalIntake: record.data.originalIntake ?? null,
     documents: documents.data.documents,
     /** The record's folders, whole (M13/2). Required like the paper: an
      * empty tree is a fact about the record, not a fallback for a read
@@ -640,6 +641,7 @@ export function ContractRecordPage() {
 }
 
 function ContractRecord() {
+  const [showRequesterDescription, setShowRequesterDescription] = useState(false);
   // Which section is on screen (DES-032). The loader has already sent
   // an unknown segment to the Overview, so anything that survives to
   // here is one of the five tab segments or "overview".
@@ -648,6 +650,8 @@ function ContractRecord() {
     user,
     canEdit,
     contract,
+    originalIntake,
+    creator,
     documents: contractDocuments,
     folders: contractFolders,
     approvals: contractApprovals,
@@ -1171,11 +1175,10 @@ function ContractRecord() {
   });
 
   const archived = saved.archivedAt !== null;
-  const contributor = user.role === "contributor";
   /** DD-015's deliberately narrow built-ins stay writable for a
    * Contributor on a live record; every legal-managed control keeps
    * the standing Member+ floor. */
-  const businessFrozen = archived || (!canEdit && !contributor);
+  const businessFrozen = archived || !canEdit;
   /** True when legal-managed controls are inert. An archived record
    * freezes every Field; a Contributor's live record leaves only the
    * explicit business-owned seams above writable (DD-015, CTR-021). */
@@ -1299,13 +1302,13 @@ function ContractRecord() {
    * them on the same page.
    */
   const canFlag =
-    user.role === "administrator" ||
-    saved.manager?.id === user.id ||
-    roster.some((member) => member.id === user.id && member.role === "creator");
+    user.role === "administrator" || saved.manager?.id === user.id || saved.createdBy === user.id;
 
   const teamApplet = useTeamApplet({
     contractNumber: saved.number,
     owner: saved.manager,
+    businessOwner: saved.businessOwner,
+    creator,
     roster,
     users,
     frozen,
@@ -2285,27 +2288,29 @@ function ContractRecord() {
                   </header>
                   <div className="grid grid-cols-1 gap-4 p-4 @2xl/page:grid-cols-2">
                     <div className="@2xl/page:col-span-2">
-                      <AiField
-                        active={Boolean(saved.aiUnverified?.title)}
-                        className="flex flex-col gap-1.5"
-                      >
+                      <div className="flex flex-col gap-1.5">
                         <Label htmlFor="contract-title">
                           <FormattedMessage id="contracts.form.titleField" defaultMessage="Title" />
                         </Label>
                         <div className="flex items-center gap-2">
-                          <Input
-                            id="contract-title"
-                            value={drafts.title}
-                            disabled={frozen}
-                            onChange={(event) =>
-                              setDrafts((current) => ({ ...current, title: event.target.value }))
-                            }
-                            onBlur={() => commitText("title")}
-                            onKeyDown={(event) => {
-                              if (event.key === "Enter") commitText("title");
-                              if (event.key === "Escape") revertText("title");
-                            }}
-                          />
+                          <AiField
+                            active={Boolean(saved.aiUnverified?.title)}
+                            className="min-w-0 flex-1"
+                          >
+                            <Input
+                              id="contract-title"
+                              value={drafts.title}
+                              disabled={frozen}
+                              onChange={(event) =>
+                                setDrafts((current) => ({ ...current, title: event.target.value }))
+                              }
+                              onBlur={() => commitText("title")}
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter") commitText("title");
+                                if (event.key === "Escape") revertText("title");
+                              }}
+                            />
+                          </AiField>
                           <StatusNote
                             status={fieldStatus.title ?? "idle"}
                             detail={fieldError.title}
@@ -2313,7 +2318,7 @@ function ContractRecord() {
                         </div>
                         {unverifiedMarker("title")}
                         {confirmationControl("title")}
-                      </AiField>
+                      </div>
                     </div>
                     <ReadOnlyField
                       label={
@@ -2333,27 +2338,29 @@ function ContractRecord() {
                       toggle DES-017 removed, so it lands here with the
                       other scalars — the same move the Owner, our
                       entity, and the value already made. */}
-                    <AiField
-                      active={Boolean(saved.aiUnverified?.contract_type)}
-                      className="flex flex-col gap-1.5"
-                    >
+                    <div className="flex flex-col gap-1.5">
                       <Label htmlFor="contract-type">
                         <FormattedMessage id="contracts.form.type" defaultMessage="Contract type" />
                       </Label>
                       <div className="flex items-center gap-2">
-                        <select
-                          id="contract-type"
-                          value={saved.contractTypeId}
-                          className={CONTROL_CLASS}
-                          disabled={frozen}
-                          onChange={(event) => pickType(event.target.value)}
+                        <AiField
+                          active={Boolean(saved.aiUnverified?.contract_type)}
+                          className="min-w-0 flex-1"
                         >
-                          {typeOptions.map((option) => (
-                            <option key={option.id} value={option.id}>
-                              {option.displayName}
-                            </option>
-                          ))}
-                        </select>
+                          <select
+                            id="contract-type"
+                            value={saved.contractTypeId}
+                            className={CONTROL_CLASS}
+                            disabled={frozen}
+                            onChange={(event) => pickType(event.target.value)}
+                          >
+                            {typeOptions.map((option) => (
+                              <option key={option.id} value={option.id}>
+                                {option.displayName}
+                              </option>
+                            ))}
+                          </select>
+                        </AiField>
                         <StatusNote
                           status={fieldStatus.contractTypeId ?? "idle"}
                           detail={fieldError.contractTypeId}
@@ -2361,7 +2368,7 @@ function ContractRecord() {
                       </div>
                       {unverifiedMarker("contract_type")}
                       {confirmationControl("contract_type")}
-                    </AiField>
+                    </div>
                     <div className="flex flex-col gap-1.5">
                       <Label htmlFor="contract-business-owner">
                         <FormattedMessage
@@ -2512,14 +2519,6 @@ function ContractRecord() {
                         setParties(next);
                       }}
                     />
-                    {canEdit && (
-                      <StakeholdersField
-                        key={saved.number}
-                        number={saved.number}
-                        people={users}
-                        frozen={frozen}
-                      />
-                    )}
                     {/* The status is not a field of this card any more
                       (DES-053). It commits from the sub-bar's stage
                       strip, which is on screen in every section, and a
@@ -2527,31 +2526,33 @@ function ContractRecord() {
                       to keep in step. What the record holds is still
                       read here — the sub-bar pill says it, two rows
                       up. */}
-                    <AiField
-                      active={Boolean(saved.aiUnverified?.priority)}
-                      className="flex flex-col gap-1.5"
-                    >
+                    <div className="flex flex-col gap-1.5">
                       <Label htmlFor="contract-priority">
                         <FormattedMessage id="contracts.form.priority" defaultMessage="Priority" />
                       </Label>
                       <div className="flex items-center gap-2">
-                        <select
-                          id="contract-priority"
-                          value={saved.priority}
-                          className={CONTROL_CLASS}
-                          disabled={frozen}
-                          onChange={(event) =>
-                            void commit("priority", {
-                              priority: event.target.value as SeverityLevel,
-                            })
-                          }
+                        <AiField
+                          active={Boolean(saved.aiUnverified?.priority)}
+                          className="min-w-0 flex-1"
                         >
-                          {SEVERITY_LEVELS.map((level) => (
-                            <option key={level} value={level}>
-                              {severityLabel(intl, level)}
-                            </option>
-                          ))}
-                        </select>
+                          <select
+                            id="contract-priority"
+                            value={saved.priority}
+                            className={CONTROL_CLASS}
+                            disabled={frozen}
+                            onChange={(event) =>
+                              void commit("priority", {
+                                priority: event.target.value as SeverityLevel,
+                              })
+                            }
+                          >
+                            {SEVERITY_LEVELS.map((level) => (
+                              <option key={level} value={level}>
+                                {severityLabel(intl, level)}
+                              </option>
+                            ))}
+                          </select>
+                        </AiField>
                         <StatusNote
                           status={fieldStatus.priority ?? "idle"}
                           detail={fieldError.priority}
@@ -2559,7 +2560,7 @@ function ContractRecord() {
                       </div>
                       {unverifiedMarker("priority")}
                       {confirmationControl("priority")}
-                    </AiField>
+                    </div>
                     <div className="flex flex-col gap-1.5">
                       <Label htmlFor="contract-risk">
                         <FormattedMessage id="contracts.form.risk" defaultMessage="Risk" />
@@ -2858,55 +2859,58 @@ function ContractRecord() {
                   one accessible name each, carried by the control that
                   answers to it, as the Contract card above does. */}
                 <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised">
-                  <header className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
+                  <header className="flex min-h-(--height-section-header) flex-wrap items-center justify-between gap-2 py-2 rounded-t-card border-b border-border-default bg-section-header px-4">
                     <h2 id="contract-description-heading" className="text-base font-semibold">
                       <FormattedMessage
                         id="contracts.form.description"
                         defaultMessage="Description"
                       />
                     </h2>
+                    {originalIntake && (
+                      <DescriptionSourceToggle
+                        requester={showRequesterDescription}
+                        onChange={setShowRequesterDescription}
+                      />
+                    )}
                   </header>
-                  <AiField
-                    active={Boolean(saved.aiUnverified?.description)}
-                    className="flex items-start gap-2 p-4"
-                  >
-                    <textarea
-                      id="contract-description"
-                      // The card's own heading names the field: a second
-                      // label above a full-width textarea would repeat it.
-                      aria-labelledby="contract-description-heading"
-                      value={drafts.description}
-                      className={TEXTAREA_CLASS}
-                      disabled={frozen}
-                      onChange={(event) =>
-                        setDrafts((current) => ({ ...current, description: event.target.value }))
-                      }
-                      onBlur={() => commitText("description")}
-                      onKeyDown={(event) => {
-                        if (event.key === "Escape") revertText("description");
-                      }}
-                    />
-                    <StatusNote
-                      status={fieldStatus.description ?? "idle"}
-                      detail={fieldError.description}
-                    />
-                    {unverifiedMarker("description")}
-                    {confirmationControl("description")}
-                  </AiField>
+                  {showRequesterDescription && originalIntake ? (
+                    <div className="p-4">
+                      <RequesterDescription description={originalIntake.description} />
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-2 p-4">
+                      <AiField
+                        active={Boolean(saved.aiUnverified?.description)}
+                        className="min-w-0 flex-1"
+                      >
+                        <AutoResizeTextarea
+                          id="contract-description"
+                          // The card's own heading names the field: a second
+                          // label above a full-width textarea would repeat it.
+                          aria-labelledby="contract-description-heading"
+                          value={drafts.description}
+                          disabled={frozen}
+                          onChange={(event) =>
+                            setDrafts((current) => ({
+                              ...current,
+                              description: event.target.value,
+                            }))
+                          }
+                          onBlur={() => commitText("description")}
+                          onKeyDown={(event) => {
+                            if (event.key === "Escape") revertText("description");
+                          }}
+                        />
+                      </AiField>
+                      <StatusNote
+                        status={fieldStatus.description ?? "idle"}
+                        detail={fieldError.description}
+                      />
+                      {unverifiedMarker("description")}
+                      {confirmationControl("description")}
+                    </div>
+                  )}
                 </section>
-                <AiAnalysisCard
-                  analysis={analysis}
-                  contract={saved}
-                  fields={attached}
-                  canRun={canRunAnalysis}
-                  canConfirm={analysisConfirmable}
-                  running={runningAnalysis}
-                  runError={analysisRunError}
-                  onRun={() => void runAnalysis()}
-                  onRetry={() => void runAnalysis(analysis.latestRun?.id)}
-                  onConfirm={confirmAnalysisField}
-                  onConfirmAll={confirmAllAnalysisFields}
-                />
                 {/* CTR-006's term as a picture (M16/2). It closes the
                       Overview because it draws facts the two cards
                       above already state — the mock's own order, where
@@ -2932,20 +2936,41 @@ function ContractRecord() {
                   own columns, and — once CTR-008 lands — where the
                   extraction writes its answers. */}
             {tab === "fields" && (
-              <FieldsCard
-                fields={attached}
-                values={saved.customFields}
-                people={peopleReferences}
-                entities={entityReferences}
-                frozen={frozen}
-                businessEditable={!archived && contributor}
-                aiUnverified={saved.aiUnverified}
-                reviewControl={(slug) => confirmationControl(`field:${slug}`)}
-                status={fieldStatus}
-                error={fieldError}
-                onStatus={note}
-                onCommit={commitCustomField}
-              />
+              <>
+                <FieldsCard
+                  fields={attached}
+                  values={saved.customFields}
+                  people={peopleReferences}
+                  entities={entityReferences}
+                  frozen={frozen}
+                  businessEditable={false}
+                  aiUnverified={saved.aiUnverified}
+                  reviewControl={(slug) => confirmationControl(`field:${slug}`)}
+                  status={fieldStatus}
+                  error={fieldError}
+                  onStatus={note}
+                  onCommit={commitCustomField}
+                />
+                {/* CTR-008's review surface (DES-075). It sits under the
+                      Fields card because what a run extracts is the
+                      type's field scope, which this section defines:
+                      the run's results are the account of that scope,
+                      not a fact of the Overview. The overflow menu still
+                      starts a run from any section. */}
+                <AiAnalysisCard
+                  analysis={analysis}
+                  contract={saved}
+                  fields={attached}
+                  canRun={canRunAnalysis}
+                  canConfirm={analysisConfirmable}
+                  running={runningAnalysis}
+                  runError={analysisRunError}
+                  onRun={() => void runAnalysis()}
+                  onRetry={() => void runAnalysis(analysis.latestRun?.id)}
+                  onConfirm={confirmAnalysisField}
+                  onConfirmAll={confirmAllAnalysisFields}
+                />
+              </>
             )}
             {/* The record's paper (M11/2, M11/3), in the section the
                   C4 mock draws — and behind the tab the mock puts it
@@ -2965,7 +2990,7 @@ function ContractRecord() {
                   documents={paper}
                   folders={tree}
                   nextCursor={paperCursor}
-                  supportingUploads={contributor && !archived}
+                  supportingUploads={false}
                   // Opening a version in the doc panel (M12/2). The
                   // trigger comes with it so closing puts focus back on
                   // the row control that opened it.
@@ -3061,14 +3086,7 @@ function ContractRecord() {
                             setRoster((current) =>
                               current.some((member) => member.id === id)
                                 ? current
-                                : [
-                                    ...current,
-                                    {
-                                      ...person,
-                                      role:
-                                        person.role === "contributor" ? "contributor" : "member",
-                                    },
-                                  ],
+                                : [...current, person],
                             );
                         },
                       }
@@ -3463,274 +3481,6 @@ function CounterpartiesField({
           defaultMessage="Type an unknown name to create it."
         />
       </p>
-    </div>
-  );
-}
-
-/** What the three controls hold between commits. The amount is a
- * string, in major units, because that is what a person types and an
- * empty box is a state a number cannot hold. */
-interface ValueDraft {
-  amount: string;
-  currency: string;
-  cadence: ValueCadence;
-}
-
-/** The saved value as the controls show it, and as a string that
- * changes only when the value itself does — the seed the draft is reset
- * from when a commit lands. */
-function valueDraft(value: ContractValue | null, locale: string): ValueDraft {
-  return value === null
-    ? { amount: "", currency: "", cadence: "one_time" }
-    : {
-        amount: String(toMajorUnits(value.amount, value.currency, { locale })),
-        currency: value.currency,
-        cadence: value.cadence,
-      };
-}
-
-function valueSeed(value: ContractValue | null): string {
-  return value === null ? "" : `${value.amount}:${value.currency}:${value.cadence}`;
-}
-
-/**
- * CTR-010's value: an amount, the ISO 4217 currency it is counted in,
- * and what it is per — three controls that are one field.
- *
- * DES-017 governs it, read as a group rather than as three scalars.
- * Moving between the three controls is moving inside one field, so it
- * commits when focus leaves the group, not when it leaves a control;
- * Enter commits from any of the three; Escape reverts all three, since
- * a half-reverted value would be a value nobody chose. Emptying the
- * amount clears the whole field — no value recorded is the state every
- * contract starts in, and an NDA stays in.
- *
- * The amount is typed in major units and stored in the currency's
- * smallest unit, so the currency decides the conversion; changing it
- * re-scales what is typed at commit time rather than rewriting the box
- * under the person filling it in.
- */
-function ValueField({
-  value,
-  frozen,
-  status,
-  error,
-  marker,
-  confirmation,
-  onStatus,
-  onCommit,
-}: Readonly<{
-  value: ContractValue | null;
-  /** The record is frozen: it is archived, or this viewer reads it
-   * rather than edits it. Either way it renders as facts. */
-  frozen: boolean;
-  status: FieldStatus;
-  error: string | undefined;
-  marker?: React.ReactNode;
-  confirmation?: React.ReactNode;
-  onStatus: (status: FieldStatus, detail?: string) => void;
-  onCommit: (value: ContractValue | null) => void;
-}>) {
-  const intl = useIntl();
-  const [draft, setDraft] = useState<ValueDraft>(() => valueDraft(value, intl.locale));
-  /** The value the draft was last seeded from. Comparing the content
-   * rather than the object is what lets another field's commit answer
-   * with a fresh row without discarding a half-typed amount here. */
-  const [seed, setSeed] = useState(() => valueSeed(value));
-  const seeded = valueSeed(value);
-  if (seed !== seeded) {
-    setSeed(seeded);
-    setDraft(valueDraft(value, intl.locale));
-  }
-
-  /** A step of one smallest unit: cents for USD, whole yen for JPY. The
-   * box refuses a precision the currency cannot hold. */
-  const step =
-    draft.currency === ""
-      ? 0.01
-      : 10 **
-        -currencyFractionDigits(draft.currency, {
-          locale: intl.locale,
-        });
-
-  function revert() {
-    setDraft(valueDraft(value, intl.locale));
-    onStatus("idle");
-  }
-
-  function commit() {
-    // Enter already committed this draft and the PATCH is in flight —
-    // the blur that follows must not send a duplicate.
-    if (status === "saving") return;
-    const typed = draft.amount.trim();
-
-    if (typed === "") {
-      // An empty amount is how the whole field is cleared. With nothing
-      // recorded there is nothing to clear, so the group reverts —
-      // a currency picked and then abandoned is not a value.
-      if (value === null) {
-        revert();
-        return;
-      }
-      onCommit(null);
-      return;
-    }
-
-    const major = Number(typed);
-    if (!Number.isFinite(major) || major < 0) {
-      onStatus(
-        "error",
-        intl.formatMessage({
-          id: "contracts.value.amountInvalid",
-          defaultMessage: "Enter the amount as a number.",
-        }),
-      );
-      return;
-    }
-    if (draft.currency === "") {
-      // The seam refuses this too, and the database refuses it again.
-      // Saying so here keeps a round trip out of a mistake the form can
-      // see for itself — the same guard an empty title already gets.
-      onStatus(
-        "error",
-        intl.formatMessage({
-          id: "contracts.value.currencyMissing",
-          defaultMessage: "Pick a currency for the amount.",
-        }),
-      );
-      return;
-    }
-
-    const next: ContractValue = {
-      amount: toMinorUnits(major, draft.currency, { locale: intl.locale }),
-      currency: draft.currency,
-      cadence: draft.cadence,
-    };
-    if (
-      value &&
-      next.amount === value.amount &&
-      next.currency === value.currency &&
-      next.cadence === value.cadence
-    ) {
-      // Nothing changed: commit nothing (DES-017), and drop any
-      // refusal the last attempt left standing.
-      onStatus("idle");
-      return;
-    }
-    onCommit(next);
-  }
-
-  return (
-    <div className="flex flex-col gap-1.5 @2xl/page:col-span-2">
-      <div className="flex items-center gap-2">
-        <span id="contract-value-label" className="text-sm font-medium text-primary">
-          <FormattedMessage id="contracts.form.value" defaultMessage="Value" />
-        </span>
-        {marker}
-        <StatusNote status={status} detail={error} />
-      </div>
-      {/* The review controls sit beside the group, never inside it.
-          The group takes Enter as a commit and cancels the key, so a
-          button within it could never be pressed with the keyboard.
-          The group names the value's three controls and nothing else. */}
-      <div className="flex flex-wrap items-center gap-2">
-        <div
-          role="group"
-          aria-labelledby="contract-value-label"
-          className="flex flex-1 flex-wrap items-center gap-2"
-          // Focus moving between the three controls stays inside one
-          // field, so only focus leaving the group commits it.
-          onBlur={(event) => {
-            if (event.currentTarget.contains(event.relatedTarget)) return;
-            commit();
-          }}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              // The record page is not a form; Enter here means commit.
-              event.preventDefault();
-              commit();
-            }
-            if (event.key === "Escape") revert();
-          }}
-        >
-          <AiField active={Boolean(marker)} className="w-40">
-            <Input
-              id="contract-value-amount"
-              type="number"
-              inputMode="decimal"
-              min={0}
-              step={step}
-              disabled={frozen}
-              aria-label={intl.formatMessage({
-                id: "contracts.value.amount",
-                defaultMessage: "Amount",
-              })}
-              value={draft.amount}
-              onChange={(event) =>
-                setDraft((current) => ({ ...current, amount: event.target.value }))
-              }
-            />
-          </AiField>
-          <AiField active={Boolean(marker)} className="w-56">
-            <CurrencySelect
-              id="contract-value-currency"
-              className="w-full"
-              disabled={frozen}
-              aria-label={intl.formatMessage({
-                id: "contracts.value.currency",
-                defaultMessage: "Currency",
-              })}
-              value={draft.currency}
-              onValueChange={(currency) => setDraft((current) => ({ ...current, currency }))}
-              placeholder={intl.formatMessage({
-                id: "contracts.value.currencyPlaceholder",
-                defaultMessage: "Currency…",
-              })}
-            />
-          </AiField>
-          <AiField active={Boolean(marker)} className="w-40">
-            <select
-              id="contract-value-cadence"
-              className={CONTROL_CLASS}
-              disabled={frozen}
-              aria-label={intl.formatMessage({
-                id: "contracts.value.cadence",
-                defaultMessage: "Cadence",
-              })}
-              value={draft.cadence}
-              onChange={(event) =>
-                setDraft((current) => ({ ...current, cadence: event.target.value as ValueCadence }))
-              }
-            >
-              {/* No empty option: an amount always says what it is per, and
-              a one-off is a cadence, not the absence of one (CTR-010). */}
-              {VALUE_CADENCES.map((cadence) => (
-                <option key={cadence} value={cadence}>
-                  {cadenceLabel(intl, cadence)}
-                </option>
-              ))}
-            </select>
-          </AiField>
-        </div>
-        <span className="flex items-center gap-2">{confirmation}</span>
-      </div>
-      {/* Only once there is a value to read back. Empty, the three
-          controls are the whole field: they already say the amount is
-          blank, so a line under them saying the same is noise. */}
-      {value && (
-        <>
-          {/* What the record says it is worth, read back as DES-014
-              renders it — the three controls hold the parts, this is
-              the field. */}
-          <p className="text-md">{formatContractValue(intl, value)}</p>
-          <p className="text-xs text-muted">
-            <FormattedMessage
-              id="contracts.value.hint"
-              defaultMessage="Empty the amount to take the value off."
-            />
-          </p>
-        </>
-      )}
     </div>
   );
 }

@@ -61,7 +61,7 @@ beforeAll(async () => {
 
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
   ] as const) {
     const person = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, person.id));
@@ -106,7 +106,7 @@ async function addContributor(owner: Owner): Promise<void> {
     method: "POST",
     url: `/api/v1/${owner.type}s/${owner.number}/team`,
     cookies: memberCookies,
-    payload: { userId: contributorId, role: "contributor" },
+    payload: { userId: contributorId },
   });
   expect(response.statusCode, response.body).toBe(201);
 }
@@ -114,7 +114,7 @@ async function addContributor(owner: Owner): Promise<void> {
 async function removeContributor(owner: Owner): Promise<void> {
   const response = await harness.app.inject({
     method: "DELETE",
-    url: `/api/v1/${owner.type}s/${owner.number}/team/${contributorId}/contributor`,
+    url: `/api/v1/${owner.type}s/${owner.number}/team/${contributorId}`,
     cookies: memberCookies,
   });
   expect(response.statusCode, response.body).toBe(200);
@@ -247,7 +247,7 @@ async function feed(owner: Owner) {
   const response = await harness.app.inject({
     method: "GET",
     url: `/api/v1/activity?entityType=${owner.type}&entityId=${owner.id}`,
-    cookies: contributorCookies,
+    cookies: memberCookies,
   });
   expect(response.statusCode, response.body).toBe(200);
   return response.json().entries as {
@@ -313,7 +313,7 @@ for (const ownerType of ["matter", "contract"] as const) {
         );
         expect(entry, action).toMatchObject({
           actor: { id: contributorId },
-          payload: { actorRole: "contributor" },
+          payload: { actorRole: "business_user" },
         });
       }
     });
@@ -444,14 +444,14 @@ for (const ownerType of ["matter", "contract"] as const) {
         "late.pdf",
         Buffer.from("%PDF-1.7 too late"),
       );
-      expect(frozen.statusCode, frozen.body).toBe(409);
+      expect(frozen.statusCode, frozen.body).toBe(404);
       const frozenAppend = await append(
         contributorCookies,
         supporting.id,
         "late-version.pdf",
         Buffer.from("%PDF-1.7 too late for the chain"),
       );
-      expect(frozenAppend.statusCode, frozenAppend.body).toBe(409);
+      expect(frozenAppend.statusCode, frozenAppend.body).toBe(404);
 
       // Restore the owner so the team-row assertion is about reach, not the freeze.
       const restored = await harness.app.inject({
@@ -462,7 +462,7 @@ for (const ownerType of ["matter", "contract"] as const) {
       expect(restored.statusCode, restored.body).toBe(200);
       await removeContributor(owner);
 
-      expect((await documents(contributorCookies, owner)).statusCode).toBe(404);
+      expect((await documents(contributorCookies, owner)).statusCode).toBe(403);
       expect((await download(contributorCookies, supporting.id, current.id)).statusCode).toBe(404);
       const removedAppend = await append(
         contributorCookies,

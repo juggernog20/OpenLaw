@@ -4,7 +4,7 @@ Use **Documents** to find paper across the owning records you can reach, then op
 
 ## Before you start
 
-Legal Team Members and Administrators can find reached Contract, Matter, Entity, and Knowledge Documents. Contributors see only permitted Contract and Matter paper. Business Users use the Business Portal's Request and Knowledge surfaces instead.
+Legal Team Members and Administrators can find reached Contract, Matter, Entity, and Knowledge Documents. Business Users read permitted paper through Portal records, Requests and Knowledge.
 
 The repository is a flat view. Uploads and folder management start on the [owning record](document-versions.md). Confidentiality and record access still apply to results and filter choices.
 
@@ -28,4 +28,4 @@ Select the Document row's open action or name. Its owning record opens with the 
 
 A Legal Team Member or Administrator can turn on **Show archived** to include archived Documents. Use the offered **Restore** action when permitted, or open the owning record and follow [archive and restore](archive-and-delete-documents.md). Restore the owning record first if it is archived.
 
-Contributors are not offered archived Document management. A hidden record or Document does not become visible through a filter, saved view, or direct link. If the list is empty, clear filters, check the intended owner and current Version properties, then ask the responsible Legal Team Member about access or archive status. A permanently deleted Document cannot be restored from this view.
+Business Users are not offered archived Document management. A hidden record or Document does not become visible through a filter, saved view, or direct link. If the list is empty, clear filters, check the intended owner and current Version properties, then ask the responsible Legal Team Member about access or archive status. A permanently deleted Document cannot be restored from this view.

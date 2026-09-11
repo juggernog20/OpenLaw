@@ -334,7 +334,6 @@ export function createAuth(
         roles: {
           administrator: userAc,
           legal_team_member: userAc,
-          contributor: userAc,
           business_user: userAc,
         },
         adminRoles: ["administrator"],

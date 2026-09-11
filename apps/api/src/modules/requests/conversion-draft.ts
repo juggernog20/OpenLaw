@@ -19,6 +19,7 @@ import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import { requireAuth, requireRole } from "../../auth/guards.js";
 import {
   ConversionSuggestionSchema,
+  isCarriedConversionValue,
   conversionContext,
   conversionSources,
   preparationEnabled,
@@ -28,7 +29,7 @@ import { reachedMatter } from "../../lib/matter-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { authorizedAttachment, conversionEvidence, EvidenceSchema } from "./conversion-evidence.js";
 import { attachmentDisposition, inlineDisposition } from "../../lib/uploads.js";
-import { ATTACHMENT_LIMITS, boundedBytes } from "../../lib/conversion-attachments.js";
+import { boundedBytes } from "../../lib/conversion-attachments.js";
 import { reachedContract } from "../../lib/contract-access.js";
 import { boundedQueueAsk } from "../../pipeline/jobs.js";
 
@@ -38,6 +39,7 @@ const DraftSchema = z.object({
   targetModule: z.enum(["matter", "contract"]),
   targetTypeId: z.string(),
   state: z.enum(["pending", "ready", "failed"]),
+  progressAt: z.iso.datetime().optional(),
   suggestions: z.record(z.string(), ConversionSuggestionSchema),
   conflicts: z.record(z.string(), ConversionSuggestionSchema),
   warnings: z.array(z.string()),
@@ -49,19 +51,14 @@ const DraftSchema = z.object({
       reason: z.string().optional(),
     }),
   ),
-  limits: z
-    .object({
-      sources: z.number(),
-      bytes: z.number(),
-      totalBytes: z.number(),
-      characters: z.number(),
-      totalCharacters: z.number(),
-      sourceRuntimeMs: z.number(),
-      runtimeMs: z.number(),
-    })
-    .default(ATTACHMENT_LIMITS),
   failure: z.string().nullable(),
 });
+function draftPayload(draft: typeof conversionDrafts.$inferSelect) {
+  return DraftSchema.parse({
+    ...draft,
+    progressAt: (draft.leaseAt ?? draft.startedAt ?? draft.createdAt).toISOString(),
+  });
+}
 const Envelope = z.object({ draft: DraftSchema });
 const params = z.object({ number: z.coerce.number().int().positive() });
 async function requestOf(db: Executor, number: number) {
@@ -172,7 +169,7 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
       if (draft.state === "pending")
         await boundedQueueAsk(app.jobs.requestConversionDraft(draft.id)).catch(() => {});
       reply.code(202);
-      return { draft: DraftSchema.parse(draft) };
+      return { draft: draftPayload(draft) };
     },
   );
   app.get(
@@ -210,9 +207,9 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
       }
       return {
         draft: current
-          ? DraftSchema.parse(draft)
+          ? draftPayload(draft)
           : {
-              ...DraftSchema.parse(draft),
+              ...draftPayload(draft),
               attachmentReads: [],
               state: "failed" as const,
               suggestions: {},
@@ -502,6 +499,7 @@ export async function acceptedConversionProvenance(
       !Object.hasOwn(draft.suggestions, slug) ||
       !Object.hasOwn(input.values, slug) ||
       !suggestion ||
+      isCarriedConversionValue(slug, suggestion.value, context.row) ||
       JSON.stringify(suggestion.value) !== JSON.stringify(input.values[slug])
     )
       continue;

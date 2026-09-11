@@ -139,7 +139,7 @@ beforeAll(async () => {
     [SECOND, "legal_team_member"],
     [TEAMMATE, "legal_team_member"],
     [OWNER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
     [BUSINESS, "business_user"],
     [DEPARTED, "legal_team_member"],
   ] as const) {
@@ -253,12 +253,12 @@ const wallOff = (contractId: string) =>
 /** Puts somebody on a contract's team, which is what grants a
  * Contributor their reach and what puts a Member+ inside a walled
  * record's audience. */
-const addToTeam = (number: number, userId: string, role = "member") =>
+const addToTeam = (number: number, userId: string) =>
   harness.app.inject({
     method: "POST",
     url: `/api/v1/contracts/${number}/team`,
     cookies: as(MEMBER),
-    payload: { userId, role },
+    payload: { userId },
   });
 
 describe("requesting approvals", () => {
@@ -354,9 +354,7 @@ describe("requesting approvals", () => {
 
   it("refuses a Contributor's ask and a Business User's alike, both plainly", async () => {
     const contract = await newContract("Who may ask");
-    expect((await addToTeam(contract.number, idOf(CONTRIBUTOR), "contributor")).statusCode).toBe(
-      201,
-    );
+    expect((await addToTeam(contract.number, idOf(CONTRIBUTOR))).statusCode).toBe(201);
 
     const onTeam = await requestApprovals(as(CONTRIBUTOR), contract.number, [idOf(FIRST)]);
     expect(onTeam.statusCode, onTeam.body).toBe(403);
@@ -481,14 +479,12 @@ describe("cancelling an approval", () => {
 });
 
 describe("who reaches the roster", () => {
-  it("shows a Contributor on the team who was asked, and refuses one who is not", async () => {
+  it("keeps approval rosters in the staff app even for a Business User on the team", async () => {
     const contract = await newContract("Roster reach");
     await ask(contract.number, [idOf(FIRST)]);
-    expect((await addToTeam(contract.number, idOf(CONTRIBUTOR), "contributor")).statusCode).toBe(
-      201,
-    );
+    expect((await addToTeam(contract.number, idOf(CONTRIBUTOR))).statusCode).toBe(201);
 
-    expect(await roster(as(CONTRIBUTOR), contract.number)).toHaveLength(1);
+    expect((await listApprovals(as(CONTRIBUTOR), contract.number)).statusCode).toBe(403);
 
     const business = await listApprovals(as(BUSINESS), contract.number);
     expect(business.statusCode, business.body).toBe(403);

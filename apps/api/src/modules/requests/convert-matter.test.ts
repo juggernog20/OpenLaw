@@ -437,10 +437,10 @@ describe("the matter target", () => {
     expect(status!.category).toBe("open");
     expect(
       await harness.db
-        .select({ userId: matterTeam.userId, role: matterTeam.role })
+        .select({ userId: matterTeam.userId })
         .from(matterTeam)
         .where(eq(matterTeam.matterId, matter.id)),
-    ).toEqual([{ userId: memberId, role: "creator" }]);
+    ).toEqual(expect.arrayContaining([{ userId: memberId }, { userId: requesterId }]));
     expect(
       await harness.db.select().from(matterTasks).where(eq(matterTasks.matterId, matter.id)),
     ).toEqual([]);
@@ -858,16 +858,21 @@ describe("paper follows onto the matter (INT-002, DOC-008)", () => {
       cookies: requesterCookies,
     });
     expect(portal.statusCode, portal.body).toBe(200);
-    expect(portal.json().attachments.map((row: AttachmentRow) => row.filename)).toEqual(
-      files.map((file) => file.filename),
-    );
+    expect(portal.json().attachments).toEqual([]);
+    expect(portal.json().redirectTo).toEqual({ module: "matter", number: matter.number });
     const portalDownload = await harness.app.inject({
       method: "GET",
       url: `/api/v1/portal/requests/${request.number}/attachments/${attachments[0]!.id}`,
       cookies: requesterCookies,
     });
-    expect(portalDownload.statusCode, portalDownload.body).toBe(200);
-    expect(portalDownload.rawPayload).toEqual(files[0]!.content);
+    expect(portalDownload.statusCode, portalDownload.body).toBe(404);
+    const recordDownload = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/documents/${paper[0]!.id}/versions/${paper[0]!.versions[0]!.id}/download`,
+      cookies: requesterCookies,
+    });
+    expect(recordDownload.statusCode, recordDownload.body).toBe(200);
+    expect(recordDownload.rawPayload).toEqual(files[0]!.content);
 
     const firstVersion = paper[0]!.versions[0]!;
     const [storedVersion] = await harness.db
@@ -964,7 +969,7 @@ describe("the Request thread follows onto the matter (CMT-001, NOT-002)", () => 
       url: `/api/v1/comments?entityType=matter&entityId=${matter.id}`,
       cookies: requesterCookies,
     });
-    expect(directRequester.statusCode, directRequester.body).toBe(403);
+    expect(directRequester.statusCode, directRequester.body).toBe(200);
 
     expect(await unread(memberCookies, matterRef)).toBe(1);
     expect(await unread(memberCookies, requestRef)).toBe(1);
@@ -1038,9 +1043,9 @@ describe("the Request thread follows onto the matter (CMT-001, NOT-002)", () => 
         method: "POST",
         url: `/api/v1/matters/${matter.number}/team`,
         cookies: memberCookies,
-        payload: { userId: requesterId, role: "member" },
+        payload: { userId: requesterId },
       });
-      expect(joined.statusCode, joined.body).toBe(201);
+      expect(joined.statusCode, joined.body).toBe(409);
 
       const reply = await say(
         memberCookies,

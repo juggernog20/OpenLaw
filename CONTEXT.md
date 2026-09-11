@@ -71,18 +71,18 @@ _Avoid_: using "party" to mean only a counterparty
 ### People
 
 **Administrator**:
-Full access including system configuration and all confidential records; typically the General Counsel or Legal Ops [DD-013].
+System administrator with full legal work on reachable records. Confidential Contracts and Matters still require named membership or the Legal Owner or Matter Manager assignment [DD-013, DD-014, DD-023].
 
 **Legal Team Member**:
 In-house counsel or paralegal with full functional access to legal work, excluding system settings and confidential records they are not on [DD-013].
 _Avoid_: lawyer, attorney, staff
 
 **Contributor**:
-A person, such as a procurement colleague or external counsel, granted access to specific Matters or Contracts they were added to. Contributors are made, not born: on a reached record they may read and comment, edit business Fields, and supply supporting Documents, but legal actions remain Member+ [DD-015, MTR-006].
+Former account type, removed by DD-023. Existing accounts become Business Users and retain team membership. Historical audit entries may still name Contributor.
 _Avoid_: collaborator, guest, external user
 
 **Business User**:
-An employee who submits Requests and sees their own Requests, plus non-archived Contracts where they are Business Owner or a named stakeholder, via the Portal. Confidential Contract and Document access also requires the existing named-team or Legal Owner audience [DD-013, DD-021].
+An employee who uses the Portal to submit Requests and work on non-archived Contracts and Matters they are on the team for. They edit business Fields, add supporting Documents and post Full Thread replies. Team membership is their only record grant [DD-023].
 _Avoid_: requester (that is a role on a specific Request), end user, customer
 
 **Member+**:
@@ -93,10 +93,16 @@ The single accountable person on a Matter [MTR-003]. The Contract equivalent is 
 _Avoid_: assignee, lead, responsible
 
 **Business Owner**:
-The single nullable person named for the business on a Contract, initially the Requester when a Request converts. Member+ maintains this independently of the Legal Owner and explicit stakeholders [DD-021].
+The single nullable person named for the business on a Contract or Matter. Conversion sets the Requester as Business Owner and adds their team row. Changing the assignment later does not grant or remove access [DD-023].
 
 **Stakeholder**:
-A named person explicitly linked to a Contract by Member+. This link grants Portal access independently of Business Owner assignment; Confidential audience rules still apply [DD-021].
+Former separate Contract affiliation, removed by DD-023. Eligible existing links migrate to ordinary team membership. Use team member for current participation.
+
+**Watcher**:
+Former team tag, removed by DD-023. A team row now records membership without tags.
+
+**Creator**:
+The person who created a Contract or Matter. This historical statement remains after their membership is removed. It grants no access by itself [DD-023].
 
 **Requester**:
 The Business User who submitted a given Request.
@@ -176,7 +182,7 @@ The audience of a comment or activity entry — **Legal Only**, **Working Team**
 _Avoid_: Privileged (deliberately rejected — privilege is a legal doctrine, not a UI setting), internal, shared, public
 
 **Portal**:
-The lightweight, magic-link-authenticated surface where Business Users submit Requests and follow their threads, and read non-archived Contracts where they are Business Owner or a named stakeholder. Confidential Contract and Document access also requires the existing named-team or Legal Owner audience [INT-001, DD-021].
+The Business User view of their legal work. It contains Requests, Contracts and Matters, plus published portal-readable Knowledge. A converted Request redirects to its record. Current team membership governs record access and permitted business work [INT-001, DD-023].
 _Avoid_: customer portal, self-service portal
 
 **portal-readable**:

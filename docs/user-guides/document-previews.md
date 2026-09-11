@@ -4,7 +4,7 @@ Open the right Document Version, read supported formats in place, and download t
 
 ## Before you start
 
-Staff readers need access to the owning record and the Document. Contributors read reached Contract and Matter Documents within their audience. Business Users use their own Request thread or published Knowledge shared through the Business Portal; the portal does not grant access to the staff Documents repository or a Contract's full Version history.
+Staff readers need access to the owning record and the Document. Business Users read permitted Contract and Matter paper, their Request thread attachments and published Knowledge through the Portal; the portal does not grant access to the staff Documents repository or a Contract's full Version history.
 
 ## Read a managed Document
 

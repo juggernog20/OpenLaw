@@ -150,7 +150,7 @@ import { httpError, problemResponse } from "../../lib/problem.js";
  * too: a Contributor on the team sees the tree the record's paper is
  * filed in. The role alone opens nothing — the reach predicate narrows
  * it to the records they hold a `contract_team` row on. */
-const requireFolderReader = requireRole("administrator", "legal_team_member", "contributor");
+const requireFolderReader = requireRole("administrator", "legal_team_member");
 
 /** Organizing a record's paper is Member+ in M13. A Contributor reads the
  * tree and may supply supporting paper, but DD-015 gives them no folder

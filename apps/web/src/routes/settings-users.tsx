@@ -52,12 +52,12 @@ interface UserRow {
   id: string;
   email: string;
   displayName: string;
-  role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+  role: "administrator" | "legal_team_member" | "business_user";
   status: "active" | "invited" | "archived";
   lastActiveAt: string | null;
 }
 
-const INVITE_ROLES = ["legal_team_member", "contributor", "administrator"] as const;
+const INVITE_ROLES = ["legal_team_member", "administrator"] as const;
 type InviteRole = (typeof INVITE_ROLES)[number];
 
 /** Role edits span the whole DD-013 enum (SET-005). A Business User can
@@ -65,7 +65,6 @@ type InviteRole = (typeof INVITE_ROLES)[number];
 const ALL_ROLES = [
   "administrator",
   "legal_team_member",
-  "contributor",
   "business_user",
 ] as const satisfies readonly UserRow["role"][];
 

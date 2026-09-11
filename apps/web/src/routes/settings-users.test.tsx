@@ -61,7 +61,7 @@ const LISTED = [
     id: "u4",
     email: "marcus.webb@example.com",
     displayName: "Marcus Webb",
-    role: "contributor",
+    role: "business_user",
     status: "archived",
     lastActiveAt: new Date(Date.now() - 40 * 24 * HOUR).toISOString(),
   },
@@ -227,12 +227,12 @@ describe("the Users pane (#65)", () => {
     const dialog = await screen.findByRole("dialog", { name: "Invite user" });
     await user.type(within(dialog).getByLabelText("Display name"), "Noor Haddad");
     await user.type(within(dialog).getByLabelText("Email"), "noor@example.com");
-    await user.click(within(dialog).getByRole("radio", { name: "Contributor" }));
+    await user.click(within(dialog).getByRole("radio", { name: "Legal team member" }));
     await user.click(within(dialog).getByRole("button", { name: "Send invite" }));
 
     await waitFor(() =>
       expect(calls.invitePosts).toEqual([
-        { email: "noor@example.com", displayName: "Noor Haddad", role: "contributor" },
+        { email: "noor@example.com", displayName: "Noor Haddad", role: "legal_team_member" },
       ]),
     );
     const noorRow = (await screen.findByText("noor@example.com")).closest("tr")!;
@@ -350,12 +350,14 @@ describe("the Users pane (#65)", () => {
       await screen.findByRole("button", { name: /change the role of casey@example\.com/i }),
     );
     const menu = await screen.findByRole("menu");
-    await user.click(within(menu).getByRole("menuitemradio", { name: "Contributor" }));
+    await user.click(within(menu).getByRole("menuitemradio", { name: "Business user" }));
 
-    await waitFor(() => expect(calls.rolePatches).toEqual([{ userId: "u2", role: "contributor" }]));
+    await waitFor(() =>
+      expect(calls.rolePatches).toEqual([{ userId: "u2", role: "business_user" }]),
+    );
     expect(await screen.findByText("Saved")).toBeVisible();
     const caseyRow = screen.getByText("casey@example.com").closest("tr")!;
-    expect(within(caseyRow).getByText("Contributor")).toBeVisible();
+    expect(within(caseyRow).getByText("Business user")).toBeVisible();
   });
 
   it("shows the API's own refusal when a role edit hits the floor (#66)", async () => {
@@ -376,7 +378,7 @@ describe("the Users pane (#65)", () => {
       await screen.findByRole("button", { name: /change the role of blair@example\.com/i }),
     );
     const menu = await screen.findByRole("menu");
-    await user.click(within(menu).getByRole("menuitemradio", { name: "Contributor" }));
+    await user.click(within(menu).getByRole("menuitemradio", { name: "Business user" }));
 
     // The floor's reason, verbatim — not the generic error line.
     expect(await screen.findByText("You cannot demote the last Administrator.")).toBeVisible();

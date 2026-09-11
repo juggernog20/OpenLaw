@@ -3,7 +3,7 @@
 /** Conversion prefills, editable values, validation and disposition outcomes. */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { REQUEST_DISPOSITIONED_PROBLEM_TYPE } from "@openlaw/shared";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
@@ -129,6 +129,7 @@ const NEEDED_BY = field("needed_by", "Needed by", { fieldType: "date" });
 const DEAL_DESK = field("deal_desk_region", "Deal desk region");
 const GOVERNING_LAW = field("governing_law", "Governing law", { isRequired: true });
 const REQUESTING_MANAGER = field("requesting_manager", "Requesting manager", {
+  description: "Who in the business owns this deal.",
   fieldType: "user",
 });
 const CONTRACTING_ENTITY = field("contracting_entity", "Contracting entity", {
@@ -1131,7 +1132,11 @@ describe("a lost race (INT-007, TECH-020)", () => {
 });
 
 describe("Matter Conversion drafts", () => {
-  function preparedApi(pending = false, allValues = false, withAttachments = false) {
+  function preparedApi(
+    pending = false,
+    allValues = false,
+    withAttachments: boolean | "readable" = false,
+  ) {
     const base = requestApi(
       request({
         requestType: {
@@ -1184,16 +1189,21 @@ describe("Matter Conversion drafts", () => {
         sourceRuntimeMs: 15000,
         runtimeMs: 45000,
       },
-      warnings: withAttachments ? ["attachment_omissions"] : [],
+      warnings: withAttachments === true ? ["attachment_omissions"] : [],
       attachmentReads: withAttachments
         ? [
-            { sourceId: "attachment:sheet", label: "Costs.xlsx", status: "unsupported" },
-            {
-              sourceId: "attachment:long",
-              label: "Long agreement.pdf",
-              status: "truncated",
-              reason: "character_limit",
-            },
+            { sourceId: "attachment:nda", label: "Signed NDA.pdf", status: "readable" },
+            ...(withAttachments === true
+              ? [
+                  { sourceId: "attachment:sheet", label: "Costs.xlsx", status: "unsupported" },
+                  {
+                    sourceId: "attachment:long",
+                    label: "Long agreement.pdf",
+                    status: "truncated",
+                    reason: "character_limit",
+                  },
+                ]
+              : []),
           ]
         : [],
       failure: null,
@@ -1224,6 +1234,38 @@ describe("Matter Conversion drafts", () => {
       },
     };
   }
+  it("switches descriptions for comparison without changing the conversion draft", async () => {
+    const user = userEvent.setup();
+    const api = preparedApi();
+    open(api);
+    await openDisposition(user, "Convert to matter");
+    const generated = await screen.findByRole("textbox", { name: "Description" });
+    expect(generated).toHaveValue("A response is needed.");
+    const toggle = screen.getByRole("switch", { name: "Show requester description" });
+    await user.click(toggle);
+    expect(toggle).toBeChecked();
+    expect(screen.queryByRole("textbox", { name: "Description" })).toBeNull();
+    expect(
+      within(screen.getByRole("dialog")).getByText("Small vendor, standard terms.", {
+        selector: "p",
+      }),
+    ).toBeVisible();
+    await user.click(toggle);
+    const current = screen.getByRole("textbox", { name: "Description" });
+    expect(current).toHaveValue("A response is needed.");
+    await user.clear(current);
+    await user.type(current, "Reviewed description");
+    await user.click(toggle);
+    await user.click(toggle);
+    expect(screen.getByRole("textbox", { name: "Description" })).toHaveValue(
+      "Reviewed description",
+    );
+    expect(api.conversions).toHaveLength(0);
+    await user.click(toggle);
+    await user.click(screen.getByRole("button", { name: "Convert to matter" }));
+    await waitFor(() => expect(api.conversions).toHaveLength(1));
+    expect(api.conversions[0]).toHaveProperty("description", "Reviewed description");
+  });
   it("shows editable prefill and cited markers, then submits edits as human values", async () => {
     const user = userEvent.setup();
     const api = preparedApi();
@@ -1294,7 +1336,7 @@ describe("Matter Conversion drafts", () => {
     const scroll = vi.spyOn(Element.prototype, "scrollIntoView");
     try {
       await user.click(trigger);
-      const panel = await screen.findByRole("dialog", { name: "Source document" });
+      const panel = await screen.findByRole("dialog", { name: "Title" });
       expect(convert).toBeInTheDocument();
       expect(convert.scrollTop).toBe(165);
       expect(router.state.location.pathname).toBe("/inbox/45");
@@ -1326,10 +1368,158 @@ describe("Matter Conversion drafts", () => {
       expect(convert.scrollTop).toBe(165);
       expect(within(convert).getByDisplayValue("Prepared response")).toBeVisible();
       await user.click(trigger);
-      expect(await screen.findByRole("dialog", { name: "Source document" })).toBeVisible();
+      expect(await screen.findByRole("dialog", { name: "Title" })).toBeVisible();
     } finally {
       scroll.mockRestore();
     }
+  });
+  it("groups cited passages without repeating the description and keeps PDF passages reachable", async () => {
+    const user = userEvent.setup();
+    const base = preparedApi();
+    const quotes = Array.from({ length: 11 }, (_, index) => `Request passage ${index + 1}.`);
+    const requestCitations = quotes.map((quote) => ({
+      sourceId: "request:45:description",
+      label: "R-45 description",
+      text: quotes.join("\n"),
+      quote,
+    }));
+    const attachment = {
+      sourceId: "attachment:2",
+      label: "Agreement.pdf",
+      text: PDF_PAGE_TEXT.flat().join(" "),
+      attachment: {
+        previewHref: "/api/v1/requests/45/conversion-drafts/draft-1/sources/attachment%3A2/preview",
+        downloadHref:
+          "/api/v1/requests/45/conversion-drafts/draft-1/sources/attachment%3A2/download",
+        documentId: null,
+        versionId: null,
+        method: "native_layer",
+      },
+    };
+    open({
+      ...base,
+      handler: (call: StubCall) =>
+        call.url.pathname.includes("/evidence/")
+          ? json(200, {
+              available: true,
+              citations: [
+                ...requestCitations,
+                requestCitations[0],
+                { ...attachment, quote: "The first termination right is on this page." },
+                { ...attachment, quote: "A second termination right appears here." },
+              ],
+            })
+          : base.handler(call),
+    });
+    await openDisposition(user, "Convert to matter");
+    await screen.findByDisplayValue("Prepared response");
+    await user.click(screen.getAllByRole("button", { name: "View source evidence" })[0]!);
+    const panel = await screen.findByRole("dialog", { name: "Title" });
+    // The reader opens straight from the sparkle, on the file, with the
+    // popover's explanation column beside the document.
+    expect(screen.getAllByRole("heading", { name: "Title" })).toEqual([
+      within(panel).getByRole("heading", { name: "Title" }),
+    ]);
+    expect(within(panel).getByText("No explanation was saved for this value.")).toBeVisible();
+    expect(within(panel).getByRole("button", { name: "Agreement.pdf" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(within(panel).getAllByRole("button", { name: "R-45 description" })).toHaveLength(1);
+    expect(within(panel).getAllByRole("button", { name: "Agreement.pdf" })).toHaveLength(1);
+    expect(panel.querySelector("blockquote")).toBeNull();
+    expect(within(panel).queryByText("Agreement.pdf", { selector: "p" })).toBeNull();
+    expect(within(panel).getByText("Passage 1 of 2")).toBeVisible();
+    await user.click(within(panel).getByRole("button", { name: "Next passage" }));
+    expect(within(panel).getByText("Passage 2 of 2")).toBeVisible();
+    await waitFor(() => {
+      const marks = panel.querySelectorAll('[data-page-number="2"] mark[data-pdf-find-match="0"]');
+      expect(
+        Array.from(marks)
+          .map((mark) => mark.textContent)
+          .join(""),
+      ).toBe("A second termination right appears here.");
+    });
+    await user.click(within(panel).getByRole("button", { name: "R-45 description" }));
+    expect(within(panel).queryByRole("button", { name: "Previous passage" })).toBeNull();
+    expect(within(panel).queryByRole("button", { name: "Next passage" })).toBeNull();
+    expect(panel.querySelectorAll("blockquote")).toHaveLength(11);
+    expect(within(panel).getByText(quotes[0]!)).toBeVisible();
+    expect(within(panel).getByText(quotes[10]!)).toBeVisible();
+    await user.click(within(panel).getByRole("button", { name: "Agreement.pdf" }));
+    expect(within(panel).getByText("Passage 1 of 2")).toBeVisible();
+    expect(within(panel).getByRole("link", { name: "Download" })).toHaveAttribute(
+      "href",
+      attachment.attachment.downloadHref,
+    );
+  });
+  it("shows the saved justification and opens a text source's relevant quotes on request", async () => {
+    const user = userEvent.setup();
+    const base = preparedApi();
+    const source = {
+      sourceId: "message:1",
+      label: "Nadia Counsel — September 11",
+      text: "First passage. Second passage. Further context.",
+      quote: "First passage.",
+    };
+    open({
+      ...base,
+      handler: (call: StubCall) =>
+        call.url.pathname.includes("/evidence/")
+          ? json(200, {
+              available: true,
+              justification: "The request identifies this as a dispute requiring a response.",
+              citations: [
+                {
+                  sourceId: "request:45:description",
+                  label: "R-45 description",
+                  text: "Full request description.",
+                  quote: "Full request",
+                },
+                {
+                  sourceId: "request:45:description",
+                  label: "R-45 description",
+                  text: "Full request description.",
+                  quote: "description",
+                },
+                source,
+                { ...source, quote: "Second passage." },
+                source,
+                {
+                  ...source,
+                  sourceId: "message:2",
+                  text: "A different message.",
+                  quote: "different",
+                },
+              ],
+            })
+          : base.handler(call),
+    });
+    await openDisposition(user, "Convert to matter");
+    await screen.findByDisplayValue("Prepared response");
+    await user.click(screen.getAllByRole("button", { name: "View source evidence" })[0]!);
+    expect(
+      await screen.findByText("The request identifies this as a dispute requiring a response."),
+    ).toBeVisible();
+    expect(screen.getByText("Why this value")).toBeVisible();
+    // The popover is the explanation and a source list; no passage is
+    // reproduced in it.
+    expect(screen.getAllByRole("button", { name: "R-45 description" })).toHaveLength(1);
+    expect(screen.getAllByRole("button", { name: source.label })).toHaveLength(2);
+    expect(screen.queryByText("Full request description.")).toBeNull();
+    expect(screen.queryByText(source.text)).toBeNull();
+    expect(document.querySelector("blockquote")).toBeNull();
+    await user.click(screen.getByRole("button", { name: "R-45 description" }));
+    const panel = await screen.findByRole("dialog", { name: "Title" });
+    expect(within(panel).getByText("Full request", { selector: "blockquote" })).toBeVisible();
+    expect(within(panel).getByText("description", { selector: "blockquote" })).toBeVisible();
+    expect(within(panel).queryByText("Full request description.")).toBeNull();
+    expect(within(panel).queryByText("First passage.")).toBeNull();
+    await user.click(within(panel).getAllByRole("button", { name: source.label })[0]!);
+    expect(within(panel).getAllByText("First passage.", { selector: "blockquote" })).toHaveLength(
+      1,
+    );
+    expect(within(panel).getByText("Second passage.", { selector: "blockquote" })).toBeVisible();
   });
   it("keeps Convert in place when a citation becomes unavailable", async () => {
     const user = userEvent.setup();
@@ -1347,7 +1537,7 @@ describe("Matter Conversion drafts", () => {
     const trigger = within(convert).getAllByRole("button", { name: "View source evidence" })[0]!;
     await user.click(trigger);
     expect(await screen.findByText("The source is unavailable or has changed.")).toBeVisible();
-    expect(screen.queryByRole("dialog", { name: "Source document" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Close the document" })).toBeNull();
     expect(router.state.location.pathname).toBe("/inbox/45");
     await user.keyboard("{Escape}");
     await waitFor(() => expect(trigger).toHaveFocus());
@@ -1410,7 +1600,7 @@ describe("Matter Conversion drafts", () => {
           name: "View source evidence",
         })[0]!;
         await user.click(trigger);
-        const panel = await screen.findByRole("dialog", { name: "Source document" });
+        const panel = await screen.findByRole("dialog", { name: "Title" });
         if (result === "ready at deadline" || result === "unreachable once") {
           expect(
             await within(panel).findByRole(
@@ -1423,7 +1613,7 @@ describe("Matter Conversion drafts", () => {
         } else {
           expect(
             await within(panel).findByText(
-              "This source has no searchable passage preview. Read the quoted text and check the original file.",
+              "This source has no searchable passage preview. Read the source text and check the original file.",
             ),
           ).toBeVisible();
           expect(within(panel).getByText("Supporting agreement text")).toBeVisible();
@@ -1442,7 +1632,7 @@ describe("Matter Conversion drafts", () => {
       }
     },
   );
-  it("names unread and truncated attachments and discloses the reading limits", async () => {
+  it("reports genuine failures and historical truncation without implementation-limit boilerplate", async () => {
     const user = userEvent.setup();
     open(preparedApi(false, false, true));
     await openDisposition(user, "Convert to matter");
@@ -1455,7 +1645,17 @@ describe("Matter Conversion drafts", () => {
     await user.click(screen.getByText("Attachment reading details"));
     expect(screen.getByText("Costs.xlsx: unsupported")).toBeVisible();
     expect(screen.getByText(/Long agreement.pdf: truncated.*text limit/)).toBeVisible();
-    expect(screen.getByText(/Up to 20 attachments, 10 MiB each/)).toBeVisible();
+    // A file that was read in full is not a detail anyone acts on.
+    expect(screen.queryByText(/Signed NDA.pdf/)).toBeNull();
+    expect(screen.queryByText(/Up to 20 attachments, 10 MiB each/)).toBeNull();
+  });
+  it("says nothing about attachment reading when every file was read in full", async () => {
+    const user = userEvent.setup();
+    open(preparedApi(false, false, "readable"));
+    await openDisposition(user, "Convert to matter");
+    await screen.findByDisplayValue("Prepared response");
+    expect(screen.queryByText("Attachment reading details")).toBeNull();
+    expect(screen.queryByText(/Signed NDA.pdf/)).toBeNull();
   });
   it("drops Matter suggestions for disabled Contract preparation and prepares on return", async () => {
     const user = userEvent.setup();
@@ -1474,7 +1674,7 @@ describe("Matter Conversion drafts", () => {
     expect(await within(dialog).findByDisplayValue("Prepared response")).toBeVisible();
     expect(within(dialog).getAllByText("Unverified")).toHaveLength(3);
   });
-  it.each(["Continue manually", "Convert to contract instead"])(
+  it.each(["Discard AI suggestions", "Convert to contract instead"])(
     "%s restores untouched defaults for every prepared value",
     async (action) => {
       const user = userEvent.setup();
@@ -1495,7 +1695,7 @@ describe("Matter Conversion drafts", () => {
       expect(within(dialog).queryByLabelText("Description")).toBeNull();
     },
   );
-  it.each(["Continue manually", "Convert to contract instead"])(
+  it.each(["Discard AI suggestions", "Convert to contract instead"])(
     "%s preserves human edits while discarding the draft",
     async (action) => {
       const user = userEvent.setup();
@@ -1527,7 +1727,7 @@ describe("Matter Conversion drafts", () => {
       expect(within(dialog).queryByText("Unverified")).toBeNull();
       await user.click(
         within(dialog).getByRole("button", {
-          name: action === "Continue manually" ? "Convert to matter" : "Convert to contract",
+          name: action === "Discard AI suggestions" ? "Convert to matter" : "Convert to contract",
         }),
       );
       await waitFor(() => expect(api.conversions).toHaveLength(1));
@@ -1539,16 +1739,122 @@ describe("Matter Conversion drafts", () => {
       });
       expect(api.conversions[0]).not.toHaveProperty("conversionDraftId");
       expect(api.conversions[0]).not.toHaveProperty("aiAccepted");
-      if (action === "Continue manually")
+      if (action === "Discard AI suggestions")
         expect(api.conversions[0]).toHaveProperty("description", "Human description");
     },
   );
+  it("opens an already prepared draft without waiting for another read", async () => {
+    const user = userEvent.setup();
+    const base = preparedApi();
+    let reads = 0;
+    open({
+      ...base,
+      handler: (call: StubCall) => {
+        if (call.url.pathname.endsWith("/conversion-drafts/draft-1")) {
+          reads++;
+          return new Promise<Response>(() => {});
+        }
+        return base.handler(call);
+      },
+    });
+    await openDisposition(user, "Convert to matter");
+    expect(await screen.findByRole("textbox", { name: /Title/ })).toHaveValue("Prepared response");
+    expect(reads).toBe(0);
+  });
+
+  it("keeps waiting beyond three minutes while the worker renews its lease", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      const base = preparedApi(true);
+      open({
+        ...base,
+        handler: (call: StubCall) => {
+          const response = base.handler(call);
+          if (
+            call.url.pathname.includes("/conversion-drafts") &&
+            !call.url.pathname.endsWith("/settings")
+          ) {
+            return Promise.resolve(response).then(async (response) => {
+              const body = await response!.json();
+              body.draft.progressAt = new Date(Date.now()).toISOString();
+              return json(response!.status, body);
+            });
+          }
+          return response;
+        },
+      });
+      await openDisposition(user, "Convert to matter");
+      expect(await screen.findByText("Getting matter ready…")).toBeVisible();
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(240_000);
+      });
+      expect(screen.getByText("Getting matter ready…")).toBeVisible();
+      expect(screen.getByText(/Working for 4 minutes 0 seconds\./)).toBeVisible();
+      expect(screen.queryByRole("button", { name: "Retry" })).toBeNull();
+      await user.click(screen.getByRole("button", { name: "Continue manually" }));
+      expect(screen.getByRole("textbox", { name: /Title/ })).toBeVisible();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it.each(["create", "poll"])(
+    "bounds a stalled %s request and ignores its late result",
+    async (stage) => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      try {
+        const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+        const base = preparedApi(true);
+        let release: (() => void) | undefined;
+        open({
+          ...base,
+          handler: (call: StubCall) => {
+            const held =
+              stage === "create"
+                ? call.url.pathname.endsWith("/conversion-drafts")
+                : call.url.pathname.endsWith("/conversion-drafts/draft-1");
+            if (held)
+              return new Promise<Response>((resolve) => {
+                release = () => resolve(preparedApi().handler(call) as Response);
+              });
+            return base.handler(call);
+          },
+        });
+        await openDisposition(user, "Convert to matter");
+        await waitFor(() => expect(release).toBeDefined());
+        expect(screen.getByText("Getting matter ready…")).toBeVisible();
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(180_001);
+        });
+        expect(
+          screen.getByText("Preparation could not finish. Retry or continue manually."),
+        ).toBeVisible();
+        expect(screen.getByRole("button", { name: "Retry" })).toBeEnabled();
+        await user.click(screen.getByRole("button", { name: "Continue manually" }));
+        const title = screen.getByRole("textbox", { name: /Title/ });
+        await user.clear(title);
+        await user.type(title, "My preserved title");
+        await act(async () => {
+          release?.();
+        });
+        expect(title).toHaveValue("My preserved title");
+        expect(screen.queryByText("Unverified")).not.toBeInTheDocument();
+      } finally {
+        vi.useRealTimers();
+      }
+    },
+  );
+
   it("keeps manual continuation usable while preparation waits", async () => {
     const user = userEvent.setup();
     const api = preparedApi(true);
     open(api);
     await openDisposition(user, "Convert to matter");
     expect(await screen.findByText("Getting matter ready…")).toBeVisible();
+    expect(
+      screen.getByText(/A long attachment can take a few minutes\. Working for 0 seconds\./),
+    ).toBeVisible();
     await user.click(screen.getByRole("button", { name: "Continue manually" }));
     const title = screen.getByLabelText("Title", { exact: false });
     await user.clear(title);
@@ -1559,12 +1865,12 @@ describe("Matter Conversion drafts", () => {
 });
 
 describe("Contract and Matter preparation together", () => {
-  function bothApi(suggestType = false, refuseCall = 0) {
+  function bothApi(suggestType = false, refuseCall = 0, row = request()) {
     const calls: { targetModule: "matter" | "contract"; targetTypeId: string; retry?: boolean }[] =
       [];
     const drafts = new Map<string, unknown>();
     let held: (() => void) | undefined;
-    const base = requestApi();
+    const base = requestApi(row);
     const api = {
       ...base,
       calls,
@@ -1615,6 +1921,92 @@ describe("Contract and Matter preparation together", () => {
     };
     return api;
   }
+  it("keeps identical intake answers ordinary and omits them from accepted AI values", async () => {
+    const user = userEvent.setup();
+    const api = bothApi(
+      false,
+      0,
+      request({
+        urgency: "critical",
+        customFields: { counterparty_name: "Acme", needed_by: "2026-10-02" },
+      }),
+    );
+    open(api);
+    await openDisposition(user, "Convert to contract");
+    await screen.findByDisplayValue("contract title 1");
+    for (const name of [/^Counterparty$/, /^Needed by/, /^Priority/]) {
+      const control = screen.getByLabelText(name);
+      expect(
+        within(control.parentElement!.parentElement!).queryByRole("button", {
+          name: "View source evidence",
+        }),
+      ).toBeNull();
+    }
+    expect(screen.getAllByRole("button", { name: "View source evidence" }).length).toBeGreaterThan(
+      0,
+    );
+    expect(screen.queryByText("Who in the business owns this deal.")).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Convert to contract" }));
+    await waitFor(() => expect(api.conversions).toHaveLength(1));
+    expect(api.conversions[0]).toMatchObject({
+      counterpartyName: "Acme",
+      neededBy: "2026-10-02",
+      priority: "critical",
+    });
+    expect((api.conversions[0] as { aiAccepted: string[] }).aiAccepted).not.toEqual(
+      expect.arrayContaining(["counterparty"]),
+    );
+    expect((api.conversions[0] as { aiAccepted: string[] }).aiAccepted).not.toContain("needed_by");
+    expect((api.conversions[0] as { aiAccepted: string[] }).aiAccepted).not.toContain("priority");
+  });
+
+  it("bounds a stalled Type refresh and preserves edits when it finally responds", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      const base = bothApi();
+      let release: (() => void) | undefined;
+      open({
+        ...base,
+        handler: (call: StubCall) => {
+          if (
+            call.url.pathname.endsWith("/conversion-drafts") &&
+            (call.body as { targetTypeId: string }).targetTypeId === "ct-msa"
+          ) {
+            return new Promise<Response>((resolve) => {
+              release = () => resolve(base.handler(call) as Response);
+            });
+          }
+          return base.handler(call);
+        },
+      });
+      await openDisposition(user, "Convert to contract");
+      const title = await screen.findByDisplayValue("contract title 1");
+      await user.clear(title);
+      await user.type(title, "Human title");
+      await user.selectOptions(screen.getByLabelText(/^Contract type/), "ct-msa");
+      await waitFor(() => expect(release).toBeDefined());
+      expect(screen.getByRole("button", { name: "Convert to contract" })).toBeDisabled();
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(180_001);
+      });
+      expect(
+        screen.getByText("Preparation could not finish. Retry or continue manually."),
+      ).toBeVisible();
+      expect(screen.getByRole("button", { name: "Convert to contract" })).toBeEnabled();
+      await act(async () => {
+        release?.();
+      });
+      expect(title).toHaveValue("Human title");
+      expect(
+        screen.getByText("Preparation could not finish. Retry or continue manually."),
+      ).toBeVisible();
+      expect(screen.getByRole("button", { name: "Convert to contract" })).toBeEnabled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it.each([1, 2])(
     "retries a refused preparation on call %s and preserves human values",
     async (refuseCall) => {

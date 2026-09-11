@@ -233,7 +233,7 @@ test.describe.serial("M9 demo path", () => {
       contributor = await onboardActivatedMember(page.request, browser, {
         email: contributorEmail,
         displayName: CONTRIBUTOR_NAME,
-        role: "contributor",
+        role: "business_user",
         password: "their-own-e2e-password",
       });
       const lawyerPage = lawyer.page;
@@ -244,7 +244,7 @@ test.describe.serial("M9 demo path", () => {
       // The second audience: a Contributor on this contract's team is
       // what a Legal Only comment has to exclude (CTR-021, DD-016).
       const joined = await page.request.post(`/api/v1/contracts/${contract.number}/team`, {
-        data: { userId: await userIdOf(page.request, contributorEmail), role: "contributor" },
+        data: { userId: await userIdOf(page.request, contributorEmail) },
       });
       expect(joined.status(), await joined.text()).toBe(201);
 
@@ -323,47 +323,14 @@ test.describe.serial("M9 demo path", () => {
 
       // ---- The second audience: the Legal Only comment leaves no trace ----
 
-      await contributorPage.goto(`/contracts/${contract.number}`);
+      await contributorPage.goto(`/portal/contracts/${contract.number}`);
       await expect(contributorPage.getByRole("heading", { level: 1, name: renamed })).toBeVisible();
-
-      // Not in the badge. The count is taken over the same filtered set
-      // the thread is read at (CMT-009), so it counts the one comment
-      // this reader is in the room for and never the two that exist.
-      // Read before the panel opens, because opening it marks the
-      // thread read.
-      await expect(appletSlot(contributorPage, "Comments")).toHaveAccessibleName("Comments (1)");
-
-      // Not in the thread. One row, no placeholder, no gap, and a
-      // header count that counts what is on screen.
-      const theirThread = await openApplet(contributorPage, "Comments");
-      const heardRows = panelRows(theirThread, "Comments");
-      await expect(heardRows).toHaveCount(1);
-      await expect(heardRows.nth(0)).toContainText(FULL_THREAD_COMMENT);
+      const theirThread = contributorPage.getByRole("region", { name: "Conversation" });
+      await expect(theirThread.getByText(FULL_THREAD_COMMENT)).toBeVisible();
       await expect(theirThread.getByText(LEGAL_ONLY_COMMENT)).toHaveCount(0);
-      await expect(theirThread.getByText("Legal Only")).toHaveCount(0);
-      // And no room they are not in is on offer to post into. One
-      // segment, and it is the Contract Team.
-      await expect(
-        theirThread.getByRole("group", { name: "Audience" }).getByRole("radio"),
-      ).toHaveCount(1);
-      await expect(theirThread.getByRole("radio", { name: "Legal Only" })).toHaveCount(0);
-      await expect(theirThread.getByRole("radio", { name: "Contract Team" })).toBeChecked();
+      await expect(theirThread.getByRole("radio")).toHaveCount(0);
+      await expect(contributorPage.getByRole("button", { name: "History" })).toHaveCount(0);
 
-      // Not in the feed. The field edit and the Full Thread comment are
-      // both there, so the missing entry is the predicate at work and
-      // not an empty panel.
-      await theirThread.getByRole("button", { name: "Close" }).click();
-      const theirHistory = await openApplet(contributorPage, "History");
-      await expect(
-        panelRows(theirHistory, "History").filter({ hasText: "changed Title" }),
-      ).toHaveCount(1);
-      await expect(
-        panelRows(theirHistory, "History").filter({ hasText: `${LAWYER_NAME} commented` }),
-      ).toHaveCount(1);
-      await expect(theirHistory.getByText(LEGAL_ONLY_COMMENT)).toHaveCount(0);
-
-      // And the same three answers from the seam, because the filtering
-      // is the seam's and not the screen's (DD-016, DD-017).
       const theirThreadRead = await contributorPage.request.get(
         `/api/v1/comments?entityType=contract&entityId=${contract.id}`,
       );
@@ -374,23 +341,11 @@ test.describe.serial("M9 demo path", () => {
       expect(heard.map((row) => row.visibility)).toEqual(["full_thread"]);
       expect(heard.map((row) => row.body)).toEqual([FULL_THREAD_COMMENT]);
 
-      const theirFeed = ActivityEntries.parse(
-        await (
-          await contributorPage.request.get(
-            `/api/v1/activity?entityType=contract&entityId=${contract.id}`,
-          )
-        ).json(),
-      ).entries;
-      expect(theirFeed.some((entry) => entry.action === "contract.updated")).toBe(true);
-      expect(theirFeed.filter((entry) => entry.action === "comment.posted").length).toBe(1);
-      expect(theirFeed.every((entry) => entry.visibility !== "legal_only")).toBe(true);
-      // No payload carries comment text on either side of the tier
-      // line (CMT-006), so nothing could leak through the feed even if
-      // the tier filter were wrong.
-      expect(JSON.stringify(theirFeed)).not.toContain(LEGAL_ONLY_COMMENT);
+      const theirFeed = await contributorPage.request.get(
+        `/api/v1/activity?entityType=contract&entityId=${contract.id}`,
+      );
+      expect(theirFeed.status()).toBe(403);
 
-      // The seam refuses the room outright, whatever a client sends —
-      // the absent segment is a courtesy, not the enforcement.
       const refused = await contributorPage.request.post("/api/v1/comments", {
         data: {
           entityType: "contract",

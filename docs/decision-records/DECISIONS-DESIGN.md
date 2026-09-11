@@ -3180,6 +3180,8 @@ Visual references: [Linear's property and status filter menus](https://mobbin.co
 
 ## DES-047: The Team roster is an activity-bar applet (amends DES-016, DES-032, DES-028)
 
+**2026-09-11 amendment:** DES-076 keeps the Contract team applet and its fragment. The roster shows responsibility and Creator statements, then one membership row per person. It has no tags.
+
 - **Status:** Accepted
 - **Date:** 2026-08-17
 
@@ -3193,7 +3195,7 @@ The activity bar is the record's right-side system (DES-016). A persistent side 
 
 **1. The Team roster is a panel applet**, first in the contract record's bar, with Lucide's `User` glyph at the bar's 20px step. Clicking it expands the side panel. The roster is not a section, not a fourth tab, and not a card in the main column.
 
-**2. The panel is the surface.** The applet label is the title; the add control sits in the header accessory slot (the same slot the chat applet's count pill uses). The body is the Owner row, then one row per `contract_team` role. No nested card chrome — the panel is already `bg-raised`.
+~~**2. The panel is the surface.** The applet label is the title; the add control sits in the header accessory slot (the same slot the chat applet's count pill uses). The body is the Owner row, then one row per `contract_team` role. _(Amended by **DES-075** (2026-09-11): the applet is titled **Contract team**; the body is the Legal Owner and Business Owner rows, then one row per person with their `contract_team` roles and any DD-021 Stakeholder link as tags.)_ No nested card chrome — the panel is already `bg-raised`.~~
 
 **3. DES-028's "Manage team" fragment opens the applet.** The link stays a link (`#contract-team`), not a button, because nothing on the confidentiality banner is a button. The panel takes that id while it is open. `RecordApplets` listens for the hash — native fragment navigation would miss, because the panel is not in the DOM until it is expanded. Opening it — from the bar or from the fragment — moves focus onto the panel container, not its Close control, so `Esc` from the banner path works without an extra Tab (DES-016 / DES-010).
 
@@ -3800,6 +3802,8 @@ No new tokens. The Inbox is the first surface to draw `status-severe-*` in a pil
 
 ## DES-057: The staff request detail — a record page for something that is not a record (extends DES-032, DES-016, DES-034)
 
+**2026-09-11 amendment:** Converted Request details now show only the original envelope, conversion actor and time, and reachable record link. They have no thread, paper controls or composer. New, resolved and declined Request behavior remains. See DD-023 and DES-076.
+
 - **Status:** Accepted
 - **Date:** 2026-08-22
 
@@ -4149,6 +4153,8 @@ One discriminated dialog keeps the shared facts shared and reveals only the cont
 
 ## DES-065: A dispositioned Request points paper at its composer (extends DES-062, DES-057)
 
+**2026-09-11 amendment:** Resolved and declined Requests retain their composer and paper pointer. A converted Request redirects to its record, whose Conversation accepts replies and attachments. The archived-record stub has neither. The original Request link remains usable through this redirect. See DD-023 and DES-076.
+
 - **Status:** Accepted
 - **Date:** 2026-08-23
 
@@ -4158,7 +4164,7 @@ CMT-011 leaves two ways for paper to enter: with the submission form before the 
 
 ### Decision
 
-**1. A dispositioned banner points to the existing composer.** On `converted`, `resolved`, and `declined`, the status banner ends with the link `Attach new files to a reply`. It targets the Full Thread composer in the Conversation card on the same page. The link is absent on `new`: the thread control already sits immediately below the banner, and repeating directions before a disposition would make the exceptional routing look like a standing warning.
+**1. A dispositioned banner points to the existing composer.** On ~~`converted`, `resolved`, and `declined`~~ `resolved` and `declined`, the status banner ends with the link `Attach new files to a reply`. It targets the Full Thread composer in the Conversation card on the same page. The link is absent on `new`: the thread control already sits immediately below the banner, and repeating directions before a disposition would make the exceptional routing look like a standing warning.
 
 **2. There is no Request attachment control on the detail.** The submission form's `Choose files` remains the only Request attachment control, before the Request exists. The detail carries only the comment composer's `Attach files`, on every status. Hiding after a disposition therefore means the rejected third path is never drawn; the pointer distinguishes the comment control by naming a reply.
 
@@ -4166,7 +4172,7 @@ CMT-011 leaves two ways for paper to enter: with the submission form before the 
 
 ### Rationale
 
-The composer is the door CMT-011 built, so the banner should point at it rather than restating its controls or adding another picker. Keeping the instruction inside the status banner places the changed paper rule beside the disposition that caused it. The stable Request URL remains the portal address after conversion, which lets one link work for all three outcomes without exposing a Contract reference a Business User cannot open.
+The composer is the door CMT-011 built, so the banner should point at it rather than restating its controls or adding another picker. Keeping the instruction inside the status banner places the changed paper rule beside the disposition that caused it. ~~The stable Request URL remains the portal address after conversion~~, which lets one link work for all three outcomes without exposing a Contract reference a Business User cannot open.
 
 ### Consequences
 
@@ -4379,7 +4385,7 @@ ST7 predates the credential forms and draws one integration summary row with a C
 
 ~~The Integrations destination keeps its E-signature and AI analysis tabs.~~ _(Superseded by **SET-008** (2026-09-03): AI analysis is an Organization section of its own at `/settings/ai-analysis`, with a `sparkles` rail entry before Integrations; Integrations keeps E-signature as its only tab.)_ The AI analysis pane contains a **Provider** card followed by a **Field prompts** card. Both use DES-054's disclosure header and arrive collapsed. Provider shows its connection state in the header; opening it reveals the provider preset or custom protocol, base URL, model, and write-only API key, followed by Save connector and Test connection. Field prompts exposes the seven core prompts, one row at a time, with save and reset. Its caption sends catalog Field prompts to Contracts → Fields.
 
-The Contract Overview contains an **AI analysis** card. It is not called `Key clauses`: a run extracts typed field outcomes rather than creating a clause model. The header holds Run analysis and, when more than one result remains unverified, Confirm all. The body identifies the latest run and lists each result's field label, value, exact evidence, outcome, and eligible Confirm action. A Contract with no configured connector has no run action or empty analysis card, but already-written unverified values remain visible and confirmable.
+~~The Contract Overview contains an **AI analysis** card.~~ _(Amended by **DES-075** (2026-09-11): the card is the Fields section's, below the Fields card. Everything else in this paragraph stands.)_ It is not called `Key clauses`: a run extracts typed field outcomes rather than creating a clause model. The header holds Run analysis and, when more than one result remains unverified, Confirm all. The body identifies the latest run and lists each result's field label, value, exact evidence, outcome, and eligible Confirm action. A Contract with no configured connector has no run action or empty analysis card, but already-written unverified values remain visible and confirmable.
 
 Every AI-written value carries one shared neutral marker: a 12px `CircleAlert` icon and the literal word **Unverified** in a compact pill. Color is never its only meaning. The marker sits beside the value on the Contract and beside the corresponding analysis result. A human edit or confirmation clears that field's marker; confirming one result does not clear its siblings.
 
@@ -4414,6 +4420,22 @@ The user explicitly chose purple. This is a deliberate exception to Warm's prior
 The evidence sparkle meets DES-011's 3:1 graphical-object contrast floor on all four content surfaces in each theme, enforced by `lint:contrast`. The decorative gradient leaves the existing control border and focus ring in place. In forced-colors mode, the gradient and blur disappear, a `CanvasText` outline remains, and the sparkle uses `ButtonText`. The neutral Unverified pill remains visible.
 
 Opening evidence reads the value's originating Analysis run, even after a later run completes, and checks the source Document's current audience. It opens the original Document Version in the DES-016 doc panel without changing the route or tab. PDF quotes match across whitespace and text spans, and the panel centers the highlighted passage. Missing quotes, unavailable sources, and unmatched passages have visible fallback text. Closing the panel restores focus to the sparkle.
+
+### Evidence popover addendum (2026-09-11)
+
+The popover the sparkle opens is the model's explanation, not a reproduction of the source. Reading the full Request description again inside a 320px card was information overload; the reader already has the source on the page behind the dialog and in the source reader. The popover takes DES-049's panel shape with the shared inset dropped. Its 44px head holds a 16px sparkle in `--ai-evidence-fg` and the value's name ("Owning department"; "Unverified value" when the caller has no label). The body is one labelled paragraph, "Why this value", in the 13px body size, followed by a "Sources" list. Each source is one link button with a file or quote glyph and the source's name; pressing it opens the existing reader on that source with its passages, highlighted in place for a file. No blockquote appears in the popover. A historical suggestion without an explanation says so in one muted line and keeps its source list. Loading and unavailable states keep the same head, so the panel does not change shape while it resolves. When the value can be confirmed, a foot carries a bordered **Confirm**, so a reader who has just checked the explanation does not have to close the panel to act; the row's link Confirm stays. Purple stays on the sparkle.
+
+This narrows the INT-008 rule that the sparkle "shows relevant quotes": the quotes remain one press away in the reader, which now opens on the source that was pressed. `apps/web/src/components/intake/conversion-evidence.tsx` is the surface and `conversion-source-panel.tsx` takes the asked-for source. The Contract Analysis evidence popover in `ai-field-evidence.tsx` keeps its shape until it shows more than loading and failure text.
+
+### Evidence reader addendum (2026-09-11)
+
+The sparkle resolves its evidence before anything opens. It carried a wait badly: the popover opened on a loading line and, for a value cited from a file, was replaced by the reader a moment later, so the card flashed and was never read. Now the sparkle itself shows the wait, a spinning glyph with `aria-busy` and a hidden status line, and only the surface the evidence calls for appears: the popover for text sources, the reader for a file in Convert, the record's doc panel for a saved record's single file (DES-016, #829).
+
+The reader carries the popover so nothing is lost by skipping it, and it stacks rather than splits. Its head is the popover's head: the sparkle and the value's name, with the close control on the end. Under it, one band on `bg-canvas` holds "Why this value" and the explanation, with the bordered **Confirm** at its end when the value can be confirmed. Under that, one toolbar row names the source, or lists the sources as pressed-state buttons when there are several, and carries the passage count and controls and the download on its end. The document takes everything below. A side column was tried and rejected: it cost a 320px strip of the reader for three lines of text and left most of the column empty. The dialog's accessible name is the value's name, no longer "Source document"; the head and the popover say the same thing, so a reader arriving by either route sees the same "why". The shared block lives in `apps/web/src/components/intake/evidence-explanation.tsx`; `conversion-source-panel.tsx` takes the title and confirm action from `conversion-evidence.tsx`.
+
+### Frame placement addendum (2026-09-11)
+
+The purple gradient frames the control that holds the value and nothing else: the input, select or textarea, the read-only value text when the record is frozen, or the unverified deadline's date cell on the Key dates card. It never frames the label, the Unverified pill, the confirm row, or a whole card. The Contract record's Title, Contract type, Priority and Description, and every Matter record value, were framing the whole field block; the Convert dialog already framed the control alone. `apps/web/src/components/ui/ai-field.tsx` is unchanged; the Matter field components take an `aiGenerated` flag and place the frame themselves.
 
 ## DES-071: A Comparison is one change pane beside one compare card (extends DES-006, DES-016, DES-063)
 
@@ -4569,6 +4591,84 @@ collections support different starting points. The article sidebar and outline
 serve different kinds of navigation. Shared styling keeps the retained copy useful
 when the application is unavailable.
 
+## DES-075: The Contract team applet holds stakeholders, and the AI analysis card is the Fields section's (amends DES-047, DES-070; extends DD-021, DES-032)
+
+**2026-09-11 amendment:** DES-076 removes Stakeholder tags, the Role picker and stakeholder fetch. Contract team, owner statements and AI analysis in Fields remain. The focus rule applies to membership removal.
+
+- **Status:** Accepted
+- **Date:** 2026-09-11
+
+### Context
+
+DD-021 gave a Contract two Portal audiences, the Business Owner and a list of named stakeholders, and its implementation (#808) drew the list as a **Stakeholders** section of the Contract card on the Overview, with its own add control and remove buttons. DES-047 had already moved the team roster out of the main column into an activity-bar applet, on the argument that who is on a contract is context for every section rather than a fact of one. The Stakeholders section put a second list of people back into the main column, in a different shape, one card below the Business Owner select.
+
+DES-070 placed the **AI analysis** card on the Overview. A run's results are one row per extracted field: the seven core targets and every prompted catalog Field of the confirmed Type. The Fields section (DES-032) is where that scope is set and read, and the Overview already carries the Unverified marker beside every core value it draws. The card on the Overview repeated the Fields section's subject in the wrong place. Blair, reviewing the updated Contract page on 2026-09-11: "we don't need a separate stakeholders section.. this should be part of the Contract Team applet"; "the fields in AI analysis shouldn't be in the overview section... the scope of fields should be set in the Fields tab".
+
+### Decision
+
+**1. The applet is titled Contract team.** The label matches the Matter record's **Matter team** applet. DES-028's `#contract-team` fragment and the `User` glyph are unchanged.
+
+~~**2. Stakeholders are tags on the roster.** A stakeholder appears in the Contract team panel with a **Stakeholder** tag, in the same row as any team role the person also holds. Removing the tag deletes the `contract_stakeholders` row and nothing else. The Overview has no Stakeholders section.~~
+
+~~**3. The add dialog offers Stakeholder as a role.** The Role select lists CTR-004's addable team roles and then **Stakeholder**, for a viewer the endpoint would answer (Member+). Choosing it shows one sentence saying what the link grants: the Portal read, subject to the Confidential gate, continuing when the Business Owner changes. The dialog writes to the stakeholder seam for that role and to the team seam for every other.~~
+
+**4. Both owners head the roster as statements.** The **Legal Owner** and **Business Owner** rows have no remove control. The two selects on the Contract card are where they change; the applet reads them.
+
+~~**5. One roster, one lock.** On a Confidential record where the viewer is none of CTR-023's actors, the Stakeholder tags are inert with the team tags, and the add control is disabled. The API allows a Member to write a stakeholder link on such a record, but a roster with live tags beside disabled ones would be two rules on one surface. A stakeholder on a Confidential Contract reads nothing in the Portal without team access (DD-021), so nothing useful is withheld.~~
+
+~~**6. The stakeholder list is the panel's one read.** DES-047 said opening the panel is a reveal, not a fetch, because the roster arrives with the record. The stakeholder list is a Member+ endpoint of its own, so the panel asks for it when it opens and only for a viewer who is Member+. A refused read shows one alert with a Retry control inside the panel.~~
+
+**7. Focus after a removal.** A removal unmounts the tag that ran it. The panel moves focus to its add control only when the pressed control has gone and nothing else has taken focus meanwhile. A refusal leaves the tag standing with focus on it. This rule now covers team-role removals too, which DES-047 had moving focus unconditionally.
+
+**8. The AI analysis card is the Fields section's.** It sits below the Fields card, unchanged in content: header with Run analysis and Confirm all, the run sentence, the result rows with label, value, evidence, outcome and Confirm. The Overview keeps every Unverified marker, purple border and evidence sparkle DES-070 gives a core value. The Contract actions menu still starts a run from any section, and its refusal lands on the card when the Fields section is open.
+
+### Rationale
+
+Who can read the Contract in the Portal is a question about people on the Contract. The Contract team applet is the one surface that answers "who is on this record", so a second list in the main column was DES-047's side column coming back one card at a time. Tags keep the roster's shape: a person is one row, and a Stakeholder link is one more thing they hold, like Watcher.
+
+The analysis card's rows are the type's field scope, extracted. Reading them beside the Fields card puts the account of a run next to the fields it wrote, and takes a long table off the Overview, which DES-032 wants to be the record's summary. The markers on the Overview already say which values are unverified; the card's job is the evidence and the outcomes, which is Fields-section detail.
+
+### Alternatives considered
+
+- **Keep the Stakeholders section, rename Team.** Rejected: the rename alone leaves two people lists in two shapes.
+- **Carry stakeholders in the record read so the panel stays a pure reveal.** Deferred: it widens the record response and its OpenAPI contract for a list only Member+ may see. The panel's own read is one request on open. Revisit if the roster read becomes a problem.
+- **Let a non-actor Member add a stakeholder on a Confidential record, with the team roles disabled in the dialog.** Rejected by clause 5: two rules on one roster, for a link that grants nothing without team access.
+- **A separate AI analysis tab.** Rejected by DES-032: the section strip is the record's five sections, and the results belong with the fields they wrote.
+- **Keep the card on the Overview and only move the rows.** Rejected: a card with a run sentence and no rows on one section, and rows with no run sentence on another, is one surface in two places.
+
+### Consequences
+
+`useTeamApplet` gains `businessOwner` and `stakeholderAccess`; `StakeholdersField` is deleted. `contracts.applet.team` reads "Contract team"; `contracts.teamRole.stakeholder` is new; the Stakeholders section's own messages are gone. The AI analysis card renders inside the `fields` tab branch of the Contract record. DD-021's "Stakeholders are managed separately" sentence, DES-047 clause 2 and DES-070's Overview placement are amended in place. `create-contract.md`, `roles-and-access.md` and `contract-analysis.md` follow. `designs/contracts.pen` still draws the Overview card and no Stakeholder tag; the mock owes a redraw and is not edited merely to restate the shipped surface (the DES-070 clause 3 treatment). No new tokens.
+
+## DES-076: Portal Contracts and Matters carry the business work
+
+- **Status:** Accepted under Blair's 2026-09-11 instruction to implement DD-023
+- **Date:** 2026-09-11
+
+### Context
+
+DD-023 gives Business Users one record team grant and moves their work onto Contracts and Matters. DD-021 already provides Your Contracts and a Contract summary. The Portal needs the contribution controls beside that summary and the same page structure for Matters.
+
+### Decision
+
+Your Contracts and Your Matters are flat paginated lists in the Portal navigation. Each row opens its record. The record page keeps the Portal shell and shows its reference, title, business summary, owner statements, business Fields, supporting Documents, Conversation, and Original request. Contract dates and the current primary Document keep DD-021's presentation. Matters show their Type, Status, Matter Manager, and Business Owner.
+
+Business Fields reuse the shared typed Field controls. Contract value and effective date are editable here too. The summary reflects successful changes. A save commits one Field and reports failure beside that control. Description edits change the live record only. Original request is read-only, with one original submission per converted Request. A direct record has no Original request block. Reference Fields offer scoped choices; Confidential Entities never enter a Portal picker.
+
+Supporting Documents show their current Version, Read and Download controls, and an Add Version action. Upload creates supporting paper. Contract primary paper remains in its own read-only block. Both use the existing Document reader. Uploading a supporting Document never claims an empty primary designation.
+
+Conversation reuses the Portal thread with the Contract or Matter reference. Its composer posts Full Thread only. The page offers no visibility selector. Internal comments, Tasks, History, AI run detail, legal Fields, and legal action menus do not appear.
+
+A converted Request address redirects to its record and disappears from Your Requests. Resolved and declined Requests retain their thread. The archived-record exception shows the Requester's original ask and an archived notice, with no composer or paper access. The full-app converted Request shows its original envelope, conversion actor and time, and the reachable record link. Its thread and paper controls are removed.
+
+Portal notification settings offer Request updates, Mentions, and Activity on your records. The latter two reuse the existing event groups with Portal audience copy. Staff-only groups and Briefing controls stay outside the Portal.
+
+The full-app Contract team and Matter team applets show owner and Creator statements, then one membership row per person. Add team member selects only a person. Remove acts on that person's membership. Statements carry no remove control. Membership removal preserves Creator provenance. The existing Confidential lock and focus-after-removal rule apply to the person control.
+
+### Consequences
+
+This supersedes DES-075's stakeholder tags, role picker, and separate stakeholder fetch, and DES-047's role rows. DES-075's Contract team title, owner statements, focus rule, and placement of AI analysis in Fields stand. DES-057 and DES-065's converted Request thread controls are superseded. The implementation uses existing Portal, Field, Document, and comment components.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                     |
@@ -4647,6 +4747,8 @@ when the application is unavailable.
 | DES-072 | The portal page is a main column beside an aside (amends the I5–I7 column; extends DES-012, DES-003, DES-068)                                                        | Accepted                                                                                                   |
 | DES-073 | Help has a discoverable entry in each shell and a public formal reader (extends DES-072)                                                                             | Accepted                                                                                                   |
 | DES-074 | Documentation and Help share the application design system                                                                                                           | Accepted                                                                                                   |
+| DES-075 | The Contract team applet holds stakeholders, and the AI analysis card is the Fields section's (amends DES-047, DES-070; extends DD-021, DES-032)                     | Accepted                                                                                                   |
+| DES-076 | Portal Contracts and Matters carry the business work                                                                                                                 | Accepted                                                                                                   |
 
 ### DES-016 addendum (2026-09-11, #827) — Request source reading above Convert
 

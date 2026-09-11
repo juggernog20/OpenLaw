@@ -227,7 +227,7 @@ test.describe.serial("the settings destination", () => {
     const dialog = page.getByRole("dialog", { name: "Invite user" });
     await dialog.getByLabel("Display name").fill("Pending Invitee");
     await dialog.getByLabel("Email").fill(email);
-    await dialog.getByRole("radio", { name: "Contributor" }).click();
+    await dialog.getByRole("radio", { name: "Legal team member" }).click();
     await dialog.getByRole("button", { name: "Send invite" }).click();
 
     /**
@@ -252,11 +252,11 @@ test.describe.serial("the settings destination", () => {
       // reload with its role because the list route serves it.
       const inviteRow = page.getByRole("row", { name: new RegExp(email) });
       await expect(inviteRow.getByText("Invited")).toBeVisible();
-      await expect(inviteRow.getByText("Contributor")).toBeVisible();
+      await expect(inviteRow.getByText("Legal team member")).toBeVisible();
       await waitForMailTo(page.request, email);
       await page.reload();
       await expect(inviteRow.getByText("Invited")).toBeVisible();
-      await expect(inviteRow.getByText("Contributor")).toBeVisible();
+      await expect(inviteRow.getByText("Legal team member")).toBeVisible();
 
       // Resend delivers a second set-password email.
       await inviteRow.getByRole("button", { name: `Resend the invite to ${email}` }).click();
@@ -299,7 +299,7 @@ test.describe.serial("the settings destination", () => {
       member = await onboardActivatedMember(page.request, browser, {
         email,
         displayName: "Riva Member",
-        role: "contributor",
+        role: "legal_team_member",
         password,
       });
       const memberPage = member.page;

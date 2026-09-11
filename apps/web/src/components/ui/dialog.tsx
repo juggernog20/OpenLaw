@@ -30,6 +30,7 @@ const DIALOG_WIDTH = {
   md: "md:max-w-md",
   lg: "md:max-w-lg",
   xl: "md:max-w-xl",
+  "3xl": "md:max-w-3xl",
   wide: "md:max-w-5xl",
 } as const;
 

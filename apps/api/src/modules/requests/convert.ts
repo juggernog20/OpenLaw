@@ -333,6 +333,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                   })
                 : await createMatter(tx, {
                     actorId: request.user.id,
+                    businessOwnerId: row.requesterId,
                     // The dialog seeds this from the summary. The held
                     // summary remains available for the M22 audit trail;
                     // the editable title follows the existing conversion

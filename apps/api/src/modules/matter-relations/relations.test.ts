@@ -75,7 +75,7 @@ beforeAll(async () => {
 
   const contributor = await provisionUser(harness.app.auth, CONTRIBUTOR);
   contributorId = contributor.id;
-  await harness.db.update(users).set({ role: "contributor" }).where(eq(users.id, contributor.id));
+  await harness.db.update(users).set({ role: "business_user" }).where(eq(users.id, contributor.id));
   contributorCookies = await signInCookies(harness.app, CONTRIBUTOR.email, CONTRIBUTOR.password);
 
   const options = await harness.app.inject({
@@ -244,13 +244,12 @@ describe("undirected related Matters (MTR-015)", () => {
 });
 
 describe("reach, archives, and Activity", () => {
-  it("lets a reached Contributor read but not mutate, and emits Restricted matter without leaks", async () => {
+  it("keeps relationship reads and writes in the staff app for Business Users on the team", async () => {
     const open = await create("Contributor anchor");
     const confidential = await create("Secret investigation", { isConfidential: true });
     await harness.db.insert(matterTeam).values({
       matterId: open.id,
       userId: contributorId,
-      role: "contributor",
     });
     const linked = await harness.app.inject({
       method: "POST",
@@ -265,8 +264,7 @@ describe("reach, archives, and Activity", () => {
       url: `/api/v1/matters/${open.number}/relations`,
       cookies: contributorCookies,
     });
-    expect(contributorRead.statusCode, contributorRead.body).toBe(200);
-    expect(contributorRead.json().related).toEqual([{ restricted: true }]);
+    expect(contributorRead.statusCode, contributorRead.body).toBe(403);
     expect(contributorRead.body).not.toContain(confidential.title);
     expect(contributorRead.body).not.toContain(String(confidential.number));
 

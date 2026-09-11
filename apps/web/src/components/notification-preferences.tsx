@@ -8,7 +8,7 @@
  * **One grid, two panes** (M20/9). The API answers all six notification
  * groups, and which of them a surface draws is the surface's business:
  * Personal → Notifications draws the staff groups, and the portal's
- * settings surface draws `requester_events` alone. So the caller passes
+ * settings surface draws Request updates, mentions, and record activity. So the caller passes
  * the order it wants and this module owns everything else — the copy,
  * the layout, the save chain, and what a refused write does.
  *
@@ -82,7 +82,7 @@ export const GROUP_COPY: Record<
     detail: defineMessage({
       id: "settings.notifications.group.activity.detail",
       defaultMessage:
-        "Status changes, comments, documents, and signatures on records where you're the Owner, on the team, or a watcher.",
+        "Status changes, comments, documents, and signatures on records where you're the Owner, or on the team.",
     }),
   },
   dates_approaching: {
@@ -412,9 +412,11 @@ export function NotificationSwitchGrid({
   state,
   emailOnlyGroups = [],
   inAppOnlyGroups = [],
+  copy = GROUP_COPY,
 }: Readonly<{
   /** Which groups this pane draws, in the order it draws them. */
   order: readonly EventGroup[];
+  copy?: typeof GROUP_COPY;
   state: PreferenceState;
   /** Briefing sections that have no per-publication bell channel. */
   emailOnlyGroups?: readonly EventGroup[];
@@ -468,10 +470,10 @@ export function NotificationSwitchGrid({
           >
             <div className="flex flex-1 flex-col gap-0.5 @lg/prefs:pe-4">
               <span id={labelId} className="text-base font-medium text-primary">
-                <FormattedMessage {...GROUP_COPY[group].label} />
+                <FormattedMessage {...copy[group].label} />
               </span>
               <span id={detailId} className="text-sm text-muted">
-                <FormattedMessage {...GROUP_COPY[group].detail} />
+                <FormattedMessage {...copy[group].detail} />
               </span>
             </div>
             <div className="flex gap-6 @lg/prefs:gap-0">

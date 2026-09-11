@@ -622,7 +622,7 @@ type ContractPayloads = {
     changed: ChangedFields;
     /** Present when DD-015's narrower writer made the edit, preserving
      * the role at the time of the append even if the user changes role later. */
-    actorRole?: "contributor";
+    actorRole?: "contributor" | "business_user";
   };
   "contract.status_changed": {
     number: number;
@@ -647,8 +647,16 @@ type ContractPayloads = {
     }[];
   };
   "contract.type_reassigned": { number: number; title: string; from: string; to: string };
-  "contract.team_added": { number: number; title: string; member: string; role: string };
-  "contract.team_removed": { number: number; title: string; member: string; role: string };
+  "contract.portal_access_excluded": {
+    number: number;
+    title: string;
+    userId: string;
+    member: string;
+    source: string;
+    affiliatedAt: string;
+  };
+  "contract.team_added": { number: number; title: string; member: string; role?: string };
+  "contract.team_removed": { number: number; title: string; member: string; role?: string };
   /** `created` says whether the organization was born here, so the
    * viewer can read "added Helix Labs GmbH (new)" only for that. */
   "contract.counterparty_added": {
@@ -828,7 +836,7 @@ type MatterPayloads = {
     title: string;
     changed: Record<string, { from: unknown; to: unknown }>;
     /** Present when DD-015's narrower writer made the edit. */
-    actorRole?: "contributor";
+    actorRole?: "contributor" | "business_user";
   };
   "matter.status_changed": {
     number: number;
@@ -839,8 +847,16 @@ type MatterPayloads = {
     toCategory: "open" | "closed";
     closingNote?: string;
   };
-  "matter.team_added": { number: number; title: string; member: string; role: string };
-  "matter.team_removed": { number: number; title: string; member: string; role: string };
+  "matter.portal_access_excluded": {
+    number: number;
+    title: string;
+    userId: string;
+    member: string;
+    source: string;
+    affiliatedAt: string;
+  };
+  "matter.team_added": { number: number; title: string; member: string; role?: string };
+  "matter.team_removed": { number: number; title: string; member: string; role?: string };
   "matter.archived": { number: number; title: string };
   "matter.restored": { number: number; title: string };
   "matter.type_reassigned": { number: number; title: string; from: string; to: string };
@@ -916,7 +932,7 @@ type DocumentPayloads = {
     /** Present when the first file was copied out of a thread. */
     sourceCommentId?: string;
     /** Preserves DD-015's narrower writer at append time. */
-    actorRole?: "contributor";
+    actorRole?: "contributor" | "business_user";
   };
   "document.version_added": {
     documentId: string;
@@ -927,7 +943,7 @@ type DocumentPayloads = {
     /** Present when this round was copied out of a thread. */
     sourceCommentId?: string;
     /** Preserves DD-015's narrower writer at append time. */
-    actorRole?: "contributor";
+    actorRole?: "contributor" | "business_user";
   };
   "document.redline_generated": {
     documentId: string;

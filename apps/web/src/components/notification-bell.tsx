@@ -418,6 +418,7 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
             <ol>
               {items.map((item, index) => (
                 <NotificationRow
+                  surface={surface}
                   key={item.id}
                   item={item}
                   onOpen={openItem}
@@ -467,11 +468,13 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
  * the paint.
  */
 function NotificationRow({
+  surface,
   item,
   onOpen,
   ref,
 }: Readonly<{
   item: BellItem;
+  surface: BellSurface;
   /** The reader opened this item: it is read now, and the centre
    * closes behind them. */
   onOpen: (item: BellItem) => void;
@@ -480,7 +483,7 @@ function NotificationRow({
   ref?: Ref<HTMLAnchorElement>;
 }>) {
   const intl = useIntl();
-  const { icon: Icon, sentence, href } = narrateNotification(intl, item);
+  const { icon: Icon, sentence, href } = narrateNotification(intl, item, surface);
   const unread = item.readAt === null;
 
   const face = (

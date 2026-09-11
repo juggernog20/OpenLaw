@@ -3,6 +3,11 @@
 /** M22/5's editable matter record: one commit per field and recoverable lifecycle acts. */
 import { subscribeLiveEvents } from "../lib/events";
 import { MatterConversionValue } from "../components/intake/matter-conversion-value";
+import { AiField } from "../components/ui/ai-field";
+import {
+  DescriptionSourceToggle,
+  RequesterDescription,
+} from "../components/intake/description-source-toggle";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Briefcase, ChevronRight, Settings } from "lucide-react";
 import { defineMessage, FormattedMessage, useIntl, type IntlShape } from "react-intl";
@@ -153,6 +158,8 @@ export async function matterRecordLoader({ params, request }: LoaderFunctionArgs
   return {
     user,
     matter: record.data.matter,
+    creator: record.data.creator ?? null,
+    originalIntake: record.data.originalIntake ?? null,
     fields: record.data.fields,
     customFieldRefs: record.data.customFieldRefs,
     // Keep older cached/stubbed envelopes readable across the M22/5
@@ -185,6 +192,7 @@ type FieldKey =
   | "description"
   | "matterTypeId"
   | "managerId"
+  | "businessOwnerId"
   | "priority"
   | "risk"
   | "statusId"
@@ -335,6 +343,7 @@ function MatterRecord() {
   }
   const [title, setTitle] = useState(saved.title);
   const [description, setDescription] = useState(saved.description ?? "");
+  const [showRequesterDescription, setShowRequesterDescription] = useState(false);
   const [fieldStatus, setFieldStatus] = useState<Partial<Record<FieldKey, FieldStatus>>>({});
   const [fieldError, setFieldError] = useState<Partial<Record<FieldKey, string | undefined>>>({});
   const [retypeTo, setRetypeTo] = useState<MatterTypeOption | null>(null);
@@ -347,16 +356,13 @@ function MatterRecord() {
   const [matterLifecycleStatus, setMatterLifecycleStatus] = useState<FieldStatus>("idle");
   const [matterLifecycleError, setMatterLifecycleError] = useState<string | null>(null);
   const canEdit = isMemberPlus(user.role);
-  const contributor = user.role === "contributor";
   const archived = saved.archivedAt !== null;
   const frozen = !canEdit || archived;
   /** DD-015's business-owned seams stay writable on a live record for
    * a Contributor who reached it; legal-managed details keep frozen. */
-  const businessFrozen = archived || (!canEdit && !contributor);
+  const businessFrozen = archived || !canEdit;
   const canManageAudience =
-    user.role === "administrator" ||
-    saved.manager?.id === user.id ||
-    team.some((member) => member.id === user.id && member.role === "creator");
+    user.role === "administrator" || saved.manager?.id === user.id || saved.createdBy === user.id;
   const audienceLocked = saved.isConfidential && !canManageAudience;
   const people = useMemo<FieldReference[]>(
     () =>
@@ -634,6 +640,8 @@ function MatterRecord() {
   const teamApplet = useMatterTeamApplet({
     number: saved.number,
     manager: saved.manager,
+    businessOwner: saved.businessOwner,
+    creator: loader.creator,
     team,
     users,
     frozen,
@@ -983,11 +991,17 @@ function MatterRecord() {
                         <span className="text-sm font-medium text-secondary">
                           <FormattedMessage id="matters.field.title" defaultMessage="Title" />
                         </span>
-                        <p className="flex h-8 items-center text-md">{saved.title}</p>
+                        <AiField
+                          active={Boolean(saved.aiUnverified?.title)}
+                          className="-mx-2 w-fit px-2"
+                        >
+                          <p className="flex h-8 items-center text-md">{saved.title}</p>
+                        </AiField>
                       </div>
                     ) : (
                       <InlineText
                         id="matter-title"
+                        aiGenerated={Boolean(saved.aiUnverified?.title)}
                         label={intl.formatMessage({
                           id: "matters.field.title",
                           defaultMessage: "Title",
@@ -1011,6 +1025,7 @@ function MatterRecord() {
                       {" "}
                       <EditableSelectFact
                         id="matter-type"
+                        aiGenerated={Boolean(saved.aiUnverified?.matter_type)}
                         label={
                           <FormattedMessage id="matters.field.type" defaultMessage="Matter type" />
                         }
@@ -1062,6 +1077,48 @@ function MatterRecord() {
                         })),
                       ]}
                     />
+                    <EditableSelectFact
+                      id="matter-business-owner"
+                      label={
+                        <FormattedMessage
+                          id="contracts.form.businessOwner"
+                          defaultMessage="Business Owner"
+                        />
+                      }
+                      frozen={frozen}
+                      value={saved.businessOwner?.id ?? ""}
+                      display={
+                        saved.businessOwner?.displayName ??
+                        intl.formatMessage({
+                          id: "matters.unassigned",
+                          defaultMessage: "Unassigned",
+                        })
+                      }
+                      status={fieldStatus.businessOwnerId ?? "idle"}
+                      error={fieldError.businessOwnerId}
+                      onChange={(businessOwnerId) =>
+                        void commit("businessOwnerId", { businessOwnerId: businessOwnerId || null })
+                      }
+                      options={[
+                        {
+                          value: "",
+                          label: intl.formatMessage({
+                            id: "matters.unassigned",
+                            defaultMessage: "Unassigned",
+                          }),
+                        },
+                        ...(saved.businessOwner &&
+                        !users.some((person) => person.id === saved.businessOwner!.id)
+                          ? [
+                              {
+                                value: saved.businessOwner.id,
+                                label: saved.businessOwner.displayName,
+                              },
+                            ]
+                          : []),
+                        ...users.map((person) => ({ value: person.id, label: person.displayName })),
+                      ]}
+                    />
                     <MatterConversionValue
                       active={Boolean(saved.aiUnverified?.priority)}
                       number={saved.number}
@@ -1071,6 +1128,7 @@ function MatterRecord() {
                       {" "}
                       <EditableSelectFact
                         id="matter-priority"
+                        aiGenerated={Boolean(saved.aiUnverified?.priority)}
                         label={
                           <FormattedMessage id="matters.field.priority" defaultMessage="Priority" />
                         }
@@ -1162,41 +1220,56 @@ function MatterRecord() {
                 </div>
               </section>
               <MatterConversionValue
-                active={Boolean(saved.aiUnverified?.description)}
+                active={Boolean(saved.aiUnverified?.description) && !showRequesterDescription}
                 number={saved.number}
                 slug="description"
                 onConfirmed={!frozen ? confirmedConversion : undefined}
               >
                 {" "}
                 <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised">
-                  <header className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
+                  <header className="flex min-h-(--height-section-header) flex-wrap items-center justify-between gap-2 py-2 rounded-t-card border-b border-border-default bg-section-header px-4">
                     <h2 className="text-base font-semibold">
                       <FormattedMessage
                         id="matters.field.description"
                         defaultMessage="Description"
                       />
                     </h2>
+                    {loader.originalIntake && (
+                      <DescriptionSourceToggle
+                        requester={showRequesterDescription}
+                        onChange={setShowRequesterDescription}
+                      />
+                    )}
                   </header>
                   <div className="p-4">
-                    {businessFrozen ? (
-                      <p className="whitespace-pre-wrap text-base text-muted">
-                        {saved.description || notProvided(intl)}
-                      </p>
+                    {showRequesterDescription && loader.originalIntake ? (
+                      <RequesterDescription description={loader.originalIntake.description} />
+                    ) : businessFrozen ? (
+                      <AiField
+                        active={Boolean(saved.aiUnverified?.description)}
+                        className="-mx-2 w-fit px-2"
+                      >
+                        <p className="whitespace-pre-wrap text-base text-muted">
+                          {saved.description || notProvided(intl)}
+                        </p>
+                      </AiField>
                     ) : (
                       <>
-                        <AutoResizeTextarea
-                          aria-label={intl.formatMessage({
-                            id: "matters.field.description",
-                            defaultMessage: "Description",
-                          })}
-                          className={TEXTAREA_CLASS}
-                          value={description}
-                          onChange={(event) => setDescription(event.target.value)}
-                          onBlur={() => commitText("description")}
-                          onKeyDown={(event) => {
-                            if (event.key === "Escape") setDescription(saved.description ?? "");
-                          }}
-                        />
+                        <AiField active={Boolean(saved.aiUnverified?.description)} className="flex">
+                          <AutoResizeTextarea
+                            aria-label={intl.formatMessage({
+                              id: "matters.field.description",
+                              defaultMessage: "Description",
+                            })}
+                            className={TEXTAREA_CLASS}
+                            value={description}
+                            onChange={(event) => setDescription(event.target.value)}
+                            onBlur={() => commitText("description")}
+                            onKeyDown={(event) => {
+                              if (event.key === "Escape") setDescription(saved.description ?? "");
+                            }}
+                          />
+                        </AiField>
                         <StatusNote
                           status={fieldStatus.description ?? "idle"}
                           detail={fieldError.description}
@@ -1226,10 +1299,9 @@ function MatterRecord() {
                         {" "}
                         <MatterCustomField
                           field={field}
+                          aiGenerated={Boolean(saved.aiUnverified?.[`field:${field.slug}`])}
                           saved={saved.customFields[field.slug]}
-                          frozen={
-                            frozen && !(contributor && !archived && field.fieldTag === "business")
-                          }
+                          frozen={frozen}
                           people={peopleRefs}
                           entities={entityChoices(saved.customFields[field.slug])}
                           status={fieldStatus[`field:${field.slug}`] ?? "idle"}
@@ -1264,7 +1336,7 @@ function MatterRecord() {
                 documents={paper}
                 folders={folders}
                 nextCursor={paperCursor}
-                supportingUploads={contributor && !archived}
+                supportingUploads={false}
                 reading={reading?.versionId ?? null}
                 amending={null}
                 onAmendmentOpened={() => undefined}
@@ -1317,14 +1389,7 @@ function MatterRecord() {
                             setTeam((current) =>
                               current.some((member) => member.id === id)
                                 ? current
-                                : [
-                                    ...current,
-                                    {
-                                      ...person,
-                                      role:
-                                        person.role === "contributor" ? "contributor" : "member",
-                                    },
-                                  ],
+                                : [...current, person],
                             );
                         },
                       }
@@ -1403,6 +1468,7 @@ function MatterRecord() {
 function InlineText({
   id,
   label,
+  aiGenerated = false,
   value,
   status,
   error,
@@ -1412,6 +1478,8 @@ function InlineText({
 }: {
   id: string;
   label: string;
+  /** DES-070: the purple frame sits on the control, not the field block. */
+  aiGenerated?: boolean;
   value: string;
   status: FieldStatus;
   error?: string;
@@ -1422,20 +1490,22 @@ function InlineText({
   return (
     <div className="flex flex-col gap-1.5">
       <Label htmlFor={id}>{label}</Label>
-      <Input
-        id={id}
-        aria-label={label}
-        value={value}
-        onChange={(event) => onValue(event.target.value)}
-        onBlur={onCommit}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            onCommit();
-          }
-          if (event.key === "Escape") onCancel();
-        }}
-      />
+      <AiField active={aiGenerated} className="flex">
+        <Input
+          id={id}
+          aria-label={label}
+          value={value}
+          onChange={(event) => onValue(event.target.value)}
+          onBlur={onCommit}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              onCommit();
+            }
+            if (event.key === "Escape") onCancel();
+          }}
+        />
+      </AiField>
       <StatusNote status={status} detail={error} />
     </div>
   );
@@ -1444,6 +1514,7 @@ function InlineText({
 function EditableSelectFact({
   id,
   label,
+  aiGenerated = false,
   frozen,
   value,
   display,
@@ -1454,6 +1525,7 @@ function EditableSelectFact({
 }: {
   id: string;
   label: ReactNode;
+  aiGenerated?: boolean;
   frozen: boolean;
   value: string;
   display: string;
@@ -1469,21 +1541,25 @@ function EditableSelectFact({
       </dt>
       <dd className="mt-1.5 text-md">
         {frozen ? (
-          display
+          <AiField active={aiGenerated} className="-mx-2 w-fit px-2">
+            {display}
+          </AiField>
         ) : (
-          <select
-            id={id}
-            className={CONTROL_CLASS}
-            value={value}
-            disabled={status === "saving"}
-            onChange={(event) => onChange(event.target.value)}
-          >
-            {options.map((option) => (
-              <option key={option.value || "empty"} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <AiField active={aiGenerated} className="flex">
+            <select
+              id={id}
+              className={CONTROL_CLASS}
+              value={value}
+              disabled={status === "saving"}
+              onChange={(event) => onChange(event.target.value)}
+            >
+              {options.map((option) => (
+                <option key={option.value || "empty"} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </AiField>
         )}
         {!frozen && <StatusNote status={status} detail={error} />}
       </dd>
@@ -1493,6 +1569,7 @@ function EditableSelectFact({
 
 function MatterCustomField({
   field,
+  aiGenerated = false,
   saved,
   frozen,
   people,
@@ -1503,6 +1580,7 @@ function MatterCustomField({
   onCommit,
 }: {
   field: MatterField;
+  aiGenerated?: boolean;
   saved: CustomFieldValue | undefined;
   frozen: boolean;
   people: readonly FieldReference[];
@@ -1562,38 +1640,45 @@ function MatterCustomField({
         )}
       </Label>
       {frozen ? (
-        <span>
-          {!isAnswered(saved)
-            ? intl.formatMessage({ id: "matters.record.notRecorded", defaultMessage: "—" })
-            : field.fieldType === "user"
-              ? (people.find((person) => person.id === saved)?.label ?? String(saved))
-              : field.fieldType === "entity"
-                ? (entities.find((entity) => entity.id === saved)?.label ?? String(saved))
-                : Array.isArray(saved)
-                  ? saved.join(", ")
-                  : typeof saved === "number"
-                    ? intl.formatNumber(saved, { maximumFractionDigits: 20 })
-                    : String(saved)}
-        </span>
+        <AiField active={aiGenerated} className="-mx-2 w-fit px-2">
+          <span>
+            {!isAnswered(saved)
+              ? intl.formatMessage({ id: "matters.record.notRecorded", defaultMessage: "—" })
+              : field.fieldType === "user"
+                ? (people.find((person) => person.id === saved)?.label ?? String(saved))
+                : field.fieldType === "entity"
+                  ? (entities.find((entity) => entity.id === saved)?.label ?? String(saved))
+                  : Array.isArray(saved)
+                    ? saved.join(", ")
+                    : typeof saved === "number"
+                      ? intl.formatNumber(saved, { maximumFractionDigits: 20 })
+                      : String(saved)}
+          </span>
+        </AiField>
       ) : (
-        <CustomFieldControl
-          id={id}
-          field={field}
-          draft={draft}
-          people={people}
-          entities={entities}
-          required={field.isRequired}
-          invalid={status === "error"}
-          onDraft={(next) => {
-            setDraft(next);
-            if (commitsOnChange(field)) commitDraft(next);
-          }}
-          onBlur={() => commitDraft()}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") commitDraft();
-            if (event.key === "Escape") setDraft(toDraft(field, saved));
-          }}
-        />
+        <AiField
+          active={aiGenerated}
+          className={field.fieldType === "boolean" ? "w-fit" : undefined}
+        >
+          <CustomFieldControl
+            id={id}
+            field={field}
+            draft={draft}
+            people={people}
+            entities={entities}
+            required={field.isRequired}
+            invalid={status === "error"}
+            onDraft={(next) => {
+              setDraft(next);
+              if (commitsOnChange(field)) commitDraft(next);
+            }}
+            onBlur={() => commitDraft()}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") commitDraft();
+              if (event.key === "Escape") setDraft(toDraft(field, saved));
+            }}
+          />
+        </AiField>
       )}
       {!frozen && <StatusNote status={status} detail={error} />}
     </div>

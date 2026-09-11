@@ -15,7 +15,7 @@ The Portal bell concerns your own Requests. It returns you to the Request, inclu
 
 ## Change preferences outside the Portal
 
-For an Administrator, Legal Team Member, or Contributor:
+For an Administrator or Legal Team Member:
 
 1. Open your profile menu and select **Settings**.
 2. Under **Personal**, select **Notifications**.
@@ -32,17 +32,17 @@ Changes apply to future events. Turning **Email** off keeps that group's bell it
 | **New requests**             | New Requests arriving in the Inbox for Administrators and Legal Team Members.                                                               | In-app on; Email off.                                 |
 | **Knowledge items**          | Newly published Knowledge Items in the eligible Legal user's daily briefing.                                                                | Email on; no In-app switch.                           |
 
-A visible preference does not grant the underlying role or record access. A Contributor does not receive Inbox arrivals or Legal-only Knowledge updates because a switch is present. Activity notifications go to the record's audience, not every Legal Team Member who could open it. Comment tiers and separately Confidential Documents can narrow that audience further.
+A visible preference does not grant the underlying role or record access. A Business User does not receive Inbox arrivals or Legal-only Knowledge updates because a switch is present. Activity notifications go to the record's audience, not every Legal Team Member who could open it. Comment tiers and separately Confidential Documents can narrow that audience further.
 
 Your own actions normally do not notify you. A Request receipt is an exception: submitting a Request can send its receipt to you. A mention uses **Assigned to you**, rather than a second ordinary-comment notification for the same person.
 
 ## Change Portal preferences
 
 1. In the Portal header, select **Notification settings**.
-2. Under **Request updates**, set **In-app** and **Email**.
+2. Set **In-app** and **Email** for **Request updates**, **Mentions**, and **Activity on your records**.
 3. Wait for the saved indication and confirm the result after reloading if needed.
 
-Both start on. This group covers receipts, replies, status changes, and decisions on your own Requests. **Email** off leaves the bell on. **In-app** off stops both channels for new Request updates. The Portal does not offer staff event groups or Briefing settings.
+Request updates and Mentions start on for both channels. Activity on your records starts on for In-app and off for Email. Request updates covers receipts, replies, status changes, and decisions on your own Requests. Mentions covers shared comments that name you. Record activity includes shared comments, supporting Documents, and Contract status changes. **Email** off leaves the bell on. **In-app** off stops both channels for new Request updates. The Portal offers only events for work you can reach and does not offer Briefing settings. Removing your team membership removes record notifications from your Portal bell.
 
 ## Set the daily briefing
 

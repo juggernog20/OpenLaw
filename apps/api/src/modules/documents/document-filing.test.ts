@@ -129,8 +129,8 @@ beforeAll(async () => {
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
     [OUTSIDER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
-    [STRANGER, "contributor"],
+    [CONTRIBUTOR, "business_user"],
+    [STRANGER, "business_user"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, user.id));
@@ -175,12 +175,12 @@ async function newContract(title: string): Promise<ContractRow> {
 }
 
 /** Puts somebody on a contract's team, requiring success. */
-async function putOnTeam(number: number, userId: string, role: string): Promise<void> {
+async function putOnTeam(number: number, userId: string): Promise<void> {
   const res = await harness.app.inject({
     method: "POST",
     url: `/api/v1/contracts/${number}/team`,
     cookies: adminCookies,
-    payload: { userId, role },
+    payload: { userId },
   });
   expect(res.statusCode, res.body).toBe(201);
 }
@@ -444,7 +444,7 @@ describe("filing a document into a folder", () => {
 
   it("refuses a Contributor plainly, because they can already see the row", async () => {
     const contract = await newContract("Orion Cloud — the contributor's filing");
-    await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
+    await putOnTeam(contract.number, idOf(CONTRIBUTOR));
     const folder = await made(contract.number, "Executed");
     const document = await uploaded(contract.number, "signed.pdf");
 
@@ -649,7 +649,7 @@ describe("a folder's count", () => {
 describe("silent omission inside a folder", () => {
   it("leaves a confidential document out of the listing and out of the count", async () => {
     const contract = await newContract("Orion Cloud — the walled filing");
-    await putOnTeam(contract.number, idOf(MEMBER), "member");
+    await putOnTeam(contract.number, idOf(MEMBER));
     const folder = await made(contract.number, "Executed");
     const walled = await uploaded(contract.number, "walled.pdf");
     const open = await uploaded(contract.number, "open.pdf");
@@ -737,7 +737,7 @@ describe("dissolving a folder that holds documents", () => {
 
   it("re-files an archived document too, and one the deleter cannot see", async () => {
     const contract = await newContract("Orion Cloud — the dissolved walled folder");
-    await putOnTeam(contract.number, idOf(MEMBER), "member");
+    await putOnTeam(contract.number, idOf(MEMBER));
     const folder = await made(contract.number, "Executed");
     const walled = await uploaded(contract.number, "walled.pdf");
     const gone = await uploaded(contract.number, "archived.pdf");
@@ -839,18 +839,18 @@ describe("a record this viewer cannot reach", () => {
     expect(withoutInstance(outside.json())).toEqual(withoutInstance(nowhere.json()));
   });
 
-  it("answers a folder-filtered read to a Contributor off the team the same way", async () => {
+  it("answers a folder-filtered read to a Business User off the team the same way", async () => {
     const contract = await newContract("Orion Cloud — the stranger's folder read");
     const folder = await made(contract.number, "Executed");
 
     const outside = await listDocuments(strangerCookies, contract.number, { folder: folder.id });
     const nowhere = await listDocuments(strangerCookies, NEVER_CREATED, { folder: folder.id });
 
-    // A Contributor reads the records they are on and nothing else. The
+    // A Business User reads the records they are on and nothing else. The
     // read floor lets them in, so reach is what refuses them — and it
     // has to refuse identically at both addresses.
-    expect(outside.statusCode, outside.body).toBe(404);
-    expect(nowhere.statusCode, nowhere.body).toBe(404);
+    expect(outside.statusCode, outside.body).toBe(403);
+    expect(nowhere.statusCode, nowhere.body).toBe(403);
     expect(withoutInstance(outside.json())).toEqual(withoutInstance(nowhere.json()));
   });
 

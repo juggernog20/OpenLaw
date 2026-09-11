@@ -61,12 +61,10 @@
  * of facts a Request can still change — still live, still this person's
  * — and it fails the same way, silently.
  *
- * **The predicate is also what keeps the two bells apart.** A staff
- * mark-all-read cannot reach a group-5 row, because a group-5 row is not
- * in the staff predicate at all; the portal's cannot reach a contract
- * row for the mirror reason. A person who is both a Member+ and a
- * Requester has two bells with two badges, and neither one reads the
- * other.
+ * Request events distinguish staff Inbox arrivals from the Requester's
+ * Portal updates. Record events on the Portal require current team
+ * membership and the shared audience. Every badge and read action uses
+ * the same access predicate as its list.
  *
  * **The list pages the way every feed in this API pages**: keyset on
  * `(created_at, id)`, a server-fixed page size, and a cursor that is one
@@ -97,7 +95,7 @@ import {
   sql,
 } from "@openlaw/db";
 import type { Executor } from "@openlaw/db";
-import { requireAuth } from "../../auth/guards.js";
+import { requireAuth, requireRole } from "../../auth/guards.js";
 import type { AuthenticatedUser } from "../../auth/user.js";
 import { recordActivity } from "../../lib/activity.js";
 import { notificationScope, type NotificationSurface } from "../../lib/notifications/audience.js";
@@ -298,48 +296,11 @@ const PORTAL_BELL: BellMount = {
     readAll: "markAllPortalNotificationsRead",
   },
   summaries: {
-    list:
-      "The signed-in person's portal notifications, newest first " +
-      "(NOT-001, INT-001) — NOT-002's group 5, about their own " +
-      "Requests. The gate is a session and nothing else, the portal's " +
-      "own rule: Member+ staff submit Requests too, and on this surface " +
-      "they are a Requester like anybody else. There is no way to ask " +
-      "for anybody else's, and no way to reach a contract item from " +
-      "here — that is the staff notification centre, at " +
-      "`/notifications`. An item about a Request the reader is no " +
-      "longer the Requester of, or one that has since been archived, is " +
-      "silently omitted: no row, no gap, and no number that says " +
-      "something was left out. Paged from a server-fixed page size: " +
-      "pass the previous page's `nextCursor` to read further back. A " +
-      "cursor naming nothing in this person's bell answers an empty " +
-      "page rather than an error",
-    count:
-      "How many unread portal notifications the signed-in person has " +
-      "(NOT-005) — the number behind the portal bell's badge. It is the " +
-      "whole count, not the capped one: '9+' is how the badge draws it, " +
-      "and the cap belongs to the surface. It is computed over exactly " +
-      "the items the list would answer with, through the same " +
-      "predicate, so an item about an archived Request leaves the count " +
-      "as silently as it leaves the list",
-    read:
-      "Mark the named portal items read — what opening one from the " +
-      "portal bell does (NOT-005, 2026-09-09 amendment). Drawing the " +
-      "panel writes nothing; the click on an item is the read, so the " +
-      "panel sends that one id. The body is a list of up to one page's " +
-      "worth, because a page is the most the panel ever holds. Ids that " +
-      "are not this person's, are already read, are about a Request " +
-      "they can no longer reach, or belong to their staff notification " +
-      "centre match nothing and are not refused — a refusal would " +
-      "answer whether an id exists. Answers the unread count that " +
-      "remains",
+    list: "Portal notifications for the signed-in person's Requests and current Contract or Matter team memberships. Legal content, archived work, and revoked memberships are omitted before pagination.",
+    count: "Unread count over exactly the Portal notifications the current user may read.",
+    read: "Mark named reachable Portal notifications read. Unreachable or already-read ids match nothing. Returns the remaining unread count.",
     readAll:
-      "Mark every unread portal item read — the affordance that zeroes " +
-      "the portal badge (NOT-005). It covers exactly what the badge " +
-      "counts, so an item about an archived Request is left alone, and " +
-      "so is a staff item on the same person's notification centre: it " +
-      "is not on this surface at all. Answers the unread count that " +
-      "remains, which is zero unless something landed while the request " +
-      "was in flight",
+      "Mark every currently reachable Portal notification read and return the remaining unread count.",
   },
 };
 
@@ -354,11 +315,13 @@ const PORTAL_BELL: BellMount = {
  */
 function bellRoutes(mount: BellMount): FastifyPluginAsyncZod {
   const { surface } = mount;
+  const requireReader =
+    surface === "portal" ? requireAuth : requireRole("administrator", "legal_team_member");
   return async (app) => {
     app.get(
       mount.path,
       {
-        preHandler: requireAuth,
+        preHandler: requireReader,
         schema: {
           operationId: mount.operationIds.list,
           summary: mount.summaries.list,
@@ -434,7 +397,7 @@ function bellRoutes(mount: BellMount): FastifyPluginAsyncZod {
     app.get(
       `${mount.path}/unread-count`,
       {
-        preHandler: requireAuth,
+        preHandler: requireReader,
         schema: {
           operationId: mount.operationIds.count,
           summary: mount.summaries.count,
@@ -448,7 +411,7 @@ function bellRoutes(mount: BellMount): FastifyPluginAsyncZod {
     app.post(
       `${mount.path}/read`,
       {
-        preHandler: requireAuth,
+        preHandler: requireReader,
         schema: {
           operationId: mount.operationIds.read,
           summary: mount.summaries.read,
@@ -493,7 +456,7 @@ function bellRoutes(mount: BellMount): FastifyPluginAsyncZod {
     app.post(
       `${mount.path}/read-all`,
       {
-        preHandler: requireAuth,
+        preHandler: requireReader,
         schema: {
           operationId: mount.operationIds.readAll,
           summary: mount.summaries.readAll,
@@ -551,7 +514,7 @@ export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
           "opinion can be held about a group before its first event " +
           "exists. Which event groups a surface draws " +
           "is the surface's business — the staff pane draws four and " +
-          "the portal pane draws `requester_events` alone. There is no " +
+          "the Portal pane draws Request updates, mentions, and record activity. There is no " +
           "user parameter — a preference is one person's, and the " +
           "signed-in person is the whole scope",
         tags: ["notifications"],

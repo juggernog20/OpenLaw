@@ -889,7 +889,11 @@ async function verify(fingerprint) {
   for (const seeded of fingerprint.users) {
     const found = users.find((user) => user.email === seeded.email);
     check(found !== undefined, `user ${seeded.email} is gone after the upgrade`);
-    same(found.role, seeded.role, `role of ${seeded.email}`);
+    same(
+      found.role,
+      seeded.role === "contributor" ? "business_user" : seeded.role,
+      `role of ${seeded.email}`,
+    );
   }
 
   const contractTypes = (await get("/api/v1/contract-types")).contractTypes;
@@ -1074,7 +1078,7 @@ async function verify(fingerprint) {
   const matterTeam = (await get(`/api/v1/matters/${fingerprint.matterTeam.matterNumber}`)).team;
   const teamMember = matterTeam.find((row) => row.id === fingerprint.matterTeam.userId);
   check(teamMember !== undefined, "the seeded Matter team member is gone after the upgrade");
-  same(teamMember.role, fingerprint.matterTeam.role, "seeded Matter team role");
+  check(!Object.hasOwn(teamMember, "role"), "Matter membership must not retain a role tag");
 
   const matterTasks = (await get(`/api/v1/matters/${fingerprint.matterTask.matterNumber}/tasks`))
     .tasks;

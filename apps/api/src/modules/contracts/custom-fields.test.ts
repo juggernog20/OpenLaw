@@ -70,7 +70,7 @@ beforeAll(async () => {
   await harness.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, member.id));
   memberId = member.id;
   const contributor = await provisionUser(harness.app.auth, CONTRIBUTOR);
-  await harness.db.update(users).set({ role: "contributor" }).where(eq(users.id, contributor.id));
+  await harness.db.update(users).set({ role: "business_user" }).where(eq(users.id, contributor.id));
   contributorId = contributor.id;
   adminCookies = await signInCookies(harness.app, ADMIN.email, ADMIN.password);
   memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
@@ -254,8 +254,8 @@ const auditRowsFor = async (id: string) =>
   ).filter((row) => row.entityId === id);
 
 describe("the fields a contract's type attaches (CTR-016)", () => {
-  it("projects only business Fields and values to a Contributor on the team", async () => {
-    const type = await newType("Contributor projection");
+  it("projects only business Fields and values to a Business User on the team", async () => {
+    const type = await newType("Business User projection");
     const business = await defineField({
       displayName: "Payment terms",
       fieldType: "text",
@@ -268,7 +268,7 @@ describe("the fields a contract's type attaches (CTR-016)", () => {
     });
     await attachField(type.id, business.fieldId, true);
     await attachField(type.id, legal.fieldId);
-    const contract = await newContract("Contributor fields", type.id, {
+    const contract = await newContract("Business User fields", type.id, {
       [business.slug]: "Net 30",
       [legal.slug]: "England and Wales",
     });
@@ -276,30 +276,29 @@ describe("the fields a contract's type attaches (CTR-016)", () => {
       method: "POST",
       url: `/api/v1/contracts/${contract.number}/team`,
       cookies: memberCookies,
-      payload: { userId: contributorId, role: "contributor" },
+      payload: { userId: contributorId },
     });
     expect(added.statusCode, added.body).toBe(201);
 
     const response = await harness.app.inject({
       method: "GET",
-      url: `/api/v1/contracts/${contract.number}`,
+      url: `/api/v1/portal/contracts/${contract.number}/work`,
       cookies: contributorCookies,
     });
     expect(response.statusCode, response.body).toBe(200);
-    expect(response.json().fields).toEqual([
+    expect(response.json().work.fields).toEqual([
       expect.objectContaining({ slug: business.slug, fieldTag: "business" }),
     ]);
-    expect(response.json().contract.customFields).toEqual({ [business.slug]: "Net 30" });
+    expect(response.json().work.customFields).toEqual({ [business.slug]: "Net 30" });
     const list = await harness.app.inject({
       method: "GET",
-      url: "/api/v1/contracts",
+      url: "/api/v1/portal/contracts",
       cookies: contributorCookies,
     });
     expect(list.statusCode, list.body).toBe(200);
     expect(
-      list.json().contracts.find((row: { number: number }) => row.number === contract.number)
-        ?.customFields,
-    ).toEqual({ [business.slug]: "Net 30" });
+      list.json().contracts.find((row: { number: number }) => row.number === contract.number),
+    ).not.toHaveProperty("customFields");
 
     for (const payload of [
       { customFields: { [business.slug]: "Net 45" } },
@@ -308,7 +307,7 @@ describe("the fields a contract's type attaches (CTR-016)", () => {
     ]) {
       const accepted = await harness.app.inject({
         method: "PATCH",
-        url: `/api/v1/contracts/${contract.number}`,
+        url: `/api/v1/portal/contracts/${contract.number}/work`,
         cookies: contributorCookies,
         payload,
       });
@@ -316,7 +315,7 @@ describe("the fields a contract's type attaches (CTR-016)", () => {
     }
     const required = await harness.app.inject({
       method: "PATCH",
-      url: `/api/v1/contracts/${contract.number}`,
+      url: `/api/v1/portal/contracts/${contract.number}/work`,
       cookies: contributorCookies,
       payload: { customFields: { [business.slug]: null } },
     });
@@ -332,11 +331,11 @@ describe("the fields a contract's type attaches (CTR-016)", () => {
     ]) {
       const refused = await harness.app.inject({
         method: "PATCH",
-        url: `/api/v1/contracts/${contract.number}`,
+        url: `/api/v1/portal/contracts/${contract.number}/work`,
         cookies: contributorCookies,
         payload,
       });
-      expect(refused.statusCode, refused.body).toBe(403);
+      expect([400, 403]).toContain(refused.statusCode);
     }
 
     const updates = (await auditRowsFor(contract.id)).filter(
@@ -344,7 +343,7 @@ describe("the fields a contract's type attaches (CTR-016)", () => {
     );
     expect(updates).toHaveLength(3);
     expect(updates.every((row) => row.actorId === contributorId)).toBe(true);
-    expect(updates.every((row) => row.payload.actorRole === "contributor")).toBe(true);
+    expect(updates.every((row) => row.payload.actorRole === "business_user")).toBe(true);
   });
 
   it("renders the type's live attachments in attachment order, and no others", async () => {

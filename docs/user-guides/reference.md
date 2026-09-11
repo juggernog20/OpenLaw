@@ -42,15 +42,14 @@ See [Entities and Counterparties](entities-and-counterparties.md), [Entity recor
 
 Both account role and record access apply. This table is a starting point; [roles and record access](roles-and-access.md) gives Confidential access and Document/conversation audience rules.
 
-| Reader              | Reach and action limits                                                                                                                                                                                                              |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Administrator       | Legal work and organization settings, including all Confidential Contracts, Matters, and Entities. Individual actions can still require the named person, such as answering an Approval Request.                                     |
-| Legal Team Member   | Legal work on reachable records. Confidential Contracts/Matters need the applicable Owner, Manager, or team access; Confidential Entities use Grants. Organization settings remain Administrator-only.                               |
-| Contributor         | Shared Contracts and Matters through their teams. Can edit permitted business information, supply supporting Documents, and join permitted conversations. Cannot perform legal actions, complete Tasks, or manage primary Documents. |
-| Business User       | Their own Portal Requests and published Knowledge shared with their audience. Conversion does not open the staff Contract or Matter workspace to them.                                                                               |
-| Deployment operator | Maintains the installation and service configuration. This is an operational responsibility, not an additional app account role. Use an appropriate account for in-app work.                                                         |
+| Reader              | Reach and action limits                                                                                                                                                                                |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Administrator       | Legal work and organization settings, subject to Confidential Contract and Matter access; all Entities. Individual actions can still require the named person, such as answering an Approval Request.  |
+| Legal Team Member   | Legal work on reachable records. Confidential Contracts/Matters need the applicable Owner, Manager, or team access; Confidential Entities use Grants. Organization settings remain Administrator-only. |
+| Business User       | Their own Requests, team Contracts and Matters, and published Knowledge shared with their Portal audience. Conversion does not open the staff Contract or Matter workspace to them.                    |
+| Deployment operator | Maintains the installation and service configuration. This is an operational responsibility, not an additional app account role. Use an appropriate account for in-app work.                           |
 
-A relationship, mention, Task assignment, or copied link does not itself share a record. A Contributor on one Contract does not acquire access to its related Matter. See [Contributor work](contributor-guide.md) and [Request updates](follow-request.md).
+A relationship, mention, Task assignment, or copied link does not itself share a record. A Business User on one Contract does not acquire access to its related Matter. See [Portal record work](contributor-guide.md) and [Request updates](follow-request.md).
 
 ## Documents and derived files
 
@@ -88,6 +87,6 @@ The applicable [Document reading guide](document-previews.md) describes format-s
 
 Administrators configure types, Status labels, Fields, Matter Templates, Approver groups, request forms, reminder lead times, and eligible organization settings. A Field's label can change while its stable identifier remains. A type's required answers and available Fields can differ from another type's. See [types, Statuses, and Fields](types-statuses-fields.md), [Matter Templates](matter-templates.md), and [Request forms](request-forms.md).
 
-Account roles, Contract Stages, Matter Categories, and the distinction between Entity and Counterparty are fixed concepts. Configuration does not make a Contributor a Legal Team Member or turn an Approval into a signature.
+Account roles, Contract Stages, Matter Categories, and the distinction between Entity and Counterparty are fixed concepts. Configuration does not make a Business User a Legal Team Member or turn an Approval into a signature.
 
 Personal preferences belong to the signed-in person; organization settings belong to the Administrator; environment configuration, storage, backups, and service operation belong to the deployment operator. Follow [personal settings](personal-settings.md), [organization and users](organisation-and-users.md), and [deployment configuration](deployment-configuration.md) for the right controls.

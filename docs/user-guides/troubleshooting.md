@@ -1,10 +1,10 @@
 # Resolve common problems
 
-Start with the symptom you can see. These checks cover Legal Team Members, Administrators, Contributors, and Business Users. Follow the linked procedure for your role; an operator investigating a service failure should use [operator troubleshooting](operator-troubleshooting.md).
+Start with the symptom you can see. These checks cover Legal Team Members, Administrators and Business Users. Follow the linked procedure for your role; an operator investigating a service failure should use [operator troubleshooting](operator-troubleshooting.md).
 
 ## I cannot sign in
 
-Check the app address and account email with your Administrator. Staff and Contributors use [staff sign-in](staff-sign-in.md); Business Users use [Portal sign-in](portal-sign-in.md). Follow the method your organization has enabled. A Portal email link does not turn a Business User into a staff user.
+Check the app address and account email with your Administrator. Legal Team Members and Administrators use [staff sign-in](staff-sign-in.md); Business Users use [Portal sign-in](portal-sign-in.md). Follow the method your organization has enabled. A Portal email link does not turn a Business User into a staff user.
 
 If a link is expired or already used, request a new link and open the newest message. Check spam and mailbox filters if it does not arrive. If the configured sign-in method or expected message remains unavailable, ask your Administrator to check your account and [authentication and email](authentication-and-email.md). Give the visible error and time, without forwarding a sign-in link or password.
 
@@ -12,13 +12,13 @@ If a link is expired or already used, request a new link and open the newest mes
 
 Check the signed-in account, the module, your search words, and active filters or saved view. Return to the module's ordinary list and follow [search and views](search-and-views.md). An absent result does not prove deletion.
 
-A direct link may show **Something went wrong.** and **Reload** for either missing work or work you cannot reach. Reopen after a temporary connection failure; repeated reloads do not change access. Ask the Contract Owner, Matter Manager, or Administrator to check [your role and record access](roles-and-access.md). Contributors need a team entry on that particular Contract or Matter. Confidential Entities need their own access arrangement; a linked record does not grant access.
+A direct link may show **Something went wrong.** and **Reload** for either missing work or work you cannot reach. Reopen after a temporary connection failure; repeated reloads do not change access. Ask the Contract Owner, Matter Manager, or Administrator to check [your role and record access](roles-and-access.md). Business Users need a team entry on that particular Contract or Matter. Confidential Entities need their own access arrangement; a linked record does not grant access.
 
 Business Users should reopen their own Request in the Portal. Conversion does not grant access to the resulting staff Contract or Matter page. For missing published Knowledge, ask Legal whether the item is still published, live, and shared with your audience. See [follow a Request](follow-request.md) and [Portal Knowledge](portal-knowledge.md).
 
 ## An edit or action is unavailable
 
-Check whether the owning record is archived and whether your role permits the action. A Contributor can supply business information and supporting Documents on shared work, but cannot change its legal-managed details, complete Tasks, give Approval, or send for signature. Follow [Contributor work](contributor-guide.md) and ask Legal to perform the required legal action.
+Check whether the owning record is archived and whether your role permits the action. A Business User can supply business information and supporting Documents on shared work, but cannot change its legal-managed details, complete Tasks, give Approval, or send for signature. Follow [Portal record work](contributor-guide.md) and ask Legal to perform the required legal action.
 
 If a save reports an error, keep your intended value, follow the displayed correction, and reload to confirm what actually saved. Do not assume an unchanged page means the save succeeded. Administrators can investigate configured Fields and required answers through [types, Statuses, and Fields](types-statuses-fields.md).
 
@@ -26,7 +26,7 @@ If a save reports an error, keep your intended value, follow the displayed corre
 
 Read the refusal: an oversized file needs a smaller copy or an operator-approved limit change; a filename problem needs a corrected name. Check the destination list before retrying an uncertain upload. If the first upload succeeded, sending it again as a new Document creates a separate chain.
 
-For another round of the same managed paper, use [Add version](document-versions.md). Contributors cannot append to a Contract's primary Document. Portal attachments belong to the Request conversation and do not provide a Document Version-history control. See [file limits](reference.md#file-behavior-and-limits) and [Request updates](follow-request.md).
+For another round of the same managed paper, use [Add version](document-versions.md). Business Users cannot append to a Contract's primary Document. Portal record pages offer supporting Document uploads and Add version. Reply attachments stay with the conversation. See [file limits](reference.md#file-behavior-and-limits) and [Request updates](follow-request.md).
 
 If valid uploads repeatedly fail, give your Administrator the visible message, time, file type and size, and the intended action. Share record details only through your organization's approved channel.
 

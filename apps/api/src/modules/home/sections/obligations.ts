@@ -50,7 +50,7 @@ export async function readObligationsHomeSection(
   user: AuthenticatedUser,
   now = new Date(),
 ): Promise<ObligationsHomeSection | null> {
-  if (user.role === "contributor" || user.role === "business_user") return null;
+  if (user.role === "business_user") return null;
 
   const today = localMoment(now, user.timezone).date;
   const isOverdue = sql<boolean>`${entityObligations.nextDueOn} < ${today}`;

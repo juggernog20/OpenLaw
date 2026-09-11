@@ -28,12 +28,6 @@ const MEMBER = {
   displayName: "Nadia Counsel",
   role: "legal_team_member",
 };
-const CONTRIBUTOR = {
-  id: "u3",
-  email: "contributor@example.com",
-  displayName: "Casey Contributor",
-  role: "contributor",
-};
 const BUSINESS = {
   id: "u9",
   email: "business@example.com",
@@ -769,79 +763,6 @@ describe("the confidential marker in the contract list (M10/5)", () => {
     // DES-009 admits no alternate — the glyph is the affordance.
     expect(view.container.querySelector("svg.lucide-shield-alert")).toBeNull();
     expect(view.container.querySelector("svg.lucide-eye-off")).toBeNull();
-  });
-});
-
-describe("a Contributor on the /contracts destination (M9/1)", () => {
-  /**
-   * The list stub with both Member+ picker reads walled off. The
-   * create dialog is what needs them, and a Contributor has no create
-   * dialog — `pickerReads` is what proves the loader never asks.
-   */
-  function contributorApi(...args: Parameters<typeof listApi>) {
-    const api = listApi(...args);
-    const pickerReads: string[] = [];
-    const handler = (call: StubCall): Response | undefined => {
-      if (["/api/v1/contracts/options", "/api/v1/entities"].includes(call.url.pathname)) {
-        pickerReads.push(call.url.pathname);
-        return problem(403, "You do not have permission to perform this action.");
-      }
-      return api.handler(call);
-    };
-    return { ...api, handler, pickerReads };
-  }
-
-  it("shows a Contributor their contracts, with no way to create one", async () => {
-    const api = contributorApi([contractRow()]);
-    stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
-    renderAt("/contracts");
-
-    expect(await screen.findByRole("heading", { level: 1, name: "Contracts" })).toBeInTheDocument();
-    const row = screen.getByRole("row", { name: /Acme master services agreement/ });
-    expect(
-      within(row).getByRole("link", { name: "Acme master services agreement" }),
-    ).toHaveAttribute("href", "/contracts/42");
-    // Absent, not disabled — the same convention the nav follows.
-    expect(screen.queryByRole("button", { name: "Create contract" })).not.toBeInTheDocument();
-    expect(api.pickerReads).toEqual([]);
-    expect(api.creates).toEqual([]);
-  });
-
-  it("gives a Contributor on no contract the list's empty state, not a refusal", async () => {
-    const api = contributorApi([]);
-    stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
-    renderAt("/contracts");
-
-    expect(await screen.findByRole("heading", { name: "No contracts yet" })).toBeInTheDocument();
-    // The pitch a Contributor gets says how a row lands here, because
-    // making one is not something they can do (DD-015).
-    expect(screen.getByText(/Contracts you are added to appear here/)).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Create contract" })).not.toBeInTheDocument();
-  });
-
-  it("shows a Contributor archived contracts behind the same toggle, with no restore", async () => {
-    const api = contributorApi(
-      [contractRow()],
-      [
-        contractRow({
-          id: "c2",
-          number: 41,
-          title: "Mutual NDA",
-          archivedAt: "2026-08-02T00:00:00.000Z",
-        }),
-      ],
-    );
-    stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
-    renderAt("/contracts");
-    const user = userEvent.setup();
-
-    await toggleListFlag(user, "Show archived");
-    const archived = await screen.findByRole("row", { name: /Mutual NDA/ });
-    expect(within(archived).getByText("Archived")).toBeInTheDocument();
-    // Restore is a mutation, so no row offers one and the actions
-    // column never appears.
-    expect(screen.queryByRole("button", { name: /Restore/ })).not.toBeInTheDocument();
-    expect(api.restores).toEqual([]);
   });
 });
 

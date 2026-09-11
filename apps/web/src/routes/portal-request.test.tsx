@@ -68,8 +68,8 @@ function field(
 function detail(
   overrides: {
     owner?: { displayName: string } | null;
-    expectedBy?: string | null;
-    estimatePassed?: boolean;
+    nextDeadline?: string | null;
+    deadlinePassed?: boolean;
     status?: RequestStatus;
     declinedReason?: string | null;
     description?: string | null;
@@ -82,8 +82,8 @@ function detail(
   return {
     request: {
       owner: overrides.owner ?? null,
-      expectedBy: overrides.expectedBy ?? null,
-      estimatePassed: overrides.estimatePassed ?? false,
+      nextDeadline: overrides.nextDeadline ?? null,
+      deadlinePassed: overrides.deadlinePassed ?? false,
       id: "rq1",
       number: 45,
       status: overrides.status ?? "new",
@@ -247,16 +247,22 @@ describe("the request envelope", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("keeps a converted Request open, and names no record it cannot open", async () => {
-    // INT-001, DD-018: conversion never takes the requester's window
-    // away — and a Business User cannot open a Contract or a Matter, so
-    // the page offers no link into one.
-    stubApi({ signedIn: REQUESTER, extra: detailRead(detail({ status: "converted" })) });
+  it("shows only the original ask when the converted record was archived", async () => {
+    stubApi({
+      signedIn: REQUESTER,
+      extra: detailRead({
+        ...detail({ status: "converted" }),
+        redirectTo: null,
+        recordArchived: true,
+      }),
+    });
     renderAt("/portal/requests/45");
-
-    expect(await screen.findByRole("heading", { level: 1 })).toBeInTheDocument();
-    expect(screen.getByText("In progress")).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /contract/i })).not.toBeInTheDocument();
+    expect(
+      await screen.findByText(/The record created from this Request was archived/),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "What you submitted" })).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Conversation" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Send" })).not.toBeInTheDocument();
   });
 
   it("carries the decline reason on a declined Request (INT-006)", async () => {
@@ -473,9 +479,7 @@ describe("who reaches the detail", () => {
     stubApi({ signedIn: null });
     renderAt("/portal/requests/45");
 
-    expect(
-      await screen.findByRole("heading", { name: "Legal request portal" }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Legal portal" })).toBeInTheDocument();
   });
 
   it("sends a reference that is not the caller's back to their own list", async () => {
@@ -512,7 +516,7 @@ describe("who reaches the detail", () => {
     renderAt("/portal/requests/45");
 
     expect(await screen.findByRole("region", { name: "What you submitted" })).toBeInTheDocument();
-    expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Portal" })).toBeInTheDocument();
   });
 });
 
@@ -537,9 +541,7 @@ describe("the portal deep link", () => {
     stubApi({ signedIn: null });
     const { router } = renderAt("/portal/requests/45");
 
-    expect(
-      await screen.findByRole("heading", { name: "Legal request portal" }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Legal portal" })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe("/portal/enter");
     // The entry screen carries the email step itself, so a stale session
     // costs one address rather than a dead end.
@@ -1059,14 +1061,14 @@ describe("the conversation", () => {
   });
 });
 
-it("shows Legal's owner and estimate beside the requester's original Needed by date", async () => {
+it("shows the owner and next task deadline beside the requester's original Needed by date", async () => {
   stubApi({
     signedIn: REQUESTER,
     extra: detailRead(
       detail({
         owner: { displayName: "Lee Member" },
-        expectedBy: "2026-10-10",
-        estimatePassed: true,
+        nextDeadline: "2026-10-10",
+        deadlinePassed: true,
         customFields: { needed_by: "2026-10-08" },
         fields: [{ ...field({ slug: "needed_by", displayName: "Needed by" }), fieldType: "date" }],
       }),
@@ -1074,8 +1076,8 @@ it("shows Legal's owner and estimate beside the requester's original Needed by d
   });
   renderAt("/portal/requests/45");
   expect(await screen.findByText("Owner: Lee Member")).toBeInTheDocument();
-  expect(screen.getByText(/Expected back \(estimate\)/)).toBeInTheDocument();
-  expect(screen.getByText("Estimate passed")).toBeInTheDocument();
+  expect(screen.getByText(/Next deadline/)).toBeInTheDocument();
+  expect(screen.getByText("Deadline passed")).toBeInTheDocument();
   expect(screen.getByText("Needed by")).toBeInTheDocument();
   expect(screen.getByText("Oct 10, 2026")).toBeInTheDocument();
 });

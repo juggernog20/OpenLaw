@@ -48,18 +48,18 @@ const APPROVER = {
   displayName: "Sarah Chen",
   role: "legal_team_member",
 };
-const CONTRIBUTOR = {
-  id: "u3",
-  email: "contributor@example.com",
-  displayName: "Casey Contributor",
-  role: "contributor",
-};
 
 /** The people the record's pickers read. A Contributor is offered for
  * the team, and never as an approver (CTR-012, DD-013). */
 const PEOPLE = [
   { id: "u1", displayName: "Ada Admin", image: null, archived: false, role: "administrator" },
-  { id: "u3", displayName: "Casey Contributor", image: null, archived: false, role: "contributor" },
+  {
+    id: "u3",
+    displayName: "Casey Contributor",
+    image: null,
+    archived: false,
+    role: "business_user",
+  },
   {
     id: "u2",
     displayName: "Nadia Counsel",
@@ -694,19 +694,7 @@ describe("the contract record's Approvals section", () => {
     ).toHaveLength(1);
   });
 
-  it("draws the roster read-only for a Contributor and for an archived record", async () => {
-    const contributorApi = recordApi(
-      [approval({ id: "a1", approver: named("u4") })],
-      contractRow(),
-      [{ ...named("u3"), archived: false, role: "contributor" }],
-    );
-    stubApi({ signedIn: CONTRIBUTOR, extra: contributorApi.handler });
-    const contributorView = renderAt("/contracts/42/approvals");
-    await rosterRows();
-    expect(screen.queryByRole("button", { name: "Add approver" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Actions for/ })).not.toBeInTheDocument();
-    contributorView.view.unmount();
-
+  it("draws the roster read-only for an archived record", async () => {
     const archivedApi = recordApi(
       [approval({ id: "a1", approver: named("u4") })],
       contractRow({ archivedAt: "2026-08-11T00:00:00.000Z" }),
@@ -803,21 +791,13 @@ describe("the contract record's Approvals section", () => {
     expect(api.writes).toHaveLength(0);
   });
 
-  it("draws no apply control when no group is set up, and none for a read-only viewer", async () => {
+  it("draws no apply control when no group is set up", async () => {
     const bare = recordApi([], contractRow(), undefined, []);
     stubApi({ signedIn: MEMBER, extra: bare.handler });
     const bareView = renderAt("/contracts/42/approvals");
     await screen.findByRole("button", { name: "Add approver" });
     expect(screen.queryByRole("button", { name: "Apply group" })).not.toBeInTheDocument();
     bareView.view.unmount();
-
-    const readOnly = recordApi([approval({ id: "a1", approver: named("u4") })], contractRow(), [
-      { ...named("u3"), archived: false, role: "contributor" },
-    ]);
-    stubApi({ signedIn: CONTRIBUTOR, extra: readOnly.handler });
-    renderAt("/contracts/42/approvals");
-    await rosterRows();
-    expect(screen.queryByRole("button", { name: "Apply group" })).not.toBeInTheDocument();
   });
 
   it("reaches the section from the record's own tab strip", async () => {

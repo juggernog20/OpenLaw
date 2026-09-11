@@ -151,7 +151,7 @@ beforeAll(async () => {
 
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
     [OUTSIDER, "legal_team_member"],
     [PORTAL, "business_user"],
   ] as const) {
@@ -198,15 +198,15 @@ async function newContract(title: string): Promise<{ id: string; number: number 
   });
   expect(response.statusCode, response.body).toBe(201);
   const contract = response.json<{ contract: { id: string; number: number } }>().contract;
-  for (const [fixture, role] of [
+  for (const [fixture] of [
     [MEMBER, "member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
   ] as const) {
     const team = await harness.app.inject({
       method: "POST",
       url: `/api/v1/contracts/${contract.number}/team`,
       cookies: adminCookies,
-      payload: { userId: idOf(fixture), role },
+      payload: { userId: idOf(fixture) },
     });
     expect(team.statusCode, team.body).toBe(201);
   }
@@ -419,7 +419,7 @@ function comparisonDeps() {
 describe("a Word comparison", () => {
   it("runs through the pipeline once and keeps the parsed model and redline", async () => {
     const { contract, document, from, to } = await twoRounds("Comparison · ready");
-    const requested = await requestComparison(contributorCookies, document.id, from.id, to.id);
+    const requested = await requestComparison(memberCookies, document.id, from.id, to.id);
     expect(requested.statusCode, requested.body).toBe(202);
     const pending = requested.json<ComparisonEnvelope>().comparison;
     expect(pending).toMatchObject({
@@ -470,12 +470,12 @@ describe("a Word comparison", () => {
     expect(repeated.statusCode, repeated.body).toBe(200);
     expect(repeated.json<ComparisonEnvelope>().comparison.id).toBe(ready.id);
 
-    const found = await findComparison(contributorCookies, document.id, from.id, to.id);
+    const found = await findComparison(memberCookies, document.id, from.id, to.id);
     expect(found.statusCode, found.body).toBe(200);
     expect(found.headers["cache-control"]).toBe("private, max-age=0, must-revalidate");
     expect(found.json<ComparisonLookupEnvelope>().comparison?.id).toBe(ready.id);
 
-    const absent = await findComparison(contributorCookies, document.id, to.id, from.id);
+    const absent = await findComparison(memberCookies, document.id, to.id, from.id);
     expect(absent.statusCode, absent.body).toBe(200);
     expect(absent.json<ComparisonLookupEnvelope>().comparison).toBeNull();
   });

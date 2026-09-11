@@ -39,12 +39,6 @@ const MEMBER = {
   displayName: "Nadia Counsel",
   role: "legal_team_member",
 };
-const CONTRIBUTOR = {
-  id: "u3",
-  email: "contributor@example.com",
-  displayName: "Casey Contributor",
-  role: "contributor",
-};
 /** CTR-004's Owner — one of the void's three actors, and somebody who
  * sent nothing. */
 const OWNER = {
@@ -783,16 +777,6 @@ describe("when the send control is absent", () => {
     expect(within(rows[0]!).getByText("Voided")).toBeInTheDocument();
     expect(await screen.findByRole("button", { name: "Send for signature" })).toBeInTheDocument();
   });
-
-  it("is absent for a read-only viewer, who still reads the envelope", async () => {
-    const api = recordApi({ envelopes: [envelopeRow()] });
-    stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
-    renderAt("/contracts/42/approvals");
-
-    const rows = await envelopeRows();
-    expect(within(rows[0]!).getByText("Out for signature")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
-  });
 });
 
 /** The row's action menu, once the card has drawn the signing block. */
@@ -901,16 +885,6 @@ describe("when the void control is absent", () => {
 
     const rows = await envelopeRows();
     expect(within(rows[0]!).getByText("Signed")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: ROW_ACTIONS })).not.toBeInTheDocument();
-  });
-
-  it("draws no action cell at all for a read-only viewer", async () => {
-    const api = recordApi({ envelopes: [envelopeRow()] });
-    stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
-    renderAt("/contracts/42/approvals");
-
-    const table = await screen.findByRole("table", { name: "Signing" });
-    expect(within(table).queryByRole("columnheader", { name: "Actions" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: ROW_ACTIONS })).not.toBeInTheDocument();
   });
 });

@@ -449,23 +449,30 @@ describe("promotion writes one ordinary document per attachment (INT-002, DOC-00
 });
 
 describe("promotion copies and never takes away (INT-002, story 28)", () => {
-  it("leaves the requester's list and downloads answering exactly as before", async () => {
+  it("retires Request paper addresses and preserves the file on the Portal Contract", async () => {
     const request = await submit("My window has to keep working");
     const content = pdf("the redline");
     const attachment = await attach(request.number, "redline.pdf", content);
-    const before = await portalAttachments(request.number);
+    expect(await portalAttachments(request.number)).toHaveLength(1);
 
-    await convert(request.number, "Northwind Labs — mutual NDA");
+    const contractNumber = await convert(request.number, "Northwind Labs — mutual NDA");
 
-    expect(await portalAttachments(request.number)).toEqual(before);
+    expect(await portalAttachments(request.number)).toEqual([]);
     const download = await harness.app.inject({
       method: "GET",
       url: `/api/v1/portal/requests/${request.number}/attachments/${attachment.id}`,
       cookies: requesterCookies,
     });
-    expect(download.statusCode, download.body).toBe(200);
-    expect(download.rawPayload).toEqual(content);
-    expect(download.headers["content-disposition"]).toContain("redline.pdf");
+    expect(download.statusCode, download.body).toBe(404);
+    const [document] = await promotedOn(contractNumber);
+    const version = document!.versions[0]!;
+    const promoted = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/portal/contracts/${contractNumber}/documents/${document!.id}/versions/${version.id}/download`,
+      cookies: requesterCookies,
+    });
+    expect(promoted.statusCode, promoted.body).toBe(200);
+    expect(promoted.rawPayload).toEqual(content);
   });
 });
 

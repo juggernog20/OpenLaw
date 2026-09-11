@@ -1,10 +1,10 @@
 # Sign in to the Business Portal
 
-Use the Portal to send Requests to Legal, follow your own conversations, and read Contracts shared with you. Ask Legal for your organization's Portal address. You need access to your work email and an email domain the Administrator allows.
+Use the Portal to send Requests to Legal, follow your own conversations, and work on Contracts and Matters shared with you. Ask Legal for your organization's Portal address. You need access to your work email and an email domain the Administrator allows.
 
 ## Get a sign-in link
 
-1. Open the Portal address. The entry page says **Legal request portal**.
+1. Open the Portal address. The entry page says **Legal portal**.
 2. Enter your work address in **Email**.
 3. Select **Send link**.
 4. When **Check your email** appears, open the sign-in email for that address.
@@ -32,17 +32,20 @@ Your account keeps its role when you follow a sign-in link. Administrators and L
 
 Select **Sign out** in the Portal header. To return after sign-out or session expiry, open the Portal address and request a new link, or use the configured organization sign-in.
 
-Another Business User's Request link does not grant you access to that Request. Check that you used your own account and ask Legal if you need help. Business Users cannot enter the staff Inbox, Contracts, or Matters pages. Contracts shared through the Portal have a separate read-only view, described below.
+Another Business User's Request link does not grant you access to that Request. Check that you used your own account and ask Legal if you need help. Business Users cannot enter the staff Inbox, Contracts, or Matters pages. Shared records have their own Portal pages, described below.
 
 ## Read your Contracts
 
-1. Select **Your Contracts** on the Portal home. The list contains unarchived Contracts for which you are the Business Owner or an explicitly added stakeholder, subject to current access rules.
-2. Open a Contract and check its C- reference, title, Counterparty, Stage, Business Owner, Legal Owner, term dates, renewal period, notice deadline and Value. **Not recorded** means Legal has not recorded that fact. **Unverified** means Legal has not yet confirmed the marked value; check it with Legal before relying on it.
-3. Under **Primary Document**, select **Read Document** to open the current Version in the document reader, or **Download** to save it. If no primary Document is available to you, the page says so. Earlier Versions and other Documents are not offered here.
-4. Use **Your Contracts** to return to the list. Use **Next page** when more Contracts are available, or **First page** to return to the beginning.
+Select **Your Contracts** in the Portal navigation. The list contains non-archived Contracts whose teams include you. Open a row and check its C- reference, title, Counterparty, Stage, owners, terms, dates and Value. **Unverified** means Legal has not confirmed that value. Check it with Legal before relying on it.
 
-This page is read-only. It does not expose Tasks, internal Fields, History or Contract conversations. Continue using your own Request conversation when you need to reply to Legal. A Contract's Stage can be more detailed than the status of the Request that led to it.
+Under **Primary Document**, select **Read Document** or **Download** for the current Version. If no primary Document is available, the page says so. Use **Your Contracts** to return to the list and **Next page** for more records.
 
-When a Request converts to a Contract, its Requester becomes the initial Business Owner. Legal can change that owner or maintain separate stakeholders later. Changing or clearing Business Owner removes access supplied by that role, but an explicit stakeholder entry can preserve access. Confidential Contracts also require qualifying team access; the Business Owner or stakeholder designation alone is insufficient. The primary Document's own Confidential rule can further limit what you can read or download.
+## Open your Matters
 
-If a Contract disappears or shows **Contract not found**, ask Legal to check your current ownership, stakeholder entry and access. A saved link does not preserve access, and the Portal does not send new Contract Stage notifications as part of this view.
+Select **Your Matters** and open a row. Check its M- reference, title, Type, Status, Matter Manager and Business Owner. The list uses the same current-team rule as Contracts.
+
+## Work with Legal on a record
+
+Both record pages offer business **Fields**, **Supporting Documents**, **Conversation**, and any read-only **Original request** submissions. Follow [Work on a shared Contract or Matter](contributor-guide.md) to edit a Field, upload paper or reply.
+
+At conversion, you become Business Owner and join the new record's team. Your Request address redirects there. Later changes to Business Owner do not change membership. If a record disappears, ask Legal to check your team row and its archive state. A saved link does not preserve access.

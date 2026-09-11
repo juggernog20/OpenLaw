@@ -59,10 +59,12 @@ _None — queue cleared 2026-08-04 (CTR-001 through CTR-019). New questions from
 
 ## CTR-004 — Owner + team: manager_id + contract_team, MTR-003 sibling
 
-- **Status** — Accepted
+**2026-09-11 amendment:** One Legal Owner remains on manager_id. One person has one contract_team row, keyed by contract_id and user_id, with no role column. Creator is contracts.created_by. Business Owner is a separate statement. DD-023 defines the grant.
+
+- **Status** — Amended by DD-023 and DES-076, 2026-09-11
 - **Date** — 2026-08-02
 - **Context** — Who runs a contract (grill-plan D.7 owner-field divergence), and what the collaboration model is. MTR-003 settled one Matter Manager + role-typed team. Standalone contracts (MTR-007's autodoc NDA) can't borrow a matter's team.
-- **Decision** — `contracts.manager_id` (nullable FK → users; null = unassigned/triage), rendered with UI label **"Owner"** per the mock; name only, no job-title suffix (D.7: V13 wins). `contract_team` join table with the same shape and role enum as `matter_team`: `member | watcher | creator | contributor`, compound PK on (contract_id, user_id, role). External counsel participate as `contributor` per MTR-006.
+- **Decision** — ~~`contracts.manager_id` (nullable FK → users; null = unassigned/triage), rendered with UI label **"Owner"** per the mock; name only, no job-title suffix (D.7: V13 wins). `contract_team` join table with the same shape and role enum as `matter_team`: `member | watcher | creator | contributor`, compound PK on (contract_id, user_id, role). External counsel participate as `contributor` per MTR-006.~~
 - **Rationale** — One accountable human per contract mirrors the matter model and the market norm. A contract-local team table is required because contracts can stand alone; reusing the exact matter_team machinery keeps queries and permissions code uniform.
 - **Alternatives considered** — Owner only, team via linked matter: breaks for standalone contracts. Multi-owner: rejected for matters (MTR-003) for accountability-diffusion reasons that apply equally here.
 - **Consequences** — `contracts.manager_id` + `contract_team` table in SCHEMA.md (resolves the "reused for contract_team" TBD noted under matter_team). Grill-plan D.7 unblocked.
@@ -341,16 +343,18 @@ The Team panel groups entries by person: one avatar and name, with every held ro
 
 ## CTR-021 — Contributor contract access: the team row is the grant, read-only in M9
 
-- **Status** — Accepted
+**2026-09-11 amendment:** DD-023 retains the named-row grant and silent omission. The account type now selects staff work or Portal work. Business Users read and write permitted business work through the Portal; former Contributor staff access is removed.
+
+- **Status** — Amended by DD-023 and DES-076, 2026-09-11
 - **Date** — 2026-08-13
 - **Context** — M9 gives a Contributor their first record-level access (#127), so the DD-016 tier filter has a real second audience. DD-015 says a Contributor is "made, not born" and sees "only matters/contracts they are explicitly added to", but it does not say which row in the schema counts as "added", nor what happens on a contract they are not on. It also grants them a business/legal editable-field split that the M9 record does not yet carry.
 - **Decision** —
-  - **Any `contract_team` row is the grant.** A Contributor reads a contract when they hold a row on it, whatever role that row carries — `member`, `watcher`, `contributor`, or `creator`. The act of adding someone to the team is what grants the access, so no second rule decides which roles count.
-  - **One predicate, both readers.** The list filters on it and the record read applies it beside the number. A contract a Contributor holds no row on answers **404 with the same body as a contract that does not exist** — never 403, never a locked page. Access is not advertised.
-  - **An empty scope is an empty list**, not a refusal. A Contributor on no contract gets the list's own empty state.
-  - **Read-only in M9.** Every mutation seam stays Member+: create, the per-field PATCH, status, archive, restore, team, counterparties, value, and custom fields. So does the picker read behind the create dialog and the record's selects — the pickers exist to commit from.
-  - **The DD-015 business/legal field split is not built here.** It lands with the field grid.
-  - **Business Users stay refused** on every contract surface until intake links a requester to a record (M19–M21).
+  - ~~**Any `contract_team` row is the grant.** A Contributor reads a contract when they hold a row on it, whatever role that row carries — `member`, `watcher`, `contributor`, or `creator`. The act of adding someone to the team is what grants the access, so no second rule decides which roles count.~~
+  - ~~**One predicate, both readers.** The list filters on it and the record read applies it beside the number. A contract a Contributor holds no row on answers **404 with the same body as a contract that does not exist** — never 403, never a locked page. Access is not advertised.~~
+  - ~~**An empty scope is an empty list**, not a refusal. A Contributor on no contract gets the list's own empty state.~~
+  - ~~**Read-only in M9.** Every mutation seam stays Member+: create, the per-field PATCH, status, archive, restore, team, counterparties, value, and custom fields. So does the picker read behind the create dialog and the record's selects — the pickers exist to commit from.~~
+  - ~~**The DD-015 business/legal field split is not built here.** It lands with the field grid.~~
+  - ~~**Business Users stay refused** on every contract surface until intake links a requester to a record (M19–M21).~~
 - **Rationale** — Keying on the row rather than on the row's role keeps one act (add to the team) as the whole grant, which is what an Administrator can reason about. Answering 404 rather than 403 is the DD-014/DD-016 silent-omission rule applied to the record itself: a refusal that names the record tells a Contributor a contract exists, and existence is sometimes the sensitive part. One predicate over both readers is what stops a contract appearing in a list that the record read then refuses.
 - **Alternatives considered** — Granting only on a `contributor`-role row (leaves a Contributor added as a watcher with a row nobody honours); 403 on a contract they are not on (leaks the record's existence); giving a Contributor the picker reads so the record's selects render from a live list (they commit nothing, and the record read already carries every name the page draws); building the DD-015 field split now (the grid is a milestone of its own, and a half-built split would be a permission rule nobody reviewed).
 - **Consequences** — Removing a Contributor's last team row takes their read away immediately, because the guard reads the rows live on every request. The Contracts destination appears in a Contributor's nav. The record page renders the DES-017 inline surface with its inputs inert — the same treatment an archived contract already gets — with archive and restore absent rather than disabled, since a Contributor never gets them. The M9 comment and activity surfaces mount on this same scope.
@@ -374,12 +378,14 @@ The Team panel groups entries by person: one avatar and name, with every held ro
 
 ## CTR-023 — The team of a Confidential contract: the roster is an audience decision (extends CTR-022)
 
-- **Status** — Accepted
+**2026-09-11 amendment:** The Confidential actor rule is unchanged. Actors must be Member+ and already able to reach the record. Creator is historical provenance, independent of membership. Team mutations add or remove one person without a tag.
+
+- **Status** — Amended by DD-023 and DES-076, 2026-09-11
 - **Date** — 2026-08-14
 - **Context** — CTR-004 makes the contract team a generous thing: any Legal Team Member or Administrator puts somebody on a contract or takes them off, because on an open record nothing about the roster is withheld from anybody. CTR-021 then made the team row the grant for a Contributor, and CTR-022 made it the grant for a confidential record. Once that happened, the roster stopped being only a working group. On a walled record, adding a person is the act of letting them in — it clears the flag for one person — and the generous rule let any Member do by roster edit what CTR-022 forbids them by switch. The affordances already disagreed with the capability: the DES-028 banner hides "Manage team →" from a plain Member, and the Team card 200px below it let them manage it anyway.
 - **Decision** —
   - **On a Confidential contract, only CTR-022's three actors may change the team.** An Administrator, the contract's creator, or its Owner. Being on the team is not enough — the same sentence CTR-022 already wrote about the flag, now true of the two acts that have the same effect.
-  - **It covers both directions.** `POST /contracts/:number/team` and `DELETE /contracts/:number/team/:userId/:role`. Taking somebody off a walled record is the same decision read the other way.
+  - **It covers both directions.** `POST /contracts/:number/team` and ~~`DELETE /contracts/:number/team/:userId/:role`~~ `DELETE /contracts/:number/team/:userId`. Taking somebody off a walled record is the same decision read the other way.
   - **An open contract is untouched.** CTR-004's rule stands wherever the flag is not set, which is most of the estate. The gate arrives with the flag and goes away with it, on the very same record.
   - **403, not 404.** They reach the record. This is CTR-022's own split, unchanged: existence is the sensitive part only for somebody who cannot see it.
   - **It is asked before the archived refusal**, so a viewer who may not decide the audience does not learn from a 409 that the write was otherwise theirs to make. The flag's own write already runs in that order.

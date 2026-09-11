@@ -92,12 +92,9 @@
  * Member+ staff get the same rule applied to themselves — on this
  * surface they are a Requester like anybody else.
  *
- * **A converted Request keeps answering** (INT-001, DD-018). Conversion
- * writes a status and a link to what the Request became; it does not
- * archive the row and it does not close this window. What the Request
- * became is *not* answered here — a Business User cannot open a Contract
- * or a Matter, so a reference they could not follow would be a dead end
- * dressed as a fact.
+ * A converted Request answers a current-access-checked Portal redirect
+ * (DD-023). An archived destination leaves the Requester's original ask
+ * as a read-only stub. Neither response exposes the record's Tasks.
  */
 
 import { requestAssignees } from "./projection.js";
@@ -110,6 +107,9 @@ import { uuidv7 } from "uuidv7";
 import {
   and,
   count,
+  contracts,
+  matters,
+  ne,
   desc,
   entities,
   eq,
@@ -119,6 +119,7 @@ import {
   requestTypeFields,
   requestTypes,
   requests,
+  sql,
   SEVERITY_LEVELS,
   users,
   type CustomFieldValue,
@@ -126,6 +127,7 @@ import {
   type Transaction,
 } from "@openlaw/db";
 import { REQUEST_DISPOSITIONED_PROBLEM_TYPE, REQUEST_OUTCOMES } from "@openlaw/shared";
+import { portalRecordScope } from "../../lib/portal-record-access.js";
 import { requireAuth } from "../../auth/guards.js";
 import {
   asUploadRefusal,
@@ -193,8 +195,8 @@ const RequestTypeRefSchema = z.object({
  * through, where it got to, and how old it is. */
 const MyRequestRowSchema = z.object({
   owner: z.object({ displayName: z.string() }).nullable(),
-  expectedBy: z.iso.date().nullable(),
-  estimatePassed: z.boolean(),
+  nextDeadline: z.iso.date().nullable(),
+  deadlinePassed: z.boolean(),
   id: z.string(),
   /** Rendered R-###; it is also what the detail is addressed by. */
   number: z.number().int(),
@@ -415,7 +417,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
           typeId: requestTypes.id,
           typeSlug: requestTypes.slug,
           typeDisplayName: requestTypes.displayName,
-          expectedBy: requests.expectedBy,
+          nextDeadline: sql<string | null>`null`,
           owner: { displayName: requestAssignees.displayName },
         })
         .from(requests)
@@ -426,7 +428,13 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         // string. Archived Requests are absent by the house rule that
         // NULL means live; nothing archives one yet, and a rule stated
         // now is a rule the first archiver inherits.
-        .where(and(eq(requests.requesterId, request.user.id), isNull(requests.archivedAt)))
+        .where(
+          and(
+            eq(requests.requesterId, request.user.id),
+            isNull(requests.archivedAt),
+            ne(requests.status, "converted"),
+          ),
+        )
         // Newest first — the index the table declares, and the order a
         // person reading their own asks expects.
         //
@@ -460,6 +468,10 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         response: {
           200: z.object({
             request: MyRequestSchema,
+            redirectTo: z
+              .object({ module: z.enum(["contract", "matter"]), number: z.number().int() })
+              .nullable(),
+            recordArchived: z.boolean(),
             /** The type's attached fields, in the order the form drew
              * them — the same read the form and the submission route
              * make, so the detail labels a value exactly as the box
@@ -486,6 +498,8 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
           id: requests.id,
           number: requests.number,
           status: requests.status,
+          convertedContractId: requests.convertedContractId,
+          convertedMatterId: requests.convertedMatterId,
           summary: requests.summary,
           description: requests.description,
           urgency: requests.urgency,
@@ -495,7 +509,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
           typeId: requestTypes.id,
           typeSlug: requestTypes.slug,
           typeDisplayName: requestTypes.displayName,
-          expectedBy: requests.expectedBy,
+          nextDeadline: sql<string | null>`null`,
           owner: { displayName: requestAssignees.displayName },
         })
         .from(requests)
@@ -514,11 +528,38 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         .limit(1);
       if (!row) throw httpError(404, NO_REQUEST);
 
+      let redirectTo: { module: "contract" | "matter"; number: number } | null = null;
+      let recordArchived = false;
+      if (row.status === "converted") {
+        const module = row.convertedMatterId ? "matter" : "contract";
+        const targetId = row.convertedMatterId ?? row.convertedContractId;
+        const target = module === "contract" ? contracts : matters;
+        if (!targetId) throw httpError(404, NO_REQUEST);
+        const [destination] = await app.db
+          .select({ number: target.number, archivedAt: target.archivedAt })
+          .from(target)
+          .where(eq(target.id, targetId))
+          .limit(1);
+        if (!destination) throw httpError(404, NO_REQUEST);
+        recordArchived = destination.archivedAt !== null;
+        if (!recordArchived) {
+          const [allowed] = await app.db
+            .select({ id: target.id })
+            .from(target)
+            .where(and(eq(target.id, targetId), portalRecordScope(app.db, request.user, module)))
+            .limit(1);
+          if (!allowed) throw httpError(404, NO_REQUEST);
+          redirectTo = { module, number: destination.number };
+        }
+      }
+
       const [attached, attachments] = await Promise.all([
         selectAttachedFields(app.db, requestTypeFields, row.typeId),
-        selectAttachments(app.db, row.id),
+        row.status === "converted" ? [] : selectAttachments(app.db, row.id),
       ]);
       return {
+        redirectTo,
+        recordArchived,
         request: {
           ...toRow(row, (await requestCalendar(app.db)).today),
           description: row.description,
@@ -659,6 +700,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request, reply) => {
       const held = await reachedRequest(app.db, request.user.id, request.params.number);
+      if (held.status === "converted") throw httpError(404, NO_ATTACHMENT);
       const row = await attachmentOn(app.db, held.id, request.params.attachmentId);
       if (!row) throw httpError(404, NO_ATTACHMENT);
       // One answer for both mounts, so the staff download and this one
@@ -841,10 +883,10 @@ function toRow<T extends RequestRowColumns>(row: T, today: string) {
     status: row.status,
     summary: row.summary,
     owner: row.owner,
-    expectedBy: row.expectedBy,
-    estimatePassed:
-      row.expectedBy !== null &&
-      row.expectedBy < today &&
+    nextDeadline: row.nextDeadline,
+    deadlinePassed:
+      row.nextDeadline !== null &&
+      row.nextDeadline < today &&
       (row.status === "new" || row.status === "converted"),
     createdAt: row.createdAt.toISOString(),
     requestType: { id: row.typeId, slug: row.typeSlug, displayName: row.typeDisplayName },
@@ -853,7 +895,7 @@ function toRow<T extends RequestRowColumns>(row: T, today: string) {
 
 interface RequestRowColumns {
   owner: { displayName: string } | null;
-  expectedBy: string | null;
+  nextDeadline: string | null;
   id: string;
   number: number;
   status: (typeof REQUEST_STATUSES)[number];

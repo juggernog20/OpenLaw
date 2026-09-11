@@ -144,12 +144,6 @@ const MEMBER = {
   displayName: "Nadia Counsel",
   role: "legal_team_member",
 };
-const CONTRIBUTOR = {
-  id: "u3",
-  email: "contributor@example.com",
-  displayName: "Casey Contributor",
-  role: "contributor",
-};
 const BUSINESS = {
   id: "u9",
   email: "business@example.com",
@@ -309,11 +303,11 @@ function person(id: string, role?: string) {
  * it on mount, and clicking the icon then would collapse it. */
 async function openTeam(user: ReturnType<typeof userEvent.setup>) {
   const bar = await screen.findByRole("toolbar", { name: "Applets" });
-  const icon = within(bar).getByRole("button", { name: "Team" });
+  const icon = within(bar).getByRole("button", { name: "Contract team" });
   if (icon.getAttribute("aria-expanded") !== "true") {
     await user.click(icon);
   }
-  return screen.getByRole("complementary", { name: "Team" });
+  return screen.getByRole("complementary", { name: "Contract team" });
 }
 
 /** The strip's move control (DES-053): the current stage's pill, which
@@ -537,7 +531,10 @@ function recordApi(
   } = { users: [], entities: [] },
   initialAnalysis: Record<string, unknown> = { available: false, latestRun: null },
 ) {
-  let row = initial;
+  let row: Record<string, unknown> = {
+    createdBy: initialTeam.find((person) => person.role === "creator")?.id ?? null,
+    ...initial,
+  };
   let analysis = initialAnalysis;
   let recordReads = 0;
   /** The attached fields follow the row's type, exactly as the API
@@ -596,6 +593,7 @@ function recordApi(
       recordReads += 1;
       return json(200, {
         contract: row,
+        creator: typeof row.createdBy === "string" ? person(row.createdBy) : null,
         ...customEnvelope(),
         team,
         counterparties: parties,
@@ -749,16 +747,16 @@ function recordApi(
       return json(200, { contract: row, ...customEnvelope() });
     }
     if (call.url.pathname === "/api/v1/contracts/42/team" && call.method === "POST") {
-      const body = call.body as { userId: string; role: string };
-      teamCalls.push(`add ${body.userId} ${body.role}`);
-      team = [...team, { ...person(body.userId), role: body.role }];
+      const body = call.body as { userId: string };
+      teamCalls.push(`add ${body.userId}`);
+      team = [...team, person(body.userId)];
       return json(201, { team });
     }
-    const removal = /^\/api\/v1\/contracts\/42\/team\/([^/]+)\/([^/]+)$/.exec(call.url.pathname);
+    const removal = /^\/api\/v1\/contracts\/42\/team\/([^/]+)$/.exec(call.url.pathname);
     if (removal && call.method === "DELETE") {
-      const [, userId, role] = removal;
-      teamCalls.push(`remove ${userId} ${role}`);
-      team = team.filter((member) => !(member.id === userId && member.role === role));
+      const [, userId] = removal;
+      teamCalls.push(`remove ${userId}`);
+      team = team.filter((member) => member.id !== userId);
       return json(200, { team });
     }
     if (call.url.pathname === "/api/v1/contracts/42/archive" && call.method === "POST") {
@@ -848,7 +846,7 @@ describe("the /contracts/:number record page", () => {
     const bar = await screen.findByRole("toolbar", { name: "Applets" });
     // Team opens a panel (DES-047); chat opens a panel (CMT-004);
     // settings navigates (SET-001).
-    expect(within(bar).getByRole("button", { name: "Team" })).toBeInTheDocument();
+    expect(within(bar).getByRole("button", { name: "Contract team" })).toBeInTheDocument();
     expect(within(bar).getByRole("button", { name: "Comments" })).toBeInTheDocument();
     expect(within(bar).getByRole("link", { name: "Contract settings" })).toHaveAttribute(
       "href",
@@ -872,9 +870,9 @@ describe("the /contracts/:number record page", () => {
   describe("AI analysis review", () => {
     it("hides the card and menu action when no connector or flags exist", async () => {
       stubApi({ signedIn: MEMBER, extra: recordApi(contractRow()).handler });
-      renderAt("/contracts/42");
+      renderAt("/contracts/42/fields");
 
-      expect(await screen.findByLabelText("Title")).toBeInTheDocument();
+      expect(await screen.findByRole("heading", { name: "Fields" })).toBeInTheDocument();
       expect(screen.queryByRole("heading", { name: "AI analysis" })).not.toBeInTheDocument();
       expect(await recordActions(userEvent.setup())).toEqual([
         "Copy link",
@@ -891,13 +889,18 @@ describe("the /contracts/:number record page", () => {
         ).handler,
       });
       renderAt("/contracts/42");
+      const user = userEvent.setup();
 
+      // The marker stays beside the value on the Overview. The card is
+      // the Fields section's (DES-075), so the Overview has no heading.
+      expect((await screen.findAllByText("Unverified")).length).toBeGreaterThan(0);
+      expect(screen.queryByRole("heading", { name: "AI analysis" })).not.toBeInTheDocument();
+      await user.click(screen.getByRole("link", { name: "Fields" }));
       const card = (await screen.findByRole("heading", { name: "AI analysis" })).closest(
         "section",
       )!;
       expect(within(card).getByText("No analysis has run yet.")).toBeInTheDocument();
       expect(within(card).queryByRole("button", { name: "Run analysis" })).not.toBeInTheDocument();
-      expect(screen.getAllByText("Unverified").length).toBeGreaterThan(0);
     });
 
     it("draws the pending and failed run sentences", async () => {
@@ -906,7 +909,7 @@ describe("the /contracts/:number record page", () => {
         latestRun: analysisRun({ state: "pending", finishedAt: null }),
       });
       stubApi({ signedIn: MEMBER, extra: api.handler });
-      const rendered = renderAt("/contracts/42");
+      const rendered = renderAt("/contracts/42/fields");
 
       const card = (await screen.findByRole("heading", { name: "AI analysis" })).closest(
         "section",
@@ -924,7 +927,7 @@ describe("the /contracts/:number record page", () => {
         }),
       });
       stubApi({ signedIn: MEMBER, extra: failed.handler });
-      renderAt("/contracts/42");
+      renderAt("/contracts/42/fields");
       expect(
         await screen.findByText(
           /Failed .* on Version 3 with gpt-analysis: The provider timed out\./,
@@ -972,7 +975,7 @@ describe("the /contracts/:number record page", () => {
           { available: true, latestRun: analysisRun({ outcome }) },
         ).handler,
       });
-      renderAt("/contracts/42");
+      renderAt("/contracts/42/fields");
 
       const card = (await screen.findByRole("heading", { name: "AI analysis" })).closest(
         "section",
@@ -996,7 +999,7 @@ describe("the /contracts/:number record page", () => {
         latestRun: null,
       });
       stubApi({ signedIn: MEMBER, extra: api.handler });
-      renderAt("/contracts/42");
+      renderAt("/contracts/42/fields");
       const user = userEvent.setup();
 
       await user.click(await screen.findByRole("button", { name: "Run analysis" }));
@@ -1115,7 +1118,7 @@ describe("the /contracts/:number record page", () => {
             ? problem(409, "This Contract has no primary Document to analyze.")
             : api.handler(call),
       });
-      renderAt("/contracts/42");
+      renderAt("/contracts/42/fields");
       const user = userEvent.setup();
 
       await screen.findByRole("heading", { name: "AI analysis" });
@@ -1139,7 +1142,7 @@ describe("the /contracts/:number record page", () => {
           { available: true, latestRun: analysisRun() },
         ).handler,
       });
-      renderAt("/contracts/42");
+      renderAt("/contracts/42/fields");
 
       const card = (await screen.findByRole("heading", { name: "AI analysis" })).closest(
         "section",
@@ -1256,7 +1259,7 @@ describe("the /contracts/:number record page", () => {
         contractRow({ aiUnverified: { term_type: { runId: "restricted-run" } } }),
       );
       stubApi({
-        signedIn: CONTRIBUTOR,
+        signedIn: MEMBER,
         extra: (call) =>
           call.url.pathname.endsWith("/analysis/restricted-run")
             ? problem(404, "Analysis evidence is not available.")
@@ -1268,7 +1271,6 @@ describe("the /contracts/:number record page", () => {
         .click(await screen.findByRole("button", { name: "View AI evidence for Term type" }));
       expect(await screen.findByRole("alert")).toHaveTextContent("Source evidence is unavailable");
       expect(screen.queryByRole("link", { name: "Open source document" })).not.toBeInTheDocument();
-      expect(screen.queryByRole("button", { name: "Confirm" })).not.toBeInTheDocument();
     });
 
     it("marks only the AI primary Counterparty and removes its treatment on confirmation", async () => {
@@ -1443,18 +1445,20 @@ describe("the /contracts/:number record page", () => {
         { available: true, latestRun: analysisRun({ outcome }) },
       );
       stubApi({ signedIn: MEMBER, extra: api.handler });
-      renderAt("/contracts/42");
+      renderAt("/contracts/42/fields");
       const user = userEvent.setup();
 
       const evidence = await screen.findByText("fixed term");
       await user.click(within(evidence.closest("li")!).getByRole("button", { name: "Confirm" }));
       await waitFor(() => expect(api.posts).toContain("confirm term_type"));
       expect(within(evidence.closest("li")!).queryByText("Unverified")).not.toBeInTheDocument();
+      expect(screen.getAllByText("Unverified")).not.toHaveLength(0);
+      // The Overview's own marker went with it, and only that one.
+      await user.click(screen.getByRole("link", { name: "Overview" }));
+      expect((await screen.findByLabelText("Term type")).closest("[data-ai-generated]")).toBeNull();
       expect(
         screen.queryByRole("button", { name: "View AI evidence for Term type" }),
       ).not.toBeInTheDocument();
-      expect(screen.getAllByText("Unverified")).not.toHaveLength(0);
-      expect(screen.getByLabelText("Term type").closest("[data-ai-generated]")).toBeNull();
       expect(screen.getByLabelText("Amount").closest("[data-ai-generated]")).not.toBeNull();
     });
 
@@ -1472,36 +1476,12 @@ describe("the /contracts/:number record page", () => {
         { available: true, latestRun: analysisRun() },
       );
       stubApi({ signedIn: MEMBER, extra: api.handler });
-      renderAt("/contracts/42");
+      renderAt("/contracts/42/fields");
 
       await userEvent.setup().click(await screen.findByRole("button", { name: "Confirm all" }));
       await waitFor(() => expect(api.posts).toContain("confirm all"));
       expect(screen.queryByText("Unverified")).not.toBeInTheDocument();
       expect(screen.queryByRole("button", { name: "Confirm all" })).not.toBeInTheDocument();
-    });
-
-    it("draws markers beside core fields and withholds Confirm from read-only viewers", async () => {
-      const flagged = {
-        term_type: { evidence: "fixed term" },
-        value: { evidence: "$1,200 yearly" },
-        counterparty: { evidence: "Helix Labs" },
-      };
-      stubApi({
-        signedIn: CONTRIBUTOR,
-        extra: recordApi(
-          contractRow({
-            aiUnverified: flagged,
-            value: { amount: 120000, currency: "USD", cadence: "annually" },
-          }),
-          [person("u3", "contributor")],
-          [party("cp-helix", true)],
-        ).handler,
-      });
-      renderAt("/contracts/42");
-
-      expect(await screen.findAllByText("Unverified")).toHaveLength(3);
-      expect(screen.queryByRole("button", { name: "Confirm" })).not.toBeInTheDocument();
-      expect(screen.queryByRole("button", { name: "Run analysis" })).not.toBeInTheDocument();
     });
 
     it("confirms a Request-context custom Field with its bare Analysis slug", async () => {
@@ -1949,209 +1929,93 @@ describe("the /contracts/:number record page", () => {
     );
   });
 
-  it("maintains additional stakeholders without changing ownership", async () => {
+  it("heads the Contract team with both owners as statements", async () => {
+    const api = recordApi(contractRow({ manager: person("u2"), businessOwner: person("u3") }));
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+
+    const team = await openTeam(userEvent.setup());
+    expect(within(team).getByText("Legal Owner")).toBeInTheDocument();
+    expect(within(team).getByText("Business Owner")).toBeInTheDocument();
+    // Statements, not memberships: the two selects on the Contract
+    // card are where they change, so neither tag has a remove control.
+    expect(within(team).queryByRole("button", { name: /Nadia Counsel/ })).toBeNull();
+    expect(within(team).queryByRole("button", { name: /Casey Contributor/ })).toBeNull();
+  });
+
+  it("adds a person to the Contract team without a role picker", async () => {
     const api = recordApi(contractRow());
-    const writes: unknown[] = [];
-    let stakeholders: unknown[] = [];
-    stubApi({
-      signedIn: MEMBER,
-      extra: (call) => {
-        if (call.url.pathname.startsWith("/api/v1/contracts/42/stakeholders")) {
-          if (call.method === "POST") {
-            writes.push(call.body);
-            stakeholders = [
-              { id: "u3", displayName: "Casey Contributor", image: null, archived: false },
-            ];
-          }
-          if (call.method === "DELETE") {
-            writes.push(call.url.pathname);
-            stakeholders = [];
-          }
-          return json(call.method === "POST" ? 201 : 200, { stakeholders });
-        }
-        return api.handler(call);
-      },
-    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42");
     const user = userEvent.setup();
-    await user.selectOptions(await screen.findByLabelText("Add stakeholder"), "u3");
-    const section = screen.getByRole("region", { name: "Stakeholders" });
-    await user.click(within(section).getByRole("button", { name: "Add" }));
+    const team = await openTeam(user);
+    await user.click(within(team).getByRole("button", { name: "Add team member" }));
+    await user.selectOptions(screen.getByLabelText("Person"), "u3");
+    expect(screen.queryByLabelText("Role")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Add" }));
+    await waitFor(() => expect(api.teamCalls).toEqual(["add u3"]));
+    expect(within(team).getByText("Casey Contributor")).toBeInTheDocument();
+    expect(within(team).queryByText("Stakeholder")).not.toBeInTheDocument();
     await user.click(
-      await within(section).findByRole("button", {
-        name: "Remove Casey Contributor as stakeholder",
-      }),
+      within(team).getByRole("button", { name: "Take Casey Contributor off the contract team" }),
     );
-    await waitFor(() =>
-      expect(writes).toEqual([{ userId: "u3" }, "/api/v1/contracts/42/stakeholders/u3"]),
-    );
-    expect(api.patches).toEqual([]);
-    expect(await within(section).findByText("No additional stakeholders.")).toBeInTheDocument();
+    await waitFor(() => expect(api.teamCalls).toEqual(["add u3", "remove u3"]));
+    expect(within(team).queryByText("Casey Contributor")).not.toBeInTheDocument();
   });
 
-  /** One stakeholder roster and one DELETE, held open when a suite asks
-   * for it. Focus is what these cases are about, so the answer has to be
-   * stoppable in the middle. */
-  function stakeholderApi(
-    handler: (call: StubCall) => Response | Promise<Response> | undefined,
-    options: { refuse?: boolean; hold?: () => Promise<void> } = {},
-  ) {
-    let roster = [
-      { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
-      { id: "u3", displayName: "Casey Contributor", image: null, archived: false },
-    ];
-    return (call: StubCall) => {
-      if (!call.url.pathname.startsWith("/api/v1/contracts/42/stakeholders")) return handler(call);
-      if (call.method !== "DELETE") return json(200, { stakeholders: roster });
-      if (options.refuse)
-        return problem(409, "Restore this Contract before changing stakeholders.");
-      const id = call.url.pathname.split("/").at(-1)!;
-      roster = roster.filter((person) => person.id !== id);
-      const answer = json(200, { stakeholders: roster });
-      return options.hold ? options.hold().then(() => answer) : answer;
-    };
-  }
+  it.each([false, true])(
+    "preserves deliberate focus when removing a membership (moved focus: %s)",
+    async (moveFocus) => {
+      const api = recordApi(contractRow(), [person("u1"), person("u3")]);
+      let release!: () => void;
+      const held = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call) =>
+          call.method === "DELETE" && call.url.pathname.endsWith("/team/u3")
+            ? held.then(() => api.handler(call)!)
+            : api.handler(call),
+      });
+      renderAt("/contracts/42");
+      const user = userEvent.setup();
+      const team = await openTeam(user);
+      await user.click(
+        within(team).getByRole("button", { name: "Take Casey Contributor off the contract team" }),
+      );
+      const elsewhere = screen.getByLabelText("Business Owner");
+      if (moveFocus) elsewhere.focus();
+      release();
+      await waitFor(() =>
+        expect(within(team).queryByText("Casey Contributor")).not.toBeInTheDocument(),
+      );
+      expect(document.activeElement).toBe(
+        moveFocus ? elsewhere : within(team).getByRole("button", { name: "Add team member" }),
+      );
+    },
+  );
 
-  it("returns focus to the Add control when a removal takes the focused button away", async () => {
-    const api = recordApi(contractRow());
-    stubApi({ signedIn: MEMBER, extra: stakeholderApi(api.handler) });
-    renderAt("/contracts/42");
-    const user = userEvent.setup();
-    const section = await screen.findByRole("region", { name: "Stakeholders" });
-    const remove = await within(section).findByRole("button", {
-      name: "Remove Nadia Counsel as stakeholder",
-    });
-
-    // The keyboard path the defect is on: the button that runs the
-    // removal is the button the removal deletes.
-    remove.focus();
-    expect(document.activeElement).toBe(remove);
-    await user.keyboard("{Enter}");
-
-    // The Remove button, not the name: a removed stakeholder comes back
-    // as an option in the Add control, under that same name.
-    await waitFor(() =>
-      expect(
-        within(section).queryByRole("button", { name: "Remove Nadia Counsel as stakeholder" }),
-      ).toBeNull(),
-    );
-    const add = within(section).getByLabelText("Add stakeholder");
-    // The Add control, not the row below the one that went: focus lands
-    // somewhere that is there whether or not the list is now empty.
-    expect(document.activeElement).toBe(add);
-    expect(add).toBeEnabled();
-    expect(
-      within(section).getByRole("button", { name: "Remove Casey Contributor as stakeholder" }),
-    ).toBeInTheDocument();
-
-    // And again down to the empty list, where there is no next row at all.
-    const last = within(section).getByRole("button", {
-      name: "Remove Casey Contributor as stakeholder",
-    });
-    last.focus();
-    await user.keyboard("{Enter}");
-    expect(await within(section).findByText("No additional stakeholders.")).toBeInTheDocument();
-    expect(document.activeElement).toBe(within(section).getByLabelText("Add stakeholder"));
-  });
-
-  it("leaves focus on the button when a removal is refused", async () => {
-    const api = recordApi(contractRow());
-    stubApi({ signedIn: MEMBER, extra: stakeholderApi(api.handler, { refuse: true }) });
-    renderAt("/contracts/42");
-    const user = userEvent.setup();
-    const section = await screen.findByRole("region", { name: "Stakeholders" });
-    const remove = await within(section).findByRole("button", {
-      name: "Remove Nadia Counsel as stakeholder",
-    });
-    remove.focus();
-    await user.keyboard("{Enter}");
-
-    expect(await within(section).findByRole("alert")).toHaveTextContent(
-      "Restore this Contract before changing stakeholders.",
-    );
-    // The row is still there, so the button that was pressed still holds
-    // the focus it never lost, and nothing moved it to the Add control.
-    expect(remove).toBeInTheDocument();
-    expect(document.activeElement).toBe(remove);
-  });
-
-  it("does not take focus from a control the reader moved to while a removal was in flight", async () => {
-    let release: (() => void) | undefined;
-    const held = new Promise<void>((resolve) => {
-      release = resolve;
-    });
-    const api = recordApi(contractRow());
-    stubApi({ signedIn: MEMBER, extra: stakeholderApi(api.handler, { hold: () => held }) });
-    renderAt("/contracts/42");
-    const user = userEvent.setup();
-    const section = await screen.findByRole("region", { name: "Stakeholders" });
-    const remove = await within(section).findByRole("button", {
-      name: "Remove Nadia Counsel as stakeholder",
-    });
-    remove.focus();
-    await user.keyboard("{Enter}");
-
-    // The answer is still out, and the reader has gone somewhere else.
-    const elsewhere = screen.getByLabelText("Business Owner");
-    elsewhere.focus();
-    release!();
-
-    await waitFor(() =>
-      expect(
-        within(section).queryByRole("button", { name: "Remove Nadia Counsel as stakeholder" }),
-      ).toBeNull(),
-    );
-    // Focus goes to the Add control from nothing, never from somewhere.
-    expect(document.activeElement).toBe(elsewhere);
-  });
-
-  it("reports stakeholder write refusals and retries a failed read", async () => {
-    const api = recordApi(contractRow());
-    let reads = 0;
-    stubApi({
-      signedIn: MEMBER,
-      extra: (call) => {
-        if (call.url.pathname === "/api/v1/contracts/42/stakeholders") {
-          if (call.method === "GET") {
-            reads++;
-            return reads === 1 ? problem(503, "Unavailable") : json(200, { stakeholders: [] });
-          }
-          return problem(409, "This person is already a stakeholder.");
-        }
-        return api.handler(call);
-      },
-    });
-    renderAt("/contracts/42");
-    const user = userEvent.setup();
-    expect(await screen.findByRole("alert")).toHaveTextContent("Stakeholders could not be read.");
-    await user.click(screen.getByRole("button", { name: "Retry" }));
-    await user.selectOptions(await screen.findByLabelText("Add stakeholder"), "u3");
-    const section = screen.getByRole("region", { name: "Stakeholders" });
-    await user.click(within(section).getByRole("button", { name: "Add" }));
-    expect(await within(section).findByRole("alert")).toHaveTextContent(
-      "This person is already a stakeholder.",
-    );
-    expect(reads).toBe(2);
-  });
-
-  it("shows archived Contract stakeholders without add or remove controls", async () => {
-    const api = recordApi(contractRow({ archivedAt: "2026-09-10T00:00:00.000Z" }));
+  it("keeps a failed membership removal available for retry", async () => {
+    const api = recordApi(contractRow(), [person("u3")]);
     stubApi({
       signedIn: MEMBER,
       extra: (call) =>
-        call.url.pathname === "/api/v1/contracts/42/stakeholders"
-          ? json(200, {
-              stakeholders: [
-                { id: "u3", displayName: "Casey Contributor", image: null, archived: false },
-              ],
-            })
+        call.method === "DELETE" && call.url.pathname.endsWith("/team/u3")
+          ? problem(409, "Restore this Contract before changing its team.")
           : api.handler(call),
     });
     renderAt("/contracts/42");
-    const section = await screen.findByRole("region", { name: "Stakeholders" });
-    expect(await within(section).findByText("Casey Contributor")).toBeVisible();
-    expect(within(section).queryByRole("button")).not.toBeInTheDocument();
-    expect(within(section).queryByLabelText("Add stakeholder")).not.toBeInTheDocument();
+    const user = userEvent.setup();
+    const team = await openTeam(user);
+    const remove = within(team).getByRole("button", {
+      name: "Take Casey Contributor off the contract team",
+    });
+    await user.click(remove);
+    expect(await within(team).findByRole("alert")).toHaveTextContent(
+      "Restore this Contract before changing its team.",
+    );
+    expect(remove).toBeEnabled();
   });
 
   it("sets the Owner from the picker and clears it back to unassigned", async () => {
@@ -2164,10 +2028,10 @@ describe("the /contracts/:number record page", () => {
     expect(owner).toHaveValue("");
     await user.selectOptions(owner, "u2");
     await waitFor(() => expect(api.patches).toEqual([{ managerId: "u2" }]));
-    // The roster follows: the Owner heads the Team applet.
+    // The roster follows: the Legal Owner heads the Contract team applet.
     const team = await openTeam(user);
     expect(within(team).getByText("Nadia Counsel")).toBeInTheDocument();
-    expect(within(team).getByText("Owner")).toBeInTheDocument();
+    expect(within(team).getByText("Legal Owner")).toBeInTheDocument();
 
     await user.selectOptions(owner, "");
     await waitFor(() => expect(api.patches).toEqual([{ managerId: "u2" }, { managerId: null }]));
@@ -2543,12 +2407,12 @@ describe("the /contracts/:number record page", () => {
     const user = userEvent.setup();
 
     const team = await openTeam(user);
-    expect(within(team).getByText("Ada Admin")).toBeInTheDocument();
+    expect(within(team).getAllByText("Ada Admin")).toHaveLength(2);
     expect(within(team).getByText("Creator")).toBeInTheDocument();
     // Provenance is not membership: the creator has no remove control.
     expect(
-      within(team).queryByRole("button", { name: /Take Ada Admin off the team/ }),
-    ).not.toBeInTheDocument();
+      within(team).getByRole("button", { name: "Take Ada Admin off the contract team" }),
+    ).toBeInTheDocument();
   });
 
   it("adds a team member through the dialog and takes one off again", async () => {
@@ -2560,41 +2424,36 @@ describe("the /contracts/:number record page", () => {
     const team = await openTeam(user);
     await user.click(within(team).getByRole("button", { name: "Add team member" }));
     await user.selectOptions(screen.getByLabelText("Person"), "u3");
-    await user.selectOptions(screen.getByLabelText("Role"), "contributor");
     await user.click(screen.getByRole("button", { name: "Add" }));
 
-    await waitFor(() => expect(api.teamCalls).toEqual(["add u3 contributor"]));
+    await waitFor(() => expect(api.teamCalls).toEqual(["add u3"]));
     expect(within(team).getByText("Casey Contributor")).toBeInTheDocument();
-    expect(within(team).getByText("Contributor")).toBeInTheDocument();
+    expect(within(team).queryByText("Contributor")).not.toBeInTheDocument();
 
     await user.click(
       within(team).getByRole("button", {
-        name: "Take Casey Contributor off the team as Contributor",
+        name: "Take Casey Contributor off the contract team",
       }),
     );
-    await waitFor(() =>
-      expect(api.teamCalls).toEqual(["add u3 contributor", "remove u3 contributor"]),
-    );
+    await waitFor(() => expect(api.teamCalls).toEqual(["add u3", "remove u3"]));
     expect(within(team).queryByText("Casey Contributor")).not.toBeInTheDocument();
   });
 
-  it("keys a removal to the role, so a second role on the same person stands", async () => {
-    const api = recordApi(contractRow(), [
-      person("u1", "creator"),
-      person("u2", "member"),
-      person("u2", "watcher"),
-    ]);
+  it("removes membership while keeping the person's Creator statement", async () => {
+    const api = recordApi(contractRow({ createdBy: "u2" }), [person("u2")]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42");
     const user = userEvent.setup();
-
     const team = await openTeam(user);
     await user.click(
-      within(team).getByRole("button", { name: "Take Nadia Counsel off the team as Watcher" }),
+      within(team).getByRole("button", { name: "Take Nadia Counsel off the contract team" }),
     );
-    await waitFor(() => expect(api.teamCalls).toEqual(["remove u2 watcher"]));
-    expect(within(team).getByText("Member")).toBeInTheDocument();
-    expect(within(team).queryByText("Watcher")).not.toBeInTheDocument();
+    await waitFor(() => expect(api.teamCalls).toEqual(["remove u2"]));
+    expect(within(team).getByText("Creator")).toBeInTheDocument();
+    expect(within(team).getByText("Nadia Counsel")).toBeInTheDocument();
+    expect(
+      within(team).queryByRole("button", { name: "Take Nadia Counsel off the contract team" }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows the API's refusal when a team change is turned down", async () => {
@@ -2618,7 +2477,7 @@ describe("the /contracts/:number record page", () => {
           });
         }
         if (call.url.pathname === "/api/v1/contracts/42/team" && call.method === "POST") {
-          return problem(409, "This person already holds that role.");
+          return problem(409, "This person is already on the team.");
         }
         return undefined;
       },
@@ -2630,7 +2489,7 @@ describe("the /contracts/:number record page", () => {
     await user.click(within(team).getByRole("button", { name: "Add team member" }));
     await user.selectOptions(screen.getByLabelText("Person"), "u2");
     await user.click(screen.getByRole("button", { name: "Add" }));
-    expect(await screen.findByText("This person already holds that role.")).toBeInTheDocument();
+    expect(await screen.findByText("This person is already on the team.")).toBeInTheDocument();
   });
 
   it("archives the record — every input freezes and the action flips — then restores it", async () => {
@@ -3034,7 +2893,7 @@ describe("the contract record's broader Matter context (M23/6)", () => {
 
     first.view.unmount();
     stubApi({
-      signedIn: CONTRIBUTOR,
+      signedIn: MEMBER,
       extra: (call) => {
         if (call.url.pathname === "/api/v1/contracts/42/matter" && call.method === "GET") {
           return json(200, { matter: { restricted: true } });
@@ -3046,7 +2905,6 @@ describe("the contract record's broader Matter context (M23/6)", () => {
 
     expect(await screen.findByText("Restricted matter")).toBeVisible();
     expect(screen.queryByText(/M-12|Regulatory programme/)).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Link to Matter" })).not.toBeInTheDocument();
   });
 
   it("follows the linked Matter and unlinks back to standalone", async () => {
@@ -3235,18 +3093,6 @@ describe("the contract record's stage pipeline (M14/2)", () => {
     expect(screen.queryByRole("button", { name: /move contract$/ })).not.toBeInTheDocument();
   });
 
-  it("reads the same for a Contributor, who reads the record rather than edits it", async () => {
-    const api = recordApi(contractRow({ statusId: "s-active", stage: "active" }), [
-      person("u3", "contributor"),
-    ]);
-    stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
-    renderAt("/contracts/42");
-
-    const pipeline = await screen.findByRole("list", { name: "Stage" });
-    expect(steps(pipeline).find((step) => step.current)?.stage).toBe("Active");
-    expect(screen.queryByRole("button", { name: /move contract$/ })).not.toBeInTheDocument();
-  });
-
   it("names every status the record may hold, each beside the stage it maps to", async () => {
     await pipelineOn(contractRow());
     const user = userEvent.setup();
@@ -3369,7 +3215,7 @@ describe("the contract record's section tabs (DES-032)", () => {
     // The roster lives in the activity bar beside all sections, so the
     // DES-028 banner's "Manage team" fragment resolves from any of them.
     const team = await openTeam(user);
-    expect(within(team).getByText("Ada Admin")).toBeInTheDocument();
+    expect(within(team).getAllByText("Ada Admin")).toHaveLength(2);
   });
 
   it("lands a section the record does not have on the Overview", async () => {
@@ -3382,170 +3228,14 @@ describe("the contract record's section tabs (DES-032)", () => {
   });
 });
 
-describe("a Contributor on the contract record (M9/1)", () => {
-  /**
-   * The record stub with both Member+ picker reads walled off. A
-   * Contributor is refused them at the seam, so a loader that asked
-   * would be asking for a refusal — `pickerReads` is what proves it
-   * never does.
-   */
-  function contributorApi(...args: Parameters<typeof recordApi>) {
-    const api = recordApi(...args);
-    const pickerReads: string[] = [];
-    const handler = (call: StubCall): Response | undefined => {
-      if (["/api/v1/contracts/options", "/api/v1/entities"].includes(call.url.pathname)) {
-        pickerReads.push(call.url.pathname);
-        return problem(403, "You do not have permission to perform this action.");
-      }
-      return api.handler(call);
-    };
-    return { ...api, handler, pickerReads };
-  }
-
-  it("lets a Contributor edit business-owned details while legal-managed context stays read-only", async () => {
-    const api = contributorApi(
-      contractRow(),
-      [person("u1", "creator"), person("u3", "contributor")],
-      [party("cp-helix", true), party("cp-orion", false)],
-    );
-    stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
-    renderAt("/contracts/42");
-    const user = userEvent.setup();
-
-    // The record reads: the title, the status, the parties, the team.
-    expect(
-      await screen.findByRole("heading", { level: 1, name: /Acme master services agreement/ }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Helix Labs GmbH")).toBeInTheDocument();
-    const team = await openTeam(user);
-    expect(within(team).getByText("Casey Contributor")).toBeInTheDocument();
-    expect(screen.getByText(/Legal-managed details are read-only/)).toBeInTheDocument();
-
-    // Legal-managed context is inert, while DD-015's value and
-    // effective-date inputs remain live.
-    for (const label of [
-      "Title",
-      "Contract type",
-      "Business Owner",
-      "Legal Owner",
-      "Our entity",
-      "Priority",
-      "Risk",
-      "Description",
-    ]) {
-      expect(screen.getByLabelText(label)).toBeDisabled();
-    }
-    for (const label of ["Amount", "Currency", "Cadence", "Effective date"]) {
-      expect(screen.getByLabelText(label)).toBeEnabled();
-    }
-    await user.type(screen.getByLabelText("Amount"), "1200");
-    await user.selectOptions(screen.getByLabelText("Currency"), "USD");
-    await user.selectOptions(screen.getByLabelText("Cadence"), "annually");
-    await user.keyboard("{Enter}");
-    expect(screen.getByRole("combobox", { name: "Counterparties" })).toBeDisabled();
-    // The API projection supplies only the business-tagged attachment;
-    // that Field remains editable behind its own tab.
-    await user.click(screen.getByRole("link", { name: "Fields" }));
-    const terms = await screen.findByLabelText("Payment terms");
-    expect(terms).toBeEnabled();
-    await user.type(terms, "Net 45");
-    await user.tab();
-
-    // Archive, restore, and rename are record-level mutations a
-    // Contributor never gets, so the menu drops those rows rather than
-    // drawing them permanently disabled. It keeps the one row that
-    // changes nothing (DES-055 clause 2).
-    expect(await recordActions(userEvent.setup())).toEqual(["Copy link"]);
-    await userEvent.setup().keyboard("{Escape}");
-    // The team and party controls freeze the way an archived record
-    // freezes them — inert where they stand, gone where the archived
-    // record drops them.
-    expect(within(team).getByRole("button", { name: "Add team member" })).toBeDisabled();
-    expect(screen.queryByRole("button", { name: "Make primary" })).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /Take Helix Labs GmbH off the contract/ }),
-    ).not.toBeInTheDocument();
-    expect(
-      within(team).queryByRole("button", { name: /Take Casey Contributor off the team/ }),
-    ).not.toBeInTheDocument();
-
-    await waitFor(() =>
-      expect(api.patches).toEqual([
-        { value: { amount: 120_000, currency: "USD", cadence: "annually" } },
-        { customFields: { payment_terms: "Net 45" } },
-      ]),
-    );
-    expect(api.posts).toEqual([]);
-    expect(api.pickerReads).toEqual([]);
-  });
-
-  it("still names the type, status, and Owner the record holds, with no picker list to read them from", async () => {
-    const api = contributorApi(
-      contractRow({
-        manager: person("u2"),
-        statusId: "s-redlining",
-        statusName: "With counterparty",
-      }),
-    );
-    stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
-    renderAt("/contracts/42");
-
-    // The selects are inert, so what they show is all the record says.
-    // Each one names what is stored, not a blank — the row carries the
-    // names, so no options read is needed to draw them.
-    expect(await screen.findByLabelText("Contract type")).toHaveDisplayValue("MSA");
-    expect(screen.getByLabelText("Legal Owner")).toHaveDisplayValue("Nadia Counsel");
-    // The status has no control at all for this viewer (DES-053): the
-    // sub-bar pill names it, and the strip is the reading it always
-    // was — no trigger to press and none disabled to work out.
-    const subbar = screen.getByRole("region", { name: "Acme master services agreement" });
-    const pipeline = within(subbar).getByRole("list", { name: "Stage" });
-    expect(
-      within(subbar)
-        .getAllByText("With counterparty")
-        .filter((node) => !pipeline.contains(node)),
-    ).toHaveLength(1);
-    expect(screen.queryByRole("button", { name: /move contract$/ })).not.toBeInTheDocument();
-  });
-
-  it("says archived once on an archived contract, and never offers the restore", async () => {
-    const api = contributorApi(contractRow({ archivedAt: "2026-08-12T00:00:00.000Z" }));
-    stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
-    renderAt("/contracts/42");
-
-    // The archived note carries the state; the read-only note stands
-    // down, because "restore it to edit" is not this viewer's to act on
-    // and two notes over one card would say the same thing twice.
-    expect(await screen.findByText(/This contract is archived/)).toBeInTheDocument();
-    expect(screen.queryByText(/This record is read-only/)).not.toBeInTheDocument();
-    expect(await recordActions(userEvent.setup())).toEqual(["Copy link"]);
-    expect(screen.getByLabelText("Title")).toBeDisabled();
-    expect(api.posts).toEqual([]);
-  });
-
-  it("draws the not-found page for a contract they hold no team row on", async () => {
-    // The API answers 404, exactly as it does for a contract that does
-    // not exist — the client never learns which it was, so the page
-    // says both, inside the shell, with the way back to the list.
-    stubApi({
-      signedIn: CONTRIBUTOR,
-      extra: (call) =>
-        call.url.pathname === "/api/v1/contracts/42" && call.method === "GET"
-          ? problem(404, "No contract exists with this number.")
-          : undefined,
-    });
-    renderAt("/contracts/42");
-
-    expect(
-      await screen.findByRole("heading", { level: 1, name: "Contract not found" }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("C-42 does not exist, or you cannot open it.")).toBeInTheDocument();
-    expect(screen.getByRole("navigation", { name: "Primary" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Back to Contracts" })).toHaveAttribute(
-      "href",
-      "/contracts",
-    );
-    await waitFor(() => expect(document.title).toBe("Contract not found · OpenLaw"));
+describe("Business Users use the Portal", () => {
+  it("redirects a Business User away from the full Contract record", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: BUSINESS, extra: api.handler });
+    const { router } = renderAt("/contracts/42");
+    await waitFor(() => expect(router.state.location.pathname).toBe("/portal"));
+    expect(screen.queryByRole("button", { name: "Contract actions" })).not.toBeInTheDocument();
+    expect(api.recordReads).toBe(0);
   });
 });
 
@@ -3901,9 +3591,7 @@ describe("the contract record's comment applet (M9/2)", () => {
     // case needs no decision.
     expect(within(panel).getByRole("radio", { name: "Contract Team" })).toBeChecked();
     expect(
-      within(panel).getByText(
-        "Visible to the legal team, Contract team members, and the requester.",
-      ),
+      within(panel).getByText("Visible to Legal and all Contract team members."),
     ).toBeInTheDocument();
 
     // The audience is named before the post, never after it (CMT-003).
@@ -4259,111 +3947,6 @@ describe("the contract record's comment applet (M9/2)", () => {
     ).toBeVisible();
   });
 
-  it("shows the filed marker but no File action to a Contributor", async () => {
-    const user = userEvent.setup();
-    const comments = commentsApi([
-      {
-        ...comment("c-filed", "The filed round.", "working_team"),
-        attachments: [
-          {
-            id: "a-filed",
-            filename: "round.pdf",
-            filed: {
-              documentId: "doc-round",
-              documentTitle: "Negotiation",
-              versionId: "ver-round",
-              versionNumber: 2,
-            },
-          },
-        ],
-      },
-    ]);
-    const record = recordApi(contractRow(), [person("u1", "creator"), person("u3", "contributor")]);
-    stubApi({
-      signedIn: CONTRIBUTOR,
-      extra: (call: StubCall) => comments.handler(call) ?? record.handler(call),
-    });
-    renderAt("/contracts/42");
-    await openChat(user);
-    const panel = await screen.findByRole("complementary", { name: "Comments" });
-    expect(
-      within(panel).queryByRole("button", { name: "File to Contract" }),
-    ).not.toBeInTheDocument();
-    expect(within(panel).getByRole("link", { name: "Negotiation, version 2" })).toBeVisible();
-  });
-
-  it("gives a Contributor the Contract Team audience and no trace of a Legal Only comment", async () => {
-    const user = userEvent.setup();
-    // The API filtered at query time, so the Legal Only row is not in
-    // the answer at all — there is no placeholder here to render.
-    const comments = commentsApi([
-      comment("c-1", "Redline goes back Friday.", "working_team"),
-      comment("c-3", "Signature date is the 14th.", "full_thread"),
-    ]);
-    const record = recordApi(contractRow(), [person("u1", "creator"), person("u3", "contributor")]);
-    stubApi({
-      signedIn: CONTRIBUTOR,
-      extra: (call: StubCall) =>
-        comments.handler(call) ??
-        (["/api/v1/contracts/options", "/api/v1/entities"].includes(call.url.pathname)
-          ? problem(403, "You do not have permission to perform this action.")
-          : record.handler(call)),
-    });
-    renderAt("/contracts/42");
-    await openChat(user);
-
-    const panel = await screen.findByRole("complementary", { name: "Comments" });
-    // Absent, not disabled — the same convention the nav and the
-    // settings rail follow. The seam refuses the tier regardless.
-    expect(
-      within(panel)
-        .getAllByRole("radio")
-        .map((radio) => radio.getAttribute("value")),
-    ).toEqual(["full_thread"]);
-    expect(within(panel).queryByRole("radio", { name: "Legal Only" })).not.toBeInTheDocument();
-
-    const rows = within(await screen.findByRole("list", { name: "Comments" })).getAllByRole(
-      "listitem",
-    );
-    expect(rows).toHaveLength(2);
-    expect(within(panel).queryByText("Legal Only")).not.toBeInTheDocument();
-    expect(panel.textContent).not.toContain("1x cap");
-    // The count is the filtered set's, so it hides no gap either.
-    expect(within(panel).getByRole("img", { name: "2 comments" })).toBeInTheDocument();
-  });
-
-  it("lets a Contributor post into the rooms they are in", async () => {
-    const user = userEvent.setup();
-    const comments = commentsApi();
-    const record = recordApi(contractRow(), [person("u1", "creator"), person("u3", "contributor")]);
-    stubApi({
-      signedIn: CONTRIBUTOR,
-      extra: (call: StubCall) =>
-        comments.handler(call) ??
-        (["/api/v1/contracts/options", "/api/v1/entities"].includes(call.url.pathname)
-          ? problem(403, "You do not have permission to perform this action.")
-          : record.handler(call)),
-    });
-    renderAt("/contracts/42");
-    await openChat(user);
-
-    const panel = await screen.findByRole("complementary", { name: "Comments" });
-    await user.type(within(panel).getByLabelText("New comment"), "Procurement has the PO ready.");
-    await user.click(within(panel).getByRole("button", { name: "Comment" }));
-
-    await waitFor(() => {
-      expect(comments.posts).toEqual([
-        {
-          entityType: "contract",
-          entityId: "c1",
-          body: "Procurement has the PO ready.",
-          visibility: "full_thread",
-          mentions: [],
-        },
-      ]);
-    });
-  });
-
   it("says so when the thread cannot be read, and still takes a comment", async () => {
     const user = userEvent.setup();
     const comments = commentsApi();
@@ -4686,43 +4269,6 @@ describe("the contract record's comment applet (M9/2)", () => {
       expect(chip.tagName).toBe("SPAN");
       expect(row.textContent).toContain("@Casey Contributor what did procurement say?");
     });
-
-    it("never asks a Contributor to promote, because every name they are offered hears their tiers", async () => {
-      const user = userEvent.setup();
-      const comments = commentsApi();
-      const record = recordApi(contractRow(), [
-        person("u1", "creator"),
-        person("u3", "contributor"),
-      ]);
-      stubApi({
-        signedIn: CONTRIBUTOR,
-        extra: (call: StubCall) =>
-          comments.handler(call) ??
-          (["/api/v1/contracts/options", "/api/v1/entities"].includes(call.url.pathname)
-            ? problem(403, "You do not have permission to perform this action.")
-            : record.handler(call)),
-      });
-      renderAt("/contracts/42");
-      const { panel, box } = await composerIn(user);
-
-      // No Legal Only segment to select, so no mention can need one.
-      expect(within(panel).queryByRole("radio", { name: "Legal Only" })).not.toBeInTheDocument();
-      await user.type(box, "@Nadia{Enter}we are ready.");
-      await user.click(within(panel).getByRole("button", { name: "Comment" }));
-
-      await waitFor(() => {
-        expect(comments.posts).toEqual([
-          {
-            entityType: "contract",
-            entityId: "c1",
-            body: "@Nadia Counsel we are ready.",
-            visibility: "full_thread",
-            mentions: ["u2"],
-          },
-        ]);
-      });
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    });
   });
 
   /**
@@ -4934,12 +4480,8 @@ describe("the contract record's comment applet (M9/2)", () => {
         person("u3", "contributor"),
       ]);
       stubApi({
-        signedIn: CONTRIBUTOR,
-        extra: (call: StubCall) =>
-          api.handler(call) ??
-          (["/api/v1/contracts/options", "/api/v1/entities"].includes(call.url.pathname)
-            ? problem(403, "You do not have permission to perform this action.")
-            : record.handler(call)),
+        signedIn: { ...MEMBER, id: "another-member" },
+        extra: (call: StubCall) => api.handler(call) ?? record.handler(call),
       });
       renderAt("/contracts/42");
       await openChat(user);
@@ -5327,7 +4869,7 @@ describe("the contract record's comment applet (M9/2)", () => {
       // The tier line still says which room; the notice says the whole
       // panel is inside a wall.
       expect(
-        screen.getByText("Visible to the legal team, Contract team members, and the requester."),
+        screen.getByText("Visible to Legal and all Contract team members."),
       ).toBeInTheDocument();
 
       // Every segment, and the statement holds at each of them.
@@ -6238,7 +5780,7 @@ describe("the contract record's history applet (M9/6)", () => {
     const sources = stubEventSource();
     const pages = [[entry("a1", "contract.created")]];
     const activity = activityApi(pages);
-    stubApi({ signedIn: CONTRIBUTOR, extra: pageApi(activity) });
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
     renderAt("/contracts/42");
     await openHistory(user);
 
@@ -6289,20 +5831,6 @@ describe("the contract record's history applet (M9/6)", () => {
     expect(await within(panel).findByRole("alert")).toHaveTextContent(
       "The history could not be read.",
     );
-  });
-
-  it("opens the same panel for a Contributor on the team", async () => {
-    const user = userEvent.setup();
-    // The API filters the feed; the panel takes what it is given. What
-    // this proves is that a Contributor reaches the applet at all —
-    // the tier predicate itself is proven at the API seam.
-    const activity = activityApi([[entry("a1", "comment.posted", { commentId: "c1" })]]);
-    stubApi({ signedIn: CONTRIBUTOR, extra: pageApi(activity) });
-    renderAt("/contracts/42");
-    await openHistory(user);
-
-    const feed = await screen.findByRole("list", { name: "History" });
-    expect(within(feed).getAllByRole("listitem")[0]).toHaveTextContent("Nadia Counsel commented");
   });
 
   /**
@@ -6428,7 +5956,7 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
     // lint holds the banner's own pair to.
     expect(manage).toHaveClass("text-confidential");
     await user.click(manage);
-    const team = await screen.findByRole("complementary", { name: "Team" });
+    const team = await screen.findByRole("complementary", { name: "Contract team" });
     expect(team).toHaveAttribute("id", "contract-team");
     expect(team).toHaveFocus();
     // The same clause gates the control: an Administrator off the team
@@ -6497,7 +6025,7 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
     // deciding is withheld.
     expect(within(team).getByRole("button", { name: "Add team member" })).toBeDisabled();
     expect(
-      within(team).getByRole("button", { name: "Take Casey Contributor off the team as Member" }),
+      within(team).getByRole("button", { name: "Take Casey Contributor off the contract team" }),
     ).toBeDisabled();
     // The roster still reads.
     expect(within(team).getByText("Casey Contributor")).toBeVisible();
@@ -6515,7 +6043,7 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
     const team = await openTeam(actorUser);
     expect(within(team).getByRole("button", { name: "Add team member" })).toBeEnabled();
     expect(
-      within(team).getByRole("button", { name: "Take Casey Contributor off the team as Member" }),
+      within(team).getByRole("button", { name: "Take Casey Contributor off the contract team" }),
     ).toBeEnabled();
     walled.view.unmount();
 
@@ -6530,7 +6058,7 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
     const open = await openTeam(openUser);
     expect(within(open).getByRole("button", { name: "Add team member" })).toBeEnabled();
     expect(
-      within(open).getByRole("button", { name: "Take Casey Contributor off the team as Member" }),
+      within(open).getByRole("button", { name: "Take Casey Contributor off the contract team" }),
     ).toBeEnabled();
   });
 
@@ -6594,24 +6122,6 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
     // control that vanished would leave it unreadable on the card.
     expect(flag).toBeDisabled();
     expect(flag).toBeChecked();
-  });
-
-  it("gives a Contributor on the team the inert control too", async () => {
-    const api = recordApi(contractRow({ isConfidential: true }), [
-      person("u1", "creator"),
-      person("u3", "contributor"),
-    ]);
-    stubApi({
-      signedIn: CONTRIBUTOR,
-      extra: (call) =>
-        ["/api/v1/contracts/options", "/api/v1/entities"].includes(call.url.pathname)
-          ? problem(403, "You do not have permission to perform this action.")
-          : api.handler(call),
-    });
-    renderAt("/contracts/42");
-
-    expect(await screen.findByRole("region", { name: BANNER })).toBeInTheDocument();
-    expect(screen.getByRole("switch", { name: FLAG })).toBeDisabled();
   });
 
   it("freezes the control on an archived record, like every other edit", async () => {
@@ -7496,66 +7006,6 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(within(section).getAllByText("Primary")).toHaveLength(1);
   });
 
-  it("offers a Contributor only supporting upload actions", async () => {
-    const api = documentsApi([DRAFT, THEIRS], {}, [
-      person("u1", "creator"),
-      person("u3", "contributor"),
-    ]);
-    stubApi({
-      signedIn: CONTRIBUTOR,
-      extra: (call) =>
-        ["/api/v1/contracts/options", "/api/v1/entities"].includes(call.url.pathname)
-          ? problem(403, "You do not have permission to perform this action.")
-          : api.handler(call),
-    });
-    renderAt("/contracts/42/documents");
-    const user = userEvent.setup();
-
-    const section = await documentsSection();
-    await user.click(within(section).getByRole("button", { name: "Upload" }));
-    const upload = await screen.findByRole("dialog");
-    expect(within(upload).queryByRole("button", { name: "File Choose folder" })).toBeNull();
-    await user.click(within(upload).getByRole("button", { name: "Cancel" }));
-    // The primary chain has no write at all. The reached supporting
-    // chain offers the one act DD-015 allows and no administration.
-    expect(
-      within(section).queryByRole("button", {
-        name: "Actions for Orion_MSA_2026_draft.docx",
-      }),
-    ).not.toBeInTheDocument();
-    expect(await menuVerbs(user, section, "Orion_MSA_2026_redline_orion.docx")).toEqual([
-      "Add version",
-    ]);
-    await user.keyboard("{Escape}");
-    expect(within(section).queryByRole("button", { name: "New folder" })).not.toBeInTheDocument();
-    expect(within(section).queryByRole("combobox")).not.toBeInTheDocument();
-    expect(within(section).queryByRole("switch")).not.toBeInTheDocument();
-  });
-
-  it("offers a Contributor comparison alone on a primary Version row", async () => {
-    const api = documentsApi([CHAIN], {}, [person("u1", "creator"), person("u3", "contributor")]);
-    stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
-    renderAt("/contracts/42/documents");
-    const user = userEvent.setup();
-
-    const section = await documentsSection();
-    await user.click(
-      within(section).getByRole("button", {
-        name: `Actions for version 3 of ${CHAIN.title}`,
-      }),
-    );
-    expect(
-      within(await screen.findByRole("menu"))
-        .getAllByRole("menuitem")
-        .map((item) => item.textContent),
-    ).toEqual(["Compare with previous"]);
-    await user.keyboard("{Escape}");
-    // Supporting upload is the Contributor's existing DD-015 control;
-    // comparison adds no administration action beside it.
-    expect(within(section).getByRole("button", { name: "Upload" })).toBeInTheDocument();
-    expect(within(section).queryByRole("button", { name: "New folder" })).not.toBeInTheDocument();
-  });
-
   it("freezes the section's controls on an archived record", async () => {
     const record = recordApi(contractRow({ archivedAt: "2026-08-02T00:00:00.000Z" }));
     stubApi({
@@ -8229,7 +7679,7 @@ describe("the doc panel (M12/2)", () => {
     ).toBeVisible();
     expect(await screen.findByRole("searchbox", { name: "Find in document" })).toHaveValue(quote);
     expect(await screen.findByText("1 of 1")).toBeVisible();
-    expect(screen.queryByRole("dialog", { name: "Source document" })).toBeNull();
+    expect(screen.queryByRole("dialog", { name: "Unverified value" })).toBeNull();
     expect(router.state.location.pathname).toBe("/contracts/42");
     await user.click(screen.getByRole("button", { name: "Close the document" }));
     await waitFor(() => expect(trigger).toHaveFocus());
@@ -8770,20 +8220,6 @@ describe("the doc panel (M12/2)", () => {
         hidden: true,
       }),
     ).toBeNull();
-  });
-
-  it("lets a Contributor on the team read what they can already download", async () => {
-    stubApi({ signedIn: CONTRIBUTOR, extra: panelApi([document()]) });
-    renderAt("/contracts/42/documents");
-    const user = userEvent.setup();
-
-    const list = await section();
-    await user.click(
-      within(list).getByRole("button", { name: "Orion Cloud — master services agreement" }),
-    );
-    // Read access means reading, on every surface: the panel is not a
-    // write and is offered to everyone the record names.
-    expect(await panel(/master services agreement, version 1/)).toBeVisible();
   });
 
   /**
@@ -9523,29 +8959,6 @@ describe("the folder tree on the contract record (M13/2, DES-033)", () => {
     expect(await within(dialog).findByRole("alert")).toHaveTextContent("Give the folder a name.");
     expect(api.writes).toEqual([]);
   });
-
-  it("shows a Contributor the tree and offers them no control on it", async () => {
-    stubApi({
-      signedIn: CONTRIBUTOR,
-      extra: foldersApi([folder("f-1", "Correspondence"), folder("f-2", "2026", "f-1")], {}, [
-        person("u1", "creator"),
-        person("u3", "contributor"),
-      ]).handler,
-    });
-    renderAt("/contracts/42/documents");
-    const user = userEvent.setup();
-
-    const section = await documentsSection();
-    expect(await within(section).findByText("Correspondence")).toBeVisible();
-    // Read-only means the controls are absent, not disabled — DES-025's
-    // convention applied to a whole section.
-    expect(within(section).queryByRole("button", { name: "New folder" })).toBeNull();
-    expect(within(section).queryByRole("button", { name: /^Actions for the/ })).toBeNull();
-    // The tree still opens: reading the structure is the whole point of
-    // drawing it for them.
-    await user.click(within(section).getByRole("button", { name: "Expand Correspondence" }));
-    expect(await within(section).findByText("2026")).toBeVisible();
-  });
 });
 
 /**
@@ -9908,8 +9321,8 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
     const doc = await screen.findByRole("complementary", { name: "signed.pdf, version 1" });
 
     const bar = screen.getByRole("toolbar", { name: "Applets" });
-    await user.click(within(bar).getByRole("button", { name: "Team" }));
-    const applet = await screen.findByRole("complementary", { name: "Team" });
+    await user.click(within(bar).getByRole("button", { name: "Contract team" }));
+    const applet = await screen.findByRole("complementary", { name: "Contract team" });
 
     expect(doc).toBeVisible();
     expect(applet).toBeVisible();
@@ -10342,33 +9755,6 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
         .getAllByRole("option")
         .map((option) => option.textContent),
     ).toEqual(["None", "Correspondence", "Correspondence / 2026"]);
-  });
-
-  it("offers a Contributor only Version append inside the tree", async () => {
-    const api = filingApi(
-      [document("doc-1", "signed.pdf", "f-1")],
-      [folder("f-1", "Executed")],
-      {},
-      [person("u1", "creator"), person("u3", "contributor")],
-    );
-    stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
-    renderAt("/contracts/42/documents");
-    const user = userEvent.setup();
-
-    const section = await documentsSection();
-    // The folder opens and its documents read: the record reads the same
-    // for everyone on it (DD-015).
-    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
-    expect(await within(section).findByText("signed.pdf")).toBeVisible();
-    // Appending a Version to this supporting chain is the only write.
-    // Filing and folder administration remain absent rather than dead.
-    await user.click(within(section).getByRole("button", { name: "Actions for signed.pdf" }));
-    const menu = await screen.findByRole("menu");
-    expect(
-      within(menu)
-        .getAllByRole("menuitem")
-        .map((item) => item.textContent),
-    ).toEqual(["Add version"]);
   });
 
   it("says a folder's documents are on their way while they load", async () => {
@@ -11611,10 +10997,20 @@ it("shows Conversion draft evidence beside Contract Overview values without leav
   const title = await screen.findByLabelText("Title");
   expect(title.closest("[data-ai-generated]")).not.toBeNull();
   await user.click(screen.getByRole("button", { name: "View source evidence" }));
-  expect(await screen.findByText("Please review this agreement")).toBeVisible();
+  // The popover names the source; the passage waits in the reader.
+  const source = await screen.findByRole("button", { name: "Request conversation" });
+  expect(screen.queryByText("review this agreement")).toBeNull();
+  await user.click(source);
+  const panel = await screen.findByRole("dialog", { name: "Unverified value" });
+  expect(
+    within(panel).getByText("review this agreement", { selector: "blockquote" }),
+  ).toBeVisible();
+  expect(screen.queryByText("Please review this agreement")).toBeNull();
   expect(router.state.location.pathname).toBe("/contracts/42");
   await user.keyboard("{Escape}");
-  expect(screen.getByRole("button", { name: "View source evidence" })).toHaveFocus();
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: "View source evidence" })).toHaveFocus(),
+  );
 });
 
 it("revalidates post-conversion Analysis without losing a typed title", async () => {
@@ -11633,7 +11029,10 @@ it("revalidates post-conversion Analysis without losing a typed title", async ()
   const title = await screen.findByLabelText("Title");
   await user.clear(title);
   await user.type(title, "Unsaved human title");
-  expect(screen.getByText(/Filling Contract Fields from the Request/)).toBeVisible();
+  // The run's sentence is the Fields section's (DES-075); the typed
+  // draft is the record's, and it rides along between sections.
+  await user.click(screen.getByRole("link", { name: "Fields" }));
+  expect(await screen.findByText(/Filling Contract Fields from the Request/)).toBeVisible();
   api.updateRow({ description: "Revalidated Contract description." });
   api.updateAnalysis({
     available: true,
@@ -11643,7 +11042,10 @@ it("revalidates post-conversion Analysis without losing a typed title", async ()
     () => expect(screen.getByText(/Request-context Analysis completed/)).toBeVisible(),
     { timeout: 10_000 },
   );
-  expect(screen.getByLabelText("Description")).toHaveValue("Revalidated Contract description.");
+  await user.click(screen.getByRole("link", { name: "Overview" }));
+  expect(await screen.findByLabelText("Description")).toHaveValue(
+    "Revalidated Contract description.",
+  );
   expect(screen.getByLabelText("Title")).toHaveValue("Unsaved human title");
 });
 
@@ -11677,9 +11079,49 @@ it("offers a safe retry for a failed Request-context Analysis run", async () => 
       return api.handler(call);
     },
   });
-  renderAt("/contracts/42");
+  renderAt("/contracts/42/fields");
   expect(await screen.findByText(/The Contract was created successfully/)).toBeVisible();
   await user.click(screen.getByRole("button", { name: "Retry Request-context Analysis" }));
   expect(await screen.findByText(/Filling Contract Fields from the Request/)).toBeVisible();
   expect(calls).toEqual(["/api/v1/contracts/42/analysis/run-ready/retry"]);
+});
+
+it("toggles the current and requester descriptions without replacing the saved contract description", async () => {
+  const user = userEvent.setup();
+  const api = recordApi(contractRow());
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) => {
+      const response = api.handler(call);
+      if (call.url.pathname === "/api/v1/contracts/42" && call.method === "GET")
+        return response!.json().then((body) =>
+          json(200, {
+            ...body,
+            originalIntake: {
+              number: 100,
+              description: "Requester context omitted from the summary.",
+            },
+          }),
+        );
+      return response;
+    },
+  });
+  renderAt("/contracts/42");
+  const toggle = await screen.findByRole("switch", { name: "Show requester description" });
+  expect(screen.getByLabelText("Description")).toHaveValue("Three-year platform engagement.");
+  await user.click(toggle);
+  expect(screen.getByText("Requester context omitted from the summary.")).toBeVisible();
+  expect(screen.queryByRole("textbox", { name: "Description" })).toBeNull();
+  await user.click(toggle);
+  expect(screen.getByLabelText("Description")).toHaveValue("Three-year platform engagement.");
+  expect(api.patches).toEqual([]);
+  const current = screen.getByLabelText("Description");
+  await user.clear(current);
+  await user.type(current, "Lawyer's updated description");
+  await user.click(toggle);
+  await waitFor(() =>
+    expect(api.patches).toEqual([{ description: "Lawyer's updated description" }]),
+  );
+  await user.click(toggle);
+  expect(screen.getByLabelText("Description")).toHaveValue("Lawyer's updated description");
 });

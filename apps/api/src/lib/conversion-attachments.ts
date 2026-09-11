@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 /** INT-008 and DOC-005: bounded Request attachment reads through storage and the document engine. */
+import { maxUploadBytes } from "./uploads.js";
 import { uuidv7 } from "uuidv7";
 import { Readable } from "node:stream";
 import type { ConversionAttachmentRead } from "@openlaw/shared";
@@ -11,13 +12,8 @@ import { emailBodyText, parseStoredEmail } from "./email/parse.js";
 import { hasUsableTextLayer } from "../pipeline/text-extraction.js";
 
 export const ATTACHMENT_LIMITS = {
-  sources: 20,
-  bytes: 10 * 1024 * 1024,
-  totalBytes: 50 * 1024 * 1024,
-  characters: 30_000,
-  totalCharacters: 180_000,
-  sourceRuntimeMs: 15_000,
-  runtimeMs: 45_000,
+  bytes: maxUploadBytes(process.env.MAX_UPLOAD_MB),
+  sourceRuntimeMs: 120_000,
 } as const;
 export class AttachmentBudgetError extends Error {
   constructor(readonly reason: "byte_limit" | "runtime_limit") {
@@ -75,13 +71,9 @@ export async function extractAttachment(
     method = "email_body";
   } else return { text, mimeType, status: "unsupported" as const };
   signal?.throwIfAborted();
-  const status = !text.trim()
-    ? "unreadable"
-    : text.length > ATTACHMENT_LIMITS.characters
-      ? "truncated"
-      : "readable";
+  const status = text.trim() ? "readable" : "unreadable";
   return {
-    text: text.slice(0, ATTACHMENT_LIMITS.characters),
+    text,
     mimeType,
     method,
     pdf,
@@ -97,17 +89,13 @@ export interface AttachmentSource {
   restricted: boolean;
   versionId: string | null;
 }
-/** Sequential ordering fixes which sources survive the shared budgets. No storage key comes from a filename. */
+/** Read every eligible attachment; individual failures do not hide later sources. */
 export async function readConversionAttachments(
   deps: { storage: StorageAdapter; docEngine: DocEngine },
   sources: AttachmentSource[],
   draftId: string,
-  remainingCharacters: number,
 ): Promise<ConversionAttachmentRead[]> {
   const reads: ConversionAttachmentRead[] = [];
-  const deadline = Date.now() + ATTACHMENT_LIMITS.runtimeMs;
-  let bytesLeft = ATTACHMENT_LIMITS.totalBytes as number;
-  let count = 0;
   for (const source of sources) {
     const read: ConversionAttachmentRead = {
       sourceId: source.id,
@@ -119,22 +107,6 @@ export async function readConversionAttachments(
     reads.push(read);
     if (source.restricted) {
       read.reason = "restricted";
-      continue;
-    }
-    if (count++ >= ATTACHMENT_LIMITS.sources) {
-      read.reason = "source_limit";
-      continue;
-    }
-    if (remainingCharacters <= 0) {
-      read.reason = "character_limit";
-      continue;
-    }
-    if (bytesLeft <= 0) {
-      read.reason = "byte_limit";
-      continue;
-    }
-    if (Date.now() >= deadline) {
-      read.reason = "runtime_limit";
       continue;
     }
     let timer: NodeJS.Timeout | undefined;
@@ -149,14 +121,9 @@ export async function readConversionAttachments(
             stream.destroy();
             throw new Error("expired");
           }
-          const bytes = await boundedBytes(
-            stream,
-            Math.min(ATTACHMENT_LIMITS.bytes, bytesLeft),
-            (size) => {
-              controller.signal.throwIfAborted();
-              bytesLeft -= size;
-            },
-          );
+          const bytes = await boundedBytes(stream, ATTACHMENT_LIMITS.bytes, () => {
+            controller.signal.throwIfAborted();
+          });
           const extracted = await extractAttachment(
             deps.docEngine,
             source.label,
@@ -180,27 +147,19 @@ export async function readConversionAttachments(
           return { ...extracted, previewRef, byteSize: bytes.length };
         })(),
         new Promise<never>((_, reject) => {
-          timer = setTimeout(
-            () => {
-              expired = true;
-              controller.abort();
-              stream?.destroy();
-              reject(new AttachmentBudgetError("runtime_limit"));
-            },
-            Math.min(ATTACHMENT_LIMITS.sourceRuntimeMs, deadline - Date.now()),
-          );
+          timer = setTimeout(() => {
+            expired = true;
+            controller.abort();
+            stream?.destroy();
+            reject(new AttachmentBudgetError("runtime_limit"));
+          }, ATTACHMENT_LIMITS.sourceRuntimeMs);
         }),
       ]);
       read.status = result.status;
-      read.text = result.text.slice(0, remainingCharacters);
+      read.text = result.text;
       read.mimeType = result.mimeType;
       read.method = result.method;
       read.byteSize = result.byteSize;
-      if (read.text.length < result.text.length || result.status === "truncated") {
-        read.status = "truncated";
-        read.reason = "character_limit";
-      }
-      remainingCharacters -= read.text.length;
       read.previewRef = result.previewRef;
     } catch (error) {
       read.status =

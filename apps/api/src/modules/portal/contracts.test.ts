@@ -25,7 +25,7 @@ beforeAll(async () => {
     ["first", "business_user"],
     ["second", "business_user"],
     ["outsider", "business_user"],
-    ["contributor", "contributor"],
+    ["business_user", "business_user"],
   ] as const) {
     const fixture = {
       email: `portal-contract-${name}@example.com`,
@@ -69,35 +69,34 @@ const read = (number: number, name = "first") =>
 const add = (number: number, name: string, cookies = admin) =>
   harness.app.inject({
     method: "POST",
-    url: `/api/v1/contracts/${number}/stakeholders`,
+    url: `/api/v1/contracts/${number}/team`,
     cookies,
     payload: { userId: person(name).id },
   });
 
 describe("Portal Contract access", () => {
-  it("grants access to the current Business Owner and explicit stakeholders independently", async () => {
+  it("keeps Business Owner responsibility independent of the team grant", async () => {
     const contract = await create("Portal ownership");
+    expect((await patch(contract.number, { businessOwnerId: person("first").id })).statusCode).toBe(
+      200,
+    );
     expect((await read(contract.number)).statusCode).toBe(404);
-    const owned = await patch(contract.number, { businessOwnerId: person("first").id });
-    expect(owned.statusCode, owned.body).toBe(200);
-    expect(owned.json().contract.businessOwner).toMatchObject({ id: person("first").id });
-    expect((await read(contract.number)).statusCode).toBe(200);
-    expect((await read(contract.number, "outsider")).statusCode).toBe(404);
     expect((await add(contract.number, "first", person("member").cookies)).statusCode).toBe(201);
     expect(
       (await patch(contract.number, { businessOwnerId: person("second").id })).statusCode,
     ).toBe(200);
     expect((await read(contract.number)).statusCode).toBe(200);
-    expect((await read(contract.number, "second")).statusCode).toBe(200);
-    const removed = await harness.app.inject({
-      method: "DELETE",
-      url: `/api/v1/contracts/${contract.number}/stakeholders/${person("first").id}`,
-      cookies: admin,
-    });
-    expect(removed.statusCode, removed.body).toBe(200);
-    expect((await read(contract.number)).statusCode).toBe(404);
-    expect((await patch(contract.number, { businessOwnerId: null })).statusCode).toBe(200);
     expect((await read(contract.number, "second")).statusCode).toBe(404);
+    expect(
+      (
+        await harness.app.inject({
+          method: "DELETE",
+          url: `/api/v1/contracts/${contract.number}/team/${person("first").id}`,
+          cookies: admin,
+        })
+      ).statusCode,
+    ).toBe(200);
+    expect((await read(contract.number)).statusCode).toBe(404);
   });
 
   it("requires Member+ to manage access and refuses invalid or archived people", async () => {
@@ -106,9 +105,9 @@ describe("Portal Contract access", () => {
       method: "POST",
       url: `/api/v1/contracts/${contract.number}/team`,
       cookies: admin,
-      payload: { userId: person("contributor").id, role: "contributor" },
+      payload: { userId: person("business_user").id },
     });
-    for (const name of ["first", "contributor"]) {
+    for (const name of ["first", "business_user"]) {
       expect(
         (
           await patch(
@@ -152,13 +151,13 @@ describe("Portal Contract access", () => {
       method: "POST",
       url: `/api/v1/contracts/${contract.number}/team`,
       cookies: admin,
-      payload: { userId: person("first").id, role: "watcher" },
+      payload: { userId: person("first").id },
     });
     expect(grant.statusCode, grant.body).toBe(201);
     expect((await read(contract.number)).statusCode).toBe(200);
     await harness.app.inject({
       method: "DELETE",
-      url: `/api/v1/contracts/${contract.number}/team/${person("first").id}/watcher`,
+      url: `/api/v1/contracts/${contract.number}/team/${person("first").id}`,
       cookies: admin,
     });
     expect((await read(contract.number)).statusCode).toBe(404);
@@ -182,6 +181,7 @@ describe("Portal Contract access", () => {
         },
       })
       .where(eq(contracts.id, contract.id));
+    await add(contract.number, "first");
     const detail = await read(contract.number);
     expect(detail.json().contract.unverifiedFields).toEqual(["expiryDate"]);
     expect(detail.body).not.toContain("internal legal evidence");
@@ -269,6 +269,7 @@ const documentRead = (
 it("gates every Document endpoint on current ownership, current primary Version, and named Confidential audience", async () => {
   const contract = await create("Portal paper");
   await patch(contract.number, { businessOwnerId: person("first").id });
+  await add(contract.number, "first");
   const first = (await upload(contract.number)).document;
   const detail = (await read(contract.number)).json().contract.primaryDocument;
   expect(detail.id).toBe(first.id);
@@ -312,19 +313,19 @@ it("gates every Document endpoint on current ownership, current primary Version,
     .update(documents)
     .set({ isConfidential: true })
     .where(eq(documents.id, first.id));
-  expect((await read(contract.number)).json().contract.primaryDocument).toBeNull();
-  for (const suffix of suffixes)
-    expect((await documentRead(contract.number, first.id, latest.id, suffix)).statusCode).toBe(404);
-  await harness.app.inject({
-    method: "POST",
-    url: `/api/v1/contracts/${contract.number}/team`,
-    cookies: admin,
-    payload: { userId: person("first").id, role: "watcher" },
-  });
+  expect((await read(contract.number)).json().contract.primaryDocument.id).toBe(first.id);
   expect((await documentRead(contract.number, first.id, latest.id, "preview")).statusCode).toBe(
     200,
   );
   expect((await patch(contract.number, { businessOwnerId: null })).statusCode).toBe(200);
+  expect((await documentRead(contract.number, first.id, latest.id, "preview")).statusCode).toBe(
+    200,
+  );
+  await harness.app.inject({
+    method: "DELETE",
+    url: `/api/v1/contracts/${contract.number}/team/${person("first").id}`,
+    cookies: admin,
+  });
   for (const suffix of suffixes)
     expect((await documentRead(contract.number, first.id, latest.id, suffix)).statusCode).toBe(404);
 });
@@ -390,6 +391,7 @@ it("paginates only eligible Contracts with no repeated rows or hidden record cur
       })
       .returning({ number: contracts.number });
     ids.push(inserted!.number);
+    await add(inserted!.number, "outsider");
   }
   await create("Hidden newest Contract");
   const first = await harness.app.inject({

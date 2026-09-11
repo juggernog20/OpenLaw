@@ -107,7 +107,7 @@ const Rendition = z.object({
 });
 const PAGE_SIZE = 25;
 const ACCESS_SUMMARY =
-  "DD-021: Administrator, Legal Team Member, Contributor or Business User must be the current Business Owner or an explicit stakeholder. Archived records are excluded; Confidential records require named team membership or Legal Owner. Document reads accept only the current Version of the primary Document. ";
+  "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. ";
 const NO_DOCUMENT = "No primary Document Version exists at this address.";
 
 export const portalContractRoutes: FastifyPluginAsyncZod = async (app) => {

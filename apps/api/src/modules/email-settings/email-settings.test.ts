@@ -232,7 +232,7 @@ describe("resolved from the database when the environment sets no SMTP", () => {
       method: "POST",
       url: "/api/v1/auth/invites",
       cookies: adminCookies,
-      payload: { email: "june@example.com", displayName: "June Ito", role: "contributor" },
+      payload: { email: "june@example.com", displayName: "June Ito", role: "legal_team_member" },
     });
     expect(invited.statusCode, invited.body).toBe(201);
     expect(harness.mailer.messagesTo("june@example.com")).toHaveLength(1);

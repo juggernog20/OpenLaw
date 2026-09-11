@@ -19,6 +19,7 @@ import {
   count,
   eq,
   requests,
+  contractTeam,
   requestTypes,
   users,
 } from "@openlaw/db";
@@ -66,7 +67,7 @@ beforeAll(async () => {
 
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
     [REQUESTER, "business_user"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
@@ -142,7 +143,7 @@ async function contractWithContributor(title: string) {
     method: "POST",
     url: `/api/v1/contracts/${contract.number}/team`,
     cookies: adminCookies,
-    payload: { userId: contributorId, role: "contributor" },
+    payload: { userId: contributorId },
   });
   expect(added.statusCode, added.body).toBe(201);
   return contract;
@@ -334,7 +335,7 @@ describe("posting comment attachments", () => {
       "contract",
       contract.id,
       "Here are the rounds.",
-      "working_team",
+      "full_thread",
       Array.from({ length: 5 }, (_, index) => ({ filename: `round-${index + 1}.pdf` })),
       [contributorId],
     );
@@ -548,6 +549,13 @@ describe("the attachment inherits the comment's audience", () => {
       .set({ status: "converted", convertedContractId: contract.id })
       .where(eq(requests.id, requestId));
 
+    const [original] = await harness.db
+      .select({ requesterId: requests.requesterId })
+      .from(requests)
+      .where(eq(requests.id, requestId));
+    await harness.db
+      .insert(contractTeam)
+      .values({ contractId: contract.id, userId: original!.requesterId });
     const posted = await postMultipart(
       requesterCookies,
       "request",
@@ -1199,7 +1207,7 @@ describe("filing comment attachments", () => {
       method: "POST",
       url: `/api/v1/contracts/${contract.number}/team`,
       cookies: adminCookies,
-      payload: { userId: memberId, role: "member" },
+      payload: { userId: memberId },
     });
     expect(named.statusCode, named.body).toBe(201);
     const namedRead = await readThread(memberCookies, "contract", contract.id);

@@ -1,77 +1,52 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** MTR-003 and CTR-004 share one roster row per person with separate role tags. */
-
 import { X } from "lucide-react";
 import { Avatar } from "./avatar";
 import { Button } from "./ui/button";
 
-interface TeamPerson {
+export interface TeamPerson {
   id: string;
   displayName: string;
   image: string | null;
   archived: boolean;
 }
-type TeamRoleTag = {
-  id: string;
-  label: string;
-  removeDisabled?: boolean;
-} & (
-  { onRemove?: () => void; removeLabel: string } | { onRemove?: undefined; removeLabel?: undefined }
-);
 export interface TeamRosterEntry {
   person: TeamPerson;
-  role: TeamRoleTag;
+  statement?: string;
+  onRemove?: () => void;
+  removeLabel?: string;
+  removeDisabled?: boolean;
 }
 
-/** One person can hold several roles; removing a tag removes only that role. */
+/** Responsibility statements and one removable membership per person. */
 export function TeamRoster({ entries }: Readonly<{ entries: readonly TeamRosterEntry[] }>) {
-  const people = new Map<string, { person: TeamPerson; roles: Map<string, TeamRoleTag> }>();
-  for (const { person, role } of entries) {
-    let row = people.get(person.id);
-    if (!row) {
-      row = { person, roles: new Map() };
-      people.set(person.id, row);
-    }
-    row.roles.set(role.id, role);
-  }
   return (
     <ul className="flex flex-col py-1">
-      {[...people.values()].map(({ person, roles }) => (
+      {entries.map(({ person, statement, onRemove, removeLabel, removeDisabled }) => (
         <li
-          key={person.id}
-          className={`flex items-start gap-2.5 px-4 py-2.5 ${person.archived ? "opacity-50" : ""}`}
+          key={`${person.id}:${statement ?? "membership"}`}
+          className={`flex items-center gap-2.5 px-4 py-2.5 ${person.archived ? "opacity-50" : ""}`}
         >
-          <Avatar name={person.displayName} image={person.image} className="mt-0.5 size-6" />
-          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+          <Avatar name={person.displayName} image={person.image} className="size-6" />
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            {statement && <span className="text-xs text-muted">{statement}</span>}
             <span className="truncate text-base font-medium" title={person.displayName}>
               {person.displayName}
             </span>
-            <div className="flex flex-wrap gap-1">
-              {[...roles.values()].map((role) => (
-                <span
-                  key={role.id}
-                  className="inline-flex min-h-6 items-center rounded-chip border border-border-default bg-control ps-2 text-xs text-muted"
-                >
-                  <span className={role.onRemove ? "" : "pe-2"}>{role.label}</span>
-                  {role.onRemove && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="ms-0.5"
-                      disabled={role.removeDisabled}
-                      aria-label={role.removeLabel}
-                      title={role.removeLabel}
-                      onClick={role.onRemove}
-                    >
-                      <X size={12} aria-hidden="true" />
-                    </Button>
-                  )}
-                </span>
-              ))}
-            </div>
           </div>
+          {onRemove && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              disabled={removeDisabled}
+              aria-label={removeLabel}
+              title={removeLabel}
+              onClick={onRemove}
+            >
+              <X size={16} aria-hidden="true" />
+            </Button>
+          )}
         </li>
       ))}
     </ul>

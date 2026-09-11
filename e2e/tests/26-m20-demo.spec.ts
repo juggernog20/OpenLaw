@@ -192,7 +192,7 @@ async function enterPortalByMagicLink(
 ): Promise<Page> {
   const page = await context.newPage();
   await page.goto("/portal/enter");
-  await expect(page.getByText("Legal request portal")).toBeVisible();
+  await expect(page.getByText("Legal portal")).toBeVisible();
   await page.getByLabel("Email").fill(REQUESTER);
   await page.getByRole("button", { name: "Send link" }).click();
   // The sent screen says the same thing whether or not mail goes out;
@@ -297,7 +297,7 @@ test.describe.serial("M20 demo path", () => {
       // M20/2 and M20/9 addenda): the surface name, the identity and the
       // way out, and exactly two destinations — a bell and a gear.
       const banner = portal.getByRole("banner");
-      await expect(banner.getByText("Legal request portal")).toBeVisible();
+      await expect(banner.getByText("Legal portal")).toBeVisible();
       await expect(banner.getByText(REQUESTER, { exact: true }).first()).toBeVisible();
       await expect(banner.getByRole("button", { name: "Sign out" })).toBeVisible();
       await expect(banner.getByRole("link", { name: "Notification settings" })).toBeVisible();

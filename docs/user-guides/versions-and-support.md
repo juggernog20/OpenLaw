@@ -33,7 +33,7 @@ Bundled reading and documentation search do not require an external documentatio
 Before reporting a missing capability, check the procedure's prerequisites and current constraints:
 
 - [Roles and access](roles-and-access.md): links, relationships, and mentions do not grant access; Administrators retain access to Confidential records.
-- [Contributor work](contributor-guide.md): legal actions and Task completion remain with Legal.
+- [Portal record work](contributor-guide.md): legal actions and Task completion remain with Legal.
 - [Document reading](document-previews.md): storage support is wider than preview support; processing and original downloads can have different outcomes.
 - [Approval](contract-approvals.md): requests are parallel internal decisions; unresolved requests produce a warning when moving beyond Approval.
 - [Electronic signing](electronic-signing.md) and [Analysis](contract-analysis.md): availability depends on their separate connector configuration and the target Document. Manual signing remains available without a connector.
@@ -59,6 +59,6 @@ Include:
 - Short steps using fictional names and records, the expected outcome, and what actually happened.
 - The relevant error wording and time, with private data removed.
 
-For example: “As a Contributor, I followed ‘Work on a shared Contract or Matter,’ ‘Supply a supporting Document.’ On fictional Contract C-123, adding a second Version returned [error]. The first Version still downloaded. App build: [build]; documentation edition and digest: [details].” Replace the bracketed report fields with facts from your incident.
+For example: “As a Business User, I followed ‘Work on a shared Contract or Matter,’ ‘Supply a supporting Document.’ On fictional Contract C-123, adding a second Version returned [error]. The first Version still downloaded. App build: [build]; documentation edition and digest: [details].” Replace the bracketed report fields with facts from your incident.
 
 The tracker is public. Do not include private Documents, record titles, personal details, passwords, sign-in links, provider keys, or complete logs. Use a minimal fictional reproduction and sanitized excerpts. Following the support link does not submit a report or send your records automatically.

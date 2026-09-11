@@ -198,20 +198,20 @@ test.describe.serial("M7 demo path", () => {
       member = await onboardActivatedMember(page.request, browser, {
         email,
         displayName: "Casey Contributor",
-        role: "contributor",
+        role: "business_user",
         password: "their-own-e2e-password",
       });
       const contributorPage = member.page;
 
       // No Entities nav item. Absent, not disabled.
       await contributorPage.goto("/");
-      const nav = contributorPage.getByRole("navigation", { name: "Primary" });
-      await expect(nav.getByRole("link", { name: "Home" })).toBeVisible();
+      const nav = contributorPage.getByRole("navigation", { name: "Portal" });
+      await expect(nav.getByRole("link", { name: "Your Contracts" })).toBeVisible();
       await expect(nav.getByRole("link", { name: "Entities" })).toHaveCount(0);
 
       // The URL bounces them home.
       await contributorPage.goto("/entities");
-      await expect(contributorPage).toHaveURL(/\/$/);
+      await expect(contributorPage).toHaveURL(/\/portal$/);
 
       // The client bounce is convenience; the API's refusal is real,
       // on the list, the picker read, and the write. The write carries

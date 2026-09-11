@@ -133,8 +133,8 @@ beforeAll(async () => {
 
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
-    [OUTSIDER, "contributor"],
+    [CONTRIBUTOR, "business_user"],
+    [OUTSIDER, "business_user"],
     [BUSINESS, "business_user"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
@@ -179,7 +179,7 @@ async function contractWithTeam(title: string): Promise<{ id: string; number: nu
     method: "POST",
     url: `/api/v1/contracts/${contract.number}/team`,
     cookies: adminCookies,
-    payload: { userId: userIds.get(CONTRIBUTOR.email), role: "contributor" },
+    payload: { userId: userIds.get(CONTRIBUTOR.email) },
   });
   expect(added.statusCode, added.body).toBe(201);
   return contract;
@@ -466,7 +466,7 @@ describe("the DD-016 tier filter, proved with two viewers on one record", () => 
 
     // The same record, read by two people, compared.
     expect(memberThread.map((row) => row.id)).toEqual([working.id, legal.id, full.id]);
-    expect(contributorThread.map((row) => row.id)).toEqual([working.id, full.id]);
+    expect(contributorThread.map((row) => row.id)).toEqual([full.id]);
 
     // No text, no id, no gap, and no total: the raw body of the answer
     // carries nothing of the withheld comment, and the envelope has no
@@ -494,26 +494,18 @@ describe("the DD-016 tier filter, proved with two viewers on one record", () => 
     ]);
   });
 
-  it("lets a Contributor post at Working Team and Full Thread", async () => {
-    const contract = await contractWithTeam("Contributor speaks");
-    const working = await comment(
-      contributorCookies,
-      contract.id,
-      "Procurement has the PO ready.",
-      "working_team",
-    );
-    const full = await comment(
-      contributorCookies,
-      contract.id,
-      "Sent to the requester.",
-      "full_thread",
-    );
-
-    expect(working.author.displayName).toBe(CONTRIBUTOR.displayName);
-    expect((await thread(contributorCookies, contract.id)).map((row) => row.id)).toEqual([
-      working.id,
-      full.id,
-    ]);
+  it("lets a team Business User post at Full Thread and refuses Working Team", async () => {
+    const record = await contractWithTeam("Business shared reply");
+    const refused = await post(contributorCookies, {
+      entityType: "contract",
+      entityId: record.id,
+      body: "Private team reply",
+      visibility: "working_team",
+    });
+    expect(refused.statusCode, refused.body).toBe(403);
+    const shared = await comment(contributorCookies, record.id, "Business reply", "full_thread");
+    expect(shared.author.displayName).toBe(CONTRIBUTOR.displayName);
+    expect((await thread(contributorCookies, record.id)).map((row) => row.id)).toEqual([shared.id]);
   });
 
   it("refuses a Contributor the Legal Only tier and writes nothing", async () => {
@@ -560,7 +552,7 @@ describe("the DD-016 tier filter, proved with two viewers on one record", () => 
         visibility: "full_thread",
       }),
     ])) {
-      expect(res.statusCode, res.body).toBe(403);
+      expect(res.statusCode, res.body).toBe(404);
     }
 
     const anonymous = await harness.app.inject({
@@ -755,7 +747,7 @@ describe("who a comment on a record can address", () => {
 
     expect(list.map((row) => [row.displayName, row.tiers])).toEqual([
       [ADMIN.displayName, ["legal_only", "working_team", "full_thread"]],
-      [CONTRIBUTOR.displayName, ["working_team", "full_thread"]],
+      [CONTRIBUTOR.displayName, ["full_thread"]],
       [MEMBER.displayName, ["legal_only", "working_team", "full_thread"]],
     ]);
   });
@@ -782,7 +774,7 @@ describe("who a comment on a record can address", () => {
     // Which is why a Contributor's typeahead can never produce a mention
     // that would need Legal Only: everyone it offers hears Working Team,
     // and Working Team is a segment their composer has.
-    expect(theirs.every((row) => row.tiers.includes("working_team"))).toBe(true);
+    expect(theirs.every((row) => row.tiers.includes("full_thread"))).toBe(true);
   });
 
   it("answers 404 on a record the viewer cannot reach", async () => {
@@ -799,7 +791,7 @@ describe("posting a comment that names someone", () => {
       memberCookies,
       contract.id,
       `@${CONTRIBUTOR.displayName} @${ADMIN.displayName} can one of you take the redline?`,
-      "working_team",
+      "full_thread",
       [userIds.get(CONTRIBUTOR.email)!, userIds.get(ADMIN.email)!],
     );
 
@@ -821,7 +813,7 @@ describe("posting a comment that names someone", () => {
       memberCookies,
       contract.id,
       `@${CONTRIBUTOR.displayName}, and again @${CONTRIBUTOR.displayName}.`,
-      "working_team",
+      "full_thread",
       [casey, casey],
     );
 
@@ -838,7 +830,7 @@ describe("posting a comment that names someone", () => {
       memberCookies,
       contract.id,
       `@${CONTRIBUTOR.displayName} over to you.`,
-      "working_team",
+      "full_thread",
       [userIds.get(CONTRIBUTOR.email)!],
     );
     expect(posted.mentions).toEqual([
@@ -894,16 +886,16 @@ describe("the promotion rule, enforced at the seam", () => {
       memberCookies,
       contract.id,
       `@${CONTRIBUTOR.displayName} what did procurement say?`,
-      "working_team",
+      "full_thread",
       [userIds.get(CONTRIBUTOR.email)!],
     );
-    expect(posted.visibility).toBe("working_team");
+    expect(posted.visibility).toBe("full_thread");
 
     const [stored] = await harness.db
       .select({ visibility: comments.visibility })
       .from(comments)
       .where(eq(comments.id, posted.id));
-    expect(stored!.visibility).toBe("working_team");
+    expect(stored!.visibility).toBe("full_thread");
   });
 
   it("takes a Legal Only comment that names a Legal Team Member", async () => {
@@ -1032,7 +1024,7 @@ describe("an author editing their own comment", () => {
 
   it("refuses a non-author, including an Administrator, and writes nothing", async () => {
     const contract = await contractWithTeam("Not yours to edit");
-    const posted = await comment(memberCookies, contract.id, "My own words.", "working_team");
+    const posted = await comment(memberCookies, contract.id, "My own words.", "full_thread");
 
     for (const cookies of [adminCookies, contributorCookies]) {
       const res = await patch(cookies, posted.id, "Words I am putting in your mouth.");
@@ -1116,7 +1108,7 @@ describe("an author soft-deleting their own comment", () => {
 
   it("refuses a non-author, including an Administrator", async () => {
     const contract = await contractWithTeam("Not yours to delete");
-    const posted = await comment(memberCookies, contract.id, "Mine to take back.", "working_team");
+    const posted = await comment(memberCookies, contract.id, "Mine to take back.", "full_thread");
 
     for (const cookies of [adminCookies, contributorCookies]) {
       const res = await remove(cookies, posted.id);
@@ -1213,7 +1205,7 @@ describe("an Administrator hard-redacting a comment", () => {
       memberCookies,
       contract.id,
       `@${CONTRIBUTOR.displayName} see the note above.`,
-      "working_team",
+      "full_thread",
       [userIds.get(CONTRIBUTOR.email)!],
     );
 
@@ -1268,7 +1260,7 @@ describe("a corrected comment's audience", () => {
     const contract = await contractWithTeam("Tombstones obey the tier");
     const deleted = await comment(memberCookies, contract.id, "Strategy one.", "legal_only");
     const redacted = await comment(memberCookies, contract.id, "Strategy two.", "legal_only");
-    const seen = await comment(memberCookies, contract.id, "Coordination.", "working_team");
+    const seen = await comment(memberCookies, contract.id, "Coordination.", "full_thread");
     await softDelete(memberCookies, deleted.id);
     await hardRedact(adminCookies, redacted.id);
 
@@ -1423,7 +1415,7 @@ describe("the unread badge", () => {
     // Neither has opened the panel, so everything each can see is
     // unread — which makes the count exactly the size of their thread.
     expect(memberUnread).toBe(3);
-    expect(contributorUnread).toBe(2);
+    expect(contributorUnread).toBe(1);
     expect(memberUnread).toBe((await thread(memberCookies, contract.id)).length);
     expect(contributorUnread).toBe((await thread(contributorCookies, contract.id)).length);
   });
@@ -1512,8 +1504,8 @@ describe("the unread badge", () => {
 
     expect((await readUnread(outsiderCookies, contract.id)).statusCode).toBe(404);
     expect((await markRead(outsiderCookies, contract.id)).statusCode).toBe(404);
-    expect((await readUnread(businessCookies, contract.id)).statusCode).toBe(403);
-    expect((await markRead(businessCookies, contract.id)).statusCode).toBe(403);
+    expect((await readUnread(businessCookies, contract.id)).statusCode).toBe(404);
+    expect((await markRead(businessCookies, contract.id)).statusCode).toBe(404);
 
     // And a record that cannot be reached leaves no watermark behind.
     const rows = await harness.db

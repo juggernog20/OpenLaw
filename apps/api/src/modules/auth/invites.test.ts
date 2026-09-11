@@ -81,7 +81,7 @@ describe("invites (POST /api/v1/auth/invites)", () => {
     const res = await invite(cookies, {
       email: "sam@example.com",
       displayName: "Sam Field",
-      role: "contributor",
+      role: "legal_team_member",
     });
     expect(res.statusCode).toBe(403);
     expect(res.headers["content-type"]).toContain("application/problem+json");
@@ -89,7 +89,11 @@ describe("invites (POST /api/v1/auth/invites)", () => {
   });
 
   it("re-sends the invite for an unactivated user; the fresh token activates", async () => {
-    const second = { email: "sam@example.com", displayName: "Sam Field", role: "contributor" };
+    const second = {
+      email: "sam@example.com",
+      displayName: "Sam Field",
+      role: "legal_team_member",
+    };
     const first = await invite(adminCookies, second);
     expect(first.statusCode, first.body).toBe(201);
 
@@ -112,7 +116,7 @@ describe("invites (POST /api/v1/auth/invites)", () => {
   });
 
   it("stores the set-password token hashed at rest", async () => {
-    const third = { email: "noa@example.com", displayName: "Noa Lund", role: "contributor" };
+    const third = { email: "noa@example.com", displayName: "Noa Lund", role: "legal_team_member" };
     const res = await invite(adminCookies, third);
     expect(res.statusCode, res.body).toBe(201);
 
@@ -149,11 +153,11 @@ describe("invites (POST /api/v1/auth/invites)", () => {
 
   it("rejects a re-invite that tries to change the role", async () => {
     // Noa is still unactivated (her token expired above) with role
-    // contributor; a re-send is fine, a role edit is not an invite.
+    // legal_team_member; a re-send is fine, a role edit is not an invite.
     const res = await invite(adminCookies, {
       email: "noa@example.com",
       displayName: "Noa Lund",
-      role: "legal_team_member",
+      role: "administrator",
     });
     expect(res.statusCode).toBe(409);
     expect(res.json()).toMatchObject({ status: 409 });
@@ -187,7 +191,7 @@ describe("invites (POST /api/v1/auth/invites)", () => {
 
 /** Invites the address as a Contributor and returns the created user's id. */
 async function invitePending(email: string, displayName: string): Promise<string> {
-  const res = await invite(adminCookies, { email, displayName, role: "contributor" });
+  const res = await invite(adminCookies, { email, displayName, role: "legal_team_member" });
   expect(res.statusCode, res.body).toBe(201);
   return (res.json() as { user: { id: string } }).user.id;
 }
@@ -281,7 +285,7 @@ describe("invite revoke (DELETE /api/v1/auth/invites/:userId, #65)", () => {
     expect(res.statusCode).toBe(404);
   });
 
-  it("is Administrator-only: a Contributor's revoke bounces as 403 and the invite stays", async () => {
+  it("is Administrator-only: a Member's revoke bounces as 403 and the invite stays", async () => {
     const userId = await invitePending("tao@example.com", "Tao Lin");
     const rileyCookies = await signInCookies(
       harness.app,
@@ -337,7 +341,7 @@ describe("the DD-017 audit trail (#65)", () => {
       entityType: "user",
       entityId: userId,
       visibility: "admin_only",
-      payload: { email: "ash@example.com", role: "contributor" },
+      payload: { email: "ash@example.com", role: "legal_team_member" },
     });
     expect(entry.actorId).toBeTruthy();
   });
@@ -359,7 +363,7 @@ describe("the DD-017 audit trail (#65)", () => {
     const viaInvite = await invite(adminCookies, {
       email: "ash@example.com",
       displayName: "Ash Moreau",
-      role: "contributor",
+      role: "legal_team_member",
     });
     expect(viaInvite.statusCode, viaInvite.body).toBe(200);
 
@@ -390,7 +394,7 @@ describe("the DD-017 audit trail (#65)", () => {
       entityType: "user",
       entityId: ash!.id,
       visibility: "admin_only",
-      payload: { email: "ash@example.com", role: "contributor" },
+      payload: { email: "ash@example.com", role: "legal_team_member" },
     });
   });
 });

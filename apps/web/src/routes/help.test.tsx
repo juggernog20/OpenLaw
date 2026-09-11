@@ -47,7 +47,7 @@ describe("Help in the app shells", () => {
     },
   );
 
-  it.each(["administrator", "legal_team_member", "contributor"])(
+  it.each(["administrator", "legal_team_member"])(
     "shows the staff Help index for %s",
     async (role) => {
       stubApi({ signedIn: person(role) });
@@ -68,10 +68,6 @@ describe("Help in the app shells", () => {
         "href",
         "/documentation",
       );
-      if (role === "contributor")
-        expect(
-          screen.queryByRole("link", { name: "Recover a validation fixture" }),
-        ).not.toBeInTheDocument();
     },
   );
 
@@ -82,7 +78,7 @@ describe("Help in the app shells", () => {
       expect(screen.getByRole("heading", { name: "Before you start" })).toHaveFocus(),
     );
     expect(router.state.location.pathname).toBe("/portal/help/validation-procedure");
-    expect(screen.getByRole("link", { name: "Legal request portal" })).toBeVisible();
+    expect(screen.getByRole("link", { name: "Legal portal" })).toBeVisible();
     expect(screen.queryByRole("combobox", { name: "Search" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "the recovery fixture" })).toHaveAttribute(
       "href",

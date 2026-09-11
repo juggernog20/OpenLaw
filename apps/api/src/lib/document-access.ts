@@ -28,11 +28,7 @@ import { entityReachScope } from "./entity-access.js";
 import { matterTeamScope } from "./matter-access.js";
 
 /** Documents are readable by Member+ and by Contributors through reached records. */
-export const requireDocumentReader = requireRole(
-  "administrator",
-  "legal_team_member",
-  "contributor",
-);
+export const requireDocumentReader = requireRole("administrator", "legal_team_member");
 
 function owningRecordScope(
   owner: DocumentOwner,

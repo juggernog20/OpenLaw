@@ -4,7 +4,7 @@ Register your own corporate Entities and select the external Counterparties on a
 
 ## Before you start
 
-Sign in as a Legal Team Member or Administrator. Contributors and Business Users do not have access to the Entities destination. A Confidential Entity requires an explicit Grant unless you are an Administrator; see [Entity structure and access](entity-structure-and-access.md).
+Sign in as a Legal Team Member or Administrator. Business Users do not have access to the Entities destination. A Confidential Entity requires an explicit Grant unless you are an Administrator; see [Entity structure and access](entity-structure-and-access.md).
 
 Have the registered legal name and an available Entity type. Ask an Administrator to maintain missing [types and Fields](types-statuses-fields.md).
 

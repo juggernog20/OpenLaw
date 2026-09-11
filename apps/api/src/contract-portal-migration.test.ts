@@ -10,7 +10,7 @@ beforeAll(async () => {
   container = await new PostgreSqlContainer("postgres:16-alpine").start();
 }, 180_000);
 afterAll(async () => container?.stop());
-it("backfills converted Requesters as Business Owners once, without granting duplicate stakeholder access", async () => {
+it("backfills converted Requesters as Business Owners once, with one team membership", async () => {
   const db = await freshDb(container, "contract_portal_upgrade");
   try {
     await migrateThrough(db, "0097_currencies_in_use", migrationEntries());
@@ -35,7 +35,9 @@ it("backfills converted Requesters as Business Owners once, without granting dup
       { id: "converted", manager_id: "legal", business_owner_id: "requester" },
       { id: "direct", manager_id: "legal", business_owner_id: null },
     ]);
-    expect((await db.execute(sql`select * from contract_stakeholders`)).rows).toEqual([]);
+    expect((await db.execute(sql`select contract_id, user_id from contract_team`)).rows).toEqual([
+      { contract_id: "converted", user_id: "requester" },
+    ]);
     await db.execute(sql`update contracts set business_owner_id = null where id = 'converted'`);
     await runMigrations(db);
     expect(

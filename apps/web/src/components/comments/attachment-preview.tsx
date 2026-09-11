@@ -29,7 +29,9 @@ export function AttachmentPreview({
   useEffect(() => {
     const controller = new AbortController();
     let objectUrl: string | undefined;
-    void fetch(`${href}&preview=true`, { signal: controller.signal })
+    void fetch(`${href}${href.includes("?") ? "&" : "?"}preview=true`, {
+      signal: controller.signal,
+    })
       .then(async (response) => {
         if (!response.ok) throw new Error("Preview unavailable");
         const blob = await response.blob();

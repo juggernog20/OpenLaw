@@ -4,7 +4,7 @@ A Matter's Status has a configurable name and a fixed **open** or **closed** Cat
 
 ## Before you start
 
-Use a Legal Team Member or Administrator account that can read the Matter. Contributors can read its Status but cannot change it, close or reopen it, or archive or restore it. An archived Matter must be restored before ordinary changes.
+Use a Legal Team Member or Administrator account that can read the Matter. Business Users can read its Status but cannot change it, close or reopen it, or archive or restore it. An archived Matter must be restored before ordinary changes.
 
 ## Change Status within the current Category
 

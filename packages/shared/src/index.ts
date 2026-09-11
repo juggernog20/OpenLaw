@@ -506,6 +506,18 @@ export const MATTER_SORT_KEYS = [
 ] as const;
 export type MatterSortKey = (typeof MATTER_SORT_KEYS)[number];
 
+/** Columns the Inbox can sort across the full queue. */
+export const INBOX_SORT_KEYS = [
+  "number",
+  "summary",
+  "type",
+  "requester",
+  "urgency",
+  "createdAt",
+  "status",
+] as const;
+export type InboxSortKey = (typeof INBOX_SORT_KEYS)[number];
+
 /** Which way a sorted column runs. */
 export const SORT_DIRECTIONS = ["asc", "desc"] as const;
 export type SortDirection = (typeof SORT_DIRECTIONS)[number];
@@ -587,3 +599,5 @@ export type {
   ConversionProvenanceMap,
   ConversionAttachmentRead,
 } from "./conversion-draft.js";
+
+export { sameConversionValue } from "./conversion-draft.js";

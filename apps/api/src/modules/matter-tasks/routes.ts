@@ -27,7 +27,7 @@ import { removeTaskThread } from "../comments/audience.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { assertValidMatterTaskAssignee, createMatterTask } from "./create.js";
 
-const requireReader = requireRole("administrator", "legal_team_member", "contributor");
+const requireReader = requireRole("administrator", "legal_team_member");
 const requireMember = requireRole("administrator", "legal_team_member");
 const NumberParams = z.object({ number: z.coerce.number().int().positive() });
 const TaskParams = z.object({ taskId: z.string().min(1).max(64) });

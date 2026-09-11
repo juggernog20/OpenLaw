@@ -555,6 +555,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         querystring: EntityRefQuery.extend({
           /** The previous page's `nextCursor`. Omit for the newest page. */
           cursor: CursorSchema.optional(),
+          visibility: VisibilitySchema.optional(),
         }),
         response: {
           200: z.object({
@@ -579,6 +580,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         // and a page length that varies with what is hidden is the leak
         // DD-016 exists to close (CTR-024).
         inArray(comments.visibility, [...audience.tiers]),
+        request.query.visibility ? eq(comments.visibility, request.query.visibility) : undefined,
       );
       const rows = await selectComments(app.db)
         .where(

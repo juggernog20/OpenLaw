@@ -144,7 +144,7 @@ beforeAll(async () => {
     [LATE, "legal_team_member"],
     [DEMOTED, "legal_team_member"],
     [DEPARTED, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
     [OUTSIDER, "legal_team_member"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
@@ -274,12 +274,12 @@ const wallOff = (contractId: string) =>
 /** Puts somebody on a contract's team, which is what grants a
  * Contributor their reach and what puts a Member+ inside a walled
  * record's audience. */
-const addToTeam = (number: number, userId: string, role = "member") =>
+const addToTeam = (number: number, userId: string) =>
   harness.app.inject({
     method: "POST",
     url: `/api/v1/contracts/${number}/team`,
     cookies: as(MEMBER),
-    payload: { userId, role },
+    payload: { userId },
   });
 
 describe("applying an approver group", () => {
@@ -437,7 +437,7 @@ describe("what an apply refuses", () => {
     const group = await newGroup("Template with a demotion", [idOf(FIRST), idOf(DEMOTED)]);
     await harness.db
       .update(users)
-      .set({ role: "contributor" })
+      .set({ role: "business_user" })
       .where(eq(users.id, idOf(DEMOTED)));
 
     try {
@@ -482,9 +482,7 @@ describe("what an apply refuses", () => {
 
   it("refuses a Contributor, who reads the roster and writes nothing on it", async () => {
     const contract = await newContract("Read-only viewer");
-    expect((await addToTeam(contract.number, idOf(CONTRIBUTOR), "contributor")).statusCode).toBe(
-      201,
-    );
+    expect((await addToTeam(contract.number, idOf(CONTRIBUTOR))).statusCode).toBe(201);
     const group = await newGroup("Contributor apply", [idOf(FIRST)]);
 
     const res = await applyGroup(as(CONTRIBUTOR), contract.number, group);

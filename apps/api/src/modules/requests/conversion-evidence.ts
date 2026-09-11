@@ -21,6 +21,7 @@ import { documentRepositoryScope } from "../../lib/document-access.js";
 
 export const EvidenceSchema = z.object({
   available: z.boolean(),
+  justification: z.string().max(1000).optional(),
   citations: z.array(
     z.object({
       label: z.string(),
@@ -149,6 +150,6 @@ export async function conversionEvidence(
     });
   }
   return citations.length > 0 && citations.length === proposal?.citations.length
-    ? { available: true, citations }
+    ? { available: true, citations, justification: proposal.justification }
     : { available: false, citations: [] };
 }

@@ -14,11 +14,12 @@
  * The default answer is the new Requests. Explicit status choices or
  * includeTriaged widen it; quick filters combine across the whole Inbox.
  *
- * **Urgency rank, then age** (INT-006). Critical first, and inside one
+ * **Default order: urgency rank, then age** (INT-006). Critical first, and inside one
  * urgency the oldest first, so the hottest and the longest-waiting ask
  * surface together at the top. Urgency is `NOT NULL` on the table, so
  * the ordering has no unknown group to file last — every Request
- * claims a level, because every form collects one.
+ * claims a level, because every form collects one. A column sort replaces
+ * this order and uses the reference to break ties.
  *
  * **Paged by the house keyset pattern** (CTR-024's rule, this list's
  * ordering). The cursor is a Request id, and the boundary reads that
@@ -47,6 +48,12 @@
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
+import {
+  INBOX_SORT_KEYS,
+  SORT_DIRECTIONS,
+  type InboxSortKey,
+  type SortDirection,
+} from "@openlaw/shared";
 import {
   and,
   asc,
@@ -156,7 +163,7 @@ export const requestInboxRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "The Inbox (INT-006, INT-007): the Requests whose fate is " +
           "undecided, ordered by urgency rank — critical first — then " +
-          "age, oldest first, and paged by cursor. The answer is " +
+          "age, oldest first, unless sort names a column, and paged by cursor. The answer is " +
           "the `new` Requests by default; status choices or includeTriaged=true widen it " +
           "to the converted, resolved, and declined ones with their " +
           "outcomes. A converted row carries the contract or matter it became " +
@@ -173,6 +180,8 @@ export const requestInboxRoutes: FastifyPluginAsyncZod = async (app) => {
             receivedFrom: z.iso.date().optional(),
             receivedTo: z.iso.date().optional(),
             timeZone: TimezoneSchema.optional(),
+            sort: z.enum(INBOX_SORT_KEYS).optional(),
+            dir: z.enum(SORT_DIRECTIONS).optional(),
             /** INT-007's toggle. Omitted is the Inbox itself. */
             includeTriaged: z.enum(["true", "false"]).optional(),
             /** The previous page's `nextCursor`. Omit for the first page. */
@@ -193,6 +202,7 @@ export const requestInboxRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       const query = request.query;
+      const sort = query.sort ? { key: query.sort, dir: query.dir ?? "asc" } : null;
       const scope = and(
         isNull(requests.archivedAt),
         query.status
@@ -214,8 +224,10 @@ export const requestInboxRoutes: FastifyPluginAsyncZod = async (app) => {
         .from(requests)
         .where(scope);
       const rows = await selectInbox()
-        .where(and(scope, query.cursor === undefined ? undefined : furtherDownThan(query.cursor)))
-        .orderBy(desc(urgencyRank), asc(requests.createdAt), asc(requests.number))
+        .where(
+          and(scope, query.cursor === undefined ? undefined : furtherDownThan(query.cursor, sort)),
+        )
+        .orderBy(...listOrder(sort))
         // One past the page, which is how the answer knows whether
         // there is another page.
         .limit(PAGE_SIZE + 1);
@@ -314,15 +326,36 @@ export const requestInboxRoutes: FastifyPluginAsyncZod = async (app) => {
  * approximately is one that skips and repeats rows. */
 const urgencyRank = requestUrgencyRank(requests.urgency);
 
+type SortRequest = { key: InboxSortKey; dir: SortDirection };
+
+const SORTS: Record<InboxSortKey, SQL> = {
+  number: sql`${requests.number}`,
+  summary: sql`lower(${requests.summary})`,
+  type: sql`lower(${requestTypes.displayName})`,
+  requester: sql`lower(${users.displayName})`,
+  urgency: urgencyRank,
+  createdAt: sql`${requests.createdAt}`,
+  status: sql`case ${requests.status} ${sql.join(
+    REQUEST_STATUSES.map((status, index) => sql`when ${status} then ${sql.raw(String(index))}`),
+    sql` `,
+  )} end`,
+};
+
+function listOrder(sort: SortRequest | null): SQL[] {
+  if (!sort) return [desc(urgencyRank), asc(requests.createdAt), asc(requests.number)];
+  return [sort.dir === "asc" ? asc(SORTS[sort.key]) : desc(SORTS[sort.key]), asc(requests.number)];
+}
+
 /**
  * The keyset boundary: every Request strictly further down the queue
  * than one of them, in the order the queue reads.
  *
- * The position is a **triple** — urgency rank, then the stamp, then the
+ * The default position is a **triple** — urgency rank, then the stamp, then the
  * reference — so "further down" is three ways of being after the
  * boundary row: a lower rank, the same rank and a later stamp, or both
  * the same and a higher reference. The reference is unique and
  * monotonic, so the last term breaks every tie the first two leave.
+ * A selected column instead compares its value, then the reference.
  *
  * The boundary's own position is read from the table rather than taken
  * from the client, so nobody can page from a reference that was never
@@ -330,13 +363,24 @@ const urgencyRank = requestUrgencyRank(requests.urgency);
  * Request that is gone resolves to NULL, every comparison answers
  * nothing, and the caller gets an empty page.
  */
-function furtherDownThan(cursor: string): SQL {
+function furtherDownThan(cursor: string, sort: SortRequest | null): SQL {
   const at = (column: SQL | AnyPgColumn) => sql`(
     select ${column} from ${requests} where ${eq(requests.id, cursor)}
   )`;
   const rank = at(urgencyRank);
   const createdAt = at(requests.createdAt);
   const number = at(requests.number);
+  if (sort) {
+    const expr = SORTS[sort.key];
+    const value = sql`(
+      select ${expr} from ${requests}
+      inner join ${requestTypes} on ${eq(requests.requestTypeId, requestTypes.id)}
+      inner join ${users} on ${eq(requests.requesterId, users.id)}
+      where ${eq(requests.id, cursor)}
+    )`;
+    const later = sql.raw(sort.dir === "asc" ? ">" : "<");
+    return sql`(${expr} ${later} ${value} or (${expr} = ${value} and ${requests.number} > ${number}))`;
+  }
   return sql`(
     ${urgencyRank} < ${rank}
     or (${urgencyRank} = ${rank} and ${requests.createdAt} > ${createdAt})

@@ -415,13 +415,30 @@ export function stubApi(state: ApiState) {
       };
       return json(200, { ...methods, emailConfigured: methods.emailConfigured ?? true });
     }
-    // Additional Contract stakeholders are empty unless a suite supplies them.
     if (
-      /^\/api\/v1\/contracts\/\d+\/stakeholders$/.test(call.url.pathname) &&
+      /^\/api\/v1\/portal\/(contracts|matters)\/\d+\/work$/.test(call.url.pathname) &&
       call.method === "GET"
     ) {
-      return json(200, { stakeholders: [] });
+      return json(200, {
+        work: {
+          id: "portal-record",
+          description: null,
+          fields: [],
+          customFields: {},
+          references: { people: [], entities: [] },
+          originalRequests: [],
+          value: null,
+          effectiveDate: null,
+        },
+      });
     }
+    if (
+      /^\/api\/v1\/portal\/(contracts|matters)\/\d+\/supporting-documents$/.test(
+        call.url.pathname,
+      ) &&
+      call.method === "GET"
+    )
+      return json(200, { documents: [], nextCursor: null });
     // A contract record reads its paper (M11/2). Empty by default, so
     // every suite that is not about documents needs no stub of its own;
     // the ones that are supply rows through `extra`, which runs first.

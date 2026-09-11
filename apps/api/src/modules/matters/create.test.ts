@@ -72,7 +72,7 @@ beforeAll(async () => {
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
     [OUTSIDER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
     [BUSINESS, "business_user"],
   ] as const) {
     const person = await provisionUser(harness.app.auth, fixture);
@@ -590,7 +590,7 @@ describe("matter reach", () => {
       (
         await harness.app.inject({
           method: "GET",
-          url: `/api/v1/matters/${matter.number}`,
+          url: `/api/v1/portal/matters/${matter.number}`,
           cookies: contributorCookies,
         })
       ).statusCode,
@@ -613,14 +613,12 @@ describe("matter reach", () => {
         })
       ).statusCode,
     ).toBe(404);
-    await harness.db
-      .insert(matterTeam)
-      .values({ matterId: matter.id, userId: contributorId, role: "contributor" });
+    await harness.db.insert(matterTeam).values({ matterId: matter.id, userId: contributorId });
     expect(
       (
         await harness.app.inject({
           method: "GET",
-          url: `/api/v1/matters/${matter.number}`,
+          url: `/api/v1/portal/matters/${matter.number}`,
           cookies: contributorCookies,
         })
       ).statusCode,

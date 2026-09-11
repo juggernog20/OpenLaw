@@ -42,7 +42,7 @@ export function PortalContractsPage() {
       <p className="text-base text-muted">
         <FormattedMessage
           id="portal.contracts.description"
-          defaultMessage="Contracts where you are the Business Owner or a stakeholder."
+          defaultMessage="Contracts you are on the team for."
         />
       </p>
       {contracts.length === 0 ? (

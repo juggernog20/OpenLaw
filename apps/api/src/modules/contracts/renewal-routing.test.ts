@@ -278,7 +278,7 @@ async function predecessor(title: string, options: { confidential?: boolean } = 
     method: "POST",
     url: `/api/v1/contracts/${row.number}/team`,
     cookies: memberCookies,
-    payload: { userId: colleagueId, role: "member" },
+    payload: { userId: colleagueId },
   });
   expect(teamRes.statusCode, teamRes.body).toBe(201);
 
@@ -449,7 +449,7 @@ describe("the prefill (CTR-007, CTR-015's no-inheritance stance)", () => {
       .from(contractTeam)
       .where(eq(contractTeam.contractId, successor.id));
     expect(team).toHaveLength(1);
-    expect(team[0]).toMatchObject({ role: "creator" });
+    expect(team[0]).toMatchObject({});
     expect(team.some((row) => row.userId === colleagueId)).toBe(false);
     // And neither is the Owner, the priority, or the risk: all three
     // are facts about a record rather than about the deal.

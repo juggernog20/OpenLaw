@@ -550,10 +550,10 @@ describe("what the record is born with (INT-002, MTR-012, CTR-016)", () => {
     // The CTR-004 creator row and nothing else: the triager's
     // provenance, not a working group somebody chose.
     const team = await harness.db
-      .select({ userId: contractTeam.userId, role: contractTeam.role })
+      .select({ userId: contractTeam.userId })
       .from(contractTeam)
       .where(eq(contractTeam.contractId, contract.id));
-    expect(team).toEqual([{ userId: memberId, role: "creator" }]);
+    expect(team).toEqual(expect.arrayContaining([{ userId: memberId }, { userId: requesterId }]));
   });
 
   it("refuses an empty hard-required field by name, and writes nothing", async () => {
@@ -915,7 +915,9 @@ describe("what the form collected beside the Fields (INT-002, focus group 2026-0
     const [creator] = await harness.db
       .select({ userId: contractTeam.userId })
       .from(contractTeam)
-      .where(and(eq(contractTeam.contractId, contract.id), eq(contractTeam.role, "creator")));
+      .where(
+        and(eq(contractTeam.contractId, contract.id), eq(contractTeam.userId, contract.createdBy!)),
+      );
     expect(contract.managerId).toBe(creator!.userId);
     expect(contract.managerId).not.toBe(memberId);
     expect(contract.managerId).not.toBeNull();

@@ -37,7 +37,7 @@ let seq = 0;
 
 /** Invites a user, walks the set-password activation, and signs them in —
  * the shortest path to a real activated user with a live session. */
-async function activatedUser(role: "administrator" | "legal_team_member" | "contributor") {
+async function activatedUser(role: "administrator" | "legal_team_member" | "business_user") {
   seq += 1;
   const email = `person-${seq}@example.com`;
   const password = `their-own-password-${seq}`;
@@ -45,7 +45,11 @@ async function activatedUser(role: "administrator" | "legal_team_member" | "cont
     method: "POST",
     url: "/api/v1/auth/invites",
     cookies: adminCookies,
-    payload: { email, displayName: `Person ${seq}`, role },
+    payload: {
+      email,
+      displayName: `Person ${seq}`,
+      role: role === "business_user" ? "legal_team_member" : role,
+    },
   });
   expect(invited.statusCode, invited.body).toBe(201);
   const id = (invited.json() as { user: { id: string } }).user.id;
@@ -56,6 +60,8 @@ async function activatedUser(role: "administrator" | "legal_team_member" | "cont
     payload: { newPassword: password, token },
   });
   expect(reset.statusCode, reset.body).toBe(200);
+  if (role === "business_user")
+    expect((await changeRole(id, role, adminCookies)).statusCode).toBe(200);
   const cookies = await signInCookies(harness.app, email, password);
   return { id, email, password, cookies };
 }
@@ -89,7 +95,7 @@ describe("the Users list (GET /api/v1/users, SET-005)", () => {
       method: "POST",
       url: "/api/v1/auth/invites",
       cookies: adminCookies,
-      payload: { email: "pat@example.com", displayName: "Pat Osei", role: "contributor" },
+      payload: { email: "pat@example.com", displayName: "Pat Osei", role: "legal_team_member" },
     });
     expect(invited.statusCode, invited.body).toBe(201);
 
@@ -115,7 +121,7 @@ describe("the Users list (GET /api/v1/users, SET-005)", () => {
     const pat = users.find((user) => user.email === "pat@example.com");
     expect(pat).toMatchObject({
       displayName: "Pat Osei",
-      role: "contributor",
+      role: "legal_team_member",
       status: "invited",
       lastActiveAt: null,
     });
@@ -155,7 +161,7 @@ describe("the Users list (GET /api/v1/users, SET-005)", () => {
 
 describe("role edits (PATCH /api/v1/users/:userId/role, SET-005 #66)", () => {
   it("changes the role in place, effective on the target's next request", async () => {
-    const person = await activatedUser("contributor");
+    const person = await activatedUser("business_user");
 
     // A Contributor cannot read the Users pane…
     expect((await listUsers(person.cookies)).statusCode).toBe(403);
@@ -168,7 +174,7 @@ describe("role edits (PATCH /api/v1/users/:userId/role, SET-005 #66)", () => {
     expect((await listUsers(person.cookies)).statusCode).toBe(200);
 
     // Demotion cuts the other way, equally immediately.
-    const demoted = await changeRole(person.id, "contributor", adminCookies);
+    const demoted = await changeRole(person.id, "business_user", adminCookies);
     expect(demoted.statusCode, demoted.body).toBe(200);
     expect((await listUsers(person.cookies)).statusCode).toBe(403);
   });
@@ -188,10 +194,10 @@ describe("role edits (PATCH /api/v1/users/:userId/role, SET-005 #66)", () => {
   });
 
   it("404s on an unknown user and holds the Administrator gate", async () => {
-    expect((await changeRole("no-such-user", "contributor", adminCookies)).statusCode).toBe(404);
-    expect((await changeRole("any", "contributor")).statusCode).toBe(401);
+    expect((await changeRole("no-such-user", "business_user", adminCookies)).statusCode).toBe(404);
+    expect((await changeRole("any", "business_user")).statusCode).toBe(401);
     const person = await activatedUser("legal_team_member");
-    expect((await changeRole(person.id, "contributor", person.cookies)).statusCode).toBe(403);
+    expect((await changeRole(person.id, "business_user", person.cookies)).statusCode).toBe(403);
   });
 });
 
@@ -241,11 +247,11 @@ describe("user archive (POST /api/v1/users/:userId/archive, SET-005 #66)", () =>
     const refused = await post("archive", self, adminCookies);
     expect(refused.statusCode, refused.body).toBe(409);
     expect(refused.json()).toMatchObject({ detail: "You cannot archive yourself." });
-    expect((await changeRole(other.id, "contributor", adminCookies)).statusCode).toBe(200);
+    expect((await changeRole(other.id, "business_user", adminCookies)).statusCode).toBe(200);
   });
 
   it("409s on an already-archived user; 404 unknown; gate holds", async () => {
-    const person = await activatedUser("contributor");
+    const person = await activatedUser("business_user");
     expect((await post("archive", person.id, adminCookies)).statusCode).toBe(200);
     const again = await post("archive", person.id, adminCookies);
     expect(again.statusCode).toBe(409);
@@ -253,7 +259,7 @@ describe("user archive (POST /api/v1/users/:userId/archive, SET-005 #66)", () =>
 
     expect((await post("archive", "no-such-user", adminCookies)).statusCode).toBe(404);
     expect((await post("archive", person.id)).statusCode).toBe(401);
-    const outsider = await activatedUser("contributor");
+    const outsider = await activatedUser("business_user");
     expect((await post("archive", person.id, outsider.cookies)).statusCode).toBe(403);
   });
 });
@@ -279,7 +285,7 @@ describe("user unarchive (POST /api/v1/users/:userId/unarchive, SET-003 recovery
   });
 
   it("409s on a user who is not archived; 404 unknown; gate holds", async () => {
-    const person = await activatedUser("contributor");
+    const person = await activatedUser("business_user");
     const refused = await post("unarchive", person.id, adminCookies);
     expect(refused.statusCode).toBe(409);
     expect(refused.json()).toMatchObject({ detail: "This user is not archived." });
@@ -290,7 +296,7 @@ describe("user unarchive (POST /api/v1/users/:userId/unarchive, SET-003 recovery
 
 describe("session revocation (POST /api/v1/users/:userId/revoke-sessions, SET-005 #66)", () => {
   it("kills every live session; the user signs back in unharmed", async () => {
-    const person = await activatedUser("contributor");
+    const person = await activatedUser("business_user");
     // The lost-laptop case has two devices, so mint a second session.
     const laptop = await signInCookies(harness.app, person.email, person.password);
 
@@ -309,7 +315,7 @@ describe("session revocation (POST /api/v1/users/:userId/revoke-sessions, SET-00
   it("404s on an unknown user and holds the Administrator gate", async () => {
     expect((await post("revoke-sessions", "no-such-user", adminCookies)).statusCode).toBe(404);
     expect((await post("revoke-sessions", "any")).statusCode).toBe(401);
-    const person = await activatedUser("contributor");
+    const person = await activatedUser("business_user");
     expect((await post("revoke-sessions", person.id, person.cookies)).statusCode).toBe(403);
   });
 });
@@ -327,7 +333,7 @@ describe("the DD-017 audit trail (#66)", () => {
 
   it("logs every mutation: role change, archive, unarchive, revocation", async () => {
     const admin = await adminId();
-    const person = await activatedUser("contributor");
+    const person = await activatedUser("business_user");
     expect((await changeRole(person.id, "legal_team_member", adminCookies)).statusCode).toBe(200);
     expect((await post("revoke-sessions", person.id, adminCookies)).statusCode).toBe(204);
     expect((await post("archive", person.id, adminCookies)).statusCode).toBe(200);
@@ -339,7 +345,7 @@ describe("the DD-017 audit trail (#66)", () => {
       entityId: person.id,
       actorId: admin,
       visibility: "admin_only",
-      payload: { email: person.email, from: "contributor", to: "legal_team_member" },
+      payload: { email: person.email, from: "business_user", to: "legal_team_member" },
     });
 
     const revoked = (await entries("user.sessions_revoked", person.id)).at(-1);

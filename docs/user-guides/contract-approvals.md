@@ -12,7 +12,7 @@ Sign in as a Legal Team Member or Administrator with access to an unarchived Con
 2. Select **Add approver**. Choose one or more people under **Approvers**.
 3. Select **Request approvals**. Check each new **Pending** row.
 
-Everyone selected is asked at once and may answer in any order. A person with a pending request is not offered for a duplicate. The picker offers eligible Legal Team Members and Administrators, not Business Users or Contributors.
+Everyone selected is asked at once and may answer in any order. A person with a pending request is not offered for a duplicate. The picker offers eligible Legal Team Members and Administrators, not Business Users.
 
 If an Administrator has configured groups, select **Apply group**, choose the **Approver group**, and inspect the named people and any skipped pending requests before confirming. Applying a group asks its current members. Later edits to the group do not rewrite existing requests. See [Configure reusable Approver groups](approver-groups.md).
 

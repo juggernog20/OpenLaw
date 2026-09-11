@@ -49,6 +49,9 @@ import {
   and,
   asc,
   contracts,
+  comments,
+  sql,
+  ne,
   contractTeam,
   entities,
   entityGrants,
@@ -68,6 +71,7 @@ import {
   type UserRole,
 } from "@openlaw/db";
 import type { AuthenticatedUser } from "../../auth/user.js";
+import { portalRecordScope } from "../portal-record-access.js";
 import { contractMentionCandidates, contractTeamScope } from "../contract-access.js";
 import { entityReachScope } from "../entity-access.js";
 import { matterMentionCandidates, matterTeamScope } from "../matter-access.js";
@@ -217,11 +221,8 @@ export interface RecordAudience {
    * The Owner and everybody holding a `contract_team` row, in no
    * particular order and each named once.
    *
-   * **This is the whole of NOT-002's "watchers"** — the decision says
-   * so in its own words: watchers are the existing team roles, and there
-   * is no separate subscribe mechanism. So `creator`, `member`,
-   * `watcher`, and `contributor` all count, because each of them is a
-   * row somebody put on the record on purpose.
+   * Membership subscribes a person. Account type and comment tier still
+   * determine which events can reach them.
    *
    * Administrators are included through ownership or team membership,
    * just like other staff. Merely reaching an open record does not
@@ -466,6 +467,7 @@ export async function requestReachedBy(
         isNull(requests.archivedAt),
         inArray(users.id, [...userIds]),
         isNull(users.archivedAt),
+        side === "requester" ? requestDestinationScope(db, { id: users.id }) : undefined,
       ),
     );
   return new Set(rows.map((row) => row.id));
@@ -558,6 +560,7 @@ export function notificationScope(
   user: AuthenticatedUser,
   surface: NotificationSurface,
 ): SQL | undefined {
+  if (surface === "staff" && !MEMBER_PLUS.includes(user.role)) return sql`false`;
   return surface === "portal" ? portalScope(db, user) : staffScope(db, user);
 }
 
@@ -631,27 +634,116 @@ function inboxRows(db: Executor): SQL | undefined {
   );
 }
 
-/** The portal bell's rows: this person's own live Requests. */
+/** Converted Request notifications follow the live destination's team grant. */
+function requestDestinationScope(
+  db: Executor,
+  user: { id: string | typeof users.id },
+): SQL | undefined {
+  const contractIds = db
+    .select({ id: contracts.id })
+    .from(contracts)
+    .where(
+      and(
+        isNull(contracts.archivedAt),
+        inArray(
+          contracts.id,
+          db
+            .select({ id: contractTeam.contractId })
+            .from(contractTeam)
+            .where(eq(contractTeam.userId, user.id)),
+        ),
+      ),
+    );
+  const matterIds = db
+    .select({ id: matters.id })
+    .from(matters)
+    .where(
+      and(
+        isNull(matters.archivedAt),
+        inArray(
+          matters.id,
+          db
+            .select({ id: matterTeam.matterId })
+            .from(matterTeam)
+            .where(eq(matterTeam.userId, user.id)),
+        ),
+      ),
+    );
+  return or(
+    ne(requests.status, "converted"),
+    inArray(requests.convertedContractId, contractIds),
+    inArray(requests.convertedMatterId, matterIds),
+  );
+}
+
+/** Portal news names only work and shared conversation the current team can open. */
 function portalScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
-  return and(
-    eq(notifications.entityType, REQUEST_ENTITY),
-    // The group, not only the entity type, for the staff arm's reason:
-    // a Member+ reading their own Requests here must not be shown the
-    // Inbox's arrivals, which are their staff work rather than their
-    // own asks. Two named groups rather than "everything but group 4",
-    // so a group added later is invisible until somebody has decided
-    // which bell it belongs on.
-    inArray(notifications.eventType, requestEventTypesOn("requester")),
-    // No Administrator shortcut here, and there is nothing to shortcut:
-    // reaching every contract is a staff role's power (DD-014), while
-    // being somebody's Requester is a fact about one row (DD-013). An
-    // Administrator's portal bell is their own Requests and no more.
-    inArray(
-      notifications.entityId,
-      db
-        .select({ id: requests.id })
-        .from(requests)
-        .where(and(eq(requests.requesterId, user.id), isNull(requests.archivedAt))),
+  const sharedNews = or(
+    inArray(notifications.eventType, [
+      "contract.status_changed",
+      "document.added",
+      "document.version_added",
+    ]),
+    and(
+      inArray(notifications.eventType, ["comment.posted", "comment.mentioned"]),
+      inArray(
+        sql<string>`${notifications.payload}->>'commentId'`,
+        db
+          .select({ id: comments.id })
+          .from(comments)
+          .where(
+            and(
+              eq(comments.visibility, "full_thread"),
+              eq(comments.entityId, notifications.entityId),
+              eq(comments.entityType, notifications.entityType),
+              inArray(comments.entityType, ["contract", "matter"]),
+            ),
+          ),
+      ),
+    ),
+  );
+  return or(
+    and(
+      eq(notifications.entityType, REQUEST_ENTITY),
+      inArray(notifications.eventType, requestEventTypesOn("requester")),
+      inArray(
+        notifications.entityId,
+        db
+          .select({ id: requests.id })
+          .from(requests)
+          .where(
+            and(
+              eq(requests.requesterId, user.id),
+              isNull(requests.archivedAt),
+              requestDestinationScope(db, user),
+            ),
+          ),
+      ),
+    ),
+    and(
+      sharedNews,
+      or(
+        and(
+          eq(notifications.entityType, CONTRACT_ENTITY),
+          inArray(
+            notifications.entityId,
+            db
+              .select({ id: contracts.id })
+              .from(contracts)
+              .where(portalRecordScope(db, user, "contract")),
+          ),
+        ),
+        and(
+          eq(notifications.entityType, MATTER_ENTITY),
+          inArray(
+            notifications.entityId,
+            db
+              .select({ id: matters.id })
+              .from(matters)
+              .where(portalRecordScope(db, user, "matter")),
+          ),
+        ),
+      ),
     ),
   );
 }

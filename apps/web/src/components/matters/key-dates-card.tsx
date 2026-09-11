@@ -25,6 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
+import { AiField } from "../ui/ai-field";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 
@@ -148,7 +149,11 @@ export function MatterKeyDatesCard({
             <tbody>
               {deadlines.map((row) => (
                 <tr key={row.keyDateId} className="border-t border-border-muted">
-                  <td className="px-4 py-2.5 font-medium">{formatDeadline(row.date)}</td>
+                  <td className="px-4 py-2.5 font-medium">
+                    <AiField active={Boolean(row.unverified)} className="-mx-2 w-fit px-2">
+                      {formatDeadline(row.date)}
+                    </AiField>
+                  </td>
                   <td className="px-4 py-2.5">
                     <div className="flex flex-col">
                       <span>{row.label}</span>

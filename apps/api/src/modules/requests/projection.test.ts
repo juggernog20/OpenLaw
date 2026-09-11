@@ -150,9 +150,7 @@ describe("selectConvertedRecords", () => {
       },
     );
 
-    await harness.db
-      .insert(contractTeam)
-      .values({ contractId: contract.id, userId: member.id, role: "member" });
+    await harness.db.insert(contractTeam).values({ contractId: contract.id, userId: member.id });
     expect(
       (await selectConvertedRecords(harness.db, member, [request.id])).get(request.id),
     ).toEqual({

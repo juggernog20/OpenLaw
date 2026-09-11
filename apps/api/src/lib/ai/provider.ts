@@ -31,6 +31,8 @@ export interface AiExtraction {
   sourceId?: string;
   citations?: { sourceId: string; quote: string }[];
   conflict?: boolean;
+  /** Short user-facing explanation grounded in the cited facts. */
+  justification?: string;
 }
 
 /** The stored connector values needed to build one protocol adapter. */

@@ -28,7 +28,7 @@ const ContractRows = z.object({
 
 test.beforeAll(async ({ request }) => ensureAdminExists(request));
 
-test("Business Owner and Legal Owner share a row, and ownership grants revocable Portal reading", async ({
+test("Business Owner is a statement, and team membership grants revocable Portal work", async ({
   page,
   browser,
 }) => {
@@ -89,6 +89,12 @@ test("Business Owner and Legal Owner share a row, and ownership grants revocable
     await businessOwner.selectOption(owner.id);
     await expect(businessOwner).toHaveValue(owner.id);
     await expect(legalOwner).toHaveValue("");
+    expect((await portal.request.get(portalPath)).status()).toBe(404);
+    await page.getByRole("button", { name: "Contract team", exact: true }).click();
+    await page.getByRole("button", { name: "Add team member", exact: true }).click();
+    const add = page.getByRole("dialog", { name: "Add team member" });
+    await add.getByLabel("Person").selectOption(owner.id);
+    await add.getByRole("button", { name: "Add", exact: true }).click();
     await expect.poll(async () => (await portal.request.get(portalPath)).status()).toBe(200);
     const businessBox = await businessOwner.boundingBox();
     const legalBox = await legalOwner.boundingBox();
@@ -105,7 +111,17 @@ test("Business Owner and Legal Owner share a row, and ownership grants revocable
     await portal.goto("/portal/contracts");
     await portal.getByRole("link", { name: contract.title }).click();
     await expect(portal.getByRole("heading", { name: contract.title })).toBeVisible();
-    await expect(portal.getByRole("textbox")).toHaveCount(0);
+    await expect(portal.getByLabel("Description", { exact: true })).toBeEditable();
+    const saved = portal.waitForResponse(
+      (response) =>
+        response.url().endsWith(`${portalPath}/work`) && response.request().method() === "PATCH",
+    );
+    await portal
+      .getByLabel("Description", { exact: true })
+      .fill("The business needs an updated delivery schedule.");
+    await portal.getByLabel("Description", { exact: true }).blur();
+    expect((await saved).status()).toBe(200);
+    await expect(portal.getByRole("button", { name: "Contract actions" })).toHaveCount(0);
     await portal.getByRole("button", { name: "Read Document" }).click();
     const reader = portal.getByRole("complementary", { name: PRIMARY_FILENAME });
     const preview = reader.getByRole("img", { name: PRIMARY_FILENAME });
@@ -124,6 +140,11 @@ test("Business Owner and Legal Owner share a row, and ownership grants revocable
       data: { businessOwnerId: null },
     });
     expect(cleared.ok()).toBe(true);
+    expect((await portal.request.get(portalPath)).status()).toBe(200);
+    const removed = await page.request.delete(
+      `/api/v1/contracts/${contract.number}/team/${owner.id}`,
+    );
+    expect(removed.status(), await removed.text()).toBe(200);
     for (const path of [portalPath, `${documentPath}/preview`, `${documentPath}/download`]) {
       expect((await portal.request.get(path)).status()).toBe(404);
     }

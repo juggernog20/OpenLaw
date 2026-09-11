@@ -312,7 +312,7 @@ describe("runtime BYO-OIDC (POST /api/v1/auth/sso-providers + sso sign-in)", () 
       method: "POST",
       url: "/api/v1/auth/invites",
       cookies: adminCookies,
-      payload: { ...staffer, role: "contributor" },
+      payload: { ...staffer, role: "legal_team_member" },
     });
     expect(invited.statusCode, invited.body).toBe(201);
 
@@ -325,7 +325,7 @@ describe("runtime BYO-OIDC (POST /api/v1/auth/sso-providers + sso sign-in)", () 
     expect(cookies, "unactivated staffer should still SSO in").not.toBeNull();
     const who = await me(cookies!);
     expect(who.statusCode, who.body).toBe(200);
-    expect(who.json().user).toMatchObject({ email: staffer.email, role: "contributor" });
+    expect(who.json().user).toMatchObject({ email: staffer.email, role: "legal_team_member" });
   });
 
   it("stores the IdP's access and refresh tokens encrypted, and the id_token as it came", async () => {

@@ -28,13 +28,6 @@ const MEMBER = {
   // same on a runner in Dubai as on one in UTC.
   timezone: "UTC",
 };
-const CONTRIBUTOR = {
-  id: "u-contributor",
-  email: "contributor@example.com",
-  displayName: "Casey Contributor",
-  role: "contributor",
-  timezone: "UTC",
-};
 
 function matter(overrides: Record<string, unknown> = {}) {
   return {
@@ -330,7 +323,7 @@ describe("the Matter record's Key dates section", () => {
     expect((await section()).getByText("Response due")).toBeInTheDocument();
   });
 
-  it("keeps a closed Matter writable and makes a Contributor or archive read-only", async () => {
+  it("keeps a closed Matter writable and an archive read-only", async () => {
     const cases = [
       {
         user: MEMBER,
@@ -342,7 +335,6 @@ describe("the Matter record's Key dates section", () => {
         }),
         writable: true,
       },
-      { user: CONTRIBUTOR, row: matter(), writable: false },
       { user: MEMBER, row: matter({ archivedAt: "2026-08-23T10:00:00.000Z" }), writable: false },
     ];
     for (const fixture of cases) {

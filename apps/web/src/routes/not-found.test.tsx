@@ -87,7 +87,7 @@ describe("an address that names no route", () => {
       "/portal",
     );
     // The portal has no staff nav, and still does not here.
-    expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "Primary" })).not.toBeInTheDocument();
     await waitFor(() => expect(document.title).toBe("Page not found · OpenLaw"));
   });
 

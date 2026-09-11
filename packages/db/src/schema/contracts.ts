@@ -109,6 +109,7 @@ export const contracts = pgTable(
      * column keeps the `manager_id` name the matter sibling uses
      * (MTR-003), so one query shape serves both records. */
     managerId: text("manager_id").references(() => users.id),
+    createdBy: text("created_by").references(() => users.id),
     /** DD-021: NULL means unassigned, at direct creation or after an explicit clear. */
     businessOwnerId: text("business_owner_id").references(() => users.id),
     /** CTR-011's our side of the contract: which of our own Entities

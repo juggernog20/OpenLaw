@@ -1,29 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * The Portal's chrome (INT-001), from the header and body frames the
- * I5–I7 mocks share: one 62px strip carrying the product mark, the name
- * of the surface, and the signed-in identity with sign-out, over a
- * centered column.
- *
- * What is absent is still the point. There is no top nav, no search, and
- * no activity bar: a Business User sees only their own Requests
- * (DD-013), so every staff destination would open on nothing. Member+
- * staff are welcome here, they submit Requests too, and they reach the
- * full application through the return control shown to Member+ staff.
- *
- * The trailing cluster carries the two things a requester's session
- * owns (M20/9). The bell is NOT-001's second surface, the same
- * anatomy DES-049 settled for the staff centre, backed by the portal's
- * own four routes; the gear beside it is the lightweight settings
- * surface NOT-001 promised, which is the group-5 toggles and nothing
- * else. Product Help joins these controls under DES-073 and remains
- * separate from organization Knowledge.
- *
- * The shell owns the scroll and gives it to `main` alone, as the staff
- * shell does (DES-030): the header keeps its height through a long
- * request thread rather than being pushed off the top of it.
- */
+/** The Portal shell holds Requests, Contracts and Matters, plus the shared session controls. */
 
 import { HelpLink } from "../documentation/help-link";
 import { type ReactNode } from "react";
@@ -73,7 +50,7 @@ export function PortalShell({
           to="/portal"
           aria-label={intl.formatMessage({
             id: "portal.name",
-            defaultMessage: "Legal request portal",
+            defaultMessage: "Legal portal",
           })}
           className="flex min-w-0 items-center gap-3 rounded-button focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
         >
@@ -91,7 +68,7 @@ export function PortalShell({
               <FormattedMessage id="portal.brand" defaultMessage="OpenLaw" />
             </span>
             <span className="truncate text-sm leading-tight text-muted">
-              <FormattedMessage id="portal.name" defaultMessage="Legal request portal" />
+              <FormattedMessage id="portal.name" defaultMessage="Legal portal" />
             </span>
           </span>
         </Link>
@@ -136,7 +113,7 @@ export function PortalShell({
             <p className="text-sm text-muted">
               <FormattedMessage
                 id="portal.businessView.description"
-                defaultMessage="You’re viewing your own requests. Submissions and replies are real."
+                defaultMessage="You’re viewing your Portal work. Submissions, edits, and replies are real."
               />
             </p>
           </div>
@@ -159,6 +136,20 @@ export function PortalShell({
         className="@container/page min-h-0 flex-1 overflow-y-auto px-page-x pt-8 pb-16"
       >
         <div className="mx-auto flex w-full max-w-(--width-portal-col) flex-col gap-section-gap">
+          <nav
+            className="flex flex-wrap gap-5"
+            aria-label={intl.formatMessage({ id: "portal.navigation", defaultMessage: "Portal" })}
+          >
+            <Link className="text-base text-link" to="/portal">
+              <FormattedMessage id="portal.navigation.requests" defaultMessage="Requests" />
+            </Link>
+            <Link className="text-base text-link" to="/portal/contracts">
+              <FormattedMessage id="portal.navigation.contracts" defaultMessage="Contracts" />
+            </Link>
+            <Link className="text-base text-link" to="/portal/matters">
+              <FormattedMessage id="portal.navigation.matters" defaultMessage="Matters" />
+            </Link>
+          </nav>
           {children}
         </div>
       </main>

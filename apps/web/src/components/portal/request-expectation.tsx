@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** INT-003: the same owner and confirmed estimate on Your requests and the Request page. */
+/** The triage owner and next task deadline on both requester views. */
 import { FormattedMessage } from "react-intl";
 import { formatFullDate } from "../../lib/format";
 import type { MyRequestRow } from "../../lib/requests";
 
 export function RequestExpectation({
   request,
-}: Readonly<{ request: Pick<MyRequestRow, "owner" | "expectedBy" | "estimatePassed"> }>) {
+}: Readonly<{ request: Pick<MyRequestRow, "owner" | "nextDeadline" | "deadlinePassed"> }>) {
   return (
     <span className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted">
       <span>
@@ -23,20 +23,23 @@ export function RequestExpectation({
       </span>
       <span>
         <FormattedMessage
-          id="requests.expectedBackValue"
-          defaultMessage="Expected back (estimate): {date}"
+          id="portal.request.nextDeadline"
+          defaultMessage="Next deadline: {date}"
           values={{
-            date: request.expectedBy ? (
-              <time dateTime={request.expectedBy}>{formatFullDate(request.expectedBy)}</time>
+            date: request.nextDeadline ? (
+              <time dateTime={request.nextDeadline}>{formatFullDate(request.nextDeadline)}</time>
             ) : (
-              <FormattedMessage id="requests.estimateNotSet" defaultMessage="Not set yet" />
+              <FormattedMessage
+                id="portal.request.deadlineNotSet"
+                defaultMessage="No deadline scheduled"
+              />
             ),
           }}
         />
       </span>
-      {request.estimatePassed && (
+      {request.deadlinePassed && (
         <span>
-          <FormattedMessage id="requests.estimatePassed" defaultMessage="Estimate passed" />
+          <FormattedMessage id="portal.request.deadlinePassed" defaultMessage="Deadline passed" />
         </span>
       )}
     </span>

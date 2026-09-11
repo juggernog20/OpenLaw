@@ -54,7 +54,7 @@ export async function keyDateReminderOptions(
           and(
             inArray(users.id, [...audience.userIds]),
             isNull(users.archivedAt),
-            // A Business User may hold a team row as a watcher, and the
+            // A Business User may hold a team row, and the
             // morning round serves nobody with that role. Offering one
             // here would let a person pick the one audience the system
             // can never remind. An explicit selection does not fall

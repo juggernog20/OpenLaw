@@ -6,7 +6,7 @@ Create a named set of colleagues that Legal can use when requesting Contract app
 
 1. Open your profile menu, select **Settings**, then **Contracts**, **Approver groups**.
 2. Select **Add group**. Enter **Name** and an optional **Description** that explains when to use it.
-3. Under **Members**, select the intended people. Contributors and Business Users cannot be group approvers.
+3. Under **Members**, select the intended people. Business Users cannot be group approvers.
 4. Select **Add group**. Reopen the row's **Edit** control and confirm the saved members.
 
 Groups appear by name; they do not have a custom order or a sequential approval order.

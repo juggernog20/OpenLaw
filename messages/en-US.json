@@ -158,6 +158,9 @@
   "activity.contract.parentSet": {
     "defaultMessage": "{actor} put this contract under {parent}"
   },
+  "activity.contract.portalAccessExcluded": {
+    "defaultMessage": "Migration kept {member} outside this Confidential record's audience"
+  },
   "activity.contract.primaryChanged": {
     "defaultMessage": "{actor} changed which counterparty the contract is listed under"
   },
@@ -183,10 +186,10 @@
     "defaultMessage": "{actor} changed the status"
   },
   "activity.contract.teamAdded": {
-    "defaultMessage": "{actor} added {member} to the team as {role}"
+    "defaultMessage": "{actor} added {member} to the team{legacy, select, yes { as {role}} other {}}"
   },
   "activity.contract.teamRemoved": {
-    "defaultMessage": "{actor} took {member} off the team as {role}"
+    "defaultMessage": "{actor} took {member} off the team{legacy, select, yes { as {role}} other {}}"
   },
   "activity.contract.typeReassigned": {
     "defaultMessage": "{actor} re-typed this contract"
@@ -449,6 +452,9 @@
   "activity.matter.parentSet": {
     "defaultMessage": "{actor} put this Matter under {parent}"
   },
+  "activity.matter.portalAccessExcluded": {
+    "defaultMessage": "Migration kept {member} outside this Confidential record's audience"
+  },
   "activity.matter.relatedRecord": {
     "defaultMessage": "{reference} ({title})"
   },
@@ -468,10 +474,10 @@
     "defaultMessage": "{actor} reassigned this matter's status"
   },
   "activity.matter.teamAdded": {
-    "defaultMessage": "{actor} added {member} to the team as {role}"
+    "defaultMessage": "{actor} added {member} to the team{legacy, select, yes { as {role}} other {}}"
   },
   "activity.matter.teamRemoved": {
-    "defaultMessage": "{actor} took {member} off the team as {role}"
+    "defaultMessage": "{actor} took {member} off the team{legacy, select, yes { as {role}} other {}}"
   },
   "activity.matter.typeReassigned": {
     "defaultMessage": "{actor} reassigned this matter's type"
@@ -1149,7 +1155,7 @@
     "defaultMessage": "Remove {filename}"
   },
   "comments.audience.fullThread": {
-    "defaultMessage": "Visible to everyone on this record, including the requester."
+    "defaultMessage": "Visible to everyone on this record, including the Business Users on its team."
   },
   "comments.audience.legalOnly": {
     "defaultMessage": "Visible to Administrators and Legal Team Members."
@@ -1164,13 +1170,13 @@
     "defaultMessage": "Confidential contract — only the contract team and owner can read it."
   },
   "comments.contract.internalAudience": {
-    "defaultMessage": "Visible to the legal team and Contract team members. Not shared with the requester."
+    "defaultMessage": "Visible to Legal. Not shared with Business Users."
   },
   "comments.contract.team": {
     "defaultMessage": "Contract Team"
   },
   "comments.contract.teamAudience": {
-    "defaultMessage": "Visible to the legal team, Contract team members, and the requester."
+    "defaultMessage": "Visible to Legal and all Contract team members."
   },
   "comments.countLabel": {
     "defaultMessage": "{count, plural, one {# comment} other {# comments}}"
@@ -1245,7 +1251,7 @@
     "defaultMessage": "Internal team"
   },
   "comments.matter.internalAudience": {
-    "defaultMessage": "Visible to the legal team and Matter team members. Not shared with the requester."
+    "defaultMessage": "Visible to Legal. Not shared with Business Users."
   },
   "comments.matter.legalOnly": {
     "defaultMessage": "Legal Only"
@@ -1254,7 +1260,7 @@
     "defaultMessage": "Matter Team"
   },
   "comments.matter.teamAudience": {
-    "defaultMessage": "Visible to the legal team, Matter team members, and the requester."
+    "defaultMessage": "Visible to Legal and all Matter team members."
   },
   "comments.mention.filesLoading": {
     "defaultMessage": "Searching files…"
@@ -1524,7 +1530,7 @@
     "defaultMessage": "Contract settings"
   },
   "contracts.applet.team": {
-    "defaultMessage": "Team"
+    "defaultMessage": "Contract team"
   },
   "contracts.archivedPill": {
     "defaultMessage": "Archived"
@@ -2051,75 +2057,6 @@
   "contracts.stageLabel": {
     "defaultMessage": "{stage, select, draft {Draft} review {Review} approval {Approval} signature {Signature} active {Active} ended {Ended} other {Unknown}}"
   },
-  "contracts.stakeholders.add": {
-    "defaultMessage": "Add"
-  },
-  "contracts.stakeholders.archived": {
-    "defaultMessage": "(archived)"
-  },
-  "contracts.stakeholders.choose": {
-    "defaultMessage": "Choose a person"
-  },
-  "contracts.stakeholders.empty": {
-    "defaultMessage": "No additional stakeholders."
-  },
-  "contracts.stakeholders.explanation": {
-    "defaultMessage": "The Business Owner and stakeholders can read this Contract in the Portal. Confidential Contracts also require record-team or Legal Owner access. Stakeholder access continues when the Business Owner changes."
-  },
-  "contracts.stakeholders.person": {
-    "defaultMessage": "Add stakeholder"
-  },
-  "contracts.stakeholders.readError": {
-    "defaultMessage": "Stakeholders could not be read."
-  },
-  "contracts.stakeholders.remove": {
-    "defaultMessage": "Remove"
-  },
-  "contracts.stakeholders.removeNamed": {
-    "defaultMessage": "Remove {name} as stakeholder"
-  },
-  "contracts.stakeholders.retry": {
-    "defaultMessage": "Retry"
-  },
-  "contracts.stakeholders.title": {
-    "defaultMessage": "Stakeholders"
-  },
-  "contracts.stakeholders.writeError": {
-    "defaultMessage": "Stakeholders could not be updated."
-  },
-  "contracts.team.add": {
-    "defaultMessage": "Add team member"
-  },
-  "contracts.team.addError": {
-    "defaultMessage": "That person could not be added."
-  },
-  "contracts.team.empty": {
-    "defaultMessage": "Nobody is on this contract yet."
-  },
-  "contracts.team.person": {
-    "defaultMessage": "Person"
-  },
-  "contracts.team.personMissing": {
-    "defaultMessage": "Pick a person."
-  },
-  "contracts.team.personPlaceholder": {
-    "defaultMessage": "Person…"
-  },
-  "contracts.team.remove": {
-    "defaultMessage": "Take {name} off the team as {role, select, member {Member} watcher {Watcher} creator {Creator} contributor {Contributor} other {Unknown}}"
-  },
-  "contracts.team.removeError": {
-    "defaultMessage": "That person could not be taken off the team."
-  },
-  "contracts.team.role": {
-    "defaultMessage": "Role"
-  },
-  "contracts.team.submit": {
-    "defaultMessage": "Add"
-  },
-  "contracts.teamRole": {
-    "defaultMessage": "{role, select, member {Member} watcher {Watcher} creator {Creator} contributor {Contributor} other {Unknown}}"
-  },
   "contracts.termTimeline.empty": {
     "defaultMessage": "{missing, select, start {No effective date on this contract yet.} end {No expiry date on this contract yet.} other {No term dates on this contract yet.}}"
   },
@@ -2210,6 +2147,9 @@
   "conversion.conflicts": {
     "defaultMessage": "Conflicting sources need your review:"
   },
+  "conversion.discardSuggestions": {
+    "defaultMessage": "Discard AI suggestions"
+  },
   "conversion.draft": {
     "defaultMessage": "Conversion draft"
   },
@@ -2218,6 +2158,9 @@
   },
   "conversion.evidenceLoading": {
     "defaultMessage": "Loading source…"
+  },
+  "conversion.evidenceTitle": {
+    "defaultMessage": "Unverified value"
   },
   "conversion.evidenceUnavailable": {
     "defaultMessage": "The source is unavailable or has changed."
@@ -2228,17 +2171,32 @@
   "conversion.gettingReady": {
     "defaultMessage": "Getting {module, select, matter {matter} other {contract}} ready…"
   },
+  "conversion.justification": {
+    "defaultMessage": "Why this value"
+  },
   "conversion.manual": {
     "defaultMessage": "Continue manually"
   },
+  "conversion.nextPassage": {
+    "defaultMessage": "Next passage"
+  },
+  "conversion.noJustification": {
+    "defaultMessage": "No explanation was saved for this value."
+  },
   "conversion.noLocatedPassage": {
-    "defaultMessage": "This source has no searchable passage preview. Read the quoted text and check the original file."
+    "defaultMessage": "This source has no searchable passage preview. Read the source text and check the original file."
   },
-  "conversion.openSource": {
-    "defaultMessage": "Open source document"
+  "conversion.passageCount": {
+    "defaultMessage": "Passage {current} of {total}"
   },
-  "conversion.readingLimits": {
-    "defaultMessage": "Up to {sources, number} attachments, {bytes, number} MiB each and {totalBytes, number} MiB total; {characters, number} characters each and {totalCharacters, number} across all sources. Reading allows {sourceSeconds, number} seconds per attachment and {totalSeconds, number} seconds total. Request answers and messages are considered first."
+  "conversion.preparingElapsed": {
+    "defaultMessage": "Working for {duration}."
+  },
+  "conversion.preparingHint": {
+    "defaultMessage": "The provider reads the Request and its attachments. A long attachment can take a few minutes."
+  },
+  "conversion.previousPassage": {
+    "defaultMessage": "Previous passage"
   },
   "conversion.restrictedOmitted": {
     "defaultMessage": "Restricted messages and Legal or reference Fields were omitted to keep record values safe for broader readers."
@@ -2260,9 +2218,6 @@
   },
   "conversion.settingsMatter": {
     "defaultMessage": "Prepare Matter conversions with AI"
-  },
-  "conversion.sourcePanel": {
-    "defaultMessage": "Source document"
   },
   "conversion.sourceReason.byteLimit": {
     "defaultMessage": "file size limit"
@@ -2296,6 +2251,9 @@
   },
   "conversion.sourceStatus.unsupported": {
     "defaultMessage": "unsupported"
+  },
+  "conversion.sources": {
+    "defaultMessage": "Sources"
   },
   "conversion.targetBudgetOmitted": {
     "defaultMessage": "Some Fields exceeded the preparation limit. Complete them manually."
@@ -2464,6 +2422,21 @@
   },
   "decline.title": {
     "defaultMessage": "Decline {reference}"
+  },
+  "description.source.ai": {
+    "defaultMessage": "AI generated"
+  },
+  "description.source.current": {
+    "defaultMessage": "Current"
+  },
+  "description.source.empty": {
+    "defaultMessage": "The requester did not provide a description."
+  },
+  "description.source.requester": {
+    "defaultMessage": "Requester"
+  },
+  "description.source.showRequester": {
+    "defaultMessage": "Show requester description"
   },
   "dialog.close": {
     "defaultMessage": "Close"
@@ -4577,14 +4550,14 @@
   "inbox.request.convertMatter": {
     "defaultMessage": "Convert to matter"
   },
+  "inbox.request.convertedBy": {
+    "defaultMessage": "Converted by {person} on {date}"
+  },
   "inbox.request.description": {
     "defaultMessage": "Description"
   },
   "inbox.request.documentTitle": {
     "defaultMessage": "{reference} · {summary}"
-  },
-  "inbox.request.fromForm": {
-    "defaultMessage": "From the portal form"
   },
   "inbox.request.noAttachments": {
     "defaultMessage": "No files travelled with this request."
@@ -4597,9 +4570,6 @@
   },
   "inbox.request.overview": {
     "defaultMessage": "Overview"
-  },
-  "inbox.request.requester": {
-    "defaultMessage": "Requester"
   },
   "inbox.request.resolveWithoutConverting": {
     "defaultMessage": "Resolve request without converting"
@@ -5543,39 +5513,6 @@
   "matters.stillOpen": {
     "defaultMessage": "Still open"
   },
-  "matters.team.add": {
-    "defaultMessage": "Add team member"
-  },
-  "matters.team.addError": {
-    "defaultMessage": "That person could not be added to the matter team."
-  },
-  "matters.team.addSubmit": {
-    "defaultMessage": "Add to team"
-  },
-  "matters.team.empty": {
-    "defaultMessage": "Nobody is on this matter yet."
-  },
-  "matters.team.person": {
-    "defaultMessage": "Person"
-  },
-  "matters.team.personMissing": {
-    "defaultMessage": "Pick a person."
-  },
-  "matters.team.pickPerson": {
-    "defaultMessage": "Pick a person"
-  },
-  "matters.team.remove": {
-    "defaultMessage": "Take {name} off the matter team as {role}"
-  },
-  "matters.team.removeError": {
-    "defaultMessage": "That person could not be taken off the matter team."
-  },
-  "matters.team.role": {
-    "defaultMessage": "{role, select, member {Member} watcher {Watcher} creator {Creator} contributor {Contributor} other {Unknown}}"
-  },
-  "matters.team.roleLabel": {
-    "defaultMessage": "Role"
-  },
   "matters.template.contentHint": {
     "defaultMessage": "Template adds {taskCount, plural, one {# task} other {# tasks}} and {keyDateCount, plural, one {# key date} other {# key dates}}."
   },
@@ -5793,7 +5730,7 @@
     "defaultMessage": "Viewing as business user"
   },
   "portal.businessView.description": {
-    "defaultMessage": "You’re viewing your own requests. Submissions and replies are real."
+    "defaultMessage": "You’re viewing your Portal work. Submissions, edits, and replies are real."
   },
   "portal.businessView.return": {
     "defaultMessage": "Return to legal view"
@@ -5853,7 +5790,7 @@
     "defaultMessage": "Value"
   },
   "portal.contracts.description": {
-    "defaultMessage": "Contracts where you are the Business Owner or a stakeholder."
+    "defaultMessage": "Contracts you are on the team for."
   },
   "portal.contracts.empty": {
     "defaultMessage": "No Contracts are available to you."
@@ -5886,7 +5823,7 @@
     "defaultMessage": "Enter your work email to get a single-use link into the portal. No account and no password."
   },
   "portal.entry.title": {
-    "defaultMessage": "Legal request portal"
+    "defaultMessage": "Legal portal"
   },
   "portal.form.attachmentFailedReason": {
     "defaultMessage": "{filename} — {reason}"
@@ -6008,6 +5945,42 @@
   "portal.knowledge.kicker": {
     "defaultMessage": "From Legal"
   },
+  "portal.matter.manager": {
+    "defaultMessage": "Matter Manager"
+  },
+  "portal.matter.notFound": {
+    "defaultMessage": "Matter not found"
+  },
+  "portal.matter.status": {
+    "defaultMessage": "Status"
+  },
+  "portal.matter.type": {
+    "defaultMessage": "Matter Type"
+  },
+  "portal.matter.unreachable": {
+    "defaultMessage": "This Matter does not exist, or you cannot open it."
+  },
+  "portal.matters.description": {
+    "defaultMessage": "Matters you are on the team for."
+  },
+  "portal.matters.empty": {
+    "defaultMessage": "No Matters are available to you."
+  },
+  "portal.matters.firstPage": {
+    "defaultMessage": "First page"
+  },
+  "portal.matters.nextPage": {
+    "defaultMessage": "Next page"
+  },
+  "portal.matters.pagination": {
+    "defaultMessage": "Matter pages"
+  },
+  "portal.matters.requests": {
+    "defaultMessage": "Your requests"
+  },
+  "portal.matters.title": {
+    "defaultMessage": "Your Matters"
+  },
   "portal.myRequests.count": {
     "defaultMessage": "{count, plural, one {# request} other {# requests}}"
   },
@@ -6021,7 +5994,61 @@
     "defaultMessage": "Your requests"
   },
   "portal.name": {
-    "defaultMessage": "Legal request portal"
+    "defaultMessage": "Legal portal"
+  },
+  "portal.navigation": {
+    "defaultMessage": "Portal"
+  },
+  "portal.navigation.contracts": {
+    "defaultMessage": "Contracts"
+  },
+  "portal.navigation.matters": {
+    "defaultMessage": "Matters"
+  },
+  "portal.navigation.requests": {
+    "defaultMessage": "Requests"
+  },
+  "portal.record.addVersion": {
+    "defaultMessage": "Add version"
+  },
+  "portal.record.description": {
+    "defaultMessage": "Description"
+  },
+  "portal.record.documents": {
+    "defaultMessage": "Supporting Documents"
+  },
+  "portal.record.failed": {
+    "defaultMessage": "The change could not be saved. Try again."
+  },
+  "portal.record.fields": {
+    "defaultMessage": "Fields"
+  },
+  "portal.record.invalidNumber": {
+    "defaultMessage": "Enter a number."
+  },
+  "portal.record.moreDocuments": {
+    "defaultMessage": "More Documents"
+  },
+  "portal.record.noSupporting": {
+    "defaultMessage": "No supporting Documents yet."
+  },
+  "portal.record.originalMeta": {
+    "defaultMessage": "R-{number} · {requester} · Submitted {date}"
+  },
+  "portal.record.originalRequest": {
+    "defaultMessage": "Original request"
+  },
+  "portal.record.originalUrgency": {
+    "defaultMessage": "Urgency: {urgency}"
+  },
+  "portal.record.retrySave": {
+    "defaultMessage": "Retry save"
+  },
+  "portal.record.upload": {
+    "defaultMessage": "Upload Document"
+  },
+  "portal.request.archivedRecord": {
+    "defaultMessage": "The record created from this Request was archived. Your original request is shown below."
   },
   "portal.request.back": {
     "defaultMessage": "Your requests"
@@ -6041,11 +6068,20 @@
   "portal.request.booleanValue": {
     "defaultMessage": "{value, select, true {Yes} other {No}}"
   },
+  "portal.request.deadlineNotSet": {
+    "defaultMessage": "No deadline scheduled"
+  },
+  "portal.request.deadlinePassed": {
+    "defaultMessage": "Deadline passed"
+  },
   "portal.request.documentTitle": {
     "defaultMessage": "{reference} · {summary}"
   },
   "portal.request.meta": {
     "defaultMessage": "{reference} · {requestType} · Submitted {submitted}"
+  },
+  "portal.request.nextDeadline": {
+    "defaultMessage": "Next deadline: {date}"
   },
   "portal.request.owner": {
     "defaultMessage": "Owner: {name}"
@@ -6093,13 +6129,22 @@
     "defaultMessage": "Not assigned yet"
   },
   "portal.settings.heading": {
-    "defaultMessage": "How we tell you about your requests"
+    "defaultMessage": "How we tell you about your work"
   },
   "portal.settings.lead": {
-    "defaultMessage": "Choose how Legal reaches you about the requests you submit."
+    "defaultMessage": "Choose how Legal reaches you about your Requests, Contracts, and Matters."
   },
   "portal.settings.link": {
     "defaultMessage": "Notification settings"
+  },
+  "portal.settings.mentions": {
+    "defaultMessage": "Mentions"
+  },
+  "portal.settings.mentions.detail": {
+    "defaultMessage": "Comments that mention you on your Contracts and Matters."
+  },
+  "portal.settings.records.detail": {
+    "defaultMessage": "Shared comments and supporting Documents on your Contracts and Matters, and Contract status changes."
   },
   "portal.settings.title": {
     "defaultMessage": "Notification settings"
@@ -6112,6 +6157,36 @@
   },
   "portal.turnaround": {
     "defaultMessage": "Estimated turnaround: {days, plural, one {# calendar day} other {# calendar days}}"
+  },
+  "record.team.add": {
+    "defaultMessage": "Add team member"
+  },
+  "record.team.addAction": {
+    "defaultMessage": "Add"
+  },
+  "record.team.addError": {
+    "defaultMessage": "That person could not be added to the team."
+  },
+  "record.team.choose": {
+    "defaultMessage": "Choose a person"
+  },
+  "record.team.creator": {
+    "defaultMessage": "Creator"
+  },
+  "record.team.empty": {
+    "defaultMessage": "Nobody is on this team yet."
+  },
+  "record.team.person": {
+    "defaultMessage": "Person"
+  },
+  "record.team.personMissing": {
+    "defaultMessage": "Pick a person."
+  },
+  "record.team.remove": {
+    "defaultMessage": "Take {name} off the {module} team"
+  },
+  "record.team.removeError": {
+    "defaultMessage": "That person could not be taken off the team."
   },
   "recordFilters.apply": {
     "defaultMessage": "Apply"
@@ -6320,24 +6395,6 @@
   "renewal.vehicle.successorBlurb": {
     "defaultMessage": "Standalone record linked as the renewal."
   },
-  "requests.clearEstimate": {
-    "defaultMessage": "Clear estimate"
-  },
-  "requests.estimateHint": {
-    "defaultMessage": "An estimate from Legal, separate from the requester's Needed by date. Suggested dates use the request type's calendar-day turnaround from submission."
-  },
-  "requests.estimateNotSet": {
-    "defaultMessage": "Not set yet"
-  },
-  "requests.estimatePassed": {
-    "defaultMessage": "Estimate passed"
-  },
-  "requests.expectedBack": {
-    "defaultMessage": "Expected back (estimate)"
-  },
-  "requests.expectedBackValue": {
-    "defaultMessage": "Expected back (estimate): {date}"
-  },
   "requests.reference": {
     "defaultMessage": "R-{number, number, ::group-off}"
   },
@@ -6346,9 +6403,6 @@
   },
   "requests.statusLabel": {
     "defaultMessage": "{status, select, new {New} converted {Converted} resolved {Resolved} declined {Declined} other {Unknown}}"
-  },
-  "requests.useSuggestedEstimate": {
-    "defaultMessage": "Use suggested date: {date}"
   },
   "resolve.explains": {
     "defaultMessage": "Explain why this request can be closed without creating a contract or matter."
@@ -6376,9 +6430,6 @@
   },
   "role.businessUser": {
     "defaultMessage": "Business user"
-  },
-  "role.contributor": {
-    "defaultMessage": "Contributor"
   },
   "role.legalTeamMember": {
     "defaultMessage": "Legal team member"
@@ -8214,7 +8265,7 @@
     "defaultMessage": "Activity on your records"
   },
   "settings.notifications.group.activity.detail": {
-    "defaultMessage": "Status changes, comments, documents, and signatures on records where you're the Owner, on the team, or a watcher."
+    "defaultMessage": "Status changes, comments, documents, and signatures on records where you're the Owner, or on the team."
   },
   "settings.notifications.group.assigned": {
     "defaultMessage": "Assigned to you"
