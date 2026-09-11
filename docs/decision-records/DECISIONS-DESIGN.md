@@ -4772,6 +4772,7 @@ This supersedes only DES-076's flat-list presentation. DD-023's account types, P
 | DES-074 | Documentation and Help share the application design system                                                                                                           | Accepted                                                                                                   |
 | DES-075 | The Contract team applet holds stakeholders, and the AI analysis card is the Fields section's (amends DES-047, DES-070; extends DD-021, DES-032)                     | Accepted                                                                                                   |
 | DES-076 | Portal Contracts and Matters carry the business work                                                                                                                 | Accepted                                                                                                   |
+| DES-077 | Portal record lists use the managed table (supersedes DES-076's flat-list presentation)                                                                              | Accepted                                                                                                   |
 
 ### DES-016 addendum (2026-09-11, #827) — Request source reading above Convert
 
@@ -4782,4 +4783,3 @@ This is a new Request attachment read path: the Inbox's chat-only `RecordApplets
 ### DES-016 addendum (2026-09-11, #829) — Saved conversion citations
 
 The stacked source modal remains appropriate while the Convert dialog is active and keeps that dialog mounted. On saved Matter and Contract records, a citation with a Document Version uses the existing doc panel in RecordApplets. It docks beside the record at the existing width threshold and covers only the record content at narrower widths. It opens the original Version with the quoted passage highlighted, preserves the route and typed values, and restores the sparkle on close. Multiple citations offer a source choice. Request/message text remains available beside its value; unfiled conversation attachments retain their source reader. This supersedes the INT-008-era permission to reuse the centered Convert source modal for promoted Document Versions on saved records.
-| DES-077 | Portal record lists use the managed table | Accepted |
