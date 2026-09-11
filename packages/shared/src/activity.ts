@@ -1076,7 +1076,8 @@ type AiConnectorPayloads = {
       }
     | {
         preset: string;
-        field: "preset" | "protocol" | "baseUrl" | "model" | "matterPreparation";
+        field:
+          "preset" | "protocol" | "baseUrl" | "model" | "matterPreparation" | "contractPreparation";
         old: unknown;
         new: unknown;
       };

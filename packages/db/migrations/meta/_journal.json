@@ -729,6 +729,13 @@
       "when": 1789082486485,
       "tag": "0103_minor_revanche",
       "breakpoints": true
+    },
+    {
+      "idx": 104,
+      "version": "7",
+      "when": 1789089711595,
+      "tag": "0104_contract_preparation",
+      "breakpoints": true
     }
   ]
 }

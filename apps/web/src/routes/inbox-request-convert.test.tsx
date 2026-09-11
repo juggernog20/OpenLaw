@@ -291,7 +291,11 @@ function requestApi(
 const openConvert = (user: ReturnType<typeof userEvent.setup>) =>
   openDisposition(user, "Convert to contract");
 
-function open(api: ReturnType<typeof requestApi>) {
+function open(
+  api: Omit<ReturnType<typeof requestApi>, "handler"> & {
+    handler: (call: StubCall) => Response | Promise<Response> | undefined;
+  },
+) {
   stubApi({ signedIn: MEMBER, extra: api.handler });
   return renderAt("/inbox/45");
 }
@@ -1128,9 +1132,20 @@ describe("a lost race (INT-007, TECH-020)", () => {
 
 describe("Matter Conversion drafts", () => {
   function preparedApi(pending = false, allValues = false, withAttachments = false) {
-    const base = requestApi();
+    const base = requestApi(
+      request({
+        requestType: {
+          id: "rt-dispute",
+          displayName: "Dispute",
+          targetModule: "matter",
+          targetTypeId: "mt-dispute",
+          targetTypeName: "Dispute",
+        },
+      }),
+    );
     const draft = {
       id: "draft-1",
+      targetModule: "matter",
       targetTypeId: "mt-dispute",
       state: pending ? "pending" : "ready",
       suggestions: {
@@ -1188,7 +1203,10 @@ describe("Matter Conversion drafts", () => {
       handler: (call: StubCall) => {
         if (call.url.pathname === "/api/v1/conversion-drafts/settings")
           return json(200, { matterPreparation: true });
-        if (call.url.pathname.endsWith("/conversion-drafts")) return json(202, { draft });
+        if (call.url.pathname.endsWith("/conversion-drafts")) {
+          draft.targetTypeId = (call.body as { targetTypeId: string }).targetTypeId;
+          return json(202, { draft });
+        }
         if (call.url.pathname.endsWith("/conversion-drafts/draft-1")) return json(200, { draft });
         if (call.url.pathname.includes("/evidence/"))
           return json(200, {
@@ -1221,7 +1239,7 @@ describe("Matter Conversion drafts", () => {
     await user.type(title, "Human opening title");
     expect(within(dialog).getAllByText("Unverified")).toHaveLength(2);
     await user.selectOptions(within(dialog).getByLabelText(/^Matter type/), "mt-employment");
-    expect(within(dialog).getAllByText("Unverified")).toHaveLength(2);
+    await waitFor(() => expect(within(dialog).getAllByText("Unverified")).toHaveLength(2));
     await user.click(within(dialog).getByRole("button", { name: "Convert to matter" }));
     await waitFor(() => expect(api.conversions).toHaveLength(1));
     expect(api.conversions[0]).toMatchObject({
@@ -1439,7 +1457,7 @@ describe("Matter Conversion drafts", () => {
     expect(screen.getByText(/Long agreement.pdf: truncated.*text limit/)).toBeVisible();
     expect(screen.getByText(/Up to 20 attachments, 10 MiB each/)).toBeVisible();
   });
-  it("leaves prepared values behind when the dialog moves to the contract arm", async () => {
+  it("drops Matter suggestions for disabled Contract preparation and prepares on return", async () => {
     const user = userEvent.setup();
     open(preparedApi());
     await openDisposition(user, "Convert to matter");
@@ -1453,10 +1471,8 @@ describe("Matter Conversion drafts", () => {
     );
     expect(within(dialog).queryByText("Unverified")).toBeNull();
     await user.click(within(dialog).getByRole("button", { name: /Convert to matter instead/ }));
-    expect(within(dialog).getByLabelText("Title", { exact: false })).toHaveValue(
-      "Northwind Labs mutual NDA",
-    );
-    expect(within(dialog).queryByText("Unverified")).toBeNull();
+    expect(await within(dialog).findByDisplayValue("Prepared response")).toBeVisible();
+    expect(within(dialog).getAllByText("Unverified")).toHaveLength(3);
   });
   it.each(["Continue manually", "Convert to contract instead"])(
     "%s restores untouched defaults for every prepared value",
@@ -1539,5 +1555,126 @@ describe("Matter Conversion drafts", () => {
     await user.type(title, "My manual title");
     expect(screen.queryByText("Unverified")).not.toBeInTheDocument();
     expect(title).toHaveValue("My manual title");
+  });
+});
+
+describe("Contract and Matter preparation together", () => {
+  function bothApi(suggestType = false) {
+    const calls: { targetModule: "matter" | "contract"; targetTypeId: string }[] = [];
+    const drafts = new Map<string, unknown>();
+    let held: (() => void) | undefined;
+    const base = requestApi();
+    const api = {
+      ...base,
+      calls,
+      release: () => held?.(),
+      handler: (call: StubCall) => {
+        if (call.url.pathname === "/api/v1/conversion-drafts/settings")
+          return json(200, { matterPreparation: true, contractPreparation: true });
+        if (call.url.pathname.endsWith("/conversion-drafts")) {
+          const target = call.body as (typeof calls)[number];
+          calls.push(target);
+          const id = `both-${calls.length}`;
+          const proposal = (value: unknown) => ({
+            value,
+            citations: [{ sourceId: "message:1", revision: "v1", quote: "Supported" }],
+          });
+          const draft = {
+            id,
+            ...target,
+            state: "ready",
+            suggestions: {
+              title: proposal(`${target.targetModule} title ${calls.length}`),
+              ...(suggestType && calls.length === 1 ? { contract_type: proposal("ct-msa") } : {}),
+              description: proposal(`${target.targetModule} description`),
+              priority: proposal("critical"),
+              needed_by: proposal("2026-10-02"),
+              ...(target.targetModule === "contract" ? { counterparty: proposal("Acme") } : {}),
+              ...(target.targetTypeId === "ct-msa"
+                ? { "field:governing_law": proposal("England") }
+                : {}),
+            },
+            conflicts: {},
+            warnings: [],
+            attachmentReads: [],
+            failure: null,
+          };
+          drafts.set(id, draft);
+          if (target.targetModule === "matter")
+            return new Promise<Response>((resolve) => {
+              held = () => resolve(json(202, { draft }));
+            });
+          return json(202, { draft });
+        }
+        const id = call.url.pathname.split("/conversion-drafts/")[1];
+        if (id && drafts.has(id)) return json(200, { draft: drafts.get(id) });
+        return base.handler(call);
+      },
+    };
+    return api;
+  }
+  it.each([false, true])(
+    "uses the Request Type as a fallback, not an initial constraint, with suggestion %s",
+    async (suggestType) => {
+      const user = userEvent.setup();
+      const api = bothApi(suggestType);
+      open(api);
+      await openDisposition(user, "Convert to contract");
+      await screen.findByDisplayValue("contract title 1");
+      expect(api.calls[0]).toMatchObject({ targetModule: "contract", targetTypeId: "" });
+      expect(screen.getByLabelText(/^Contract type/)).toHaveValue(
+        suggestType ? "ct-msa" : "ct-nda",
+      );
+      await user.selectOptions(screen.getByLabelText(/^Contract type/), "ct-sow");
+      await waitFor(() =>
+        expect(api.calls[1]).toMatchObject({ targetModule: "contract", targetTypeId: "ct-sow" }),
+      );
+      await waitFor(() =>
+        expect(screen.getByRole("button", { name: "Convert to contract" })).toBeEnabled(),
+      );
+      expect(screen.getByLabelText(/^Contract type/)).toHaveValue("ct-sow");
+    },
+  );
+  it("prepares Contract controls, preserves edits through Type and Re-target changes, and ignores a late Matter reply", async () => {
+    const user = userEvent.setup();
+    const api = bothApi();
+    open(api);
+    await openDisposition(user, "Convert to contract");
+    const title = await screen.findByDisplayValue("contract title 1");
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByLabelText(/^Counterparty/)).toHaveValue("Acme");
+    expect(within(dialog).queryByLabelText("Matter template")).toBeNull();
+    await user.clear(title);
+    await user.type(title, "Human title");
+    await user.clear(within(dialog).getByLabelText("Description"));
+    await user.clear(within(dialog).getByLabelText(/^Needed by/));
+    await user.selectOptions(within(dialog).getByLabelText(/^Contract type/), "ct-msa");
+    expect(await within(dialog).findByDisplayValue("England")).toBeVisible();
+    await user.clear(within(dialog).getByLabelText(/^Governing law/));
+    await user.type(within(dialog).getByLabelText(/^Governing law/), "France");
+    await user.click(within(dialog).getByRole("button", { name: "Convert to matter instead" }));
+    expect(await within(dialog).findByText("Getting matter ready…")).toBeVisible();
+    await user.click(within(dialog).getByRole("button", { name: "Convert to contract instead" }));
+    await waitFor(() =>
+      expect(within(dialog).getByRole("button", { name: "Convert to contract" })).toBeEnabled(),
+    );
+    api.release();
+    expect(within(dialog).getByLabelText(/^Title/)).toHaveValue("Human title");
+    expect(within(dialog).getByLabelText("Description")).toHaveValue("");
+    expect(within(dialog).getByLabelText(/^Needed by/)).toHaveValue("");
+    expect(within(dialog).getByLabelText(/^Governing law/)).toHaveValue("France");
+    expect(within(dialog).queryByText("Getting matter ready…")).toBeNull();
+    await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
+    await waitFor(() => expect(api.conversions).toHaveLength(1));
+    expect(api.conversions[0]).toMatchObject({
+      title: "Human title",
+      description: null,
+      contractTypeId: "ct-msa",
+      customFields: { governing_law: "France" },
+      counterpartyName: "Acme",
+      aiAccepted: ["priority", "counterparty"],
+    });
+    expect(api.conversions[0]).not.toHaveProperty("neededBy");
+    expect(api.conversions[0]).not.toHaveProperty("templateId");
   });
 });

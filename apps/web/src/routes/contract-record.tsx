@@ -248,6 +248,7 @@ import {
   UnverifiedMarker,
 } from "../components/contracts/ai-analysis-card";
 import { AiField } from "../components/ui/ai-field";
+import { ConversionEvidence } from "../components/intake/conversion-evidence";
 import { AiFieldEvidence } from "../components/contracts/ai-field-evidence";
 import { coreAnalysisLabel } from "../lib/core-analysis-labels";
 import { CounterpartyPicker, type CounterpartyPick } from "../components/counterparty-picker";
@@ -1185,8 +1186,23 @@ function ContractRecord() {
   const unverifiedMarker = (slug: string) =>
     saved.aiUnverified?.[slug] ? <UnverifiedMarker /> : null;
   const confirmationControl = (slug: string) => {
-    const marker = saved.aiUnverified?.[slug];
+    const marker =
+      saved.aiUnverified?.[slug] ??
+      (slug.startsWith("field:") ? saved.aiUnverified?.[slug.slice(6)] : undefined);
     if (!marker) return null;
+    if (marker.draftId)
+      return (
+        <ConversionEvidence
+          key={`${marker.draftId}:${slug}`}
+          module="contract"
+          showMarker={false}
+          number={saved.number}
+          slug={slug}
+          onConfirm={analysisConfirmable ? () => confirmAnalysisField(slug) : undefined}
+        />
+      );
+    if (!marker.runId) return null;
+    if (slug.startsWith("field:")) slug = slug.slice(6);
     const coreLabel = coreAnalysisLabel(slug);
     const label = coreLabel
       ? intl.formatMessage(coreLabel)
@@ -1449,6 +1465,7 @@ function ContractRecord() {
       .catch(() => undefined);
     if (!result?.data) return (await readProblem(result)).detail;
     adoptSaved(result.data.contract);
+    refreshDeadlines(saved.number);
     return undefined;
   }
 
@@ -1460,6 +1477,7 @@ function ContractRecord() {
       .catch(() => undefined);
     if (!result?.data) return (await readProblem(result)).detail;
     adoptSaved(result.data.contract);
+    refreshDeadlines(saved.number);
     return undefined;
   }
 
@@ -2240,7 +2258,10 @@ function ContractRecord() {
                   </header>
                   <div className="grid grid-cols-1 gap-4 p-4 @2xl/page:grid-cols-2">
                     <div className="@2xl/page:col-span-2">
-                      <div className="flex flex-col gap-1.5">
+                      <AiField
+                        active={Boolean(saved.aiUnverified?.title)}
+                        className="flex flex-col gap-1.5"
+                      >
                         <Label htmlFor="contract-title">
                           <FormattedMessage id="contracts.form.titleField" defaultMessage="Title" />
                         </Label>
@@ -2263,7 +2284,9 @@ function ContractRecord() {
                             detail={fieldError.title}
                           />
                         </div>
-                      </div>
+                        {unverifiedMarker("title")}
+                        {confirmationControl("title")}
+                      </AiField>
                     </div>
                     <ReadOnlyField
                       label={
@@ -2283,7 +2306,10 @@ function ContractRecord() {
                       toggle DES-017 removed, so it lands here with the
                       other scalars — the same move the Owner, our
                       entity, and the value already made. */}
-                    <div className="flex flex-col gap-1.5">
+                    <AiField
+                      active={Boolean(saved.aiUnverified?.contract_type)}
+                      className="flex flex-col gap-1.5"
+                    >
                       <Label htmlFor="contract-type">
                         <FormattedMessage id="contracts.form.type" defaultMessage="Contract type" />
                       </Label>
@@ -2306,7 +2332,9 @@ function ContractRecord() {
                           detail={fieldError.contractTypeId}
                         />
                       </div>
-                    </div>
+                      {unverifiedMarker("contract_type")}
+                      {confirmationControl("contract_type")}
+                    </AiField>
                     <div className="flex flex-col gap-1.5">
                       <Label htmlFor="contract-business-owner">
                         <FormattedMessage
@@ -2472,7 +2500,10 @@ function ContractRecord() {
                       to keep in step. What the record holds is still
                       read here — the sub-bar pill says it, two rows
                       up. */}
-                    <div className="flex flex-col gap-1.5">
+                    <AiField
+                      active={Boolean(saved.aiUnverified?.priority)}
+                      className="flex flex-col gap-1.5"
+                    >
                       <Label htmlFor="contract-priority">
                         <FormattedMessage id="contracts.form.priority" defaultMessage="Priority" />
                       </Label>
@@ -2499,7 +2530,9 @@ function ContractRecord() {
                           detail={fieldError.priority}
                         />
                       </div>
-                    </div>
+                      {unverifiedMarker("priority")}
+                      {confirmationControl("priority")}
+                    </AiField>
                     <div className="flex flex-col gap-1.5">
                       <Label htmlFor="contract-risk">
                         <FormattedMessage id="contracts.form.risk" defaultMessage="Risk" />
@@ -2806,7 +2839,10 @@ function ContractRecord() {
                       />
                     </h2>
                   </header>
-                  <div className="flex items-start gap-2 p-4">
+                  <AiField
+                    active={Boolean(saved.aiUnverified?.description)}
+                    className="flex items-start gap-2 p-4"
+                  >
                     <textarea
                       id="contract-description"
                       // The card's own heading names the field: a second
@@ -2827,7 +2863,9 @@ function ContractRecord() {
                       status={fieldStatus.description ?? "idle"}
                       detail={fieldError.description}
                     />
-                  </div>
+                    {unverifiedMarker("description")}
+                    {confirmationControl("description")}
+                  </AiField>
                 </section>
                 <AiAnalysisCard
                   analysis={analysis}
@@ -2874,7 +2912,7 @@ function ContractRecord() {
                 frozen={frozen}
                 businessEditable={!archived && contributor}
                 aiUnverified={saved.aiUnverified}
-                reviewControl={confirmationControl}
+                reviewControl={(slug) => confirmationControl(`field:${slug}`)}
                 status={fieldStatus}
                 error={fieldError}
                 onStatus={note}
@@ -2942,6 +2980,7 @@ function ContractRecord() {
                   one named. */}
             {tab === "key-dates" && (
               <KeyDatesCard
+                conversionReview={confirmationControl("needed_by")}
                 deadlines={deadlines}
                 // The saved row, not the loader's copy: editing the
                 // notice period on the Overview changes what the
@@ -3724,7 +3763,7 @@ function FieldsCard({
               people={people}
               entities={entities}
               frozen={frozen && !(businessEditable && field.fieldTag === "business")}
-              marker={Boolean(aiUnverified?.[field.slug])}
+              marker={Boolean(aiUnverified?.[field.slug] ?? aiUnverified?.[`field:${field.slug}`])}
               confirmation={reviewControl(field.slug)}
               status={status[`field:${field.slug}`] ?? "idle"}
               error={error[`field:${field.slug}`]}

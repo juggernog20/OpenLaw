@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-/** Durable Matter preparation with leased work and current-source checks (INT-008). */
+/** Durable Request conversion preparation with leased work and current-source checks (INT-008). */
 import { and, conversionDrafts, eq, isNull, lt, or, users, type Db } from "@openlaw/db";
 import type { ConversionSuggestion } from "@openlaw/shared";
 import {
   checkedSuggestion,
   conversionContext,
-  matterPreparationEnabled,
+  preparationEnabled,
   withAttachmentReads,
 } from "../lib/conversion-draft.js";
 import { ATTACHMENT_LIMITS, readConversionAttachments } from "../lib/conversion-attachments.js";
@@ -48,11 +48,17 @@ export async function handleConversionDraft(
       !actor ||
       actor.archivedAt ||
       !["administrator", "legal_team_member"].includes(actor.role) ||
-      !(await matterPreparationEnabled(deps.db))
+      !(await preparationEnabled(deps.db, draft.targetModule))
     )
       throw new Error("disabled");
     stage = "sources";
-    const context = await conversionContext(deps.db, draft.requestId, draft.targetTypeId);
+    const context = await conversionContext(
+      deps.db,
+      draft.requestId,
+      draft.targetTypeId,
+      false,
+      draft.targetModule,
+    );
     if (context.row.status !== "new" || context.snapshot !== draft.snapshot)
       throw new Error("changed");
     const attachmentReads = draft.attachmentReads.length
@@ -70,8 +76,15 @@ export async function handleConversionDraft(
       .where(and(eq(conversionDrafts.id, id), eq(conversionDrafts.startedAt, now)));
     withAttachmentReads(context, attachmentReads);
     if (
-      (await conversionContext(deps.db, draft.requestId, draft.targetTypeId)).snapshot !==
-      draft.snapshot
+      (
+        await conversionContext(
+          deps.db,
+          draft.requestId,
+          draft.targetTypeId,
+          false,
+          draft.targetModule,
+        )
+      ).snapshot !== draft.snapshot
     )
       throw new Error("changed");
     stage = "provider";
@@ -96,7 +109,13 @@ export async function handleConversionDraft(
     }
     for (const slug of Object.keys(conflicts)) delete suggestions[slug];
     stage = "freshness";
-    const current = await conversionContext(deps.db, draft.requestId, draft.targetTypeId);
+    const current = await conversionContext(
+      deps.db,
+      draft.requestId,
+      draft.targetTypeId,
+      false,
+      draft.targetModule,
+    );
     const [currentActor] = await deps.db.select().from(users).where(eq(users.id, draft.actorId));
     if (
       current.snapshot !== draft.snapshot ||
@@ -104,7 +123,7 @@ export async function handleConversionDraft(
       !currentActor ||
       currentActor.archivedAt ||
       !["administrator", "legal_team_member"].includes(currentActor.role) ||
-      !(await matterPreparationEnabled(deps.db))
+      !(await preparationEnabled(deps.db, draft.targetModule))
     )
       throw new Error("changed");
     await deps.db
@@ -127,7 +146,7 @@ export async function handleConversionDraft(
         ),
       );
   } catch {
-    deps.log?.warn({ draftId: id, stage }, "Matter preparation failed");
+    deps.log?.warn({ draftId: id, stage }, "Request conversion preparation failed");
     await deps.db
       .update(conversionDrafts)
       .set({

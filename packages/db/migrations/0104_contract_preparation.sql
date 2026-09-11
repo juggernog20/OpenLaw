@@ -1,0 +1,1 @@
+ALTER TABLE "ai_connector" ADD COLUMN "contract_preparation" boolean DEFAULT false NOT NULL;

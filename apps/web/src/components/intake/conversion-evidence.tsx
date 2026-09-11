@@ -12,11 +12,15 @@ import { ConfirmUnverified, UnverifiedMarker } from "../contracts/ai-analysis-ca
 
 export function ConversionEvidence({
   number,
+  module = "matter",
+  showMarker = true,
   draftId,
   slug,
   onConfirm,
 }: Readonly<{
   number: number;
+  module?: "matter" | "contract";
+  showMarker?: boolean;
   draftId?: string;
   slug: string;
   onConfirm?: () => Promise<string | undefined>;
@@ -37,9 +41,14 @@ export function ConversionEvidence({
         ? await api.GET("/api/v1/requests/{number}/conversion-drafts/{draftId}/evidence/{slug}", {
             params: { path: { number, draftId, slug } },
           })
-        : await api.GET("/api/v1/matters/{number}/conversion-evidence/{slug}", {
-            params: { path: { number, slug } },
-          });
+        : await api.GET(
+            module === "matter"
+              ? "/api/v1/matters/{number}/conversion-evidence/{slug}"
+              : "/api/v1/contracts/{number}/conversion-evidence/{slug}",
+            {
+              params: { path: { number, slug } },
+            },
+          );
       if (token !== currentRead.current) return;
       setEvidence(result.data ?? { available: false, citations: [] });
       if (result.data?.available && result.data.citations.some((citation) => citation.attachment)) {
@@ -52,7 +61,7 @@ export function ConversionEvidence({
   }
   return (
     <span className="flex items-center gap-1">
-      <UnverifiedMarker />
+      {showMarker && <UnverifiedMarker />}
       <Popover
         open={popover}
         onOpenChange={(open) => {

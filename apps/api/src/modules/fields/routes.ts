@@ -397,7 +397,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
           // in another slot would keep a broader audience after retagging.
           const dependencies = await tx.execute<{ present: boolean }>(sql`
             select exists (
-              select 1 from ${matters} m
+              select 1 from (select ai_unverified from ${matters} union all select ai_unverified from ${contracts}) m
               cross join lateral jsonb_each(coalesce(m.ai_unverified, '{}'::jsonb)) marker
               join ${conversionDrafts} draft on draft.id = marker.value->>'draftId'
               cross join lateral jsonb_array_elements(coalesce(draft.suggestions->marker.key->'citations', '[]'::jsonb)) citation
@@ -408,7 +408,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
           if (dependencies.rows[0]?.present)
             throw httpError(
               409,
-              "Review and confirm or edit the unverified Matter values derived from this Field before marking it Legal. No Field tag was changed.",
+              "Review and confirm or edit the unverified record values derived from this Field before marking it Legal. No Field tag was changed.",
             );
         }
         if (body.fieldTag !== undefined) wants("fieldTag", body.fieldTag);

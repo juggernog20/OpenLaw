@@ -532,7 +532,8 @@ const ContractRowSchema = z.object({
     .record(
       z.string(),
       z.object({
-        runId: z.string(),
+        runId: z.string().optional(),
+        draftId: z.string().optional(),
         writtenAt: z.iso.datetime(),
       }),
     )
@@ -786,13 +787,13 @@ function sameValue(
  * text, and only the run's results (audience-gated in `latestAnalysisRun`)
  * may carry it; the row reaches readers the Document may not. */
 function publicUnverified(
-  map: Readonly<Record<string, { runId: string; writtenAt: string }>> | null,
-): Record<string, { runId: string; writtenAt: string }> | null {
+  map: Readonly<Record<string, { runId?: string; draftId?: string; writtenAt: string }>> | null,
+): Record<string, { runId?: string; draftId?: string; writtenAt: string }> | null {
   if (!map) return null;
   return Object.fromEntries(
     Object.entries(map).map(([slug, entry]) => [
       slug,
-      { runId: entry.runId, writtenAt: entry.writtenAt },
+      { runId: entry.runId, draftId: entry.draftId, writtenAt: entry.writtenAt },
     ]),
   );
 }
@@ -850,7 +851,16 @@ function toRow(
     description: row.description,
     nextDeadline: context.nextDeadline ?? null,
     customFields,
-    aiUnverified: publicUnverified(row.aiUnverified),
+    aiUnverified: publicUnverified(
+      row.aiUnverified
+        ? Object.fromEntries(
+            Object.entries(row.aiUnverified).filter(
+              ([slug, flag]) =>
+                !flag.draftId || !slug.startsWith("field:") || slug.slice(6) in customFields,
+            ),
+          )
+        : null,
+    ),
     isConfidential: row.isConfidential,
     endedAt: row.endedAt?.toISOString() ?? null,
     archivedAt: row.archivedAt?.toISOString() ?? null,
@@ -2527,6 +2537,19 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         // AI marker named by this PATCH in the same transaction and add
         // no second activity entry for the clearing itself (CTR-008).
         const humanWrittenSlugs = new Set<string>();
+        if (body.title !== undefined) humanWrittenSlugs.add("title");
+        if (body.description !== undefined) humanWrittenSlugs.add("description");
+        if (body.priority !== undefined) humanWrittenSlugs.add("priority");
+        if (body.contractTypeId !== undefined) {
+          humanWrittenSlugs.add("contract_type");
+          for (const [slug, flag] of Object.entries(target.aiUnverified ?? {}))
+            if (
+              flag.draftId &&
+              flag.targetTypeId !== body.contractTypeId &&
+              !["title", "description", "priority", "counterparty", "needed_by"].includes(slug)
+            )
+              humanWrittenSlugs.add(slug);
+        }
         if (body.termType !== undefined) humanWrittenSlugs.add("term_type");
         if (body.effectiveDate !== undefined) humanWrittenSlugs.add("effective_date");
         if (body.expiryDate !== undefined) humanWrittenSlugs.add("expiry_date");
@@ -2535,7 +2558,10 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         if (body.noticePeriodDays !== undefined) humanWrittenSlugs.add("notice_period_days");
         if (body.value !== undefined) humanWrittenSlugs.add("value");
-        for (const slug of Object.keys(body.customFields ?? {})) humanWrittenSlugs.add(slug);
+        for (const slug of Object.keys(body.customFields ?? {})) {
+          humanWrittenSlugs.add(slug);
+          humanWrittenSlugs.add(`field:${slug}`);
+        }
         // A term-type write may clear a dependent even when the body did
         // not name it. That clear is a human write to the slot too.
         if (patch.expiryDate !== undefined) humanWrittenSlugs.add("expiry_date");

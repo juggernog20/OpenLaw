@@ -501,6 +501,40 @@ export function SettingsAiAnalysisPage() {
               }}
             />
           </div>
+          <div className="flex items-center justify-between gap-4 p-4">
+            <Label htmlFor="contract-preparation">
+              <FormattedMessage
+                id="conversion.settingsContract"
+                defaultMessage="Prepare Contract conversions with AI"
+              />
+            </Label>
+            <Switch
+              id="contract-preparation"
+              checked={connector.contractPreparation}
+              disabled={!connector.enabled || status.workflow === "saving"}
+              onCheckedChange={async (contractPreparation) => {
+                note("workflow", "saving");
+                try {
+                  const result = await api.PATCH("/api/v1/ai-connector/workflows", {
+                    body: { contractPreparation },
+                  });
+                  if (result.data) {
+                    setConnector(result.data.connector);
+                    note("workflow", "saved");
+                  } else note("workflow", "error", (await problem(result)).detail);
+                } catch {
+                  note(
+                    "workflow",
+                    "error",
+                    intl.formatMessage({
+                      id: "conversion.settingsFailed",
+                      defaultMessage: "The conversion setting could not be saved.",
+                    }),
+                  );
+                }
+              }}
+            />
+          </div>
           <StatusNote status={status.workflow} detail={detail.workflow} />
         </SettingsCard>
       )}
