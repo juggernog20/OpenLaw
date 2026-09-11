@@ -206,7 +206,7 @@ test.describe.serial("M7 demo path", () => {
       // No Entities nav item. Absent, not disabled.
       await contributorPage.goto("/");
       const nav = contributorPage.getByRole("navigation", { name: "Portal" });
-      await expect(nav.getByRole("link", { name: "Your Contracts" })).toBeVisible();
+      await expect(nav.getByRole("link", { name: "Contracts" })).toBeVisible();
       await expect(nav.getByRole("link", { name: "Entities" })).toHaveCount(0);
 
       // The URL bounces them home.

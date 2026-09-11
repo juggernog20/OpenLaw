@@ -311,10 +311,10 @@ test.describe.serial("the settings destination", () => {
       // The in-place role edit commits from the row and survives a
       // reload (the API's live-guard proof runs at the HTTP seam).
       await row.getByRole("button", { name: `change the role of ${email}` }).click();
-      await page.getByRole("menuitemradio", { name: "Legal team member" }).click();
+      await page.getByRole("menuitemradio", { name: "Administrator" }).click();
       await expect(row.getByText("Saved")).toBeVisible();
       await page.reload();
-      await expect(row.getByText("Legal team member")).toBeVisible();
+      await expect(row.getByText("Administrator")).toBeVisible();
 
       // Standalone revocation, the lost-laptop case: the member's live
       // session dies mid-flight and their next navigation lands on login.

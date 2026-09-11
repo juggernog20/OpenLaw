@@ -502,13 +502,13 @@ test.describe.serial("M20 demo path", () => {
 
       // ---- And the portal's other destination ----
       //
-      // NOT-002's group 5 and nothing else: the other four groups are
-      // about contracts, records, dates, and the Inbox, none of which a
-      // Business User can open (DD-013).
+      // The Portal draws Request updates, Mentions, and Activity on your
+      // records (DD-023): three groups, two channels each. Staff-only
+      // groups and the Briefing stay outside the Portal.
       await portal.getByRole("link", { name: "Notification settings" }).click();
       await expect(portal).toHaveURL(/\/portal\/settings$/);
-      const prefs = portal.getByRole("region", { name: "How we tell you about your requests" });
-      await expect(prefs.getByRole("switch")).toHaveCount(2);
+      const prefs = portal.getByRole("region", { name: "How we tell you about your work" });
+      await expect(prefs.getByRole("switch")).toHaveCount(6);
       await expect(prefs.getByRole("switch", { name: "Request updates Email" })).toBeChecked();
     } catch (error) {
       // A cleanup that throws here would replace the failure that caused
