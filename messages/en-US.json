@@ -3656,6 +3656,12 @@
   "entities.chart.export.format": {
     "defaultMessage": "File format"
   },
+  "entities.chart.export.format.pdf": {
+    "defaultMessage": "PDF (.pdf)"
+  },
+  "entities.chart.export.format.pptx": {
+    "defaultMessage": "PowerPoint (.pptx)"
+  },
   "entities.chart.export.legalName": {
     "defaultMessage": "Legal name (always included)"
   },
