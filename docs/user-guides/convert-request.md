@@ -12,7 +12,7 @@ Sign in as a Legal Team Member or Administrator. [Review the undecided Request](
 2. With preparation enabled for that module, wait for **Getting contract ready** or **Getting matter ready**. The Conversion draft can use eligible saved Request answers, current Full thread messages and readable attachments. Explicit conversation corrections can override earlier answers. Restricted or unreadable sources and reading limits can leave gaps. Review the warnings and conflicting facts yourself.
 3. Review the editable Title, Type, Description, Priority, **Needed by**, attached Fields and, for Contracts, Counterparty. Supported AI proposals carry **Unverified**, a purple border and a sparkle. Open a sparkle to inspect its saved source. An attachment opens above the Convert dialog, which retains your work. Close the reader to return to that value. A citation is stored evidence, not a new AI explanation.
 4. Choose or confirm the live destination Type. Changing Type prepares its Fields again. Human edits, confirmations and explicit clears stay in place. If preparation fails, retry it or continue manually. With the module's switch off, ordinary manual conversion opens directly. You can also return to manual conversion from preparation.
-5. Review answers that carry into the record and those that stay only on the Request. Complete every required Field. For a Matter, review **Template (optional)** and its Task and Key date counts. A Type with one template can select it automatically. AI does not choose a template.
+5. Review answers that carry into the record and those that stay only on the Request. Complete every required Field. Replace an archived carried person or Entity with a live reference, or explicitly clear the Field if it is optional. For a Matter, choose **Matter template** or leave **No template** selected, then review its Field defaults. AI does not choose a template.
 6. Select **Convert to contract** or **Convert to matter**. This decides the Request and creates one record. **Cancel** leaves the Request undecided.
 
 Switching modules prepares the new destination only when its own switch is enabled. Check the Type, required answers and any template again before submitting. You cannot convert a decided Request a second time.
@@ -25,7 +25,17 @@ The converting person becomes the Contract Owner or Matter Manager. A Contract a
 
 Each original Request attachment becomes a separate Document at the record root with its first Version. On a Contract, the first promoted attachment becomes the primary Document if none is set. Matters have no primary Document. Comment attachments remain in the conversation until filed as Documents. Comments keep their visibility tiers and original identities. The Requester keeps the same R- address, sees **In progress**, and retains permitted conversation and original attachment downloads.
 
+Conversion does not grant a Business User access to the staff Contract or Matter page. A converted Contract is also available through [Your Contracts](portal-sign-in.md#read-your-contracts) while the Requester remains its Business Owner or an explicit stakeholder and passes the current access checks. Confidential Contracts also require qualifying team access.
+
 Unchanged accepted proposals remain **Unverified** on the new record. Select a sparkle to inspect the original source. Document Versions open in the same-page doc panel, which docks when space permits. Multiple citations let you choose the source. Request answers and messages show their actual text and context. Confirm a checked value or edit its normal control. These actions remain available when preparation is disabled. Changed, deleted or inaccessible evidence has an unavailable state.
+
+## When you apply a Matter template
+
+Template Field defaults fill values not supplied by the Request or the reviewed answers in the Convert dialog. Carried answers and dialog answers take precedence; an explicit clear keeps an optional Field empty. After changing the template, review the displayed defaults again and complete every required Field.
+
+Conversion keeps the Title and Priority reviewed in the dialog. A template's title prefix, default Priority and default Risk do not replace them in this flow; Risk remains unset. The converting person becomes Matter Manager, so Tasks configured for **Matter Manager** are assigned to that person. Review and assign any other Tasks after creation.
+
+The template can create Tasks and Key dates relative to the Matter's creation date in UTC, not the Request's submission date. A Task without a due offset has no due date. Check the new Matter's Tasks, assignments and Key dates, including any separate **Needed by** date. These are ordinary records that you can subsequently edit. See [Matter templates](matter-templates.md) for how an Administrator configures the defaults and checklist.
 
 ## Fill Contract Fields after conversion
 
@@ -35,4 +45,17 @@ A failed Analysis run does not undo conversion. Check the Type, sources and AI s
 
 ## If conversion is refused
 
-Read the error and complete the named required values or choose current Types and references. Preparation cannot bypass normal creation checks. If another person already decided the Request, open its Outcome and continue on the existing record. Do not create another record to work around a stale dialog.
+Read the error and complete the named Title, Type or required Fields. Replace an archived carried reference using the offered control, or explicitly clear an optional Field. Preparation cannot bypass normal creation checks.
+
+If the dialog names an unavailable configured value but offers no way to replace it, cancel and ask an Administrator to check the destination Fields or template. If a template default is refused, choose another live template or **No template**, then answer the required Fields yourself. Review the resulting values before trying again.
+
+If another person decided first, close the dialog and read the recorded Outcome. A losing conversion creates no second record. If the response is uncertain, reopen the original Request and check its Outcome before retrying. Do not manually create another Contract or Matter to work around a stale dialog or an uncertain response.
+
+An answer listed as not carrying stays on the Request. Check the destination Type's Field configuration before assuming the resulting record contains it. If promoted paper or conversation appears wrong, retain the R- and C-/M- references when asking for help.
+
+## Related guides
+
+- [Assign and triage Requests](triage-requests.md).
+- [Follow a Request and reply to Legal](follow-request.md).
+- [Choose who can read a comment](comments-and-activity.md).
+- [Work with Document Versions](document-versions.md).
