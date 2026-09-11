@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** CTR-008's shared target vocabulary, answer provenance, and source-text budget. */
+import type { ConversionProvenance } from "./conversion-draft.js";
 
 /** The writer types carried by the seven built-in Contract targets. */
 export const CORE_ANALYSIS_TARGET_TYPES = [
@@ -68,11 +69,17 @@ export const CORE_ANALYSIS_SLUGS = CORE_ANALYSIS_TARGETS.map((target) => target.
 /** Maximum source characters sent to one provider call. */
 export const AI_ANALYSIS_CHARACTER_BUDGET = 200_000;
 
-export interface AiUnverifiedEntry {
-  evidence: string;
-  runId: string;
-  writtenAt: string;
-}
+/** A saved value cites either an Analysis run or a Conversion draft. */
+export type AiUnverifiedEntry =
+  | {
+      evidence: string;
+      runId: string;
+      writtenAt: string;
+      draftId?: never;
+      targetTypeId?: never;
+      keyDateId?: never;
+    }
+  | (ConversionProvenance & { evidence?: never; runId?: never });
 
 export type AiUnverifiedMap = Record<string, AiUnverifiedEntry>;
 

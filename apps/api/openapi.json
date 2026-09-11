@@ -3489,6 +3489,9 @@
                         "matterPreparation": {
                           "type": "boolean"
                         },
+                        "contractPreparation": {
+                          "type": "boolean"
+                        },
                         "configured": {
                           "type": "boolean"
                         },
@@ -3561,6 +3564,7 @@
                       },
                       "required": [
                         "matterPreparation",
+                        "contractPreparation",
                         "configured",
                         "enabled",
                         "preset",
@@ -3701,6 +3705,9 @@
                         "matterPreparation": {
                           "type": "boolean"
                         },
+                        "contractPreparation": {
+                          "type": "boolean"
+                        },
                         "configured": {
                           "type": "boolean"
                         },
@@ -3773,6 +3780,7 @@
                       },
                       "required": [
                         "matterPreparation",
+                        "contractPreparation",
                         "configured",
                         "enabled",
                         "preset",
@@ -3871,6 +3879,9 @@
                         "matterPreparation": {
                           "type": "boolean"
                         },
+                        "contractPreparation": {
+                          "type": "boolean"
+                        },
                         "configured": {
                           "type": "boolean"
                         },
@@ -3943,6 +3954,7 @@
                       },
                       "required": [
                         "matterPreparation",
+                        "contractPreparation",
                         "configured",
                         "enabled",
                         "preset",
@@ -4038,6 +4050,9 @@
                 "properties": {
                   "matterPreparation": {
                     "type": "boolean"
+                  },
+                  "contractPreparation": {
+                    "type": "boolean"
                   }
                 },
                 "additionalProperties": false
@@ -4057,6 +4072,9 @@
                       "type": "object",
                       "properties": {
                         "matterPreparation": {
+                          "type": "boolean"
+                        },
+                        "contractPreparation": {
                           "type": "boolean"
                         },
                         "configured": {
@@ -4131,6 +4149,7 @@
                       },
                       "required": [
                         "matterPreparation",
+                        "contractPreparation",
                         "configured",
                         "enabled",
                         "preset",
@@ -4357,6 +4376,9 @@
                         "matterPreparation": {
                           "type": "boolean"
                         },
+                        "contractPreparation": {
+                          "type": "boolean"
+                        },
                         "configured": {
                           "type": "boolean"
                         },
@@ -4429,6 +4451,7 @@
                       },
                       "required": [
                         "matterPreparation",
+                        "contractPreparation",
                         "configured",
                         "enabled",
                         "preset",
@@ -4529,6 +4552,9 @@
                         "matterPreparation": {
                           "type": "boolean"
                         },
+                        "contractPreparation": {
+                          "type": "boolean"
+                        },
                         "configured": {
                           "type": "boolean"
                         },
@@ -4601,6 +4627,7 @@
                       },
                       "required": [
                         "matterPreparation",
+                        "contractPreparation",
                         "configured",
                         "enabled",
                         "preset",
@@ -23410,9 +23437,12 @@
                   "properties": {
                     "matterPreparation": {
                       "type": "boolean"
+                    },
+                    "contractPreparation": {
+                      "type": "boolean"
                     }
                   },
-                  "required": ["matterPreparation"],
+                  "required": ["matterPreparation", "contractPreparation"],
                   "additionalProperties": false
                 }
               }
@@ -23443,7 +23473,7 @@
                 "properties": {
                   "targetModule": {
                     "type": "string",
-                    "enum": ["matter"]
+                    "enum": ["matter", "contract"]
                   },
                   "targetTypeId": {
                     "type": "string"
@@ -23483,6 +23513,10 @@
                       "properties": {
                         "id": {
                           "type": "string"
+                        },
+                        "targetModule": {
+                          "type": "string",
+                          "enum": ["matter", "contract"]
                         },
                         "targetTypeId": {
                           "type": "string"
@@ -23679,6 +23713,7 @@
                       },
                       "required": [
                         "id",
+                        "targetModule",
                         "targetTypeId",
                         "state",
                         "suggestions",
@@ -23747,6 +23782,10 @@
                         "id": {
                           "type": "string"
                         },
+                        "targetModule": {
+                          "type": "string",
+                          "enum": ["matter", "contract"]
+                        },
                         "targetTypeId": {
                           "type": "string"
                         },
@@ -23942,6 +23981,7 @@
                       },
                       "required": [
                         "id",
+                        "targetModule",
                         "targetTypeId",
                         "state",
                         "suggestions",
@@ -24096,6 +24136,118 @@
     "/api/v1/matters/{number}/conversion-evidence/{slug}": {
       "get": {
         "operationId": "getMatterConversionEvidence",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "slug",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "available": {
+                      "type": "boolean"
+                    },
+                    "citations": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string"
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "quote": {
+                            "type": "string"
+                          },
+                          "sourceId": {
+                            "type": "string"
+                          },
+                          "attachment": {
+                            "type": "object",
+                            "properties": {
+                              "previewHref": {
+                                "type": ["string", "null"]
+                              },
+                              "downloadHref": {
+                                "type": "string"
+                              },
+                              "documentId": {
+                                "type": ["string", "null"]
+                              },
+                              "versionId": {
+                                "type": ["string", "null"]
+                              },
+                              "method": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "enum": ["native_layer", "converted", "ocr", "email_body"]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "previewHref",
+                              "downloadHref",
+                              "documentId",
+                              "versionId",
+                              "method"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": ["label", "text", "quote", "sourceId"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["available", "citations"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contracts/{number}/conversion-evidence/{slug}": {
+      "get": {
+        "operationId": "getContractConversionEvidence",
         "parameters": [
           {
             "schema": {
@@ -26699,19 +26851,44 @@
                                   "type": "string"
                                 },
                                 "additionalProperties": {
-                                  "type": "object",
-                                  "properties": {
-                                    "runId": {
-                                      "type": "string"
+                                  "anyOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "runId": {
+                                          "type": "string"
+                                        },
+                                        "draftId": {
+                                          "type": "string"
+                                        },
+                                        "writtenAt": {
+                                          "type": "string",
+                                          "format": "date-time",
+                                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                        }
+                                      },
+                                      "required": ["runId", "writtenAt"],
+                                      "additionalProperties": false
                                     },
-                                    "writtenAt": {
-                                      "type": "string",
-                                      "format": "date-time",
-                                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "draftId": {
+                                          "type": "string"
+                                        },
+                                        "runId": {
+                                          "type": "string"
+                                        },
+                                        "writtenAt": {
+                                          "type": "string",
+                                          "format": "date-time",
+                                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                        }
+                                      },
+                                      "required": ["draftId", "writtenAt"],
+                                      "additionalProperties": false
                                     }
-                                  },
-                                  "required": ["runId", "writtenAt"],
-                                  "additionalProperties": false
+                                  ]
                                 }
                               },
                               {
@@ -27253,19 +27430,44 @@
                                 "type": "string"
                               },
                               "additionalProperties": {
-                                "type": "object",
-                                "properties": {
-                                  "runId": {
-                                    "type": "string"
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "runId": {
+                                        "type": "string"
+                                      },
+                                      "draftId": {
+                                        "type": "string"
+                                      },
+                                      "writtenAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": ["runId", "writtenAt"],
+                                    "additionalProperties": false
                                   },
-                                  "writtenAt": {
-                                    "type": "string",
-                                    "format": "date-time",
-                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "draftId": {
+                                        "type": "string"
+                                      },
+                                      "runId": {
+                                        "type": "string"
+                                      },
+                                      "writtenAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": ["draftId", "writtenAt"],
+                                    "additionalProperties": false
                                   }
-                                },
-                                "required": ["runId", "writtenAt"],
-                                "additionalProperties": false
+                                ]
                               }
                             },
                             {
@@ -28066,19 +28268,44 @@
                                 "type": "string"
                               },
                               "additionalProperties": {
-                                "type": "object",
-                                "properties": {
-                                  "runId": {
-                                    "type": "string"
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "runId": {
+                                        "type": "string"
+                                      },
+                                      "draftId": {
+                                        "type": "string"
+                                      },
+                                      "writtenAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": ["runId", "writtenAt"],
+                                    "additionalProperties": false
                                   },
-                                  "writtenAt": {
-                                    "type": "string",
-                                    "format": "date-time",
-                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "draftId": {
+                                        "type": "string"
+                                      },
+                                      "runId": {
+                                        "type": "string"
+                                      },
+                                      "writtenAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": ["draftId", "writtenAt"],
+                                    "additionalProperties": false
                                   }
-                                },
-                                "required": ["runId", "writtenAt"],
-                                "additionalProperties": false
+                                ]
                               }
                             },
                             {
@@ -29151,19 +29378,44 @@
                                 "type": "string"
                               },
                               "additionalProperties": {
-                                "type": "object",
-                                "properties": {
-                                  "runId": {
-                                    "type": "string"
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "runId": {
+                                        "type": "string"
+                                      },
+                                      "draftId": {
+                                        "type": "string"
+                                      },
+                                      "writtenAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": ["runId", "writtenAt"],
+                                    "additionalProperties": false
                                   },
-                                  "writtenAt": {
-                                    "type": "string",
-                                    "format": "date-time",
-                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "draftId": {
+                                        "type": "string"
+                                      },
+                                      "runId": {
+                                        "type": "string"
+                                      },
+                                      "writtenAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": ["draftId", "writtenAt"],
+                                    "additionalProperties": false
                                   }
-                                },
-                                "required": ["runId", "writtenAt"],
-                                "additionalProperties": false
+                                ]
                               }
                             },
                             {
@@ -29890,19 +30142,44 @@
                                 "type": "string"
                               },
                               "additionalProperties": {
-                                "type": "object",
-                                "properties": {
-                                  "runId": {
-                                    "type": "string"
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "runId": {
+                                        "type": "string"
+                                      },
+                                      "draftId": {
+                                        "type": "string"
+                                      },
+                                      "writtenAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": ["runId", "writtenAt"],
+                                    "additionalProperties": false
                                   },
-                                  "writtenAt": {
-                                    "type": "string",
-                                    "format": "date-time",
-                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "draftId": {
+                                        "type": "string"
+                                      },
+                                      "runId": {
+                                        "type": "string"
+                                      },
+                                      "writtenAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": ["draftId", "writtenAt"],
+                                    "additionalProperties": false
                                   }
-                                },
-                                "required": ["runId", "writtenAt"],
-                                "additionalProperties": false
+                                ]
                               }
                             },
                             {
@@ -30368,19 +30645,44 @@
                                 "type": "string"
                               },
                               "additionalProperties": {
-                                "type": "object",
-                                "properties": {
-                                  "runId": {
-                                    "type": "string"
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "runId": {
+                                        "type": "string"
+                                      },
+                                      "draftId": {
+                                        "type": "string"
+                                      },
+                                      "writtenAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": ["runId", "writtenAt"],
+                                    "additionalProperties": false
                                   },
-                                  "writtenAt": {
-                                    "type": "string",
-                                    "format": "date-time",
-                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "draftId": {
+                                        "type": "string"
+                                      },
+                                      "runId": {
+                                        "type": "string"
+                                      },
+                                      "writtenAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": ["draftId", "writtenAt"],
+                                    "additionalProperties": false
                                   }
-                                },
-                                "required": ["runId", "writtenAt"],
-                                "additionalProperties": false
+                                ]
                               }
                             },
                             {
@@ -30870,19 +31172,44 @@
                                 "type": "string"
                               },
                               "additionalProperties": {
-                                "type": "object",
-                                "properties": {
-                                  "runId": {
-                                    "type": "string"
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "runId": {
+                                        "type": "string"
+                                      },
+                                      "draftId": {
+                                        "type": "string"
+                                      },
+                                      "writtenAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": ["runId", "writtenAt"],
+                                    "additionalProperties": false
                                   },
-                                  "writtenAt": {
-                                    "type": "string",
-                                    "format": "date-time",
-                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "draftId": {
+                                        "type": "string"
+                                      },
+                                      "runId": {
+                                        "type": "string"
+                                      },
+                                      "writtenAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": ["draftId", "writtenAt"],
+                                    "additionalProperties": false
                                   }
-                                },
-                                "required": ["runId", "writtenAt"],
-                                "additionalProperties": false
+                                ]
                               }
                             },
                             {
@@ -31653,19 +31980,44 @@
                                 "type": "string"
                               },
                               "additionalProperties": {
-                                "type": "object",
-                                "properties": {
-                                  "runId": {
-                                    "type": "string"
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "runId": {
+                                        "type": "string"
+                                      },
+                                      "draftId": {
+                                        "type": "string"
+                                      },
+                                      "writtenAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": ["runId", "writtenAt"],
+                                    "additionalProperties": false
                                   },
-                                  "writtenAt": {
-                                    "type": "string",
-                                    "format": "date-time",
-                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "draftId": {
+                                        "type": "string"
+                                      },
+                                      "runId": {
+                                        "type": "string"
+                                      },
+                                      "writtenAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": ["draftId", "writtenAt"],
+                                    "additionalProperties": false
                                   }
-                                },
-                                "required": ["runId", "writtenAt"],
-                                "additionalProperties": false
+                                ]
                               }
                             },
                             {
@@ -32161,19 +32513,44 @@
                                 "type": "string"
                               },
                               "additionalProperties": {
-                                "type": "object",
-                                "properties": {
-                                  "runId": {
-                                    "type": "string"
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "runId": {
+                                        "type": "string"
+                                      },
+                                      "draftId": {
+                                        "type": "string"
+                                      },
+                                      "writtenAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": ["runId", "writtenAt"],
+                                    "additionalProperties": false
                                   },
-                                  "writtenAt": {
-                                    "type": "string",
-                                    "format": "date-time",
-                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "draftId": {
+                                        "type": "string"
+                                      },
+                                      "runId": {
+                                        "type": "string"
+                                      },
+                                      "writtenAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": ["draftId", "writtenAt"],
+                                    "additionalProperties": false
                                   }
-                                },
-                                "required": ["runId", "writtenAt"],
-                                "additionalProperties": false
+                                ]
                               }
                             },
                             {
@@ -32669,19 +33046,44 @@
                                 "type": "string"
                               },
                               "additionalProperties": {
-                                "type": "object",
-                                "properties": {
-                                  "runId": {
-                                    "type": "string"
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "runId": {
+                                        "type": "string"
+                                      },
+                                      "draftId": {
+                                        "type": "string"
+                                      },
+                                      "writtenAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": ["runId", "writtenAt"],
+                                    "additionalProperties": false
                                   },
-                                  "writtenAt": {
-                                    "type": "string",
-                                    "format": "date-time",
-                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "draftId": {
+                                        "type": "string"
+                                      },
+                                      "runId": {
+                                        "type": "string"
+                                      },
+                                      "writtenAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": ["draftId", "writtenAt"],
+                                    "additionalProperties": false
                                   }
-                                },
-                                "required": ["runId", "writtenAt"],
-                                "additionalProperties": false
+                                ]
                               }
                             },
                             {
@@ -33169,19 +33571,44 @@
                                 "type": "string"
                               },
                               "additionalProperties": {
-                                "type": "object",
-                                "properties": {
-                                  "runId": {
-                                    "type": "string"
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "runId": {
+                                        "type": "string"
+                                      },
+                                      "draftId": {
+                                        "type": "string"
+                                      },
+                                      "writtenAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": ["runId", "writtenAt"],
+                                    "additionalProperties": false
                                   },
-                                  "writtenAt": {
-                                    "type": "string",
-                                    "format": "date-time",
-                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "draftId": {
+                                        "type": "string"
+                                      },
+                                      "runId": {
+                                        "type": "string"
+                                      },
+                                      "writtenAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": ["draftId", "writtenAt"],
+                                    "additionalProperties": false
                                   }
-                                },
-                                "required": ["runId", "writtenAt"],
-                                "additionalProperties": false
+                                ]
                               }
                             },
                             {
@@ -33647,19 +34074,44 @@
                                 "type": "string"
                               },
                               "additionalProperties": {
-                                "type": "object",
-                                "properties": {
-                                  "runId": {
-                                    "type": "string"
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "runId": {
+                                        "type": "string"
+                                      },
+                                      "draftId": {
+                                        "type": "string"
+                                      },
+                                      "writtenAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": ["runId", "writtenAt"],
+                                    "additionalProperties": false
                                   },
-                                  "writtenAt": {
-                                    "type": "string",
-                                    "format": "date-time",
-                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "draftId": {
+                                        "type": "string"
+                                      },
+                                      "runId": {
+                                        "type": "string"
+                                      },
+                                      "writtenAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": ["draftId", "writtenAt"],
+                                    "additionalProperties": false
                                   }
-                                },
-                                "required": ["runId", "writtenAt"],
-                                "additionalProperties": false
+                                ]
                               }
                             },
                             {

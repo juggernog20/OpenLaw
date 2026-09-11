@@ -809,3 +809,400 @@ it("reuses cached attachment reads when preparation retries a provider failure",
     extraction.mockRestore();
   }
 });
+
+it("prepares Contracts independently and accepts only matching reviewed values", async () => {
+  const { contractTypes, contracts } = await import("@openlaw/db");
+  const [type] = await harness.db.select().from(contractTypes).limit(1);
+  const row = await ask();
+  const start = () =>
+    harness.app.inject({
+      method: "POST",
+      url: `/api/v1/requests/${row.number}/conversion-drafts`,
+      cookies: cast.memberCookies,
+      payload: { targetModule: "contract", targetTypeId: type!.id },
+    });
+  expect((await start()).statusCode).toBe(409);
+  expect(
+    (
+      await harness.app.inject({
+        method: "PATCH",
+        url: "/api/v1/ai-connector/workflows",
+        cookies: cast.memberCookies,
+        payload: { contractPreparation: true },
+      })
+    ).statusCode,
+  ).toBe(403);
+  expect(
+    (
+      await harness.app.inject({
+        method: "PATCH",
+        url: "/api/v1/ai-connector/workflows",
+        cookies: cast.adminCookies,
+        payload: { contractPreparation: true, matterPreparation: false },
+      })
+    ).statusCode,
+  ).toBe(200);
+  await harness.db.update(aiConnector).set({ disabledAt: null });
+  answers.title = {
+    value: "Prepared Contract",
+    sourceId: `request:${row.id}:summary`,
+    evidence: "Original ask",
+  };
+  answers.description = {
+    value: "Reviewed context",
+    sourceId: `request:${row.id}:description`,
+    evidence: "Respond by October 1",
+  };
+  answers.counterparty = {
+    value: "Acme",
+    sourceId: `request:${row.id}:summary`,
+    evidence: "Original ask",
+  };
+  const prepared = await start();
+  expect(prepared.statusCode, prepared.body).toBe(202);
+  const id = prepared.json().draft.id;
+  await handleConversionDraft(
+    {
+      db: harness.db,
+      storage: harness.storage,
+      docEngine: harness.docEngine,
+      resolveAiProvider: harness.resolveAiProvider,
+    },
+    id,
+  );
+  const read = await harness.app.inject({
+    url: `/api/v1/requests/${row.number}/conversion-drafts/${id}`,
+    cookies: cast.memberCookies,
+  });
+  expect(read.json().draft).toMatchObject({
+    targetModule: "contract",
+    state: "ready",
+    suggestions: { title: { value: "Prepared Contract" } },
+  });
+  const converted = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/requests/${row.number}/convert`,
+    cookies: cast.memberCookies,
+    payload: {
+      contractTypeId: type!.id,
+      title: "Prepared Contract",
+      description: null,
+      counterpartyName: "Acme",
+      conversionDraftId: id,
+      aiAccepted: ["title", "description", "counterparty", "unknown", "toString", "__proto__"],
+    },
+  });
+  expect(converted.statusCode, converted.body).toBe(200);
+  const [original] = await harness.db.select().from(requests).where(eq(requests.id, row.id));
+  const [contract] = await harness.db
+    .select()
+    .from(contracts)
+    .where(eq(contracts.id, original!.convertedContractId!));
+  expect(contract).toMatchObject({
+    title: "Prepared Contract",
+    description: null,
+    managerId: cast.memberId,
+  });
+  expect(Object.keys(contract!.aiUnverified!)).toEqual(["title", "counterparty"]);
+  expect(contract!.aiUnverified!.title).toMatchObject({ draftId: id });
+  expect(original!.description).toBe("Respond by October 1");
+  const evidence = await harness.app.inject({
+    url: `/api/v1/contracts/${contract!.number}/conversion-evidence/title`,
+    cookies: cast.memberCookies,
+  });
+  expect(evidence.json()).toMatchObject({ available: true, citations: [{ text: "Original ask" }] });
+});
+
+it("keeps Contract paper and conversation evidence through one concurrent conversion and refuses source narrowing", async () => {
+  const { Readable } = await import("node:stream");
+  const { contractTypes, contracts, requestAttachments, documentVersions, contractTypeFields } =
+    await import("@openlaw/db");
+  const { fakeExtractedText } = await import("../../lib/doc-engine/fake.js");
+  await harness.db.update(aiConnector).set({ contractPreparation: true, disabledAt: null });
+  const [type] = await harness.db.select().from(contractTypes).limit(1);
+  const [field] = await harness.db
+    .insert(fields)
+    .values({
+      slug: "contract_opening",
+      displayName: "Opening context",
+      moduleScope: "contract",
+      fieldType: "text",
+      fieldTag: "business",
+    })
+    .returning();
+  await harness.db
+    .insert(contractTypeFields)
+    .values({ typeId: type!.id, fieldId: field!.id, displayOrder: 999, isRequired: false });
+  const row = await ask();
+  const paper = [];
+  for (const index of [1, 2]) {
+    const bytes = Buffer.from(`%PDF-1.4\nAgreement ${index}`);
+    const fileRef = await harness.storage.put(`test/${row.id}/${index}`, Readable.from([bytes]));
+    const [file] = await harness.db
+      .insert(requestAttachments)
+      .values({
+        requestId: row.id,
+        fileRef,
+        filename: `${index}.pdf`,
+        uploadedBy: cast.requesterId,
+      })
+      .returning();
+    paper.push(file!);
+    answers[index === 1 ? "title" : "field:contract_opening"] = {
+      value: index === 1 ? "Agreement review" : "Supported opening",
+      sourceId: `attachment:${file!.id}`,
+      evidence: fakeExtractedText(bytes),
+    };
+  }
+  const [message] = await harness.db
+    .insert(comments)
+    .values({
+      entityType: "request",
+      entityId: row.id,
+      authorId: cast.requesterId,
+      visibility: "full_thread",
+      body: "Correction: needed by October 2, 2026.",
+    })
+    .returning();
+  await harness.db.insert(comments).values({
+    entityType: "request",
+    entityId: row.id,
+    authorId: cast.memberId,
+    visibility: "legal_only",
+    body: "Restricted Contract strategy",
+  });
+  answers.needed_by = {
+    value: "2026-10-02",
+    sourceId: `message:${message!.id}`,
+    evidence: "October 2, 2026",
+  };
+  const made = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/requests/${row.number}/conversion-drafts`,
+    cookies: cast.memberCookies,
+    payload: { targetModule: "contract", targetTypeId: type!.id },
+  });
+  const id = made.json().draft.id;
+  await handleConversionDraft(
+    {
+      db: harness.db,
+      storage: harness.storage,
+      docEngine: harness.docEngine,
+      resolveAiProvider: harness.resolveAiProvider,
+    },
+    id,
+  );
+  expect(provider.extractions.at(-1)!.text).not.toContain("Restricted Contract strategy");
+  const payload = {
+    title: "Agreement review",
+    contractTypeId: type!.id,
+    customFields: { contract_opening: "Supported opening" },
+    neededBy: "2026-10-02",
+    conversionDraftId: id,
+    aiAccepted: ["title", "field:contract_opening", "needed_by"],
+  };
+  const converted = await Promise.all(
+    [1, 2].map(() =>
+      harness.app.inject({
+        method: "POST",
+        url: `/api/v1/requests/${row.number}/convert`,
+        cookies: cast.memberCookies,
+        payload,
+      }),
+    ),
+  );
+  expect(converted.map((r) => r.statusCode).sort()).toEqual([200, 409]);
+  const [original] = await harness.db.select().from(requests).where(eq(requests.id, row.id));
+  const [contract] = await harness.db
+    .select()
+    .from(contracts)
+    .where(eq(contracts.id, original!.convertedContractId!));
+  expect(contract!.aiUnverified!["field:contract_opening"]!.draftId).toBe(id);
+  // Detaching hides the marker with its Field but retains both for reattachment.
+  await harness.db.delete(contractTypeFields).where(eq(contractTypeFields.fieldId, field!.id));
+  const detachedReads = await Promise.all([
+    harness.app.inject({
+      url: `/api/v1/contracts/${contract!.number}`,
+      cookies: cast.memberCookies,
+    }),
+    harness.app.inject({ url: "/api/v1/contracts", cookies: cast.memberCookies }),
+    harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/contracts/${contract!.number}`,
+      cookies: cast.memberCookies,
+      payload: { priority: "medium" },
+    }),
+  ]);
+  for (const response of detachedReads) {
+    expect(response.statusCode, response.body).toBe(200);
+    const body = response.json();
+    const row = body.contract ?? body.contracts.find((c: { id: string }) => c.id === contract!.id);
+    expect(row.customFields.contract_opening).toBe("Supported opening");
+    expect(row.aiUnverified).not.toHaveProperty("field:contract_opening");
+    expect(row.aiUnverified.title).toMatchObject({ draftId: id });
+  }
+  for (const action of ["archive", "restore"]) {
+    const response = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract!.number}/${action}`,
+      cookies: cast.memberCookies,
+    });
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.json().contract.aiUnverified).not.toHaveProperty("field:contract_opening");
+  }
+  await harness.db
+    .insert(contractTypeFields)
+    .values({ typeId: type!.id, fieldId: field!.id, displayOrder: 999, isRequired: false });
+  const reattached = await harness.app.inject({
+    url: `/api/v1/contracts/${contract!.number}`,
+    cookies: cast.memberCookies,
+  });
+  expect(reattached.json().contract.aiUnverified["field:contract_opening"]).toMatchObject({
+    draftId: id,
+  });
+  const read = await harness.app.inject({
+    url: `/api/v1/contracts/${contract!.number}/conversion-evidence/field:contract_opening`,
+    cookies: cast.otherMemberCookies,
+  });
+  expect(read.json().available).toBe(true);
+  const [promoted] = await harness.db
+    .select()
+    .from(requestAttachments)
+    .where(eq(requestAttachments.id, paper[1]!.id));
+  const [version] = await harness.db
+    .select()
+    .from(documentVersions)
+    .where(eq(documentVersions.id, promoted!.promotedVersionId!));
+  expect(read.json().citations[0].attachment).toMatchObject({
+    documentId: version!.documentId,
+    versionId: version!.id,
+  });
+  const narrow = await harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/documents/${version!.documentId}`,
+    cookies: cast.memberCookies,
+    payload: { isConfidential: true },
+  });
+  expect(narrow.statusCode, narrow.body).toBe(409);
+  const deadline = await harness.app.inject({
+    url: `/api/v1/contracts/${contract!.number}/key-dates`,
+    cookies: cast.memberCookies,
+  });
+  expect(
+    deadline.json().deadlines.find((d: { label: string }) => d.label === "Needed by").unverified,
+  ).toBe(true);
+  const neededDate = deadline
+    .json()
+    .deadlines.find((d: { label: string }) => d.label === "Needed by");
+  // The edit dialog re-sends the date, the label and the note whatever
+  // it changed, so a reminder-only edit must leave the marker standing.
+  const reminderOnly = await harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/key-dates/${neededDate.keyDateId}`,
+    cookies: cast.memberCookies,
+    payload: {
+      date: neededDate.date,
+      label: neededDate.label,
+      note: neededDate.note,
+      reminderOffsetDays: [7],
+    },
+  });
+  expect(reminderOnly.statusCode, reminderOnly.body).toBe(200);
+  expect(
+    reminderOnly.json().deadlines.find((d: { label: string }) => d.label === "Needed by")
+      .unverified,
+  ).toBe(true);
+  const changedDate = await harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/key-dates/${neededDate.keyDateId}`,
+    cookies: cast.memberCookies,
+    payload: { date: "2026-10-03" },
+  });
+  expect(changedDate.statusCode, changedDate.body).toBe(200);
+  expect(
+    changedDate.json().deadlines.find((d: { label: string }) => d.label === "Needed by").unverified,
+  ).toBe(false);
+  const edited = await harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/contracts/${contract!.number}`,
+    cookies: cast.memberCookies,
+    payload: { customFields: { contract_opening: null } },
+  });
+  expect(edited.statusCode, edited.body).toBe(200);
+  expect(edited.json().contract.aiUnverified).not.toHaveProperty("field:contract_opening");
+  expect(edited.json().contract.aiUnverified.title.draftId).toBe(id);
+});
+
+it("rejects Contract claims from another module or Type, and late results after disabling", async () => {
+  const { contractTypes } = await import("@openlaw/db");
+  await harness.db
+    .update(aiConnector)
+    .set({ matterPreparation: true, contractPreparation: true, disabledAt: null });
+  const row = await ask();
+  const types = await harness.db.select().from(contractTypes).limit(2);
+  answers.title = {
+    value: "Supported title",
+    sourceId: `request:${row.id}:summary`,
+    evidence: "Original ask",
+  };
+  const make = (targetModule: "matter" | "contract", targetTypeId: string) =>
+    harness.app.inject({
+      method: "POST",
+      url: `/api/v1/requests/${row.number}/conversion-drafts`,
+      cookies: cast.memberCookies,
+      payload: { targetModule, targetTypeId },
+    });
+  const deps = {
+    db: harness.db,
+    storage: harness.storage,
+    docEngine: harness.docEngine,
+    resolveAiProvider: harness.resolveAiProvider,
+  };
+  const matter = await make("matter", typeId);
+  await handleConversionDraft(deps, matter.json().draft.id);
+  const claim = (id: string, contractTypeId: string) =>
+    harness.app.inject({
+      method: "POST",
+      url: `/api/v1/requests/${row.number}/convert`,
+      cookies: cast.memberCookies,
+      payload: {
+        title: "Supported title",
+        contractTypeId,
+        conversionDraftId: id,
+        aiAccepted: ["title"],
+      },
+    });
+  expect((await claim(matter.json().draft.id, types[0]!.id)).statusCode).toBe(409);
+  const contract = await make("contract", types[0]!.id);
+  await handleConversionDraft(deps, contract.json().draft.id);
+  if (types[1]) {
+    const wrong = await claim(contract.json().draft.id, types[1].id);
+    // No suggestion from a different Type can be labelled AI-generated.
+    expect(wrong.statusCode, wrong.body).toBe(409);
+  }
+  const second = await ask();
+  const pending = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/requests/${second.number}/conversion-drafts`,
+    cookies: cast.memberCookies,
+    payload: { targetModule: "contract", targetTypeId: types[0]!.id },
+  });
+  const extraction = vi.spyOn(provider, "extract").mockImplementationOnce(async () => {
+    await harness.db.update(aiConnector).set({ contractPreparation: false });
+    return [
+      {
+        slug: "title",
+        value: "Late title",
+        sourceId: `request:${second.id}:summary`,
+        evidence: "Original ask",
+      },
+    ];
+  });
+  await handleConversionDraft(deps, pending.json().draft.id);
+  extraction.mockRestore();
+  const [late] = await harness.db
+    .select()
+    .from(conversionDrafts)
+    .where(eq(conversionDrafts.id, pending.json().draft.id));
+  expect(late).toMatchObject({ state: "failed", suggestions: {} });
+});

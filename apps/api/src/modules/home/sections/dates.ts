@@ -146,7 +146,7 @@ export async function readPersonalDates(
         ${contractKeyDates.date} as date,
         ${contractKeyDates.label} as label,
         null::integer as notice_period_days,
-        false as unverified,
+        coalesce(${contracts.aiUnverified}->'needed_by'->>'keyDateId' = ${contractKeyDates.id}, false) as unverified,
         'contract'::text as record_kind,
         ${contracts.id} as record_id,
         ${contracts.number} as record_number,

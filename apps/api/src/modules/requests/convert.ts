@@ -93,7 +93,7 @@ import { requireRole } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import { CounterpartyNameSchema, findOrCreateCounterparty } from "../../lib/counterparty-link.js";
 import { acceptedConversionProvenance } from "./conversion-draft.js";
-import { matters } from "@openlaw/db";
+import { matters, contracts } from "@openlaw/db";
 import { CustomFieldsInput, selectAttachedFields } from "../../lib/custom-fields.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { createContract } from "../contracts/create.js";
@@ -307,20 +307,16 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
             }
 
             const customFields = { ...carried, ...(answers ?? {}) };
-            if (
-              target.module !== "matter" &&
-              (request.body.description !== undefined ||
-                request.body.conversionDraftId ||
-                request.body.aiAccepted?.length)
-            )
-              throw httpError(400, "Conversion drafts currently prepare Matters only.");
             const born =
               target.module === "contract"
                 ? await createContract(tx, {
                     actorId: request.user.id,
                     title,
                     contractTypeId: target.typeId,
-                    description: row.description,
+                    description:
+                      request.body.description === undefined
+                        ? row.description
+                        : request.body.description,
                     customFields,
                     priority: request.body.priority ?? row.urgency,
                     // The Contract Owner, the Matter Manager's sibling
@@ -349,29 +345,28 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                     managerId: request.user.id,
                     isConfidential: false,
                   });
-            const provenance =
-              target.module === "matter"
-                ? await acceptedConversionProvenance(tx, {
-                    id: request.body.conversionDraftId,
-                    accepted: request.body.aiAccepted,
-                    actorId: request.user.id,
-                    requestId: held.id,
-                    typeId: target.typeId,
-                    values: {
-                      title: born.row.title,
-                      description: born.row.description,
-                      priority: born.row.priority,
-                      matter_type: target.typeId,
-                      needed_by: neededBy,
-                      ...Object.fromEntries(
-                        Object.entries(born.row.customFields).map(([slug, value]) => [
-                          `field:${slug}`,
-                          value,
-                        ]),
-                      ),
-                    },
-                  })
-                : null;
+            const provenance = await acceptedConversionProvenance(tx, {
+              targetModule: target.module,
+              id: request.body.conversionDraftId,
+              accepted: request.body.aiAccepted,
+              actorId: request.user.id,
+              requestId: held.id,
+              typeId: target.typeId,
+              values: {
+                title: born.row.title,
+                description: born.row.description,
+                priority: born.row.priority,
+                [`${target.module}_type`]: target.typeId,
+                counterparty: counterpartyName,
+                needed_by: neededBy,
+                ...Object.fromEntries(
+                  Object.entries(born.row.customFields).map(([slug, value]) => [
+                    `field:${slug}`,
+                    value,
+                  ]),
+                ),
+              },
+            });
             const record = {
               module: target.module,
               id: born.row.id,
@@ -418,12 +413,14 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
               if (provenance?.needed_by) provenance.needed_by.keyDateId = keyDateId;
             }
 
-            if (target.module === "matter" && provenance) {
+            if (provenance) {
               if (born.row.title !== title) delete provenance.title;
+              const table = target.module === "matter" ? matters : contracts;
+              const flags = provenance;
               await tx
-                .update(matters)
-                .set({ aiUnverified: Object.keys(provenance).length ? provenance : null })
-                .where(eq(matters.id, born.row.id));
+                .update(table)
+                .set({ aiUnverified: Object.keys(flags).length ? flags : null })
+                .where(eq(table.id, born.row.id));
             }
             // CMT-001's thread, moved onto the record beside the paper
             // (#422). Tiers are preserved because the write does not

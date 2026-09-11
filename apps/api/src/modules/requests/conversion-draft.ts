@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-/** Actor-scoped preparation and source evidence for Matter conversion (INT-008). */
+/** Actor-scoped preparation and source evidence for Request conversion (INT-008). */
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
@@ -9,6 +9,7 @@ import {
   eq,
   isNull,
   matterTypeFields,
+  contractTypeFields,
   matters,
   requests,
   type Executor,
@@ -20,7 +21,7 @@ import {
   ConversionSuggestionSchema,
   conversionContext,
   conversionSources,
-  matterPreparationEnabled,
+  preparationEnabled,
 } from "../../lib/conversion-draft.js";
 import { selectAttachedFields } from "../../lib/custom-fields.js";
 import { reachedMatter } from "../../lib/matter-access.js";
@@ -34,6 +35,7 @@ import { boundedQueueAsk } from "../../pipeline/jobs.js";
 const DownloadSchema = z.any().meta({ type: "string", format: "binary" });
 const DraftSchema = z.object({
   id: z.string(),
+  targetModule: z.enum(["matter", "contract"]),
   targetTypeId: z.string(),
   state: z.enum(["pending", "ready", "failed"]),
   suggestions: z.record(z.string(), ConversionSuggestionSchema),
@@ -79,10 +81,16 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: gate,
       schema: {
         operationId: "getConversionDraftSettings",
-        response: { 200: z.object({ matterPreparation: z.boolean() }), default: problemResponse },
+        response: {
+          200: z.object({ matterPreparation: z.boolean(), contractPreparation: z.boolean() }),
+          default: problemResponse,
+        },
       },
     },
-    async () => ({ matterPreparation: await matterPreparationEnabled(app.db) }),
+    async () => ({
+      matterPreparation: await preparationEnabled(app.db, "matter"),
+      contractPreparation: await preparationEnabled(app.db, "contract"),
+    }),
   );
   app.post(
     "/requests/:number/conversion-drafts",
@@ -92,7 +100,7 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "prepareConversionDraft",
         params,
         body: z.strictObject({
-          targetModule: z.literal("matter"),
+          targetModule: z.enum(["matter", "contract"]),
           targetTypeId: z.string(),
           retry: z.boolean().optional(),
         }),
@@ -100,16 +108,22 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      if (!(await matterPreparationEnabled(app.db)))
-        throw httpError(409, "Matter preparation is turned off. Continue manually.");
+      if (!(await preparationEnabled(app.db, request.body.targetModule)))
+        throw httpError(409, "Preparation is turned off. Continue manually.");
       const row = await requestOf(app.db, request.params.number);
       if (row.status !== "new")
         throw httpError(409, "This Request has already been dispositioned.");
-      const context = await conversionContext(app.db, row.id, request.body.targetTypeId);
+      const context = await conversionContext(
+        app.db,
+        row.id,
+        request.body.targetTypeId,
+        false,
+        request.body.targetModule,
+      );
       const key = {
         requestId: row.id,
         actorId: request.user.id,
-        targetModule: "matter" as const,
+        targetModule: request.body.targetModule,
         targetTypeId: request.body.targetTypeId,
         snapshot: context.snapshot,
       };
@@ -122,7 +136,7 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
             eq(conversionDrafts.requestId, key.requestId),
             eq(conversionDrafts.actorId, key.actorId),
             eq(conversionDrafts.targetTypeId, key.targetTypeId),
-            eq(conversionDrafts.targetModule, "matter"),
+            eq(conversionDrafts.targetModule, key.targetModule),
             eq(conversionDrafts.snapshot, key.snapshot),
           ),
         );
@@ -175,8 +189,9 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
       try {
         current =
           row.status === "new" &&
-          (await matterPreparationEnabled(app.db)) &&
-          (await conversionContext(app.db, row.id, draft.targetTypeId)).snapshot === draft.snapshot;
+          (await preparationEnabled(app.db, draft.targetModule)) &&
+          (await conversionContext(app.db, row.id, draft.targetTypeId, false, draft.targetModule))
+            .snapshot === draft.snapshot;
       } catch {
         /* A changed or missing source makes the draft unavailable. */
       }
@@ -262,6 +277,46 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!draft) return { available: false, citations: [] };
       const source = await conversionSources(app.db, draft.requestId).catch(() => null);
       if (!source || source.row.convertedMatterId !== row.id)
+        return { available: false, citations: [] };
+      const proposal = draft.suggestions[request.params.slug];
+      return conversionEvidence(app.db, request.user, source, draft, proposal);
+    },
+  );
+  app.get(
+    "/contracts/:number/conversion-evidence/:slug",
+    {
+      preHandler: requireAuth,
+      schema: {
+        operationId: "getContractConversionEvidence",
+        params: params.extend({ slug: z.string() }),
+        response: {
+          200: EvidenceSchema,
+          default: problemResponse,
+        },
+      },
+    },
+    async (request) => {
+      const row = await reachedContract(app.db, request.user, request.params.number);
+      if (!row || row.archivedAt) throw httpError(404, "The Contract is unavailable.");
+      const flag = row.aiUnverified?.[request.params.slug];
+      if (!flag?.draftId) return { available: false, citations: [] };
+      if (request.params.slug.startsWith("field:")) {
+        const fields = await selectAttachedFields(app.db, contractTypeFields, row.contractTypeId);
+        const field = fields.find((f) => `field:${f.slug}` === request.params.slug);
+        if (
+          !field ||
+          (field.fieldTag === "legal" &&
+            !["administrator", "legal_team_member"].includes(request.user.role))
+        )
+          return { available: false, citations: [] };
+      }
+      const [draft] = await app.db
+        .select()
+        .from(conversionDrafts)
+        .where(eq(conversionDrafts.id, flag.draftId));
+      if (!draft) return { available: false, citations: [] };
+      const source = await conversionSources(app.db, draft.requestId).catch(() => null);
+      if (!source || source.row.convertedContractId !== row.id)
         return { available: false, citations: [] };
       const proposal = draft.suggestions[request.params.slug];
       return conversionEvidence(app.db, request.user, source, draft, proposal);
@@ -387,11 +442,12 @@ export async function acceptedConversionProvenance(
     actorId: string;
     requestId: string;
     typeId: string;
+    targetModule: "matter" | "contract";
     values: Record<string, unknown>;
   },
 ): Promise<ConversionProvenanceMap | null> {
   if (!input.accepted?.length) return null;
-  if (!input.id || !(await matterPreparationEnabled(db, true)))
+  if (!input.id || !(await preparationEnabled(db, input.targetModule, true)))
     throw httpError(409, "The Conversion draft is unavailable. Continue manually.");
   const [draft] = await db
     .select()
@@ -404,20 +460,34 @@ export async function acceptedConversionProvenance(
         eq(conversionDrafts.state, "ready"),
       ),
     );
-  if (!draft || draft.targetModule !== "matter")
+  if (
+    !draft ||
+    draft.targetModule !== input.targetModule ||
+    (draft.targetTypeId && draft.targetTypeId !== input.typeId)
+  )
     throw httpError(409, "The Conversion draft is unavailable.");
-  const context = await conversionContext(db, input.requestId, draft.targetTypeId, true);
+  const context = await conversionContext(
+    db,
+    input.requestId,
+    draft.targetTypeId,
+    true,
+    draft.targetModule,
+  );
   if (context.snapshot !== draft.snapshot)
     throw httpError(
       409,
       "The Request sources changed. Prepare a new Conversion draft or continue manually.",
     );
   const flags: ConversionProvenanceMap = {};
-  const typeMatches = context.types.some((type) => type.id === input.typeId);
+  const typeMatches =
+    context.types.some((type) => type.id === input.typeId) &&
+    (!draft.targetTypeId || draft.targetTypeId === input.typeId);
   for (const slug of input.accepted) {
     const suggestion = draft.suggestions[slug];
     if (
       !typeMatches ||
+      !Object.hasOwn(draft.suggestions, slug) ||
+      !Object.hasOwn(input.values, slug) ||
       !suggestion ||
       JSON.stringify(suggestion.value) !== JSON.stringify(input.values[slug])
     )

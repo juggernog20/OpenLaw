@@ -43,7 +43,7 @@
  * the date, label, and note in the Add and Edit dialogs (NOT-004, #807).
  */
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { KeyDateReminderFields, type KeyDateReminderDraft } from "../key-date-reminder-fields";
 import { useRecord } from "../record-context";
 import { FormattedMessage, useIntl, defineMessage, type IntlShape } from "react-intl";
@@ -114,12 +114,14 @@ type Editing = { row: null } | { row: ContractDeadline & { keyDateId: string } }
 
 export function KeyDatesCard({
   deadlines,
+  conversionReview,
   noticePeriodDays,
   onDeadlines,
 }: Readonly<{
   /** The CTR-009 union as the seam answered it — ordered, counted, and
    * with the next deadline already marked. */
   deadlines: readonly ContractDeadline[];
+  conversionReview?: ReactNode;
   /** CTR-006's notice period, which is the only part of the derived
    * deadline's own sentence the union does not carry: the row says how
    * long before the expiry it falls. Null when none is recorded, in
@@ -274,6 +276,7 @@ export function KeyDatesCard({
                   // deadline can ever be in the list.
                   key={row.keyDateId ?? row.source}
                   row={row}
+                  conversionReview={conversionReview}
                   intl={intl}
                   noticePeriodDays={noticePeriodDays}
                   busy={busy}
@@ -319,6 +322,7 @@ export function KeyDatesCard({
  */
 function DeadlineRow({
   row,
+  conversionReview,
   intl,
   noticePeriodDays,
   busy,
@@ -327,6 +331,7 @@ function DeadlineRow({
   onRemove,
 }: Readonly<{
   row: ContractDeadline;
+  conversionReview?: ReactNode;
   intl: IntlShape;
   noticePeriodDays: number | null;
   busy: boolean;
@@ -360,6 +365,7 @@ function DeadlineRow({
             <FormattedMessage {...SOURCE_LABEL[row.source]} />
           </span>
           {row.unverified ? <UnverifiedMarker /> : null}
+          {row.source === "key_date" && row.unverified ? conversionReview : null}
         </span>
       </td>
       {!frozen && (

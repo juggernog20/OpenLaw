@@ -11500,3 +11500,40 @@ describe("moving between two records on the same route (#372)", () => {
     expect(screen.getByLabelText("Priority")).toHaveValue("high");
   });
 });
+
+it("shows Conversion draft evidence beside Contract Overview values without leaving the record", async () => {
+  const user = userEvent.setup();
+  const api = recordApi(
+    contractRow({
+      aiUnverified: {
+        title: { draftId: "prepared-contract", writtenAt: "2026-09-11T00:00:00.000Z" },
+      },
+    }),
+  );
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/contracts/42/conversion-evidence/title")
+        return json(200, {
+          available: true,
+          citations: [
+            {
+              sourceId: "message:1",
+              label: "Request conversation",
+              text: "Please review this agreement",
+              quote: "review this agreement",
+            },
+          ],
+        });
+      return api.handler(call);
+    },
+  });
+  const { router } = renderAt("/contracts/42");
+  const title = await screen.findByLabelText("Title");
+  expect(title.closest("[data-ai-generated]")).not.toBeNull();
+  await user.click(screen.getByRole("button", { name: "View source evidence" }));
+  expect(await screen.findByText("Please review this agreement")).toBeVisible();
+  expect(router.state.location.pathname).toBe("/contracts/42");
+  await user.keyboard("{Escape}");
+  expect(screen.getByRole("button", { name: "View source evidence" })).toHaveFocus();
+});

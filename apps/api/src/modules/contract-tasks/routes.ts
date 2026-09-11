@@ -141,6 +141,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
           expiryDate: contracts.expiryDate,
           noticePeriodDays: contracts.noticePeriodDays,
           aiUnverified: contracts.aiUnverified,
+          contractTypeId: contracts.contractTypeId,
         },
       })
       .from(contractTasks)

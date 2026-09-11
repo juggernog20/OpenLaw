@@ -180,6 +180,7 @@ export async function inboxRequestLoader({ params }: LoaderFunctionArgs) {
     user,
     ...res.data,
     matterPreparation: workflow?.data?.matterPreparation ?? false,
+    contractPreparation: workflow?.data?.contractPreparation ?? false,
     contractTypes: options.data.contractTypes,
     matterTypes: matterOptions.data.matterTypes,
     people: options.data.users,
@@ -194,6 +195,7 @@ export function InboxRequestPage() {
     fields,
     customFieldRefs,
     matterPreparation,
+    contractPreparation,
     attachments,
     contractTypes,
     matterTypes,
@@ -342,7 +344,8 @@ export function InboxRequestPage() {
     >
       {(disposing === "contract" || disposing === "matter") && (
         <PreparedConvertDialog
-          enabled={matterPreparation}
+          enabled={disposing === "matter" ? matterPreparation : contractPreparation}
+          preparationSettings={{ matter: matterPreparation, contract: contractPreparation }}
           initialTargetModule={disposing}
           reference={reference}
           request={request}

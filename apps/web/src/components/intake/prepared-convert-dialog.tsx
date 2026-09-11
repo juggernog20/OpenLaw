@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-/** Prepares the editable Matter conversion dialog before creation (INT-008). */
+/** Prepares the editable conversion dialog before creation (INT-008). */
 import { useEffect, useState, type ComponentProps } from "react";
 import { LoaderCircle } from "lucide-react";
 import { FormattedMessage } from "react-intl";
@@ -19,11 +19,9 @@ export function PreparedConvertDialog({
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const preparing =
-    enabled && props.initialTargetModule === "matter" && props.matterTypes.length > 0 && !manual;
-  const typeId =
-    props.request.requestType.targetModule === "matter"
-      ? (props.request.requestType.targetTypeId ?? "")
-      : "";
+    enabled &&
+    (props.initialTargetModule === "matter" ? props.matterTypes : props.contractTypes).length > 0 &&
+    !manual;
   const number = props.request.number;
   useEffect(() => {
     if (!preparing) return;
@@ -57,7 +55,11 @@ export function PreparedConvertDialog({
     void api
       .POST("/api/v1/requests/{number}/conversion-drafts", {
         params: { path: { number } },
-        body: { targetModule: "matter", targetTypeId: typeId, retry: attempt > 0 },
+        body: {
+          targetModule: props.initialTargetModule ?? "contract",
+          targetTypeId: "",
+          retry: attempt > 0,
+        },
         signal: controller.signal,
       })
       .then(async ({ data }) => {
@@ -75,9 +77,8 @@ export function PreparedConvertDialog({
       controller.abort();
       clearTimeout(timer);
     };
-  }, [preparing, typeId, number, attempt]);
-  if (!preparing || props.matterTypes.length === 0 || draft)
-    return <ConvertDialog {...props} initialDraft={draft ?? undefined} />;
+  }, [preparing, number, attempt, props.initialTargetModule]);
+  if (!preparing || draft) return <ConvertDialog {...props} initialDraft={draft ?? undefined} />;
   return (
     <Dialog
       open
@@ -99,8 +100,9 @@ export function PreparedConvertDialog({
             <>
               <LoaderCircle className="animate-spin" aria-hidden="true" size={16} />
               <FormattedMessage
-                id="conversion.gettingMatterReady"
-                defaultMessage="Getting matter ready…"
+                id="conversion.gettingReady"
+                defaultMessage="Getting {module, select, matter {matter} other {contract}} ready…"
+                values={{ module: props.initialTargetModule }}
               />
             </>
           )}

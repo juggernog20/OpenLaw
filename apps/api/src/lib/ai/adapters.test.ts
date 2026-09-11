@@ -374,3 +374,21 @@ it("does not request source IDs from legacy unaddressed text", () => {
   expect(prompt).toContain("Contract text:");
   expect(prompt).not.toContain("sourceId");
 });
+
+it("names the exact evidence properties for source-addressed extraction", () => {
+  const prompt = extractionPrompt(
+    [
+      {
+        id: "request:one",
+        revision: "v1",
+        kind: "request",
+        label: "Summary",
+        text: "Due October 2",
+      },
+    ],
+    [{ slug: "needed_by", prompt: "Extract date" }],
+  );
+  expect(prompt).toContain('"evidence":');
+  expect(prompt).toContain('"sourceId":');
+  expect(prompt).toContain('"citations":');
+});

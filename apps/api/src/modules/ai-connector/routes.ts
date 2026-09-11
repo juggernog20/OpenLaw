@@ -35,7 +35,10 @@ const PresetOptionSchema = z.object({
   requiresBaseUrl: z.boolean(),
 });
 
-const WorkflowSettingsSchema = z.object({ matterPreparation: z.boolean() });
+const WorkflowSettingsSchema = z.object({
+  matterPreparation: z.boolean(),
+  contractPreparation: z.boolean(),
+});
 
 const ConnectorSchema = WorkflowSettingsSchema.extend({
   configured: z.boolean(),
@@ -74,6 +77,7 @@ function readConnector(row: AiConnector | undefined): z.infer<typeof ConnectorSc
   if (!row) {
     return {
       matterPreparation: false,
+      contractPreparation: false,
       configured: false,
       enabled: false,
       preset: null,
@@ -87,6 +91,7 @@ function readConnector(row: AiConnector | undefined): z.infer<typeof ConnectorSc
   }
   return {
     matterPreparation: row.matterPreparation,
+    contractPreparation: row.contractPreparation,
     configured: true,
     enabled: row.disabledAt === null,
     preset: row.preset,

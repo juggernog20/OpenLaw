@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-/** Source collection and validation for Matter Conversion drafts (INT-008). */
+/** Source collection and validation for Conversion drafts (INT-008). */
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import {
@@ -14,13 +14,19 @@ import {
   isNull,
   matterTypeFields,
   matterTypes,
+  contractTypes,
+  contractTypeFields,
   requestAttachments,
   requestTypeFields,
   requests,
   users,
   type Executor,
 } from "@openlaw/db";
-import { type ConversionSuggestion, type ConversionAttachmentRead } from "@openlaw/shared";
+import {
+  MAX_COUNTERPARTY_NAME_LENGTH,
+  type ConversionSuggestion,
+  type ConversionAttachmentRead,
+} from "@openlaw/shared";
 import {
   coerceCustomFieldValue,
   selectAttachedFields,
@@ -49,9 +55,17 @@ export const hash = (value: unknown) =>
   createHash("sha256").update(JSON.stringify(value)).digest("hex");
 export const normalizeQuote = (text: string) =>
   text.normalize("NFKC").toLocaleLowerCase("en-US").replace(/\s+/gu, " ").trim();
-export async function matterPreparationEnabled(db: Executor, lock = false) {
+export async function preparationEnabled(
+  db: Executor,
+  module: "matter" | "contract",
+  lock = false,
+) {
   const query = db
-    .select({ enabled: aiConnector.matterPreparation, disabledAt: aiConnector.disabledAt })
+    .select({
+      enabled:
+        module === "matter" ? aiConnector.matterPreparation : aiConnector.contractPreparation,
+      disabledAt: aiConnector.disabledAt,
+    })
     .from(aiConnector)
     .limit(1);
   const [row] = await (lock ? query.for("share") : query);
@@ -216,35 +230,38 @@ export async function conversionContext(
   requestId: string,
   targetTypeId: string,
   lockSources = false,
+  targetModule: "matter" | "contract" = "matter",
 ) {
   const source = await conversionSources(db, requestId, lockSources);
+  const typeTable = targetModule === "matter" ? matterTypes : contractTypes;
+  const typeFields = targetModule === "matter" ? matterTypeFields : contractTypeFields;
+  const moduleLabel = targetModule === "matter" ? "Matter" : "Contract";
   const types = await db
-    .select({ id: matterTypes.id, name: matterTypes.displayName })
-    .from(matterTypes)
-    .where(isNull(matterTypes.archivedAt))
-    .orderBy(asc(matterTypes.id));
+    .select({ id: typeTable.id, name: typeTable.displayName })
+    .from(typeTable)
+    .where(isNull(typeTable.archivedAt))
+    .orderBy(asc(typeTable.id));
   if (targetTypeId && !types.some((t) => t.id === targetTypeId))
-    throw httpError(409, "Choose a live Matter Type.");
-  const perType: { typeId: string; fields: Awaited<ReturnType<typeof selectAttachedFields>> }[] =
-    [];
-  for (const type of types)
-    perType.push({
-      typeId: type.id,
-      fields: await selectAttachedFields(db, matterTypeFields, type.id),
-    });
-  const fields = [
-    ...new Map(perType.flatMap((type) => type.fields).map((field) => [field.slug, field])).values(),
-  ];
+    throw httpError(409, `Choose a live ${moduleLabel} Type.`);
+  // A chosen Type answers for itself; only an unanswered target reads
+  // every live Type. The whole context is rebuilt on each freshness
+  // check and on each poll, so a read per Type is a read per second.
+  const asked = targetTypeId ? types.filter((type) => type.id === targetTypeId) : types;
+  const attached: Awaited<ReturnType<typeof selectAttachedFields>>[] = [];
+  for (const type of asked) attached.push(await selectAttachedFields(db, typeFields, type.id));
+  const fields = [...new Map(attached.flat().map((field) => [field.slug, field])).values()];
   const allTargets: AiExtractionTarget[] = [
-    { slug: "title", prompt: "Propose a concise opening Matter title, at most 200 characters." },
     {
-      slug: "matter_type",
-      prompt: `Choose an eligible Matter Type id only when supported: ${JSON.stringify(types)}.`,
+      slug: "title",
+      prompt: `Propose a concise opening ${moduleLabel} title, at most 200 characters.`,
+    },
+    {
+      slug: `${targetModule}_type`,
+      prompt: `Choose an eligible ${moduleLabel} Type id only when supported: ${JSON.stringify(asked)}.`,
     },
     {
       slug: "description",
-      prompt:
-        "Synthesize a useful Matter Overview description from the supported facts, at most 10000 characters. Cite all supporting passages. No legal risk assessment.",
+      prompt: `Synthesize a useful ${moduleLabel} Overview description from the supported facts, at most 10000 characters. Cite all supporting passages. No legal risk assessment.`,
     },
     {
       slug: "priority",
@@ -255,6 +272,14 @@ export async function conversionContext(
       prompt:
         "Extract the explicitly stated Needed by date as YYYY-MM-DD. Do not guess missing date parts.",
     },
+    ...(targetModule === "contract"
+      ? [
+          {
+            slug: "counterparty",
+            prompt: `Extract the explicitly named Counterparty legal name, at most ${MAX_COUNTERPARTY_NAME_LENGTH} characters. Never invent a name.`,
+          },
+        ]
+      : []),
     ...fields
       .filter((f) => f.fieldType !== "user" && f.fieldType !== "entity")
       .map((f) => ({
@@ -271,10 +296,14 @@ export async function conversionContext(
   if (targets.length !== allTargets.length) source.warnings.push("target_budget");
   return {
     ...source,
+    targetModule,
+    targetTypeId,
     fields,
     types,
     targets,
     snapshot: hash([
+      targetModule,
+      targetTypeId,
       source.all,
       source.attachments.map((a) => ({
         id: a.id,
@@ -284,7 +313,10 @@ export async function conversionContext(
         restricted: a.restricted,
       })),
       types,
-      perType,
+      // The attached Fields the targets were built from, in the same
+      // order as the Types above. Re-attaching a Field the proposal
+      // could use makes the draft stale.
+      attached,
     ]),
   };
 }
@@ -316,8 +348,18 @@ export function checkedSuggestion(
       typeof raw === "string" && raw.trim() && raw.length <= (answer.slug === "title" ? 200 : 10000)
         ? raw.trim()
         : null;
-  else if (answer.slug === "matter_type")
-    value = typeof raw === "string" && context.types.some((t) => t.id === raw) ? raw : null;
+  else if (answer.slug === `${context.targetModule}_type`)
+    value =
+      typeof raw === "string" &&
+      context.types.some((t) => t.id === raw) &&
+      (!context.targetTypeId || raw === context.targetTypeId)
+        ? raw
+        : null;
+  else if (answer.slug === "counterparty" && context.targetModule === "contract")
+    value =
+      typeof raw === "string" && raw.trim() && raw.length <= MAX_COUNTERPARTY_NAME_LENGTH
+        ? raw.trim()
+        : null;
   else if (answer.slug === "priority")
     value = ["low", "medium", "high", "critical"].includes(String(raw)) ? String(raw) : null;
   else if (answer.slug === "needed_by") {

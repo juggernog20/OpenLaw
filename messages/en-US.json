@@ -2201,8 +2201,8 @@
   "conversion.failed": {
     "defaultMessage": "Preparation could not finish. Retry or continue manually."
   },
-  "conversion.gettingMatterReady": {
-    "defaultMessage": "Getting matter ready…"
+  "conversion.gettingReady": {
+    "defaultMessage": "Getting {module, select, matter {matter} other {contract}} ready…"
   },
   "conversion.manual": {
     "defaultMessage": "Continue manually"
@@ -2214,10 +2214,13 @@
     "defaultMessage": "Up to {sources, number} attachments, {bytes, number} MiB each and {totalBytes, number} MiB total; {characters, number} characters each and {totalCharacters, number} across all sources. Reading allows {sourceSeconds, number} seconds per attachment and {totalSeconds, number} seconds total. Request answers and messages are considered first."
   },
   "conversion.restrictedOmitted": {
-    "defaultMessage": "Restricted messages and Legal or reference Fields were omitted to keep Matter values safe for broader readers."
+    "defaultMessage": "Restricted messages and Legal or reference Fields were omitted to keep record values safe for broader readers."
   },
   "conversion.settings": {
     "defaultMessage": "Request conversion"
+  },
+  "conversion.settingsContract": {
+    "defaultMessage": "Prepare Contract conversions with AI"
   },
   "conversion.settingsFailed": {
     "defaultMessage": "The conversion setting could not be saved."
@@ -2265,7 +2268,7 @@
     "defaultMessage": "Some Fields exceeded the preparation limit. Complete them manually."
   },
   "conversion.targetLabel": {
-    "defaultMessage": "{slug, select, title {Title} description {Description} matter_type {Matter type} priority {Priority} needed_by {Needed by} other {Value}}"
+    "defaultMessage": "{slug, select, title {Title} description {Description} matter_type {Matter type} contract_type {Contract type} counterparty {Counterparty} priority {Priority} needed_by {Needed by} other {Value}}"
   },
   "convert.alreadyConvertedRecord": {
     "defaultMessage": "It became {record}."
