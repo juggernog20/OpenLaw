@@ -68,8 +68,8 @@ function field(
 function detail(
   overrides: {
     owner?: { displayName: string } | null;
-    nextDeadline?: string | null;
-    deadlinePassed?: boolean;
+    expectedBy?: string | null;
+    estimatePassed?: boolean;
     status?: RequestStatus;
     declinedReason?: string | null;
     description?: string | null;
@@ -82,8 +82,8 @@ function detail(
   return {
     request: {
       owner: overrides.owner ?? null,
-      nextDeadline: overrides.nextDeadline ?? null,
-      deadlinePassed: overrides.deadlinePassed ?? false,
+      expectedBy: overrides.expectedBy ?? null,
+      estimatePassed: overrides.estimatePassed ?? false,
       id: "rq1",
       number: 45,
       status: overrides.status ?? "new",
@@ -1061,14 +1061,14 @@ describe("the conversation", () => {
   });
 });
 
-it("shows the owner and next task deadline beside the requester's original Needed by date", async () => {
+it("shows Legal's owner and estimate beside the requester's original Needed by date", async () => {
   stubApi({
     signedIn: REQUESTER,
     extra: detailRead(
       detail({
         owner: { displayName: "Lee Member" },
-        nextDeadline: "2026-10-10",
-        deadlinePassed: true,
+        expectedBy: "2026-10-10",
+        estimatePassed: true,
         customFields: { needed_by: "2026-10-08" },
         fields: [{ ...field({ slug: "needed_by", displayName: "Needed by" }), fieldType: "date" }],
       }),
@@ -1076,8 +1076,8 @@ it("shows the owner and next task deadline beside the requester's original Neede
   });
   renderAt("/portal/requests/45");
   expect(await screen.findByText("Owner: Lee Member")).toBeInTheDocument();
-  expect(screen.getByText(/Next deadline/)).toBeInTheDocument();
-  expect(screen.getByText("Deadline passed")).toBeInTheDocument();
+  expect(screen.getByText(/Expected back \(estimate\)/)).toBeInTheDocument();
+  expect(screen.getByText("Estimate passed")).toBeInTheDocument();
   expect(screen.getByText("Needed by")).toBeInTheDocument();
   expect(screen.getByText("Oct 10, 2026")).toBeInTheDocument();
 });

@@ -119,7 +119,6 @@ import {
   requestTypeFields,
   requestTypes,
   requests,
-  sql,
   SEVERITY_LEVELS,
   users,
   type CustomFieldValue,
@@ -195,8 +194,8 @@ const RequestTypeRefSchema = z.object({
  * through, where it got to, and how old it is. */
 const MyRequestRowSchema = z.object({
   owner: z.object({ displayName: z.string() }).nullable(),
-  nextDeadline: z.iso.date().nullable(),
-  deadlinePassed: z.boolean(),
+  expectedBy: z.iso.date().nullable(),
+  estimatePassed: z.boolean(),
   id: z.string(),
   /** Rendered R-###; it is also what the detail is addressed by. */
   number: z.number().int(),
@@ -417,7 +416,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
           typeId: requestTypes.id,
           typeSlug: requestTypes.slug,
           typeDisplayName: requestTypes.displayName,
-          nextDeadline: sql<string | null>`null`,
+          expectedBy: requests.expectedBy,
           owner: { displayName: requestAssignees.displayName },
         })
         .from(requests)
@@ -509,7 +508,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
           typeId: requestTypes.id,
           typeSlug: requestTypes.slug,
           typeDisplayName: requestTypes.displayName,
-          nextDeadline: sql<string | null>`null`,
+          expectedBy: requests.expectedBy,
           owner: { displayName: requestAssignees.displayName },
         })
         .from(requests)
@@ -883,10 +882,10 @@ function toRow<T extends RequestRowColumns>(row: T, today: string) {
     status: row.status,
     summary: row.summary,
     owner: row.owner,
-    nextDeadline: row.nextDeadline,
-    deadlinePassed:
-      row.nextDeadline !== null &&
-      row.nextDeadline < today &&
+    expectedBy: row.expectedBy,
+    estimatePassed:
+      row.expectedBy !== null &&
+      row.expectedBy < today &&
       (row.status === "new" || row.status === "converted"),
     createdAt: row.createdAt.toISOString(),
     requestType: { id: row.typeId, slug: row.typeSlug, displayName: row.typeDisplayName },
@@ -895,7 +894,7 @@ function toRow<T extends RequestRowColumns>(row: T, today: string) {
 
 interface RequestRowColumns {
   owner: { displayName: string } | null;
-  nextDeadline: string | null;
+  expectedBy: string | null;
   id: string;
   number: number;
   status: (typeof REQUEST_STATUSES)[number];

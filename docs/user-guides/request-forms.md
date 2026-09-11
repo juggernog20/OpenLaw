@@ -24,7 +24,7 @@ The **Display name** can change; **Slug** stays fixed. Rename or reorder request
 
 In the request type editor, set **Turnaround (calendar days)** to a whole number from 0 to 36,500, or leave it blank when no estimate is published. Leave the control or press Enter to save, then check the saved indication. Zero means the submission date; weekends and holidays count as calendar days.
 
-The Portal's request-type card shows this duration as general guidance. Individual Request deadlines come from unfinished tasks on the resulting Contract or Matter once Legal has reviewed and planned the work. The published turnaround does not set a task deadline or replace the Requester's Needed by date. See [Plan deadlines on the work](triage-requests.md#plan-deadlines-on-the-work).
+The Portal's request-type card shows this duration as an estimate. On an individual Request, it suggests an **Expected back (estimate)** date from submission in the organization's timezone. A Legal Team Member or Administrator must confirm that suggestion or choose another date. The published turnaround does not overwrite a saved Request estimate or replace the Requester's Needed by date. See [Confirm a return estimate](triage-requests.md#confirm-a-return-estimate).
 
 ## Choose the form fields
 

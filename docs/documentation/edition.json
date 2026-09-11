@@ -51,7 +51,7 @@
       },
       {
         "id": "follow-request",
-        "contentSha256": "e916ff26513dbf97efc62c0bc3cfc5724377d90b2e07b44f9303a910fa184042"
+        "contentSha256": "92fa028e9efd10ed17377459da6427824aa565df99c8a486cfa36e91820157ba"
       },
       {
         "id": "portal-knowledge",
@@ -59,7 +59,7 @@
       },
       {
         "id": "triage-requests",
-        "contentSha256": "5da2fe76a0e8aed95e982a4a26e6dca242a83d27aeafb89428e160aa1e18f3c4"
+        "contentSha256": "3f68d6f6ae3fcad41e02a8e34778a2009f2e9686e7548ec74ae415126702b558"
       },
       {
         "id": "convert-request",
@@ -175,7 +175,7 @@
       },
       {
         "id": "request-forms",
-        "contentSha256": "d88bbbc24f3a2826962705f43ed8bc293bfd4ca7241cc8ab0d0a6380cb92f6b9"
+        "contentSha256": "5781d87b0603fb8ce08b839079e462e55e299433a8dce9e47da002eb2b52b49a"
       },
       {
         "id": "reminders-and-audit",

@@ -500,8 +500,8 @@ describe("my-requests", () => {
   const MINE: HomeRequest[] = [
     {
       owner: { displayName: "Lee Member" },
-      nextDeadline: "2026-10-10",
-      deadlinePassed: true,
+      expectedBy: "2026-10-10",
+      estimatePassed: true,
       id: "rq1",
       number: 45,
       status: "new",
@@ -511,8 +511,8 @@ describe("my-requests", () => {
     },
     {
       owner: null,
-      nextDeadline: null,
-      deadlinePassed: false,
+      expectedBy: null,
+      estimatePassed: false,
       id: "rq2",
       number: 38,
       status: "converted",
@@ -522,8 +522,8 @@ describe("my-requests", () => {
     },
     {
       owner: null,
-      nextDeadline: null,
-      deadlinePassed: false,
+      expectedBy: null,
+      estimatePassed: false,
       id: "rq3",
       number: 31,
       status: "resolved",
@@ -533,8 +533,8 @@ describe("my-requests", () => {
     },
     {
       owner: null,
-      nextDeadline: null,
-      deadlinePassed: false,
+      expectedBy: null,
+      estimatePassed: false,
       id: "rq4",
       number: 22,
       status: "declined",
@@ -544,11 +544,11 @@ describe("my-requests", () => {
     },
   ];
 
-  it("shows ownership and the next task deadline on Your requests", async () => {
+  it("shows ownership and the confirmed estimate on Your requests", async () => {
     stubApi({ signedIn: REQUESTER, extra: homeWith(MINE) });
     renderAt("/portal");
     expect(await screen.findByText("Owner: Lee Member")).toBeInTheDocument();
-    expect(screen.getByText("Deadline passed")).toBeInTheDocument();
+    expect(screen.getByText("Estimate passed")).toBeInTheDocument();
     expect(screen.getByText("Oct 10, 2026")).toBeInTheDocument();
   });
 

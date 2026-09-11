@@ -17,11 +17,13 @@ Sign in as a Legal Team Member or Administrator. Business Users [follow their ow
 
 Assignment records responsibility without reserving the Request. Another Legal Team Member or Administrator can still decide it. Assignment and replies leave it undecided, and the person assigned during triage does not automatically become the Contract Legal Owner or Matter Manager. The Requester sees the saved triage assignee as **Owner** in the Portal; clearing assignment clears that name.
 
-## Plan deadlines on the work
+## Confirm a return estimate
 
-Triage records who will handle a Request and what it should become. After conversion, add due dates to tasks on the [Contract](contract-tasks-and-dates.md) or [Matter](matter-work.md) as the work is reviewed and planned.
+On the Request page, find **Expected back (estimate)**. Choose a date, or select **Use suggested date** when a suggestion is available. The suggestion uses the Request type's calendar-day turnaround from the submission date in the organization's timezone. Check the saved indication. Use **Clear estimate** to remove a confirmed date.
 
-The Portal shows **Next deadline**, the earliest due date among unfinished tasks on the resulting record. Completing, rescheduling, or deleting a task changes that date on the next Portal read. It is separate from the Requester's **Needed by** date and does not promise completion of the whole Request. Task titles and descriptions stay on the record. Archived records and confidential records outside the Requester's named team access do not share a deadline.
+The estimate stays separate from the Requester's **Needed by** date. If Needed by is earlier than the suggestion, consider it when choosing a date; the app does not silently move the estimate earlier. Changing the request type's turnaround later does not overwrite an estimate already saved on a Request.
+
+The Requester sees the confirmed date on the Request and under **Your requests**. An Open Request whose estimate is past shows **Estimate passed**. Legal can change the estimate while a Request is undecided. A converted Request shows only its envelope, and later deadlines belong to the resulting record's tasks. Resolution or decline makes the estimate read-only and removes the passed-estimate warning. If saving fails, retry the date and confirm the saved result before relying on it. Press Escape in the date control to return to the saved date.
 
 ## Convert to a Contract or Matter
 

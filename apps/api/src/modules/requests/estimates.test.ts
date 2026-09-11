@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { afterAll, beforeAll, expect, it } from "vitest";
-import { contractTasks, eq, matterTasks, orgSettings, requests, requestTypes } from "@openlaw/db";
+import { eq, orgSettings, requests, requestTypes } from "@openlaw/db";
 import {
   dispositionScaffold,
   MEMBER,
@@ -95,12 +95,12 @@ it("offers an org-timezone calendar-day suggestion without writing or clamping t
   expect((await estimate(request.number, null)).statusCode).toBe(200);
   expect((await detail(request.number)).expectedBy).toBeNull();
 });
-it("projects the triage owner but ignores legacy estimates on both requester reads", async () => {
+it("projects only the triage owner's name and the confirmed estimate on both requester reads, including clearing", async () => {
   const request = await submit();
   expect(await detail(request.number, true)).toMatchObject({
     owner: null,
-    nextDeadline: null,
-    deadlinePassed: false,
+    expectedBy: null,
+    estimatePassed: false,
   });
   await harness.app.inject({
     method: "PATCH",
@@ -111,8 +111,8 @@ it("projects the triage owner but ignores legacy estimates on both requester rea
   await estimate(request.number, "2000-01-01");
   expect(await detail(request.number, true)).toMatchObject({
     owner: { displayName: MEMBER.displayName },
-    nextDeadline: null,
-    deadlinePassed: false,
+    expectedBy: "2000-01-01",
+    estimatePassed: true,
   });
   const list = await harness.app.inject({
     method: "GET",
@@ -121,7 +121,7 @@ it("projects the triage owner but ignores legacy estimates on both requester rea
   });
   const row = list.json().requests.find((row: { id: string }) => row.id === request.id);
   expect(row.owner).toEqual({ displayName: MEMBER.displayName });
-  expect(row).toMatchObject({ nextDeadline: null, deadlinePassed: false });
+  expect(row).toMatchObject({ expectedBy: "2000-01-01", estimatePassed: true });
   await harness.app.inject({
     method: "PATCH",
     url: `/api/v1/requests/${request.number}/assignee`,
@@ -132,8 +132,8 @@ it("projects the triage owner but ignores legacy estimates on both requester rea
   for (const status of ["resolved", "declined"] as const) {
     await harness.db.update(requests).set({ status }).where(eq(requests.id, request.id));
     expect(await detail(request.number, true)).toMatchObject({
-      nextDeadline: null,
-      deadlinePassed: false,
+      expectedBy: "2000-01-01",
+      estimatePassed: false,
     });
   }
 });
@@ -230,7 +230,7 @@ it("audits a changed estimate once, preserves it through conversion, and refuses
   expect(convertedRequest.convertedContract?.number).toBeGreaterThan(0);
   expect(await detail(request.number, true)).toMatchObject({
     status: "converted",
-    nextDeadline: null,
+    expectedBy: "2026-10-15",
   });
   expect((await estimate(request.number, "2026-10-16")).statusCode).toBe(200);
   for (const status of ["resolved", "declined"] as const) {
@@ -241,7 +241,7 @@ it("audits a changed estimate once, preserves it through conversion, and refuses
 });
 
 it.each(["contract", "matter"] as const)(
-  "moves a converted %s out of Your Requests without exposing Task deadlines",
+  "moves a converted %s out of Your Requests and redirects its address",
   async (module) => {
     const request = await submit();
     let matterTypeId: string | undefined;
@@ -262,24 +262,6 @@ it.each(["contract", "matter"] as const)(
       payload: { title: "Plan the work", ...(matterTypeId ? { matterTypeId } : {}) },
     });
     expect(converted.statusCode, converted.body).toBe(200);
-    const stored = await cast.stored(request.id);
-    const recordId = (
-      module === "contract" ? stored.convertedContractId : stored.convertedMatterId
-    )!;
-    if (module === "contract")
-      await harness.db.insert(contractTasks).values({
-        contractId: recordId,
-        title: "Private deadline",
-        dueDate: "2000-01-02",
-        displayOrder: 0,
-      });
-    else
-      await harness.db.insert(matterTasks).values({
-        matterId: recordId,
-        title: "Private deadline",
-        dueDate: "2000-01-02",
-        displayOrder: 0,
-      });
     const response = await harness.app.inject({
       method: "GET",
       url: `/api/v1/portal/requests/${request.number}`,
@@ -287,7 +269,6 @@ it.each(["contract", "matter"] as const)(
     });
     expect(response.statusCode, response.body).toBe(200);
     expect(response.json().redirectTo.module).toBe(module);
-    expect(response.json().request.nextDeadline).toBeNull();
     const list = await harness.app.inject({
       method: "GET",
       url: "/api/v1/portal/requests",

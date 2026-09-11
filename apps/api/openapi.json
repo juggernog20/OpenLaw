@@ -22573,7 +22573,7 @@
                               }
                             ]
                           },
-                          "nextDeadline": {
+                          "expectedBy": {
                             "anyOf": [
                               {
                                 "type": "string",
@@ -22585,7 +22585,7 @@
                               }
                             ]
                           },
-                          "deadlinePassed": {
+                          "estimatePassed": {
                             "type": "boolean"
                           },
                           "id": {
@@ -22625,8 +22625,8 @@
                         },
                         "required": [
                           "owner",
-                          "nextDeadline",
-                          "deadlinePassed",
+                          "expectedBy",
+                          "estimatePassed",
                           "id",
                           "number",
                           "status",
@@ -22702,7 +22702,7 @@
                             }
                           ]
                         },
-                        "nextDeadline": {
+                        "expectedBy": {
                           "anyOf": [
                             {
                               "type": "string",
@@ -22714,7 +22714,7 @@
                             }
                           ]
                         },
-                        "deadlinePassed": {
+                        "estimatePassed": {
                           "type": "boolean"
                         },
                         "id": {
@@ -22789,8 +22789,8 @@
                       },
                       "required": [
                         "owner",
-                        "nextDeadline",
-                        "deadlinePassed",
+                        "expectedBy",
+                        "estimatePassed",
                         "id",
                         "number",
                         "status",
@@ -33388,7 +33388,7 @@
     "/api/v1/contracts/{number}/team": {
       "post": {
         "operationId": "addContractTeamMember",
-        "summary": "Maintain one membership per person on a contract team",
+        "summary": "Put a person on the contract team (DD-023). One membership per person; the account type says what the membership lets them do",
         "tags": ["contracts"],
         "requestBody": {
           "required": true,
@@ -33472,7 +33472,7 @@
     "/api/v1/contracts/{number}/team/{userId}": {
       "delete": {
         "operationId": "removeContractTeamMember",
-        "summary": "Maintain one membership per person on a contract team",
+        "summary": "Take a person off the contract team (DD-023). A Business User loses Portal access to the record on the next read",
         "tags": ["contracts"],
         "parameters": [
           {

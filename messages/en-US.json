@@ -1161,7 +1161,7 @@
     "defaultMessage": "Visible to Administrators and Legal Team Members."
   },
   "comments.audience.workingTeam": {
-    "defaultMessage": "Visible to the legal team and Contributors on this record."
+    "defaultMessage": "Visible to the legal team on this record. Not shared with Business Users."
   },
   "comments.composer": {
     "defaultMessage": "New comment"
@@ -4551,7 +4551,7 @@
     "defaultMessage": "Convert to matter"
   },
   "inbox.request.convertedBy": {
-    "defaultMessage": "Converted by {person} on {date}"
+    "defaultMessage": "{person, select, none {Converted on {date}} other {Converted by {person} on {date}}}"
   },
   "inbox.request.description": {
     "defaultMessage": "Description"
@@ -6068,20 +6068,11 @@
   "portal.request.booleanValue": {
     "defaultMessage": "{value, select, true {Yes} other {No}}"
   },
-  "portal.request.deadlineNotSet": {
-    "defaultMessage": "No deadline scheduled"
-  },
-  "portal.request.deadlinePassed": {
-    "defaultMessage": "Deadline passed"
-  },
   "portal.request.documentTitle": {
     "defaultMessage": "{reference} · {summary}"
   },
   "portal.request.meta": {
     "defaultMessage": "{reference} · {requestType} · Submitted {submitted}"
-  },
-  "portal.request.nextDeadline": {
-    "defaultMessage": "Next deadline: {date}"
   },
   "portal.request.owner": {
     "defaultMessage": "Owner: {name}"
@@ -6395,6 +6386,24 @@
   "renewal.vehicle.successorBlurb": {
     "defaultMessage": "Standalone record linked as the renewal."
   },
+  "requests.clearEstimate": {
+    "defaultMessage": "Clear estimate"
+  },
+  "requests.estimateHint": {
+    "defaultMessage": "An estimate from Legal, separate from the requester's Needed by date. Suggested dates use the request type's calendar-day turnaround from submission."
+  },
+  "requests.estimateNotSet": {
+    "defaultMessage": "Not set yet"
+  },
+  "requests.estimatePassed": {
+    "defaultMessage": "Estimate passed"
+  },
+  "requests.expectedBack": {
+    "defaultMessage": "Expected back (estimate)"
+  },
+  "requests.expectedBackValue": {
+    "defaultMessage": "Expected back (estimate): {date}"
+  },
   "requests.reference": {
     "defaultMessage": "R-{number, number, ::group-off}"
   },
@@ -6403,6 +6412,9 @@
   },
   "requests.statusLabel": {
     "defaultMessage": "{status, select, new {New} converted {Converted} resolved {Resolved} declined {Declined} other {Unknown}}"
+  },
+  "requests.useSuggestedEstimate": {
+    "defaultMessage": "Use suggested date: {date}"
   },
   "resolve.explains": {
     "defaultMessage": "Explain why this request can be closed without creating a contract or matter."
@@ -6430,6 +6442,9 @@
   },
   "role.businessUser": {
     "defaultMessage": "Business user"
+  },
+  "role.contributorHistorical": {
+    "defaultMessage": "Contributor"
   },
   "role.legalTeamMember": {
     "defaultMessage": "Legal team member"

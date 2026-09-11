@@ -2756,7 +2756,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Maintain one membership per person on a contract team */
+    /** Put a person on the contract team (DD-023). One membership per person; the account type says what the membership lets them do */
     post: operations["addContractTeamMember"];
     delete?: never;
     options?: never;
@@ -2774,7 +2774,7 @@ export interface paths {
     get?: never;
     put?: never;
     post?: never;
-    /** Maintain one membership per person on a contract team */
+    /** Take a person off the contract team (DD-023). A Business User loses Portal access to the record on the next read */
     delete: operations["removeContractTeamMember"];
     options?: never;
     head?: never;
@@ -14350,8 +14350,8 @@ export interface operations {
               owner: {
                 displayName: string;
               } | null;
-              nextDeadline: string | null;
-              deadlinePassed: boolean;
+              expectedBy: string | null;
+              estimatePassed: boolean;
               id: string;
               number: number;
               /** @enum {string} */
@@ -14400,8 +14400,8 @@ export interface operations {
               owner: {
                 displayName: string;
               } | null;
-              nextDeadline: string | null;
-              deadlinePassed: boolean;
+              expectedBy: string | null;
+              estimatePassed: boolean;
               id: string;
               number: number;
               /** @enum {string} */

@@ -10,7 +10,7 @@ Use your Request to follow Legal's response. Once Legal converts it, the same ad
 
 1. On the Portal home, find the Request under **Your requests**.
 2. Open it and check the summary and R- reference.
-3. Read its status, **Owner**, and **Next deadline**. The same owner and deadline appear under **Your requests**. **Not assigned yet** means no triage assignee is recorded; **No deadline scheduled** means there is no task deadline available to show.
+3. Read its status, **Owner**, and **Expected back (estimate)**. The same owner and estimate appear under **Your requests**. **Not assigned yet** means no triage assignee is recorded; **Not set yet** means Legal has not confirmed a return estimate.
 4. Read **Conversation** for Legal's replies. Select **Show earlier replies** when you need older messages.
 5. Check **What you submitted** for the saved description, original attachments, urgency, and available additional answers. Select an attachment's filename to download it.
 
@@ -24,7 +24,7 @@ A converted Request leaves **Your requests**. Its address redirects to the resul
 
 If Legal removes your team row, the old Request link no longer opens the live record. If the destination is archived, the Request address shows your original ask and an archived notice. That stub has no conversation or Document access.
 
-The Request's **Owner** is its triage assignee. Before conversion there is no record Task deadline to show. Converted work uses its record page; resolved and declined Requests keep their own conversations.
+The Request's **Owner** is its current triage assignee, separate from a resulting Contract's Business Owner or Legal Owner. Clearing triage assignment clears the requester-facing name. **Expected back (estimate)** is Legal's confirmed estimate, separate from the **Needed by** date you submitted. A request type's published turnaround suggests a date for Legal to confirm; it does not promise that date or silently replace a saved estimate. **Estimate passed** appears when an Open Request's saved estimate is in the past. Resolved and Declined Requests do not show that warning. Converted work uses its record page; resolved and declined Requests keep their own conversations.
 
 ## Reply and send further files
 

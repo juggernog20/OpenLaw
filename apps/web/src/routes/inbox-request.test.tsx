@@ -253,7 +253,8 @@ describe("the envelope (I2)", () => {
     // DD-018: triage confirms the routing the Administrator bound.
     expect(within(hero).getByText("Contract · NDA")).toBeInTheDocument();
     expect(within(hero).getByText("High")).toBeInTheDocument();
-    expect(screen.queryByLabelText("Expected back (estimate)")).not.toBeInTheDocument();
+    // INT-003's estimate stays on an undecided Request.
+    expect(screen.getByLabelText("Expected back (estimate)")).toBeInTheDocument();
     // The age, which is what triage weighs. The assertion is the stamp
     // alone: what the element *reads* is relative to the wall clock at
     // run time (DES-014), so pinning the words would be a test that
@@ -303,6 +304,9 @@ describe("the envelope (I2)", () => {
       "href",
       "/contracts/12",
     );
+    // DD-023: a converted Request is an envelope, so the estimate
+    // control and the thread are not drawn.
+    expect(screen.queryByLabelText("Expected back (estimate)")).not.toBeInTheDocument();
   });
 
   it("carries a decline's recorded reason itself (INT-006)", async () => {
