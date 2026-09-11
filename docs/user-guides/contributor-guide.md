@@ -8,6 +8,14 @@ Sign in with your Business User account. Ask Legal to add you to the Contract or
 
 Former Contributor accounts now use this Portal workflow.
 
+## Find a record
+
+Your Contracts and Your Matters use a table. Enter a title or C- or M- reference in **Search**, then press Enter or select **Search**. Contract searches also match the primary Counterparty.
+
+Select **Filter**, choose a property and value, and select **Apply**. Contracts offer Stage, Type, Legal Owner and Expiry date. Matters offer Status, Type, Matter Manager and open or closed lifecycle. Filters combine with your search. Remove a filter chip or use **Clear all** to widen the list.
+
+Select a column heading to sort ascending, descending or return to the default order. Use **Columns** to choose and reorder columns, and drag a heading's edge to resize it. **Show more** adds the next page. Search, filters and sorting stay in the page address, so you can return to them with Back or keep a bookmark.
+
 ## Update business information
 
 Under **Fields**, update **Description** or the business Fields supplied by the record's type. On a Contract you can also edit **Amount**, **Currency**, **Cadence** and **Effective date**. Text saves when you leave its control; choices save when selected. The three Value controls save together when you leave that group or press Enter.

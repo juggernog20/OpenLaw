@@ -13165,7 +13165,23 @@ export interface operations {
   listPortalContracts: {
     parameters: {
       query?: {
+        q?: string;
+        typeId?: string;
+        ownerId?: string;
         cursor?: number;
+        dir?: "asc" | "desc";
+        stage?: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+        expiryFrom?: string;
+        expiryTo?: string;
+        sort?:
+          | "number"
+          | "title"
+          | "counterparty"
+          | "type"
+          | "stage"
+          | "owner"
+          | "effectiveDate"
+          | "expiryDate";
       };
       header?: never;
       path?: never;
@@ -13185,6 +13201,7 @@ export interface operations {
               title: string;
               /** @enum {string} */
               stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              type: string;
               counterparty: string | null;
               legalOwner: {
                 id: string;
@@ -13220,6 +13237,17 @@ export interface operations {
                 | "renewalPeriodMonths"
               )[];
             }[];
+            total: number;
+            filterOptions: {
+              types: {
+                id: string;
+                displayName: string;
+              }[];
+              owners: {
+                id: string;
+                displayName: string;
+              }[];
+            };
             nextCursor: number | null;
           };
         };
@@ -13258,6 +13286,7 @@ export interface operations {
               title: string;
               /** @enum {string} */
               stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              type: string;
               counterparty: string | null;
               legalOwner: {
                 id: string;
@@ -14087,7 +14116,14 @@ export interface operations {
   listPortalMatters: {
     parameters: {
       query?: {
+        q?: string;
+        typeId?: string;
+        ownerId?: string;
         cursor?: number;
+        dir?: "asc" | "desc";
+        statusId?: string;
+        category?: "open" | "closed";
+        sort?: "number" | "title" | "type" | "status" | "owner";
       };
       header?: never;
       path?: never;
@@ -14120,6 +14156,21 @@ export interface operations {
                 image: string | null;
               } | null;
             }[];
+            total: number;
+            filterOptions: {
+              types: {
+                id: string;
+                displayName: string;
+              }[];
+              owners: {
+                id: string;
+                displayName: string;
+              }[];
+              statuses: {
+                id: string;
+                displayName: string;
+              }[];
+            };
             nextCursor: number | null;
           };
         };

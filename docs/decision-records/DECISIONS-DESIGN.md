@@ -4651,7 +4651,7 @@ DD-023 gives Business Users one record team grant and moves their work onto Cont
 
 ### Decision
 
-Your Contracts and Your Matters are flat paginated lists in the Portal navigation. Each row opens its record. The record page keeps the Portal shell and shows its reference, title, business summary, owner statements, business Fields, supporting Documents, Conversation, and Original request. Contract dates and the current primary Document keep DD-021's presentation. Matters show their Type, Status, Matter Manager, and Business Owner.
+~~Your Contracts and Your Matters are flat paginated lists in the Portal navigation.~~ DES-077 replaces the flat lists with managed tables, search, filters and sorting. Each row opens its record. The record page keeps the Portal shell and shows its reference, title, business summary, owner statements, business Fields, supporting Documents, Conversation, and Original request. Contract dates and the current primary Document keep DD-021's presentation. Matters show their Type, Status, Matter Manager, and Business Owner.
 
 Business Fields reuse the shared typed Field controls. Contract value and effective date are editable here too. The summary reflects successful changes. A save commits one Field and reports failure beside that control. Description edits change the live record only. Original request is read-only, with one original submission per converted Request. A direct record has no Original request block. Reference Fields offer scoped choices; Confidential Entities never enter a Portal picker.
 
@@ -4668,6 +4668,29 @@ The full-app Contract team and Matter team applets show owner and Creator statem
 ### Consequences
 
 This supersedes DES-075's stakeholder tags, role picker, and separate stakeholder fetch, and DES-047's role rows. DES-075's Contract team title, owner statements, focus rule, and placement of AI analysis in Fields stand. DES-057 and DES-065's converted Request thread controls are superseded. The implementation uses existing Portal, Field, Document, and comment components.
+
+## DES-077: Portal record lists use the managed table
+
+- **Status:** Accepted under Blair's 2026-09-11 instruction
+- **Date:** 2026-09-11
+
+### Context
+
+Blair asked for proper Your Contracts and Your Matters lists, with search and filters similar to the full app. The flat lists in DES-076 do not support scanning or finding work across multiple pages.
+
+### Decision
+
+Both destinations use DES-046's managed table, column menu, resizable columns, sortable headings and filter menu with removable chips. The Portal shell gives these lists the available content width. Search, filters and sort are carried in the URL, including direct links, reload and Back. Column choices and widths are local to the open list. Saved views remain a separate preference feature.
+
+Contracts show Reference, Title, Counterparty, Stage, Legal Owner and Expiry date by default. Type, Business Owner, Effective date and Value are available in Columns. Matters show Reference, Title, Type, Status and Matter Manager, with Business Owner available in Columns. A title opens the Portal record. Existing status colors, date formatting, focus rules and horizontal overflow apply.
+
+Search matches a title or full record reference, plus the primary Counterparty for Contracts. Contract filters are Stage, Type, Legal Owner and an inclusive Expiry date range. Matter filters are Status, Type, Matter Manager and open or closed lifecycle. Choice filters select one value at a time and combine with the search. Clear all removes filter chips; Clear search removes the search. A filtered empty state offers Clear search and filters.
+
+Search, filtering, sorting, counts and paging run on the server over current team membership and non-archived records. Filter choices come only from that audience, including when the active search matches nothing. A cursor is a record reference read through the same membership and filters. Ordering keeps null values last in both directions and uses the reference to break ties. Show more appends the next page, reports the displayed count, and focuses its first row. Failed updates retain the last successful table and report the failure. A reply to an earlier navigation cannot replace or extend the current list.
+
+### Consequences
+
+This supersedes only DES-076's flat-list presentation. DD-023's account types, Portal write grid, team grant and Confidential gate stand. No staff taxonomy, user picker, saved-view or record endpoint is required to populate these lists. The API, generated client, Portal guide and browser acceptance tests follow this decision.
 
 ## Index of decisions
 
@@ -4759,3 +4782,4 @@ This is a new Request attachment read path: the Inbox's chat-only `RecordApplets
 ### DES-016 addendum (2026-09-11, #829) — Saved conversion citations
 
 The stacked source modal remains appropriate while the Convert dialog is active and keeps that dialog mounted. On saved Matter and Contract records, a citation with a Document Version uses the existing doc panel in RecordApplets. It docks beside the record at the existing width threshold and covers only the record content at narrower widths. It opens the original Version with the quoted passage highlighted, preserves the route and typed values, and restores the sparkle on close. Multiple citations offer a source choice. Request/message text remains available beside its value; unfiled conversation attachments retain their source reader. This supersedes the INT-008-era permission to reuse the centered Convert source modal for promoted Document Versions on saved records.
+| DES-077 | Portal record lists use the managed table | Accepted |

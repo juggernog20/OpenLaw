@@ -601,3 +601,10 @@ export type {
 } from "./conversion-draft.js";
 
 export { sameConversionValue } from "./conversion-draft.js";
+
+export {
+  PORTAL_CONTRACT_SORT_KEYS,
+  PORTAL_MATTER_SORT_KEYS,
+  PORTAL_CONTRACT_FILTER_KEYS,
+  PORTAL_MATTER_FILTER_KEYS,
+} from "./portal-lists.js";

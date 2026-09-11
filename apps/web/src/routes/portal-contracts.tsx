@@ -1,100 +1,109 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** DD-021: the paginated Portal list of Contracts shared with the signed-in person. */
-import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
-import { FormattedMessage, useIntl } from "react-intl";
+import { redirect, type LoaderFunctionArgs } from "react-router";
+import { useIntl } from "react-intl";
+import {
+  PORTAL_CONTRACT_FILTER_KEYS,
+  PORTAL_CONTRACT_SORT_KEYS,
+  CONTRACT_STAGES,
+} from "@openlaw/shared";
 import { api } from "../lib/api";
-import { currentUser, useSignOut } from "../lib/session";
-import { contractReference, stageLabel } from "../lib/contracts";
-import { PortalShell } from "../components/portal/portal-shell";
-import { PortalBackLink } from "../components/portal/back-link";
-import { PageTitle } from "../components/page-title";
-import { Button } from "../components/ui/button";
+import { currentUser } from "../lib/session";
+import type { Layout } from "../lib/list-views";
+import { portalListLayout, portalListQuery } from "../lib/portal-lists";
+import { stageLabel } from "../lib/contracts";
+import { PORTAL_CONTRACTS_CATALOGUE as catalogue } from "../components/portal/record-list-columns";
+import { PortalRecordList } from "../components/portal/record-list";
 
-export async function portalContractsLoader({ request }: LoaderFunctionArgs) {
+async function read(layout: Layout, cursor?: number) {
+  const query = portalListQuery(layout, PORTAL_CONTRACT_FILTER_KEYS);
+  const { data } = await api.GET("/api/v1/portal/contracts", {
+    params: {
+      query: {
+        ...query,
+        ...(cursor ? { cursor } : {}),
+        sort: PORTAL_CONTRACT_SORT_KEYS.find((key) => key === layout.sort?.key),
+        dir: layout.sort?.dir,
+      },
+    },
+  });
+  return data
+    ? {
+        rows: data.contracts,
+        total: data.total,
+        nextCursor: data.nextCursor,
+        filterOptions: data.filterOptions,
+      }
+    : undefined;
+}
+export async function portalContractsLoader(args: LoaderFunctionArgs) {
   const user = await currentUser();
   if (!user) return redirect("/portal/enter");
-  const requestedCursor = Number(new URL(request.url).searchParams.get("cursor"));
-  const cursor =
-    Number.isSafeInteger(requestedCursor) && requestedCursor > 0 ? requestedCursor : null;
-  const { data } = await api.GET("/api/v1/portal/contracts", {
-    params: { query: cursor ? { cursor } : {} },
-  });
+  const layout = portalListLayout(
+    catalogue,
+    args,
+    PORTAL_CONTRACT_FILTER_KEYS,
+    PORTAL_CONTRACT_SORT_KEYS,
+  );
+  const cursor = Number(new URL(args.request.url).searchParams.get("cursor"));
+  const data = await read(layout, Number.isSafeInteger(cursor) && cursor > 0 ? cursor : undefined);
   if (!data) throw new Error("Your Contracts could not be read.");
-  return { user, ...data, cursor };
+  return { user, layout, ...data };
 }
-
 export function PortalContractsPage() {
-  const { user, contracts, nextCursor, cursor } = useLoaderData<typeof portalContractsLoader>();
-  const signOut = useSignOut("/portal/enter");
   const intl = useIntl();
-  const title = intl.formatMessage({
-    id: "portal.contracts.title",
-    defaultMessage: "Your Contracts",
-  });
   return (
-    <PortalShell user={user} onSignOut={() => void signOut()}>
-      <PageTitle title={title} />
-      <PortalBackLink>
-        <FormattedMessage id="portal.contracts.requests" defaultMessage="Your requests" />
-      </PortalBackLink>
-      <h1 className="text-2xl font-semibold">{title}</h1>
-      <p className="text-base text-muted">
-        <FormattedMessage
-          id="portal.contracts.description"
-          defaultMessage="Contracts you are on the team for."
-        />
-      </p>
-      {contracts.length === 0 ? (
-        <p className="text-base text-muted">
-          <FormattedMessage
-            id="portal.contracts.empty"
-            defaultMessage="No Contracts are available to you."
-          />
-        </p>
-      ) : (
-        <ul className="divide-y divide-border-muted overflow-hidden rounded-card border border-border-default bg-raised">
-          {contracts.map((contract) => (
-            <li key={contract.number}>
-              <Link
-                to={`/portal/contracts/${contract.number}`}
-                className="flex flex-wrap items-center justify-between gap-3 p-4 text-link hover:bg-canvas focus-visible:outline-2 focus-visible:outline-link"
-              >
-                <span className="flex min-w-0 flex-col gap-1">
-                  <span className="text-sm text-muted">
-                    {contractReference(intl, contract.number)}
-                  </span>
-                  <span className="text-md font-semibold">{contract.title}</span>
-                  <span className="text-base text-muted">{contract.counterparty}</span>
-                </span>
-                <span className="text-sm text-muted">{stageLabel(intl, contract.stage)}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-      <nav
-        aria-label={intl.formatMessage({
-          id: "portal.contracts.pagination",
-          defaultMessage: "Contract pages",
-        })}
-        className="flex gap-3"
-      >
-        {cursor && (
-          <Button asChild variant="secondary">
-            <Link to="/portal/contracts">
-              <FormattedMessage id="portal.contracts.firstPage" defaultMessage="First page" />
-            </Link>
-          </Button>
-        )}
-        {nextCursor && (
-          <Button asChild variant="secondary">
-            <Link to={`/portal/contracts?cursor=${encodeURIComponent(nextCursor)}`}>
-              <FormattedMessage id="portal.contracts.nextPage" defaultMessage="Next page" />
-            </Link>
-          </Button>
-        )}
-      </nav>
-    </PortalShell>
+    <PortalRecordList
+      catalogue={catalogue}
+      filterKeys={PORTAL_CONTRACT_FILTER_KEYS}
+      read={read}
+      path="/portal/contracts"
+      title={intl.formatMessage({ id: "portal.contracts.title", defaultMessage: "Your Contracts" })}
+      description={intl.formatMessage({
+        id: "portal.contracts.description",
+        defaultMessage: "Contracts you are on the team for.",
+      })}
+      searchLabel={intl.formatMessage({
+        id: "portal.contracts.search",
+        defaultMessage: "Search Contracts",
+      })}
+      definitions={(options) => [
+        {
+          key: "typeId",
+          label: intl.formatMessage({ id: "portal.list.column.type", defaultMessage: "Type" }),
+          kind: "choices",
+          multiple: false,
+          choices: options.types,
+        },
+        {
+          key: "ownerId",
+          label: intl.formatMessage({
+            id: "portal.list.column.legalOwner",
+            defaultMessage: "Legal Owner",
+          }),
+          kind: "choices",
+          multiple: false,
+          choices: options.owners,
+        },
+        {
+          key: "stage",
+          label: intl.formatMessage({ id: "portal.list.column.stage", defaultMessage: "Stage" }),
+          kind: "choices",
+          multiple: false,
+          choices: CONTRACT_STAGES.map((stage) => ({
+            id: stage,
+            displayName: stageLabel(intl, stage),
+          })),
+        },
+        {
+          key: "expiry",
+          label: intl.formatMessage({
+            id: "portal.list.column.expiryDate",
+            defaultMessage: "Expiry date",
+          }),
+          kind: "date",
+        },
+      ]}
+    />
   );
 }

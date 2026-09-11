@@ -5792,20 +5792,8 @@
   "portal.contracts.description": {
     "defaultMessage": "Contracts you are on the team for."
   },
-  "portal.contracts.empty": {
-    "defaultMessage": "No Contracts are available to you."
-  },
-  "portal.contracts.firstPage": {
-    "defaultMessage": "First page"
-  },
-  "portal.contracts.nextPage": {
-    "defaultMessage": "Next page"
-  },
-  "portal.contracts.pagination": {
-    "defaultMessage": "Contract pages"
-  },
-  "portal.contracts.requests": {
-    "defaultMessage": "Your requests"
+  "portal.contracts.search": {
+    "defaultMessage": "Search Contracts"
   },
   "portal.contracts.title": {
     "defaultMessage": "Your Contracts"
@@ -5945,6 +5933,81 @@
   "portal.knowledge.kicker": {
     "defaultMessage": "From Legal"
   },
+  "portal.list.clearAll": {
+    "defaultMessage": "Clear search and filters"
+  },
+  "portal.list.clearSearch": {
+    "defaultMessage": "Clear search"
+  },
+  "portal.list.column.businessOwner": {
+    "defaultMessage": "Business Owner"
+  },
+  "portal.list.column.counterparty": {
+    "defaultMessage": "Counterparty"
+  },
+  "portal.list.column.effectiveDate": {
+    "defaultMessage": "Effective date"
+  },
+  "portal.list.column.expiryDate": {
+    "defaultMessage": "Expiry date"
+  },
+  "portal.list.column.legalOwner": {
+    "defaultMessage": "Legal Owner"
+  },
+  "portal.list.column.manager": {
+    "defaultMessage": "Matter Manager"
+  },
+  "portal.list.column.reference": {
+    "defaultMessage": "Reference"
+  },
+  "portal.list.column.stage": {
+    "defaultMessage": "Stage"
+  },
+  "portal.list.column.status": {
+    "defaultMessage": "Status"
+  },
+  "portal.list.column.title": {
+    "defaultMessage": "Title"
+  },
+  "portal.list.column.type": {
+    "defaultMessage": "Type"
+  },
+  "portal.list.column.value": {
+    "defaultMessage": "Value"
+  },
+  "portal.list.count": {
+    "defaultMessage": "{shown} of {total, plural, one {# record} other {# records}}"
+  },
+  "portal.list.empty": {
+    "defaultMessage": "No records are available to you"
+  },
+  "portal.list.empty.body": {
+    "defaultMessage": "Records appear here when Legal adds you to their team."
+  },
+  "portal.list.empty.filtered": {
+    "defaultMessage": "No records match your search or filters"
+  },
+  "portal.list.empty.filteredBody": {
+    "defaultMessage": "Try another search or clear a filter to widen the list."
+  },
+  "portal.list.more": {
+    "defaultMessage": "Show more"
+  },
+  "portal.list.moreAdded": {
+    "defaultMessage": "{count, plural, one {# more record} other {# more records}}. {total} shown."
+  },
+  "portal.list.notRecorded": {
+    "defaultMessage": "Not recorded"
+  },
+  "portal.list.readError": {
+    "defaultMessage": "The list could not be updated. Try again."
+  },
+  "portal.list.search": {
+    "defaultMessage": "Search"
+  },
+  "portal.list.unassigned": {
+    "defaultMessage": "Unassigned"
+  },
   "portal.matter.manager": {
     "defaultMessage": "Matter Manager"
   },
@@ -5963,20 +6026,17 @@
   "portal.matters.description": {
     "defaultMessage": "Matters you are on the team for."
   },
-  "portal.matters.empty": {
-    "defaultMessage": "No Matters are available to you."
+  "portal.matters.filter.closed": {
+    "defaultMessage": "Closed"
   },
-  "portal.matters.firstPage": {
-    "defaultMessage": "First page"
+  "portal.matters.filter.lifecycle": {
+    "defaultMessage": "Lifecycle"
   },
-  "portal.matters.nextPage": {
-    "defaultMessage": "Next page"
+  "portal.matters.filter.open": {
+    "defaultMessage": "Open"
   },
-  "portal.matters.pagination": {
-    "defaultMessage": "Matter pages"
-  },
-  "portal.matters.requests": {
-    "defaultMessage": "Your requests"
+  "portal.matters.search": {
+    "defaultMessage": "Search Matters"
   },
   "portal.matters.title": {
     "defaultMessage": "Your Matters"

@@ -19082,12 +19082,97 @@
         "parameters": [
           {
             "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "in": "query",
+            "name": "q",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "in": "query",
+            "name": "typeId",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "in": "query",
+            "name": "ownerId",
+            "required": false
+          },
+          {
+            "schema": {
               "type": "integer",
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             },
             "in": "query",
             "name": "cursor",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"]
+            },
+            "in": "query",
+            "name": "dir",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["draft", "review", "approval", "signature", "active", "ended"]
+            },
+            "in": "query",
+            "name": "stage",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "in": "query",
+            "name": "expiryFrom",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "in": "query",
+            "name": "expiryTo",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "number",
+                "title",
+                "counterparty",
+                "type",
+                "stage",
+                "owner",
+                "effectiveDate",
+                "expiryDate"
+              ]
+            },
+            "in": "query",
+            "name": "sort",
             "required": false
           }
         ],
@@ -19115,6 +19200,9 @@
                           "stage": {
                             "type": "string",
                             "enum": ["draft", "review", "approval", "signature", "active", "ended"]
+                          },
+                          "type": {
+                            "type": "string"
                           },
                           "counterparty": {
                             "type": ["string", "null"]
@@ -19276,6 +19364,7 @@
                           "number",
                           "title",
                           "stage",
+                          "type",
                           "counterparty",
                           "legalOwner",
                           "businessOwner",
@@ -19292,6 +19381,50 @@
                         "additionalProperties": false
                       }
                     },
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "filterOptions": {
+                      "type": "object",
+                      "properties": {
+                        "types": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "displayName": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id", "displayName"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "owners": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "displayName": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id", "displayName"],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": ["types", "owners"],
+                      "additionalProperties": false
+                    },
                     "nextCursor": {
                       "anyOf": [
                         {
@@ -19305,7 +19438,7 @@
                       ]
                     }
                   },
-                  "required": ["contracts", "nextCursor"],
+                  "required": ["contracts", "total", "filterOptions", "nextCursor"],
                   "additionalProperties": false
                 }
               }
@@ -19363,6 +19496,9 @@
                         "stage": {
                           "type": "string",
                           "enum": ["draft", "review", "approval", "signature", "active", "ended"]
+                        },
+                        "type": {
+                          "type": "string"
                         },
                         "counterparty": {
                           "type": ["string", "null"]
@@ -19600,6 +19736,7 @@
                         "number",
                         "title",
                         "stage",
+                        "type",
                         "counterparty",
                         "legalOwner",
                         "businessOwner",
@@ -21798,12 +21935,78 @@
         "parameters": [
           {
             "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "in": "query",
+            "name": "q",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "in": "query",
+            "name": "typeId",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "in": "query",
+            "name": "ownerId",
+            "required": false
+          },
+          {
+            "schema": {
               "type": "integer",
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             },
             "in": "query",
             "name": "cursor",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"]
+            },
+            "in": "query",
+            "name": "dir",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "in": "query",
+            "name": "statusId",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["open", "closed"]
+            },
+            "in": "query",
+            "name": "category",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["number", "title", "type", "status", "owner"]
+            },
+            "in": "query",
+            "name": "sort",
             "required": false
           }
         ],
@@ -21897,6 +22100,66 @@
                         "additionalProperties": false
                       }
                     },
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "filterOptions": {
+                      "type": "object",
+                      "properties": {
+                        "types": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "displayName": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id", "displayName"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "owners": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "displayName": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id", "displayName"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "statuses": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "displayName": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id", "displayName"],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": ["types", "owners", "statuses"],
+                      "additionalProperties": false
+                    },
                     "nextCursor": {
                       "anyOf": [
                         {
@@ -21910,7 +22173,7 @@
                       ]
                     }
                   },
-                  "required": ["matters", "nextCursor"],
+                  "required": ["matters", "total", "filterOptions", "nextCursor"],
                   "additionalProperties": false
                 }
               }

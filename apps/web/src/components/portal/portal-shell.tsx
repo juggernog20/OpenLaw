@@ -30,11 +30,13 @@ export function PortalShell({
   user,
   onSignOut,
   recordScope,
+  wide = false,
   children,
 }: Readonly<{
   user: PortalUser;
   onSignOut: () => void;
   recordScope?: LiveEventRecordScope;
+  wide?: boolean;
   children: ReactNode;
 }>) {
   const intl = useIntl();
@@ -135,7 +137,9 @@ export function PortalShell({
         tabIndex={-1}
         className="@container/page min-h-0 flex-1 overflow-y-auto px-page-x pt-8 pb-16"
       >
-        <div className="mx-auto flex w-full max-w-(--width-portal-col) flex-col gap-section-gap">
+        <div
+          className={`mx-auto flex w-full flex-col gap-section-gap ${wide ? "" : "max-w-(--width-portal-col)"}`}
+        >
           <nav
             className="flex flex-wrap gap-5"
             aria-label={intl.formatMessage({ id: "portal.navigation", defaultMessage: "Portal" })}
