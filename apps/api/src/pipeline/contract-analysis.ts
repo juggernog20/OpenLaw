@@ -844,8 +844,13 @@ async function handleRequestAnalysis(deps: ContractAnalysisDeps, run: ContractAn
         "Request sources or Contract Fields changed before extraction.",
       );
     let timer: NodeJS.Timeout | undefined;
+    const extracting = provider.extract(context.sources, targets);
+    // The timeout can win the race. A provider that rejects afterwards would
+    // otherwise reject with nobody listening, and Node ends the worker on an
+    // unhandled rejection.
+    extracting.catch(() => undefined);
     const answers = await Promise.race([
-      provider.extract(context.sources, targets),
+      extracting,
       new Promise<never>((_, reject) => {
         timer = setTimeout(() => reject(new AnalysisTargetError("Analysis timed out.")), 125_000);
       }),

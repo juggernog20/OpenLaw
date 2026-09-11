@@ -430,10 +430,13 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                 .update(contracts)
                 .set({
                   analysisHumanFields: [
-                    ...new Set([...Object.keys(carried), ...Object.keys(answers ?? {})]),
-                    ...(counterpartyName !== undefined || request.body.counterpartyCleared
-                      ? ["counterparty"]
-                      : []),
+                    ...new Set([
+                      ...Object.keys(carried),
+                      ...Object.keys(answers ?? {}),
+                      ...(counterpartyName !== undefined || request.body.counterpartyCleared
+                        ? ["counterparty"]
+                        : []),
+                    ]),
                   ],
                 })
                 .where(eq(contracts.id, born.row.id));

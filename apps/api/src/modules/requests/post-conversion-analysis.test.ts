@@ -274,6 +274,31 @@ it("preserves explicitly cleared Convert dialog Fields and retries failures safe
   expect(stored!.customFields.post_clear).toBeUndefined();
   expect(stored!.noticePeriodDays).toBe(30);
 });
+it("refuses a retry while an ordinary Analysis run is still pending", async () => {
+  const { contract, runs } = await convert();
+  const spy = vi.spyOn(provider, "extract").mockRejectedValueOnce(new Error("provider down"));
+  await execute(runs[0]!.id);
+  spy.mockRestore();
+  await harness.db.insert(contractAnalysisRuns).values({
+    contractId: contract.id,
+    requestedBy: cast.memberId,
+    trigger: "manual",
+    preset: "openai",
+    model: "fake",
+  });
+  const refused = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/contracts/${contract.number}/analysis/${runs[0]!.id}/retry`,
+    cookies: cast.memberCookies,
+  });
+  expect(refused.statusCode).toBe(409);
+  expect(refused.json().detail).toContain("Another Analysis run is already pending");
+  const all = await harness.db
+    .select()
+    .from(contractAnalysisRuns)
+    .where(eq(contractAnalysisRuns.contractId, contract.id));
+  expect(all.filter((run) => run.trigger === "conversion")).toHaveLength(1);
+});
 it("refuses late replies after a Type or source changes", async () => {
   for (const change of ["type", "source", "settings"] as const) {
     const { request, contract, runs } = await convert();

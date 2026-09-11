@@ -1201,7 +1201,6 @@ function ContractRecord() {
         <ConversionEvidence
           key={`${marker.draftId ?? marker.runId}:${slug}`}
           runId={marker.runId}
-
           module="contract"
           showMarker={false}
           number={saved.number}

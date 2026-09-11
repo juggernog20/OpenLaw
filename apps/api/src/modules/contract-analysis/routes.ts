@@ -201,7 +201,12 @@ export const contractAnalysisRoutes: FastifyPluginAsyncZod = async (app) => {
               eq(contractAnalysisRuns.state, "pending"),
             ),
           );
-        if (pending) return pending;
+        // A second retry joins the run the first one reserved. A pending
+        // Document run is somebody else's work: queueing this retry behind it
+        // would report a run that never reads the Request.
+        if (pending?.trigger === "conversion") return pending;
+        if (pending)
+          throw httpError(409, "Another Analysis run is already pending on this Contract.");
         return (await reserveConversionAnalysis(tx, {
           contractId: contract.id,
           requestId: previous.sourceContext.requestId,
