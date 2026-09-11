@@ -293,8 +293,18 @@ function ExportDialog({
                 value={format}
                 onChange={(event) => setFormat(event.target.value as "pdf" | "pptx")}
               >
-                <option value="pdf">PDF (.pdf)</option>
-                <option value="pptx">PowerPoint (.pptx)</option>
+                <option value="pdf">
+                  {intl.formatMessage({
+                    id: "entities.chart.export.format.pdf",
+                    defaultMessage: "PDF (.pdf)",
+                  })}
+                </option>
+                <option value="pptx">
+                  {intl.formatMessage({
+                    id: "entities.chart.export.format.pptx",
+                    defaultMessage: "PowerPoint (.pptx)",
+                  })}
+                </option>
               </select>
             </label>
           </div>
