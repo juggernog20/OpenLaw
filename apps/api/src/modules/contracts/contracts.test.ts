@@ -1772,11 +1772,24 @@ describe("the counterparties (CTR-011)", () => {
     const leaving = await putCounterpartyOn(contract.number, "Leaving Party Ltd");
     const staying = await putCounterpartyOn(contract.number, "Staying Party Ltd");
     const third = await putCounterpartyOn(contract.number, "Third Party Ltd");
+    await harness.db
+      .update(contracts)
+      .set({
+        aiUnverified: {
+          counterparty: {
+            evidence: "Leaving Party Ltd",
+            runId: contract.id,
+            writtenAt: new Date().toISOString(),
+          },
+        },
+      })
+      .where(eq(contracts.id, contract.id));
 
     const removed = await removeCounterparty(memberCookies, contract.number, leaving.id);
     expect(removed.statusCode, removed.body).toBe(200);
     // The party who joined next takes the flag — the record's own
     // order, not an arbitrary one.
+    expect(removed.json().contract.aiUnverified?.counterparty).toBeUndefined();
     expect(removed.json().contract.primaryCounterparty).toEqual({
       id: staying.id,
       name: "Staying Party Ltd",

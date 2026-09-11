@@ -7,6 +7,7 @@ import {
   and,
   asc,
   eq,
+  sql,
   matterKeyDates,
   matters,
   matterStatuses,
@@ -54,6 +55,7 @@ const DeadlineSchema = z.object({
   daysAway: z.int(),
   overdue: z.boolean(),
   isNext: z.boolean(),
+  unverified: z.boolean().optional(),
 });
 const DeadlinesEnvelope = z.object({ deadlines: z.array(DeadlineSchema) });
 
@@ -105,12 +107,18 @@ export const matterKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
       .from(matterKeyDates)
       .where(eq(matterKeyDates.matterId, context.matter.id))
       .orderBy(asc(matterKeyDates.date), asc(matterKeyDates.id));
+    // A Key date mutation may have cleared the marker after context was loaded.
+    const [provenance] = await db
+      .select({ flags: matters.aiUnverified })
+      .from(matters)
+      .where(eq(matters.id, context.matter.id));
     const today = civilToday(now);
     const active = context.statusCategory === "open" && context.matter.archivedAt === null;
     const deadlines = rows.map((row) => {
       const daysAway = daysBetween(today, row.date);
       return {
         ...row,
+        ...(provenance?.flags?.needed_by?.keyDateId === row.keyDateId ? { unverified: true } : {}),
         reminderOffsetDays: ownReminderOffsets(row.reminderOffsetDays),
         reminderRecipientIds: ownReminderRecipients(row.reminderRecipientIds),
         daysAway,
@@ -318,6 +326,16 @@ export const matterKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
           changed.label = { from: current.label, to: wanted.label };
         if (wanted.note !== current.note) changed.note = { from: current.note, to: wanted.note };
         if (Object.keys(changed).length > 0) {
+          if (
+            current.context.matter.aiUnverified?.needed_by?.keyDateId === current.id &&
+            ("date" in changed || "label" in changed)
+          )
+            await tx
+              .update(matters)
+              .set({
+                aiUnverified: sql`nullif(${matters.aiUnverified} - 'needed_by', '{}'::jsonb)`,
+              })
+              .where(eq(matters.id, current.context.matter.id));
           await tx.update(matterKeyDates).set(wanted).where(eq(matterKeyDates.id, current.id));
           await recordActivity(tx, {
             entityType: "matter",
@@ -349,6 +367,11 @@ export const matterKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
         const current = await reachedKeyDate(tx, request.user, request.params.keyDateId);
         if (!current) throw httpError(404, NO_KEY_DATE);
         assertWritable(current.context);
+        if (current.context.matter.aiUnverified?.needed_by?.keyDateId === current.id)
+          await tx
+            .update(matters)
+            .set({ aiUnverified: sql`nullif(${matters.aiUnverified} - 'needed_by', '{}'::jsonb)` })
+            .where(eq(matters.id, current.context.matter.id));
         await tx.delete(matterKeyDates).where(eq(matterKeyDates.id, current.id));
         await recordActivity(tx, {
           entityType: "matter",

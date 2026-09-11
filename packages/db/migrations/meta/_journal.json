@@ -715,6 +715,55 @@
       "when": 1789057041755,
       "tag": "0101_key_date_reminders",
       "breakpoints": true
+    },
+    {
+      "idx": 102,
+      "version": "7",
+      "when": 1789075500640,
+      "tag": "0102_high_leo",
+      "breakpoints": true
+    },
+    {
+      "idx": 103,
+      "version": "7",
+      "when": 1789082486485,
+      "tag": "0103_minor_revanche",
+      "breakpoints": true
+    },
+    {
+      "idx": 104,
+      "version": "7",
+      "when": 1789089711595,
+      "tag": "0104_contract_preparation",
+      "breakpoints": true
+    },
+    {
+      "idx": 105,
+      "version": "7",
+      "when": 1789096552081,
+      "tag": "0105_flowery_doctor_spectrum",
+      "breakpoints": true
+    },
+    {
+      "idx": 106,
+      "version": "7",
+      "when": 1789099999750,
+      "tag": "0106_funny_hulk",
+      "breakpoints": true
+    },
+    {
+      "idx": 107,
+      "version": "7",
+      "when": 1789107009263,
+      "tag": "0107_sour_the_watchers",
+      "breakpoints": true
+    },
+    {
+      "idx": 108,
+      "version": "7",
+      "when": 1789107305658,
+      "tag": "0108_normal_psynapse",
+      "breakpoints": true
     }
   ]
 }

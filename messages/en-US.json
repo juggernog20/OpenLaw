@@ -440,6 +440,9 @@
   "activity.matter.createdFromRequest": {
     "defaultMessage": "{actor} created this matter from {request}"
   },
+  "activity.matter.fieldConfirmed": {
+    "defaultMessage": "{actor} confirmed the AI-written value for {field}"
+  },
   "activity.matter.parentRemoved": {
     "defaultMessage": "{actor} took this Matter out from under {parent}"
   },
@@ -1442,8 +1445,14 @@
   "contracts.analysis.confirmAll": {
     "defaultMessage": "Confirm all"
   },
+  "contracts.analysis.conversionValues": {
+    "defaultMessage": "Conversion draft values are ready for review. Confirm or edit each Unverified value."
+  },
   "contracts.analysis.counterparty": {
     "defaultMessage": "Counterparty"
+  },
+  "contracts.analysis.evidenceUnavailable": {
+    "defaultMessage": "Source evidence is unavailable. The Document Version may have been removed or you may not have access."
   },
   "contracts.analysis.failed": {
     "defaultMessage": "Failed {when} on Version {version} with {model}: {reason}"
@@ -1451,8 +1460,14 @@
   "contracts.analysis.heading": {
     "defaultMessage": "AI analysis"
   },
+  "contracts.analysis.loadingEvidence": {
+    "defaultMessage": "Opening cited passage…"
+  },
   "contracts.analysis.noEvidence": {
     "defaultMessage": "No evidence returned."
+  },
+  "contracts.analysis.noSavedEvidence": {
+    "defaultMessage": "No source quote was saved for this field."
   },
   "contracts.analysis.notRun": {
     "defaultMessage": "No analysis has run yet."
@@ -1472,8 +1487,26 @@
   "contracts.analysis.outcome.written": {
     "defaultMessage": "Written"
   },
+  "contracts.analysis.requestFailed": {
+    "defaultMessage": "Request-context Analysis failed. The Contract was created successfully. Check the Type, sources and AI settings, then retry."
+  },
+  "contracts.analysis.requestOmissions": {
+    "defaultMessage": "Some sources were restricted, unreadable or exceeded reading limits. Review the original Request and supporting Documents."
+  },
+  "contracts.analysis.requestPending": {
+    "defaultMessage": "Filling Contract Fields from the Request and supporting sources…"
+  },
+  "contracts.analysis.requestReady": {
+    "defaultMessage": "Request-context Analysis completed. Review the Unverified values and their source evidence."
+  },
   "contracts.analysis.results": {
     "defaultMessage": "Analysis results"
+  },
+  "contracts.analysis.retryEvidence": {
+    "defaultMessage": "Try again"
+  },
+  "contracts.analysis.retryRequest": {
+    "defaultMessage": "Retry Request-context Analysis"
   },
   "contracts.analysis.run": {
     "defaultMessage": "Run analysis"
@@ -1483,6 +1516,9 @@
   },
   "contracts.analysis.unverified": {
     "defaultMessage": "Unverified"
+  },
+  "contracts.analysis.viewEvidence": {
+    "defaultMessage": "View AI evidence for {field}"
   },
   "contracts.applet.settings": {
     "defaultMessage": "Contract settings"
@@ -2156,6 +2192,117 @@
   "contracts.valueWithCadence": {
     "defaultMessage": "{cadence, select, monthly {{amount} /month} annually {{amount} /year} other {{amount}}}"
   },
+  "conversion.attachmentOmissions": {
+    "defaultMessage": "Some attachments could not be fully read. Review the source statuses and original files before converting."
+  },
+  "conversion.attachmentReadStatus": {
+    "defaultMessage": "{label}: {status}{hasReason, select, yes { — {reason}} other {}}"
+  },
+  "conversion.attachmentReads": {
+    "defaultMessage": "Attachment reading details"
+  },
+  "conversion.budgetOmitted": {
+    "defaultMessage": "Some sources exceeded the reading limit and were omitted. Review the original Request too."
+  },
+  "conversion.confirmFailed": {
+    "defaultMessage": "Confirmation could not be saved. Try again."
+  },
+  "conversion.conflicts": {
+    "defaultMessage": "Conflicting sources need your review:"
+  },
+  "conversion.draft": {
+    "defaultMessage": "Conversion draft"
+  },
+  "conversion.evidence": {
+    "defaultMessage": "View source evidence"
+  },
+  "conversion.evidenceLoading": {
+    "defaultMessage": "Loading source…"
+  },
+  "conversion.evidenceUnavailable": {
+    "defaultMessage": "The source is unavailable or has changed."
+  },
+  "conversion.failed": {
+    "defaultMessage": "Preparation could not finish. Retry or continue manually."
+  },
+  "conversion.gettingReady": {
+    "defaultMessage": "Getting {module, select, matter {matter} other {contract}} ready…"
+  },
+  "conversion.manual": {
+    "defaultMessage": "Continue manually"
+  },
+  "conversion.noLocatedPassage": {
+    "defaultMessage": "This source has no searchable passage preview. Read the quoted text and check the original file."
+  },
+  "conversion.openSource": {
+    "defaultMessage": "Open source document"
+  },
+  "conversion.readingLimits": {
+    "defaultMessage": "Up to {sources, number} attachments, {bytes, number} MiB each and {totalBytes, number} MiB total; {characters, number} characters each and {totalCharacters, number} across all sources. Reading allows {sourceSeconds, number} seconds per attachment and {totalSeconds, number} seconds total. Request answers and messages are considered first."
+  },
+  "conversion.restrictedOmitted": {
+    "defaultMessage": "Restricted messages and Legal or reference Fields were omitted to keep record values safe for broader readers."
+  },
+  "conversion.settings": {
+    "defaultMessage": "Request conversion"
+  },
+  "conversion.settingsAnalysis": {
+    "defaultMessage": "Fill Contract Fields after conversion"
+  },
+  "conversion.settingsAnalysisHint": {
+    "defaultMessage": "Run Analysis with the saved Request, conversation and supporting sources. Also works with manual conversion."
+  },
+  "conversion.settingsContract": {
+    "defaultMessage": "Prepare Contract conversions with AI"
+  },
+  "conversion.settingsFailed": {
+    "defaultMessage": "The conversion setting could not be saved."
+  },
+  "conversion.settingsMatter": {
+    "defaultMessage": "Prepare Matter conversions with AI"
+  },
+  "conversion.sourcePanel": {
+    "defaultMessage": "Source document"
+  },
+  "conversion.sourceReason.byteLimit": {
+    "defaultMessage": "file size limit"
+  },
+  "conversion.sourceReason.characterLimit": {
+    "defaultMessage": "text limit"
+  },
+  "conversion.sourceReason.other": {
+    "defaultMessage": "reading limit"
+  },
+  "conversion.sourceReason.restricted": {
+    "defaultMessage": "restricted source"
+  },
+  "conversion.sourceReason.runtimeLimit": {
+    "defaultMessage": "reading time limit"
+  },
+  "conversion.sourceReason.sourceLimit": {
+    "defaultMessage": "attachment limit"
+  },
+  "conversion.sourceStatus.omitted": {
+    "defaultMessage": "omitted"
+  },
+  "conversion.sourceStatus.readable": {
+    "defaultMessage": "readable"
+  },
+  "conversion.sourceStatus.truncated": {
+    "defaultMessage": "truncated"
+  },
+  "conversion.sourceStatus.unreadable": {
+    "defaultMessage": "unreadable"
+  },
+  "conversion.sourceStatus.unsupported": {
+    "defaultMessage": "unsupported"
+  },
+  "conversion.targetBudgetOmitted": {
+    "defaultMessage": "Some Fields exceeded the preparation limit. Complete them manually."
+  },
+  "conversion.targetLabel": {
+    "defaultMessage": "{slug, select, title {Title} description {Description} matter_type {Matter type} contract_type {Contract type} counterparty {Counterparty} priority {Priority} needed_by {Needed by} other {Value}}"
+  },
   "convert.alreadyConvertedRecord": {
     "defaultMessage": "It became {record}."
   },
@@ -2434,6 +2581,9 @@
   },
   "docpanel.find.next": {
     "defaultMessage": "Next match"
+  },
+  "docpanel.find.noMatches": {
+    "defaultMessage": "No matches"
   },
   "docpanel.find.open": {
     "defaultMessage": "Find in document"

@@ -107,7 +107,7 @@ import {
 import { api } from "../lib/api";
 import { readRegistry } from "../lib/entities";
 import { useCommentApplet } from "../components/comments/comment-applet";
-import { ConvertDialog } from "../components/intake/convert-dialog";
+import { PreparedConvertDialog } from "../components/intake/prepared-convert-dialog";
 import { CustomFieldValueText } from "../components/intake/custom-field-value";
 import { RequestAssignment } from "../components/inbox/request-assignment";
 import { ResolveDialog } from "../components/intake/resolve-dialog";
@@ -162,18 +162,15 @@ export async function inboxRequestLoader({ params }: LoaderFunctionArgs) {
   // the error boundary: a stale bookmark is not a fault a triager can
   // act on, and the Inbox is where the Requests they can open are.
   if (!Number.isInteger(number) || number < 1) return redirect("/inbox");
-  // The detail, plus the two reads Convert needs to draw a prefilled
-  // contract create (#420). The contract options carry the live contract
-  // types with the fields each attaches (CTR-016) and the people a
-  // required `user` gap field offers; the M7 registry carries the
-  // Entities a required `entity` one offers. Both ride the loader rather
-  // than the dialog, so opening the dialog is instant and still writes
-  // nothing (INT-007).
-  const [res, options, matterOptions, registry] = await Promise.all([
+  // Load the Request and live creation options before opening Convert.
+  // A failed workflow-settings read falls back to the ordinary manual dialog;
+  // the other reads are required to show reachable, valid creation choices.
+  const [res, options, matterOptions, registry, workflow] = await Promise.all([
     api.GET("/api/v1/requests/{number}", { params: { path: { number } } }),
     api.GET("/api/v1/contracts/options"),
     api.GET("/api/v1/matters/options"),
     readRegistry(),
+    api.GET("/api/v1/conversion-drafts/settings").catch(() => null),
   ]);
   if (res.response.status === 404) return redirect("/inbox");
   if (!res.data || !options.data || !matterOptions.data || !registry.data) {
@@ -182,6 +179,8 @@ export async function inboxRequestLoader({ params }: LoaderFunctionArgs) {
   return {
     user,
     ...res.data,
+    matterPreparation: workflow?.data?.matterPreparation ?? false,
+    contractPreparation: workflow?.data?.contractPreparation ?? false,
     contractTypes: options.data.contractTypes,
     matterTypes: matterOptions.data.matterTypes,
     people: options.data.users,
@@ -195,6 +194,8 @@ export function InboxRequestPage() {
     request,
     fields,
     customFieldRefs,
+    matterPreparation,
+    contractPreparation,
     attachments,
     contractTypes,
     matterTypes,
@@ -342,7 +343,9 @@ export function InboxRequestPage() {
       }
     >
       {(disposing === "contract" || disposing === "matter") && (
-        <ConvertDialog
+        <PreparedConvertDialog
+          enabled={disposing === "matter" ? matterPreparation : contractPreparation}
+          preparationSettings={{ matter: matterPreparation, contract: contractPreparation }}
           initialTargetModule={disposing}
           reference={reference}
           request={request}

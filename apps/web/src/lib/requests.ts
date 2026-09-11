@@ -281,6 +281,10 @@ export async function resolveRequest(number: number, reply: string): Promise<Dis
  * a decline writes nothing before its own: INT-007 has no claim step.
  */
 export interface ConvertRequestInput {
+  /** Null clears the created record description; omission preserves Request carry-through. */
+  description?: string | null;
+  conversionDraftId?: string;
+  aiAccepted?: string[];
   title: string;
   contractTypeId?: string;
   matterTypeId?: string;
@@ -303,6 +307,11 @@ export async function convertRequest(
 ): Promise<DispositionOutcome> {
   const body: ConvertBody = {
     title: input.title,
+    ...(input.description === undefined ? {} : { description: input.description }),
+    ...(input.conversionDraftId === undefined
+      ? {}
+      : { conversionDraftId: input.conversionDraftId }),
+    ...(input.aiAccepted === undefined ? {} : { aiAccepted: input.aiAccepted }),
     ...(input.priority === undefined ? {} : { priority: input.priority }),
     ...(input.contractTypeId === undefined ? {} : { contractTypeId: input.contractTypeId }),
     ...(input.matterTypeId === undefined ? {} : { matterTypeId: input.matterTypeId }),

@@ -2,7 +2,7 @@
 
 /** Conversion prefills, editable values, validation and disposition outcomes. */
 
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { REQUEST_DISPOSITIONED_PROBLEM_TYPE } from "@openlaw/shared";
@@ -15,6 +15,91 @@ import {
   staffRequest,
   subbar,
 } from "../testing/disposition";
+
+const PDF_PAGE_TEXT = vi.hoisted(() => [
+  ["The first termination right is on this page."],
+  ["A second termi", "nation right appears here. The final termination right follows."],
+]);
+
+vi.mock("pdfjs-dist", () => ({
+  GlobalWorkerOptions: { workerSrc: "" },
+  getDocument: () => ({
+    promise: Promise.resolve({
+      numPages: PDF_PAGE_TEXT.length,
+      loadingTask: { destroy: () => Promise.resolve() },
+      getPage: (pageNumber: number) => {
+        const items = (PDF_PAGE_TEXT[pageNumber - 1] ?? []).flatMap((str) =>
+          str.split("\n").map((line, index, lines) => ({
+            str: line,
+            hasEOL: index < lines.length - 1,
+          })),
+        );
+        return Promise.resolve({
+          getViewport: ({ scale }: { scale: number }) => ({
+            width: 600 * scale,
+            height: 800 * scale,
+          }),
+          getTextContent: () => Promise.resolve({ items }),
+          render: () => ({ promise: Promise.resolve() }),
+        });
+      },
+    }),
+  }),
+  TextLayer: class MockTextLayer {
+    readonly options: {
+      textContentSource: { items: Array<{ str?: string; hasEOL?: boolean }> };
+      container: HTMLElement;
+    };
+
+    constructor(options: {
+      textContentSource: { items: Array<{ str?: string; hasEOL?: boolean }> };
+      container: HTMLElement;
+    }) {
+      this.options = options;
+    }
+
+    render() {
+      for (const item of this.options.textContentSource.items) {
+        const span = document.createElement("span");
+        span.textContent = item.str ?? "";
+        this.options.container.append(span);
+        if (item.hasEOL) this.options.container.append(document.createElement("br"));
+      }
+      return Promise.resolve();
+    }
+  },
+}));
+
+beforeEach(() => {
+  vi.stubGlobal(
+    "IntersectionObserver",
+    class MockIntersectionObserver {
+      readonly callback: IntersectionObserverCallback;
+
+      constructor(callback: IntersectionObserverCallback) {
+        this.callback = callback;
+      }
+
+      observe(target: Element) {
+        queueMicrotask(() => {
+          this.callback(
+            [{ target, isIntersecting: true, intersectionRatio: 1 } as IntersectionObserverEntry],
+            this as unknown as IntersectionObserver,
+          );
+        });
+      }
+
+      unobserve() {}
+      disconnect() {}
+      takeRecords() {
+        return [];
+      }
+      readonly root = null;
+      readonly rootMargin = "0px";
+      readonly thresholds = [0];
+    },
+  );
+});
 
 /** One attached catalog field, in the shape both the request form and a
  * contract type answer it in. */
@@ -206,7 +291,11 @@ function requestApi(
 const openConvert = (user: ReturnType<typeof userEvent.setup>) =>
   openDisposition(user, "Convert to contract");
 
-function open(api: ReturnType<typeof requestApi>) {
+function open(
+  api: Omit<ReturnType<typeof requestApi>, "handler"> & {
+    handler: (call: StubCall) => Response | Promise<Response> | undefined;
+  },
+) {
   stubApi({ signedIn: MEMBER, extra: api.handler });
   return renderAt("/inbox/45");
 }
@@ -1038,5 +1127,601 @@ describe("a lost race (INT-007, TECH-020)", () => {
       await within(dialog).findByText("Somebody else already declined this request."),
     ).toBeInTheDocument();
     expect(within(dialog).queryByText(/^It became/)).toBeNull();
+  });
+});
+
+describe("Matter Conversion drafts", () => {
+  function preparedApi(pending = false, allValues = false, withAttachments = false) {
+    const base = requestApi(
+      request({
+        requestType: {
+          id: "rt-dispute",
+          displayName: "Dispute",
+          targetModule: "matter",
+          targetTypeId: "mt-dispute",
+          targetTypeName: "Dispute",
+        },
+      }),
+    );
+    const draft = {
+      id: "draft-1",
+      targetModule: "matter",
+      targetTypeId: "mt-dispute",
+      state: pending ? "pending" : "ready",
+      suggestions: {
+        ...(allValues
+          ? {
+              priority: {
+                value: "critical",
+                citations: [{ sourceId: "message:1", revision: "rev", quote: "urgent" }],
+              },
+              needed_by: {
+                value: "2026-10-02",
+                citations: [{ sourceId: "message:1", revision: "rev", quote: "October 2" }],
+              },
+            }
+          : {}),
+        title: {
+          value: "Prepared response",
+          citations: [{ sourceId: "message:1", revision: "rev", quote: "Prepare a response" }],
+        },
+        description: {
+          value: "A response is needed.",
+          citations: [{ sourceId: "message:1", revision: "rev", quote: "Prepare a response" }],
+        },
+        "field:governing_law": {
+          value: "England",
+          citations: [{ sourceId: "message:1", revision: "rev", quote: "England" }],
+        },
+      },
+      conflicts: {},
+      limits: {
+        sources: 20,
+        bytes: 10485760,
+        totalBytes: 52428800,
+        characters: 30000,
+        totalCharacters: 180000,
+        sourceRuntimeMs: 15000,
+        runtimeMs: 45000,
+      },
+      warnings: withAttachments ? ["attachment_omissions"] : [],
+      attachmentReads: withAttachments
+        ? [
+            { sourceId: "attachment:sheet", label: "Costs.xlsx", status: "unsupported" },
+            {
+              sourceId: "attachment:long",
+              label: "Long agreement.pdf",
+              status: "truncated",
+              reason: "character_limit",
+            },
+          ]
+        : [],
+      failure: null,
+    };
+    return {
+      ...base,
+      handler: (call: StubCall) => {
+        if (call.url.pathname === "/api/v1/conversion-drafts/settings")
+          return json(200, { matterPreparation: true });
+        if (call.url.pathname.endsWith("/conversion-drafts")) {
+          draft.targetTypeId = (call.body as { targetTypeId: string }).targetTypeId;
+          return json(202, { draft });
+        }
+        if (call.url.pathname.endsWith("/conversion-drafts/draft-1")) return json(200, { draft });
+        if (call.url.pathname.includes("/evidence/"))
+          return json(200, {
+            available: true,
+            citations: [
+              {
+                sourceId: "message:1",
+                label: "Nadia Counsel — September 11",
+                text: "Prepare a response in England",
+                quote: "Prepare a response",
+              },
+            ],
+          });
+        return base.handler(call);
+      },
+    };
+  }
+  it("shows editable prefill and cited markers, then submits edits as human values", async () => {
+    const user = userEvent.setup();
+    const api = preparedApi();
+    open(api);
+    await openDisposition(user, "Convert to matter");
+    const title = await screen.findByDisplayValue("Prepared response");
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getAllByText("Unverified")).toHaveLength(3);
+    await user.click(within(dialog).getAllByRole("button", { name: "View source evidence" })[0]!);
+    expect(await screen.findByText("Nadia Counsel — September 11")).toBeVisible();
+    await user.keyboard("{Escape}");
+    await user.clear(title);
+    await user.type(title, "Human opening title");
+    expect(within(dialog).getAllByText("Unverified")).toHaveLength(2);
+    await user.selectOptions(within(dialog).getByLabelText(/^Matter type/), "mt-employment");
+    await waitFor(() => expect(within(dialog).getAllByText("Unverified")).toHaveLength(2));
+    await user.click(within(dialog).getByRole("button", { name: "Convert to matter" }));
+    await waitFor(() => expect(api.conversions).toHaveLength(1));
+    expect(api.conversions[0]).toMatchObject({
+      title: "Human opening title",
+      matterTypeId: "mt-employment",
+      description: "A response is needed.",
+      conversionDraftId: "draft-1",
+      aiAccepted: ["description", "field:governing_law"],
+      customFields: { governing_law: "England" },
+    });
+  });
+  it("opens attachment evidence above Convert, centres its PDF passage, and restores focus without changing the page", async () => {
+    const user = userEvent.setup();
+    const base = preparedApi();
+    const href = "/api/v1/requests/42/conversion-drafts/draft-1/sources/attachment%3A2/preview";
+    const api = {
+      ...base,
+      handler: (call: StubCall) =>
+        call.url.pathname.includes("/evidence/")
+          ? json(200, {
+              available: true,
+              citations: [
+                {
+                  sourceId: "request:45:summary",
+                  label: "Request summary",
+                  text: "Opening context",
+                  quote: "Opening context",
+                },
+                {
+                  sourceId: "attachment:2",
+                  label: "Second attachment.pdf",
+                  text: "A second termination right appears here.",
+                  quote: "A second termination right appears here.",
+                  attachment: {
+                    previewHref: href,
+                    downloadHref: href.replace("preview", "download"),
+                    documentId: null,
+                    versionId: null,
+                    method: "native_layer",
+                  },
+                },
+              ],
+            })
+          : base.handler(call),
+    };
+    const { router } = open(api);
+    await openDisposition(user, "Convert to matter");
+    await screen.findByDisplayValue("Prepared response");
+    const convert = screen.getByRole("dialog");
+    convert.scrollTop = 165;
+    const trigger = within(convert).getAllByRole("button", { name: "View source evidence" })[0]!;
+    const scroll = vi.spyOn(Element.prototype, "scrollIntoView");
+    try {
+      await user.click(trigger);
+      const panel = await screen.findByRole("dialog", { name: "Source document" });
+      expect(convert).toBeInTheDocument();
+      expect(convert.scrollTop).toBe(165);
+      expect(router.state.location.pathname).toBe("/inbox/45");
+      expect(within(panel).getByRole("link", { name: "Download" })).toHaveAttribute(
+        "href",
+        href.replace("preview", "download"),
+      );
+      expect(await within(panel).findByText("1 of 1")).toBeVisible();
+      await waitFor(() => {
+        const marks = panel.querySelectorAll<HTMLElement>(
+          '[data-page-number="2"] mark[data-pdf-find-match="0"]',
+        );
+        expect(
+          Array.from(marks)
+            .map((m) => m.textContent)
+            .join(""),
+        ).toBe("A second termination right appears here.");
+        expect(
+          scroll.mock.instances.some(
+            (element, index) =>
+              element === marks[0] &&
+              (scroll.mock.calls[index]?.[0] as ScrollIntoViewOptions)?.block === "center",
+          ),
+        ).toBe(true);
+      });
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(trigger).toHaveFocus());
+      expect(screen.getByRole("dialog")).toBe(convert);
+      expect(convert.scrollTop).toBe(165);
+      expect(within(convert).getByDisplayValue("Prepared response")).toBeVisible();
+      await user.click(trigger);
+      expect(await screen.findByRole("dialog", { name: "Source document" })).toBeVisible();
+    } finally {
+      scroll.mockRestore();
+    }
+  });
+  it("keeps Convert in place when a citation becomes unavailable", async () => {
+    const user = userEvent.setup();
+    const base = preparedApi();
+    const { router } = open({
+      ...base,
+      handler: (call: StubCall) =>
+        call.url.pathname.includes("/evidence/")
+          ? json(200, { available: false, citations: [] })
+          : base.handler(call),
+    });
+    await openDisposition(user, "Convert to matter");
+    await screen.findByDisplayValue("Prepared response");
+    const convert = screen.getByRole("dialog");
+    const trigger = within(convert).getAllByRole("button", { name: "View source evidence" })[0]!;
+    await user.click(trigger);
+    expect(await screen.findByText("The source is unavailable or has changed.")).toBeVisible();
+    expect(screen.queryByRole("dialog", { name: "Source document" })).toBeNull();
+    expect(router.state.location.pathname).toBe("/inbox/45");
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(trigger).toHaveFocus());
+    expect(screen.getByRole("dialog")).toBe(convert);
+  });
+  it.each(["unreachable to the deadline", "failed", "ready at deadline", "unreachable once"])(
+    "handles a mapped Office rendition that is %s without losing Convert",
+    async (result) => {
+      const user = userEvent.setup();
+      const base = preparedApi();
+      const href = "/api/v1/documents/promoted/versions/immutable/preview";
+      const clock = vi.spyOn(Date, "now");
+      let renditionReads = 0;
+      try {
+        const { router } = open({
+          ...base,
+          handler: (call: StubCall) => {
+            if (call.url.pathname.endsWith("/rendition")) {
+              renditionReads += 1;
+              // A read nobody answers is worth waiting through. Two arms
+              // run the clock past the panel's bound so they settle on the
+              // first read; the last one answers on the retry the panel is
+              // supposed to make.
+              if (result === "ready at deadline" || result === "unreachable to the deadline")
+                clock.mockReturnValue(Date.now() + 60_001);
+              if (result === "unreachable to the deadline") return json(404, {});
+              if (result === "unreachable once")
+                return renditionReads === 1
+                  ? json(404, {})
+                  : json(200, { rendition: { state: "ready" } });
+              return json(200, { rendition: { state: result === "failed" ? "failed" : "ready" } });
+            }
+            if (call.url.pathname.includes("/evidence/"))
+              return json(200, {
+                available: true,
+                citations: [
+                  {
+                    sourceId: "attachment:word",
+                    label: "Agreement.docx",
+                    text: "Supporting agreement text",
+                    quote: "Supporting agreement",
+                    attachment: {
+                      previewHref: href,
+                      downloadHref: href.replace("preview", "download"),
+                      documentId: "promoted",
+                      versionId: "immutable",
+                      method: "converted",
+                    },
+                  },
+                ],
+              });
+            return base.handler(call);
+          },
+        });
+        await openDisposition(user, "Convert to matter");
+        await screen.findByDisplayValue("Prepared response");
+        const convert = screen.getByRole("dialog");
+        convert.scrollTop = 165;
+        const trigger = within(convert).getAllByRole("button", {
+          name: "View source evidence",
+        })[0]!;
+        await user.click(trigger);
+        const panel = await screen.findByRole("dialog", { name: "Source document" });
+        if (result === "ready at deadline" || result === "unreachable once") {
+          expect(
+            await within(panel).findByRole(
+              "region",
+              { name: "Agreement.docx, pages" },
+              { timeout: 6000 },
+            ),
+          ).toBeVisible();
+          expect(renditionReads).toBe(result === "unreachable once" ? 2 : 1);
+        } else {
+          expect(
+            await within(panel).findByText(
+              "This source has no searchable passage preview. Read the quoted text and check the original file.",
+            ),
+          ).toBeVisible();
+          expect(within(panel).getByText("Supporting agreement text")).toBeVisible();
+        }
+        expect(within(panel).getByRole("link", { name: "Download" })).toHaveAttribute(
+          "href",
+          href.replace("preview", "download"),
+        );
+        expect(router.state.location.pathname).toBe("/inbox/45");
+        await user.keyboard("{Escape}");
+        await waitFor(() => expect(trigger).toHaveFocus());
+        expect(screen.getByRole("dialog")).toBe(convert);
+        expect(convert.scrollTop).toBe(165);
+      } finally {
+        clock.mockRestore();
+      }
+    },
+  );
+  it("names unread and truncated attachments and discloses the reading limits", async () => {
+    const user = userEvent.setup();
+    open(preparedApi(false, false, true));
+    await openDisposition(user, "Convert to matter");
+    await screen.findByDisplayValue("Prepared response");
+    expect(
+      screen.getByText(
+        "Some attachments could not be fully read. Review the source statuses and original files before converting.",
+      ),
+    ).toBeVisible();
+    await user.click(screen.getByText("Attachment reading details"));
+    expect(screen.getByText("Costs.xlsx: unsupported")).toBeVisible();
+    expect(screen.getByText(/Long agreement.pdf: truncated.*text limit/)).toBeVisible();
+    expect(screen.getByText(/Up to 20 attachments, 10 MiB each/)).toBeVisible();
+  });
+  it("drops Matter suggestions for disabled Contract preparation and prepares on return", async () => {
+    const user = userEvent.setup();
+    open(preparedApi());
+    await openDisposition(user, "Convert to matter");
+    const dialog = screen.getByRole("dialog");
+    await screen.findByDisplayValue("Prepared response");
+    await user.click(within(dialog).getByRole("button", { name: /Convert to contract instead/ }));
+    // A draft is prepared for one Matter and carries no Contract
+    // provenance, so its text cannot ride onto a Contract unmarked.
+    expect(within(dialog).getByLabelText("Title", { exact: false })).toHaveValue(
+      "Northwind Labs mutual NDA",
+    );
+    expect(within(dialog).queryByText("Unverified")).toBeNull();
+    await user.click(within(dialog).getByRole("button", { name: /Convert to matter instead/ }));
+    expect(await within(dialog).findByDisplayValue("Prepared response")).toBeVisible();
+    expect(within(dialog).getAllByText("Unverified")).toHaveLength(3);
+  });
+  it.each(["Continue manually", "Convert to contract instead"])(
+    "%s restores untouched defaults for every prepared value",
+    async (action) => {
+      const user = userEvent.setup();
+      open(preparedApi(false, true));
+      await openDisposition(user, "Convert to matter");
+      await screen.findByDisplayValue("Prepared response");
+      const dialog = screen.getByRole("dialog");
+      expect(within(dialog).getByLabelText(/^Priority/)).toHaveValue("critical");
+      expect(within(dialog).getByLabelText(/^Needed by/)).toHaveValue("2026-10-02");
+      await user.click(within(dialog).getByRole("button", { name: action }));
+      if (action === "Convert to contract instead")
+        await user.selectOptions(within(dialog).getByLabelText(/^Contract type/), "ct-msa");
+      expect(within(dialog).getByLabelText(/^Title/)).toHaveValue("Northwind Labs mutual NDA");
+      expect(within(dialog).getByLabelText(/^Priority/)).toHaveValue("high");
+      expect(within(dialog).getByLabelText(/^Needed by/)).toHaveValue("");
+      expect(within(dialog).getByLabelText(/^Governing law/)).toHaveValue("");
+      expect(within(dialog).queryByText("Unverified")).toBeNull();
+      expect(within(dialog).queryByLabelText("Description")).toBeNull();
+    },
+  );
+  it.each(["Continue manually", "Convert to contract instead"])(
+    "%s preserves human edits while discarding the draft",
+    async (action) => {
+      const user = userEvent.setup();
+      const api = preparedApi(false, true);
+      open(api);
+      await openDisposition(user, "Convert to matter");
+      await screen.findByDisplayValue("Prepared response");
+      const dialog = screen.getByRole("dialog");
+      for (const [label, value] of [
+        [/^Title/, "Human title"],
+        [/^Governing law/, "France"],
+        [/^Description/, "Human description"],
+      ] as const) {
+        const box = within(dialog).getByLabelText(label);
+        await user.clear(box);
+        await user.type(box, value);
+      }
+      await user.selectOptions(within(dialog).getByLabelText(/^Priority/), "low");
+      const date = within(dialog).getByLabelText(/^Needed by/);
+      await user.clear(date);
+      await user.type(date, "2026-11-03");
+      await user.click(within(dialog).getByRole("button", { name: action }));
+      if (action === "Convert to contract instead")
+        await user.selectOptions(within(dialog).getByLabelText(/^Contract type/), "ct-msa");
+      expect(within(dialog).getByLabelText(/^Title/)).toHaveValue("Human title");
+      expect(within(dialog).getByLabelText(/^Priority/)).toHaveValue("low");
+      expect(within(dialog).getByLabelText(/^Needed by/)).toHaveValue("2026-11-03");
+      expect(within(dialog).getByLabelText(/^Governing law/)).toHaveValue("France");
+      expect(within(dialog).queryByText("Unverified")).toBeNull();
+      await user.click(
+        within(dialog).getByRole("button", {
+          name: action === "Continue manually" ? "Convert to matter" : "Convert to contract",
+        }),
+      );
+      await waitFor(() => expect(api.conversions).toHaveLength(1));
+      expect(api.conversions[0]).toMatchObject({
+        title: "Human title",
+        priority: "low",
+        neededBy: "2026-11-03",
+        customFields: { governing_law: "France" },
+      });
+      expect(api.conversions[0]).not.toHaveProperty("conversionDraftId");
+      expect(api.conversions[0]).not.toHaveProperty("aiAccepted");
+      if (action === "Continue manually")
+        expect(api.conversions[0]).toHaveProperty("description", "Human description");
+    },
+  );
+  it("keeps manual continuation usable while preparation waits", async () => {
+    const user = userEvent.setup();
+    const api = preparedApi(true);
+    open(api);
+    await openDisposition(user, "Convert to matter");
+    expect(await screen.findByText("Getting matter ready…")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Continue manually" }));
+    const title = screen.getByLabelText("Title", { exact: false });
+    await user.clear(title);
+    await user.type(title, "My manual title");
+    expect(screen.queryByText("Unverified")).not.toBeInTheDocument();
+    expect(title).toHaveValue("My manual title");
+  });
+});
+
+describe("Contract and Matter preparation together", () => {
+  function bothApi(suggestType = false, refuseCall = 0) {
+    const calls: { targetModule: "matter" | "contract"; targetTypeId: string; retry?: boolean }[] =
+      [];
+    const drafts = new Map<string, unknown>();
+    let held: (() => void) | undefined;
+    const base = requestApi();
+    const api = {
+      ...base,
+      calls,
+      release: () => held?.(),
+      handler: (call: StubCall) => {
+        if (call.url.pathname === "/api/v1/conversion-drafts/settings")
+          return json(200, { matterPreparation: true, contractPreparation: true });
+        if (call.url.pathname.endsWith("/conversion-drafts")) {
+          const target = call.body as (typeof calls)[number];
+          calls.push(target);
+          if (calls.length === refuseCall) return problem(503, "Preparation is busy.");
+          const id = `both-${calls.length}`;
+          const proposal = (value: unknown) => ({
+            value,
+            citations: [{ sourceId: "message:1", revision: "v1", quote: "Supported" }],
+          });
+          const draft = {
+            id,
+            ...target,
+            state: "ready",
+            suggestions: {
+              title: proposal(`${target.targetModule} title ${calls.length}`),
+              ...(suggestType && calls.length === 1 ? { contract_type: proposal("ct-msa") } : {}),
+              description: proposal(`${target.targetModule} description`),
+              priority: proposal("critical"),
+              needed_by: proposal("2026-10-02"),
+              ...(target.targetModule === "contract" ? { counterparty: proposal("Acme") } : {}),
+              ...(target.targetTypeId === "ct-msa"
+                ? { "field:governing_law": proposal("England") }
+                : {}),
+            },
+            conflicts: {},
+            warnings: [],
+            attachmentReads: [],
+            failure: null,
+          };
+          drafts.set(id, draft);
+          if (target.targetModule === "matter")
+            return new Promise<Response>((resolve) => {
+              held = () => resolve(json(202, { draft }));
+            });
+          return json(202, { draft });
+        }
+        const id = call.url.pathname.split("/conversion-drafts/")[1];
+        if (id && drafts.has(id)) return json(200, { draft: drafts.get(id) });
+        return base.handler(call);
+      },
+    };
+    return api;
+  }
+  it.each([1, 2])(
+    "retries a refused preparation on call %s and preserves human values",
+    async (refuseCall) => {
+      const user = userEvent.setup();
+      const api = bothApi(false, refuseCall);
+      open(api);
+      await openDisposition(user, "Convert to contract");
+      if (refuseCall === 2) {
+        const title = await screen.findByDisplayValue("contract title 1");
+        await user.clear(title);
+        await user.type(title, "Human title");
+        await user.clear(within(screen.getByRole("dialog")).getByLabelText("Description"));
+        await user.clear(within(screen.getByRole("dialog")).getByLabelText(/^Needed by/));
+        await user.selectOptions(
+          within(screen.getByRole("dialog")).getByLabelText(/^Contract type/),
+          "ct-msa",
+        );
+      }
+      expect(
+        await screen.findByText("Preparation could not finish. Retry or continue manually."),
+      ).toBeVisible();
+      await user.click(screen.getByRole("button", { name: "Retry" }));
+      await waitFor(() => expect(api.calls).toHaveLength(refuseCall + 1));
+      expect(api.calls.at(-1)).toMatchObject({ targetModule: "contract", retry: true });
+      await waitFor(() =>
+        expect(screen.getByRole("button", { name: "Convert to contract" })).toBeEnabled(),
+      );
+      expect(
+        screen.queryByText("Preparation could not finish. Retry or continue manually."),
+      ).toBeNull();
+      if (refuseCall === 2) {
+        expect(within(screen.getByRole("dialog")).getByLabelText(/^Title/)).toHaveValue(
+          "Human title",
+        );
+        expect(within(screen.getByRole("dialog")).getByLabelText("Description")).toHaveValue("");
+        expect(within(screen.getByRole("dialog")).getByLabelText(/^Needed by/)).toHaveValue("");
+        expect(within(screen.getByRole("dialog")).getByLabelText(/^Governing law/)).toHaveValue(
+          "England",
+        );
+      } else
+        expect(within(screen.getByRole("dialog")).getByLabelText(/^Title/)).toHaveValue(
+          "contract title 2",
+        );
+    },
+  );
+  it.each([false, true])(
+    "uses the Request Type as a fallback, not an initial constraint, with suggestion %s",
+    async (suggestType) => {
+      const user = userEvent.setup();
+      const api = bothApi(suggestType);
+      open(api);
+      await openDisposition(user, "Convert to contract");
+      await screen.findByDisplayValue("contract title 1");
+      expect(api.calls[0]).toMatchObject({ targetModule: "contract", targetTypeId: "" });
+      expect(screen.getByLabelText(/^Contract type/)).toHaveValue(
+        suggestType ? "ct-msa" : "ct-nda",
+      );
+      await user.selectOptions(screen.getByLabelText(/^Contract type/), "ct-sow");
+      await waitFor(() =>
+        expect(api.calls[1]).toMatchObject({ targetModule: "contract", targetTypeId: "ct-sow" }),
+      );
+      await waitFor(() =>
+        expect(screen.getByRole("button", { name: "Convert to contract" })).toBeEnabled(),
+      );
+      expect(screen.getByLabelText(/^Contract type/)).toHaveValue("ct-sow");
+    },
+  );
+  it("prepares Contract controls, preserves edits through Type and Re-target changes, and ignores a late Matter reply", async () => {
+    const user = userEvent.setup();
+    const api = bothApi();
+    open(api);
+    await openDisposition(user, "Convert to contract");
+    const title = await screen.findByDisplayValue("contract title 1");
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByLabelText(/^Counterparty/)).toHaveValue("Acme");
+    expect(within(dialog).queryByLabelText("Matter template")).toBeNull();
+    await user.clear(title);
+    await user.type(title, "Human title");
+    await user.clear(within(dialog).getByLabelText("Description"));
+    await user.clear(within(dialog).getByLabelText(/^Needed by/));
+    await user.selectOptions(within(dialog).getByLabelText(/^Contract type/), "ct-msa");
+    expect(await within(dialog).findByDisplayValue("England")).toBeVisible();
+    await user.clear(within(dialog).getByLabelText(/^Governing law/));
+    await user.type(within(dialog).getByLabelText(/^Governing law/), "France");
+    await user.click(within(dialog).getByRole("button", { name: "Convert to matter instead" }));
+    expect(await within(dialog).findByText("Getting matter ready…")).toBeVisible();
+    await user.click(within(dialog).getByRole("button", { name: "Convert to contract instead" }));
+    await waitFor(() =>
+      expect(within(dialog).getByRole("button", { name: "Convert to contract" })).toBeEnabled(),
+    );
+    api.release();
+    expect(within(dialog).getByLabelText(/^Title/)).toHaveValue("Human title");
+    expect(within(dialog).getByLabelText("Description")).toHaveValue("");
+    expect(within(dialog).getByLabelText(/^Needed by/)).toHaveValue("");
+    expect(within(dialog).getByLabelText(/^Governing law/)).toHaveValue("France");
+    expect(within(dialog).queryByText("Getting matter ready…")).toBeNull();
+    await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
+    await waitFor(() => expect(api.conversions).toHaveLength(1));
+    expect(api.conversions[0]).toMatchObject({
+      title: "Human title",
+      description: null,
+      contractTypeId: "ct-msa",
+      customFields: { governing_law: "France" },
+      counterpartyName: "Acme",
+      aiAccepted: ["priority", "counterparty"],
+    });
+    expect(api.conversions[0]).not.toHaveProperty("neededBy");
+    expect(api.conversions[0]).not.toHaveProperty("templateId");
   });
 });

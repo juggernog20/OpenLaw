@@ -430,3 +430,5 @@ export async function runMigrations(db: Db): Promise<void> {
 export async function rewrapSecrets(db: Db): Promise<SecretsRewrap> {
   return withAdvisoryLock(db, ADVISORY_LOCK.secretsRewrap, () => resealStoredSecrets(db));
 }
+
+export { conversionDrafts } from "./schema/conversion-drafts.js";

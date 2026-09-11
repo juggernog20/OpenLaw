@@ -5,7 +5,7 @@
  * durable ledger of queued, completed, and failed Contract analysis runs.
  */
 
-import type { ContractAnalysisOutcome } from "@openlaw/shared";
+import type { ContractAnalysisOutcome, ConversionAnalysisContext } from "@openlaw/shared";
 import { sql } from "drizzle-orm";
 import { boolean, check, index, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { users } from "./auth.js";
@@ -17,7 +17,7 @@ import { uuidPk } from "./helpers.js";
 export const ANALYSIS_RUN_STATES = ["pending", "ready", "failed"] as const;
 export type AnalysisRunState = (typeof ANALYSIS_RUN_STATES)[number];
 
-export const ANALYSIS_RUN_TRIGGERS = ["automatic", "manual"] as const;
+export const ANALYSIS_RUN_TRIGGERS = ["automatic", "manual", "conversion"] as const;
 export type AnalysisRunTrigger = (typeof ANALYSIS_RUN_TRIGGERS)[number];
 
 /** Editable overrides for the shared package's seven core prompts. */
@@ -30,7 +30,7 @@ export const aiFieldPrompts = pgTable("ai_field_prompts", {
     .$onUpdate(() => new Date()),
 });
 
-/** One reading of one Version against one Contract field schema. */
+/** One extraction against one Contract field schema, with its original source context. */
 export const contractAnalysisRuns = pgTable(
   "contract_analysis_runs",
   {
@@ -48,10 +48,19 @@ export const contractAnalysisRuns = pgTable(
     preset: text("preset", { enum: AI_PRESETS }).notNull(),
     model: text("model").notNull(),
     truncated: boolean("truncated").notNull().default(false),
+    /** Null selects Document analysis; a value selects Request-context Analysis. */
+    sourceContext: jsonb("source_context").$type<ConversionAnalysisContext>(),
     outcome: jsonb("outcome").$type<ContractAnalysisOutcome>(),
     failure: text("failure"),
+    /** Conversion workers renew this lease while reading sources; startedAt remains the claim token. */
+    leaseAt: timestamp("lease_at", { withTimezone: true }),
     startedAt: timestamp("started_at", { withTimezone: true }),
     finishedAt: timestamp("finished_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
   },
   (table) => [
     index("contract_analysis_runs_contract_idx").on(table.contractId, table.id),
@@ -59,7 +68,10 @@ export const contractAnalysisRuns = pgTable(
       "contract_analysis_runs_state_check",
       sql`${table.state} in ('pending', 'ready', 'failed')`,
     ),
-    check("contract_analysis_runs_trigger_check", sql`${table.trigger} in ('automatic', 'manual')`),
+    check(
+      "contract_analysis_runs_trigger_check",
+      sql`${table.trigger} in ('automatic', 'manual', 'conversion')`,
+    ),
   ],
 );
 

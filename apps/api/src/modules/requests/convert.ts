@@ -71,6 +71,7 @@
  * anywhere leaves the conversation exactly where the requester left it.
  */
 
+import { reserveConversionAnalysis } from "../../pipeline/conversion-analysis.js";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
@@ -92,6 +93,8 @@ import { MAX_CONTRACT_TITLE_LENGTH, MAX_MATTER_TITLE_LENGTH } from "@openlaw/sha
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import { CounterpartyNameSchema, findOrCreateCounterparty } from "../../lib/counterparty-link.js";
+import { acceptedConversionProvenance } from "./conversion-draft.js";
+import { matters, contracts } from "@openlaw/db";
 import { CustomFieldsInput, selectAttachedFields } from "../../lib/custom-fields.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { createContract } from "../contracts/create.js";
@@ -155,6 +158,10 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
              * and editable there. Its target-aware bound is checked after
              * the locked Request has resolved the conversion module. */
             title: z.string(),
+            description: z.string().trim().max(10000).nullable().optional(),
+            conversionDraftId: z.string().optional(),
+            aiAccepted: z.array(z.string()).max(100).optional(),
+            counterpartyCleared: z.boolean().optional(),
             /** Overrides the configured target type. */
             contractTypeId: z.string().min(1).optional(),
             /** The matter sibling of contractTypeId. Supplying this on a
@@ -209,7 +216,10 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
       // of the commit: the blobs it copied are taken away when the act
       // refuses, and the rounds it appended are asked for their
       // derivations once the act has committed (DOC-012, DOC-004).
-      return withPromotedPaper(
+      const analysis: { run: Awaited<ReturnType<typeof reserveConversionAnalysis>> } = {
+        run: null,
+      };
+      const converted = await withPromotedPaper(
         {
           storage: app.storage,
           notifier: app.notifier,
@@ -308,7 +318,10 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                     actorId: request.user.id,
                     title,
                     contractTypeId: target.typeId,
-                    description: row.description,
+                    description:
+                      request.body.description === undefined
+                        ? row.description
+                        : request.body.description,
                     customFields,
                     priority: request.body.priority ?? row.urgency,
                     // The Contract Owner, the Matter Manager's sibling
@@ -326,7 +339,10 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                     // contract and the I8 matter modal.
                     title,
                     matterTypeId: target.typeId,
-                    description: row.description,
+                    description:
+                      request.body.description === undefined
+                        ? row.description
+                        : request.body.description,
                     ...(chosenTemplateId === undefined ? {} : { templateId: chosenTemplateId }),
                     customFields,
                     priority: request.body.priority ?? row.urgency,
@@ -334,6 +350,28 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                     managerId: request.user.id,
                     isConfidential: false,
                   });
+            const provenance = await acceptedConversionProvenance(tx, {
+              targetModule: target.module,
+              id: request.body.conversionDraftId,
+              accepted: request.body.aiAccepted,
+              actorId: request.user.id,
+              requestId: held.id,
+              typeId: target.typeId,
+              values: {
+                title: born.row.title,
+                description: born.row.description,
+                priority: born.row.priority,
+                [`${target.module}_type`]: target.typeId,
+                counterparty: counterpartyName,
+                needed_by: neededBy,
+                ...Object.fromEntries(
+                  Object.entries(born.row.customFields).map(([slug, value]) => [
+                    `field:${slug}`,
+                    value,
+                  ]),
+                ),
+              },
+            });
             const record = {
               module: target.module,
               id: born.row.id,
@@ -372,9 +410,45 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
               });
             }
             if (neededBy !== undefined) {
-              await addNeededByKeyDate(tx, { record, date: neededBy, actorId: request.user.id });
+              const keyDateId = await addNeededByKeyDate(tx, {
+                record,
+                date: neededBy,
+                actorId: request.user.id,
+              });
+              if (provenance?.needed_by) provenance.needed_by.keyDateId = keyDateId;
             }
 
+            if (provenance) {
+              if (born.row.title !== title) delete provenance.title;
+              const table = target.module === "matter" ? matters : contracts;
+              const flags = provenance;
+              await tx
+                .update(table)
+                .set({ aiUnverified: Object.keys(flags).length ? flags : null })
+                .where(eq(table.id, born.row.id));
+            }
+            if (target.module === "contract") {
+              await tx
+                .update(contracts)
+                .set({
+                  analysisHumanFields: [
+                    ...new Set([
+                      ...Object.keys(carried),
+                      ...Object.keys(answers ?? {}),
+                      ...(counterpartyName !== undefined || request.body.counterpartyCleared
+                        ? ["counterparty"]
+                        : []),
+                    ]),
+                  ],
+                })
+                .where(eq(contracts.id, born.row.id));
+              analysis.run = await reserveConversionAnalysis(tx, {
+                contractId: born.row.id,
+                requestId: held.id,
+                targetTypeId: target.typeId,
+                actorId: request.user.id,
+              });
+            }
             // CMT-001's thread, moved onto the record beside the paper
             // (#422). Tiers are preserved because the write does not
             // touch them, and each reader's place in the conversation
@@ -447,6 +521,13 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
             });
           }),
       );
+      // The committed run is the outbox. Reconciliation retries a lost queue ask.
+      const queuedRun = analysis.run;
+      if (queuedRun)
+        void app.jobs
+          .requestContractAnalysis(queuedRun.contractId, queuedRun.id)
+          .catch(() => false);
+      return converted;
     },
   );
 };
@@ -495,7 +576,7 @@ async function linkPrimaryCounterparty(
 async function addNeededByKeyDate(
   tx: Transaction,
   input: { record: ConversionRecordReference; date: string; actorId: string },
-): Promise<void> {
+): Promise<string> {
   const [created] =
     input.record.module === "contract"
       ? await tx
@@ -514,6 +595,7 @@ async function addNeededByKeyDate(
     visibility: RECORD_ACTIVITY_TIER,
     payload: { keyDateId: created!.id, label: NEEDED_BY_LABEL, date: input.date },
   });
+  return created!.id;
 }
 
 /** Explicit choices override the Request type; omitted choices use its live default. */

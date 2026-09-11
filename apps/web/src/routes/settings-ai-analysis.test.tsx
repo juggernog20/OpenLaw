@@ -124,6 +124,9 @@ function isPromptSaveRequest(value: unknown): value is PromptSaveRequest {
 
 function connector(overrides: Partial<AiResponse["connector"]> = {}): AiResponse["connector"] {
   return {
+    matterPreparation: false,
+    contractPreparation: false,
+    contractConversionAnalysis: false,
     configured: true,
     enabled: true,
     preset: "openai",
@@ -139,6 +142,9 @@ function connector(overrides: Partial<AiResponse["connector"]> = {}): AiResponse
 
 function unconfigured(): AiResponse["connector"] {
   return connector({
+    matterPreparation: false,
+    contractPreparation: false,
+    contractConversionAnalysis: false,
     configured: false,
     enabled: false,
     preset: null,
@@ -179,6 +185,11 @@ function connectorApi(
           disabledAt: stored.disabledAt,
         });
       }
+      return json(200, { connector: stored, presets: PRESETS });
+    }
+    if (call.url.pathname === "/api/v1/ai-connector/workflows" && call.method === "PATCH") {
+      saves.push(call.body);
+      stored = { ...stored, ...(call.body as { matterPreparation: boolean }) };
       return json(200, { connector: stored, presets: PRESETS });
     }
     if (call.url.pathname === "/api/v1/ai-field-prompts") {
@@ -534,4 +545,69 @@ describe("the provider model selector", () => {
     expect(screen.getByText(/Enter the deployment name from Azure/)).toBeVisible();
     expect(screen.getByLabelText("Model")).toHaveAttribute("maxlength", "300");
   });
+});
+
+it("persists the independent Matter preparation switch without changing provider settings", async () => {
+  const user = userEvent.setup();
+  const saves: unknown[] = [];
+  stubApi({ signedIn: ADMIN, extra: connectorApi({}, saves) });
+  renderAt("/settings/ai-analysis");
+  const toggle = await screen.findByRole("switch", { name: "Prepare Matter conversions with AI" });
+  expect(toggle).not.toBeChecked();
+  await user.click(toggle);
+  await waitFor(() => expect(toggle).toBeChecked());
+  expect(saves).toEqual([{ matterPreparation: true }]);
+});
+
+it("persists the independent Contract preparation switch without changing provider settings", async () => {
+  const user = userEvent.setup();
+  const saves: unknown[] = [];
+  stubApi({ signedIn: ADMIN, extra: connectorApi({}, saves) });
+  renderAt("/settings/ai-analysis");
+  const toggle = await screen.findByRole("switch", {
+    name: "Prepare Contract conversions with AI",
+  });
+  expect(toggle).not.toBeChecked();
+  await user.click(toggle);
+  await waitFor(() => expect(toggle).toBeChecked());
+  expect(saves).toEqual([{ contractPreparation: true }]);
+});
+
+it("reports a refused Contract preparation change and leaves the switch off", async () => {
+  const user = userEvent.setup();
+  const base = connectorApi();
+  stubApi({
+    signedIn: ADMIN,
+    extra: (call: StubCall) =>
+      call.url.pathname === "/api/v1/ai-connector/workflows" && call.method === "PATCH"
+        ? problem(409, "The AI connector changed. Reload and try again.")
+        : base(call),
+  });
+  renderAt("/settings/ai-analysis");
+  const toggle = await screen.findByRole("switch", {
+    name: "Prepare Contract conversions with AI",
+  });
+  await user.click(toggle);
+  expect(await screen.findByText("The AI connector changed. Reload and try again.")).toBeVisible();
+  expect(toggle).not.toBeChecked();
+});
+
+it("persists post-conversion filling independently of both preparation switches", async () => {
+  const user = userEvent.setup();
+  const saves: unknown[] = [];
+  stubApi({ signedIn: ADMIN, extra: connectorApi({}, saves) });
+  renderAt("/settings/ai-analysis");
+  const toggle = await screen.findByRole("switch", {
+    name: "Fill Contract Fields after conversion",
+  });
+  expect(toggle).not.toBeChecked();
+  await user.click(toggle);
+  await waitFor(() => expect(toggle).toBeChecked());
+  expect(saves).toEqual([{ contractConversionAnalysis: true }]);
+  expect(
+    screen.getByRole("switch", { name: "Prepare Contract conversions with AI" }),
+  ).not.toBeChecked();
+  expect(
+    screen.getByRole("switch", { name: "Prepare Matter conversions with AI" }),
+  ).not.toBeChecked();
 });

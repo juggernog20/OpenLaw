@@ -64,6 +64,14 @@ Follow [Contract analysis](contract-analysis.md) to compare the run's Version an
 
 If a run failed, resolve the reported processing or provider problem before running again. Ask your Administrator about connector or Field-prompt configuration. Never put provider keys or private extracted text in a public report.
 
+## AI conversion or source evidence is unavailable
+
+If a Convert dialog is preparing a Conversion draft, wait for its completion or use manual conversion. Retry a failed preparation after checking the Type and sources. The Matter and Contract preparation switches are independent. An Administrator can check them in [AI analysis settings](configure-analysis.md).
+
+A Contract can finish conversion before its background field-filling Analysis run finishes. The **AI analysis** card shows progress, completion or failure. A failure does not undo creation. Select **Retry Request-context Analysis** after checking the Type, sources and enabled filling switch. A late reply cannot replace human edits or explicit clears.
+
+Purple borders and **Unverified** identify AI-written values. A sparkle opens saved source evidence without another AI call or leaving the record. Document citations open the original Version in the doc panel and locate its quote when possible. Removed Documents, changed or deleted messages and lost access can make evidence unavailable. Use the original source or ask an authorized colleague to check it before confirming. Disabling a workflow leaves existing evidence and individual confirm/edit usable.
+
 ## If the problem continues
 
 Contact your Administrator through your organization's usual channel with your role, action, time, expected result, and exact visible error. Include private record links only in that internal channel. For a product defect or documentation correction, follow [version information and support](versions-and-support.md) to prepare a report with fictional steps and the applicable edition details.

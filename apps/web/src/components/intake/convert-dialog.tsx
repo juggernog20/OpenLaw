@@ -3,8 +3,12 @@
 /** Prefilled conversion form. Edits apply to the new record when conversion succeeds. */
 
 import { CreateAttachments, useCreateAttachments } from "../documents/create-attachments";
-import { useState } from "react";
-import { FormattedMessage, useIntl } from "react-intl";
+import { ConversionEvidence } from "./conversion-evidence";
+import type { ConversionDraft } from "./prepared-convert-dialog";
+import { api } from "../../lib/api";
+import { AiField } from "../ui/ai-field";
+import { useEffect, useRef, useState } from "react";
+import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import { ArrowRightLeft, FilePen } from "lucide-react";
 import {
   INTAKE_CARRY_SLUGS,
@@ -55,6 +59,24 @@ const TITLE_ERROR_ID = "convert-title-error";
  * to say.
  */
 
+const sourceStatusMessages = defineMessages({
+  readable: { id: "conversion.sourceStatus.readable", defaultMessage: "readable" },
+  unreadable: { id: "conversion.sourceStatus.unreadable", defaultMessage: "unreadable" },
+  unsupported: { id: "conversion.sourceStatus.unsupported", defaultMessage: "unsupported" },
+  truncated: { id: "conversion.sourceStatus.truncated", defaultMessage: "truncated" },
+  omitted: { id: "conversion.sourceStatus.omitted", defaultMessage: "omitted" },
+});
+const sourceReasonMessages = defineMessages({
+  source_limit: { id: "conversion.sourceReason.sourceLimit", defaultMessage: "attachment limit" },
+  byte_limit: { id: "conversion.sourceReason.byteLimit", defaultMessage: "file size limit" },
+  character_limit: { id: "conversion.sourceReason.characterLimit", defaultMessage: "text limit" },
+  runtime_limit: {
+    id: "conversion.sourceReason.runtimeLimit",
+    defaultMessage: "reading time limit",
+  },
+  restricted: { id: "conversion.sourceReason.restricted", defaultMessage: "restricted source" },
+  other: { id: "conversion.sourceReason.other", defaultMessage: "reading limit" },
+});
 export type ConvertResult =
   /** It landed. The page repaints from the envelope the write answered. */
   | { ok: true; request: StaffRequest }
@@ -68,6 +90,8 @@ export type ConvertResult =
   | { ok: false; alreadyDecided?: undefined; detail?: string };
 
 export function ConvertDialog({
+  initialDraft: suppliedDraft,
+  preparationSettings,
   initialTargetModule,
   reference,
   request,
@@ -82,6 +106,8 @@ export function ConvertDialog({
   onConvert,
 }: Readonly<{
   /** The Request's R-### reference, which the title quotes. */
+  initialDraft?: ConversionDraft;
+  preparationSettings?: { matter: boolean; contract: boolean };
   reference: string;
   initialTargetModule?: "contract" | "matter";
   request: StaffRequest;
@@ -103,6 +129,40 @@ export function ConvertDialog({
 }>) {
   const intl = useIntl();
   const attachments = useCreateAttachments();
+  const [initialDraft, setInitialDraft] = useState(suppliedDraft);
+  const suggestions = initialDraft?.suggestions ?? {};
+  const pendingRead = useRef<AbortController | null>(null);
+  const [preparing, setPreparing] = useState(false);
+  const [preparationFailed, setPreparationFailed] = useState(false);
+  useEffect(() => () => pendingRead.current?.abort(), []);
+  const [human, setHuman] = useState<Set<string>>(new Set());
+  const [dropped, setDropped] = useState(false);
+  const humanRef = useRef(human);
+  const humanValue = (slug: string) => {
+    humanRef.current = new Set([...humanRef.current, slug]);
+    setHuman(humanRef.current);
+  };
+  const suggested = (slug: string) => (dropped ? undefined : suggestions[slug]);
+  const marked = (slug: string) => Boolean(suggested(slug)) && !human.has(slug);
+  const marker = (slug: string) =>
+    marked(slug) && (
+      <ConversionEvidence
+        number={request.number}
+        draftId={initialDraft!.id}
+        slug={slug}
+        onConfirm={async () => {
+          humanValue(slug);
+          if (slug.startsWith("field:")) {
+            const field = targetFields.find((field) => `field:${field.slug}` === slug);
+            if (field) setDrafts((current) => ({ ...current, [field.slug]: fieldDraft(field) }));
+          }
+          return undefined;
+        }}
+      />
+    );
+  const [description, setDescription] = useState(
+    String(suggestions.description?.value ?? request.description ?? ""),
+  );
 
   type TargetModule = "contract" | "matter";
   const initialModule: TargetModule =
@@ -114,24 +174,39 @@ export function ConvertDialog({
    * would take back an edit. */
   const [pickedIds, setPickedIds] = useState<Record<TargetModule, string>>({
     contract:
-      request.requestType.targetModule === "contract"
-        ? (request.requestType.targetTypeId ?? "")
-        : "",
+      typeof suggestions.contract_type?.value === "string"
+        ? suggestions.contract_type.value
+        : (initialModule === "contract" ? initialDraft?.targetTypeId : undefined) ||
+          (request.requestType.targetModule === "contract"
+            ? (request.requestType.targetTypeId ?? "")
+            : ""),
     matter:
-      request.requestType.targetModule === "matter" ? (request.requestType.targetTypeId ?? "") : "",
+      typeof suggestions.matter_type?.value === "string"
+        ? suggestions.matter_type.value
+        : (initialModule === "matter" ? initialDraft?.targetTypeId : undefined) ||
+          (request.requestType.targetModule === "matter"
+            ? (request.requestType.targetTypeId ?? "")
+            : ""),
   });
   const pickedId = pickedIds[targetModule];
   const [templateId, setTemplateId] = useState("");
-  const [title, setTitle] = useState(request.summary);
-  const [priority, setPriority] = useState(request.urgency);
+  const [title, setTitle] = useState(String(suggestions.title?.value ?? request.summary));
+  const [priority, setPriority] = useState<StaffRequest["urgency"]>(
+    SEVERITY_LEVELS.find((level) => level === suggestions.priority?.value) ?? request.urgency,
+  );
   /** The two facts that are not Fields on the record (INT-002's
    * 2026-09-09 addendum). Seeded once from the seeded request fields,
    * where the form collected them; editable either way. */
   const [counterpartyName, setCounterpartyName] = useState(() =>
-    collectedText(fields, request, INTAKE_CARRY_SLUGS.counterpartyName),
+    String(
+      suggestions.counterparty?.value ??
+        collectedText(fields, request, INTAKE_CARRY_SLUGS.counterpartyName),
+    ),
   );
   const [neededBy, setNeededBy] = useState(() =>
-    collectedText(fields, request, INTAKE_CARRY_SLUGS.neededBy),
+    String(
+      suggestions.needed_by?.value ?? collectedText(fields, request, INTAKE_CARRY_SLUGS.neededBy),
+    ),
   );
   /** The creation fields' drafts, keyed by slug. They survive switching
    * types and back — a value typed once should not have to be typed
@@ -154,9 +229,111 @@ export function ConvertDialog({
   const templates = matterTarget?.templates ?? [];
   const selectedTemplate = templates.find((template) => template.id === templateId);
 
-  /** Template defaults sit below both carried Request values and what
-   * the triager types. `drafts` holds only the latter, so changing a
-   * Template changes an untouched default without taking back an edit. */
+  /** Puts the boxes a Conversion draft prefilled back to what the manual
+   * dialog would have shown, and stops applying the draft. Boxes somebody
+   * already edited keep their edit. */
+  function dropPreparedValues() {
+    pendingRead.current?.abort();
+    setPreparing(false);
+    setPreparationFailed(false);
+    for (const slug of Object.keys(suggestions)) {
+      if (human.has(slug)) {
+        // A confirmed Field has no text edit in drafts yet, but is human-reviewed.
+        if (slug.startsWith("field:") && drafts[slug.slice(6)] === undefined) {
+          const field = targetFields.find((field) => `field:${field.slug}` === slug);
+          if (field)
+            setDrafts((current) => ({
+              ...current,
+              [field.slug]: toDraft(field, suggestions[slug]!.value),
+            }));
+        }
+        continue;
+      }
+      if (slug === "title") setTitle(request.summary);
+      else if (slug === "priority") setPriority(request.urgency);
+      else if (slug === "description") setDescription(request.description ?? "");
+      else if (slug === "needed_by")
+        setNeededBy(collectedText(fields, request, INTAKE_CARRY_SLUGS.neededBy));
+      else if (slug === "counterparty")
+        setCounterpartyName(collectedText(fields, request, INTAKE_CARRY_SLUGS.counterpartyName));
+      else if (slug === "matter_type" || slug === "contract_type")
+        setPickedIds((current) => ({
+          ...current,
+          [targetModule]:
+            request.requestType.targetModule === targetModule
+              ? (request.requestType.targetTypeId ?? "")
+              : "",
+        }));
+    }
+    setDropped(true);
+  }
+
+  async function refreshPreparation(module: TargetModule, typeId: string, retry = false) {
+    dropPreparedValues();
+    if (!preparationSettings?.[module]) return;
+    if (!humanRef.current.has(`${module}_type`)) typeId = "";
+    const controller = new AbortController();
+    pendingRead.current = controller;
+    setPreparing(true);
+    try {
+      const result = await api.POST("/api/v1/requests/{number}/conversion-drafts", {
+        params: { path: { number: request.number } },
+        body: { targetModule: module, targetTypeId: typeId, retry },
+        signal: controller.signal,
+      });
+      if (!result.data) throw new Error("unavailable");
+      // This asynchronous path runs only after a dialog event.
+      // eslint-disable-next-line react-hooks/purity
+      const deadline = Date.now() + 180_000;
+      let next: ConversionDraft = result.data.draft;
+      while (next.state === "pending" && !controller.signal.aborted) {
+        // eslint-disable-next-line react-hooks/purity
+        if (Date.now() > deadline) throw new Error("timeout");
+        await new Promise<void>((resolve) => {
+          const finish = () => {
+            clearTimeout(timer);
+            controller.signal.removeEventListener("abort", finish);
+            resolve();
+          };
+          const timer = setTimeout(finish, 1200);
+          controller.signal.addEventListener("abort", finish, { once: true });
+        });
+        if (controller.signal.aborted) return;
+        const read = await api.GET("/api/v1/requests/{number}/conversion-drafts/{draftId}", {
+          params: { path: { number: request.number, draftId: next.id } },
+          signal: controller.signal,
+        });
+        if (!read.data) throw new Error("unavailable");
+        next = read.data.draft;
+      }
+      if (controller.signal.aborted) return;
+      if (next.state !== "ready" || next.targetModule !== module || next.targetTypeId !== typeId)
+        throw new Error("unavailable");
+      setInitialDraft(next);
+      setDropped(false);
+      const editable = (slug: string) => !humanRef.current.has(slug) && next.suggestions[slug];
+      if (editable("title")) setTitle(String(next.suggestions.title!.value));
+      if (editable("description")) setDescription(String(next.suggestions.description!.value));
+      if (editable("priority"))
+        setPriority(
+          SEVERITY_LEVELS.find((level) => level === next.suggestions.priority!.value) ??
+            request.urgency,
+        );
+      if (editable("needed_by")) setNeededBy(String(next.suggestions.needed_by!.value));
+      if (editable("counterparty"))
+        setCounterpartyName(String(next.suggestions.counterparty!.value));
+      if (editable(`${module}_type`))
+        setPickedIds((current) => ({
+          ...current,
+          [module]: String(next.suggestions[`${module}_type`]!.value),
+        }));
+    } catch {
+      if (!controller.signal.aborted) setPreparationFailed(true);
+    } finally {
+      if (!controller.signal.aborted) setPreparing(false);
+    }
+  }
+
   function seedTemplate(type: MatterTypeOption, nextTemplateId: string) {
     const template = type.templates?.find((candidate) => candidate.id === nextTemplateId);
     setTemplateId(template?.id ?? "");
@@ -220,7 +397,9 @@ export function ConvertDialog({
     if (archivedCarrySlugs.has(field.slug)) return toDraft(field, undefined);
     return toDraft(
       field,
-      request.customFields[field.slug] ?? selectedTemplate?.defaultCustomFields[field.slug],
+      suggested(`field:${field.slug}`)?.value ??
+        request.customFields[field.slug] ??
+        selectedTemplate?.defaultCustomFields[field.slug],
     );
   }
 
@@ -298,20 +477,37 @@ export function ConvertDialog({
         });
         return;
       }
-      if (drafts[field.slug] !== undefined) customFields[field.slug] = parsed.value;
+      if (drafts[field.slug] !== undefined || suggested(`field:${field.slug}`))
+        customFields[field.slug] = parsed.value;
     }
 
     const namedCounterparty = counterpartyName.trim();
     const result = await onConvert({
       title: named,
+      ...(initialDraft && (!dropped || human.has("description"))
+        ? { description: description.trim() || null }
+        : {}),
+      ...(initialDraft && !dropped
+        ? {
+            conversionDraftId: initialDraft.id,
+            aiAccepted: Object.keys(suggestions).filter(
+              (slug) =>
+                marked(slug) &&
+                (!slug.startsWith("field:") ||
+                  targetFields.some((field) => `field:${field.slug}` === slug)),
+            ),
+          }
+        : {}),
       priority,
       ...(targetModule === "contract"
         ? { contractTypeId: target.id }
         : { matterTypeId: target.id }),
       ...(selectedTemplate ? { templateId: selectedTemplate.id } : {}),
       ...(Object.keys(customFields).length === 0 ? {} : { customFields }),
-      // An empty box sends nothing: the seam lands what is named and
-      // refuses a name on the matter arm, so the box is not drawn there.
+      // A deliberate clear survives the later Request-context Analysis run.
+      ...(drawsCounterparty && human.has("counterparty") && namedCounterparty === ""
+        ? { counterpartyCleared: true }
+        : {}),
       ...(drawsCounterparty && namedCounterparty !== ""
         ? { counterpartyName: namedCounterparty }
         : {}),
@@ -426,7 +622,37 @@ export function ConvertDialog({
                 }}
               />
             </p>
-            <div className="flex flex-col gap-1.5">
+            {(preparing || preparationFailed) && (
+              <div>
+                <p role="status">
+                  {preparing ? (
+                    <FormattedMessage
+                      id="conversion.gettingReady"
+                      defaultMessage="Getting {module, select, matter {matter} other {contract}} ready…"
+                      values={{ module: targetModule }}
+                    />
+                  ) : (
+                    <FormattedMessage
+                      id="conversion.failed"
+                      defaultMessage="Preparation could not finish. Retry or continue manually."
+                    />
+                  )}
+                </p>
+                <Button type="button" variant="link" onClick={dropPreparedValues}>
+                  <FormattedMessage id="conversion.manual" defaultMessage="Continue manually" />
+                </Button>
+                {preparationFailed && (
+                  <Button
+                    type="button"
+                    variant="link"
+                    onClick={() => void refreshPreparation(targetModule, pickedId, true)}
+                  >
+                    <FormattedMessage id="action.retry" defaultMessage="Retry" />
+                  </Button>
+                )}
+              </div>
+            )}
+            <AiField active={marked("title")} className="flex flex-col gap-1.5">
               <Label htmlFor="convert-title" required>
                 <FormattedMessage id="convert.titleField" defaultMessage="Title" />
               </Label>
@@ -445,12 +671,14 @@ export function ConvertDialog({
                   ? { "aria-invalid": true, "aria-describedby": TITLE_ERROR_ID }
                   : {})}
                 onChange={(event) => {
+                  humanValue("title");
                   setTitle(event.target.value);
                   setError(null);
                 }}
               />
-            </div>
-            <div className="flex flex-col gap-1.5">
+              {marker("title")}
+            </AiField>
+            <AiField active={marked(`${targetModule}_type`)} className="flex flex-col gap-1.5">
               <Label htmlFor="convert-type" required>
                 <FormattedMessage
                   id="convert.typeField"
@@ -464,7 +692,9 @@ export function ConvertDialog({
                 value={pickedId}
                 className={CONTROL_CLASS}
                 onChange={(event) => {
+                  humanValue(`${targetModule}_type`);
                   const nextId = event.target.value;
+                  void refreshPreparation(targetModule, nextId);
                   setPickedIds((current) => ({
                     ...current,
                     [targetModule]: nextId,
@@ -485,7 +715,139 @@ export function ConvertDialog({
                   </option>
                 ))}
               </select>
-            </div>
+              {marker(`${targetModule}_type`)}
+            </AiField>
+            {initialDraft && (!dropped || human.has("description")) && (
+              <AiField active={marked("description")} className="flex flex-col gap-1.5">
+                <Label htmlFor="convert-description">
+                  <FormattedMessage id="matters.field.description" defaultMessage="Description" />
+                </Label>
+                <textarea
+                  id="convert-description"
+                  className={`${CONTROL_CLASS} h-auto min-h-24 py-2`}
+                  value={description}
+                  onChange={(event) => {
+                    humanValue("description");
+                    setDescription(event.target.value);
+                  }}
+                />
+                {marker("description")}
+              </AiField>
+            )}
+            {initialDraft && !dropped && (
+              <Button type="button" variant="link" onClick={dropPreparedValues}>
+                <FormattedMessage id="conversion.manual" defaultMessage="Continue manually" />
+              </Button>
+            )}
+            {initialDraft &&
+              !dropped &&
+              initialDraft.warnings.map((warning) => (
+                <p key={warning} role="status" className="text-sm text-muted">
+                  {warning === "restricted_sources" ? (
+                    <FormattedMessage
+                      id="conversion.restrictedOmitted"
+                      defaultMessage="Restricted messages and Legal or reference Fields were omitted to keep record values safe for broader readers."
+                    />
+                  ) : warning === "attachment_omissions" ? (
+                    <FormattedMessage
+                      id="conversion.attachmentOmissions"
+                      defaultMessage="Some attachments could not be fully read. Review the source statuses and original files before converting."
+                    />
+                  ) : warning === "target_budget" ? (
+                    <FormattedMessage
+                      id="conversion.targetBudgetOmitted"
+                      defaultMessage="Some Fields exceeded the preparation limit. Complete them manually."
+                    />
+                  ) : (
+                    <FormattedMessage
+                      id="conversion.budgetOmitted"
+                      defaultMessage="Some sources exceeded the reading limit and were omitted. Review the original Request too."
+                    />
+                  )}
+                </p>
+              ))}
+            {initialDraft && !dropped && initialDraft.attachmentReads.length > 0 && (
+              <details className="text-sm text-muted">
+                <summary>
+                  <FormattedMessage
+                    id="conversion.attachmentReads"
+                    defaultMessage="Attachment reading details"
+                  />
+                </summary>
+                <p>
+                  <FormattedMessage
+                    id="conversion.readingLimits"
+                    defaultMessage="Up to {sources, number} attachments, {bytes, number} MiB each and {totalBytes, number} MiB total; {characters, number} characters each and {totalCharacters, number} across all sources. Reading allows {sourceSeconds, number} seconds per attachment and {totalSeconds, number} seconds total. Request answers and messages are considered first."
+                    values={{
+                      sources: initialDraft.limits.sources,
+                      bytes: initialDraft.limits.bytes / (1024 * 1024),
+                      totalBytes: initialDraft.limits.totalBytes / (1024 * 1024),
+                      characters: initialDraft.limits.characters,
+                      totalCharacters: initialDraft.limits.totalCharacters,
+                      sourceSeconds: initialDraft.limits.sourceRuntimeMs / 1000,
+                      totalSeconds: initialDraft.limits.runtimeMs / 1000,
+                    }}
+                  />
+                </p>
+                <ul>
+                  {initialDraft.attachmentReads.map((source) => (
+                    <li key={source.sourceId}>
+                      <FormattedMessage
+                        id="conversion.attachmentReadStatus"
+                        defaultMessage="{label}: {status}{hasReason, select, yes { — {reason}} other {}}"
+                        values={{
+                          label: source.label,
+                          status: intl.formatMessage(
+                            Object.hasOwn(sourceStatusMessages, source.status)
+                              ? sourceStatusMessages[source.status]
+                              : sourceStatusMessages.omitted,
+                          ),
+                          hasReason: source.reason ? "yes" : "no",
+                          reason: source.reason
+                            ? intl.formatMessage(
+                                Object.hasOwn(sourceReasonMessages, source.reason)
+                                  ? sourceReasonMessages[
+                                      source.reason as keyof typeof sourceReasonMessages
+                                    ]
+                                  : sourceReasonMessages.other,
+                              )
+                            : "",
+                        }}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
+            {initialDraft && !dropped && Object.keys(initialDraft.conflicts).length > 0 && (
+              <section className="text-sm">
+                <FormattedMessage
+                  id="conversion.conflicts"
+                  defaultMessage="Conflicting sources need your review:"
+                />
+                {Object.keys(initialDraft.conflicts).map((slug) => (
+                  <div key={slug}>
+                    {slug.startsWith("field:") ? (
+                      (targetTypes
+                        .flatMap((type) => type.fields)
+                        .find((field) => `field:${field.slug}` === slug)?.displayName ??
+                      slug.slice(6))
+                    ) : (
+                      <FormattedMessage
+                        id="conversion.targetLabel"
+                        defaultMessage="{slug, select, title {Title} description {Description} matter_type {Matter type} contract_type {Contract type} counterparty {Counterparty} priority {Priority} needed_by {Needed by} other {Value}}"
+                        values={{ slug }}
+                      />
+                    )}
+                    <ConversionEvidence
+                      number={request.number}
+                      draftId={initialDraft.id}
+                      slug={slug}
+                    />
+                  </div>
+                ))}
+              </section>
+            )}
             {matterTarget && (
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="convert-template">
@@ -511,7 +873,7 @@ export function ConvertDialog({
                 </select>
               </div>
             )}
-            <div className="flex flex-col gap-1.5">
+            <AiField active={marked("priority")} className="flex flex-col gap-1.5">
               <Label htmlFor="convert-priority" required>
                 <FormattedMessage id="convert.priority" defaultMessage="Priority" />
               </Label>
@@ -522,6 +884,7 @@ export function ConvertDialog({
                 className={CONTROL_CLASS}
                 onChange={(event) => {
                   const value = SEVERITY_LEVELS.find((level) => level === event.target.value);
+                  humanValue("priority");
                   if (value) setPriority(value);
                 }}
               >
@@ -531,9 +894,10 @@ export function ConvertDialog({
                   </option>
                 ))}
               </select>
-            </div>
+              {marker("priority")}
+            </AiField>
             {drawsCounterparty && (
-              <div className="flex flex-col gap-1.5">
+              <AiField active={marked("counterparty")} className="flex flex-col gap-1.5">
                 <Label htmlFor="convert-counterparty">
                   <FormattedMessage id="convert.counterparty" defaultMessage="Counterparty" />
                 </Label>
@@ -542,14 +906,16 @@ export function ConvertDialog({
                   value={counterpartyName}
                   maxLength={MAX_COUNTERPARTY_NAME_LENGTH}
                   onChange={(event) => {
+                    humanValue("counterparty");
                     setCounterpartyName(event.target.value);
                     setError(null);
                   }}
                 />
-              </div>
+                {marker("counterparty")}
+              </AiField>
             )}
             {drawsNeededBy && (
-              <div className="flex flex-col gap-1.5">
+              <AiField active={marked("needed_by")} className="flex flex-col gap-1.5">
                 <Label htmlFor="convert-needed-by">
                   <FormattedMessage id="convert.neededBy" defaultMessage="Needed by" />
                 </Label>
@@ -558,11 +924,13 @@ export function ConvertDialog({
                   type="date"
                   value={neededBy}
                   onChange={(event) => {
+                    humanValue("needed_by");
                     setNeededBy(event.target.value);
                     setError(null);
                   }}
                 />
-              </div>
+                {marker("needed_by")}
+              </AiField>
             )}
             {target && staysBehind.length > 0 && (
               <div className="flex flex-col gap-1.5">
@@ -582,7 +950,11 @@ export function ConvertDialog({
               </div>
             )}
             {targetFields.map((field) => (
-              <div key={field.slug} className="flex flex-col gap-1.5">
+              <AiField
+                key={field.slug}
+                active={marked(`field:${field.slug}`)}
+                className="flex flex-col gap-1.5"
+              >
                 <Label
                   id={`convert-${field.slug}-label`}
                   htmlFor={`convert-${field.slug}`}
@@ -603,6 +975,7 @@ export function ConvertDialog({
                       : undefined
                   }
                   onDraft={(next) => {
+                    humanValue(`field:${field.slug}`);
                     setDrafts((current) => ({ ...current, [field.slug]: next }));
                     setError(null);
                   }}
@@ -628,7 +1001,8 @@ export function ConvertDialog({
                     )}
                   </p>
                 )}
-              </div>
+                {marker(`field:${field.slug}`)}
+              </AiField>
             ))}
             <CreateAttachments
               showKind={targetModule !== "matter"}
@@ -645,7 +1019,9 @@ export function ConvertDialog({
                 type="button"
                 variant="secondary"
                 onClick={() => {
-                  setTargetModule(targetModule === "contract" ? "matter" : "contract");
+                  const next = targetModule === "contract" ? "matter" : "contract";
+                  void refreshPreparation(next, pickedIds[next]);
+                  setTargetModule(next);
                   setError(null);
                 }}
               >
@@ -660,7 +1036,7 @@ export function ConvertDialog({
                 <Button type="button" variant="secondary" disabled={busy} onClick={onClose}>
                   <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
                 </Button>
-                <Button type="submit" disabled={busy}>
+                <Button type="submit" disabled={busy || preparing}>
                   <FilePen size={16} aria-hidden="true" />
                   <FormattedMessage
                     id="convert.submit"

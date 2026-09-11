@@ -16,6 +16,7 @@
  * (DD-017) inside the same transaction.
  */
 
+import { unverifiedConversionCitations } from "../../lib/conversion-source-privacy.js";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
@@ -388,6 +389,25 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         if (body.displayName !== undefined) wants("displayName", body.displayName.trim());
         if (body.description !== undefined) {
           wants("description", body.description?.trim() || null);
+        }
+        if (body.fieldTag === "legal" && target.fieldTag === "business") {
+          // conversionSources identifies answers as field:<requestId>:<slug>.
+          // JSON citations require this SQL join across draft and Matter maps.
+          // Same-slot values follow the Field tag themselves; only derivatives
+          // in another slot would keep a broader audience after retagging.
+          const dependencies = await tx.execute<{ present: boolean }>(sql`
+            select exists (
+              select 1 from (${unverifiedConversionCitations}) dependency
+              where dependency.citation->>'sourceId' = 'field:' || dependency.request_id || ':' || ${target.slug}
+                and dependency.slug <> ${`field:${target.slug}`}
+                and dependency.slug <> ${target.slug}
+            ) as present
+          `);
+          if (dependencies.rows[0]?.present)
+            throw httpError(
+              409,
+              "Review and confirm or edit the unverified record values derived from this Field before marking it Legal. No Field tag was changed.",
+            );
         }
         if (body.fieldTag !== undefined) wants("fieldTag", body.fieldTag);
         if (body.options !== undefined) {

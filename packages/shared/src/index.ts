@@ -25,6 +25,7 @@ export {
   type AiUnverifiedEntry,
   type AiUnverifiedMap,
   type ContractAnalysisOutcome,
+  type ConversionAnalysisContext,
   type ContractAnalysisResult,
   type ContractAnalysisResultOutcome,
   CONTRACT_ANALYSIS_RESULT_OUTCOMES,
@@ -578,3 +579,11 @@ export const MAX_COMMENT_BODY_LENGTH = 10_000;
 /** The record must obtain confirmation before reopening a closed Matter. */
 export const MATTER_REOPEN_CONFIRMATION_PROBLEM_TYPE =
   "urn:openlaw:problem:matter-reopen-confirmation";
+
+export type {
+  ConversionCitation,
+  ConversionSuggestion,
+  ConversionProvenance,
+  ConversionProvenanceMap,
+  ConversionAttachmentRead,
+} from "./conversion-draft.js";

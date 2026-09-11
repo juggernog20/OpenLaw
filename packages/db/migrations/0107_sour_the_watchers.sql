@@ -1,0 +1,3 @@
+ALTER TABLE "conversion_drafts" ADD COLUMN "lease_at" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "conversion_drafts" ADD CONSTRAINT "conversion_drafts_state_check" CHECK ("conversion_drafts"."state" in ('pending', 'ready', 'failed'));--> statement-breakpoint
+ALTER TABLE "conversion_drafts" ADD CONSTRAINT "conversion_drafts_module_check" CHECK ("conversion_drafts"."target_module" in ('matter', 'contract'));

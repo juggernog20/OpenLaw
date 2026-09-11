@@ -574,6 +574,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/ai-connector/workflows": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Update AI workflow settings; an empty body changes nothing */
+    patch: operations["updateAiWorkflows"];
+    trace?: never;
+  };
   "/api/v1/ai-connector/models": {
     parameters: {
       query?: never;
@@ -2209,6 +2226,150 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/conversion-drafts/settings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getConversionDraftSettings"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/requests/{number}/conversion-drafts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["prepareConversionDraft"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/requests/{number}/conversion-drafts/{draftId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getConversionDraft"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/requests/{number}/conversion-drafts/{draftId}/evidence/{slug}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getConversionDraftEvidence"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matters/{number}/conversion-evidence/{slug}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getMatterConversionEvidence"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/conversion-evidence/{slug}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getContractConversionEvidence"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/requests/{number}/conversion-drafts/{draftId}/sources/{sourceId}/preview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["previewConversionAttachment"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/requests/{number}/conversion-drafts/{draftId}/sources/{sourceId}/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["downloadConversionAttachment"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matters/{number}/conversion-confirm/{slug}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["confirmMatterConversionValue"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/requests/{number}/convert": {
     parameters: {
       query?: never;
@@ -2638,6 +2799,55 @@ export interface paths {
     put?: never;
     /** Restore an archived contract (archive's recovery story): it rejoins the list and becomes editable again */
     post: operations["restoreContract"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/analysis/{runId}/evidence/{slug}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getRequestAnalysisEvidence"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/analysis/{runId}/retry": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["retryRequestAnalysis"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/analysis/{runId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Read an analysis run and its evidence when its source Document is accessible */
+    get: operations["getContractAnalysisRun"];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -6831,6 +7041,9 @@ export interface operations {
         content: {
           "application/json": {
             connector: {
+              matterPreparation: boolean;
+              contractPreparation: boolean;
+              contractConversionAnalysis: boolean;
               configured: boolean;
               enabled: boolean;
               preset:
@@ -6913,6 +7126,9 @@ export interface operations {
         content: {
           "application/json": {
             connector: {
+              matterPreparation: boolean;
+              contractPreparation: boolean;
+              contractConversionAnalysis: boolean;
               configured: boolean;
               enabled: boolean;
               preset:
@@ -6982,6 +7198,89 @@ export interface operations {
         content: {
           "application/json": {
             connector: {
+              matterPreparation: boolean;
+              contractPreparation: boolean;
+              contractConversionAnalysis: boolean;
+              configured: boolean;
+              enabled: boolean;
+              preset:
+                | (
+                    | "anthropic"
+                    | "openai"
+                    | "azure_openai"
+                    | "gemini"
+                    | "openrouter"
+                    | "ollama"
+                    | "custom"
+                  )
+                | null;
+              protocol: ("anthropic_messages" | "openai_chat_completions" | "gemini") | null;
+              baseUrl: string | null;
+              hasApiKey: boolean;
+              model: string | null;
+              disabledAt: string | null;
+              updatedAt: string | null;
+            };
+            presets: {
+              /** @enum {string} */
+              preset:
+                | "anthropic"
+                | "openai"
+                | "azure_openai"
+                | "gemini"
+                | "openrouter"
+                | "ollama"
+                | "custom";
+              label: string;
+              /** @enum {string} */
+              protocol: "anthropic_messages" | "openai_chat_completions" | "gemini";
+              baseUrl: string | null;
+              defaultModel: string;
+              requiresApiKey: boolean;
+              requiresBaseUrl: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateAiWorkflows: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          matterPreparation?: boolean;
+          contractPreparation?: boolean;
+          contractConversionAnalysis?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            connector: {
+              matterPreparation: boolean;
+              contractPreparation: boolean;
+              contractConversionAnalysis: boolean;
               configured: boolean;
               enabled: boolean;
               preset:
@@ -7130,6 +7429,9 @@ export interface operations {
         content: {
           "application/json": {
             connector: {
+              matterPreparation: boolean;
+              contractPreparation: boolean;
+              contractConversionAnalysis: boolean;
               configured: boolean;
               enabled: boolean;
               preset:
@@ -7199,6 +7501,9 @@ export interface operations {
         content: {
           "application/json": {
             connector: {
+              matterPreparation: boolean;
+              contractPreparation: boolean;
+              contractConversionAnalysis: boolean;
               configured: boolean;
               enabled: boolean;
               preset:
@@ -9041,6 +9346,14 @@ export interface operations {
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
+              aiUnverified?: {
+                [key: string]: {
+                  draftId: string;
+                  writtenAt: string;
+                  targetTypeId?: string;
+                  keyDateId?: string;
+                };
+              } | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -9138,6 +9451,14 @@ export interface operations {
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
+              aiUnverified?: {
+                [key: string]: {
+                  draftId: string;
+                  writtenAt: string;
+                  targetTypeId?: string;
+                  keyDateId?: string;
+                };
+              } | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -9343,6 +9664,14 @@ export interface operations {
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
+              aiUnverified?: {
+                [key: string]: {
+                  draftId: string;
+                  writtenAt: string;
+                  targetTypeId?: string;
+                  keyDateId?: string;
+                };
+              } | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -9490,6 +9819,14 @@ export interface operations {
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
+              aiUnverified?: {
+                [key: string]: {
+                  draftId: string;
+                  writtenAt: string;
+                  targetTypeId?: string;
+                  keyDateId?: string;
+                };
+              } | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -9782,6 +10119,14 @@ export interface operations {
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
+              aiUnverified?: {
+                [key: string]: {
+                  draftId: string;
+                  writtenAt: string;
+                  targetTypeId?: string;
+                  keyDateId?: string;
+                };
+              } | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -9857,6 +10202,14 @@ export interface operations {
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
+              aiUnverified?: {
+                [key: string]: {
+                  draftId: string;
+                  writtenAt: string;
+                  targetTypeId?: string;
+                  keyDateId?: string;
+                };
+              } | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
@@ -9958,6 +10311,7 @@ export interface operations {
               daysAway: number;
               overdue: boolean;
               isNext: boolean;
+              unverified?: boolean;
             }[];
           };
         };
@@ -10013,6 +10367,7 @@ export interface operations {
               daysAway: number;
               overdue: boolean;
               isNext: boolean;
+              unverified?: boolean;
             }[];
           };
         };
@@ -10057,6 +10412,7 @@ export interface operations {
               daysAway: number;
               overdue: boolean;
               isNext: boolean;
+              unverified?: boolean;
             }[];
           };
         };
@@ -10112,6 +10468,7 @@ export interface operations {
               daysAway: number;
               overdue: boolean;
               isNext: boolean;
+              unverified?: boolean;
             }[];
           };
         };
@@ -14321,6 +14678,469 @@ export interface operations {
       };
     };
   };
+  getConversionDraftSettings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterPreparation: boolean;
+            contractPreparation: boolean;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  prepareConversionDraft: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          targetModule: "matter" | "contract";
+          targetTypeId: string;
+          retry?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            draft: {
+              id: string;
+              /** @enum {string} */
+              targetModule: "matter" | "contract";
+              targetTypeId: string;
+              /** @enum {string} */
+              state: "pending" | "ready" | "failed";
+              suggestions: {
+                [key: string]: {
+                  value: string | number | boolean | string[];
+                  citations: {
+                    sourceId: string;
+                    revision: string;
+                    quote: string;
+                  }[];
+                };
+              };
+              conflicts: {
+                [key: string]: {
+                  value: string | number | boolean | string[];
+                  citations: {
+                    sourceId: string;
+                    revision: string;
+                    quote: string;
+                  }[];
+                };
+              };
+              warnings: string[];
+              attachmentReads: {
+                sourceId: string;
+                label: string;
+                /** @enum {string} */
+                status: "readable" | "unreadable" | "unsupported" | "truncated" | "omitted";
+                reason?: string;
+              }[];
+              /**
+               * @default {
+               *       "sources": 20,
+               *       "bytes": 10485760,
+               *       "totalBytes": 52428800,
+               *       "characters": 30000,
+               *       "totalCharacters": 180000,
+               *       "sourceRuntimeMs": 15000,
+               *       "runtimeMs": 45000
+               *     }
+               */
+              limits: {
+                sources: number;
+                bytes: number;
+                totalBytes: number;
+                characters: number;
+                totalCharacters: number;
+                sourceRuntimeMs: number;
+                runtimeMs: number;
+              };
+              failure: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getConversionDraft: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        draftId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            draft: {
+              id: string;
+              /** @enum {string} */
+              targetModule: "matter" | "contract";
+              targetTypeId: string;
+              /** @enum {string} */
+              state: "pending" | "ready" | "failed";
+              suggestions: {
+                [key: string]: {
+                  value: string | number | boolean | string[];
+                  citations: {
+                    sourceId: string;
+                    revision: string;
+                    quote: string;
+                  }[];
+                };
+              };
+              conflicts: {
+                [key: string]: {
+                  value: string | number | boolean | string[];
+                  citations: {
+                    sourceId: string;
+                    revision: string;
+                    quote: string;
+                  }[];
+                };
+              };
+              warnings: string[];
+              attachmentReads: {
+                sourceId: string;
+                label: string;
+                /** @enum {string} */
+                status: "readable" | "unreadable" | "unsupported" | "truncated" | "omitted";
+                reason?: string;
+              }[];
+              /**
+               * @default {
+               *       "sources": 20,
+               *       "bytes": 10485760,
+               *       "totalBytes": 52428800,
+               *       "characters": 30000,
+               *       "totalCharacters": 180000,
+               *       "sourceRuntimeMs": 15000,
+               *       "runtimeMs": 45000
+               *     }
+               */
+              limits: {
+                sources: number;
+                bytes: number;
+                totalBytes: number;
+                characters: number;
+                totalCharacters: number;
+                sourceRuntimeMs: number;
+                runtimeMs: number;
+              };
+              failure: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getConversionDraftEvidence: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        draftId: string;
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            available: boolean;
+            citations: {
+              label: string;
+              text: string;
+              quote: string;
+              sourceId: string;
+              attachment?: {
+                previewHref: string | null;
+                downloadHref: string;
+                documentId: string | null;
+                versionId: string | null;
+                method: ("native_layer" | "converted" | "ocr" | "email_body") | null;
+              };
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getMatterConversionEvidence: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            available: boolean;
+            citations: {
+              label: string;
+              text: string;
+              quote: string;
+              sourceId: string;
+              attachment?: {
+                previewHref: string | null;
+                downloadHref: string;
+                documentId: string | null;
+                versionId: string | null;
+                method: ("native_layer" | "converted" | "ocr" | "email_body") | null;
+              };
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getContractConversionEvidence: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            available: boolean;
+            citations: {
+              label: string;
+              text: string;
+              quote: string;
+              sourceId: string;
+              attachment?: {
+                previewHref: string | null;
+                downloadHref: string;
+                documentId: string | null;
+                versionId: string | null;
+                method: ("native_layer" | "converted" | "ocr" | "email_body") | null;
+              };
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  previewConversionAttachment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        draftId: string;
+        sourceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/pdf": string;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  downloadConversionAttachment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        draftId: string;
+        sourceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/octet-stream": string;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  confirmMatterConversionValue: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** @enum {boolean} */
+            ok: true;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   convertRequest: {
     parameters: {
       query?: never;
@@ -14334,6 +15154,10 @@ export interface operations {
       content: {
         "application/json": {
           title: string;
+          description?: string | null;
+          conversionDraftId?: string;
+          aiAccepted?: string[];
+          counterpartyCleared?: boolean;
           contractTypeId?: string;
           matterTypeId?: string;
           templateId?: string;
@@ -15169,11 +15993,20 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               aiUnverified: {
-                [key: string]: {
-                  runId: string;
-                  /** Format: date-time */
-                  writtenAt: string;
-                };
+                [key: string]:
+                  | {
+                      runId: string;
+                      sourceContext?: boolean;
+                      draftId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    }
+                  | {
+                      draftId: string;
+                      runId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    };
               } | null;
               isConfidential: boolean;
               endedAt: string | null;
@@ -15305,11 +16138,20 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               aiUnverified: {
-                [key: string]: {
-                  runId: string;
-                  /** Format: date-time */
-                  writtenAt: string;
-                };
+                [key: string]:
+                  | {
+                      runId: string;
+                      sourceContext?: boolean;
+                      draftId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    }
+                  | {
+                      draftId: string;
+                      runId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    };
               } | null;
               isConfidential: boolean;
               endedAt: string | null;
@@ -15570,11 +16412,20 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               aiUnverified: {
-                [key: string]: {
-                  runId: string;
-                  /** Format: date-time */
-                  writtenAt: string;
-                };
+                [key: string]:
+                  | {
+                      runId: string;
+                      sourceContext?: boolean;
+                      draftId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    }
+                  | {
+                      draftId: string;
+                      runId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    };
               } | null;
               isConfidential: boolean;
               endedAt: string | null;
@@ -15667,7 +16518,7 @@ export interface operations {
                 /** @enum {string} */
                 state: "pending" | "ready" | "failed";
                 /** @enum {string} */
-                trigger: "automatic" | "manual";
+                trigger: "automatic" | "manual" | "conversion";
                 requestedBy: string | null;
                 /** @enum {string} */
                 preset:
@@ -15694,6 +16545,7 @@ export interface operations {
                     outcome: "written" | "kept" | "unsupported" | "invalid" | "unmatched";
                   }[];
                 } | null;
+                warnings?: string[];
                 failure: string | null;
                 startedAt: string | null;
                 finishedAt: string | null;
@@ -15835,11 +16687,20 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               aiUnverified: {
-                [key: string]: {
-                  runId: string;
-                  /** Format: date-time */
-                  writtenAt: string;
-                };
+                [key: string]:
+                  | {
+                      runId: string;
+                      sourceContext?: boolean;
+                      draftId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    }
+                  | {
+                      draftId: string;
+                      runId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    };
               } | null;
               isConfidential: boolean;
               endedAt: string | null;
@@ -16052,11 +16913,20 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               aiUnverified: {
-                [key: string]: {
-                  runId: string;
-                  /** Format: date-time */
-                  writtenAt: string;
-                };
+                [key: string]:
+                  | {
+                      runId: string;
+                      sourceContext?: boolean;
+                      draftId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    }
+                  | {
+                      draftId: string;
+                      runId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    };
               } | null;
               isConfidential: boolean;
               endedAt: string | null;
@@ -16170,11 +17040,20 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               aiUnverified: {
-                [key: string]: {
-                  runId: string;
-                  /** Format: date-time */
-                  writtenAt: string;
-                };
+                [key: string]:
+                  | {
+                      runId: string;
+                      sourceContext?: boolean;
+                      draftId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    }
+                  | {
+                      draftId: string;
+                      runId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    };
               } | null;
               isConfidential: boolean;
               endedAt: string | null;
@@ -16297,11 +17176,20 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               aiUnverified: {
-                [key: string]: {
-                  runId: string;
-                  /** Format: date-time */
-                  writtenAt: string;
-                };
+                [key: string]:
+                  | {
+                      runId: string;
+                      sourceContext?: boolean;
+                      draftId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    }
+                  | {
+                      draftId: string;
+                      runId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    };
               } | null;
               isConfidential: boolean;
               endedAt: string | null;
@@ -16550,11 +17438,20 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               aiUnverified: {
-                [key: string]: {
-                  runId: string;
-                  /** Format: date-time */
-                  writtenAt: string;
-                };
+                [key: string]:
+                  | {
+                      runId: string;
+                      sourceContext?: boolean;
+                      draftId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    }
+                  | {
+                      draftId: string;
+                      runId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    };
               } | null;
               isConfidential: boolean;
               endedAt: string | null;
@@ -16675,11 +17572,20 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               aiUnverified: {
-                [key: string]: {
-                  runId: string;
-                  /** Format: date-time */
-                  writtenAt: string;
-                };
+                [key: string]:
+                  | {
+                      runId: string;
+                      sourceContext?: boolean;
+                      draftId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    }
+                  | {
+                      draftId: string;
+                      runId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    };
               } | null;
               isConfidential: boolean;
               endedAt: string | null;
@@ -16800,11 +17706,20 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               aiUnverified: {
-                [key: string]: {
-                  runId: string;
-                  /** Format: date-time */
-                  writtenAt: string;
-                };
+                [key: string]:
+                  | {
+                      runId: string;
+                      sourceContext?: boolean;
+                      draftId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    }
+                  | {
+                      draftId: string;
+                      runId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    };
               } | null;
               isConfidential: boolean;
               endedAt: string | null;
@@ -16924,11 +17839,20 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               aiUnverified: {
-                [key: string]: {
-                  runId: string;
-                  /** Format: date-time */
-                  writtenAt: string;
-                };
+                [key: string]:
+                  | {
+                      runId: string;
+                      sourceContext?: boolean;
+                      draftId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    }
+                  | {
+                      draftId: string;
+                      runId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    };
               } | null;
               isConfidential: boolean;
               endedAt: string | null;
@@ -17042,11 +17966,20 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               aiUnverified: {
-                [key: string]: {
-                  runId: string;
-                  /** Format: date-time */
-                  writtenAt: string;
-                };
+                [key: string]:
+                  | {
+                      runId: string;
+                      sourceContext?: boolean;
+                      draftId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    }
+                  | {
+                      draftId: string;
+                      runId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    };
               } | null;
               isConfidential: boolean;
               endedAt: string | null;
@@ -17056,6 +17989,201 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getRequestAnalysisEvidence: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        runId: string;
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            available: boolean;
+            citations: {
+              label: string;
+              text: string;
+              quote: string;
+              sourceId: string;
+              attachment?: {
+                previewHref: string | null;
+                downloadHref: string;
+                documentId: string | null;
+                versionId: string | null;
+                method: ("native_layer" | "converted" | "ocr" | "email_body") | null;
+              };
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  retryRequestAnalysis: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        runId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            run: {
+              id: string;
+              contractId: string;
+              versionId: string | null;
+              versionNumber: number | null;
+              /** @enum {string} */
+              state: "pending" | "ready" | "failed";
+              /** @enum {string} */
+              trigger: "automatic" | "manual" | "conversion";
+              requestedBy: string | null;
+              /** @enum {string} */
+              preset:
+                | "anthropic"
+                | "openai"
+                | "azure_openai"
+                | "gemini"
+                | "openrouter"
+                | "ollama"
+                | "custom";
+              model: string;
+              truncated: boolean;
+              outcome: {
+                written: string[];
+                kept: string[];
+                unsupported: string[];
+                invalid: string[];
+                unmatched?: string;
+                results?: {
+                  slug: string;
+                  value: unknown;
+                  evidence: string | null;
+                  /** @enum {string} */
+                  outcome: "written" | "kept" | "unsupported" | "invalid" | "unmatched";
+                }[];
+              } | null;
+              warnings?: string[];
+              failure: string | null;
+              startedAt: string | null;
+              finishedAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getContractAnalysisRun: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        runId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            run: {
+              id: string;
+              contractId: string;
+              versionId: string | null;
+              versionNumber: number | null;
+              /** @enum {string} */
+              state: "pending" | "ready" | "failed";
+              /** @enum {string} */
+              trigger: "automatic" | "manual" | "conversion";
+              requestedBy: string | null;
+              /** @enum {string} */
+              preset:
+                | "anthropic"
+                | "openai"
+                | "azure_openai"
+                | "gemini"
+                | "openrouter"
+                | "ollama"
+                | "custom";
+              model: string;
+              truncated: boolean;
+              outcome: {
+                written: string[];
+                kept: string[];
+                unsupported: string[];
+                invalid: string[];
+                unmatched?: string;
+                results?: {
+                  slug: string;
+                  value: unknown;
+                  evidence: string | null;
+                  /** @enum {string} */
+                  outcome: "written" | "kept" | "unsupported" | "invalid" | "unmatched";
+                }[];
+              } | null;
+              warnings?: string[];
+              failure: string | null;
+              startedAt: string | null;
+              finishedAt: string | null;
+            };
+            documentId: string;
           };
         };
       };
@@ -17096,7 +18224,7 @@ export interface operations {
               /** @enum {string} */
               state: "pending" | "ready" | "failed";
               /** @enum {string} */
-              trigger: "automatic" | "manual";
+              trigger: "automatic" | "manual" | "conversion";
               requestedBy: string | null;
               /** @enum {string} */
               preset:
@@ -17123,6 +18251,7 @@ export interface operations {
                   outcome: "written" | "kept" | "unsupported" | "invalid" | "unmatched";
                 }[];
               } | null;
+              warnings?: string[];
               failure: string | null;
               startedAt: string | null;
               finishedAt: string | null;

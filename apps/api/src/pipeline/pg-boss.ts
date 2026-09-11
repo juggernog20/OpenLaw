@@ -28,6 +28,8 @@ import type { SigningResolver } from "../lib/signing/resolver.js";
 import type { AiResolver } from "../lib/ai/resolver.js";
 import { requestAutomaticContractAnalysis } from "./automatic-contract-analysis.js";
 import { runBackfillSweep } from "./backfill.js";
+import { sweepConversionAnalysis } from "./conversion-analysis.js";
+import { handleConversionDraft, sweepConversionDrafts } from "./conversion-draft.js";
 import { handleContractAnalysis } from "./contract-analysis.js";
 import type { DerivationDeps } from "./derivations.js";
 import { handleDisplayConversion } from "./display-conversion.js";
@@ -38,6 +40,7 @@ import { handleNotificationEmail } from "./notification-email.js";
 import {
   JOB_QUEUES,
   type ContractAnalysisJob,
+  type ConversionDraftJob,
   type DisplayConversionJob,
   type DocumentComparisonJob,
   type ExecutedCopyFetchJob,
@@ -172,6 +175,9 @@ export const NOTIFICATION_EMAIL_QUEUE_OPTIONS = {
   retryBackoff: true,
 } as const;
 
+/** One bounded attempt; the durable sweep recovers abandoned preparation. */
+export const CONVERSION_DRAFT_QUEUE_OPTIONS = { retryLimit: 0, expireInSeconds: 180 };
+
 /** One provider call, with the pipeline's three-attempt backoff. */
 export const CONTRACT_ANALYSIS_QUEUE_OPTIONS = {
   expireInSeconds: 300,
@@ -223,6 +229,7 @@ export interface PipelineHandlers extends DerivationDeps {
  * timezone this install agrees on.
  */
 export const BACKFILL_SWEEP_CRON = "0 4 * * *";
+export const CONVERSION_SWEEP_CRON = "* * * * *";
 
 /** Bounds on one scheduled sweep. */
 export const BACKFILL_SWEEP_QUEUE_OPTIONS = {
@@ -404,6 +411,10 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // leave one job between them rather than two messages.
       await boss.send(JOB_QUEUES.notificationEmail, job, { singletonKey: notificationId });
     },
+    async requestConversionDraft(draftId: string): Promise<void> {
+      const job: ConversionDraftJob = { draftId };
+      await boss.send(JOB_QUEUES.conversionDraft, job, { singletonKey: draftId });
+    },
     async requestContractAnalysis(contractId: string, runId: string): Promise<boolean> {
       const job: ContractAnalysisJob = { contractId, runId };
       const jobId = await boss.send(JOB_QUEUES.contractAnalysis, job, {
@@ -486,6 +497,15 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       notify: true,
       ...NOTIFICATION_EMAIL_QUEUE_OPTIONS,
     });
+    await boss.createQueue(JOB_QUEUES.conversionDraft, {
+      policy: "short",
+      notify: true,
+      ...CONVERSION_DRAFT_QUEUE_OPTIONS,
+    });
+    await boss.updateQueue(JOB_QUEUES.conversionDraft, {
+      notify: true,
+      ...CONVERSION_DRAFT_QUEUE_OPTIONS,
+    });
     await boss.createQueue(JOB_QUEUES.contractAnalysis, {
       policy: "short",
       notify: true,
@@ -501,6 +521,11 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
     // walks of the same table for one walk's worth of answer. A tick
     // that lands while a sweep is still going waits for it rather than
     // joining it.
+    await boss.createQueue(JOB_QUEUES.conversionSweep, {
+      policy: "singleton",
+      ...BACKFILL_SWEEP_QUEUE_OPTIONS,
+    });
+    await boss.updateQueue(JOB_QUEUES.conversionSweep, BACKFILL_SWEEP_QUEUE_OPTIONS);
     await boss.createQueue(JOB_QUEUES.backfillSweep, {
       policy: "singleton",
       ...BACKFILL_SWEEP_QUEUE_OPTIONS,
@@ -676,12 +701,37 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
         },
       );
       await boss.work(
+        JOB_QUEUES.conversionDraft,
+        oneAtATime,
+        async (jobs: JobWithMetadata<ConversionDraftJob>[]) => {
+          for (const job of jobs)
+            await handleConversionDraft(
+              {
+                db: handlers.db,
+                resolveAiProvider: handlers.resolveAiProvider,
+                storage: handlers.storage,
+                docEngine: handlers.docEngine,
+                log,
+              },
+              job.data.draftId,
+            );
+        },
+      );
+      await sweepConversionDrafts(handlers.db, queue);
+      await sweepConversionAnalysis(handlers.db, queue);
+      await boss.work(
         JOB_QUEUES.contractAnalysis,
         oneAtATime,
         async (jobs: JobWithMetadata<ContractAnalysisJob>[]) => {
           for (const job of jobs) {
             await handleContractAnalysis(
-              { db: handlers.db, resolveAiProvider: handlers.resolveAiProvider, log },
+              {
+                db: handlers.db,
+                resolveAiProvider: handlers.resolveAiProvider,
+                storage: handlers.storage,
+                docEngine: handlers.docEngine,
+                log,
+              },
               {
                 runId: job.data.runId,
                 retryCount: job.retryCount,
@@ -695,6 +745,10 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // ones, so an hour-long walk of a large library cannot sit in front
       // of the OCR somebody is waiting on. It takes no metadata and no
       // burst: there is only ever one of it.
+      await boss.work(JOB_QUEUES.conversionSweep, { batchSize: 1 }, async () => {
+        await sweepConversionDrafts(handlers.db, queue);
+        await sweepConversionAnalysis(handlers.db, queue);
+      });
       await boss.work(JOB_QUEUES.backfillSweep, { batchSize: 1 }, async () => {
         const summary = await runBackfillSweep({ db: handlers.db, log }, queue, {
           signal: sweeping.signal,
@@ -744,6 +798,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // every worker that boots declares the same one and an install
       // running two of them still sweeps once — pg-boss elects a single
       // cron worker and creates one job per tick.
+      await boss.schedule(JOB_QUEUES.conversionSweep, CONVERSION_SWEEP_CRON);
       await boss.schedule(JOB_QUEUES.backfillSweep, BACKFILL_SWEEP_CRON);
       // The same upsert, and the reason #277 moved this sweep here: an
       // in-process timer ran a full round per replica, and this round
@@ -765,7 +820,10 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
             JOB_QUEUES.reconciliationSweep,
             JOB_QUEUES.morningRound,
             JOB_QUEUES.contractAnalysis,
+            JOB_QUEUES.conversionDraft,
+            JOB_QUEUES.conversionSweep,
           ],
+          conversionSweepCron: CONVERSION_SWEEP_CRON,
           backfillSweepCron: BACKFILL_SWEEP_CRON,
           reconciliationSweepCron: RECONCILIATION_SWEEP_CRON,
           morningRoundCron: MORNING_ROUND_CRON,

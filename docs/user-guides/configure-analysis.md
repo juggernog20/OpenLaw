@@ -84,3 +84,13 @@ To delete the stored key, select **Remove connector** and confirm. Reconnecting 
 | A Field is missing from the result              | Check that it is active, Contract-scoped, attached to this Type, and has an AI prompt. Check whether the run started before you saved the change.                                                                                   |
 
 When escalating, provide the time, provider, model, displayed error, C- reference, and run's Document Version. Do not include the API key or copy Contract text into a general support report.
+
+## Request conversion switches
+
+Under **AI analysis**, find **Request conversion**. Three independent switches start off for existing installations:
+
+- **Prepare Matter conversions with AI** prepares an editable Conversion draft before Matter creation.
+- **Prepare Contract conversions with AI** prepares an editable Conversion draft before Contract creation.
+- **Fill Contract Fields after conversion** starts a background Analysis run on the created Contract using its confirmed Type, current core/custom prompts and eligible Request answers, conversation and supporting sources. This also works when Contract preparation is off.
+
+Only an Administrator can save these settings. Each switch requires the connector to be enabled. Turning one off stops new application for that workflow. Existing evidence, Unverified values and individual confirm/edit remain available. Ordinary manual Contract analysis keeps its existing control. Follow [Request conversion](convert-request.md) and [Contract analysis](contract-analysis.md) to review proposals, progress, omissions and safe retries.

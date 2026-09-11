@@ -4395,6 +4395,26 @@ The same marker follows a term-derived date onto deadline surfaces. Contract Key
 
 `AiAnalysisCard` and the shared unverified marker are the built reference. The Contract's SSE revalidation keeps the card and fields on one server snapshot; deadline readers consume the same `ai_unverified` fact rather than inventing local trust state. The M31 acceptance journey runs axe over both the settings pane and the Contract record. `SETTINGS-INVENTORY.md` marks the pane shipped while retaining the redraw debt.
 
+### AI evidence addendum (2026-09-11, #825)
+
+AI-written core and custom Contract Fields, including the primary Counterparty, gain a subtle purple gradient border with a blurred edge. Each value keeps the neutral 12px `CircleAlert` and literal **Unverified** pill. A 16px sparkle beside the value opens its evidence. A human edit or confirmation clears only that value's pill, border, and sparkle.
+
+These role-named colors extend DES-005. The theme files own their values; components do not choose colors by theme. The border's start and end colors also supply its half-opacity shadow.
+
+| Token                      | Light     | Warm      | Dark      |
+| -------------------------- | --------- | --------- | --------- |
+| `--ai-field-border-start`  | `#a78bfa` | `#ae91c9` | `#9e82e0` |
+| `--ai-field-border-middle` | `#8b5cf6` | `#9466b5` | `#9874e5` |
+| `--ai-field-border-end`    | `#c084fc` | `#bd8cc9` | `#b77dde` |
+| `--ai-field-border-fade`   | `#ddd6fe` | `#e1d3e8` | `#c7b8ed` |
+| `--ai-evidence-fg`         | `#7c3aed` | `#795099` | `#c4b5fd` |
+
+The user explicitly chose purple. This is a deliberate exception to Warm's prior no-purple palette in DES-005. Warm uses softer purple values against its cream surfaces. The gradient, sparkle, and Unverified label distinguish AI provenance from DES-009 confidentiality and assigned status. None of those meanings depends on hue alone.
+
+The evidence sparkle meets DES-011's 3:1 graphical-object contrast floor on all four content surfaces in each theme, enforced by `lint:contrast`. The decorative gradient leaves the existing control border and focus ring in place. In forced-colors mode, the gradient and blur disappear, a `CanvasText` outline remains, and the sparkle uses `ButtonText`. The neutral Unverified pill remains visible.
+
+Opening evidence reads the value's originating Analysis run, even after a later run completes, and checks the source Document's current audience. It opens the original Document Version in the DES-016 doc panel without changing the route or tab. PDF quotes match across whitespace and text spans, and the panel centers the highlighted passage. Missing quotes, unavailable sources, and unmatched passages have visible fallback text. Closing the panel restores focus to the sparkle.
+
 ## DES-071: A Comparison is one change pane beside one compare card (extends DES-006, DES-016, DES-063)
 
 - **Status:** Accepted
@@ -4627,3 +4647,13 @@ when the application is unavailable.
 | DES-072 | The portal page is a main column beside an aside (amends the I5–I7 column; extends DES-012, DES-003, DES-068)                                                        | Accepted                                                                                                   |
 | DES-073 | Help has a discoverable entry in each shell and a public formal reader (extends DES-072)                                                                             | Accepted                                                                                                   |
 | DES-074 | Documentation and Help share the application design system                                                                                                           | Accepted                                                                                                   |
+
+### DES-016 addendum (2026-09-11, #827) — Request source reading above Convert
+
+A document sparkle in the Convert dialog opens the doc panel **above the still-mounted Convert dialog**, as a second modal. The source panel owns focus and Escape until closed. Closing restores focus to the initiating sparkle with no scrolling of the Convert dialog or the Inbox Request page. Neither dialog submission nor navigation occurs. Opening another citation replaces only the source being read; an ordinary record-page doc panel keeps its existing docking behavior.
+
+This is a new Request attachment read path: the Inbox's chat-only `RecordApplets` does not acquire a fictitious Document owner or a Document Version before conversion. Its Convert dialog owns this modal source layer rather than inserting a layer behind the modal in `RecordApplets`. The same source panel remains available from Matter values after conversion. It uses the baseline PDF viewer and its find/center behavior, with an authorized attachment preview before conversion and the mapped immutable Document Version afterwards. Office renditions wait on the existing rendition read after promotion. A scanned PDF still displays the original scan: OCR supplies text, not coordinates or a replacement PDF. OCR and parsed email explicitly state when a passage cannot be located. The quote and original download remain available. Multiple citations are individually named and selectable.
+
+### DES-016 addendum (2026-09-11, #829) — Saved conversion citations
+
+The stacked source modal remains appropriate while the Convert dialog is active and keeps that dialog mounted. On saved Matter and Contract records, a citation with a Document Version uses the existing doc panel in RecordApplets. It docks beside the record at the existing width threshold and covers only the record content at narrower widths. It opens the original Version with the quoted passage highlighted, preserves the route and typed values, and restores the sparkle on close. Multiple citations offer a source choice. Request/message text remains available beside its value; unfiled conversation attachments retain their source reader. This supersedes the INT-008-era permission to reuse the centered Convert source modal for promoted Document Versions on saved records.

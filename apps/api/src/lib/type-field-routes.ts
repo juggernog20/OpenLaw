@@ -37,16 +37,12 @@ import { z } from "zod";
 import {
   and,
   asc,
-  contractTypeFields,
-  entityTypeFields,
   eq,
   fields,
   FIELD_MODULE_SCOPES,
   FIELD_TYPES,
   isNotNull,
   isNull,
-  matterTypeFields,
-  requestTypeFields,
   type Executor,
   type Field,
   type FieldModuleScope,
@@ -58,12 +54,8 @@ import { recordActivity, type TypeFieldActionPrefix } from "./activity.js";
 import { httpError, problemResponse } from "./problem.js";
 import type { TaxonomyRow, TaxonomyTable } from "./taxonomy-routes.js";
 
-/** The join tables are one shape by construction (`typeFieldColumns`). */
-export type TypeFieldsTable =
-  | typeof contractTypeFields
-  | typeof entityTypeFields
-  | typeof matterTypeFields
-  | typeof requestTypeFields;
+import type { TypeFieldsTable } from "./type-fields.js";
+export type { TypeFieldsTable } from "./type-fields.js";
 export type TypeFieldRow = TypeFieldsTable["$inferSelect"];
 
 /**

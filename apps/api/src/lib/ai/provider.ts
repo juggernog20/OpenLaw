@@ -13,11 +13,24 @@ export interface AiExtractionTarget {
   prompt: string;
 }
 
+export interface AiSource {
+  id: string;
+  revision: string;
+  label: string;
+  text: string;
+  kind: "request" | "field" | "message" | "document";
+  author?: string;
+  createdAt?: string;
+}
+
 /** One answer from the provider. Evidence may be absent in a weak model's reply. */
 export interface AiExtraction {
   slug: string;
   value: unknown;
   evidence?: string;
+  sourceId?: string;
+  citations?: { sourceId: string; quote: string }[];
+  conflict?: boolean;
 }
 
 /** The stored connector values needed to build one protocol adapter. */
@@ -74,7 +87,10 @@ export interface AiProvider {
   readonly protocol: AiProtocol;
   readonly model: string;
 
-  extract(text: string, targets: readonly AiExtractionTarget[]): Promise<AiExtraction[]>;
+  extract(
+    text: string | readonly AiSource[],
+    targets: readonly AiExtractionTarget[],
+  ): Promise<AiExtraction[]>;
 
   /** Makes one small model call to prove the stored configuration. */
   probe(): Promise<void>;

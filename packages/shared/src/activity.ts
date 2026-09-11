@@ -785,7 +785,8 @@ type ContractPayloads = {
     number: number;
     title: string;
     runId: string;
-    versionId: string;
+    /** Null for Request-context Analysis, which reads multiple sources rather than one Version. */
+    versionId: string | null;
     model: string;
     written: string[];
     kept: string[];
@@ -820,6 +821,8 @@ type MatterPayloads = {
   "matter.created_from_request": { number: number; title: string; requestNumber: number };
   "matter.confidentiality_set": { number: number; title: string };
   "matter.confidentiality_cleared": { number: number; title: string };
+  /** A person verified one AI-populated Matter value; the value itself did not change. */
+  "matter.field_confirmed": { number: number; title: string; slug: string };
   "matter.updated": {
     number: number;
     title: string;
@@ -1075,7 +1078,14 @@ type AiConnectorPayloads = {
       }
     | {
         preset: string;
-        field: "preset" | "protocol" | "baseUrl" | "model";
+        field:
+          | "preset"
+          | "protocol"
+          | "baseUrl"
+          | "model"
+          | "matterPreparation"
+          | "contractPreparation"
+          | "contractConversionAnalysis";
         old: unknown;
         new: unknown;
       };

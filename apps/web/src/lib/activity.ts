@@ -1284,6 +1284,34 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       defaultMessage: "{actor} could not complete an AI analysis of this contract",
     }),
   },
+  "matter.field_confirmed": {
+    icon: Check,
+    message: defineMessage({
+      id: "activity.matter.fieldConfirmed",
+      defaultMessage: "{actor} confirmed the AI-written value for {field}",
+    }),
+    values: (intl, payload, _changes, context) => {
+      const slug = text(payload, "slug") ?? "";
+      const generic = intl.formatMessage({
+        id: "activity.contract.unknownField",
+        defaultMessage: "a field",
+      });
+      return {
+        field: !slug
+          ? generic
+          : slug.startsWith("field:")
+            ? (customField(context, slug.slice(6))?.displayName ?? generic)
+            : intl.formatMessage(
+                {
+                  id: "conversion.targetLabel",
+                  defaultMessage:
+                    "{slug, select, title {Title} description {Description} matter_type {Matter type} contract_type {Contract type} counterparty {Counterparty} priority {Priority} needed_by {Needed by} other {Value}}",
+                },
+                { slug },
+              ),
+      };
+    },
+  },
   "contract.field_confirmed": {
     icon: Check,
     message: defineMessage({

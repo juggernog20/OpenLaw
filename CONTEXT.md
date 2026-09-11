@@ -35,7 +35,7 @@ One derived reading of two Versions of one Document, the older against the newer
 The Version a Comparison's export appends to the chain, kind `generated_redline`, source `generated`, carrying both operands; it is a fact about how a file was made and is never correctable [CTR-014, DOC-001, DOC-003].
 
 **Analysis run**:
-One durable reading of a Contract's chosen Document Version against that Contract's current AI target schema. It is triggered automatically or manually, moves from pending to ready or failed, and records the provider model, evidence, and each writer outcome. It is an account of what the extraction did, not a proposal waiting to be accepted [CTR-008, TECH-012].
+One durable reading of a Contract's chosen Document Version, or its eligible original Request context after conversion, against that Contract's current AI target schema. It is triggered automatically or manually, moves from pending to ready or failed, and records the provider model, evidence, and each writer outcome. It is an account of what the extraction did, not a proposal waiting to be accepted [CTR-008, TECH-012].
 _Avoid_: AI job, analysis result, extraction proposal
 
 **Knowledge Item**:
@@ -277,8 +277,12 @@ _Avoid_: approval group, approver team, sign-off rule
 The Administrator-configured credentials one e-signature provider is reached with — DocuSign in v1, adapter-keyed so a second provider is a second connector. It is org configuration, not deployment environment: it is saved in Settings → Organization → Integrations → E-signature and read live on every use, so a rotated key applies to the next call. An install with no connector loses nothing it has today — the manual hand-off (upload the executed PDF, pin it, mark active) is always available and needs no configuration [CTR-013, TECH-013, SET-007].
 _Avoid_: DocuSign integration, e-sign settings, signing provider (that is the code seam behind the connector, not the configuration)
 
+**Conversion draft**:
+An actor-scoped, editable proposal prepared from a Request before a person submits the Convert dialog. It holds suggested values and source citations, creates no Matter or Contract, and does not disposition the Request. Unchanged accepted suggestions become Unverified values; edits and confirmations are human. It is distinct from an Analysis run, which records what an extraction already did [INT-008].
+_Avoid_: Analysis run (for a before-creation proposal), preparation run
+
 **AI connector**:
-The singleton provider configuration for Contract analysis, saved in Settings → Organization → AI analysis, a section of its own. It chooses a preset or custom endpoint, one supported protocol, a base URL, model, and write-only API key. The API resolves it for Test connection and the worker resolves it for every Analysis run, so changes apply without a restart; the key is encrypted under `OPENLAW_SECRET_KEY` [CTR-008, TECH-012, SET-008].
+The singleton provider configuration for Contract analysis and opted-in Conversion drafts, saved in Settings → Organization → AI analysis, a section of its own. It chooses a preset or custom endpoint, one supported protocol, a base URL, model, and write-only API key. The API resolves it for Test connection and the worker resolves it for every Analysis run and Conversion draft, so changes apply without a restart; the key is encrypted under `OPENLAW_SECRET_KEY` [CTR-008, TECH-012, SET-008].
 _Avoid_: AI integration, provider environment variable, model settings
 
 **Manual hand-off**:

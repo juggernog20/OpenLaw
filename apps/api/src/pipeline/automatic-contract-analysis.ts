@@ -21,6 +21,7 @@ import {
   isNotNull,
   isNull,
   sql,
+  requestAttachments,
   type Db,
 } from "@openlaw/db";
 import type { AiResolver } from "../lib/ai/resolver.js";
@@ -77,6 +78,25 @@ export async function requestAutomaticContractAnalysis(
         .for("update");
       if (!contract || contract.archivedAt || contract.endedAt) return null;
 
+      const [conversion] = await tx
+        .select({ id: contractAnalysisRuns.id })
+        .from(contractAnalysisRuns)
+        .where(
+          and(
+            eq(contractAnalysisRuns.contractId, contract.id),
+            eq(contractAnalysisRuns.trigger, "conversion"),
+          ),
+        )
+        .limit(1);
+      // Original promoted paper is covered even when its derivation finishes after the richer run.
+      if (conversion) {
+        const [original] = await tx
+          .select({ id: requestAttachments.id })
+          .from(requestAttachments)
+          .where(eq(requestAttachments.promotedVersionId, versionId))
+          .limit(1);
+        if (original) return null;
+      }
       // Resolve while holding the same Contract lock that worker start
       // takes. The worker therefore cannot finish this target in the
       // gap between connector lookup and the coverage checks below.

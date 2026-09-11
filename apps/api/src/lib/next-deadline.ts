@@ -56,7 +56,7 @@ export function nextDeadline(module: "matter" | "contract", today = civilToday()
         'unverified', nullif(deadline.unverified, false)))
       from (
         select ${dates.date} as date, ${dates.label} as label, 'key_date' as source, ${dates.id} as id,
-          false as unverified
+          (${record.aiUnverified}->'needed_by'->>'keyDateId' = ${dates.id}) as unverified
         from ${dates}
         where ${dateOwner} = ${record.id} and ${dates.date} >= ${today}::date
         union all

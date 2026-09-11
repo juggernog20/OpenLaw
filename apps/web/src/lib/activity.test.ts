@@ -544,6 +544,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     model: "analysis-model",
     reason: "The provider did not answer.",
   },
+  "matter.field_confirmed": { number: 41, title: "Matter", slug: "title" },
   "contract.field_confirmed": {
     number: 41,
     title: "Helix supply agreement",
@@ -1364,4 +1365,10 @@ it("includes the closing note in Matter activity without inventing one for older
   expect(
     narrate("matter.status_changed", { from: "Open", to: "Closed" }).closingNote,
   ).toBeUndefined();
+});
+
+it("uses the generic Field label for older Matter confirmations without a slug", () => {
+  expect(narrate("matter.field_confirmed", { number: 41, title: "Matter" }).sentence).toContain(
+    "a field",
+  );
 });

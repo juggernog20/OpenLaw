@@ -41,3 +41,12 @@ change to a guide source and promoted no article.
 DOC-022 #742, DOC-025 #745 and fully verified release publication #747 remain open.
 The 56-guide and 55-coverage-group denominators are unchanged. Verification of the
 publication mechanism and served readers is recorded in the implementation PR linked from #800.
+
+The #829 feature update changes the approved source hashes for convert-request,
+contract-analysis, configure-analysis, create-matter, matter-templates and
+troubleshooting. These guides now describe the independent Request conversion
+switches, Conversion draft review, post-conversion Analysis, source citations,
+explicit clears and current ownership defaults. Their existing validation status
+and old evidence remain unchanged. The live preparation observations supplied in
+the feature handoff cover only the interactions actually recorded; they are not
+blanket guide verification.

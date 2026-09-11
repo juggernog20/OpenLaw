@@ -170,6 +170,7 @@ import {
   type ResolvedDocumentOwner,
 } from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
+import { assertConversionDocumentCanNarrow } from "../../lib/conversion-source-privacy.js";
 import { copyStoredBlob } from "../../lib/copy-stored-blob.js";
 import { requireDocumentReader } from "../../lib/document-access.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
@@ -2646,6 +2647,13 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             await assertMayFlagConfidential(tx, target, request.user);
           }
           assertOpenDocument(target);
+          // The INT-008 narrowing refusal is about this document's own
+          // state, not the actor's standing, so it waits until after the
+          // freezes above. An archived document has a plainer reason to
+          // give, and its citations already read as unavailable, so
+          // there is no unreviewed derivative left to protect there.
+          if (body.isConfidential && !target.isConfidential)
+            await assertConversionDocumentCanNarrow(tx, documentId);
 
           const patch: {
             title?: string;

@@ -230,6 +230,7 @@ export interface ReachedContract {
   /** CTR-008's source flags. Deadline readers use the map to mark the
    * two term-derived dates without changing their order or eligibility. */
   aiUnverified: AiUnverifiedMap | null;
+  contractTypeId: string;
 }
 
 /** The witness a {@link LockedContract} carries. It is `declare`d and
@@ -306,6 +307,7 @@ export async function reachedContract(
       expiryDate: contracts.expiryDate,
       noticePeriodDays: contracts.noticePeriodDays,
       aiUnverified: contracts.aiUnverified,
+      contractTypeId: contracts.contractTypeId,
     })
     .from(contracts)
     .where(and(eq(contracts.number, number), contractTeamScope(db, user)))

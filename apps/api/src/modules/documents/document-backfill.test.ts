@@ -54,7 +54,7 @@ import {
   type BackfillSummary,
 } from "../../pipeline/backfill.js";
 import { JOB_QUEUES, createUnconfiguredJobQueue, type JobQueue } from "../../pipeline/jobs.js";
-import { BACKFILL_SWEEP_CRON } from "../../pipeline/pg-boss.js";
+import { BACKFILL_SWEEP_CRON, CONVERSION_SWEEP_CRON } from "../../pipeline/pg-boss.js";
 import { DOCX_MIME_TYPE, officePackage } from "../../testing/fixtures/office.js";
 import { testDeps } from "../../testing/deps.js";
 import {
@@ -695,5 +695,12 @@ describe("when the install is never restarted", () => {
 
     expect(rows).toHaveLength(1);
     expect(rows[0]?.cron).toBe(BACKFILL_SWEEP_CRON);
+    const recovery = await harness.db.execute<{ cron: string; policy: string }>(sql`
+      select schedule.cron, queue.policy from pgboss.schedule schedule
+      join pgboss.queue queue on queue.name = schedule.name
+      where schedule.name = ${JOB_QUEUES.conversionSweep}
+    `);
+    expect(recovery.rows).toEqual([{ cron: CONVERSION_SWEEP_CRON, policy: "singleton" }]);
+    expect(CONVERSION_SWEEP_CRON).toBe("* * * * *");
   });
 });

@@ -34,7 +34,7 @@ type Connector = Response["connector"];
 type PresetOption = Response["presets"][number];
 type Preset = PresetOption["preset"];
 type Protocol = PresetOption["protocol"];
-type Field = "connector" | "test" | "lifecycle";
+type Field = "connector" | "test" | "lifecycle" | "workflow";
 
 export async function settingsAiAnalysisLoader() {
   const user = await requireUser();
@@ -73,11 +73,13 @@ export function SettingsAiAnalysisPage() {
     connector: "idle",
     test: "idle",
     lifecycle: "idle",
+    workflow: "idle",
   });
   const [detail, setDetail] = useState<Record<Field, string | undefined>>({
     connector: undefined,
     test: undefined,
     lifecycle: undefined,
+    workflow: undefined,
   });
   const [confirmingRemove, setConfirmingRemove] = useState(false);
   const saving = useRef(false);
@@ -106,6 +108,33 @@ export function SettingsAiAnalysisPage() {
   function note(field: Field, value: FieldStatus, message?: string) {
     setStatus((current) => ({ ...current, [field]: value }));
     setDetail((current) => ({ ...current, [field]: message }));
+  }
+
+  async function saveWorkflow(
+    patch:
+      | { matterPreparation: boolean }
+      | { contractPreparation: boolean }
+      | { contractConversionAnalysis: boolean },
+  ): Promise<void> {
+    note("workflow", "saving");
+    try {
+      const result = await api.PATCH("/api/v1/ai-connector/workflows", {
+        body: patch,
+      });
+      if (result.data) {
+        setConnector(result.data.connector);
+        note("workflow", "saved");
+      } else note("workflow", "error", (await problem(result)).detail);
+    } catch {
+      note(
+        "workflow",
+        "error",
+        intl.formatMessage({
+          id: "conversion.settingsFailed",
+          defaultMessage: "The conversion setting could not be saved.",
+        }),
+      );
+    }
   }
 
   function choosePreset(next: Preset): void {
@@ -461,6 +490,65 @@ export function SettingsAiAnalysisPage() {
           </div>
         )}
       </SettingsCard>
+      {connector.configured && (
+        <SettingsCard
+          title={<FormattedMessage id="conversion.settings" defaultMessage="Request conversion" />}
+        >
+          <div className="flex items-center justify-between gap-4 p-4">
+            <Label htmlFor="matter-preparation">
+              <FormattedMessage
+                id="conversion.settingsMatter"
+                defaultMessage="Prepare Matter conversions with AI"
+              />
+            </Label>
+            <Switch
+              id="matter-preparation"
+              checked={connector.matterPreparation}
+              disabled={!connector.enabled || status.workflow === "saving"}
+              onCheckedChange={(matterPreparation) => void saveWorkflow({ matterPreparation })}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-4 p-4">
+            <Label htmlFor="contract-preparation">
+              <FormattedMessage
+                id="conversion.settingsContract"
+                defaultMessage="Prepare Contract conversions with AI"
+              />
+            </Label>
+            <Switch
+              id="contract-preparation"
+              checked={connector.contractPreparation}
+              disabled={!connector.enabled || status.workflow === "saving"}
+              onCheckedChange={(contractPreparation) => void saveWorkflow({ contractPreparation })}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-4 p-4">
+            <div>
+              <Label htmlFor="contract-conversion-analysis">
+                <FormattedMessage
+                  id="conversion.settingsAnalysis"
+                  defaultMessage="Fill Contract Fields after conversion"
+                />
+              </Label>
+              <p className="text-sm text-muted">
+                <FormattedMessage
+                  id="conversion.settingsAnalysisHint"
+                  defaultMessage="Run Analysis with the saved Request, conversation and supporting sources. Also works with manual conversion."
+                />
+              </p>
+            </div>
+            <Switch
+              id="contract-conversion-analysis"
+              checked={connector.contractConversionAnalysis}
+              disabled={!connector.enabled || status.workflow === "saving"}
+              onCheckedChange={(contractConversionAnalysis) =>
+                void saveWorkflow({ contractConversionAnalysis })
+              }
+            />
+          </div>
+          <StatusNote status={status.workflow} detail={detail.workflow} />
+        </SettingsCard>
+      )}
       <AiFieldPromptsCard initialPrompts={loaded.prompts} />
       {confirmingRemove && (
         <Dialog open onOpenChange={(open) => !open && setConfirmingRemove(false)}>

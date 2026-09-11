@@ -256,7 +256,9 @@ async function sourceRows(
       )
     : sql.raw("");
   const withoutLaterContractColumns = migrated
-    ? sql.raw(" - 'search_vector' - 'ai_unverified' - 'business_owner_id'")
+    ? sql.raw(
+        " - 'search_vector' - 'ai_unverified' - 'business_owner_id' - 'analysis_human_fields'",
+      )
     : sql.raw("");
   const withoutLaterDocumentColumns = migrated
     ? sql.raw(" - 'search_vector' - 'entity_id' - 'knowledge_item_id'")

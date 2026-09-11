@@ -54,6 +54,7 @@ import {
   contractKeyDates,
   contracts,
   eq,
+  sql,
   type Executor,
   type Transaction,
 } from "@openlaw/db";
@@ -155,8 +156,8 @@ const DeadlineSchema = z.object({
   /** The earliest date still ahead — CTR-009's "next deadline". Exactly
    * one entry carries it, or none when every date has passed. */
   isNext: z.boolean(),
-  /** True only when a term-derived row reads an AI-written source no
-   * person has confirmed. Key dates are always false. */
+  /** True while a term-derived source or the Conversion draft's Needed by
+   * key date still awaits a person's confirmation. */
   unverified: z.boolean(),
 });
 
@@ -223,6 +224,7 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
           expiryDate: contracts.expiryDate,
           noticePeriodDays: contracts.noticePeriodDays,
           aiUnverified: contracts.aiUnverified,
+          contractTypeId: contracts.contractTypeId,
         },
       })
       .from(contractKeyDates)
@@ -274,7 +276,7 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
       reminderRecipientIds: ownReminderRecipients(row.reminderRecipientIds),
       daysAway: daysBetween(today, row.date),
       isNext: false,
-      unverified: false,
+      unverified: contract.aiUnverified?.needed_by?.keyDateId === row.id,
     }));
 
     /** A term-derived date joins the union as a row with no row behind
@@ -551,6 +553,24 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
         // worse than no entry at all.
         if (Object.keys(changed).length > 0) {
           await tx.update(contractKeyDates).set(wanted).where(eq(contractKeyDates.id, keyDate.id));
+          // The date and the label are what the proposal claimed, so
+          // only a change to one of them reviews it. A reminder or a
+          // note edit re-sends both boxes without touching either
+          // value, and the Matter arm reads the same two keys.
+          if (
+            keyDate.contract.aiUnverified?.needed_by?.keyDateId === keyDate.id &&
+            ("date" in changed || "label" in changed)
+          ) {
+            await tx
+              .update(contracts)
+              .set({
+                aiUnverified: sql`nullif(${contracts.aiUnverified} - 'needed_by', '{}'::jsonb)`,
+              })
+              .where(eq(contracts.id, keyDate.contract.id));
+            const flags = { ...keyDate.contract.aiUnverified };
+            delete flags.needed_by;
+            keyDate.contract.aiUnverified = Object.keys(flags).length ? flags : null;
+          }
 
           await recordActivity(tx, {
             entityType: "contract",
@@ -597,6 +617,13 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
         if (keyDate.contract.archivedAt) throw httpError(409, FROZEN);
 
         await tx.delete(contractKeyDates).where(eq(contractKeyDates.id, keyDate.id));
+        if (keyDate.contract.aiUnverified?.needed_by?.keyDateId === keyDate.id)
+          await tx
+            .update(contracts)
+            .set({
+              aiUnverified: sql`nullif(${contracts.aiUnverified} - 'needed_by', '{}'::jsonb)`,
+            })
+            .where(eq(contracts.id, keyDate.contract.id));
 
         // The row is gone, so this entry is the only thing left that
         // says the date was ever on the record — which is why it carries
