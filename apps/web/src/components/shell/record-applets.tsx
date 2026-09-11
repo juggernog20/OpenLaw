@@ -61,7 +61,9 @@ export function RecordApplets({
   /** The record's own content, beside the panel. */
   children: ReactNode;
 }>) {
+  const citationSequence = useRef(0);
   const [citation, setCitation] = useState<{
+    citationKey: number;
     landing: DocumentLanding;
     recordKey?: string;
     quote: string;
@@ -207,7 +209,13 @@ export function RecordApplets({
         );
         if (!landing || input.signal?.aborted) return false;
         setCitationCovers(true);
-        setCitation({ landing, recordKey, quote: input.quote, trigger: input.trigger });
+        setCitation({
+          citationKey: ++citationSequence.current,
+          landing,
+          recordKey,
+          quote: input.quote,
+          trigger: input.trigger,
+        });
         return true;
       }}
     >
@@ -230,6 +238,7 @@ export function RecordApplets({
             right of it, with the applet beyond them both. */}
           {readingCitation ? (
             <DocPanel
+              key={readingCitation.citationKey}
               documentId={readingCitation.landing.document.id}
               title={readingCitation.landing.document.title}
               version={readingCitation.landing.document.versions.find(

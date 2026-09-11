@@ -11,10 +11,10 @@
  * fire transitionend, so close tests dispatch it on the clip.
  */
 
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { SourceDocumentPanel } from "../intake/source-document-panel";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { IntlProvider, defineMessage } from "react-intl";
 import { History, MessageSquare, Settings } from "lucide-react";
@@ -386,7 +386,22 @@ vi.mock("../../lib/documents", () => ({
   }),
 }));
 vi.mock("../documents/doc-panel", () => ({
-  DocPanel: () => <aside aria-label="Cited document">Saved citation</aside>,
+  DocPanel: ({
+    initialFind,
+    onDockedChange,
+  }: {
+    initialFind: string;
+    onDockedChange: (docked: boolean) => void;
+  }) => {
+    useEffect(() => {
+      onDockedChange(true);
+    }, [onDockedChange]);
+    return (
+      <aside aria-label="Cited document">
+        <input aria-label="Reader search" defaultValue={initialFind} />
+      </aside>
+    );
+  },
 }));
 
 function OpenCitation() {
@@ -424,4 +439,23 @@ it("discards a citation when navigating away, so returning does not reopen it", 
   expect(screen.queryByRole("complementary", { name: "Cited document" })).toBeNull();
   rerender(page("matter:1"));
   expect(screen.queryByRole("complementary", { name: "Cited document" })).toBeNull();
+});
+
+it("reopens the cited passage after the reader changes their search", async () => {
+  render(
+    <IntlProvider locale="en-US">
+      <RecordApplets recordKey="matter:1" applets={[]}>
+        <OpenCitation />
+      </RecordApplets>
+    </IntlProvider>,
+  );
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("button", { name: "Open evidence" }));
+  const find = await screen.findByRole("textbox", { name: "Reader search" });
+  await user.clear(find);
+  await user.type(find, "Another passage");
+  await user.click(screen.getByRole("button", { name: "Open evidence" }));
+  await waitFor(() =>
+    expect(screen.getByRole("textbox", { name: "Reader search" })).toHaveValue("Evidence"),
+  );
 });
