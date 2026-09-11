@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-/** A narrowed source must not leave unreviewed facts in broader Matter fields. */
+/** INT-008: a narrowed source must not leave unreviewed facts in broader Matter fields. */
 import {
   conversionDrafts,
   matters,
@@ -18,10 +18,12 @@ export async function assertConversionDocumentCanNarrow(db: Executor, documentId
       join ${conversionDrafts} draft on draft.id = marker.value->>'draftId'
       cross join lateral jsonb_array_elements(coalesce(draft.suggestions->marker.key->'citations', '[]'::jsonb)) citation
       where citation->>'sourceId' in (
-        select 'attachment:' || a.id from ${requestAttachments} a
-        join ${documentVersions} v on v.id = a.promoted_version_id where v.document_id = ${documentId}
+        select 'attachment:' || ${requestAttachments.id} from ${requestAttachments}
+        join ${documentVersions} on ${documentVersions.id} = ${requestAttachments.promotedVersionId}
+        where ${documentVersions.documentId} = ${documentId}
         union all
-        select 'message-attachment:' || a.id from ${commentAttachments} a where a.filed_document_id = ${documentId}
+        select 'message-attachment:' || ${commentAttachments.id} from ${commentAttachments}
+        where ${commentAttachments.filedDocumentId} = ${documentId}
       )
     ) as present
   `);

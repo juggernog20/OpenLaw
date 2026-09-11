@@ -27,7 +27,7 @@ import {
   CustomFieldValueSchema,
 } from "./custom-fields.js";
 import type { AiExtraction, AiExtractionTarget, AiSource } from "./ai/provider.js";
-import type { AttachmentSource } from "./conversion-attachments.js";
+import { ATTACHMENT_LIMITS, type AttachmentSource } from "./conversion-attachments.js";
 import { httpError } from "./problem.js";
 
 export const ConversionSuggestionSchema = z.object({
@@ -191,7 +191,7 @@ export async function conversionSources(db: Executor, requestId: string, lockSou
   const sources = all
     .filter((source) => {
       if (source.restricted) return false;
-      if (characters + source.text.length > 180_000) {
+      if (characters + source.text.length > ATTACHMENT_LIMITS.totalCharacters) {
         warnings.push("source_budget");
         return false;
       }

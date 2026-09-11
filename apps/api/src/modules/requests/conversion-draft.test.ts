@@ -639,9 +639,11 @@ it("reads all eligible paper once, preserves named evidence, and maps promotion 
   const evidence = await harness.app.inject({ url: evidencePath, cookies: cast.memberCookies });
   expect(evidence.json().citations[0].sourceId).toBe(`attachment:${paper[1]!.id}`);
   const previewPath = evidence.json().citations[0].attachment.previewHref;
-  expect(
-    (await harness.app.inject({ url: previewPath, cookies: cast.memberCookies })).rawPayload,
-  ).toEqual(native);
+  const preview = await harness.app.inject({ url: previewPath, cookies: cast.memberCookies });
+  expect(preview.rawPayload).toEqual(native);
+  expect(preview.headers["content-length"]).toBe(String(native.length));
+  expect(preview.headers["content-security-policy"]).toBe("default-src 'none'; sandbox");
+  expect(preview.headers["content-type"]).toBe("application/pdf");
   expect(
     (await harness.app.inject({ url: previewPath, cookies: cast.otherMemberCookies })).statusCode,
   ).toBe(404);
@@ -742,4 +744,57 @@ it("reads all eligible paper once, preserves named evidence, and maps promotion 
     .set({ archivedAt: new Date() })
     .where(eq(documents.id, version!.documentId));
   expect((await after()).json()).toEqual({ available: false, citations: [] });
+});
+
+it("reuses cached attachment reads when preparation retries a provider failure", async () => {
+  await harness.db.update(aiConnector).set({ matterPreparation: true, disabledAt: null });
+  const { Readable } = await import("node:stream");
+  const { requestAttachments } = await import("@openlaw/db");
+  const row = await ask();
+  const fileRef = await harness.storage.put(
+    `test/${row.id}/retry`,
+    Readable.from([Buffer.from("%PDF-1.4 Supporting agreement")]),
+  );
+  await harness.db
+    .insert(requestAttachments)
+    .values({ requestId: row.id, fileRef, filename: "retry.pdf", uploadedBy: cast.requesterId });
+  const made = await prepare(row.number);
+  const id = made.json().draft.id;
+  const deps = {
+    db: harness.db,
+    storage: harness.storage,
+    docEngine: harness.docEngine,
+    resolveAiProvider: harness.resolveAiProvider,
+  };
+  const extraction = vi.spyOn(harness.docEngine, "extractPdfText");
+  provider.outage();
+  try {
+    await handleConversionDraft(deps, id);
+    const [failed] = await harness.db
+      .select()
+      .from(conversionDrafts)
+      .where(eq(conversionDrafts.id, id));
+    expect(failed!.state).toBe("failed");
+    expect(failed!.attachmentReads).toMatchObject([{ status: "readable" }]);
+    expect(extraction).toHaveBeenCalledOnce();
+    provider.outage(false);
+    const retry = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/requests/${row.number}/conversion-drafts`,
+      cookies: cast.memberCookies,
+      payload: { targetModule: "matter", targetTypeId: typeId, retry: true },
+    });
+    expect(retry.json().draft.id).toBe(id);
+    expect(retry.json().draft.state).toBe("pending");
+    await handleConversionDraft(deps, id);
+    const [ready] = await harness.db
+      .select()
+      .from(conversionDrafts)
+      .where(eq(conversionDrafts.id, id));
+    expect(ready!.state).toBe("ready");
+    expect(extraction).toHaveBeenCalledOnce();
+  } finally {
+    provider.outage(false);
+    extraction.mockRestore();
+  }
 });

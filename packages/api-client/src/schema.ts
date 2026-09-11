@@ -14945,7 +14945,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": unknown;
+          "application/pdf": string;
         };
       };
       /** @description Problem details (RFC 9457) */
@@ -14978,7 +14978,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": unknown;
+          "application/octet-stream": string;
         };
       };
       /** @description Problem details (RFC 9457) */

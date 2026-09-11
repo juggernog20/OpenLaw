@@ -1127,7 +1127,7 @@ describe("a lost race (INT-007, TECH-020)", () => {
 });
 
 describe("Matter Conversion drafts", () => {
-  function preparedApi(pending = false, allValues = false) {
+  function preparedApi(pending = false, allValues = false, withAttachments = false) {
     const base = requestApi();
     const draft = {
       id: "draft-1",
@@ -1160,7 +1160,27 @@ describe("Matter Conversion drafts", () => {
         },
       },
       conflicts: {},
-      warnings: [],
+      limits: {
+        sources: 20,
+        bytes: 10485760,
+        totalBytes: 52428800,
+        characters: 30000,
+        totalCharacters: 180000,
+        sourceRuntimeMs: 15000,
+        runtimeMs: 45000,
+      },
+      warnings: withAttachments ? ["attachment_omissions"] : [],
+      attachmentReads: withAttachments
+        ? [
+            { sourceId: "attachment:sheet", label: "Costs.xlsx", status: "unsupported" },
+            {
+              sourceId: "attachment:long",
+              label: "Long agreement.pdf",
+              status: "truncated",
+              reason: "character_limit",
+            },
+          ]
+        : [],
       failure: null,
     };
     return {
@@ -1292,6 +1312,117 @@ describe("Matter Conversion drafts", () => {
     } finally {
       scroll.mockRestore();
     }
+  });
+  it("keeps Convert in place when a citation becomes unavailable", async () => {
+    const user = userEvent.setup();
+    const base = preparedApi();
+    const { router } = open({
+      ...base,
+      handler: (call: StubCall) =>
+        call.url.pathname.includes("/evidence/")
+          ? json(200, { available: false, citations: [] })
+          : base.handler(call),
+    });
+    await openDisposition(user, "Convert to matter");
+    await screen.findByDisplayValue("Prepared response");
+    const convert = screen.getByRole("dialog");
+    const trigger = within(convert).getAllByRole("button", { name: "View source evidence" })[0]!;
+    await user.click(trigger);
+    expect(await screen.findByText("The source is unavailable or has changed.")).toBeVisible();
+    expect(screen.queryByRole("dialog", { name: "Source document" })).toBeNull();
+    expect(router.state.location.pathname).toBe("/inbox/45");
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(trigger).toHaveFocus());
+    expect(screen.getByRole("dialog")).toBe(convert);
+  });
+  it.each(["unreachable", "failed", "ready at deadline"])(
+    "handles a mapped Office rendition that is %s without losing Convert",
+    async (result) => {
+      const user = userEvent.setup();
+      const base = preparedApi();
+      const href = "/api/v1/documents/promoted/versions/immutable/preview";
+      const clock = vi.spyOn(Date, "now");
+      try {
+        const { router } = open({
+          ...base,
+          handler: (call: StubCall) => {
+            if (call.url.pathname.endsWith("/rendition")) {
+              if (result === "ready at deadline") clock.mockReturnValue(Date.now() + 60_001);
+              return result === "unreachable"
+                ? json(404, {})
+                : json(200, { rendition: { state: result === "failed" ? "failed" : "ready" } });
+            }
+            if (call.url.pathname.includes("/evidence/"))
+              return json(200, {
+                available: true,
+                citations: [
+                  {
+                    sourceId: "attachment:word",
+                    label: "Agreement.docx",
+                    text: "Supporting agreement text",
+                    quote: "Supporting agreement",
+                    attachment: {
+                      previewHref: href,
+                      downloadHref: href.replace("preview", "download"),
+                      documentId: "promoted",
+                      versionId: "immutable",
+                      method: "converted",
+                    },
+                  },
+                ],
+              });
+            return base.handler(call);
+          },
+        });
+        await openDisposition(user, "Convert to matter");
+        await screen.findByDisplayValue("Prepared response");
+        const convert = screen.getByRole("dialog");
+        convert.scrollTop = 165;
+        const trigger = within(convert).getAllByRole("button", {
+          name: "View source evidence",
+        })[0]!;
+        await user.click(trigger);
+        const panel = await screen.findByRole("dialog", { name: "Source document" });
+        if (result === "ready at deadline") {
+          expect(
+            await within(panel).findByRole("region", { name: "Agreement.docx, pages" }),
+          ).toBeVisible();
+        } else {
+          expect(
+            await within(panel).findByText(
+              "This source has no searchable passage preview. Read the quoted text and check the original file.",
+            ),
+          ).toBeVisible();
+          expect(within(panel).getByText("Supporting agreement text")).toBeVisible();
+        }
+        expect(within(panel).getByRole("link", { name: "Download" })).toHaveAttribute(
+          "href",
+          href.replace("preview", "download"),
+        );
+        expect(router.state.location.pathname).toBe("/inbox/45");
+        await user.keyboard("{Escape}");
+        await waitFor(() => expect(trigger).toHaveFocus());
+        expect(screen.getByRole("dialog")).toBe(convert);
+        expect(convert.scrollTop).toBe(165);
+      } finally {
+        clock.mockRestore();
+      }
+    },
+  );
+  it("names unread and truncated attachments and discloses the reading limits", async () => {
+    const user = userEvent.setup();
+    open(preparedApi(false, false, true));
+    await openDisposition(user, "Convert to matter");
+    await screen.findByDisplayValue("Prepared response");
+    expect(
+      screen.getByText(
+        "Some attachments could not be fully read. Review the source statuses and original files before converting.",
+      ),
+    ).toBeVisible();
+    await user.click(screen.getByText("Attachment reading details"));
+    expect(screen.getByText("Costs.xlsx: unsupported")).toBeVisible();
+    expect(screen.getByText(/Long agreement.pdf: truncated.*text limit/)).toBeVisible();
+    expect(screen.getByText(/Up to 20 attachments, 10 MiB each/)).toBeVisible();
   });
   it("leaves prepared values behind when the dialog moves to the contract arm", async () => {
     const user = userEvent.setup();

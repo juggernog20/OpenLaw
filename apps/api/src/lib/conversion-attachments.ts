@@ -19,7 +19,11 @@ export const ATTACHMENT_LIMITS = {
   sourceRuntimeMs: 15_000,
   runtimeMs: 45_000,
 } as const;
-export class AttachmentBudgetError extends Error {}
+export class AttachmentBudgetError extends Error {
+  constructor(readonly reason: "byte_limit" | "runtime_limit") {
+    super(reason);
+  }
+}
 export async function boundedBytes(
   stream: Readable,
   max = ATTACHMENT_LIMITS.bytes,
@@ -204,8 +208,7 @@ export async function readConversionAttachments(
           : error instanceof UnsupportedFormatError
             ? "unsupported"
             : "unreadable";
-      if (error instanceof AttachmentBudgetError)
-        read.reason = error.message as "byte_limit" | "runtime_limit";
+      if (error instanceof AttachmentBudgetError) read.reason = error.reason;
     } finally {
       clearTimeout(timer);
       stream?.destroy();

@@ -27,10 +27,11 @@ import { reachedMatter } from "../../lib/matter-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { authorizedAttachment, conversionEvidence, EvidenceSchema } from "./conversion-evidence.js";
 import { attachmentDisposition, inlineDisposition } from "../../lib/uploads.js";
-import { ATTACHMENT_LIMITS } from "../../lib/conversion-attachments.js";
+import { ATTACHMENT_LIMITS, boundedBytes } from "../../lib/conversion-attachments.js";
 import { reachedContract } from "../../lib/contract-access.js";
 import { boundedQueueAsk } from "../../pipeline/jobs.js";
 
+const DownloadSchema = z.any().meta({ type: "string", format: "binary" });
 const DraftSchema = z.object({
   id: z.string(),
   targetTypeId: z.string(),
@@ -275,7 +276,8 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
           operationId:
             mode === "preview" ? "previewConversionAttachment" : "downloadConversionAttachment",
           params: params.extend({ draftId: z.string(), sourceId: z.string() }),
-          response: { 200: z.any(), default: problemResponse },
+          produces: [mode === "preview" ? "application/pdf" : "application/octet-stream"],
+          response: { 200: DownloadSchema, default: problemResponse },
         },
       },
       async (request, reply) => {
@@ -334,7 +336,11 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
           "content-type",
           mode === "preview" ? "application/pdf" : "application/octet-stream",
         );
-        return reply.send(await app.storage.get(ref));
+        const bytes = await boundedBytes(await app.storage.get(ref));
+        reply.header("content-length", bytes.length);
+        if (mode === "preview")
+          reply.header("content-security-policy", "default-src 'none'; sandbox");
+        return reply.send(bytes);
       },
     );
   app.post(

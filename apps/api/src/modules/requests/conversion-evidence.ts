@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-/** Revalidates original sources and their promoted immutable Versions before disclosing evidence. */
+/** INT-008: Revalidates original sources and their promoted immutable Versions before disclosing evidence. */
 import { z } from "zod";
 import {
   and,

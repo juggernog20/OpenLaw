@@ -7,7 +7,7 @@ import { ConversionEvidence } from "./conversion-evidence";
 import type { ConversionDraft } from "./prepared-convert-dialog";
 import { AiField } from "../ui/ai-field";
 import { useState } from "react";
-import { FormattedMessage, useIntl } from "react-intl";
+import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import { ArrowRightLeft, FilePen } from "lucide-react";
 import {
   INTAKE_CARRY_SLUGS,
@@ -58,6 +58,24 @@ const TITLE_ERROR_ID = "convert-title-error";
  * to say.
  */
 
+const sourceStatusMessages = defineMessages({
+  readable: { id: "conversion.sourceStatus.readable", defaultMessage: "readable" },
+  unreadable: { id: "conversion.sourceStatus.unreadable", defaultMessage: "unreadable" },
+  unsupported: { id: "conversion.sourceStatus.unsupported", defaultMessage: "unsupported" },
+  truncated: { id: "conversion.sourceStatus.truncated", defaultMessage: "truncated" },
+  omitted: { id: "conversion.sourceStatus.omitted", defaultMessage: "omitted" },
+});
+const sourceReasonMessages = defineMessages({
+  source_limit: { id: "conversion.sourceReason.sourceLimit", defaultMessage: "attachment limit" },
+  byte_limit: { id: "conversion.sourceReason.byteLimit", defaultMessage: "file size limit" },
+  character_limit: { id: "conversion.sourceReason.characterLimit", defaultMessage: "text limit" },
+  runtime_limit: {
+    id: "conversion.sourceReason.runtimeLimit",
+    defaultMessage: "reading time limit",
+  },
+  restricted: { id: "conversion.sourceReason.restricted", defaultMessage: "restricted source" },
+  other: { id: "conversion.sourceReason.other", defaultMessage: "reading limit" },
+});
 export type ConvertResult =
   /** It landed. The page repaints from the envelope the write answered. */
   | { ok: true; request: StaffRequest }
@@ -638,24 +656,33 @@ export function ConvertDialog({
                   <p>
                     <FormattedMessage
                       id="conversion.readingLimits"
-                      defaultMessage="Up to 20 attachments, 10 MiB each and 50 MiB total; 30,000 characters each and 180,000 across all sources. Reading allows 15 seconds per attachment and 45 seconds total. Request answers and messages are considered first."
+                      defaultMessage="Up to {sources, number} attachments, {bytes, number} MiB each and {totalBytes, number} MiB total; {characters, number} characters each and {totalCharacters, number} across all sources. Reading allows {sourceSeconds, number} seconds per attachment and {totalSeconds, number} seconds total. Request answers and messages are considered first."
+                      values={{
+                        sources: initialDraft.limits.sources,
+                        bytes: initialDraft.limits.bytes / (1024 * 1024),
+                        totalBytes: initialDraft.limits.totalBytes / (1024 * 1024),
+                        characters: initialDraft.limits.characters,
+                        totalCharacters: initialDraft.limits.totalCharacters,
+                        sourceSeconds: initialDraft.limits.sourceRuntimeMs / 1000,
+                        totalSeconds: initialDraft.limits.runtimeMs / 1000,
+                      }}
                     />
                   </p>
                   <ul>
                     {initialDraft.attachmentReads.map((source) => (
                       <li key={source.sourceId}>
                         {source.label}:{" "}
-                        <FormattedMessage
-                          id={`conversion.sourceStatus.${source.status}`}
-                          defaultMessage={source.status}
-                        />
+                        <FormattedMessage {...sourceStatusMessages[source.status]} />
                         {source.reason && (
                           <>
                             {" "}
                             —{" "}
                             <FormattedMessage
-                              id={`conversion.sourceReason.${source.reason}`}
-                              defaultMessage={source.reason.replaceAll("_", " ")}
+                              {...(Object.hasOwn(sourceReasonMessages, source.reason)
+                                ? sourceReasonMessages[
+                                    source.reason as keyof typeof sourceReasonMessages
+                                  ]
+                                : sourceReasonMessages.other)}
                             />
                           </>
                         )}

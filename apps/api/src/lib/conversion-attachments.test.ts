@@ -1,8 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { Readable } from "node:stream";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { createFakeDocEngine, fakeImageOnlyPdf, fakeComparisonDocx } from "./doc-engine/fake.js";
-import { extractAttachment, ATTACHMENT_LIMITS } from "./conversion-attachments.js";
+import { SourceUnreadableError } from "./doc-engine/engine.js";
+import {
+  extractAttachment,
+  ATTACHMENT_LIMITS,
+  readConversionAttachments,
+} from "./conversion-attachments.js";
 
 const engine = createFakeDocEngine();
 it("reads native PDF, converts Word through PDF, and OCRs scans", async () => {
@@ -22,7 +27,9 @@ it("omits unsupported formats and rejects malformed files without inventing text
     status: "unsupported",
     text: "",
   });
-  await expect(extractAttachment(engine, "broken.pdf", Buffer.from("not a PDF"))).rejects.toThrow();
+  await expect(extractAttachment(engine, "broken.pdf", Buffer.from("not a PDF"))).rejects.toThrow(
+    SourceUnreadableError,
+  );
 });
 it("bounds extracted text independently for each source", async () => {
   const large = {
@@ -35,7 +42,6 @@ it("bounds extracted text independently for each source", async () => {
 });
 
 it("keeps useful sources after failures and enforces the source budget", async () => {
-  const { readConversionAttachments } = await import("./conversion-attachments.js");
   const sources = Array.from({ length: 22 }, (_, i) => ({
     id: `attachment:${i}`,
     revision: `revision-${i}`,
@@ -69,8 +75,6 @@ it("keeps useful sources after failures and enforces the source budget", async (
 });
 
 it("ends a hung source read at its runtime bound and continues with readable paper", async () => {
-  const { vi } = await import("vitest");
-  const { readConversionAttachments } = await import("./conversion-attachments.js");
   vi.useFakeTimers();
   try {
     const pending = readConversionAttachments(
@@ -110,7 +114,6 @@ it("ends a hung source read at its runtime bound and continues with readable pap
 });
 
 it("reports an oversized original without losing the next readable attachment", async () => {
-  const { readConversionAttachments } = await import("./conversion-attachments.js");
   const reads = await readConversionAttachments(
     {
       docEngine: engine,
@@ -141,4 +144,79 @@ it("reports an oversized original without losing the next readable attachment", 
   );
   expect(reads[0]).toMatchObject({ status: "omitted", reason: "byte_limit", text: "" });
   expect(reads[1]!.status).toBe("readable");
+});
+
+it("stores a Word rendition by generated key and skips restricted paper without reading it", async () => {
+  const put = vi.fn(async () => "local:rendition");
+  const get = vi.fn(async () => Readable.from([fakeComparisonDocx()]));
+  const reads = await readConversionAttachments(
+    { docEngine: engine, storage: { driver: "local", put, get, delete: async () => {} } },
+    [false, true].map((restricted, index) => ({
+      id: `attachment:${index}`,
+      revision: "rev",
+      label: "../../terms.docx",
+      fileRef: `local:source/${index}`,
+      restricted,
+      versionId: null,
+    })),
+    "draft",
+    ATTACHMENT_LIMITS.totalCharacters,
+  );
+  expect(reads[0]).toMatchObject({
+    status: "readable",
+    method: "converted",
+    previewRef: "local:rendition",
+  });
+  expect(reads[1]).toMatchObject({ status: "omitted", reason: "restricted", text: "" });
+  expect(get.mock.calls).toEqual([["local:source/0"]]);
+  expect(put).toHaveBeenCalledWith(
+    expect.stringMatching(/^conversion-drafts\/draft\/[\da-f-]+\.pdf$/),
+    expect.any(Readable),
+  );
+});
+
+it("deletes a rendition whose storage write finishes after the source deadline", async () => {
+  vi.useFakeTimers();
+  try {
+    let finishPut!: (ref: string) => void;
+    const put = vi.fn(
+      () =>
+        new Promise<string>((resolve) => {
+          finishPut = resolve;
+        }),
+    );
+    const remove = vi.fn(async () => {});
+    const pending = readConversionAttachments(
+      {
+        docEngine: engine,
+        storage: {
+          driver: "local",
+          put,
+          delete: remove,
+          get: async () => Readable.from([fakeComparisonDocx()]),
+        },
+      },
+      [
+        {
+          id: "attachment:1",
+          revision: "rev",
+          label: "terms.docx",
+          fileRef: "local:source",
+          restricted: false,
+          versionId: null,
+        },
+      ],
+      "draft",
+      ATTACHMENT_LIMITS.totalCharacters,
+    );
+    await vi.advanceTimersByTimeAsync(0);
+    expect(put).toHaveBeenCalledOnce();
+    await vi.advanceTimersByTimeAsync(ATTACHMENT_LIMITS.sourceRuntimeMs);
+    expect(await pending).toMatchObject([{ status: "omitted", reason: "runtime_limit" }]);
+    finishPut("local:late-rendition");
+    await vi.advanceTimersByTimeAsync(0);
+    expect(remove).toHaveBeenCalledWith("local:late-rendition");
+  } finally {
+    vi.useRealTimers();
+  }
 });

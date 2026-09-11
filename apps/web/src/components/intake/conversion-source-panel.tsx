@@ -102,7 +102,7 @@ function AttachmentSurface({ citation }: Readonly<{ citation: Citation }>) {
     async function poll() {
       const next = await readRenditionState(attachment.documentId!, attachment.versionId!);
       if (!live) return;
-      if (Date.now() >= deadline || next === "unreachable") {
+      if (next === "unreachable" || (next === "pending" && Date.now() >= deadline)) {
         setState("failed");
         return;
       }

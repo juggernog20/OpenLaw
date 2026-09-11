@@ -8,7 +8,7 @@ import {
   matterPreparationEnabled,
   withAttachmentReads,
 } from "../lib/conversion-draft.js";
-import { readConversionAttachments } from "../lib/conversion-attachments.js";
+import { ATTACHMENT_LIMITS, readConversionAttachments } from "../lib/conversion-attachments.js";
 import type { StorageAdapter } from "../lib/storage/adapter.js";
 import type { DocEngine } from "../lib/doc-engine/engine.js";
 import type { AiResolver } from "../lib/ai/resolver.js";
@@ -61,7 +61,8 @@ export async function handleConversionDraft(
           deps,
           context.attachments,
           draft.id,
-          180_000 - context.sources.reduce((n, source) => n + source.text.length, 0),
+          ATTACHMENT_LIMITS.totalCharacters -
+            context.sources.reduce((n, source) => n + source.text.length, 0),
         );
     await deps.db
       .update(conversionDrafts)
