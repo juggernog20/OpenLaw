@@ -1369,3 +1369,55 @@ it("shows Conversion draft evidence without leaving the Matter and confirms only
   await waitFor(() => expect(screen.getAllByText("Unverified")).toHaveLength(1));
   expect(confirmations).toEqual(["/api/v1/matters/12/conversion-confirm/title"]);
 });
+
+it("opens the mapped immutable source on the same Matter and retains an honest email fallback", async () => {
+  const user = userEvent.setup();
+  const flagged = row({
+    aiUnverified: { title: { draftId: "draft-1", writtenAt: "2026-09-11T00:00:00Z" } },
+  });
+  stubApi({
+    signedIn: ADMIN,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/matters/options") return options();
+      if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET")
+        return json(200, record(flagged));
+      if (call.url.pathname.includes("/conversion-evidence/"))
+        return json(200, {
+          available: true,
+          citations: [
+            {
+              label: "Original correspondence.eml",
+              text: "The original message says supplier dispute.",
+              quote: "supplier dispute",
+              sourceId: "attachment:original",
+              attachment: {
+                previewHref: null,
+                downloadHref: "/api/v1/documents/promoted/versions/original-version/download",
+                documentId: "promoted",
+                versionId: "original-version",
+                method: "email_body",
+              },
+            },
+          ],
+        });
+      return undefined;
+    },
+  });
+  const { router } = renderAt("/matters/12");
+  const trigger = await screen.findByRole("button", { name: "View source evidence" });
+  await user.click(trigger);
+  const panel = await screen.findByRole("dialog", { name: "Source document" });
+  expect(router.state.location.pathname).toBe("/matters/12");
+  expect(within(panel).getByRole("link", { name: "Download" })).toHaveAttribute(
+    "href",
+    "/api/v1/documents/promoted/versions/original-version/download",
+  );
+  expect(
+    within(panel).getByText(
+      "This source has no searchable passage preview. Read the quoted text and check the original file.",
+    ),
+  ).toBeVisible();
+  expect(within(panel).getByText("The original message says supplier dispute.")).toBeVisible();
+  await user.keyboard("{Escape}");
+  await waitFor(() => expect(trigger).toHaveFocus());
+});

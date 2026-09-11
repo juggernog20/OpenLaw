@@ -23599,6 +23599,80 @@
                             "type": "string"
                           }
                         },
+                        "attachmentReads": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "sourceId": {
+                                "type": "string"
+                              },
+                              "label": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "readable",
+                                  "unreadable",
+                                  "unsupported",
+                                  "truncated",
+                                  "omitted"
+                                ]
+                              },
+                              "reason": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["sourceId", "label", "status"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "limits": {
+                          "default": {
+                            "sources": 20,
+                            "bytes": 10485760,
+                            "totalBytes": 52428800,
+                            "characters": 30000,
+                            "totalCharacters": 180000,
+                            "sourceRuntimeMs": 15000,
+                            "runtimeMs": 45000
+                          },
+                          "type": "object",
+                          "properties": {
+                            "sources": {
+                              "type": "number"
+                            },
+                            "bytes": {
+                              "type": "number"
+                            },
+                            "totalBytes": {
+                              "type": "number"
+                            },
+                            "characters": {
+                              "type": "number"
+                            },
+                            "totalCharacters": {
+                              "type": "number"
+                            },
+                            "sourceRuntimeMs": {
+                              "type": "number"
+                            },
+                            "runtimeMs": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "sources",
+                            "bytes",
+                            "totalBytes",
+                            "characters",
+                            "totalCharacters",
+                            "sourceRuntimeMs",
+                            "runtimeMs"
+                          ],
+                          "additionalProperties": false
+                        },
                         "failure": {
                           "type": ["string", "null"]
                         }
@@ -23610,6 +23684,8 @@
                         "suggestions",
                         "conflicts",
                         "warnings",
+                        "attachmentReads",
+                        "limits",
                         "failure"
                       ],
                       "additionalProperties": false
@@ -23786,6 +23862,80 @@
                             "type": "string"
                           }
                         },
+                        "attachmentReads": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "sourceId": {
+                                "type": "string"
+                              },
+                              "label": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "readable",
+                                  "unreadable",
+                                  "unsupported",
+                                  "truncated",
+                                  "omitted"
+                                ]
+                              },
+                              "reason": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["sourceId", "label", "status"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "limits": {
+                          "default": {
+                            "sources": 20,
+                            "bytes": 10485760,
+                            "totalBytes": 52428800,
+                            "characters": 30000,
+                            "totalCharacters": 180000,
+                            "sourceRuntimeMs": 15000,
+                            "runtimeMs": 45000
+                          },
+                          "type": "object",
+                          "properties": {
+                            "sources": {
+                              "type": "number"
+                            },
+                            "bytes": {
+                              "type": "number"
+                            },
+                            "totalBytes": {
+                              "type": "number"
+                            },
+                            "characters": {
+                              "type": "number"
+                            },
+                            "totalCharacters": {
+                              "type": "number"
+                            },
+                            "sourceRuntimeMs": {
+                              "type": "number"
+                            },
+                            "runtimeMs": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "sources",
+                            "bytes",
+                            "totalBytes",
+                            "characters",
+                            "totalCharacters",
+                            "sourceRuntimeMs",
+                            "runtimeMs"
+                          ],
+                          "additionalProperties": false
+                        },
                         "failure": {
                           "type": ["string", "null"]
                         }
@@ -23797,6 +23947,8 @@
                         "suggestions",
                         "conflicts",
                         "warnings",
+                        "attachmentReads",
+                        "limits",
                         "failure"
                       ],
                       "additionalProperties": false
@@ -23879,6 +24031,42 @@
                           },
                           "sourceId": {
                             "type": "string"
+                          },
+                          "attachment": {
+                            "type": "object",
+                            "properties": {
+                              "previewHref": {
+                                "type": ["string", "null"]
+                              },
+                              "downloadHref": {
+                                "type": "string"
+                              },
+                              "documentId": {
+                                "type": ["string", "null"]
+                              },
+                              "versionId": {
+                                "type": ["string", "null"]
+                              },
+                              "method": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "enum": ["native_layer", "converted", "ocr", "email_body"]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "previewHref",
+                              "downloadHref",
+                              "documentId",
+                              "versionId",
+                              "method"
+                            ],
+                            "additionalProperties": false
                           }
                         },
                         "required": ["label", "text", "quote", "sourceId"],
@@ -23955,6 +24143,42 @@
                           },
                           "sourceId": {
                             "type": "string"
+                          },
+                          "attachment": {
+                            "type": "object",
+                            "properties": {
+                              "previewHref": {
+                                "type": ["string", "null"]
+                              },
+                              "downloadHref": {
+                                "type": "string"
+                              },
+                              "documentId": {
+                                "type": ["string", "null"]
+                              },
+                              "versionId": {
+                                "type": ["string", "null"]
+                              },
+                              "method": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "enum": ["native_layer", "converted", "ocr", "email_body"]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "previewHref",
+                              "downloadHref",
+                              "documentId",
+                              "versionId",
+                              "method"
+                            ],
+                            "additionalProperties": false
                           }
                         },
                         "required": ["label", "text", "quote", "sourceId"],
@@ -23964,6 +24188,118 @@
                   },
                   "required": ["available", "citations"],
                   "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/requests/{number}/conversion-drafts/{draftId}/sources/{sourceId}/preview": {
+      "get": {
+        "operationId": "previewConversionAttachment",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "draftId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "sourceId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/requests/{number}/conversion-drafts/{draftId}/sources/{sourceId}/download": {
+      "get": {
+        "operationId": "downloadConversionAttachment",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "draftId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "sourceId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
                 }
               }
             }

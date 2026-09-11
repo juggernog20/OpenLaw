@@ -2174,8 +2174,11 @@
   "contracts.valueWithCadence": {
     "defaultMessage": "{cadence, select, monthly {{amount} /month} annually {{amount} /year} other {{amount}}}"
   },
-  "conversion.attachmentsOmitted": {
-    "defaultMessage": "Attachments were not read. Review the Request's paper before converting."
+  "conversion.attachmentOmissions": {
+    "defaultMessage": "Some attachments could not be fully read. Review the source statuses and original files before converting."
+  },
+  "conversion.attachmentReads": {
+    "defaultMessage": "Attachment reading details"
   },
   "conversion.budgetOmitted": {
     "defaultMessage": "Some sources exceeded the reading limit and were omitted. Review the original Request too."
@@ -2204,6 +2207,12 @@
   "conversion.manual": {
     "defaultMessage": "Continue manually"
   },
+  "conversion.noLocatedPassage": {
+    "defaultMessage": "This source has no searchable passage preview. Read the quoted text and check the original file."
+  },
+  "conversion.readingLimits": {
+    "defaultMessage": "Up to {sources, number} attachments, {bytes, number} MiB each and {totalBytes, number} MiB total; {characters, number} characters each and {totalCharacters, number} across all sources. Reading allows {sourceSeconds, number} seconds per attachment and {totalSeconds, number} seconds total. Request answers and messages are considered first."
+  },
   "conversion.restrictedOmitted": {
     "defaultMessage": "Restricted messages and Legal or reference Fields were omitted to keep Matter values safe for broader readers."
   },
@@ -2215,6 +2224,42 @@
   },
   "conversion.settingsMatter": {
     "defaultMessage": "Prepare Matter conversions with AI"
+  },
+  "conversion.sourcePanel": {
+    "defaultMessage": "Source document"
+  },
+  "conversion.sourceReason.byteLimit": {
+    "defaultMessage": "file size limit"
+  },
+  "conversion.sourceReason.characterLimit": {
+    "defaultMessage": "text limit"
+  },
+  "conversion.sourceReason.other": {
+    "defaultMessage": "reading limit"
+  },
+  "conversion.sourceReason.restricted": {
+    "defaultMessage": "restricted source"
+  },
+  "conversion.sourceReason.runtimeLimit": {
+    "defaultMessage": "reading time limit"
+  },
+  "conversion.sourceReason.sourceLimit": {
+    "defaultMessage": "attachment limit"
+  },
+  "conversion.sourceStatus.omitted": {
+    "defaultMessage": "omitted"
+  },
+  "conversion.sourceStatus.readable": {
+    "defaultMessage": "readable"
+  },
+  "conversion.sourceStatus.truncated": {
+    "defaultMessage": "truncated"
+  },
+  "conversion.sourceStatus.unreadable": {
+    "defaultMessage": "unreadable"
+  },
+  "conversion.sourceStatus.unsupported": {
+    "defaultMessage": "unsupported"
   },
   "conversion.targetBudgetOmitted": {
     "defaultMessage": "Some Fields exceeded the preparation limit. Complete them manually."

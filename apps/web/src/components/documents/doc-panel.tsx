@@ -448,7 +448,7 @@ function EmailSurface({
 /** The PDF surface, and the one line shown while its parser is being
  * fetched. Shared by a stored PDF and by a converted rendition, because
  * a rendition is a PDF and reads exactly like one. */
-function PdfSurface({
+export function PdfSurface({
   src,
   filename,
   initialFind,

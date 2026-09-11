@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 /** Inline source review and per-value confirmation for Conversion drafts (INT-008). */
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
+import type { paths } from "@openlaw/api-client";
+import { ConversionSourcePanel } from "./conversion-source-panel";
 import { api } from "../../lib/api";
 import { Button } from "../ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
@@ -20,11 +22,15 @@ export function ConversionEvidence({
   onConfirm?: () => Promise<string | undefined>;
 }>) {
   const intl = useIntl();
-  const [evidence, setEvidence] = useState<{
-    available: boolean;
-    citations: { label: string; text: string; quote: string; sourceId: string }[];
-  } | null>(null);
+  type Evidence =
+    paths["/api/v1/matters/{number}/conversion-evidence/{slug}"]["get"]["responses"]["200"]["content"]["application/json"];
+  const [evidence, setEvidence] = useState<Evidence | null>(null);
+  const [popover, setPopover] = useState(false);
+  const [panel, setPanel] = useState(false);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const currentRead = useRef(0);
   async function read() {
+    const token = ++currentRead.current;
     setEvidence(null);
     try {
       const result = draftId
@@ -34,7 +40,12 @@ export function ConversionEvidence({
         : await api.GET("/api/v1/matters/{number}/conversion-evidence/{slug}", {
             params: { path: { number, slug } },
           });
+      if (token !== currentRead.current) return;
       setEvidence(result.data ?? { available: false, citations: [] });
+      if (result.data?.available && result.data.citations.some((citation) => citation.attachment)) {
+        setPopover(false);
+        setPanel(true);
+      }
     } catch {
       setEvidence({ available: false, citations: [] });
     }
@@ -43,12 +54,16 @@ export function ConversionEvidence({
     <span className="flex items-center gap-1">
       <UnverifiedMarker />
       <Popover
+        open={popover}
         onOpenChange={(open) => {
+          setPopover(open);
           if (open) void read();
+          else currentRead.current += 1;
         }}
       >
         <PopoverTrigger asChild>
           <Button
+            ref={trigger}
             type="button"
             variant="ghost"
             size="icon"
@@ -61,7 +76,13 @@ export function ConversionEvidence({
             <Sparkles size={16} aria-hidden="true" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="max-h-96 w-96 overflow-auto" align="start">
+        <PopoverContent
+          onCloseAutoFocus={(event) => {
+            if (panel) event.preventDefault();
+          }}
+          className="max-h-96 w-96 overflow-auto"
+          align="start"
+        >
           {!evidence ? (
             <p role="status">
               <FormattedMessage id="conversion.evidenceLoading" defaultMessage="Loading source…" />
@@ -86,6 +107,13 @@ export function ConversionEvidence({
           )}
         </PopoverContent>
       </Popover>
+      {panel && evidence?.available && (
+        <ConversionSourcePanel
+          citations={evidence.citations}
+          trigger={trigger}
+          onClose={() => setPanel(false)}
+        />
+      )}
       {onConfirm && <ConfirmUnverified onConfirm={onConfirm} />}
     </span>
   );

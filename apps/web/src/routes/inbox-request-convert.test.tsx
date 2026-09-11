@@ -2,7 +2,7 @@
 
 /** Conversion prefills, editable values, validation and disposition outcomes. */
 
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { REQUEST_DISPOSITIONED_PROBLEM_TYPE } from "@openlaw/shared";
@@ -15,6 +15,91 @@ import {
   staffRequest,
   subbar,
 } from "../testing/disposition";
+
+const PDF_PAGE_TEXT = vi.hoisted(() => [
+  ["The first termination right is on this page."],
+  ["A second termi", "nation right appears here. The final termination right follows."],
+]);
+
+vi.mock("pdfjs-dist", () => ({
+  GlobalWorkerOptions: { workerSrc: "" },
+  getDocument: () => ({
+    promise: Promise.resolve({
+      numPages: PDF_PAGE_TEXT.length,
+      loadingTask: { destroy: () => Promise.resolve() },
+      getPage: (pageNumber: number) => {
+        const items = (PDF_PAGE_TEXT[pageNumber - 1] ?? []).flatMap((str) =>
+          str.split("\n").map((line, index, lines) => ({
+            str: line,
+            hasEOL: index < lines.length - 1,
+          })),
+        );
+        return Promise.resolve({
+          getViewport: ({ scale }: { scale: number }) => ({
+            width: 600 * scale,
+            height: 800 * scale,
+          }),
+          getTextContent: () => Promise.resolve({ items }),
+          render: () => ({ promise: Promise.resolve() }),
+        });
+      },
+    }),
+  }),
+  TextLayer: class MockTextLayer {
+    readonly options: {
+      textContentSource: { items: Array<{ str?: string; hasEOL?: boolean }> };
+      container: HTMLElement;
+    };
+
+    constructor(options: {
+      textContentSource: { items: Array<{ str?: string; hasEOL?: boolean }> };
+      container: HTMLElement;
+    }) {
+      this.options = options;
+    }
+
+    render() {
+      for (const item of this.options.textContentSource.items) {
+        const span = document.createElement("span");
+        span.textContent = item.str ?? "";
+        this.options.container.append(span);
+        if (item.hasEOL) this.options.container.append(document.createElement("br"));
+      }
+      return Promise.resolve();
+    }
+  },
+}));
+
+beforeEach(() => {
+  vi.stubGlobal(
+    "IntersectionObserver",
+    class MockIntersectionObserver {
+      readonly callback: IntersectionObserverCallback;
+
+      constructor(callback: IntersectionObserverCallback) {
+        this.callback = callback;
+      }
+
+      observe(target: Element) {
+        queueMicrotask(() => {
+          this.callback(
+            [{ target, isIntersecting: true, intersectionRatio: 1 } as IntersectionObserverEntry],
+            this as unknown as IntersectionObserver,
+          );
+        });
+      }
+
+      unobserve() {}
+      disconnect() {}
+      takeRecords() {
+        return [];
+      }
+      readonly root = null;
+      readonly rootMargin = "0px";
+      readonly thresholds = [0];
+    },
+  );
+});
 
 /** One attached catalog field, in the shape both the request form and a
  * contract type answer it in. */
@@ -1042,7 +1127,7 @@ describe("a lost race (INT-007, TECH-020)", () => {
 });
 
 describe("Matter Conversion drafts", () => {
-  function preparedApi(pending = false, allValues = false) {
+  function preparedApi(pending = false, allValues = false, withAttachments = false) {
     const base = requestApi();
     const draft = {
       id: "draft-1",
@@ -1075,7 +1160,27 @@ describe("Matter Conversion drafts", () => {
         },
       },
       conflicts: {},
-      warnings: [],
+      limits: {
+        sources: 20,
+        bytes: 10485760,
+        totalBytes: 52428800,
+        characters: 30000,
+        totalCharacters: 180000,
+        sourceRuntimeMs: 15000,
+        runtimeMs: 45000,
+      },
+      warnings: withAttachments ? ["attachment_omissions"] : [],
+      attachmentReads: withAttachments
+        ? [
+            { sourceId: "attachment:sheet", label: "Costs.xlsx", status: "unsupported" },
+            {
+              sourceId: "attachment:long",
+              label: "Long agreement.pdf",
+              status: "truncated",
+              reason: "character_limit",
+            },
+          ]
+        : [],
       failure: null,
     };
     return {
@@ -1127,6 +1232,212 @@ describe("Matter Conversion drafts", () => {
       aiAccepted: ["description", "field:governing_law"],
       customFields: { governing_law: "England" },
     });
+  });
+  it("opens attachment evidence above Convert, centres its PDF passage, and restores focus without changing the page", async () => {
+    const user = userEvent.setup();
+    const base = preparedApi();
+    const href = "/api/v1/requests/42/conversion-drafts/draft-1/sources/attachment%3A2/preview";
+    const api = {
+      ...base,
+      handler: (call: StubCall) =>
+        call.url.pathname.includes("/evidence/")
+          ? json(200, {
+              available: true,
+              citations: [
+                {
+                  sourceId: "request:45:summary",
+                  label: "Request summary",
+                  text: "Opening context",
+                  quote: "Opening context",
+                },
+                {
+                  sourceId: "attachment:2",
+                  label: "Second attachment.pdf",
+                  text: "A second termination right appears here.",
+                  quote: "A second termination right appears here.",
+                  attachment: {
+                    previewHref: href,
+                    downloadHref: href.replace("preview", "download"),
+                    documentId: null,
+                    versionId: null,
+                    method: "native_layer",
+                  },
+                },
+              ],
+            })
+          : base.handler(call),
+    };
+    const { router } = open(api);
+    await openDisposition(user, "Convert to matter");
+    await screen.findByDisplayValue("Prepared response");
+    const convert = screen.getByRole("dialog");
+    convert.scrollTop = 165;
+    const trigger = within(convert).getAllByRole("button", { name: "View source evidence" })[0]!;
+    const scroll = vi.spyOn(Element.prototype, "scrollIntoView");
+    try {
+      await user.click(trigger);
+      const panel = await screen.findByRole("dialog", { name: "Source document" });
+      expect(convert).toBeInTheDocument();
+      expect(convert.scrollTop).toBe(165);
+      expect(router.state.location.pathname).toBe("/inbox/45");
+      expect(within(panel).getByRole("link", { name: "Download" })).toHaveAttribute(
+        "href",
+        href.replace("preview", "download"),
+      );
+      expect(await within(panel).findByText("1 of 1")).toBeVisible();
+      await waitFor(() => {
+        const marks = panel.querySelectorAll<HTMLElement>(
+          '[data-page-number="2"] mark[data-pdf-find-match="0"]',
+        );
+        expect(
+          Array.from(marks)
+            .map((m) => m.textContent)
+            .join(""),
+        ).toBe("A second termination right appears here.");
+        expect(
+          scroll.mock.instances.some(
+            (element, index) =>
+              element === marks[0] &&
+              (scroll.mock.calls[index]?.[0] as ScrollIntoViewOptions)?.block === "center",
+          ),
+        ).toBe(true);
+      });
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(trigger).toHaveFocus());
+      expect(screen.getByRole("dialog")).toBe(convert);
+      expect(convert.scrollTop).toBe(165);
+      expect(within(convert).getByDisplayValue("Prepared response")).toBeVisible();
+      await user.click(trigger);
+      expect(await screen.findByRole("dialog", { name: "Source document" })).toBeVisible();
+    } finally {
+      scroll.mockRestore();
+    }
+  });
+  it("keeps Convert in place when a citation becomes unavailable", async () => {
+    const user = userEvent.setup();
+    const base = preparedApi();
+    const { router } = open({
+      ...base,
+      handler: (call: StubCall) =>
+        call.url.pathname.includes("/evidence/")
+          ? json(200, { available: false, citations: [] })
+          : base.handler(call),
+    });
+    await openDisposition(user, "Convert to matter");
+    await screen.findByDisplayValue("Prepared response");
+    const convert = screen.getByRole("dialog");
+    const trigger = within(convert).getAllByRole("button", { name: "View source evidence" })[0]!;
+    await user.click(trigger);
+    expect(await screen.findByText("The source is unavailable or has changed.")).toBeVisible();
+    expect(screen.queryByRole("dialog", { name: "Source document" })).toBeNull();
+    expect(router.state.location.pathname).toBe("/inbox/45");
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(trigger).toHaveFocus());
+    expect(screen.getByRole("dialog")).toBe(convert);
+  });
+  it.each(["unreachable to the deadline", "failed", "ready at deadline", "unreachable once"])(
+    "handles a mapped Office rendition that is %s without losing Convert",
+    async (result) => {
+      const user = userEvent.setup();
+      const base = preparedApi();
+      const href = "/api/v1/documents/promoted/versions/immutable/preview";
+      const clock = vi.spyOn(Date, "now");
+      let renditionReads = 0;
+      try {
+        const { router } = open({
+          ...base,
+          handler: (call: StubCall) => {
+            if (call.url.pathname.endsWith("/rendition")) {
+              renditionReads += 1;
+              // A read nobody answers is worth waiting through. Two arms
+              // run the clock past the panel's bound so they settle on the
+              // first read; the last one answers on the retry the panel is
+              // supposed to make.
+              if (result === "ready at deadline" || result === "unreachable to the deadline")
+                clock.mockReturnValue(Date.now() + 60_001);
+              if (result === "unreachable to the deadline") return json(404, {});
+              if (result === "unreachable once")
+                return renditionReads === 1
+                  ? json(404, {})
+                  : json(200, { rendition: { state: "ready" } });
+              return json(200, { rendition: { state: result === "failed" ? "failed" : "ready" } });
+            }
+            if (call.url.pathname.includes("/evidence/"))
+              return json(200, {
+                available: true,
+                citations: [
+                  {
+                    sourceId: "attachment:word",
+                    label: "Agreement.docx",
+                    text: "Supporting agreement text",
+                    quote: "Supporting agreement",
+                    attachment: {
+                      previewHref: href,
+                      downloadHref: href.replace("preview", "download"),
+                      documentId: "promoted",
+                      versionId: "immutable",
+                      method: "converted",
+                    },
+                  },
+                ],
+              });
+            return base.handler(call);
+          },
+        });
+        await openDisposition(user, "Convert to matter");
+        await screen.findByDisplayValue("Prepared response");
+        const convert = screen.getByRole("dialog");
+        convert.scrollTop = 165;
+        const trigger = within(convert).getAllByRole("button", {
+          name: "View source evidence",
+        })[0]!;
+        await user.click(trigger);
+        const panel = await screen.findByRole("dialog", { name: "Source document" });
+        if (result === "ready at deadline" || result === "unreachable once") {
+          expect(
+            await within(panel).findByRole(
+              "region",
+              { name: "Agreement.docx, pages" },
+              { timeout: 6000 },
+            ),
+          ).toBeVisible();
+          expect(renditionReads).toBe(result === "unreachable once" ? 2 : 1);
+        } else {
+          expect(
+            await within(panel).findByText(
+              "This source has no searchable passage preview. Read the quoted text and check the original file.",
+            ),
+          ).toBeVisible();
+          expect(within(panel).getByText("Supporting agreement text")).toBeVisible();
+        }
+        expect(within(panel).getByRole("link", { name: "Download" })).toHaveAttribute(
+          "href",
+          href.replace("preview", "download"),
+        );
+        expect(router.state.location.pathname).toBe("/inbox/45");
+        await user.keyboard("{Escape}");
+        await waitFor(() => expect(trigger).toHaveFocus());
+        expect(screen.getByRole("dialog")).toBe(convert);
+        expect(convert.scrollTop).toBe(165);
+      } finally {
+        clock.mockRestore();
+      }
+    },
+  );
+  it("names unread and truncated attachments and discloses the reading limits", async () => {
+    const user = userEvent.setup();
+    open(preparedApi(false, false, true));
+    await openDisposition(user, "Convert to matter");
+    await screen.findByDisplayValue("Prepared response");
+    expect(
+      screen.getByText(
+        "Some attachments could not be fully read. Review the source statuses and original files before converting.",
+      ),
+    ).toBeVisible();
+    await user.click(screen.getByText("Attachment reading details"));
+    expect(screen.getByText("Costs.xlsx: unsupported")).toBeVisible();
+    expect(screen.getByText(/Long agreement.pdf: truncated.*text limit/)).toBeVisible();
+    expect(screen.getByText(/Up to 20 attachments, 10 MiB each/)).toBeVisible();
   });
   it("leaves prepared values behind when the dialog moves to the contract arm", async () => {
     const user = userEvent.setup();

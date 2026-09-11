@@ -1,0 +1,3 @@
+ALTER TABLE "conversion_drafts" ADD COLUMN "attachment_reads" jsonb DEFAULT '[]'::jsonb NOT NULL;--> statement-breakpoint
+ALTER TABLE "request_attachments" ADD COLUMN "promoted_version_id" text;--> statement-breakpoint
+ALTER TABLE "request_attachments" ADD CONSTRAINT "request_attachments_promoted_version_id_document_versions_id_fk" FOREIGN KEY ("promoted_version_id") REFERENCES "public"."document_versions"("id") ON DELETE set null ON UPDATE no action;

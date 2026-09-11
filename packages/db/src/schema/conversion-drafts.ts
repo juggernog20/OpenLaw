@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 /** Durable actor-scoped proposals before Request conversion (INT-008). */
 import { index, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
-import type { ConversionSuggestion } from "@openlaw/shared";
+import type { ConversionSuggestion, ConversionAttachmentRead } from "@openlaw/shared";
 import { uuidPk } from "./helpers.js";
 import { requests } from "./requests.js";
 import { users } from "./auth.js";
@@ -32,6 +32,10 @@ export const conversionDrafts = pgTable(
       .notNull()
       .default({}),
     warnings: jsonb("warnings").$type<string[]>().notNull().default([]),
+    attachmentReads: jsonb("attachment_reads")
+      .$type<ConversionAttachmentRead[]>()
+      .notNull()
+      .default([]),
     failure: text("failure"),
     startedAt: timestamp("started_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
