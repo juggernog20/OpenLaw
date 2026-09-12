@@ -815,7 +815,6 @@ async function seed() {
     matterTeam: {
       matterNumber: closedMatter.number,
       userId: invited[0].id,
-      role: "member",
     },
     matterTask: {
       matterNumber: closedMatter.number,
