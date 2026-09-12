@@ -28,6 +28,11 @@ import { S3_DRIVER, createS3Storage } from "./s3.js";
 /**
  * Pinned, like every other image the suites run. A floating tag makes a
  * green run today and an unexplained red one tomorrow.
+ *
+ * Quay, not Docker Hub: Docker Hub denies this tag ("requested access to
+ * the resource is denied"), on CI and locally. Quay serves the same
+ * manifest digest. Do not move it back for consistency with the
+ * Postgres image.
  */
 const MINIO_IMAGE = "quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z";
 
