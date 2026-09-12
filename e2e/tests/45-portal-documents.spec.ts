@@ -30,6 +30,13 @@ test("Portal Documents keep one current row, read earlier versions and accept re
     password: "correct-horse-battery",
   });
   const portal = colleague.page;
+  const invitedEmail = `portal-team-added-${Date.now()}@example.com`;
+  const invited = await onboardActivatedMember(page.request, browser, {
+    email: invitedEmail,
+    displayName: "Portal added colleague",
+    role: "business_user",
+    password: "correct-horse-battery",
+  });
   const userId = (await (await portal.request.get("/api/v1/me")).json()).user.id;
   const records: { module: "contract" | "matter"; number: number }[] = [];
   try {
@@ -67,25 +74,48 @@ test("Portal Documents keep one current row, read earlier versions and accept re
       await portal.goto(`/portal/${module}s/${record.number}`);
       if (module === "contract") {
         const overview = portal.getByRole("region", { name: "Overview", exact: true });
-        await expect(overview.getByRole("textbox", { name: "Owning department" })).toHaveValue(
-          "Sales",
-        );
-        await expect(overview.getByRole("textbox", { name: "Region" })).toHaveValue("EMEA");
-        await overview.getByRole("textbox", { name: "Owning department" }).fill("Procurement");
-        await overview.getByRole("textbox", { name: "Region" }).focus();
-        await expect
-          .poll(
-            async () =>
-              (await (await page.request.get(`/api/v1/contracts/${record.number}`)).json()).contract
-                .owningDepartment,
-          )
-          .toBe("Procurement");
+        await expect(overview.getByText("Sales", { exact: true })).toBeVisible();
+        await expect(overview.getByText("EMEA", { exact: true })).toBeVisible();
+        await expect(overview.getByRole("textbox", { name: "Owning department" })).toHaveCount(0);
+        await expect(overview.getByRole("textbox", { name: "Region" })).toHaveCount(0);
+        const updated = await page.request.patch(`/api/v1/contracts/${record.number}`, {
+          data: { owningDepartment: "Procurement", region: "Americas" },
+        });
+        expect(updated.status(), await updated.text()).toBe(200);
+        await portal.reload();
+        await expect(overview.getByText("Procurement", { exact: true })).toBeVisible();
+        await expect(overview.getByText("Americas", { exact: true })).toBeVisible();
         await expect(
           portal
             .getByRole("region", { name: "Fields", exact: true })
             .getByRole("textbox", { name: "Region" }),
         ).toHaveCount(0);
       }
+      const fields = portal.getByRole("region", { name: "Fields", exact: true });
+      await expect(fields.getByRole("textbox")).toHaveCount(0);
+      await expect(fields.getByRole("combobox")).toHaveCount(0);
+      await expect(fields.getByRole("spinbutton")).toHaveCount(0);
+      await portal
+        .getByRole("button", { name: module === "contract" ? "Contract team" : "Matter team" })
+        .click();
+      await portal.getByRole("button", { name: "Add team member" }).click();
+      const teamDialog = portal.getByRole("dialog", { name: "Add team member" });
+      await teamDialog
+        .getByRole("combobox", { name: "Person" })
+        .selectOption({ label: "Portal added colleague" });
+      await teamDialog.getByRole("button", { name: "Add", exact: true }).click();
+      await expect(teamDialog).toBeHidden();
+      const roster = portal.getByRole("complementary", {
+        name: module === "contract" ? "Contract team" : "Matter team",
+      });
+      await expect(roster.getByText("Portal added colleague", { exact: true })).toHaveCount(1);
+      await expect(portal.getByRole("button", { name: "Add team member" })).toBeFocused();
+      await portal.keyboard.press("Escape");
+      await expect(roster).toBeHidden();
+      await invited.page.goto(`/portal/${module}s/${record.number}`);
+      await expect(
+        invited.page.getByRole("heading", { name: `Portal document ${module}`, exact: true }),
+      ).toBeVisible();
       const section = portal.getByRole("region", { name: "Documents", exact: true });
       await expect(section.getByText("Version 1", { exact: true })).toHaveCount(1);
       await expect(section.getByRole("button", { name: /earlier version/ })).toHaveCount(0);
@@ -142,7 +172,9 @@ test("Portal Documents keep one current row, read earlier versions and accept re
       await portal.screenshot({ path: `/tmp/openlaw-portal-${module}-documents.png` });
       await portal.setViewportSize({ width: 390, height: 844 });
       await section.scrollIntoViewIfNeeded();
-      expect(await section.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
+      await expect
+        .poll(() => section.evaluate((node) => node.scrollWidth <= node.clientWidth))
+        .toBe(true);
       await section.getByRole("button", { name: "Upload documents", exact: true }).click();
       await expect(dialog).toBeVisible();
       await reportAxeViolations(portal, testInfo, `portal-${module}-upload-mobile`);
@@ -153,5 +185,7 @@ test("Portal Documents keep one current row, read earlier versions and accept re
       await page.request.delete(`/api/v1/${record.module}s/${record.number}`);
     await ensureMemberInert(page.request, email);
     await colleague.context.close();
+    await ensureMemberInert(page.request, invitedEmail);
+    await invited.context.close();
   }
 });

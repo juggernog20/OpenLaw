@@ -46,6 +46,6 @@ Select **Matters** in the Portal navigation bar and open a row. Check its M- ref
 
 ## Work with Legal on a record
 
-Both record pages offer business **Fields**, **Documents** with their Versions, and any read-only **Original request** submissions. The applet bar on the right holds **Comments**, **History**, and **Contract team** or **Matter team**. Follow [Work on a shared Contract or Matter](contributor-guide.md) to edit a Field, upload paper or reply.
+Both record pages offer business **Fields**, **Documents** with their Versions, and any read-only **Original request** submissions. The applet bar on the right holds **Comments**, **History**, and **Contract team** or **Matter team**. Follow [Work on a shared Contract or Matter](contributor-guide.md) to read record Fields, upload paper, reply or add a team member.
 
 At conversion, you become Business Owner and join the new record's team. Your Request address redirects there. Later changes to Business Owner do not change membership. If a record disappears, ask Legal to check your team row and its archive state. A saved link does not preserve access.

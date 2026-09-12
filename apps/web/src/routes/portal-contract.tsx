@@ -5,7 +5,6 @@ import { type ReactNode } from "react";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { loadPortalWork } from "../lib/portal-records";
-import { PortalContractClassification } from "../components/portal/contract-classification";
 import { PortalRecordWork } from "../components/portal/record-work";
 import { api } from "../lib/api";
 import { currentUser, useSignOut } from "../lib/session";
@@ -143,6 +142,17 @@ export function PortalContractPage() {
                 contract.legalOwner?.displayName ?? unset,
               )}
               {fact(
+                <FormattedMessage
+                  id="contracts.form.owningDepartment"
+                  defaultMessage="Owning department"
+                />,
+                recordWork?.work.owningDepartment ?? unset,
+              )}
+              {fact(
+                <FormattedMessage id="contracts.form.region" defaultMessage="Region" />,
+                recordWork?.work.region ?? unset,
+              )}
+              {fact(
                 <FormattedMessage id="portal.contract.termType" defaultMessage="Term type" />,
                 termTypeLabel(intl, contract.termType),
                 flagged("termType"),
@@ -190,9 +200,6 @@ export function PortalContractPage() {
                 flagged("expiryDate") || flagged("noticePeriodDays"),
               )}
             </dl>
-            {recordWork && (
-              <PortalContractClassification number={contract.number} work={recordWork.work} />
-            )}
           </section>
           {recordWork && (
             <PortalRecordWork module="contract" number={contract.number} {...recordWork} />

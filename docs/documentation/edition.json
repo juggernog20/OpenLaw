@@ -19,7 +19,7 @@
       },
       {
         "id": "portal-sign-in",
-        "contentSha256": "55600ef5706aecfe2f90c5766991c393b814bb9571afe0ee7804150defc5d155"
+        "contentSha256": "a555e87dab0938a09ace19041372365c5f0f10c1c348d83625dc2428badb5b8b"
       },
       {
         "id": "find-your-work",
@@ -35,7 +35,7 @@
       },
       {
         "id": "roles-and-access",
-        "contentSha256": "b3f605fab16cda5c157d8a8517655fcc7111fd569708de5afe6e7ac3389bb368"
+        "contentSha256": "c9853977f0f25dd7b8ca17da4b8e0726d65481ec35f970b33d6d092fd705122f"
       },
       {
         "id": "comments-and-activity",
@@ -115,7 +115,7 @@
       },
       {
         "id": "contributor-guide",
-        "contentSha256": "4b7bbbf749bbb3f0383630ac253d9260d7b93b1690a3d0ed244a3c92e133ac08"
+        "contentSha256": "c7f8ff2e3d0a80d340e660584db75476ffc337caf9f978d1396ffd35501d3d36"
       },
       {
         "id": "document-versions",

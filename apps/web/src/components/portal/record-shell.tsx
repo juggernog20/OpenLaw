@@ -9,8 +9,9 @@ import {
   useRef,
   useState,
   type ComponentProps,
+  type RefObject,
 } from "react";
-import { User } from "lucide-react";
+import { Plus, User } from "lucide-react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../../lib/api";
@@ -19,6 +20,7 @@ import { portalContractReader } from "../../lib/portal-contracts";
 import { DocPanel } from "../documents/doc-panel";
 import { useActivityApplet } from "../activity/activity-applet";
 import type { Applet } from "../shell/applets";
+import { AddTeamDialog } from "../record-team-applet";
 import { TeamRoster, type TeamRosterEntry } from "../team-roster";
 import { Button } from "../ui/button";
 import { PortalShell } from "./portal-shell";
@@ -50,11 +52,15 @@ export function PortalRecordShell({
     work?: PortalWork;
   }
 >) {
+  const intl = useIntl();
   const [reading, setReading] = useState<{
     document: PortalDocument;
     version: PortalDocumentVersion;
   } | null>(null);
   const [covers, setCovers] = useState(true);
+  const [adding, setAdding] = useState(false);
+  const addControl = useRef<HTMLButtonElement>(null);
+  const [canAdd, setCanAdd] = useState(false);
   const readTrigger = useRef<HTMLElement | null>(null);
   const primaryReader = useMemo(() => portalContractReader(number), [number]);
   const openDocument = useCallback(
@@ -108,7 +114,31 @@ export function PortalRecordShell({
             entityType === "contract"
               ? defineMessage({ id: "contracts.applet.team", defaultMessage: "Contract team" })
               : defineMessage({ id: "matters.applet.team", defaultMessage: "Matter team" }),
-          render: () => <PortalTeam module={entityType} number={number} />,
+          accessory: () => (
+            <Button
+              ref={addControl}
+              variant="ghost"
+              size="icon"
+              disabled={!canAdd}
+              aria-label={intl.formatMessage({
+                id: "record.team.add",
+                defaultMessage: "Add team member",
+              })}
+              onClick={() => setAdding(true)}
+            >
+              <Plus size={16} aria-hidden="true" />
+            </Button>
+          ),
+          render: () => (
+            <PortalTeam
+              module={entityType}
+              number={number}
+              addControl={addControl}
+              adding={adding}
+              onAdding={setAdding}
+              onCanAdd={setCanAdd}
+            />
+          ),
         };
   return (
     <DocumentPanelContext value={openDocument}>
@@ -144,9 +174,20 @@ type Team =
   paths["/api/v1/portal/contracts/{number}/team"]["get"]["responses"]["200"]["content"]["application/json"];
 
 function PortalTeam({
+  addControl,
   module,
   number,
-}: Readonly<{ module: "contract" | "matter"; number: number }>) {
+  adding,
+  onAdding,
+  onCanAdd,
+}: Readonly<{
+  addControl: RefObject<HTMLButtonElement | null>;
+  module: "contract" | "matter";
+  number: number;
+  adding: boolean;
+  onAdding: (open: boolean) => void;
+  onCanAdd: (canAdd: boolean) => void;
+}>) {
   const intl = useIntl();
   const [team, setTeam] = useState<Team | null>(null);
   const [failed, setFailed] = useState(false);
@@ -160,11 +201,14 @@ function PortalTeam({
         if (!current) return;
         setTeam(data ?? null);
         setFailed(!data);
+        onCanAdd(Boolean(data?.canAdd));
       });
     return () => {
       current = false;
+      onCanAdd(false);
+      onAdding(false);
     };
-  }, [module, number, attempt]);
+  }, [module, number, attempt, onCanAdd, onAdding]);
   if (!team)
     return failed ? (
       <div className="flex flex-col items-start gap-3 p-4">
@@ -209,5 +253,33 @@ function PortalTeam({
       }),
     });
   entries.push(...team.team.map((person) => ({ person })));
-  return <TeamRoster entries={entries} />;
+  return (
+    <>
+      <TeamRoster entries={entries} />
+      {!team.canAdd && (
+        <p className="px-4 py-3 text-sm text-muted">
+          <FormattedMessage
+            id="portal.team.confidential"
+            defaultMessage="Ask Legal to add members to a Confidential record."
+          />
+        </p>
+      )}
+      {adding && team.canAdd && (
+        <AddTeamDialog
+          returnFocusRef={addControl}
+          surface="portal"
+          module={module}
+          number={number}
+          users={team.people.filter(
+            (person) => !team.team.some((member) => member.id === person.id),
+          )}
+          disabled={false}
+          onOpenChange={onAdding}
+          onAdded={(members) =>
+            setTeam((current) => (current ? { ...current, team: members } : null))
+          }
+        />
+      )}
+    </>
+  );
 }

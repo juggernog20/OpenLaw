@@ -4,11 +4,11 @@ Your account type controls what you can do. Team membership controls which recor
 
 ## What each account can reach
 
-| Account           | Access and actions                                                                                                                                                                                       |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Administrator     | Full legal work and organization settings. Confidential Contracts and Matters still require named access.                                                                                                |
-| Legal Team Member | Full legal work on open records and Confidential records they can reach. Organization settings remain Administrator-only.                                                                                |
-| Business User     | Their own Requests and non-archived Contracts and Matters whose teams include them, through the Portal. They edit business Fields, upload Documents and add Versions and join Full Thread conversations. |
+| Account           | Access and actions                                                                                                                                                                                                                                          |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Administrator     | Full legal work and organization settings. Confidential Contracts and Matters still require named access.                                                                                                                                                   |
+| Legal Team Member | Full legal work on open records and Confidential records they can reach. Organization settings remain Administrator-only.                                                                                                                                   |
+| Business User     | Their own Requests and non-archived Contracts and Matters whose teams include them, through the Portal. They read business Fields, upload Documents and Versions, join Full Thread conversations, and add existing people to non-Confidential record teams. |
 
 Contributor is no longer an account type. Existing Contributor accounts become Business Users and keep their team memberships. An Administrator can change an account to Legal Team Member when the person needs full legal work access.
 
@@ -22,9 +22,9 @@ Confidential Entities use a separate rule. An Administrator gives a named Legal 
 
 ## Manage Portal Contract access
 
-Open **Contract team** or **Matter team** in the record's activity bar. Select **Add team member**, choose **Person**, and select **Add**. Each person appears once, with their responsibilities together and no role picker. Adding a Business User gives them access to the record in the Portal. The same action puts a Legal Team Member inside a Confidential record's named audience.
+Open **Contract team** or **Matter team** in the record's activity bar. Select **Add team member**, choose **Person**, and select **Add**. Each person appears once, with their responsibilities together and no role picker. Adding a Business User gives them access to the record in the Portal. Business Users may add existing people from the Portal on non-Confidential records. Confidential team changes remain Legal actions under the rules above.
 
-Use the person's remove control to remove membership. That ends a Business User's record access on the next read, including old links, replies, Documents and notifications. Removing a Legal Team Member from an open record does not end their ordinary account access.
+In the full app, use the person's remove control to remove membership. That ends a Business User's record access on the next read, including old links, replies, Documents and notifications. Removing a Legal Team Member from an open record does not end their ordinary account access.
 
 Legal Owner, Matter Manager, Business Owner and Creator are statements on the person's row in both the main app and Portal. Use the owner controls on Overview to change responsibility. Changing Business Owner does not add or remove a team membership. Removing membership leaves the person's owner and Creator statements visible. Those statements alone do not grant Portal access.
 

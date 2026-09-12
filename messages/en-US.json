@@ -6158,14 +6158,8 @@
   "portal.record.documents": {
     "defaultMessage": "Documents"
   },
-  "portal.record.failed": {
-    "defaultMessage": "The change could not be saved. Try again."
-  },
   "portal.record.fields": {
     "defaultMessage": "Fields"
-  },
-  "portal.record.invalidNumber": {
-    "defaultMessage": "Enter a number."
   },
   "portal.record.originalMeta": {
     "defaultMessage": "R-{number} · {requester} · Submitted {date}"
@@ -6175,9 +6169,6 @@
   },
   "portal.record.originalUrgency": {
     "defaultMessage": "Urgency: {urgency}"
-  },
-  "portal.record.retrySave": {
-    "defaultMessage": "Retry save"
   },
   "portal.request.archivedRecord": {
     "defaultMessage": "The record created from this Request was archived. Your original request is shown below."
@@ -6238,6 +6229,9 @@
   },
   "portal.settings.title": {
     "defaultMessage": "Notification settings"
+  },
+  "portal.team.confidential": {
+    "defaultMessage": "Ask Legal to add members to a Confidential record."
   },
   "portal.team.failed": {
     "defaultMessage": "The team could not be read."

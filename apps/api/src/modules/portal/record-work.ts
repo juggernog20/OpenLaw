@@ -17,7 +17,6 @@ import {
   isNull,
   matters,
   matterTypeFields,
-  or,
   requests,
   requestAttachments,
   requestTypeFields,
@@ -27,13 +26,8 @@ import {
   type Executor,
 } from "@openlaw/db";
 import { requireAuth, type AuthenticatedUser } from "../../auth/guards.js";
-import { recordActivity } from "../../lib/activity.js";
 import {
-  applyCustomFields,
-  assertRequiredCustomFields,
-  assertBusinessCustomFieldWrite,
   AttachedCustomFieldSchema,
-  CustomFieldsInput,
   CustomFieldsSchema,
   projectCustomFields,
   selectAttachedFields,
@@ -41,17 +35,6 @@ import {
 import { portalRecordScope } from "../../lib/portal-record-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
-import { MAX_CONTRACT_CLASSIFICATION_LENGTH } from "@openlaw/shared";
-
-const ValueInput = z.strictObject({
-  amount: z.int().nonnegative(),
-  currency: z
-    .string()
-    .trim()
-    .transform((value) => value.toUpperCase())
-    .refine((value) => new Set(Intl.supportedValuesOf("currency")).has(value)),
-  cadence: z.enum(VALUE_CADENCES),
-});
 const Value = z.object({
   amount: z.int().nonnegative(),
   currency: z.string(),
@@ -112,12 +95,11 @@ const Work = z.object({
   references: References,
   originalRequests: z.array(OriginalRequest),
 });
-/** Scope reference choices to attached Fields and keep withheld Entity names out of the response. */
+/** Resolve names used by visible Fields, withholding Confidential Entity names. */
 async function references(
   db: Executor,
   fields: readonly z.infer<typeof AttachedCustomFieldSchema>[],
   values: Readonly<Record<string, CustomFieldValue>>,
-  choices: boolean,
 ) {
   const ids = (type: "user" | "entity") =>
     fields
@@ -132,25 +114,14 @@ async function references(
       ? db
           .select({ id: users.id, label: users.displayName, archivedAt: users.archivedAt })
           .from(users)
-          .where(
-            choices
-              ? or(isNull(users.archivedAt), inArray(users.id, peopleIds))
-              : inArray(users.id, peopleIds),
-          )
+          .where(inArray(users.id, peopleIds))
           .orderBy(asc(users.displayName), asc(users.id))
       : [],
     fields.some((field) => field.fieldType === "entity")
       ? db
           .select({ id: entities.id, label: entities.legalName, archivedAt: entities.archivedAt })
           .from(entities)
-          .where(
-            and(
-              eq(entities.isConfidential, false),
-              choices
-                ? or(isNull(entities.archivedAt), inArray(entities.id, entityIds))
-                : inArray(entities.id, entityIds),
-            ),
-          )
+          .where(and(eq(entities.isConfidential, false), inArray(entities.id, entityIds)))
           .orderBy(asc(entities.legalName), asc(entities.id))
       : [],
   ]);
@@ -175,7 +146,7 @@ export const portalRecordWorkRoutes: FastifyPluginAsyncZod = async (app) => {
     const typeId = module === "contract" ? contracts.contractTypeId : matters.matterTypeId;
     const prefix = `/portal/${module}s/:number`;
     const name = module === "contract" ? "Contract" : "Matter";
-    async function reached(db: Executor, user: AuthenticatedUser, number: number, lock = false) {
+    async function reached(db: Executor, user: AuthenticatedUser, number: number) {
       const query = db
         .select({
           id: table.id,
@@ -188,7 +159,7 @@ export const portalRecordWorkRoutes: FastifyPluginAsyncZod = async (app) => {
         .from(table)
         .where(and(eq(table.number, number), portalRecordScope(db, user, module)))
         .limit(1);
-      const [row] = await (lock ? query.for("update") : query);
+      const [row] = await query;
       if (!row) throw httpError(404, `No ${module} exists with this number.`);
       return row;
     }
@@ -229,7 +200,7 @@ export const portalRecordWorkRoutes: FastifyPluginAsyncZod = async (app) => {
             description: row.description,
             ...projection,
             ...(module === "contract" ? await contractBusinessValues(app.db, row.id) : {}),
-            references: await references(app.db, projection.fields, projection.customFields, true),
+            references: await references(app.db, projection.fields, projection.customFields),
             originalRequests: await Promise.all(
               originals.map(async ({ row: original, requester }) => {
                 const fields = await selectAttachedFields(
@@ -280,189 +251,12 @@ export const portalRecordWorkRoutes: FastifyPluginAsyncZod = async (app) => {
                   requester,
                   fields,
                   customFields: original.customFields,
-                  references: await references(app.db, fields, original.customFields, false),
+                  references: await references(app.db, fields, original.customFields),
                 };
               }),
             ),
           },
         };
-      },
-    );
-
-    app.patch(
-      `${prefix}/work`,
-      {
-        preHandler: requireAuth,
-        schema: {
-          operationId: `updatePortal${name}Work`,
-          tags: ["portal"],
-          params: Params,
-          body: z.strictObject({
-            ...BusinessValues,
-            value: ValueInput.nullable().optional(),
-            owningDepartment: z
-              .string()
-              .trim()
-              .max(MAX_CONTRACT_CLASSIFICATION_LENGTH)
-              .nullable()
-              .optional(),
-            region: z.string().trim().max(MAX_CONTRACT_CLASSIFICATION_LENGTH).nullable().optional(),
-            description: z.string().max(50_000).nullable().optional(),
-            customFields: CustomFieldsInput.optional(),
-          }),
-          response: {
-            200: z.object({
-              ...BusinessValues,
-              description: z.string().nullable(),
-              customFields: CustomFieldsSchema,
-            }),
-            default: problemResponse,
-          },
-        },
-      },
-      async (request, reply) => {
-        reply.header("cache-control", "private, no-store");
-        return app.db.transaction(async (tx) => {
-          const row = await reached(tx, request.user, request.params.number, true);
-          if (
-            module === "matter" &&
-            (request.body.value !== undefined ||
-              request.body.effectiveDate !== undefined ||
-              request.body.owningDepartment !== undefined ||
-              request.body.region !== undefined)
-          )
-            throw httpError(400, "These Fields belong to a Contract.");
-          const attached = await selectAttachedFields(tx, attachments, row.typeId);
-          const incoming = request.body.customFields ?? {};
-          assertBusinessCustomFieldWrite(attached, incoming);
-          for (const field of attached.filter((field) => field.fieldType === "entity")) {
-            const id = incoming[field.slug];
-            if (typeof id !== "string" || id === row.customFields[field.slug]) continue;
-            const [entity] = await tx
-              .select({ id: entities.id })
-              .from(entities)
-              .where(
-                and(
-                  eq(entities.id, id),
-                  eq(entities.isConfidential, false),
-                  isNull(entities.archivedAt),
-                ),
-              )
-              .limit(1)
-              .for("share");
-            if (!entity) throw httpError(400, "Choose an available Entity.");
-          }
-          const { values, changed } = await applyCustomFields(
-            tx,
-            attached,
-            row.customFields,
-            incoming,
-          );
-          assertRequiredCustomFields(
-            attached.filter((field) => Object.hasOwn(incoming, field.slug)),
-            values,
-          );
-          const description =
-            request.body.description === undefined
-              ? row.description
-              : request.body.description?.trim() || null;
-          if (description !== row.description)
-            changed.description = { from: row.description, to: description };
-          const businessValues: Partial<Awaited<ReturnType<typeof contractBusinessValues>>> =
-            module === "contract" ? await contractBusinessValues(tx, row.id) : {};
-          if (module === "contract") {
-            const patch: Partial<typeof contracts.$inferInsert> = {};
-            if (request.body.value !== undefined) {
-              const value = request.body.value;
-              if (JSON.stringify(value) !== JSON.stringify(businessValues.value))
-                changed.value = { from: businessValues.value, to: value };
-              patch.valueAmount = value?.amount ?? null;
-              patch.valueCurrency = value?.currency ?? null;
-              patch.valueCadence = value?.cadence ?? null;
-              businessValues.value = value;
-            }
-            if (request.body.effectiveDate !== undefined) {
-              if (businessValues.effectiveDate !== request.body.effectiveDate)
-                changed.effectiveDate = {
-                  from: businessValues.effectiveDate,
-                  to: request.body.effectiveDate,
-                };
-              patch.effectiveDate = request.body.effectiveDate;
-              businessValues.effectiveDate = request.body.effectiveDate;
-            }
-            for (const key of ["owningDepartment", "region"] as const) {
-              if (request.body[key] === undefined) continue;
-              const next = request.body[key]?.trim() || null;
-              if (next !== businessValues[key])
-                changed[key] = { from: businessValues[key], to: next };
-              patch[key] = next;
-              businessValues[key] = next;
-            }
-            if (Object.keys(patch).length)
-              await tx.update(contracts).set(patch).where(eq(contracts.id, row.id));
-          }
-          const builtins = new Set([
-            "title",
-            "description",
-            "priority",
-            "contract_type",
-            "matter_type",
-            "counterparty",
-            "needed_by",
-            "term_type",
-            "effective_date",
-            "expiry_date",
-            "renewal_period_months",
-            "notice_period_days",
-            "value",
-          ]);
-          const cleared = Object.keys(incoming).flatMap((slug) =>
-            builtins.has(slug) ? [`field:${slug}`] : [slug, `field:${slug}`],
-          );
-          if (request.body.value !== undefined) cleared.push("value");
-          if (request.body.effectiveDate !== undefined) cleared.push("effective_date");
-          if (request.body.description !== undefined) cleared.push("description");
-          if (module === "contract" && cleared.length) {
-            const humanFields = [
-              ...new Set(cleared.map((slug) => (slug.startsWith("field:") ? slug.slice(6) : slug))),
-            ];
-            await tx
-              .update(contracts)
-              .set({
-                analysisHumanFields: sql`(select coalesce(jsonb_agg(distinct value), '[]'::jsonb) from jsonb_array_elements(${contracts.analysisHumanFields} || ${JSON.stringify(humanFields)}::jsonb))`,
-              })
-              .where(eq(contracts.id, row.id));
-          }
-          await tx
-            .update(table)
-            .set({
-              description,
-              customFields: values,
-              aiUnverified: sql`nullif(${table.aiUnverified} - ${sql.param(cleared)}::text[], '{}'::jsonb)`,
-              updatedAt: new Date(),
-            })
-            .where(eq(table.id, row.id));
-          if (Object.keys(changed).length) {
-            await recordActivity(tx, {
-              entityType: module,
-              entityId: row.id,
-              actorId: request.user.id,
-              action: module === "contract" ? "contract.updated" : "matter.updated",
-              visibility: "full_thread",
-              payload: {
-                number: row.number,
-                title: row.title,
-                changed,
-                ...(request.user.role === "business_user" ? { actorRole: request.user.role } : {}),
-              },
-            });
-          }
-          return {
-            ...businessValues,
-            description,
-            customFields: projectCustomFields("business_user", attached, values).customFields,
-          };
-        });
       },
     );
   }

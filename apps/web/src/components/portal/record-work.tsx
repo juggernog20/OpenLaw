@@ -1,35 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import { useRevalidator } from "react-router";
-import { ValueField } from "../contracts/value-field";
-import { StatusNote, type FieldStatus } from "../status-note";
+import { FormattedMessage, useIntl } from "react-intl";
 import { severityLabel } from "../../lib/contracts";
 import { portalContractReader } from "../../lib/portal-contracts";
-import type { ContractValue } from "../../lib/contracts";
-import { Input } from "../ui/input";
-import { useState } from "react";
-import { FormattedMessage, useIntl } from "react-intl";
-import { CustomFieldControl } from "../custom-field-control";
-import { AutoResizeTextarea } from "../auto-resize-textarea";
-import { Button } from "../ui/button";
-import {
-  commitsOnChange,
-  sameDraft,
-  toDraft,
-  toValue,
-  type AttachedField,
-  type CustomFieldDraft,
-} from "../../lib/custom-fields";
+import type { AttachedField, CustomFieldValue } from "../../lib/custom-fields";
 import { documentDownloadHref } from "../../lib/documents";
 import { PortalDocumentsSection } from "./documents-section";
 import { formatShortDate } from "../../lib/format";
-import { problem } from "../../lib/problem";
-import {
-  savePortalWork,
-  type PortalDocuments,
-  type PortalRecordModule,
-  type PortalWork,
-} from "../../lib/portal-records";
+import type { PortalDocuments, PortalRecordModule, PortalWork } from "../../lib/portal-records";
 
 const card = "flex flex-col gap-4 rounded-card border border-border-default bg-raised p-5";
 
@@ -45,27 +23,33 @@ export function PortalRecordWork({
   documents: PortalDocuments;
 }>) {
   const intl = useIntl();
-  const [description, setDescription] = useState(work.description ?? "");
-  const [savedDescription, setSavedDescription] = useState(description);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  async function saveDescription() {
-    if (saving || description === savedDescription) return;
-    setSaving(true);
-    setError(null);
-    const result = await savePortalWork(module, number, { description }).catch(() => undefined);
-    if (result?.data) {
-      setSavedDescription(result.data.description ?? "");
-      setDescription(result.data.description ?? "");
-    } else
-      setError(
-        (await problem(result)).detail ??
-          intl.formatMessage({
-            id: "portal.record.failed",
-            defaultMessage: "The change could not be saved. Try again.",
-          }),
+  const unset = intl.formatMessage({
+    id: "portal.contract.notRecorded",
+    defaultMessage: "Not recorded",
+  });
+  function fieldValue(
+    field: AttachedField,
+    value: CustomFieldValue | undefined,
+    references: PortalWork["references"],
+  ) {
+    if (value === undefined || value === null || (Array.isArray(value) && value.length === 0))
+      return unset;
+    if (field.fieldType === "user")
+      return references.people.find((person) => person.id === value)?.label ?? unset;
+    if (field.fieldType === "entity")
+      return references.entities.find((entity) => entity.id === value)?.label ?? unset;
+    if (typeof value === "boolean")
+      return intl.formatMessage(
+        {
+          id: "portal.request.booleanValue",
+          defaultMessage: "{value, select, true {Yes} other {No}}",
+        },
+        { value: String(value) },
       );
-    setSaving(false);
+    if (Array.isArray(value)) return intl.formatList(value);
+    if (typeof value === "number") return intl.formatNumber(value);
+    if (field.fieldType === "date" && value) return formatShortDate(value);
+    return String(value);
   }
   return (
     <>
@@ -73,38 +57,22 @@ export function PortalRecordWork({
         <h2 id="portal-fields-heading" className="text-lg font-semibold">
           <FormattedMessage id="portal.record.fields" defaultMessage="Fields" />
         </h2>
-        <div className="flex flex-col gap-2">
-          <label htmlFor="portal-description" className="text-base font-medium">
-            <FormattedMessage id="portal.record.description" defaultMessage="Description" />
-          </label>
-          <AutoResizeTextarea
-            id="portal-description"
-            value={description}
-            disabled={saving}
-            onChange={(event) => setDescription(event.target.value)}
-            onBlur={() => void saveDescription()}
-          />
-          {error && (
-            <p role="alert" className="text-base text-status-danger-fg">
-              {error}
-            </p>
-          )}
-          {error && (
-            <Button variant="secondary" disabled={saving} onClick={() => void saveDescription()}>
-              <FormattedMessage id="portal.record.retrySave" defaultMessage="Retry save" />
-            </Button>
-          )}
-        </div>
-        {module === "contract" && <ContractBusinessFields work={work} number={number} />}
-        {work.fields.map((field) => (
-          <BusinessField
-            key={field.slug}
-            field={field}
-            work={work}
-            module={module}
-            number={number}
-          />
-        ))}
+        <dl className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <dt className="text-sm font-medium text-muted">
+              <FormattedMessage id="portal.record.description" defaultMessage="Description" />
+            </dt>
+            <dd className="whitespace-pre-wrap text-base">{work.description || unset}</dd>
+          </div>
+          {work.fields.map((field) => (
+            <div key={field.slug} className="flex flex-col gap-1">
+              <dt className="text-sm font-medium text-muted">{field.displayName}</dt>
+              <dd className="whitespace-pre-wrap text-base">
+                {fieldValue(field, work.customFields[field.slug], work.references)}
+              </dd>
+            </div>
+          ))}
+        </dl>
       </section>
       <PortalDocumentsSection module={module} number={number} initial={documents} />
       {work.originalRequests.map((original) => (
@@ -167,26 +135,11 @@ export function PortalRecordWork({
             {original.fields
               .filter((field) => original.customFields[field.slug] !== undefined)
               .map((field) => {
-                const value = original.customFields[field.slug]!;
-                const reference =
-                  field.fieldType === "user"
-                    ? original.references.people.find((person) => person.id === value)
-                    : field.fieldType === "entity"
-                      ? original.references.entities.find((entity) => entity.id === value)
-                      : undefined;
-                const label =
-                  reference?.label ??
-                  (typeof value === "boolean"
-                    ? intl.formatMessage(
-                        {
-                          id: "portal.request.booleanValue",
-                          defaultMessage: "{value, select, true {Yes} other {No}}",
-                        },
-                        { value: String(value) },
-                      )
-                    : Array.isArray(value)
-                      ? intl.formatList(value)
-                      : String(value));
+                const label = fieldValue(
+                  field,
+                  original.customFields[field.slug],
+                  original.references,
+                );
                 return (
                   <div key={field.slug}>
                     <dt className="text-sm font-medium text-muted">{field.displayName}</dt>
@@ -197,159 +150,6 @@ export function PortalRecordWork({
           </dl>
         </section>
       ))}
-    </>
-  );
-}
-
-function BusinessField({
-  field,
-  work,
-  module,
-  number,
-}: Readonly<{
-  field: AttachedField;
-  work: PortalWork;
-  module: PortalRecordModule;
-  number: number;
-}>) {
-  const intl = useIntl();
-  const [draft, setDraft] = useState(() => toDraft(field, work.customFields[field.slug]));
-  const [saved, setSaved] = useState(draft);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  async function save(next: CustomFieldDraft) {
-    if (busy || sameDraft(next, saved)) return;
-    const parsed = toValue(field, next);
-    if ("error" in parsed) {
-      setError(
-        intl.formatMessage({
-          id: "portal.record.invalidNumber",
-          defaultMessage: "Enter a number.",
-        }),
-      );
-      return;
-    }
-    setBusy(true);
-    setError(null);
-    const result = await savePortalWork(module, number, {
-      customFields: { [field.slug]: parsed.value },
-    }).catch(() => undefined);
-    if (result?.data) {
-      const value = toDraft(field, result.data.customFields[field.slug]);
-      setSaved(value);
-      setDraft(value);
-    } else
-      setError(
-        (await problem(result)).detail ??
-          intl.formatMessage({
-            id: "portal.record.failed",
-            defaultMessage: "The change could not be saved. Try again.",
-          }),
-      );
-    setBusy(false);
-  }
-  return (
-    <div className="flex flex-col gap-2">
-      <label htmlFor={`portal-field-${field.slug}`} className="text-base font-medium">
-        {field.displayName}
-      </label>
-      <CustomFieldControl
-        id={`portal-field-${field.slug}`}
-        field={field}
-        draft={draft}
-        disabled={busy}
-        people={work.references.people}
-        entities={work.references.entities}
-        onDraft={(next) => {
-          setDraft(next);
-          if (commitsOnChange(field)) void save(next);
-        }}
-        onBlur={() => {
-          if (!commitsOnChange(field)) void save(draft);
-        }}
-      />
-      {error && (
-        <>
-          <p role="alert" className="text-base text-status-danger-fg">
-            {error}
-          </p>
-          <Button variant="secondary" disabled={busy} onClick={() => void save(draft)}>
-            <FormattedMessage id="portal.record.retrySave" defaultMessage="Retry save" />
-          </Button>
-        </>
-      )}
-    </div>
-  );
-}
-
-function ContractBusinessFields({ work, number }: Readonly<{ work: PortalWork; number: number }>) {
-  const intl = useIntl();
-  const revalidator = useRevalidator();
-  const [value, setValue] = useState(work.value ?? null);
-  const [date, setDate] = useState(work.effectiveDate ?? "");
-  const [savedDate, setSavedDate] = useState(date);
-  const [status, setStatus] = useState<FieldStatus>("idle");
-  const [dateStatus, setDateStatus] = useState<FieldStatus>("idle");
-  const [error, setError] = useState<string | undefined>();
-  const [dateError, setDateError] = useState<string | undefined>();
-  async function save(key: "value" | "effectiveDate", next: ContractValue | string | null) {
-    const note = key === "value" ? setStatus : setDateStatus;
-    const fail = key === "value" ? setError : setDateError;
-    note("saving");
-    fail(undefined);
-    const body =
-      key === "value"
-        ? { value: next as ContractValue | null }
-        : { effectiveDate: next as string | null };
-    const result = await savePortalWork("contract", number, body).catch(() => undefined);
-    if (!result?.data) {
-      note("error");
-      fail(
-        (await problem(result)).detail ??
-          intl.formatMessage({
-            id: "portal.record.failed",
-            defaultMessage: "The change could not be saved. Try again.",
-          }),
-      );
-      return;
-    }
-    if (key === "value") setValue(result.data.value ?? null);
-    else {
-      setDate(result.data.effectiveDate ?? "");
-      setSavedDate(result.data.effectiveDate ?? "");
-    }
-    note("saved");
-    void revalidator.revalidate();
-  }
-  return (
-    <>
-      <ValueField
-        value={value}
-        frozen={status === "saving"}
-        status={status}
-        error={error}
-        onStatus={(next, detail) => {
-          setStatus(next);
-          setError(detail);
-        }}
-        onCommit={(next) => void save("value", next)}
-      />
-      <div className="flex flex-col gap-2">
-        <label htmlFor="portal-effective-date" className="font-medium">
-          <FormattedMessage id="portal.contract.effectiveDate" defaultMessage="Effective date" />
-        </label>
-        <Input
-          id="portal-effective-date"
-          type="date"
-          value={date}
-          disabled={dateStatus === "saving"}
-          onChange={(event) => setDate(event.target.value)}
-          onBlur={() => {
-            if (date !== savedDate) void save("effectiveDate", date || null);
-          }}
-        />
-        <StatusNote status={dateStatus} detail={dateError} />
-      </div>
     </>
   );
 }

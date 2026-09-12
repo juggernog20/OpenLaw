@@ -1982,7 +1982,7 @@ export interface paths {
     delete?: never;
     options?: never;
     head?: never;
-    patch: operations["updatePortalContractWork"];
+    patch?: never;
     trace?: never;
   };
   "/api/v1/portal/matters/{number}/work": {
@@ -1998,7 +1998,7 @@ export interface paths {
     delete?: never;
     options?: never;
     head?: never;
-    patch: operations["updatePortalMatterWork"];
+    patch?: never;
     trace?: never;
   };
   "/api/v1/portal/contracts/{number}/documents": {
@@ -2042,7 +2042,7 @@ export interface paths {
     };
     get: operations["readPortalContractTeam"];
     put?: never;
-    post?: never;
+    post: operations["addPortalContractTeamMember"];
     delete?: never;
     options?: never;
     head?: never;
@@ -2058,7 +2058,7 @@ export interface paths {
     };
     get: operations["readPortalMatterTeam"];
     put?: never;
-    post?: never;
+    post: operations["addPortalMatterTeamMember"];
     delete?: never;
     options?: never;
     head?: never;
@@ -13789,69 +13789,6 @@ export interface operations {
       };
     };
   };
-  updatePortalContractWork: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          owningDepartment?: string | null;
-          region?: string | null;
-          value?: {
-            amount: number;
-            currency: string;
-            /** @enum {string} */
-            cadence: "one_time" | "monthly" | "annually";
-          } | null;
-          effectiveDate?: string | null;
-          description?: string | null;
-          customFields?: {
-            [key: string]: (string | number | boolean | string[]) | null;
-          };
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            owningDepartment?: string | null;
-            region?: string | null;
-            value?: {
-              amount: number;
-              currency: string;
-              /** @enum {string} */
-              cadence: "one_time" | "monthly" | "annually";
-            } | null;
-            effectiveDate?: string | null;
-            description: string | null;
-            customFields: {
-              [key: string]: string | number | boolean | string[];
-            };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
   readPortalMatterWork: {
     parameters: {
       query?: never;
@@ -13980,69 +13917,6 @@ export interface operations {
                   }[];
                 };
               }[];
-            };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  updatePortalMatterWork: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          owningDepartment?: string | null;
-          region?: string | null;
-          value?: {
-            amount: number;
-            currency: string;
-            /** @enum {string} */
-            cadence: "one_time" | "monthly" | "annually";
-          } | null;
-          effectiveDate?: string | null;
-          description?: string | null;
-          customFields?: {
-            [key: string]: (string | number | boolean | string[]) | null;
-          };
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            owningDepartment?: string | null;
-            region?: string | null;
-            value?: {
-              amount: number;
-              currency: string;
-              /** @enum {string} */
-              cadence: "one_time" | "monthly" | "annually";
-            } | null;
-            effectiveDate?: string | null;
-            description: string | null;
-            customFields: {
-              [key: string]: string | number | boolean | string[];
             };
           };
         };
@@ -14240,6 +14114,57 @@ export interface operations {
               image: string | null;
               archived: boolean;
             } | null;
+            canAdd: boolean;
+            people: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  addPortalContractTeamMember: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          userId: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            team: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            }[];
           };
         };
       };
@@ -14296,6 +14221,57 @@ export interface operations {
               image: string | null;
               archived: boolean;
             } | null;
+            canAdd: boolean;
+            people: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  addPortalMatterTeamMember: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          userId: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            team: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            }[];
           };
         };
       };

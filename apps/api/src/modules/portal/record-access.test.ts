@@ -3,6 +3,10 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   activityLog,
+  and,
+  contractTeam,
+  matterTeam,
+  sql,
   contracts,
   documents,
   eq,
@@ -190,7 +194,7 @@ describe("DD-023 record membership", () => {
 });
 
 describe.each(["contract", "matter"] as const)("DD-023 Portal %s work", (module) => {
-  it("projects business Fields, validates writes, and revokes every write with membership", async () => {
+  it("reads Legal's record values and refuses all Portal Field writes", async () => {
     const record = await create(module);
     const staff = `/api/v1/${module}s/${record.number}`;
     const path = `/api/v1/portal/${module}s/${record.number}/work`;
@@ -217,12 +221,24 @@ describe.each(["contract", "matter"] as const)("DD-023 Portal %s work", (module)
       });
       expect(attach.statusCode, attach.body).toBe(201);
     }
-    await harness.app.inject({
+    const edit = await harness.app.inject({
       method: "PATCH",
       url: staff,
       cookies: admin,
-      payload: { customFields: { [slugs[1]!]: 998 } },
+      payload: {
+        description: "Legal's current context",
+        customFields: { [slugs[0]!]: 42, [slugs[1]!]: 998 },
+        ...(module === "contract"
+          ? {
+              owningDepartment: "Procurement",
+              region: "EMEA",
+              effectiveDate: "2026-09-01",
+              value: { amount: 10000, currency: "USD", cadence: "one_time" },
+            }
+          : {}),
+      },
     });
+    expect(edit.statusCode, edit.body).toBe(200);
     await harness.app.inject({
       method: "POST",
       url: `${staff}/team`,
@@ -231,91 +247,59 @@ describe.each(["contract", "matter"] as const)("DD-023 Portal %s work", (module)
     });
     const read = await harness.app.inject({ method: "GET", url: path, cookies: business });
     expect(read.statusCode, read.body).toBe(200);
-    expect(read.body).not.toContain(slugs[1]!);
-    const saved = await harness.app.inject({
-      method: "PATCH",
-      url: path,
-      cookies: business,
-      payload: { description: "Updated business context", customFields: { [slugs[0]!]: 42 } },
-    });
-    expect(saved.statusCode, saved.body).toBe(200);
-    expect(saved.json()).toMatchObject({
-      description: "Updated business context",
+    expect(read.json().work).toMatchObject({
+      description: "Legal's current context",
       customFields: { [slugs[0]!]: 42 },
     });
+    expect(read.body).not.toContain(slugs[1]!);
+    if (module === "contract")
+      expect(read.json().work).toMatchObject({ owningDepartment: "Procurement", region: "EMEA" });
+    const table = module === "contract" ? contracts : matters;
+    const [before] = await harness.db.select().from(table).where(eq(table.id, record.id));
     for (const payload of [
+      { description: "Changed" },
+      { customFields: { [slugs[0]!]: 7 } },
       { customFields: { [slugs[1]!]: 7 } },
-      { statusId: "legal-change" },
-      { customFields: { [slugs[0]!]: "wrong" } },
+      { owningDepartment: "Changed" },
+      { region: "Changed" },
+      { effectiveDate: "2027-01-01" },
+      { value: { amount: 1, currency: "USD", cadence: "one_time" } },
+      { title: "Changed" },
     ]) {
+      for (const cookies of [business, admin]) {
+        const refused = await harness.app.inject({ method: "PATCH", url: path, cookies, payload });
+        expect(refused.statusCode, refused.body).toBe(404);
+      }
       const refused = await harness.app.inject({
         method: "PATCH",
-        url: path,
+        url: staff,
         cookies: business,
         payload,
       });
-      expect([400, 403]).toContain(refused.statusCode);
+      expect([400, 403], refused.body).toContain(refused.statusCode);
     }
-    const classification = await harness.app.inject({
+    const [after] = await harness.db.select().from(table).where(eq(table.id, record.id));
+    expect(after).toEqual(before);
+    await harness.app.inject({
       method: "PATCH",
-      url: path,
-      cookies: business,
-      payload: { owningDepartment: "  Procurement  ", region: "EMEA" },
+      url: staff,
+      cookies: admin,
+      payload: {
+        description: "Updated by Legal",
+        ...(module === "contract" ? { owningDepartment: null, region: "Americas" } : {}),
+      },
     });
-    if (module === "contract") {
-      expect(classification.statusCode, classification.body).toBe(200);
-      expect(classification.json()).toMatchObject({
-        owningDepartment: "Procurement",
-        region: "EMEA",
-      });
-      const reread = await harness.app.inject({ method: "GET", url: path, cookies: business });
-      expect(reread.json().work).toMatchObject({ owningDepartment: "Procurement", region: "EMEA" });
-      expect(reread.json().work.customFields).not.toHaveProperty("owning_department");
-      const full = await harness.app.inject({ method: "GET", url: staff, cookies: admin });
-      expect(full.json().contract).toMatchObject({
-        owningDepartment: "Procurement",
-        region: "EMEA",
-      });
-      const history = await harness.app.inject({
-        method: "GET",
-        url: `/api/v1/portal/activity?entityType=contract&entityId=${full.json().contract.id}`,
-        cookies: business,
-      });
-      expect(history.json().entries[0].payload.changed).toMatchObject({
-        owningDepartment: { from: null, to: "Procurement" },
-      });
-      const edited = await harness.app.inject({
-        method: "PATCH",
-        url: staff,
-        cookies: admin,
-        payload: { region: "Americas" },
-      });
-      expect(edited.statusCode, edited.body).toBe(200);
-      expect(edited.json().contract.region).toBe("Americas");
-      const cleared = await harness.app.inject({
-        method: "PATCH",
-        url: path,
-        cookies: business,
-        payload: { owningDepartment: " " },
-      });
-      expect(cleared.json()).toMatchObject({ owningDepartment: null, region: "Americas" });
-    } else expect(classification.statusCode).toBe(400);
-    const stored = await harness.app.inject({ method: "GET", url: staff, cookies: admin });
-    expect(stored.json()[module].customFields[slugs[1]!]).toBe(998);
+    const updated = await harness.app.inject({ method: "GET", url: path, cookies: business });
+    expect(updated.json().work.description).toBe("Updated by Legal");
+    if (module === "contract")
+      expect(updated.json().work).toMatchObject({ owningDepartment: null, region: "Americas" });
     await harness.app.inject({
       method: "DELETE",
       url: `${staff}/team/${businessId}`,
       cookies: admin,
     });
     expect(
-      (
-        await harness.app.inject({
-          method: "PATCH",
-          url: path,
-          cookies: business,
-          payload: module === "contract" ? { region: "Revoked" } : { description: "Revoked" },
-        })
-      ).statusCode,
+      (await harness.app.inject({ method: "GET", url: path, cookies: business })).statusCode,
     ).toBe(404);
   });
 
@@ -674,6 +658,160 @@ describe.each(["contract", "matter"] as const)("DD-023 Portal %s work", (module)
 });
 
 describe.each(["contract", "matter"] as const)("Portal %s applets", (module) => {
+  it("adds members through the shared roster while preserving confidentiality and current reach", async () => {
+    const record = await create(module);
+    const staff = `/api/v1/${module}s/${record.number}`;
+    const path = `/api/v1/portal/${module}s/${record.number}/team`;
+    const person = await provisionUser(harness.app.auth, {
+      email: `portal-added-${module}@example.com`,
+      displayName: "Added colleague",
+      password: "correct-horse-battery",
+    });
+    await harness.db.update(users).set({ role: "business_user" }).where(eq(users.id, person.id));
+    const addedCookies = await signInCookies(
+      harness.app,
+      `portal-added-${module}@example.com`,
+      "correct-horse-battery",
+    );
+    const add = (userId = person.id, cookies = business) =>
+      harness.app.inject({ method: "POST", url: path, cookies, payload: { userId } });
+    expect((await add()).statusCode).toBe(404);
+    await harness.app.inject({
+      method: "POST",
+      url: `${staff}/team`,
+      cookies: admin,
+      payload: { userId: businessId },
+    });
+    const eligible = await harness.app.inject({ method: "GET", url: path, cookies: business });
+    expect(eligible.json().canAdd).toBe(true);
+    expect(eligible.json().people).toContainEqual(expect.objectContaining({ id: person.id }));
+    expect(eligible.json().people).not.toContainEqual(expect.objectContaining({ id: businessId }));
+    expect(eligible.body).not.toContain("email");
+    expect((await add("missing-user")).statusCode).toBe(400);
+    await harness.db.update(users).set({ archivedAt: new Date() }).where(eq(users.id, person.id));
+    expect((await add()).statusCode).toBe(400);
+    await harness.db.update(users).set({ archivedAt: null }).where(eq(users.id, person.id));
+    const joined = await add();
+    expect(joined.statusCode, joined.body).toBe(201);
+    expect(joined.json().team.filter((row: { id: string }) => row.id === person.id)).toHaveLength(
+      1,
+    );
+    expect((await add()).statusCode).toBe(409);
+    const reached = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/portal/${module}s/${record.number}/work`,
+      cookies: addedCookies,
+    });
+    expect(reached.statusCode, reached.body).toBe(200);
+    const log = await harness.db
+      .select()
+      .from(activityLog)
+      .where(eq(activityLog.entityId, record.id));
+    expect(log).toContainEqual(
+      expect.objectContaining({
+        actorId: businessId,
+        action: `${module}.team_added`,
+        payload: expect.objectContaining({ member: "Added colleague" }),
+      }),
+    );
+    expect(
+      (
+        await harness.app.inject({
+          method: "DELETE",
+          url: `${staff}/team/${person.id}`,
+          cookies: business,
+        })
+      ).statusCode,
+    ).toBe(403);
+    expect(
+      (
+        await harness.app.inject({
+          method: "DELETE",
+          url: `${path}/${person.id}`,
+          cookies: business,
+        })
+      ).statusCode,
+    ).toBe(404);
+    const confidential = await harness.app.inject({
+      method: "PATCH",
+      url: staff,
+      cookies: admin,
+      payload: { isConfidential: true },
+    });
+    expect(confidential.statusCode, confidential.body).toBe(200);
+    const locked = await harness.app.inject({ method: "GET", url: path, cookies: business });
+    expect(locked.json()).toMatchObject({ canAdd: false, people: [] });
+    expect((await add("missing-user")).statusCode).toBe(403);
+    expect((await add("missing-user", admin)).statusCode).toBe(403);
+    await harness.app.inject({
+      method: "PATCH",
+      url: staff,
+      cookies: admin,
+      payload: { isConfidential: false },
+    });
+    await harness.app.inject({
+      method: "DELETE",
+      url: `${staff}/team/${businessId}`,
+      cookies: admin,
+    });
+    expect((await add()).statusCode).toBe(404);
+    const table = module === "contract" ? contracts : matters;
+    await harness.db.update(table).set({ archivedAt: new Date() }).where(eq(table.id, record.id));
+    expect((await add("missing-user", addedCookies)).statusCode).toBe(404);
+  });
+
+  it.each(["membership", "confidentiality", "archive"] as const)(
+    "rechecks %s after waiting for a concurrent record change",
+    async (change) => {
+      const record = await create(module);
+      await harness.app.inject({
+        method: "POST",
+        url: `/api/v1/${module}s/${record.number}/team`,
+        cookies: admin,
+        payload: { userId: businessId },
+      });
+      const table = module === "contract" ? contracts : matters;
+      let pending: Promise<{ statusCode: number; body: string }> | undefined;
+      await harness.db.transaction(async (tx) => {
+        const result = await tx.execute(sql`select pg_backend_pid()::int as pid`);
+        const holder = Number(result.rows[0]?.pid);
+        await tx.select({ id: table.id }).from(table).where(eq(table.id, record.id)).for("update");
+        if (change === "membership") {
+          if (module === "contract")
+            await tx
+              .delete(contractTeam)
+              .where(
+                and(eq(contractTeam.contractId, record.id), eq(contractTeam.userId, businessId)),
+              );
+          else
+            await tx
+              .delete(matterTeam)
+              .where(and(eq(matterTeam.matterId, record.id), eq(matterTeam.userId, businessId)));
+        } else
+          await tx
+            .update(table)
+            .set(change === "archive" ? { archivedAt: new Date() } : { isConfidential: true })
+            .where(eq(table.id, record.id));
+        pending = harness.app.inject({
+          method: "POST",
+          url: `/api/v1/portal/${module}s/${record.number}/team`,
+          cookies: business,
+          payload: { userId: "unreached-target" },
+        });
+        for (let attempt = 0; attempt < 400; attempt++) {
+          const waiting = await harness.db.execute(
+            sql`select count(*)::int as waiting from pg_stat_activity where ${holder} = any(pg_blocking_pids(pid))`,
+          );
+          if (Number(waiting.rows[0]?.waiting) > 0) return;
+          await new Promise((resolve) => setTimeout(resolve, 5));
+        }
+        throw new Error("Portal add did not wait for the record lock");
+      });
+      const response = await pending!;
+      expect(response.statusCode, response.body).toBe(change === "confidentiality" ? 403 : 404);
+    },
+  );
+
   it("filters history in the store before paging, including staff Portal previews, and revokes applet reads", async () => {
     const record = await create(module);
     const other = await create(module);
@@ -956,13 +1094,14 @@ it("removes historical Field edits when the Field becomes legal-only", async () 
     cookies: admin,
     payload: { fieldId: id },
   });
-  const saved = await harness.app.inject({
-    method: "PATCH",
-    url: `/api/v1/portal/contracts/${record.number}/work`,
-    cookies: business,
-    payload: { customFields: { [slug]: "A previously shared value" } },
+  await harness.db.insert(activityLog).values({
+    entityType: "contract",
+    entityId: record.id,
+    actorId: businessId,
+    action: "contract.updated",
+    visibility: "full_thread",
+    payload: { changed: { [`field.${slug}`]: { from: null, to: "A previously shared value" } } },
   });
-  expect(saved.statusCode, saved.body).toBe(200);
   const history = () =>
     harness.app.inject({
       method: "GET",

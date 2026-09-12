@@ -1,6 +1,6 @@
 # Work on a shared Contract or Matter
 
-Use the Portal to add business information, supporting Documents and replies to legal work you are on.
+Use the Portal to read legal work you are on, upload Documents, add replies and bring colleagues onto its team.
 
 ## Before you start
 
@@ -16,15 +16,11 @@ Select **Filter**, choose a property and value, and select **Apply**. Contracts 
 
 Select a column heading to sort ascending, descending or return to the default order. Use **Columns** to choose and reorder columns, and drag a heading's edge to resize it. **Show more** adds the next page. Search, filters and sorting stay in the page address, so you can return to them with Back or keep a bookmark.
 
-## Update business information
+## Read record information
 
-On a Contract, **Overview** includes **Owning department** and **Region**. Enter the department and region responsible for the work. Both are built-in attributes available for every Contract type; they are separate from its configurable Fields.
+**Overview** and **Fields** show the current values from the full app record. On a Contract, this includes **Owning department**, **Region**, Value and dates. Business Fields, including Description, are read-only. Ask Legal to change a value; reload the record to see their update.
 
-Under **Fields**, update **Description** or the business Fields supplied by the record's type. On a Contract you can also edit **Amount**, **Currency**, **Cadence** and **Effective date**. Text saves when you leave its control; choices save when selected. The three Value controls save together when you leave that group or press Enter.
-
-Wait for the save result. If saving fails, your draft stays in the control. Use **Retry save** where offered, or correct the value and leave the control again. Required Fields cannot be cleared.
-
-**Original request** contains the original description, submitted answers, Requester and submission date. It is read-only. A record may show more than one original submission, or none if it started without a Request. Editing the live Description does not change the original ask.
+**Original request** contains the original description, submitted answers, Requester and submission date. It is read-only. A record may show more than one original submission, or none if it started without a Request. Legal’s changes to the live Description do not change the original ask.
 
 ## Work with Documents
 
@@ -44,8 +40,14 @@ Open **Comments** in the applet bar on the right, write your reply, attach files
 
 A comment attachment belongs to the conversation. Upload under Documents when the file needs its own managed Document chain. See [Comments, attachments, and activity](comments-and-activity.md) for attachment limits and reply behavior.
 
+## Add team members
+
+Open **Contract team** or **Matter team** in the applet bar. Select **Add team member**, choose an existing person, then select **Add**. They join the same team shown in the full app. Each person appears once, and existing members are excluded from the picker. Business Users added this way gain Portal access to the record.
+
+For a Confidential record, ask Legal to add people. Removing members and creating new accounts also stay with Legal and Administrators.
+
 ## Work that stays with Legal
 
-Ask Legal to change Status, Type, owners, parties, teams, confidentiality, legal Fields, relationships, Tasks, Key dates, Approvals or signatures. Business Users create [Requests](submit-request.md) to start new work.
+Ask Legal to change record Fields, Description, Value, dates, Status, Type, owners, parties, confidentiality, relationships, Tasks, Key dates, Approvals or signatures, or to remove team members. Business Users create [Requests](submit-request.md) to start new work.
 
 Closing a Matter or Ending a Contract does not remove permitted Portal work. Archiving removes the record from the Portal. If the record disappears, ask Legal to check its archive state and your membership. See [roles and access](roles-and-access.md).

@@ -31,14 +31,3 @@ export async function loadPortalWork(module: PortalRecordModule, number: number)
   if (!documents.data) throw new Error("The Documents could not be read.");
   return { work: data.work, documents: documents.data };
 }
-
-export function savePortalWork(
-  module: PortalRecordModule,
-  number: number,
-  body: paths["/api/v1/portal/contracts/{number}/work"]["patch"]["requestBody"]["content"]["application/json"],
-) {
-  return api.PATCH(`/api/v1/portal/${module}s/{number}/work`, {
-    params: { path: { number } },
-    body,
-  });
-}

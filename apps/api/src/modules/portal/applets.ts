@@ -22,6 +22,7 @@ import {
   users,
 } from "@openlaw/db";
 import { requireAuth } from "../../auth/guards.js";
+import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import { selectAttachedFields } from "../../lib/custom-fields.js";
 import { portalRecordScope } from "../../lib/portal-record-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
@@ -62,6 +63,8 @@ export const portalAppletRoutes: FastifyPluginAsyncZod = async (app) => {
               manager: Person.nullable(),
               businessOwner: Person.nullable(),
               creator: Person.nullable(),
+              canAdd: z.boolean(),
+              people: z.array(Person),
             }),
             default: problemResponse,
           },
@@ -75,6 +78,7 @@ export const portalAppletRoutes: FastifyPluginAsyncZod = async (app) => {
             managerId: table.managerId,
             businessOwnerId: table.businessOwnerId,
             createdBy: table.createdBy,
+            isConfidential: table.isConfidential,
           })
           .from(table)
           .where(
@@ -110,7 +114,94 @@ export const portalAppletRoutes: FastifyPluginAsyncZod = async (app) => {
           manager: person(record.managerId),
           businessOwner: person(record.businessOwnerId),
           creator: person(record.createdBy),
+          canAdd: !record.isConfidential,
+          people: record.isConfidential
+            ? []
+            : await app.db
+                .select(PersonColumns)
+                .from(users)
+                .where(
+                  and(
+                    isNull(users.archivedAt),
+                    sql`not exists (select 1 from ${team} where ${teamRecordId} = ${record.id} and ${team.userId} = ${users.id})`,
+                  ),
+                )
+                .orderBy(asc(users.displayName), asc(users.id)),
         };
+      },
+    );
+    app.post(
+      `/portal/${module}s/:number/team`,
+      {
+        preHandler: requireAuth,
+        schema: {
+          operationId: `addPortal${module === "contract" ? "Contract" : "Matter"}TeamMember`,
+          tags: ["portal"],
+          params: z.object({ number: z.coerce.number().int().positive() }),
+          body: z.strictObject({ userId: z.string().min(1) }),
+          response: { 201: z.object({ team: z.array(Person) }), default: problemResponse },
+        },
+      },
+      async (request, reply) => {
+        reply.header("cache-control", "private, no-store");
+        const members = await app.db.transaction(async (tx) => {
+          const [record] = await tx
+            .select({
+              id: table.id,
+              number: table.number,
+              title: table.title,
+              isConfidential: table.isConfidential,
+            })
+            .from(table)
+            .where(eq(table.number, request.params.number))
+            .limit(1)
+            .for("update");
+          if (!record) throw httpError(404, "No record exists with this reference.");
+          // Recheck membership after the record lock, which also serializes staff removals and archival.
+          const [reached] = await tx
+            .select({ id: table.id })
+            .from(table)
+            .where(and(eq(table.id, record.id), portalRecordScope(tx, request.user, module)))
+            .limit(1);
+          if (!reached) throw httpError(404, "No record exists with this reference.");
+          if (record.isConfidential)
+            throw httpError(403, "Ask Legal to add members to a Confidential record.");
+          const [person] = await tx
+            .select(PersonColumns)
+            .from(users)
+            .where(eq(users.id, request.body.userId))
+            .limit(1)
+            .for("update");
+          if (!person || person.archived) throw httpError(400, "That is not a person we can add.");
+          const inserted =
+            module === "contract"
+              ? await tx
+                  .insert(contractTeam)
+                  .values({ contractId: record.id, userId: person.id })
+                  .onConflictDoNothing()
+                  .returning()
+              : await tx
+                  .insert(matterTeam)
+                  .values({ matterId: record.id, userId: person.id })
+                  .onConflictDoNothing()
+                  .returning();
+          if (!inserted.length) throw httpError(409, "This person is already on the team.");
+          await recordActivity(tx, {
+            entityType: module,
+            entityId: record.id,
+            actorId: request.user.id,
+            action: `${module}.team_added`,
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: { number: record.number, title: record.title, member: person.displayName },
+          });
+          return tx
+            .select(PersonColumns)
+            .from(team)
+            .innerJoin(users, eq(users.id, team.userId))
+            .where(eq(teamRecordId, record.id))
+            .orderBy(asc(users.displayName), asc(users.id));
+        });
+        return reply.status(201).send({ team: members });
       },
     );
   }
