@@ -437,7 +437,7 @@ test.describe.serial("M20 demo path", () => {
       await thread.getByRole("button", { name: "Comment", exact: true }).click();
       expect((await posted).status()).toBe(201);
       await expect(thread.getByText(REQUESTER_REPLY)).toBeVisible();
-      await expect(thread.getByText("You", { exact: true })).toBeVisible();
+      await expect(thread.getByText("Full thread", { exact: true }).first()).toBeVisible();
 
       // Legal answers. There is no staff surface for a Request until
       // M21's Inbox, so the Administrator posts at the seam — the same
