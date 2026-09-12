@@ -4692,6 +4692,19 @@ Search, filtering, sorting, counts and paging run on the server over current tea
 
 This supersedes only DES-076's flat-list presentation. DD-023's account types, Portal write grid, team grant and Confidential gate stand. No staff taxonomy, user picker, saved-view or record endpoint is required to populate these lists. The API, generated client, Portal guide and browser acceptance tests follow this decision.
 
+## DES-078: Portal destinations share a persistent navigation bar
+
+- **Status:** Accepted under Blair's 2026-09-12 instruction
+- **Date:** 2026-09-12
+
+### Decision
+
+Requests, Contracts and Matters sit in one full-width navigation bar directly below the Portal header. The bar uses the full app's navigation height, theme colors, icons and accent underline. It stays outside the scrolling page content, in the same position on lists and records. On narrow screens the labels remain visible and icons yield their space.
+
+The current destination has an underline, stronger text and `aria-current="page"`. Requests stays current on the Request form and Request detail; Contracts and Matters stay current on their respective records. Settings and Help do not mark a work destination current. These are ordinary keyboard-accessible links to their existing addresses.
+
+The redundant Your Contracts shortcut on the Requests home is removed. DES-076's record pages and DES-077's list headings and controls retain their existing presentation.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                     |
@@ -4773,6 +4786,7 @@ This supersedes only DES-076's flat-list presentation. DD-023's account types, P
 | DES-075 | The Contract team applet holds stakeholders, and the AI analysis card is the Fields section's (amends DES-047, DES-070; extends DD-021, DES-032)                     | Accepted                                                                                                   |
 | DES-076 | Portal Contracts and Matters carry the business work                                                                                                                 | Accepted                                                                                                   |
 | DES-077 | Portal record lists use the managed table (supersedes DES-076's flat-list presentation)                                                                              | Accepted                                                                                                   |
+| DES-078 | Portal destinations share a persistent navigation bar                                                                                                                | Accepted                                                                                                   |
 
 ### DES-016 addendum (2026-09-11, #827) — Request source reading above Convert
 

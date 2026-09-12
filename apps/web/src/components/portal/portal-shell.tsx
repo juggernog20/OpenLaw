@@ -12,6 +12,7 @@ import { isMemberPlus, type Role } from "../../lib/roles";
 import { useRetainedLiveEvents, type LiveEventRecordScope } from "../../lib/events";
 import { Avatar } from "../avatar";
 import { PortalThemeMenu } from "./portal-theme-menu";
+import { PortalNav } from "./portal-nav";
 import { NotificationBell } from "../notification-bell";
 import { SkipLink } from "../skip-link";
 import { Button } from "../ui/button";
@@ -103,6 +104,7 @@ export function PortalShell({
           </Button>
         </div>
       </header>
+      <PortalNav />
       {isMemberPlus(user.role) && (
         <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border-default bg-raised px-page-x py-3">
           <div className="flex min-w-0 flex-col gap-1">
@@ -140,20 +142,6 @@ export function PortalShell({
         <div
           className={`mx-auto flex w-full flex-col gap-section-gap ${wide ? "" : "max-w-(--width-portal-col)"}`}
         >
-          <nav
-            className="flex flex-wrap gap-5"
-            aria-label={intl.formatMessage({ id: "portal.navigation", defaultMessage: "Portal" })}
-          >
-            <Link className="text-base text-link" to="/portal">
-              <FormattedMessage id="portal.navigation.requests" defaultMessage="Requests" />
-            </Link>
-            <Link className="text-base text-link" to="/portal/contracts">
-              <FormattedMessage id="portal.navigation.contracts" defaultMessage="Contracts" />
-            </Link>
-            <Link className="text-base text-link" to="/portal/matters">
-              <FormattedMessage id="portal.navigation.matters" defaultMessage="Matters" />
-            </Link>
-          </nav>
           {children}
         </div>
       </main>

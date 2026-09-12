@@ -293,6 +293,13 @@ describe("the portal chrome", () => {
       "href",
       "/portal/contracts",
     );
+    const nav = screen.getByRole("navigation", { name: "Portal" });
+    expect(within(nav).getByRole("link", { name: "Requests" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.getByRole("main")).not.toContainElement(nav);
+    expect(screen.queryByRole("link", { name: "Your Contracts" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Entities" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Settings" })).not.toBeInTheDocument();
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
