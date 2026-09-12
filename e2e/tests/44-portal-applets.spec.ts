@@ -13,7 +13,7 @@ import {
 test.setTimeout(120_000);
 test.beforeAll(async ({ request }) => ensureAdminExists(request));
 
-test("Portal uses shared applets with private history omitted and expanding Fields", async ({
+test("Portal uses shared applets with private history omitted, read-only Fields and an expanding composer", async ({
   page,
   browser,
 }, testInfo) => {
@@ -37,52 +37,59 @@ test("Portal uses shared applets with private history omitted and expanding Fiel
           !row.fields.some((field) => field.isRequired),
       );
       const created = await page.request.post(`/api/v1/${module}s`, {
-        data: { title: `Portal applet ${module}`, [`${module}TypeId`]: type.id },
+        data: {
+          title: `Portal applet ${module}`,
+          [`${module}TypeId`]: type.id,
+        },
       });
       expect(created.status(), await created.text()).toBe(201);
       const record = (await created.json())[module];
       records.push({ module, number: record.number });
+      const described = await page.request.patch(`/api/v1/${module}s/${record.number}`, {
+        data: { description: "Shared business context" },
+      });
+      expect(described.status(), await described.text()).toBe(200);
       expect(
         (
           await page.request.post(`/api/v1/${module}s/${record.number}/team`, { data: { userId } })
         ).status(),
       ).toBe(201);
+      let sharedCommentId: string | undefined;
       for (const visibility of ["full_thread", "legal_only", "working_team"]) {
-        expect(
-          (
-            await page.request.post("/api/v1/comments", {
-              data: {
-                entityType: module,
-                entityId: record.id,
-                visibility,
-                body: `${visibility} discussion`,
-              },
-            })
-          ).status(),
-        ).toBe(201);
+        const posted = await page.request.post("/api/v1/comments", {
+          data: {
+            entityType: module,
+            entityId: record.id,
+            visibility,
+            body: `${visibility} discussion`,
+          },
+        });
+        expect(posted.status(), await posted.text()).toBe(201);
+        if (visibility === "full_thread") sharedCommentId = (await posted.json()).comment.id;
       }
       await portal.setViewportSize({ width: 1440, height: 1000 });
       await portal.goto(`/portal/${module}s/${record.number}`);
-      const field = portal.getByRole("textbox", { name: "Description", exact: true });
-      await field.fill("Short description");
-      const short = await field.evaluate((node) => node.getBoundingClientRect().height);
-      await field.fill(Array.from({ length: 18 }, (_, i) => `Context line ${i}`).join("\n"));
-      await expect
-        .poll(() => field.evaluate((node) => node.getBoundingClientRect().height))
-        .toBeGreaterThan(short);
-      expect(await field.evaluate((node) => getComputedStyle(node).resize)).toBe("none");
-      await field.fill("Shared business context");
-      await expect
-        .poll(() => field.evaluate((node) => node.getBoundingClientRect().height))
-        .toBe(short);
-      await portal.getByRole("heading", { name: `Portal applet ${module}`, exact: true }).click();
+      const fields = portal.getByRole("region", { name: "Fields", exact: true });
+      await expect(fields.getByText("Shared business context", { exact: true })).toBeVisible();
+      await expect(fields.getByRole("textbox")).toHaveCount(0);
       await expect(portal.getByRole("button", { name: /Comments.*1/ })).toBeVisible();
       await portal.getByRole("button", { name: /Comments.*1/ }).click();
       const comments = portal.getByRole("complementary", { name: "Comments", exact: true });
       await expect(comments.getByText("full_thread discussion", { exact: true })).toBeVisible();
       await expect(comments.getByText("legal_only discussion")).toHaveCount(0);
       await expect(comments.getByText("working_team discussion")).toHaveCount(0);
-      await comments.getByRole("textbox", { name: "New comment" }).fill("Keep my draft");
+      const composer = comments.getByRole("textbox", { name: "New comment" });
+      await composer.fill("Short comment");
+      const short = await composer.evaluate((node) => node.getBoundingClientRect().height);
+      await composer.fill(Array.from({ length: 18 }, (_, i) => `Context line ${i}`).join("\n"));
+      await expect
+        .poll(() => composer.evaluate((node) => node.getBoundingClientRect().height))
+        .toBeGreaterThan(short);
+      expect(await composer.evaluate((node) => getComputedStyle(node).resize)).toBe("none");
+      await composer.fill("Keep my draft");
+      await expect
+        .poll(() => composer.evaluate((node) => node.getBoundingClientRect().height))
+        .toBe(short);
       await portal
         .getByRole("button", {
           name: module === "contract" ? "Contract team" : "Matter team",
@@ -92,7 +99,8 @@ test("Portal uses shared applets with private history omitted and expanding Fiel
       await expect(
         portal.getByRole("complementary").getByText("Portal applet colleague", { exact: true }),
       ).toBeVisible();
-      await expect(portal.getByRole("button", { name: "Add team member" })).toHaveCount(0);
+      await expect(portal.getByRole("button", { name: "Add team member" })).toBeEnabled();
+      await expect(portal.getByRole("button", { name: /^Remove / })).toHaveCount(0);
       await portal.getByRole("button", { name: "Comments", exact: true }).click();
       await expect(comments.getByRole("textbox", { name: "New comment" })).toHaveValue(
         "Keep my draft",
@@ -101,15 +109,22 @@ test("Portal uses shared applets with private history omitted and expanding Fiel
       await expect(portal.getByRole("button", { name: "Comments", exact: true })).toBeFocused();
       await portal.getByRole("button", { name: "History", exact: true }).click();
       const history = portal.getByRole("complementary", { name: "History", exact: true });
-      await expect(history.getByText(/Shared business context/)).toBeVisible();
+      await expect(
+        history.getByText(`${ADMIN.displayName} commented`, { exact: true }),
+      ).toBeVisible();
       const response = await portal.request.get(
         `/api/v1/portal/activity?entityType=${module}&entityId=${record.id}`,
       );
       expect(response.ok()).toBe(true);
       const entries = (await response.json()).entries;
-      expect(
-        entries.every((entry: { visibility: string }) => entry.visibility === "full_thread"),
-      ).toBe(true);
+      expect(sharedCommentId).toBeDefined();
+      expect(entries).toMatchObject([
+        {
+          action: "comment.posted",
+          visibility: "full_thread",
+          payload: { commentId: sharedCommentId },
+        },
+      ]);
       await reportAxeViolations(portal, testInfo, `portal-${module}-applets-desktop`);
       for (const width of [390, 320]) {
         await portal.setViewportSize({ width, height: 844 });
@@ -128,8 +143,12 @@ test("Portal uses shared applets with private history omitted and expanding Fiel
       await portal.screenshot({ path: `/tmp/openlaw-portal-${module}-applets.png` });
     }
   } finally {
-    for (const record of records)
-      await page.request.delete(`/api/v1/${record.module}s/${record.number}`);
+    for (const record of records) {
+      const archived = await page.request.post(
+        `/api/v1/${record.module}s/${record.number}/archive`,
+      );
+      expect(archived.status(), await archived.text()).toBe(200);
+    }
     await colleague.context.close();
     await ensureMemberInert(page.request, email);
   }

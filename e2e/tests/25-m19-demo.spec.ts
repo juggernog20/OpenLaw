@@ -13,7 +13,7 @@
  * seeded rows already read their targets — `Contract · NDA`, `Contract`,
  * and `No target` — which is the three-state model (INT-002 addendum)
  * drawn as a fact. A new request type is added from the inline draft row,
- * pointed at the NDA contract type in its editor (ST14), given two
+ * given an existing NDA routing default through the API, then given two
  * catalog fields from the M6 catalog, and one of them is marked required
  * **on this form** — the per-attachment flag that makes a form definition
  * more than a list. Then a deflection link is placed on that request type
@@ -278,42 +278,30 @@ test.describe.serial("M19 demo path", () => {
       await expect(cell(row, "Form fields", "0 fields")).toBeVisible();
 
       // Its pencil opens the type's own editor screen (DES-022), where
-      // identity, target, and form live together (story 19).
+      // identity and form live together (story 19).
       await row.getByRole("button", { name: `Edit ${typeName}` }).click();
       await expect(page).toHaveURL(/\/settings\/intake\/request-types\/[^/]+$/);
       const typeId = new URL(page.url()).pathname.split("/").pop()!;
       await expect(page.getByLabel("Display name")).toHaveValue(typeName);
 
-      // ---- The target: the routing decision, pre-encoded ----
-      //
-      // One select, grouped by module, whose value carries both halves
-      // of the model — the module and the optional type id.
-      const targeted = page.waitForResponse(
-        (response) =>
-          response.url().includes(`/api/v1/request-types/${typeId}`) &&
-          response.request().method() === "PATCH",
-      );
-      await page.getByLabel("Target").selectOption(`contract:${ndaType!.id}`);
-      expect((await targeted).ok()).toBe(true);
-      // The help line says what conversion will do, in the reviewer's
-      // own words (INT-006: triage confirms, it does not classify).
-      await expect(
-        page.getByText(
-          `Converting a request of this type creates a contract of the ${ndaType!.displayName} type.`,
-        ),
-      ).toBeVisible();
+      // Existing routing defaults still scope the catalog, while the editor
+      // leaves destination choice to Legal at conversion.
+      await expect(page.getByLabel("Target", { exact: true })).toHaveCount(0);
+      const targeted = await page.request.patch(`/api/v1/request-types/${typeId}`, {
+        data: { targetModule: "contract", targetTypeId: ndaType!.id },
+      });
+      expect(targeted.status(), await targeted.text()).toBe(200);
+      await page.reload();
+      await expect(page.getByLabel("Display name")).toHaveValue(typeName);
+      await expect(page.getByLabel("Target", { exact: true })).toHaveCount(0);
 
-      // ---- The form: four locked basics, then the catalog ----
-      //
-      // The basics state what every form always collects, drawn as
-      // facts rather than as choices (story 20). Urgency wears the
-      // DES-018 severity ramp, which is what ST14's redrawn row reads.
+      // The basics state what every form always collects.
       const basics = page.getByRole("list", { name: "Basics are always on the form" });
       for (const [name, caption] of [
         ["Title", "Text"],
         ["Description", "Long text"],
         ["Attachments", "Files"],
-        ["Urgency", "Low · medium · high · critical"],
+        ["Urgency", "Single select"],
       ] as const) {
         await expect(basics.getByText(caption, { exact: true })).toBeVisible();
         await expect(basics.getByRole("checkbox", { name: `${name} required` })).toBeDisabled();
@@ -351,33 +339,13 @@ test.describe.serial("M19 demo path", () => {
         attachedList.getByRole("checkbox", { name: `${FIRST_FIELD} required` }),
       ).toBeChecked();
 
-      // ---- The scope rule bites (story 18) ----
-      //
-      // Re-pointing this form at nothing would leave two contract-scoped
-      // fields with nowhere to land, so the change is refused and the
-      // refusal names them — SET-003's house style: guards refuse and
-      // explain, they do not detach quietly.
-      //
-      // This is where the rule is visible from a browser. The offered
-      // set cannot show the other half here: this run plants no
-      // matter-scoped field, and the seed defines no global field, so
-      // there is nothing to assert as present-or-absent that the two
-      // attachments above have not already shown.
-      const refused = page.waitForResponse(
-        (response) =>
-          response.url().includes(`/api/v1/request-types/${typeId}`) &&
-          response.request().method() === "PATCH",
-      );
-      await page.getByLabel("Target").selectOption("");
-      expect((await refused).status()).toBe(409);
-      await expect(
-        page.getByText(
-          `${FIRST_FIELD} and ${SECOND_FIELD} do not fit that target. Detach them from the form first.`,
-        ),
-      ).toBeVisible();
-      // Nothing moved: the control goes back to what the server still
-      // holds rather than showing a pick that never landed.
-      await expect(page.getByLabel("Target")).toHaveValue(`contract:${ndaType!.id}`);
+      // The server retains its scope guard for existing integrations.
+      const refused = await page.request.patch(`/api/v1/request-types/${typeId}`, {
+        data: { targetModule: null, targetTypeId: null },
+      });
+      expect(refused.status(), await refused.text()).toBe(409);
+      const retained = (await listRequestTypes(page.request)).find((type) => type.id === typeId);
+      expect(retained).toMatchObject({ targetModule: "contract", targetTypeId: ndaType!.id });
 
       // ---- The deflection link, above the form (INT-004) ----
 
@@ -427,7 +395,8 @@ test.describe.serial("M19 demo path", () => {
       await expect(cell(reloadedRow, "Form fields", "2 fields")).toBeVisible();
 
       await reloadedRow.getByRole("button", { name: `Edit ${typeName}` }).click();
-      await expect(page.getByLabel("Target")).toHaveValue(`contract:${ndaType!.id}`);
+      await expect(page.getByLabel("Display name")).toHaveValue(typeName);
+      await expect(page.getByLabel("Target", { exact: true })).toHaveCount(0);
       const reloadedFields = page.getByRole("list", { name: "Form fields" });
       await expect(
         reloadedFields.getByRole("checkbox", { name: `${FIRST_FIELD} required` }),
