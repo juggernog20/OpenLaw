@@ -335,13 +335,13 @@ describe.each(["contract", "matter"] as const)("DD-023 Portal %s work", (module)
     expect(version.statusCode, version.body).toBe(201);
     const listed = await harness.app.inject({
       method: "GET",
-      url: `/api/v1/portal/${module}s/${record.number}/supporting-documents`,
+      url: `/api/v1/portal/${module}s/${record.number}/documents`,
       cookies: business,
     });
     expect(listed.statusCode, listed.body).toBe(200);
     const document = listed.json().documents[0];
-    expect(document.version.versionNumber).toBe(2);
-    const bytes = `/api/v1/documents/${document.id}/versions/${document.version.id}/download`;
+    expect(document.versions[0].versionNumber).toBe(2);
+    const bytes = `/api/v1/documents/${document.id}/versions/${document.versions[0].id}/download`;
     expect(
       (await harness.app.inject({ method: "GET", url: bytes, cookies: business })).statusCode,
     ).toBe(200);

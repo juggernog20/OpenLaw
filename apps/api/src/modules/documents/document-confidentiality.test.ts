@@ -587,7 +587,7 @@ describe("who may set and clear one document's flag (M11/6, CTR-022)", () => {
     expect(refused.body).not.toContain("board-memo.txt");
     const portal = await harness.app.inject({
       method: "GET",
-      url: `/api/v1/portal/contracts/${contract.number}/supporting-documents`,
+      url: `/api/v1/portal/contracts/${contract.number}/documents`,
       cookies: contributorCookies,
     });
     expect(portal.statusCode, portal.body).toBe(200);

@@ -66,6 +66,8 @@ export interface TypeFieldScopeRule {
   /** The field scopes this rule allows — the catalog's own vocabulary,
    * so a mount cannot name a scope no field can carry. */
   scopes: readonly [FieldModuleScope, ...FieldModuleScope[]];
+  /** Slugs refused even inside those scopes: built-in attributes the
+   * record carries as columns (CTR-025), which no type may attach again. */
   excludedSlugs?: readonly string[];
   /** The refusal line when a field's scope is outside them. */
   refusal: string;

@@ -1985,22 +1985,6 @@ export interface paths {
     patch: operations["updatePortalContractWork"];
     trace?: never;
   };
-  "/api/v1/portal/contracts/{number}/supporting-documents": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: operations["listPortalContractSupportingDocuments"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/api/v1/portal/matters/{number}/work": {
     parameters: {
       query?: never;
@@ -2015,22 +1999,6 @@ export interface paths {
     options?: never;
     head?: never;
     patch: operations["updatePortalMatterWork"];
-    trace?: never;
-  };
-  "/api/v1/portal/matters/{number}/supporting-documents": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: operations["listPortalMatterSupportingDocuments"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
     trace?: never;
   };
   "/api/v1/portal/contracts/{number}/documents": {
@@ -13884,64 +13852,6 @@ export interface operations {
       };
     };
   };
-  listPortalContractSupportingDocuments: {
-    parameters: {
-      query?: {
-        cursor?: string;
-      };
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            documents: {
-              id: string;
-              title: string;
-              version: {
-                id: string;
-                versionNumber: number;
-                originalFilename: string;
-                mimeType: string;
-                byteSize: number;
-                /** @enum {string} */
-                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
-                /** @enum {string} */
-                kind:
-                  | "general"
-                  | "draft_ours"
-                  | "draft_theirs"
-                  | "redline_theirs"
-                  | "redline_ours"
-                  | "executed"
-                  | "amendment"
-                  | "generated_redline";
-              };
-            }[];
-            nextCursor: string | null;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
   readPortalMatterWork: {
     parameters: {
       query?: never;
@@ -14134,64 +14044,6 @@ export interface operations {
             customFields: {
               [key: string]: string | number | boolean | string[];
             };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  listPortalMatterSupportingDocuments: {
-    parameters: {
-      query?: {
-        cursor?: string;
-      };
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            documents: {
-              id: string;
-              title: string;
-              version: {
-                id: string;
-                versionNumber: number;
-                originalFilename: string;
-                mimeType: string;
-                byteSize: number;
-                /** @enum {string} */
-                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
-                /** @enum {string} */
-                kind:
-                  | "general"
-                  | "draft_ours"
-                  | "draft_theirs"
-                  | "redline_theirs"
-                  | "redline_ours"
-                  | "executed"
-                  | "amendment"
-                  | "generated_redline";
-              };
-            }[];
-            nextCursor: string | null;
           };
         };
       };

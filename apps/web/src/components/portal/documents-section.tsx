@@ -62,7 +62,9 @@ export function PortalDocumentsSection({
     if (attempt !== generation.current) return;
     setBusy(false);
     if (!result?.data) {
-      setData({ documents: [], nextCursor: null });
+      // A failed first page shows the empty list; a failed later page keeps
+      // what is already on screen.
+      if (!cursor) setData({ documents: [], nextCursor: null });
       setFailed(true);
       return;
     }

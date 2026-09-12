@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** The Member+ Inbox pressure title. */
+/** The Member+ Inbox pressure summary. */
 import { Inbox } from "lucide-react";
 import { Link } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";

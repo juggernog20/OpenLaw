@@ -3,21 +3,18 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
-  DOCUMENT_VERSION_KINDS,
   VALUE_CADENCES,
   SEVERITY_LEVELS,
   and,
   asc,
   contracts,
   contractTypeFields,
-  desc,
   documents,
   documentVersions,
   entities,
   eq,
   inArray,
   isNull,
-  lt,
   matters,
   matterTypeFields,
   or,
@@ -43,7 +40,6 @@ import {
 } from "../../lib/custom-fields.js";
 import { portalRecordScope } from "../../lib/portal-record-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
-import { renderFamilyOf, RENDER_FAMILIES } from "../../lib/render-family.js";
 
 import { MAX_CONTRACT_CLASSIFICATION_LENGTH } from "@openlaw/shared";
 
@@ -116,20 +112,6 @@ const Work = z.object({
   references: References,
   originalRequests: z.array(OriginalRequest),
 });
-const SupportingDocument = z.object({
-  id: z.string(),
-  title: z.string(),
-  version: z.object({
-    id: z.string(),
-    versionNumber: z.number().int(),
-    originalFilename: z.string(),
-    mimeType: z.string(),
-    byteSize: z.number(),
-    renderFamily: z.enum(RENDER_FAMILIES),
-    kind: z.enum(DOCUMENT_VERSION_KINDS),
-  }),
-});
-
 /** Scope reference choices to attached Fields and keep withheld Entity names out of the response. */
 async function references(
   db: Executor,
@@ -481,77 +463,6 @@ export const portalRecordWorkRoutes: FastifyPluginAsyncZod = async (app) => {
             customFields: projectCustomFields("business_user", attached, values).customFields,
           };
         });
-      },
-    );
-
-    app.get(
-      `${prefix}/supporting-documents`,
-      {
-        preHandler: requireAuth,
-        schema: {
-          operationId: `listPortal${name}SupportingDocuments`,
-          tags: ["portal"],
-          params: Params,
-          querystring: z.object({ cursor: z.string().optional() }),
-          response: {
-            200: z.object({
-              documents: z.array(SupportingDocument),
-              nextCursor: z.string().nullable(),
-            }),
-            default: problemResponse,
-          },
-        },
-      },
-      async (request, reply) => {
-        reply.header("cache-control", "private, no-store");
-        const row = await reached(app.db, request.user, request.params.number);
-        const scope = and(
-          eq(module === "contract" ? documents.contractId : documents.matterId, row.id),
-          isNull(documents.archivedAt),
-          module === "contract"
-            ? sql`not exists (select 1 from ${contracts} where ${contracts.id} = ${row.id} and ${contracts.primaryDocumentId} = ${documents.id})`
-            : undefined,
-        );
-        if (request.query.cursor) {
-          const [cursor] = await app.db
-            .select({ id: documents.id })
-            .from(documents)
-            .where(and(scope, eq(documents.id, request.query.cursor)))
-            .limit(1);
-          if (!cursor) return { documents: [], nextCursor: null };
-        }
-        const rows = await app.db
-          .select({ id: documents.id, title: documents.title, version: documentVersions })
-          .from(documents)
-          .innerJoin(
-            documentVersions,
-            and(
-              eq(documentVersions.documentId, documents.id),
-              sql`${documentVersions.versionNumber} = (select max(v.version_number) from document_versions v where v.document_id = ${documents.id})`,
-            ),
-          )
-          .where(
-            and(scope, request.query.cursor ? lt(documents.id, request.query.cursor) : undefined),
-          )
-          .orderBy(desc(documents.id))
-          .limit(51);
-        const page = rows.slice(0, 50);
-        return {
-          documents: page.map(({ id, title, version }) => ({
-            id,
-            title,
-            version: {
-              id: version.id,
-              versionNumber: version.versionNumber,
-              originalFilename: version.originalFilename,
-              mimeType: version.mimeType,
-              byteSize: version.byteSize,
-              kind: version.kind,
-              renderFamily: renderFamilyOf(version.mimeType, version.originalFilename),
-            },
-          })),
-          nextCursor: rows.length > 50 ? page.at(-1)!.id : null,
-        };
       },
     );
   }

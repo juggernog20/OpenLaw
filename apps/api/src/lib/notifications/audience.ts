@@ -583,7 +583,7 @@ function staffScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
   const matterScope = matterTeamScope(db, user);
   const entityScope = entityReachScope(db, user);
   return or(
-    // NOT-008's daily title is about this reader's state, not a
+    // NOT-008's daily summary is about this reader's state, not a
     // record. Its user id is therefore the whole reach predicate.
     and(eq(notifications.eventType, "briefing.ready"), eq(notifications.userId, user.id)),
     and(

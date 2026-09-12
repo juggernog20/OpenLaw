@@ -192,7 +192,7 @@ const BASICS = defineMessages({
     defaultMessage: "{name} is always collected and can't be changed.",
   },
   title: { id: "settings.requestTypeEditor.basicTitle", defaultMessage: "Title" },
-  summaryType: { id: "settings.requestTypeEditor.basicTitleType", defaultMessage: "Text" },
+  titleType: { id: "settings.requestTypeEditor.basicTitleType", defaultMessage: "Text" },
   description: { id: "settings.requestTypeEditor.basicDescription", defaultMessage: "Description" },
   descriptionType: {
     id: "settings.requestTypeEditor.basicDescriptionType",
@@ -217,7 +217,7 @@ const BASICS_SLOT: TypeEditorBasics = {
   caption: BASICS.caption,
   locked: BASICS.locked,
   rows: [
-    { key: "title", name: BASICS.title, caption: BASICS.summaryType, isRequired: true },
+    { key: "title", name: BASICS.title, caption: BASICS.titleType, isRequired: true },
     {
       key: "description",
       name: BASICS.description,
