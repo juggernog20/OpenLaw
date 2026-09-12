@@ -794,7 +794,10 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
             userId: request.user.id,
             entityType: audience.entityType,
             entityId: audience.entityId,
-            ...(portal ? { readAt: null, fullThreadReadAt: new Date() } : {}),
+            // The database clock, as `created_at` and the update below use.
+            // A host clock ahead of it would count a comment posted a
+            // moment later as already read.
+            ...(portal ? { readAt: null, fullThreadReadAt: sql`now()` } : {}),
           })
           .onConflictDoUpdate({
             target: [commentLastRead.userId, commentLastRead.entityType, commentLastRead.entityId],
