@@ -5987,9 +5987,6 @@
   "portal.form.urgency": {
     "defaultMessage": "Urgency"
   },
-  "portal.form.urgencyHint": {
-    "defaultMessage": "How soon Legal should look at it."
-  },
   "portal.history.empty": {
     "defaultMessage": "No shared history yet."
   },

@@ -135,11 +135,6 @@ const TITLE = defineMessage({
   defaultMessage: "New request",
 });
 
-/** The Urgency hint's id. Written rather than generated, because the
- * control is one of a kind on this screen and the hint is one line
- * above it. */
-const URGENCY_HINT_ID = "request-urgency-help";
-
 /** The three basics that carry a value. Attachments are the fourth. */
 type BasicKey = "title" | "description" | "urgency";
 
@@ -392,18 +387,12 @@ export function PortalRequestFormPage() {
                   htmlFor="request-urgency"
                   label={intl.formatMessage(BASIC_LABELS.urgency)}
                   required
-                  hintId={URGENCY_HINT_ID}
-                  hint={intl.formatMessage({
-                    id: "portal.form.urgencyHint",
-                    defaultMessage: "How soon Legal should look at it.",
-                  })}
                 >
                   <select
                     id="request-urgency"
                     value={urgency}
                     className={CONTROL_CLASS}
                     aria-required="true"
-                    aria-describedby={URGENCY_HINT_ID}
                     // Read back off the ramp rather than asserted onto
                     // it: the four options are the only ones the select
                     // draws, and this is what makes that a fact rather
