@@ -326,9 +326,11 @@ async function enterPortalByMagicLink(
   return page;
 }
 
-/** The one conversation card the portal draws. */
-function conversation(page: Page): Locator {
-  return page.getByRole("region", { name: "Conversation" });
+/** Open the shared Comments applet on the Portal record. */
+async function conversation(page: Page): Promise<Locator> {
+  const panel = page.getByRole("complementary", { name: "Comments", exact: true });
+  if (!(await panel.isVisible())) await page.getByRole("button", { name: /^Comments/ }).click();
+  return panel;
 }
 
 /** One applet's slot on a record's activity bar (DES-016). The staff
@@ -476,13 +478,13 @@ test.describe.serial("M21 demo path", () => {
       // One turn on the thread before anybody triages it, so there is a
       // conversation for the conversion to move (CMT-001).
       await portal.goto(`/portal/requests/${String(number)}`);
-      const askThread = conversation(portal);
+      const askThread = await conversation(portal);
       const posted = portal.waitForResponse(
         (response) =>
           response.url().endsWith("/api/v1/comments") && response.request().method() === "POST",
       );
-      await askThread.getByLabel("Reply to Legal").fill(REQUESTER_REPLY);
-      await askThread.getByRole("button", { name: "Send" }).click();
+      await askThread.getByLabel("New comment").fill(REQUESTER_REPLY);
+      await askThread.getByRole("button", { name: "Comment", exact: true }).click();
       expect((await posted).status()).toBe(201);
       await expect(askThread.getByText(REQUESTER_REPLY)).toBeVisible();
 
@@ -681,7 +683,7 @@ test.describe.serial("M21 demo path", () => {
 
       await portal.reload();
       await expect(portal).toHaveURL(new RegExp(`/portal/contracts/${String(contractNumber)}$`));
-      const movedThread = conversation(portal);
+      const movedThread = await conversation(portal);
       await expect(movedThread.getByText(REQUESTER_REPLY)).toBeVisible();
       await expect(movedThread.getByText(STAFF_REPLY)).toBeVisible();
       await expect(

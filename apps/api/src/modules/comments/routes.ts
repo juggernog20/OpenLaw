@@ -166,14 +166,25 @@ import { CommentBodySchema, postComment } from "./post.js";
  * `reachedThread` — in the same words this guard uses. The guard is what
  * keeps a role that reaches no thread at all from ever meeting a handler.
  */
-const requireCommentReader = requireRole(...COMMENT_READER_ROLES);
+function requireCommentRole(...roles: Parameters<typeof requireRole>) {
+  const guard = requireRole(...roles);
+  return async (request: Parameters<typeof guard>[0]) => {
+    await guard(request);
+    if (request.headers["x-openlaw-surface"] === "portal") {
+      if (!roles.includes("business_user"))
+        throw httpError(403, "You do not have permission to perform this action.");
+      request.user = { ...request.user, role: "business_user" };
+    }
+  };
+}
+const requireCommentReader = requireCommentRole(...COMMENT_READER_ROLES);
 
 /** The hard redact is an Administrator's alone (CMT-005). The role gate
  * refuses everyone else before the route reads a row. */
-const requireAdministrator = requireRole("administrator");
+const requireAdministrator = requireCommentRole("administrator");
 
 /** Filing changes the record's paper, so it belongs to Member+ alone. */
-const requireMember = requireRole("administrator", "legal_team_member");
+const requireMember = requireCommentRole("administrator", "legal_team_member");
 
 /**
  * What a comment can hang off, as the API accepts it — the entity types
@@ -651,7 +662,12 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const audience = await reachedThread(app.db, request.user, request.query);
       const candidates = await mentionCandidates(app.db, audience);
-      return { candidates: candidates.map((row) => ({ ...row, tiers: [...row.tiers] })) };
+      return {
+        candidates: candidates.flatMap((row) => {
+          const tiers = row.tiers.filter((tier) => audience.tiers.includes(tier));
+          return tiers.length ? [{ ...row, tiers }] : [];
+        }),
+      };
     },
   );
 
@@ -683,7 +699,11 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
     // The viewer's own place in this record's conversation, as a scalar:
     // the primary key names exactly one row, or none at all.
     const watermark = db
-      .select({ readAt: commentLastRead.readAt })
+      .select({
+        readAt: sql`case when ${comments.visibility} = 'full_thread'
+        then greatest(${commentLastRead.readAt}, ${commentLastRead.fullThreadReadAt})
+        else ${commentLastRead.readAt} end`,
+      })
       .from(commentLastRead)
       .where(
         and(
@@ -765,19 +785,25 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         // the reader no longer reaches. A refusal thrown here rolls the
         // transaction back and keeps its status.
         const audience = await reachedThread(tx, request.user, request.body);
+        const portal =
+          request.headers["x-openlaw-surface"] === "portal" ||
+          request.user.role === "business_user";
         await tx
           .insert(commentLastRead)
           .values({
             userId: request.user.id,
             entityType: audience.entityType,
             entityId: audience.entityId,
+            ...(portal ? { readAt: null, fullThreadReadAt: new Date() } : {}),
           })
           .onConflictDoUpdate({
             target: [commentLastRead.userId, commentLastRead.entityType, commentLastRead.entityId],
             // The watermark only ever moves forward. Two panels open in
             // two tabs settle on the later of the two rather than on
             // whichever request the database happened to serve last.
-            set: { readAt: sql`greatest(${commentLastRead.readAt}, now())` },
+            set: portal
+              ? { fullThreadReadAt: sql`greatest(${commentLastRead.fullThreadReadAt}, now())` }
+              : { readAt: sql`greatest(${commentLastRead.readAt}, now())` },
           });
         // Counted after the write, on the same snapshot: the badge takes
         // the server's number rather than assuming the write cleared it.

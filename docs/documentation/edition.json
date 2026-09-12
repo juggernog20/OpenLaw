@@ -19,7 +19,7 @@
       },
       {
         "id": "portal-sign-in",
-        "contentSha256": "805322b99a18a42e8a39d66c348b6b7b5ede47dc80e56211015437ff4f1ead75"
+        "contentSha256": "aee6a428e78e12bc30c23bb524e0bee6667ba0d4dff1fdc8a5898110a2e6c07c"
       },
       {
         "id": "find-your-work",
@@ -39,7 +39,7 @@
       },
       {
         "id": "comments-and-activity",
-        "contentSha256": "ceabafe83b9541a2cee361062c59a3c841378efb8e5a65c00cc68a4afb0d3538"
+        "contentSha256": "db2fd5444bd71da3b5f39b0806a03739e56c1ee449751b995ba1f3e1393521e8"
       },
       {
         "id": "notifications",
@@ -51,7 +51,7 @@
       },
       {
         "id": "follow-request",
-        "contentSha256": "92fa028e9efd10ed17377459da6427824aa565df99c8a486cfa36e91820157ba"
+        "contentSha256": "89327e3d68061988094abdb7a7040baa989ef07a7752cea21a1c204931146228"
       },
       {
         "id": "portal-knowledge",
@@ -115,7 +115,7 @@
       },
       {
         "id": "contributor-guide",
-        "contentSha256": "e386c485250472b864d8d62ea154e9a66865a6244189ce9f62b86b1a0c0e21f9"
+        "contentSha256": "9eac4c14cbcf731f5a0c4cc673d1c09dd7d0404c3965d1c3b3b6ae54d2c7170b"
       },
       {
         "id": "document-versions",

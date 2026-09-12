@@ -60,19 +60,19 @@ An Administrator can select **Redact** on a reached comment, including one alrea
 
 ## Reply from the Portal
 
-1. Open your Request from **Your requests**.
-2. Read **Conversation**. Select **Show earlier replies** if needed.
-3. Write in **Reply to Legal**. Use **Attach files** for paper you need to send with the reply.
-4. Select **Send** and check the reply and attachments under **You**.
+1. Open a Request, Contract or Matter you can reach.
+2. Select **Comments** in the applet bar on the right. Select **Show older** if needed.
+3. Write in **New comment**. Use **@** to mention someone or **Attach files** to add paper.
+4. Select **Comment** and check that your reply appears. Use **Comment actions** to edit or delete your own words.
 
-Portal replies use Full Thread. The Portal has no audience picker, mention typeahead, or edit/delete menu. Ask Legal to correct a problem with an existing reply. Legal Only and Working Team comments and their attachments stay out of this view.
+Portal replies use Full Thread. There is no audience picker. Legal Only and Working Team comments and their attachments stay out of this view. Redaction and filing attachments into the legal record remain Legal actions.
 
-Keep using the same Request after Legal converts it to a Contract or Matter. Its conversation follows the work, and your replies still reach Legal there.
+After conversion, the Request address opens its Contract or Matter. Continue in that record's Comments applet. Removing your team membership removes access.
 
 ## Read the Activity feed
 
 On a reached Contract or Matter page, select **History**. Read the entries in order and use **Show older** for earlier changes. The Activity feed describes actions on that record and applies your visibility limits. It is different from the Administrator's system-wide Audit log.
 
-The Portal provides the Request status and conversation, not the Legal record's History panel. A Request in the Inbox has its conversation but no History panel. When Legal converts a Request, the resulting record's History begins with the record's creation, and the comments themselves follow the work.
+The Portal also has History for shared comment activity and business Field edits. It excludes all Legal Only and Working Team activity, and Fields that are now legal-only. A Request in the Inbox has its conversation but no History panel. When Legal converts a Request, the resulting record's History begins with the record's creation, and the comments themselves follow the work.
 
-If the conversation or History cannot load, follow its message to reopen the panel. In the Portal, reload the page. Retry **Show older** or **Show earlier replies** if only the earlier page failed. If access has changed, ask Legal to check it before posting again.
+If the conversation or History cannot load, follow its message to reopen the panel. Retry **Show older** if only the earlier page failed. If access has changed, ask Legal to check it before posting again.

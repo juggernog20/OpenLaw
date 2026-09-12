@@ -118,7 +118,7 @@ const ActorSchema = z.object({
   archived: z.boolean(),
 });
 
-const ActivityEntrySchema = z.object({
+export const ActivityEntrySchema = z.object({
   id: z.string(),
   /**
    * The action slug, as plain text rather than as an enum.

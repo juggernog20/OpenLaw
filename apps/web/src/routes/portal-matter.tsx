@@ -6,7 +6,7 @@ import { api } from "../lib/api";
 import { currentUser, useSignOut } from "../lib/session";
 import { matterReference } from "../lib/matters";
 import { loadPortalWork } from "../lib/portal-records";
-import { PortalShell } from "../components/portal/portal-shell";
+import { PortalRecordShell } from "../components/portal/record-shell";
 import { PortalRecordWork } from "../components/portal/record-work";
 import { PageTitle } from "../components/page-title";
 
@@ -33,7 +33,13 @@ export function PortalMatterPage() {
     defaultMessage: "Not recorded",
   });
   return (
-    <PortalShell
+    <PortalRecordShell
+      key={recordWork?.work.id}
+      entityType="matter"
+      entityId={recordWork?.work.id}
+      number={matter?.number ?? 0}
+      viewerId={user.id}
+      work={recordWork?.work}
       user={user}
       onSignOut={() => void signOut()}
       recordScope={recordWork ? { entityType: "matter", entityId: recordWork.work.id } : undefined}
@@ -82,14 +88,9 @@ export function PortalMatterPage() {
               <dd>{matter.businessOwner?.displayName ?? unset}</dd>
             </div>
           </dl>
-          <PortalRecordWork
-            module="matter"
-            number={matter.number}
-            viewerId={user.id}
-            {...recordWork}
-          />
+          <PortalRecordWork module="matter" number={matter.number} {...recordWork} />
         </>
       )}
-    </PortalShell>
+    </PortalRecordShell>
   );
 }

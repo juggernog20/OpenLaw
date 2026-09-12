@@ -229,18 +229,19 @@ test.describe.serial("M21A demo path", () => {
       // The Requester returns the counterparty's markup on the thread
       // that survived conversion, not through the Request upload route.
       await portal.goto(`/portal/requests/${String(requestNumber)}`);
-      const conversation = portal.getByRole("region", { name: "Conversation" });
+      await portal.getByRole("button", { name: /^Comments/ }).click();
+      const conversation = portal.getByRole("complementary", { name: "Comments", exact: true });
       await conversation.getByLabel("Choose files for this comment").setInputFiles({
         name: MARKUP_FILE,
         mimeType: "text/plain",
         buffer: Buffer.from("Northwind NDA — counterparty markup, round two.\n"),
       });
-      await conversation.getByLabel("Reply to Legal").fill("The counterparty sent its markup.");
+      await conversation.getByLabel("New comment").fill("The counterparty sent its markup.");
       const posted = portal.waitForResponse(
         (response) =>
           response.url().endsWith("/api/v1/comments") && response.request().method() === "POST",
       );
-      await conversation.getByRole("button", { name: "Send" }).click();
+      await conversation.getByRole("button", { name: "Comment", exact: true }).click();
       expect((await posted).status(), await (await posted).text()).toBe(201);
       await expect(conversation.getByRole("link", { name: MARKUP_FILE })).toBeVisible();
 

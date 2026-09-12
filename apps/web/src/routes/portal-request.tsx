@@ -1,64 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * The Request detail (INT-001, INT-006, #379), from the I7 frame of
- * intake.pen: what a Requester sees when they open one of their own
- * asks.
- *
- * Five blocks: the envelope — the summary, the status, and the
- * "R-45 · Contract review · Submitted Aug 6" line — then the Owner and
- * return estimate (INT-003), a banner explaining the status, the
- * Conversation card, and "What you submitted" with the saved form values.
- *
- * **The thread sits between the banner and the card** (#381), which is
- * where I7 draws it. It is the same thread the staff applet draws, read
- * through the same routes: the `request` audience arm puts a Requester
- * in one room (DD-016), so the read carries Full Thread comments alone
- * and the composer posts Full Thread and offers no other. What it draws
- * and why is in `components/portal/request-thread.tsx`.
- *
- * A converted Request redirects to its Contract or Matter (DD-023).
- * An archived destination leaves a read-only stub with the original ask.
- * Conversation and paper live on the record, with current roster access.
- *
- * **A declined Request carries its reason** (INT-006): "no" always
- * arrives with a why, so the banner is the reason rather than a line
- * about it.
- *
- * **The pill speaks the requester's words** (the INT-003 M21/6
- * addendum): Open, In progress, Resolved, Declined, which is what their
- * email says about the same Request. The staff detail says the enum's
- * words, and neither reader is ever told two names for one status.
- *
- * ### Recorded normalization points (I7 deviations accepted)
- *
- * 1. I7 draws the Description as the thread's opening message. Nothing
- *    writes a comment row at submission — the Description is a column
- *    on the Request — so it is drawn as what it is: the first of the
- *    values in "What you submitted". The thread draws comment rows and
- *    nothing else.
- * 2. I7 draws the Attachments row's filenames as one static line. They
- *    render as a list, and each name is the link that downloads the file
- *    it names: the paper is what a requester came back for, and a name
- *    they cannot open is a label rather than a document. The row is
- *    absent when the Request carries no paper, which is the rule every
- *    other row on this card follows — the card says what was submitted,
- *    and attachments are optional (INT-002).
- * 3. I7 makes the card collapsible, with a chevron in its header. It
- *    renders open and fixed: the card is the whole of what the page has
- *    to say until the thread lands, and a control whose only state is
- *    "hide the page" is not a control.
- * 4. I7's field rows are 36px strips with a 200px label column. They
- *    render as a two-column grid that collapses to stacked rows in a
- *    narrow container (DES-012), and grow with their value — a
- *    Description is a paragraph, not a strip.
- * 5. I7 stacks the four blocks in one column. From @3xl of the page
- *    container the "What you submitted" card moves into an aside
- *    beside the banner and the thread (`grid-cols-portal-split`): the
- *    conversation is the live half of the page and takes the width,
- *    and what was typed at submission stays in view beside it rather
- *    than under it. Below that width the mock's order holds.
- */
+/** Portal Requests keep the submitted ask in the page and shared Conversation
+ * and History in applets (DES-079). Conversion redirects to the record; an
+ * archived destination leaves only the read-only original submission. */
 
 import { RequestExpectation } from "../components/portal/request-expectation";
 import { HelpLink } from "../components/documentation/help-link";
@@ -82,8 +26,7 @@ import {
 import { currentUser, useSignOut } from "../lib/session";
 import { PageTitle } from "../components/page-title";
 import { PortalBackLink } from "../components/portal/back-link";
-import { PortalShell } from "../components/portal/portal-shell";
-import { RequestThread } from "../components/portal/request-thread";
+import { PortalRecordShell } from "../components/portal/record-shell";
 
 export async function portalRequestLoader({ params }: LoaderFunctionArgs) {
   const user = await currentUser();
@@ -111,16 +54,11 @@ export async function portalRequestLoader({ params }: LoaderFunctionArgs) {
   // a request that never arrives rejects. Both are the same fact to this
   // page — there is no conversation to draw — and neither is a reason to
   // take the rest of it away.
-  const thread = await api
-    .GET("/api/v1/comments", {
-      params: { query: { entityType: "request", entityId: res.data.request.id } },
-    })
-    .catch(() => ({ data: undefined }));
-  return { user, ...res.data, thread: thread.data ?? null };
+  return { user, ...res.data };
 }
 
 export function PortalRequestPage() {
-  const { user, request, fields, customFieldRefs, attachments, thread, recordArchived } =
+  const { user, request, fields, customFieldRefs, attachments, recordArchived } =
     useLoaderData<typeof portalRequestLoader>();
   const intl = useIntl();
   const reference = requestReference(intl, request.number);
@@ -128,7 +66,12 @@ export function PortalRequestPage() {
   const signOut = useSignOut("/portal/enter");
 
   return (
-    <PortalShell
+    <PortalRecordShell
+      key={request.id}
+      entityType="request"
+      entityId={recordArchived ? undefined : request.id}
+      number={request.number}
+      viewerId={user.id}
       user={user}
       onSignOut={() => void signOut()}
       recordScope={{ entityType: "request", entityId: request.id }}
@@ -169,7 +112,7 @@ export function PortalRequestPage() {
         </p>
       </div>
       <HelpLink surface="portal" contextual />
-      <div className="grid gap-section-gap @3xl/page:grid-cols-portal-split">
+      <div className="flex flex-col gap-section-gap">
         <div className="flex min-w-0 flex-col gap-4">
           {recordArchived ? (
             <p className="text-base text-muted">
@@ -182,24 +125,10 @@ export function PortalRequestPage() {
             <>
               <RequestExpectation request={request} />
               <StatusBanner status={request.status} declinedReason={request.declinedReason} />
-              {/* I7 puts the conversation between the banner and the card,
-              which is where a requester looks first: what has been said
-              since they asked matters more than what they typed when
-              they did. Keyed by the Request, because the card seeds its
-              state from the loader's read: a navigation from one Request
-              to another re-renders this route in place, and without the
-              key the card would keep the previous Request's
-              conversation. */}
-              <RequestThread
-                key={request.id}
-                requestId={request.id}
-                viewerId={user.id}
-                thread={thread}
-              />
             </>
           )}
         </div>
-        <aside className="min-w-0 @3xl/page:self-start">
+        <aside className="min-w-0">
           <section
             aria-labelledby="portal-request-submitted-heading"
             className="w-full overflow-hidden rounded-card border border-border-default bg-raised"
@@ -246,7 +175,7 @@ export function PortalRequestPage() {
           </section>
         </aside>
       </div>
-    </PortalShell>
+    </PortalRecordShell>
   );
 }
 

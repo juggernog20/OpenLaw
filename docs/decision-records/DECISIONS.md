@@ -1139,7 +1139,7 @@ Portal notification settings expose Request updates, mentions, and activity on r
 
 Legal Only and Working Team content is not exposed through the Portal. Existing comment tiers and historical entries are preserved; migration does not republish Working Team comments as Full Thread. Former Contributors therefore lose access to Working Team content when their accounts become Business Users. Changing the remaining staff composer tiers or defaults is not decided here.
 
-The Portal design record will set the page layout and detailed read projection. DD-021's exclusions of legal Fields, internal AI evidence, run details, Tasks, and History continue for the Contract Portal page unless that review explicitly amends them. The Contract's existing Unverified markers remain visible.
+The Portal design record will set the page layout and detailed read projection. DD-021's exclusions of legal Fields, internal AI evidence, run details, Tasks, ~~and History~~ continue for the Contract Portal page. DES-079 adds History filtered to Full Thread at the server, with current Field and record access enforced. The Contract's existing Unverified markers remain visible.
 
 #### 5. A converted Request becomes a link to the record
 

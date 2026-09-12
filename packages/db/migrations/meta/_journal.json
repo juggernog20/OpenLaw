@@ -771,6 +771,13 @@
       "when": 1789137754599,
       "tag": "0109_portal_record_access",
       "breakpoints": true
+    },
+    {
+      "idx": 110,
+      "version": "7",
+      "when": 1789211878777,
+      "tag": "0110_portal_comment_reads",
+      "breakpoints": true
     }
   ]
 }

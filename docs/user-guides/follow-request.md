@@ -11,16 +11,16 @@ Use your Request to follow Legal's response. Once Legal converts it, the same ad
 1. On the Portal home, find the Request under **Your requests**.
 2. Open it and check the summary and R- reference.
 3. Read its status, **Owner**, and **Expected back (estimate)**. The same owner and estimate appear under **Your requests**. **Not assigned yet** means no triage assignee is recorded; **Not set yet** means Legal has not confirmed a return estimate.
-4. Read **Conversation** for Legal's replies. Select **Show earlier replies** when you need older messages.
+4. Open **Comments** in the applet bar on the right for Legal's replies. Select **Show older** when you need older messages.
 5. Check **What you submitted** for the saved description, original attachments, urgency, and available additional answers. Select an attachment's filename to download it.
 
-| Status       | Meaning in the Portal                                                                          |
-| ------------ | ---------------------------------------------------------------------------------------------- |
-| **Open**     | Legal has received the Request and has not yet decided it.                                     |
-| **Resolved** | Legal answered and closed the Request without conversion. Read the resolution in Conversation. |
-| **Declined** | Legal declined the Request. Read the reason shown beneath the status.                          |
+| Status       | Meaning in the Portal                                                                      |
+| ------------ | ------------------------------------------------------------------------------------------ |
+| **Open**     | Legal has received the Request and has not yet decided it.                                 |
+| **Resolved** | Legal answered and closed the Request without conversion. Read the resolution in Comments. |
+| **Declined** | Legal declined the Request. Read the reason shown beneath the status.                      |
 
-A converted Request leaves **Your requests**. Its address redirects to the resulting Contract or Matter. Conversion adds you to that record's team and records you as Business Owner. Read the original ask under **Original request** and continue in the record's **Conversation**. Legal may add other Business Users to that same record later.
+A converted Request leaves **Your requests**. Its address redirects to the resulting Contract or Matter. Conversion adds you to that record's team and records you as Business Owner. Read the original ask under **Original request** and continue in the record's **Comments**. Legal may add other Business Users to that same record later.
 
 If Legal removes your team row, the old Request link no longer opens the live record. If the destination is archived, the Request address shows your original ask and an archived notice. That stub has no conversation or Document access.
 
@@ -28,9 +28,9 @@ The Request's **Owner** is its current triage assignee, separate from a resultin
 
 ## Reply and send further files
 
-1. Under **Conversation**, enter your message in **Reply to Legal**.
+1. Open **Comments** in the applet bar on the right and enter your message in **New comment**.
 2. Select **Attach files** if you need to send further paper. Check the selected filenames and remove any you did not intend to send.
-3. Select **Send**. It stays unavailable until you have entered a message, so files cannot be sent on their own.
+3. Select **Comment**. It stays unavailable until you have entered a message, so files cannot be sent on their own.
 4. Check that your reply and its attachments appear in the conversation. Select an attachment to download it.
 
 You can reply while the Request is Open, Resolved or Declined. After conversion, reply on the record. The **Attach new files to a reply** link on a Resolved or Declined Request takes you to its composer. A reply does not reopen a Resolved or Declined Request or change submitted answers; explain the correction or further help you need to Legal.
@@ -39,7 +39,7 @@ The Portal shows the conversation shared with the Requester. You do not choose a
 
 ## If it does not work
 
-If the conversation could not be read, reload the page. If earlier replies could not be read, select **Show earlier replies** again. If a reply fails, check that its text and files remain, then try **Send** again. If the result is uncertain, check the conversation before sending the same reply twice.
+If the conversation could not be read, close and reopen Comments. If earlier replies could not be read, select **Show older** again. If a reply fails, check that its text and files remain, then try **Comment** again. If the result is uncertain, check the conversation before sending the same reply twice.
 
 If a Request link returns you to the Portal home, check your signed-in identity and open it from **Your requests**. Ask Legal about a Request that is still missing. A staff Contract or Matter address is not a substitute for your Portal Request link.
 

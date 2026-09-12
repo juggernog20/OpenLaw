@@ -2033,6 +2033,55 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/portal/contracts/{number}/team": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["readPortalContractTeam"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/matters/{number}/team": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["readPortalMatterTeam"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/activity": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Full Thread history for a reached Portal record. Other tiers leave no entries or counts. */
+    get: operations["listPortalActivity"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/portal/matters": {
     parameters: {
       query?: never;
@@ -14096,6 +14145,170 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+              };
+            }[];
+            nextCursor: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  readPortalContractTeam: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            team: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            }[];
+            manager: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            } | null;
+            businessOwner: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            } | null;
+            creator: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            } | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  readPortalMatterTeam: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            team: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            }[];
+            manager: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            } | null;
+            businessOwner: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            } | null;
+            creator: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            } | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listPortalActivity: {
+    parameters: {
+      query: {
+        entityType: "contract" | "matter" | "request";
+        entityId: string;
+        cursor?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            entries: {
+              id: string;
+              action: string;
+              /** @enum {string} */
+              visibility: "legal_only" | "working_team" | "full_thread";
+              actor: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              /** Format: date-time */
+              createdAt: string;
+              payload: {
+                [key: string]: unknown;
               };
             }[];
             nextCursor: string | null;

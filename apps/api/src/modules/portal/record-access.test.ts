@@ -1,7 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { contracts, eq, matters, notifications, requests, requestTypes, users } from "@openlaw/db";
+import {
+  activityLog,
+  contracts,
+  eq,
+  matters,
+  notifications,
+  requests,
+  requestTypes,
+  users,
+} from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies,
@@ -496,4 +505,347 @@ describe.each(["contract", "matter"] as const)("DD-023 Portal %s work", (module)
       ).statusCode,
     ).toBe(404);
   });
+});
+
+describe.each(["contract", "matter"] as const)("Portal %s applets", (module) => {
+  it("filters history in the store before paging, including staff Portal previews, and revokes applet reads", async () => {
+    const record = await create(module);
+    const other = await create(module);
+    const staff = `/api/v1/${module}s/${record.number}`;
+    const teamUrl = `/api/v1/portal/${module}s/${record.number}/team`;
+    const historyUrl = `/api/v1/portal/activity?entityType=${module}&entityId=${record.id}`;
+    const read = (url: string, cookies = business) =>
+      harness.app.inject({ method: "GET", url, cookies });
+    expect((await read(teamUrl)).statusCode).toBe(404);
+    expect((await read(historyUrl)).statusCode).toBe(404);
+    await harness.app.inject({
+      method: "POST",
+      url: `${staff}/team`,
+      cookies: admin,
+      payload: { userId: businessId },
+    });
+    const roster = await read(teamUrl);
+    expect(roster.statusCode, roster.body).toBe(200);
+    expect(roster.json().team).toContainEqual(
+      expect.objectContaining({ id: businessId, displayName: "Business colleague" }),
+    );
+    expect(roster.body).not.toContain("email");
+    expect(roster.body).not.toContain("role");
+    expect(roster.headers["cache-control"]).toBe("private, no-store");
+
+    const privateIds: string[] = [];
+    for (const visibility of ["legal_only", "working_team", "full_thread"] as const) {
+      const posted = await harness.app.inject({
+        method: "POST",
+        url: "/api/v1/comments",
+        cookies: admin,
+        payload: {
+          entityType: module,
+          entityId: record.id,
+          visibility,
+          body: `${visibility} comment`,
+        },
+      });
+      expect(posted.statusCode, posted.body).toBe(201);
+      if (visibility !== "full_thread") privateIds.push(posted.json().comment.id);
+    }
+    const hidden = await harness.db
+      .insert(activityLog)
+      .values([
+        {
+          entityType: module,
+          entityId: record.id,
+          action: "comment.edited",
+          visibility: "legal_only",
+          payload: { commentId: "secret-comment" },
+        },
+        {
+          entityType: module,
+          entityId: record.id,
+          action: `${module}.updated`,
+          visibility: "full_thread",
+          payload: { changed: { "field.private": { from: null, to: "legal-field-secret" } } },
+        },
+        {
+          entityType: module,
+          entityId: record.id,
+          action: "document.created",
+          visibility: "full_thread",
+          payload: { title: "restricted-document" },
+        },
+        {
+          entityType: module,
+          entityId: record.id,
+          action: "future.private_action",
+          visibility: "full_thread",
+          payload: { secret: "unknown-private-payload" },
+        },
+        {
+          entityType: module,
+          entityId: other.id,
+          action: "comment.posted",
+          visibility: "full_thread",
+          payload: { commentId: "other-record-comment" },
+        },
+      ])
+      .returning({ id: activityLog.id });
+    await harness.db.insert(activityLog).values(
+      Array.from({ length: 26 }, (_, index) => ({
+        entityType: module,
+        entityId: record.id,
+        action: `${module}.updated`,
+        visibility: "full_thread" as const,
+        payload: {
+          changed: {
+            description: { from: null, to: `Shared edit ${index}` },
+            "field.private": { from: null, to: "legal-field-secret" },
+          },
+          internal: "extra-secret",
+        },
+      })),
+    );
+    const first = await read(historyUrl);
+    expect(first.statusCode, first.body).toBe(200);
+    expect(first.json().entries).toHaveLength(25);
+    expect(first.json().nextCursor).toBeTruthy();
+    const second = await read(`${historyUrl}&cursor=${first.json().nextCursor}`);
+    expect(second.json().entries).toHaveLength(2);
+    expect(second.json().nextCursor).toBeNull();
+    const all = first.body + second.body;
+    for (const secret of [
+      ...privateIds,
+      "secret-comment",
+      "legal-field-secret",
+      "restricted-document",
+      "unknown-private-payload",
+      "other-record-comment",
+      "extra-secret",
+      "field.private",
+    ])
+      expect(all).not.toContain(secret);
+    expect(first.json()).not.toHaveProperty("total");
+    expect(
+      first
+        .json()
+        .entries.every((entry: { visibility: string }) => entry.visibility === "full_thread"),
+    ).toBe(true);
+    expect(first.headers["cache-control"]).toBe("private, no-store");
+    for (const entry of hidden)
+      expect((await read(`${historyUrl}&cursor=${entry.id}`)).json()).toEqual({
+        entries: [],
+        nextCursor: null,
+      });
+    const staffPreview = await read(historyUrl, admin);
+    expect(staffPreview.statusCode, staffPreview.body).toBe(200);
+    expect(staffPreview.json()).toEqual(first.json());
+    expect(
+      (await read(`/api/v1/activity?entityType=${module}&entityId=${record.id}`)).statusCode,
+    ).toBe(403);
+    await harness.app.inject({
+      method: "DELETE",
+      url: `${staff}/team/${businessId}`,
+      cookies: admin,
+    });
+    expect((await read(teamUrl)).statusCode).toBe(404);
+    expect((await read(historyUrl)).statusCode).toBe(404);
+  });
+});
+
+it("keeps Portal comment reads, mentions and unread markers within the shared audience", async () => {
+  const record = await create();
+  const legal = {
+    email: "applet-legal@example.com",
+    displayName: "Legal writer",
+    password: "correct-horse-battery",
+  };
+  const writer = await provisionUser(harness.app.auth, legal);
+  await harness.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, writer.id));
+  const legalCookies = await signInCookies(harness.app, legal.email, legal.password);
+  await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/contracts/${record.number}/team`,
+    cookies: admin,
+    payload: { userId: businessId },
+  });
+  const ref = { entityType: "contract", entityId: record.id };
+  const query = `entityType=contract&entityId=${record.id}`;
+  const headers = { "x-openlaw-surface": "portal" };
+  for (const visibility of ["legal_only", "working_team", "full_thread"]) {
+    const posted = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/comments",
+      cookies: legalCookies,
+      payload: { ...ref, visibility, body: `${visibility} from Legal` },
+    });
+    expect(posted.statusCode, posted.body).toBe(201);
+  }
+  const read = (path: string, portal = true) =>
+    harness.app.inject({
+      method: "GET",
+      url: `/api/v1/comments${path}?${query}`,
+      cookies: admin,
+      headers: portal ? headers : {},
+    });
+  const thread = await read("");
+  expect(thread.statusCode, thread.body).toBe(200);
+  expect(thread.json().comments).toHaveLength(1);
+  expect(thread.body).not.toContain("legal_only");
+  expect(thread.body).not.toContain("working_team");
+  expect((await read("/unread")).json()).toEqual({ unread: 1 });
+  expect((await read("/unread", false)).json()).toEqual({ unread: 3 });
+  const marked = await harness.app.inject({
+    method: "POST",
+    url: "/api/v1/comments/read",
+    cookies: admin,
+    headers,
+    payload: ref,
+  });
+  expect(marked.statusCode, marked.body).toBe(200);
+  expect(marked.json()).toEqual({ unread: 0 });
+  expect((await read("/unread", false)).json()).toEqual({ unread: 2 });
+  const candidates = await read("/mention-candidates");
+  expect(candidates.json().candidates.length).toBeGreaterThan(0);
+  expect(
+    candidates
+      .json()
+      .candidates.every(
+        (person: { tiers: string[] }) =>
+          person.tiers.length === 1 && person.tiers[0] === "full_thread",
+      ),
+  ).toBe(true);
+  const privatePost = await harness.app.inject({
+    method: "POST",
+    url: "/api/v1/comments",
+    cookies: admin,
+    headers,
+    payload: { ...ref, visibility: "legal_only", body: "Not allowed from Portal" },
+  });
+  expect(privatePost.statusCode).toBe(403);
+  const posted = await harness.app.inject({
+    method: "POST",
+    url: "/api/v1/comments",
+    cookies: business,
+    headers,
+    payload: {
+      ...ref,
+      visibility: "full_thread",
+      body: "@Legal writer please check",
+      mentions: [writer.id],
+    },
+  });
+  expect(posted.statusCode, posted.body).toBe(201);
+  const id = posted.json().comment.id;
+  const edited = await harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/comments/${id}`,
+    cookies: business,
+    headers,
+    payload: { body: "My correction" },
+  });
+  expect(edited.statusCode, edited.body).toBe(200);
+  expect(edited.json().comment.body).toBe("My correction");
+  const redacted = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/comments/${id}/redact`,
+    cookies: admin,
+    headers,
+  });
+  expect(redacted.statusCode).toBe(403);
+  expect(
+    (
+      await harness.app.inject({
+        method: "DELETE",
+        url: `/api/v1/comments/${id}`,
+        cookies: business,
+        headers,
+      })
+    ).statusCode,
+  ).toBe(200);
+});
+
+it("removes historical Field edits when the Field becomes legal-only", async () => {
+  const record = await create();
+  await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/contracts/${record.number}/team`,
+    cookies: admin,
+    payload: { userId: businessId },
+  });
+  const field = await harness.app.inject({
+    method: "POST",
+    url: "/api/v1/fields",
+    cookies: admin,
+    payload: {
+      displayName: "History projection",
+      moduleScope: "contract",
+      fieldTag: "business",
+      fieldType: "text",
+    },
+  });
+  expect(field.statusCode, field.body).toBe(201);
+  const { id, slug } = field.json().field;
+  await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/contract-types/${contractTypeId}/fields`,
+    cookies: admin,
+    payload: { fieldId: id },
+  });
+  const saved = await harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/portal/contracts/${record.number}/work`,
+    cookies: business,
+    payload: { customFields: { [slug]: "A previously shared value" } },
+  });
+  expect(saved.statusCode, saved.body).toBe(200);
+  const history = () =>
+    harness.app.inject({
+      method: "GET",
+      url: `/api/v1/portal/activity?entityType=contract&entityId=${record.id}`,
+      cookies: business,
+    });
+  expect((await history()).body).toContain("A previously shared value");
+  const retag = await harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/fields/${id}`,
+    cookies: admin,
+    payload: { fieldTag: "legal" },
+  });
+  expect(retag.statusCode, retag.body).toBe(200);
+  expect((await history()).json()).toEqual({ entries: [], nextCursor: null });
+});
+
+it("keeps Request History with its Requester and closes it after conversion", async () => {
+  const [type] = await harness.db.select().from(requestTypes).limit(1);
+  const [request] = await harness.db
+    .insert(requests)
+    .values({
+      requesterId: businessId,
+      requestTypeId: type!.id,
+      summary: "History request",
+      urgency: "medium",
+    })
+    .returning();
+  for (const visibility of ["legal_only", "full_thread"] as const) {
+    await harness.db.insert(activityLog).values({
+      entityType: "request",
+      entityId: request!.id,
+      action: "comment.posted",
+      visibility,
+      payload: { commentId: visibility },
+    });
+  }
+  const url = `/api/v1/portal/activity?entityType=request&entityId=${request!.id}`;
+  const visible = await harness.app.inject({ method: "GET", url, cookies: business });
+  expect(visible.statusCode, visible.body).toBe(200);
+  expect(visible.json().entries).toHaveLength(1);
+  expect(visible.body).not.toContain("legal_only");
+  expect((await harness.app.inject({ method: "GET", url, cookies: admin })).statusCode).toBe(404);
+  const record = await create();
+  await harness.db
+    .update(requests)
+    .set({ status: "converted", convertedContractId: record.id })
+    .where(eq(requests.id, request!.id));
+  expect((await harness.app.inject({ method: "GET", url, cookies: business })).statusCode).toBe(
+    404,
+  );
 });

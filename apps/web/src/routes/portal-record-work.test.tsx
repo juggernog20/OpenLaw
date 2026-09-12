@@ -2,8 +2,10 @@
 
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
-import { json, problem, renderAt, stubApi } from "../testing/helpers";
+import { beforeEach, describe, expect, it } from "vitest";
+import { json, problem, renderAt, stubApi, stubEventSource } from "../testing/helpers";
+
+beforeEach(() => window.history.replaceState({}, "", "/"));
 
 const USER = {
   id: "business",
@@ -118,6 +120,175 @@ describe.each(["contract", "matter"] as const)("Portal %s work", (module) => {
     expect(screen.queryByRole("combobox", { name: "Status" })).not.toBeInTheDocument();
   });
 
+  it("keeps drafts across applets, reads the roster on open, and clears history after access is refused", async () => {
+    const sources = stubEventSource();
+    let teamReads = 0;
+    let historyReads = 0;
+    let denied = false;
+    const person = { id: "owner", displayName: "Legal colleague", image: null, archived: false };
+    stubApi({
+      signedIn: USER,
+      extra: (call) => {
+        if (call.url.pathname === `/api/v1/portal/${module}s/12`)
+          return json(200, module === "contract" ? { contract: CONTRACT } : { matter: MATTER });
+        if (call.url.pathname === `/api/v1/portal/${module}s/12/work`)
+          return json(200, { work: WORK });
+        if (call.url.pathname === "/api/v1/comments")
+          return json(200, { comments: [], nextCursor: null });
+        if (call.url.pathname === `/api/v1/portal/${module}s/12/team`) {
+          teamReads++;
+          return json(200, {
+            team: [{ ...person, id: USER.id, displayName: USER.displayName }],
+            manager: person,
+            businessOwner: null,
+            creator: person,
+          });
+        }
+        if (call.url.pathname === "/api/v1/portal/activity") {
+          historyReads++;
+          expect(call.url.searchParams.get("entityType")).toBe(module);
+          expect(call.url.searchParams.get("entityId")).toBe(WORK.id);
+          if (denied) return problem(404, "No record exists with this reference.");
+          return json(200, {
+            entries: [
+              {
+                id: "shared-change",
+                action: `${module}.updated`,
+                actor: person,
+                createdAt: "2026-09-12T12:00:00Z",
+                visibility: "full_thread",
+                payload: {
+                  changed: { description: { from: "Earlier context", to: "Shared update" } },
+                },
+              },
+            ],
+            nextCursor: null,
+          });
+        }
+        return undefined;
+      },
+    });
+    renderAt(`/portal/${module}s/12`);
+    const user = userEvent.setup();
+    const chat = await screen.findByRole("button", { name: "Comments" });
+    expect(screen.queryByRole("complementary", { name: "Comments" })).not.toBeInTheDocument();
+    expect(teamReads).toBe(0);
+    expect(historyReads).toBe(0);
+    await user.click(chat);
+    await user.type(screen.getByRole("textbox", { name: "New comment" }), "Keep this reply");
+    await user.click(
+      screen.getByRole("button", { name: module === "contract" ? "Contract team" : "Matter team" }),
+    );
+    const roster = await screen.findByRole("complementary", {
+      name: module === "contract" ? "Contract team" : "Matter team",
+    });
+    expect(await within(roster).findByText(USER.displayName)).toBeInTheDocument();
+    expect(within(roster).getByText("Creator")).toBeInTheDocument();
+    expect(within(roster).queryByRole("button", { name: /Add|Remove/ })).not.toBeInTheDocument();
+    expect(teamReads).toBe(1);
+    await user.click(chat);
+    expect(screen.getByRole("textbox", { name: "New comment" })).toHaveValue("Keep this reply");
+    await user.keyboard("{Escape}");
+    expect(chat).toHaveFocus();
+    await waitFor(() =>
+      expect(screen.queryByRole("complementary", { name: "Comments" })).not.toBeInTheDocument(),
+    );
+    await user.click(chat);
+    expect(screen.getByRole("textbox", { name: "New comment" })).toHaveValue("Keep this reply");
+    await user.click(screen.getByRole("button", { name: "History" }));
+    expect(await screen.findByText(/Shared update/)).toBeInTheDocument();
+    denied = true;
+    sources[0]!.open();
+    expect(await screen.findByRole("alert")).toHaveTextContent("The history could not be read");
+    expect(screen.queryByText(/Shared update/)).not.toBeInTheDocument();
+  });
+
+  it("uses the shared unread badge, mentions, and own-comment actions", async () => {
+    let unread = 2;
+    let sent: unknown;
+    let comment: Record<string, unknown> | null = null;
+    const candidate = {
+      id: "legal",
+      displayName: "Legal colleague",
+      image: null,
+      tiers: ["full_thread"],
+    };
+    stubApi({
+      signedIn: USER,
+      extra: (call) => {
+        if (call.url.pathname === `/api/v1/portal/${module}s/12`)
+          return json(200, module === "contract" ? { contract: CONTRACT } : { matter: MATTER });
+        if (call.url.pathname === `/api/v1/portal/${module}s/12/work`)
+          return json(200, { work: WORK });
+        if (call.url.pathname === "/api/v1/comments/unread") return json(200, { unread });
+        if (call.url.pathname === "/api/v1/comments/read") {
+          unread = 0;
+          return json(200, { unread });
+        }
+        if (call.url.pathname === "/api/v1/comments/mention-candidates")
+          return json(200, { candidates: [candidate] });
+        if (call.url.pathname === "/api/v1/comments") {
+          if (call.method === "GET")
+            return json(200, { comments: comment ? [comment] : [], nextCursor: null });
+          sent = call.body;
+          comment = {
+            id: "mine",
+            entityType: module,
+            entityId: WORK.id,
+            ...(call.body as object),
+            author: { id: USER.id, displayName: USER.displayName, image: null, archived: false },
+            mentions: [{ id: candidate.id, displayName: candidate.displayName }],
+            attachments: [],
+            createdAt: "2026-09-12T12:00:00Z",
+            editedAt: null,
+            deletedAt: null,
+            redactedAt: null,
+          };
+          return json(201, { comment });
+        }
+        if (call.url.pathname === "/api/v1/comments/mine") {
+          comment = {
+            ...comment,
+            ...(call.body as object),
+            ...(call.method === "DELETE"
+              ? { deletedAt: "2026-09-12T12:01:00Z" }
+              : { editedAt: "2026-09-12T12:01:00Z" }),
+          };
+          return json(200, { comment });
+        }
+        return undefined;
+      },
+    });
+    renderAt(`/portal/${module}s/12`);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: /Comments.*2/ }));
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Comments" })).toBeInTheDocument(),
+    );
+    const box = screen.getByRole("textbox", { name: "New comment" });
+    await user.type(box, "@Legal");
+    await user.click(await screen.findByRole("option", { name: /Legal colleague/ }));
+    await user.type(box, "please check");
+    await user.click(screen.getByRole("button", { name: "Comment" }));
+    await waitFor(() =>
+      expect(sent).toEqual(
+        expect.objectContaining({ visibility: "full_thread", mentions: ["legal"] }),
+      ),
+    );
+    await user.click(await screen.findByRole("button", { name: "Comment actions" }));
+    expect(screen.queryByRole("menuitem", { name: "Redact" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("menuitem", { name: "Edit" }));
+    const edit = screen.getByRole("textbox", { name: "Edit comment" });
+    await user.clear(edit);
+    await user.type(edit, "Corrected reply");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(await screen.findByText("Corrected reply")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Comment actions" }));
+    await user.click(screen.getByRole("menuitem", { name: "Delete" }));
+    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Delete" }));
+    expect(await screen.findByText("Comment deleted by its author.")).toBeInTheDocument();
+  });
+
   it("posts a Full Thread reply using the record identity", async () => {
     const writes: unknown[] = [];
     stubApi({
@@ -152,9 +323,10 @@ describe.each(["contract", "matter"] as const)("Portal %s work", (module) => {
     });
     renderAt(`/portal/${module}s/12`);
     const user = userEvent.setup();
-    const conversation = await screen.findByRole("region", { name: "Conversation" });
+    await user.click(await screen.findByRole("button", { name: "Comments" }));
+    const conversation = await screen.findByRole("complementary", { name: "Comments" });
     await user.type(within(conversation).getByRole("textbox"), "The business approves.");
-    await user.click(within(conversation).getByRole("button", { name: "Send" }));
+    await user.click(within(conversation).getByRole("button", { name: "Comment" }));
     await waitFor(() =>
       expect(writes).toEqual([
         expect.objectContaining({

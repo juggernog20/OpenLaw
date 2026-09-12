@@ -20,18 +20,9 @@ export async function loadPortalWork(module: PortalRecordModule, number: number)
     params: { path: { number } },
   });
   if (!data) throw new Error("This record could not be read.");
-  const [documents, thread] = await Promise.all([
-    readPortalDocuments(module, number),
-    api
-      .GET("/api/v1/comments", {
-        params: {
-          query: { entityType: module, entityId: data.work.id, visibility: "full_thread" },
-        },
-      })
-      .catch(() => ({ data: undefined })),
-  ]);
+  const documents = await readPortalDocuments(module, number);
   if (!documents.data) throw new Error("The Documents could not be read.");
-  return { work: data.work, documents: documents.data, thread: thread.data ?? null };
+  return { work: data.work, documents: documents.data };
 }
 
 export function savePortalWork(

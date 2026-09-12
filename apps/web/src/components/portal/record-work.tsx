@@ -13,7 +13,6 @@ import { CustomFieldControl } from "../custom-field-control";
 import { AutoResizeTextarea } from "../auto-resize-textarea";
 import { DocPanel } from "../documents/doc-panel";
 import { Button } from "../ui/button";
-import { PortalThread, type LoadedThread } from "./request-thread";
 import {
   commitsOnChange,
   sameDraft,
@@ -42,17 +41,13 @@ const card = "flex flex-col gap-4 rounded-card border border-border-default bg-r
 export function PortalRecordWork({
   module,
   number,
-  viewerId,
   work,
   documents,
-  thread,
 }: Readonly<{
   module: PortalRecordModule;
   number: number;
-  viewerId: string;
   work: PortalWork;
   documents: PortalDocuments;
-  thread: LoadedThread | null;
 }>) {
   const intl = useIntl();
   const [description, setDescription] = useState(work.description ?? "");
@@ -117,7 +112,6 @@ export function PortalRecordWork({
         ))}
       </section>
       <SupportingDocuments module={module} number={number} initial={documents} />
-      <PortalThread entityType={module} entityId={work.id} viewerId={viewerId} thread={thread} />
       {work.originalRequests.map((original) => (
         <section className={card} key={original.number}>
           <h2 className="text-lg font-semibold">

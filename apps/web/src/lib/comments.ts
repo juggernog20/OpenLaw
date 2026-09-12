@@ -58,6 +58,7 @@ export async function readCommentWindow(
   entityId: string,
   throughId?: string,
   visibility?: CommentTier,
+  surface?: "portal",
 ): Promise<ThreadResponse | undefined> {
   let cursor: string | undefined;
   let comments: Comment[] = [];
@@ -66,6 +67,7 @@ export async function readCommentWindow(
   for (;;) {
     const { data } = await api
       .GET("/api/v1/comments", {
+        headers: commentHeaders(surface),
         params: {
           query: {
             entityType,
@@ -158,10 +160,19 @@ export interface CommentPost {
 }
 
 /** Posts one comment, choosing multipart only when paper is present. */
-export async function sendComment(input: CommentPost, files: readonly File[] = []) {
+export function commentHeaders(surface?: "portal") {
+  return surface === "portal" ? { "x-openlaw-surface": "portal" } : undefined;
+}
+
+export async function sendComment(
+  input: CommentPost,
+  files: readonly File[] = [],
+  surface?: "portal",
+) {
   if (files.length === 0) {
     const { mentions, ...body } = input;
     return api.POST("/api/v1/comments", {
+      headers: commentHeaders(surface),
       body: {
         ...body,
         ...(mentions ? { mentions: [...mentions] } : {}),
@@ -181,7 +192,11 @@ export async function sendComment(input: CommentPost, files: readonly File[] = [
 
   let response: Response;
   try {
-    response = await fetch("/api/v1/comments", { method: "POST", body: form });
+    response = await fetch("/api/v1/comments", {
+      method: "POST",
+      headers: commentHeaders(surface),
+      body: form,
+    });
   } catch {
     // A dropped connection: the composer says so in its own words.
     return undefined;

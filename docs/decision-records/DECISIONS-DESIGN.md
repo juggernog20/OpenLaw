@@ -4657,7 +4657,7 @@ Business Fields reuse the shared typed Field controls. Contract value and effect
 
 Supporting Documents show their current Version, Read and Download controls, and an Add Version action. Upload creates supporting paper. Contract primary paper remains in its own read-only block. Both use the existing Document reader. Uploading a supporting Document never claims an empty primary designation.
 
-Conversation reuses the Portal thread with the Contract or Matter reference. Its composer posts Full Thread only. The page offers no visibility selector. Internal comments, Tasks, History, AI run detail, legal Fields, and legal action menus do not appear.
+Conversation reuses the Portal thread with the Contract or Matter reference. Its composer posts Full Thread only. The page offers no visibility selector. Internal comments, Tasks, ~~History,~~ AI run detail, legal Fields, and legal action menus do not appear. DES-079 adds filtered History and moves Comments and team context into the shared applets.
 
 A converted Request address redirects to its record and disappears from Your Requests. Resolved and declined Requests retain their thread. The archived-record exception shows the Requester's original ask and an archived notice, with no composer or paper access. The full-app converted Request shows its original envelope, conversion actor and time, and the reachable record link. Its thread and paper controls are removed.
 
@@ -4704,6 +4704,37 @@ Requests, Contracts and Matters sit in one full-width navigation bar directly be
 The current destination has an underline, stronger text and `aria-current="page"`. Requests stays current on the Request form and Request detail; Contracts and Matters stay current on their respective records. Settings and Help do not mark a work destination current. These are ordinary keyboard-accessible links to their existing addresses.
 
 The redundant Your Contracts shortcut on the Requests home is removed. DES-076's record pages and DES-077's list headings and controls retain their existing presentation.
+
+## DES-079: Portal records use the shared applets
+
+- **Status:** Accepted under Blair's 2026-09-12 instructions to add applets and History, preserve permissions, and align their features with the main app
+- **Date:** 2026-09-12
+
+### Audit and decision
+
+The Portal conversation was a separate component. Its large inline rows, author pills and scrolling reply box differed from the main Comments applet, and it lacked mentions, unread counts, comment count, editing and deletion. Copying the activity bar around that component would preserve these differences. The Portal now mounts the main Comments applet. History uses the main Activity feed, and the roster uses the shared TeamRoster. The applet rail, panel, icons, spacing, focus restoration and Escape behavior are shared.
+
+| Area           | Alignment                                                                                                                                         | Permission boundary                                                                                                                        |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Comments       | Same rows, timestamps, audience labels, count, unread badge, mentions, attachments, pinned composer, pagination, edit/delete menus and tombstones | Full Thread only; authors may correct their own comments; Administrator redaction and Legal's attachment filing controls remain restricted |
+| Team           | Same icon, owner and Creator statements, avatars and membership rows                                                                              | Business Users read the roster; membership changes remain Legal actions under DD-023 and CTR-023                                           |
+| History        | Same narration, timestamps, pagination and live refresh                                                                                           | Server reads Full Thread only, with no private rows, counts or cursors                                                                     |
+| Document tools | Same attachment preview and download components                                                                                                   | Global Document search, primary designation and filing into the legal record remain outside the Business User permission grid              |
+| Panel behavior | Same open, close, switch, focus and Escape controls                                                                                               | Portal width is constrained to fit the screen                                                                                              |
+
+Contract and Matter pages offer Team, Comments and History. Requests offer Comments and History. A converted Request follows DD-023's redirect; its archived-record stub has no applets. Fields, business summary, supporting Documents and Original request stay in the main content. The `#portal-request-composer` address opens Comments. Closing or switching an applet preserves the draft, attachments and selected mentions on the current record. Navigating to a different record clears them. Multiline Fields and comment controls use AutoResizeTextarea, including growing, shrinking and width changes.
+
+### Server permissions
+
+Portal History requires current team membership, or ownership of an unconverted Request. It selects `full_thread` entries before pagination. Legal Only, Working Team and Administrator-only history never enters the response. No migration republishes existing audit entries. Shared comment events and business record edits are supported; unknown action families are omitted. Historical edits are projected through the current attached business Fields, with inaccessible Entity changes omitted. Legal Fields and restricted Document payloads cannot enter the feed. Portal refreshes replace cached history pages so a newly restricted projection is removed.
+
+The shared Comments client identifies Portal calls to the server. This can only narrow the authenticated audience to a Business User's access, including for staff previewing the Portal. It applies to the thread, unread count, mention candidates, posting, editing and deletion. Business Users cannot recover private comments by omitting that hint: their account role still enforces the same boundary. Candidate tiers are restricted to the viewer's audience.
+
+A Portal read advances a separate Full Thread read marker. It cannot clear unseen private comments from the staff app's unread badge. The normal staff read still marks all comments in its audience as read. Conversion carries both markers to the resulting record.
+
+### Consequences
+
+This amends DES-076's inline Conversation and History exclusion and DD-023's inherited History exclusion. The account types, team grant, confidential gate and write grid are unchanged. The Portal no longer maintains a second conversation component. Sharing the composer also preserves drafts when staff switch applets.
 
 ## Index of decisions
 
@@ -4787,6 +4818,7 @@ The redundant Your Contracts shortcut on the Requests home is removed. DES-076's
 | DES-076 | Portal Contracts and Matters carry the business work                                                                                                                 | Accepted                                                                                                   |
 | DES-077 | Portal record lists use the managed table (supersedes DES-076's flat-list presentation)                                                                              | Accepted                                                                                                   |
 | DES-078 | Portal destinations share a persistent navigation bar                                                                                                                | Accepted                                                                                                   |
+| DES-079 | Portal records use the shared applets                                                                                                                                | Accepted                                                                                                   |
 
 ### DES-016 addendum (2026-09-11, #827) — Request source reading above Convert
 

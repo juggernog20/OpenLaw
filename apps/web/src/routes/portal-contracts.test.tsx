@@ -97,7 +97,7 @@ describe("Portal Contracts", () => {
     expect(screen.getByText(/Legal has not yet verified/)).toBeInTheDocument();
     expect(screen.getAllByText("Unverified").length).toBeGreaterThan(0);
     expect(screen.getByRole("textbox", { name: "Description" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "History" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "History" })).toBeInTheDocument();
     await userEvent.setup().click(screen.getByRole("button", { name: "Read Document" }));
     const panel = await screen.findByRole("complementary", { name: /Agreed terms/ });
     expect(within(panel).getByRole("img", { name: "signed.png" })).toHaveAttribute(

@@ -11,7 +11,7 @@
  * `/portal/requests/45` can see.
  */
 
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Comment } from "../lib/comments";
@@ -30,6 +30,8 @@ import {
   type StubAnswer,
   type StubCall,
 } from "../testing/helpers";
+
+beforeEach(() => window.history.replaceState({}, "", "/"));
 
 const REQUESTER = {
   id: "u9",
@@ -232,6 +234,7 @@ describe("the request envelope", () => {
 
       const pointer = await screen.findByRole("link", { name: "Attach new files to a reply" });
       expect(pointer).toHaveAttribute("href", "#portal-request-composer");
+      await userEvent.setup().click(pointer);
       expect(screen.queryByRole("button", { name: "Choose files" })).not.toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Attach files" })).toBeInTheDocument();
     },
@@ -261,8 +264,8 @@ describe("the request envelope", () => {
       await screen.findByText(/The record created from this Request was archived/),
     ).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "What you submitted" })).toBeInTheDocument();
-    expect(screen.queryByRole("region", { name: "Conversation" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Send" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("complementary", { name: "Comments" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Comment" })).not.toBeInTheDocument();
   });
 
   it("carries the decline reason on a declined Request (INT-006)", async () => {
@@ -459,7 +462,7 @@ describe("what the requester submitted", () => {
     expect(within(card).queryByText("Attachments")).not.toBeInTheDocument();
   });
 
-  it("draws the conversation above it, where I7 puts it", async () => {
+  it("opens the conversation beside the submitted form", async () => {
     // #379 drew no conversation, because an empty card would have
     // claimed there was one. #381 gives the card a composer, so it is
     // now the way to start the conversation rather than a claim about
@@ -467,10 +470,11 @@ describe("what the requester submitted", () => {
     stubApi({ signedIn: REQUESTER, extra: detailRead(detail()) });
     renderAt("/portal/requests/45");
 
-    const thread = await screen.findByRole("region", { name: "Conversation" });
+    await userEvent.setup().click(await screen.findByRole("button", { name: "Comments" }));
+    const thread = await screen.findByRole("complementary", { name: "Comments" });
     const submitted = screen.getByRole("region", { name: "What you submitted" });
-    expect(thread.compareDocumentPosition(submitted)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-    expect(within(thread).getByRole("textbox", { name: "Reply to Legal" })).toBeInTheDocument();
+    expect(thread.compareDocumentPosition(submitted)).toBe(Node.DOCUMENT_POSITION_PRECEDING);
+    expect(within(thread).getByRole("textbox", { name: "New comment" })).toBeInTheDocument();
   });
 });
 
@@ -588,15 +592,15 @@ describe("the conversation", () => {
       }),
     });
     renderAt("/portal/requests/45");
+    await userEvent.setup().click(await screen.findByRole("button", { name: "Comments" }));
 
-    const card = await screen.findByRole("region", { name: "Conversation" });
+    const card = await screen.findByRole("complementary", { name: "Comments" });
     expect(within(card).getByText("Adding context — the 22nd is a hard date.")).toBeInTheDocument();
     expect(within(card).getByText("Thanks Tom — reviewing the redline now.")).toBeInTheDocument();
     // I7's author pill: the reader's own reply is "You", and on a
     // Request the only other author is staff.
-    expect(within(card).getByText("You")).toBeInTheDocument();
+    expect(within(card).getAllByText("Full thread")).toHaveLength(2);
     expect(within(card).getByText("Sarah Chen")).toBeInTheDocument();
-    expect(within(card).getByText("Legal")).toBeInTheDocument();
   });
 
   it("keeps one reply when a live read arrives before the posting response", async () => {
@@ -621,9 +625,10 @@ describe("the conversation", () => {
       ),
     });
     renderAt("/portal/requests/45");
-    const box = await screen.findByRole("textbox", { name: "Reply to Legal" });
+    await userEvent.setup().click(await screen.findByRole("button", { name: "Comments" }));
+    const box = await screen.findByRole("textbox", { name: "New comment" });
     await user.type(box, posted.body);
-    await user.click(screen.getByRole("button", { name: "Send" }));
+    await user.click(screen.getByRole("button", { name: "Comment" }));
     await waitFor(() => expect(finishPost).toBeTypeOf("function"));
     sources[0]!.emit({
       kind: "record",
@@ -646,9 +651,12 @@ describe("the conversation", () => {
     };
     stubApi({ signedIn: REQUESTER, extra: detailRead(detail(), 200, liveThread) });
     renderAt("/portal/requests/45");
+    await userEvent.setup().click(await screen.findByRole("button", { name: "Comments" }));
 
-    const card = await screen.findByRole("region", { name: "Conversation" });
-    expect(within(card).getByText("Legal is checking the renewal term.")).toBeInTheDocument();
+    const card = await screen.findByRole("complementary", { name: "Comments" });
+    expect(
+      await within(card).findByText("Legal is checking the renewal term."),
+    ).toBeInTheDocument();
     expect(sources[0]?.url).toBe("/api/events?entityType=request&entityId=rq1");
 
     const reply = comment({ id: "c2", body: "The renewal term is twelve months." });
@@ -704,9 +712,12 @@ describe("the conversation", () => {
       },
     });
     renderAt("/portal/requests/45");
+    await userEvent.setup().click(await screen.findByRole("button", { name: "Comments" }));
 
-    const card = await screen.findByRole("region", { name: "Conversation" });
-    expect(within(card).getByText("Legal is checking the renewal term.")).toBeInTheDocument();
+    const card = await screen.findByRole("complementary", { name: "Comments" });
+    expect(
+      await within(card).findByText("Legal is checking the renewal term."),
+    ).toBeInTheDocument();
     failThread = true;
     sources[0]!.emit({
       kind: "record",
@@ -718,9 +729,9 @@ describe("the conversation", () => {
     });
 
     expect(await within(card).findByRole("alert")).toHaveTextContent(
-      "The conversation could not be read. Reload the page to try again.",
+      "The conversation could not be read. Reopen the panel to try again.",
     );
-    expect(within(card).getByText("Legal is checking the renewal term.")).toBeInTheDocument();
+    expect(within(card).queryByText("Legal is checking the renewal term.")).not.toBeInTheDocument();
 
     failThread = false;
     sources[0]!.emit({
@@ -737,9 +748,10 @@ describe("the conversation", () => {
   it("offers the reply box no tier to choose", async () => {
     stubApi({ signedIn: REQUESTER, extra: detailRead(detail()) });
     renderAt("/portal/requests/45");
+    await userEvent.setup().click(await screen.findByRole("button", { name: "Comments" }));
 
-    const card = await screen.findByRole("region", { name: "Conversation" });
-    expect(within(card).getByRole("textbox", { name: "Reply to Legal" })).toBeInTheDocument();
+    const card = await screen.findByRole("complementary", { name: "Comments" });
+    expect(within(card).getByRole("textbox", { name: "New comment" })).toBeInTheDocument();
     // The tier picker is a staff affordance. A Requester is in one room,
     // so there is nothing here to pick between (DD-016).
     expect(within(card).queryByRole("radio")).not.toBeInTheDocument();
@@ -780,15 +792,17 @@ describe("the conversation", () => {
       ),
     });
     renderAt("/portal/requests/45");
+    await userEvent.setup().click(await screen.findByRole("button", { name: "Comments" }));
 
-    const box = await screen.findByRole("textbox", { name: "Reply to Legal" });
+    const box = await screen.findByRole("textbox", { name: "New comment" });
     await user.type(box, "Any update on this?");
-    await user.click(screen.getByRole("button", { name: "Send" }));
+    await user.click(screen.getByRole("button", { name: "Comment" }));
 
     expect(await screen.findByText("Any update on this?")).toBeInTheDocument();
     // Full Thread, and keyed by the Request's own id rather than its
     // R-### number (CMT-010).
     expect(sent).toEqual({
+      mentions: [],
       entityType: "request",
       entityId: "rq1",
       body: "Any update on this?",
@@ -849,20 +863,22 @@ describe("the conversation", () => {
       ),
     });
     renderAt("/portal/requests/45");
+    await userEvent.setup().click(await screen.findByRole("button", { name: "Comments" }));
 
-    const card = await screen.findByRole("region", { name: "Conversation" });
+    const card = await screen.findByRole("complementary", { name: "Comments" });
     expect(
       within(card).getByText("We have opened the file and started the redline."),
     ).toBeInTheDocument();
     expect(threadQueries[0]?.get("entityType")).toBe("request");
     expect(threadQueries[0]?.get("entityId")).toBe("rq1");
 
-    const box = within(card).getByRole("textbox", { name: "Reply to Legal" });
+    const box = within(card).getByRole("textbox", { name: "New comment" });
     await user.type(box, "Thanks — anything else you need?");
-    await user.click(within(card).getByRole("button", { name: "Send" }));
+    await user.click(within(card).getByRole("button", { name: "Comment" }));
 
     expect(await screen.findByText("Thanks — anything else you need?")).toBeInTheDocument();
     expect(sent).toEqual({
+      mentions: [],
       entityType: "request",
       entityId: "rq1",
       body: "Thanks — anything else you need?",
@@ -880,10 +896,11 @@ describe("the conversation", () => {
       ),
     });
     renderAt("/portal/requests/45");
+    await userEvent.setup().click(await screen.findByRole("button", { name: "Comments" }));
 
-    const box = await screen.findByRole("textbox", { name: "Reply to Legal" });
+    const box = await screen.findByRole("textbox", { name: "New comment" });
     await user.type(box, "Any update on this?");
-    await user.click(screen.getByRole("button", { name: "Send" }));
+    await user.click(screen.getByRole("button", { name: "Comment" }));
 
     expect(
       await screen.findByText("You cannot post a comment at that visibility tier."),
@@ -923,6 +940,7 @@ describe("the conversation", () => {
       ),
     });
     renderAt("/portal/requests/45");
+    await userEvent.setup().click(await screen.findByRole("button", { name: "Comments" }));
 
     const existing = await screen.findByRole("link", { name: "Download draft for requester.pdf" });
     expect(existing).toHaveAttribute(
@@ -942,8 +960,8 @@ describe("the conversation", () => {
 
     await user.click(within(chosen).getByRole("button", { name: "Remove round-2.pdf" }));
     expect(within(chosen).getAllByRole("listitem")).toHaveLength(4);
-    await user.type(screen.getByRole("textbox", { name: "Reply to Legal" }), "Four rounds.");
-    await user.click(screen.getByRole("button", { name: "Send" }));
+    await user.type(screen.getByRole("textbox", { name: "New comment" }), "Four rounds.");
+    await user.click(screen.getByRole("button", { name: "Comment" }));
     await waitFor(() => expect(sent).not.toBeNull());
     expect(sent!.get("entityType")).toBe("request");
     expect(sent!.get("entityId")).toBe("rq1");
@@ -959,9 +977,10 @@ describe("the conversation", () => {
   it("says the conversation could not be read, and still shows what was submitted", async () => {
     stubApi({ signedIn: REQUESTER, extra: detailRead(detail(), 200, "failed") });
     renderAt("/portal/requests/45");
+    await userEvent.setup().click(await screen.findByRole("button", { name: "Comments" }));
 
     expect(
-      await screen.findByText("The conversation could not be read. Reload the page to try again."),
+      await screen.findByText("The conversation could not be read. Reopen the panel to try again."),
     ).toBeInTheDocument();
     // A thread that could not be fetched does not take the page with
     // it: the values the requester submitted are still theirs to see.
@@ -986,8 +1005,9 @@ describe("the conversation", () => {
       },
     });
     renderAt("/portal/requests/45");
+    await userEvent.setup().click(await screen.findByRole("button", { name: "Comments" }));
 
-    await user.click(await screen.findByRole("button", { name: "Show earlier replies" }));
+    await user.click(await screen.findByRole("button", { name: "Show older" }));
 
     const older = await screen.findByText("The very first reply.");
     const newer = screen.getByText("The newest reply.");
@@ -996,7 +1016,7 @@ describe("the conversation", () => {
     // (CTR-024).
     expect(older.compareDocumentPosition(newer)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     // The thread reaches its own beginning, so the control goes.
-    expect(screen.queryByRole("button", { name: "Show earlier replies" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Show older" })).not.toBeInTheDocument();
   });
 
   it("replaces an edited reply in an older page after a live prompt", async () => {
@@ -1018,9 +1038,10 @@ describe("the conversation", () => {
       },
     });
     renderAt("/portal/requests/45");
+    await userEvent.setup().click(await screen.findByRole("button", { name: "Comments" }));
 
-    const card = await screen.findByRole("region", { name: "Conversation" });
-    await user.click(within(card).getByRole("button", { name: "Show earlier replies" }));
+    const card = await screen.findByRole("complementary", { name: "Comments" });
+    await user.click(within(card).getByRole("button", { name: "Show older" }));
     expect(await within(card).findByText("The original older reply.")).toBeInTheDocument();
 
     older = {
@@ -1053,6 +1074,7 @@ describe("the conversation", () => {
       }),
     });
     renderAt("/portal/requests/45");
+    await userEvent.setup().click(await screen.findByRole("button", { name: "Comments" }));
 
     // The row keeps its seat so the conversation around it still reads
     // (CMT-008).

@@ -34,7 +34,7 @@ A Contract's **Primary Document** has its own Read and Download controls for the
 
 ## Join the conversation
 
-Under **Conversation**, write your reply, attach files if needed, and select **Send**. Your reply appears on the Contract or Matter at **Full thread**. There is no audience picker in the Portal. Legal Only and Working Team messages stay outside this view.
+Open **Comments** in the applet bar on the right, write your reply, attach files if needed, and select **Comment**. Your reply appears on the Contract or Matter at **Full thread**. Type **@** to mention someone who can hear the comment. Use **Comment actions** to edit or delete your own comment. The unread badge clears after the comments load. Closing or switching applets keeps your draft and attachments on this record. There is no audience picker in the Portal. Legal Only and Working Team messages stay outside this view.
 
 A comment attachment belongs to the conversation. Upload under Supporting Documents when the file needs its own managed Document chain. See [Comments, attachments, and activity](comments-and-activity.md) for attachment limits and reply behavior.
 

@@ -115,7 +115,11 @@ export async function moveThread(tx: NotifyingTransaction, move: ThreadMove): Pr
     eq(commentLastRead.entityId, move.requestId),
   );
   const watermarks = await tx
-    .select({ userId: commentLastRead.userId, readAt: commentLastRead.readAt })
+    .select({
+      userId: commentLastRead.userId,
+      readAt: commentLastRead.readAt,
+      fullThreadReadAt: commentLastRead.fullThreadReadAt,
+    })
     .from(commentLastRead)
     .where(onRequest);
   if (watermarks.length > 0) {
@@ -127,6 +131,7 @@ export async function moveThread(tx: NotifyingTransaction, move: ThreadMove): Pr
           entityType: move.target.module,
           entityId: move.target.id,
           readAt: row.readAt,
+          fullThreadReadAt: row.fullThreadReadAt,
         })),
       )
       // The rule that keeps the move honest: a reader already holding a

@@ -208,9 +208,11 @@ async function enterPortalByMagicLink(
   return page;
 }
 
-/** The one conversation card the portal draws. */
-function conversation(page: Page) {
-  return page.getByRole("region", { name: "Conversation" });
+/** Open the shared Comments applet on the Portal record. */
+async function conversation(page: Page) {
+  const panel = page.getByRole("complementary", { name: "Comments", exact: true });
+  if (!(await panel.isVisible())) await page.getByRole("button", { name: /^Comments/ }).click();
+  return panel;
 }
 
 test.describe.serial("M20 demo path", () => {
@@ -425,14 +427,14 @@ test.describe.serial("M20 demo path", () => {
       // The card draws before anybody has replied: it is the way to
       // start the conversation rather than a claim about one (the
       // INT-001 M20/7 addendum).
-      const thread = conversation(portal);
+      const thread = await conversation(portal);
       await expect(thread).toBeVisible();
       const posted = portal.waitForResponse(
         (response) =>
           response.url().endsWith("/api/v1/comments") && response.request().method() === "POST",
       );
-      await thread.getByLabel("Reply to Legal").fill(REQUESTER_REPLY);
-      await thread.getByRole("button", { name: "Send" }).click();
+      await thread.getByLabel("New comment").fill(REQUESTER_REPLY);
+      await thread.getByRole("button", { name: "Comment", exact: true }).click();
       expect((await posted).status()).toBe(201);
       await expect(thread.getByText(REQUESTER_REPLY)).toBeVisible();
       await expect(thread.getByText("You", { exact: true })).toBeVisible();
@@ -473,8 +475,10 @@ test.describe.serial("M20 demo path", () => {
       // The reply reaches the portal three ways. First on the thread,
       // where anybody who is not the reader is Legal.
       await portal.reload();
-      await expect(conversation(portal).getByText(STAFF_REPLY)).toBeVisible();
-      await expect(conversation(portal).getByText("Legal", { exact: true })).toBeVisible();
+      await expect((await conversation(portal)).getByText(STAFF_REPLY)).toBeVisible();
+      await expect(
+        (await conversation(portal)).getByText("Full thread", { exact: true }).first(),
+      ).toBeVisible();
 
       // Second as email, because a requester does not live in the app and
       // INT-003 declined the poke button on that basis.
