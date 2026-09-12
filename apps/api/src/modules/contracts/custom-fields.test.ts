@@ -305,13 +305,13 @@ describe("the fields a contract's type attaches (CTR-016)", () => {
       { value: { amount: 125_000, currency: "USD", cadence: "annually" } },
       { effectiveDate: "2026-09-01" },
     ]) {
-      const accepted = await harness.app.inject({
+      const removed = await harness.app.inject({
         method: "PATCH",
         url: `/api/v1/portal/contracts/${contract.number}/work`,
         cookies: contributorCookies,
         payload,
       });
-      expect(accepted.statusCode, accepted.body).toBe(404);
+      expect(removed.statusCode, removed.body).toBe(404);
     }
     const required = await harness.app.inject({
       method: "PATCH",

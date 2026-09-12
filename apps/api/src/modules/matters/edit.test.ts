@@ -272,13 +272,13 @@ describe("per-field matter PATCH", () => {
       { description: "Business supplied context" },
       { customFields: { [businessSlug]: "Operations" } },
     ]) {
-      const accepted = await harness.app.inject({
+      const removed = await harness.app.inject({
         method: "PATCH",
         url: `/api/v1/portal/matters/${matter.number}/work`,
         cookies: contributorCookies,
         payload,
       });
-      expect(accepted.statusCode, accepted.body).toBe(404);
+      expect(removed.statusCode, removed.body).toBe(404);
     }
     for (const payload of [
       { title: "Crafted rename" },

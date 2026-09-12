@@ -1250,31 +1250,31 @@ This supersedes DD-015's business Field edit permission as carried into DD-023, 
 
 ## Index of decisions
 
-| #      | Decision                                                                                  | Status                            |
-| ------ | ----------------------------------------------------------------------------------------- | --------------------------------- |
-| DD-001 | Internal-tool-first development model with portable architecture                          | Accepted                          |
-| DD-002 | Reference persona — small in-house legal team (2–10 people)                               | Accepted                          |
-| DD-003 | v1 build queue starts with Contract Lifecycle Management                                  | Accepted                          |
-| DD-004 | Front-end-driven design pass; full mocks for all modules up front                         | Accepted                          |
-| DD-005 | Restructure scope into functional modules + cross-cutting capabilities                    | Accepted                          |
-| DD-006 | Add Entity Management as a functional module                                              | Accepted                          |
-| DD-007 | Layered data model — Documents → Contracts → Matters; Entities orthogonal                 | Accepted                          |
-| DD-008 | Separate `entities` and `counterparties` tables, with `parties_view` abstraction          | Accepted                          |
-| DD-009 | Single-tenant per deployment                                                              | Accepted                          |
-| DD-010 | Layered intake strategy — ChatOps + magic-link form + email parser                        | Accepted                          |
-| DD-011 | License — AGPL v3                                                                         | Accepted                          |
-| DD-012 | Project name — keep "OpenLaw" with documented rename trigger                              | Accepted                          |
-| DD-013 | Four-role permission model — Administrator, Legal Team Member, Contributor, Business User | Accepted                          |
-| DD-014 | Sensitive matter gating — confidential flag, opt-in restriction                           | Accepted                          |
-| DD-015 | Contributor permission grid — read, comment, upload, edit business fields                 | Accepted                          |
-| DD-016 | Comment visibility — three audience tiers (Legal Only / Working Team / Full Thread)       | Accepted                          |
-| DD-017 | Activity tracking — two-layer model (per-entity activity feed + system-wide audit log)    | Accepted                          |
-| DD-018 | Work-model doctrine — dual workspaces with the deliverable rule                           | Accepted                          |
-| DD-019 | Saved list views — private to one person, one `jsonb` config, saving is an act            | Accepted                          |
-| DD-020 | Product documentation is public, versioned, and separate from Knowledge                   | Accepted                          |
-| DD-021 | Business Users see the Contracts they are stakeholders on, in the portal                  | Accepted; implemented in #808     |
-| DD-022 | Auto-Docs — a new destination that fills approved templates from a form                   | Accepted direction; grill pending |
-| DD-023 | Three account types, one team roster, and Portal work on Contracts and Matters            | Accepted                          |
-| DD-024 | Business Users work with Document versions on their records                               | Accepted                          |
-| DD-025 | Business Owner replaces the seeded Business sponsor Field                                 | Accepted                          |
-| DD-026 | Portal contributions are Documents, comments and team additions                           | Accepted                          |
+| #      | Decision                                                                                  | Status                                                                      |
+| ------ | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| DD-001 | Internal-tool-first development model with portable architecture                          | Accepted                                                                    |
+| DD-002 | Reference persona — small in-house legal team (2–10 people)                               | Accepted                                                                    |
+| DD-003 | v1 build queue starts with Contract Lifecycle Management                                  | Accepted                                                                    |
+| DD-004 | Front-end-driven design pass; full mocks for all modules up front                         | Accepted                                                                    |
+| DD-005 | Restructure scope into functional modules + cross-cutting capabilities                    | Accepted                                                                    |
+| DD-006 | Add Entity Management as a functional module                                              | Accepted                                                                    |
+| DD-007 | Layered data model — Documents → Contracts → Matters; Entities orthogonal                 | Accepted                                                                    |
+| DD-008 | Separate `entities` and `counterparties` tables, with `parties_view` abstraction          | Accepted                                                                    |
+| DD-009 | Single-tenant per deployment                                                              | Accepted                                                                    |
+| DD-010 | Layered intake strategy — ChatOps + magic-link form + email parser                        | Accepted                                                                    |
+| DD-011 | License — AGPL v3                                                                         | Accepted                                                                    |
+| DD-012 | Project name — keep "OpenLaw" with documented rename trigger                              | Accepted                                                                    |
+| DD-013 | Four-role permission model — Administrator, Legal Team Member, Contributor, Business User | Accepted                                                                    |
+| DD-014 | Sensitive matter gating — confidential flag, opt-in restriction                           | Accepted                                                                    |
+| DD-015 | Contributor permission grid — read, comment, upload, edit business fields                 | Accepted                                                                    |
+| DD-016 | Comment visibility — three audience tiers (Legal Only / Working Team / Full Thread)       | Accepted                                                                    |
+| DD-017 | Activity tracking — two-layer model (per-entity activity feed + system-wide audit log)    | Accepted                                                                    |
+| DD-018 | Work-model doctrine — dual workspaces with the deliverable rule                           | Accepted                                                                    |
+| DD-019 | Saved list views — private to one person, one `jsonb` config, saving is an act            | Accepted                                                                    |
+| DD-020 | Product documentation is public, versioned, and separate from Knowledge                   | Accepted                                                                    |
+| DD-021 | Business Users see the Contracts they are stakeholders on, in the portal                  | Accepted; implemented in #808                                               |
+| DD-022 | Auto-Docs — a new destination that fills approved templates from a form                   | Accepted direction; grill pending                                           |
+| DD-023 | Three account types, one team roster, and Portal work on Contracts and Matters            | Accepted; Portal Field edits and the Legal-only roster superseded by DD-026 |
+| DD-024 | Business Users work with Document versions on their records                               | Accepted                                                                    |
+| DD-025 | Business Owner replaces the seeded Business sponsor Field                                 | Accepted                                                                    |
+| DD-026 | Portal contributions are Documents, comments and team additions                           | Accepted                                                                    |

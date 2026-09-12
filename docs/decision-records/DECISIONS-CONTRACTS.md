@@ -464,7 +464,7 @@ The Team panel groups entries by person: one avatar and name, with every held ro
 | CTR-022 | Confidential flag: the Owner joins, and CMT-007 replaces the watcher grant       | Accepted                                                                                          |
 | CTR-023 | Confidential team: the roster is an audience decision (extends CTR-022)          | Accepted                                                                                          |
 | CTR-024 | Bounding the lists: keyset cursor, server-fixed page of 50, and no total         | Accepted                                                                                          |
-| CTR-025 | Owning department and Region are built-in Overview attributes                    | Accepted                                                                                          |
+| CTR-025 | Owning department and Region are built-in Overview attributes                    | Accepted; Portal edits superseded by DD-026                                                       |
 
 ### CTR-005 UX review addendum — record Due date (2026-09-06; superseded)
 
