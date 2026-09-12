@@ -91,11 +91,12 @@ import {
   type CustomFieldDraft,
   type CustomFieldValue,
 } from "../lib/custom-fields";
-import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
+import { CONTROL_CLASS } from "../lib/form-controls";
 import { problem as readProblem } from "../lib/problem";
 import { attachToRequest, MAX_REQUEST_ATTACHMENTS, requestReference } from "../lib/requests";
 import { currentUser, useSignOut } from "../lib/session";
 import { CustomFieldControl } from "../components/custom-field-control";
+import { AutoResizeTextarea } from "../components/auto-resize-textarea";
 import { PageTitle } from "../components/page-title";
 import { PortalBackLink } from "../components/portal/back-link";
 import { DeflectionPanel } from "../components/portal/deflection-panel";
@@ -366,11 +367,10 @@ export function PortalRequestFormPage() {
                   required
                   unanswered={unanswered.has("description")}
                 >
-                  <textarea
+                  <AutoResizeTextarea
                     id="request-description"
                     rows={4}
                     value={description}
-                    className={TEXTAREA_CLASS}
                     aria-required="true"
                     aria-invalid={unanswered.has("description") || undefined}
                     placeholder={intl.formatMessage({

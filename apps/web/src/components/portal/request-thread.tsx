@@ -13,11 +13,11 @@ import {
   type Comment,
 } from "../../lib/comments";
 import { formatLongDateTime, formatRelativeOrShort } from "../../lib/format";
-import { TEXTAREA_CLASS } from "../../lib/form-controls";
 import { problem as readProblem } from "../../lib/problem";
 import { subscribeLiveEvents } from "../../lib/events";
 import { cn } from "../../lib/utils";
 import { Avatar } from "../avatar";
+import { AutoResizeTextarea } from "../auto-resize-textarea";
 import { CommentAttachmentRows, CommentFilePicker } from "../comments/comment-attachments";
 import { Button } from "../ui/button";
 
@@ -387,7 +387,7 @@ function Composer({
         void post();
       }}
     >
-      <textarea
+      <AutoResizeTextarea
         aria-label={intl.formatMessage({
           id: "portal.request.replyLabel",
           defaultMessage: "Reply to Legal",
@@ -399,7 +399,7 @@ function Composer({
         value={draft}
         disabled={busy}
         onChange={(event) => setDraft(event.target.value)}
-        className={cn(TEXTAREA_CLASS, "min-h-24")}
+        className="min-h-24"
       />
       <CommentFilePicker files={files} disabled={busy} onChange={setFiles} />
       <div className="flex justify-end">

@@ -10,6 +10,7 @@ import { Input } from "../ui/input";
 import { useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { CustomFieldControl } from "../custom-field-control";
+import { AutoResizeTextarea } from "../auto-resize-textarea";
 import { DocPanel } from "../documents/doc-panel";
 import { Button } from "../ui/button";
 import { PortalThread, type LoadedThread } from "./request-thread";
@@ -26,7 +27,6 @@ import {
   uploadDocumentVersion,
   uploadRecordDocument,
 } from "../../lib/documents";
-import { TEXTAREA_CLASS } from "../../lib/form-controls";
 import { formatShortDate } from "../../lib/format";
 import { problem } from "../../lib/problem";
 import {
@@ -87,9 +87,8 @@ export function PortalRecordWork({
           <label htmlFor="portal-description" className="text-base font-medium">
             <FormattedMessage id="portal.record.description" defaultMessage="Description" />
           </label>
-          <textarea
+          <AutoResizeTextarea
             id="portal-description"
-            className={TEXTAREA_CLASS}
             value={description}
             disabled={saving}
             onChange={(event) => setDescription(event.target.value)}
