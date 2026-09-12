@@ -4,7 +4,7 @@ Use the Portal to add business information, supporting Documents and replies to 
 
 ## Before you start
 
-Sign in with your Business User account. Ask Legal to add you to the Contract or Matter team. Open **Your Contracts** or **Your Matters**, then choose the record. Check its title and C- or M- reference. A link, Business Owner assignment or related record does not grant access by itself.
+Sign in with your Business User account. Ask Legal to add you to the Contract or Matter team. Select **Contracts** or **Matters** in the Portal navigation bar, then choose the record. Check its title and C- or M- reference. A link, Business Owner assignment or related record does not grant access by itself.
 
 Former Contributor accounts now use this Portal workflow.
 
