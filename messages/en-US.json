@@ -5903,9 +5903,6 @@
   "portal.form.urgencyHint": {
     "defaultMessage": "How soon Legal should look at it."
   },
-  "portal.home.lead": {
-    "defaultMessage": "Pick a request type — the form collects what Legal needs to get started."
-  },
   "portal.home.noTypes": {
     "defaultMessage": "No request types are available yet. Ask your legal team to open one."
   },
