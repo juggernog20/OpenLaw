@@ -8,6 +8,7 @@ import {
   onboardActivatedMember,
   signInAs,
   reportAxeViolations,
+  sweepOrSay,
 } from "./helpers.js";
 
 test.setTimeout(120_000);
@@ -29,6 +30,7 @@ test("Portal uses shared applets with private history omitted, read-only Fields 
   const identity = await portal.request.get("/api/v1/me");
   const userId = (await identity.json()).user.id;
   const records: { module: "contract" | "matter"; number: number }[] = [];
+  let journeyError: unknown;
   try {
     for (const module of ["contract", "matter"] as const) {
       const options = await (await page.request.get(`/api/v1/${module}s/options`)).json();
@@ -102,15 +104,28 @@ test("Portal uses shared applets with private history omitted, read-only Fields 
       await expect(portal.getByRole("button", { name: "Add team member" })).toBeEnabled();
       await expect(portal.getByRole("button", { name: /^Remove / })).toHaveCount(0);
       await portal.getByRole("button", { name: "Comments", exact: true }).click();
-      await expect(comments.getByRole("textbox", { name: "New comment" })).toHaveValue(
-        "Keep my draft",
+      await expect(composer).toHaveValue("Keep my draft");
+      // The preserved draft is posted: a Business User may add comments, and
+      // the Portal composer only offers the Full Thread tier.
+      const posting = portal.waitForResponse(
+        (response) =>
+          response.url().endsWith("/api/v1/comments") && response.request().method() === "POST",
       );
-      await comments.getByRole("textbox", { name: "New comment" }).press("Escape");
+      await comments.getByRole("button", { name: "Comment", exact: true }).click();
+      const postedByPortal = await posting;
+      expect(postedByPortal.status(), await postedByPortal.text()).toBe(201);
+      const portalCommentId: string = (await postedByPortal.json()).comment.id;
+      await expect(comments.getByText("Keep my draft", { exact: true })).toBeVisible();
+      await expect(composer).toHaveValue("");
+      await composer.press("Escape");
       await expect(portal.getByRole("button", { name: "Comments", exact: true })).toBeFocused();
       await portal.getByRole("button", { name: "History", exact: true }).click();
       const history = portal.getByRole("complementary", { name: "History", exact: true });
       await expect(
         history.getByText(`${ADMIN.displayName} commented`, { exact: true }),
+      ).toBeVisible();
+      await expect(
+        history.getByText("Portal applet colleague commented", { exact: true }),
       ).toBeVisible();
       const response = await portal.request.get(
         `/api/v1/portal/activity?entityType=${module}&entityId=${record.id}`,
@@ -118,7 +133,14 @@ test("Portal uses shared applets with private history omitted, read-only Fields 
       expect(response.ok()).toBe(true);
       const entries = (await response.json()).entries;
       expect(sharedCommentId).toBeDefined();
+      // Newest first: the Portal's own comment, then Legal's shared one. The
+      // two private comments leave no entry at all.
       expect(entries).toMatchObject([
+        {
+          action: "comment.posted",
+          visibility: "full_thread",
+          payload: { commentId: portalCommentId },
+        },
         {
           action: "comment.posted",
           visibility: "full_thread",
@@ -142,14 +164,24 @@ test("Portal uses shared applets with private history omitted, read-only Fields 
       await reportAxeViolations(portal, testInfo, `portal-${module}-applets-mobile`);
       await portal.screenshot({ path: `/tmp/openlaw-portal-${module}-applets.png` });
     }
+  } catch (error) {
+    journeyError = error;
+    throw error;
   } finally {
-    for (const record of records) {
-      const archived = await page.request.post(
-        `/api/v1/${record.module}s/${record.number}/archive`,
-      );
-      expect(archived.status(), await archived.text()).toBe(200);
-    }
     await colleague.context.close();
-    await ensureMemberInert(page.request, email);
+    // Every sweep step is asserted, so a failed archive cannot pass quietly.
+    // After a failed journey the sweep is reported rather than thrown, so
+    // the journey's own failure is the one that propagates.
+    const cleanup = async () => {
+      for (const record of records) {
+        const archived = await page.request.post(
+          `/api/v1/${record.module}s/${record.number}/archive`,
+        );
+        expect(archived.status(), await archived.text()).toBe(200);
+      }
+      await ensureMemberInert(page.request, email);
+    };
+    if (journeyError) await sweepOrSay("Portal applets", cleanup);
+    else await cleanup();
   }
 });
