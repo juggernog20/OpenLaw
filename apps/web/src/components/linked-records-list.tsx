@@ -17,6 +17,8 @@ import { Link } from "react-router";
 import type { RecordReference } from "./record-context";
 import { RestrictedRecordCell } from "./restricted-record-cell";
 import type { LinkedRecord, LinkedRecordsSeam } from "../lib/linked-records";
+import { contractReference } from "../lib/contracts";
+import { matterReference } from "../lib/matters";
 
 const RESTRICTED = defineMessage({
   id: "linkedRecords.restricted",
@@ -96,7 +98,9 @@ export function LinkedRecordsList({
                 >
                   <span className="min-w-0">
                     <span className="text-xs text-muted">
-                      {row.kind === "contract" ? `C-${row.number}` : `M-${row.number}`}
+                      {row.kind === "contract"
+                        ? contractReference(intl, row.number)
+                        : matterReference(intl, row.number)}
                     </span>
                     <span className="block truncate text-sm font-medium text-primary">
                       {row.title}

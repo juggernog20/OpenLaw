@@ -44,6 +44,14 @@ export function BulkDocumentActions({
   const [folderId, setFolderId] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [errors, setErrors] = useState<{ id: string; title: string; detail: string }[]>([]);
+  /** What sits between two names of a destination's path — a mark a
+   * reader reads, so it is a message rather than a literal in the
+   * joiner (DES-013), matching the same separator in DocumentsCard's
+   * own move dialogs. */
+  const pathSeparator = intl.formatMessage({
+    id: "documents.folder.pathSeparator",
+    defaultMessage: "/",
+  });
   const running = useRef(false);
   const allLive = documents.every((document) => document.archivedAt === null);
   const allArchived = documents.every((document) => document.archivedAt !== null);
@@ -218,7 +226,7 @@ export function BulkDocumentActions({
                     </option>
                     {folders.map((folder) => (
                       <option key={folder.id} value={folder.id}>
-                        {pathOf(folders, folder, "/")}
+                        {pathOf(folders, folder, pathSeparator)}
                       </option>
                     ))}
                   </select>
