@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "../ui/dialog"
 import { Input } from "../ui/input";
 
 type Person = NonNullable<InboxRow["assignee"]>;
-type AssignableRequest = Pick<InboxRow, "number" | "summary" | "status" | "assignee">;
+type AssignableRequest = Pick<InboxRow, "number" | "title" | "status" | "assignee">;
 
 export function RequestAssignment({
   request,
@@ -188,7 +188,7 @@ function AssignmentDialog({
           defaultMessage="Choose who should triage this request."
         />
       </p>
-      <p className="mt-1 truncate text-sm font-medium">{request.summary}</p>
+      <p className="mt-1 truncate text-sm font-medium">{request.title}</p>
       <form
         className="mt-4 flex flex-col gap-4"
         onSubmit={(event) => {

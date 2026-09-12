@@ -18,9 +18,10 @@
  */
 
 import { FormattedMessage, useIntl } from "react-intl";
-import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
+import { CONTROL_CLASS } from "../lib/form-controls";
 import type { AttachedField, CustomFieldDraft } from "../lib/custom-fields";
 import { CurrencySelect } from "./currency-select";
+import { AutoResizeTextarea } from "./auto-resize-textarea";
 import { Checkbox } from "./ui/checkbox";
 import { Input } from "./ui/input";
 import { NumberInput } from "./number-input";
@@ -87,10 +88,9 @@ export function CustomFieldControl({
   switch (field.fieldType) {
     case "long_text":
       return (
-        <textarea
+        <AutoResizeTextarea
           {...shared}
           value={text}
-          className={TEXTAREA_CLASS}
           onChange={(event) => onDraft(event.target.value)}
           onBlur={onBlur}
           onKeyDown={onKeyDown}

@@ -38,7 +38,7 @@ export function planRequests(context) {
     plans.push({
       kind,
       counterparty,
-      summary: random.pick(kind.summaries).replace("{cp}", counterparty),
+      title: random.pick(kind.titles).replace("{cp}", counterparty),
       description: random.pick(kind.descriptions).replaceAll("{cp}", counterparty),
       urgency: random.weighted([
         ["low", 3],
@@ -143,7 +143,7 @@ export async function seedRequests(admin, context, log) {
 
     const { body } = await requester.session.post("/api/v1/requests", {
       requestTypeId: type.id,
-      summary: plan.summary,
+      title: plan.title,
       description: plan.description,
       urgency: plan.urgency,
       customFields: customFieldsFor(plan, fields, attached, random),
@@ -267,7 +267,7 @@ export async function seedRequests(admin, context, log) {
     // naming a different type is refused, and naming the same one is
     // noise. Only an unbound Type leaves the choice to the triager.
     const typeRow = taxonomy.requestTypes.bySlug.get(plan.kind.typeSlug);
-    const payload = { title: plan.summary.slice(0, 180) };
+    const payload = { title: plan.title.slice(0, 180) };
     const module = typeRow?.targetModule ?? "matter";
     let targetTypeId = typeRow?.targetTypeId ?? null;
     if (!targetTypeId) {

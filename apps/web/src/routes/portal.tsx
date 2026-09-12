@@ -88,22 +88,9 @@ export function PortalHomePage() {
   return (
     <PortalShell user={user} onSignOut={() => void signOut()}>
       <PageTitle title={intl.formatMessage(TITLE)} />
-      <div className="flex flex-col gap-1.5">
-        <h1 className="text-2xl font-semibold">
-          <FormattedMessage {...TITLE} />
-        </h1>
-        {requestTypes.length > 0 && (
-          <p className="max-w-prose text-md text-muted">
-            <FormattedMessage
-              id="portal.home.lead"
-              defaultMessage="Pick a request type — the form collects what Legal needs to get started."
-            />
-          </p>
-        )}
-      </div>
-      <Link to="/portal/contracts" className="text-base font-medium text-link">
-        <FormattedMessage id="portal.contracts.title" defaultMessage="Your Contracts" />
-      </Link>
+      <h1 className="text-2xl font-semibold">
+        <FormattedMessage {...TITLE} />
+      </h1>
       <HelpLink surface="portal" contextual />
       <div className="grid gap-section-gap @3xl/page:grid-cols-portal-split">
         {requestTypes.length > 0 ? (
@@ -132,7 +119,7 @@ export function PortalHomePage() {
                       <span className="text-sm text-muted">
                         <FormattedMessage
                           id="portal.turnaround"
-                          defaultMessage="Estimated turnaround: {days, plural, one {# calendar day} other {# calendar days}}"
+                          defaultMessage="Estimated turnaround: {days, plural, one {# business day} other {# business days}}"
                           values={{ days: type.turnaroundDays }}
                         />
                       </span>

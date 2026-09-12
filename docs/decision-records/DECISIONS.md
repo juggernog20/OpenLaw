@@ -1045,7 +1045,7 @@ The portal's job is to stop the inbox back-and-forth (PRODUCT.md principle 3). "
 
 ~~Your Contracts is one flat paginated list; DD-019 views do not apply. The detail exposes title, primary counterparty, stage, both owner names, value, term type, effective and expiry dates, renewal period, notice deadline, and renewal-pending state. Existing CTR-008 Unverified markers remain visible with an explanation; internal evidence, run details, legal Fields, Tasks and History are excluded. No new Contract comment surface or stage-change notification is added. Existing Request threads are unchanged.~~
 
-The existing Document reader uses dedicated Portal endpoints. Every metadata, byte, rendition, email and attachment request checks affiliation and confidentiality again, and accepts only the current Version of the current primary Document. Staff Document endpoints retain their existing access rules. Reporting stays deferred; this is a read on records the person already has a stake in, not a dashboard.
+The existing Document reader uses dedicated Portal endpoints. Every metadata, byte, rendition, email and attachment request checks affiliation and confidentiality again, and ~~accepts only the current Version of the current primary Document~~ accepts every Version of the current primary Document under DD-024. Staff Document endpoints retain their existing access rules. Reporting stays deferred; this is a read on records the person already has a stake in, not a dashboard.
 
 ## DD-022: Auto-Docs — a new destination that fills approved templates from a form
 
@@ -1119,17 +1119,17 @@ Closing a Matter or Ending a Contract does not revoke its team's access or freez
 
 #### 4. The record is where Portal write happens
 
-DD-015's business contribution permissions move to Business Users on the record's team, through the Portal. The comment permission is **Full Thread (`shared`) only**.
+~~DD-015's business contribution permissions move to Business Users on the record's team, through the Portal.~~ DD-026 makes record Fields read-only and adds non-Confidential team additions. The comment permission is **Full Thread (`shared`) only**.
 
-| Surface or action                     | Business User on the team                                                                                                                                                           |
-| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Record summary                        | Read the business-facing Contract or Matter details. The Contract starts from DD-021's current summary.                                                                             |
-| Business Fields and description       | Edit business-tagged Fields, Contract value and effective date, and the live record's business description. Legal-tagged Fields stay outside the Portal.                            |
-| Supporting Documents                  | Upload supporting Documents and add Versions to supporting Document chains, subject to ordinary Document access.                                                                    |
-| Primary Contract Document             | Read and download the current Version under DD-021's reader rules. Uploading a primary Version, replacing it, or changing the primary designation stays Member+.                    |
-| Record comments and reply attachments | Read and post at Full Thread (`shared`), using the record's conversation and attachment machinery.                                                                                  |
-| Original request                      | Read the original submission. It is a historical snapshot and cannot be edited through the record.                                                                                  |
-| Legal actions                         | Status, Type, parties, legal Fields, owners, roster, confidentiality, primary Document, approvals, signature, lifecycle, Key dates, Tasks, and relationship mutations stay Member+. |
+| Surface or action                     | Business User on the team                                                                                                                                                                                                                                                            |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Record summary                        | Read the business-facing Contract or Matter details. The Contract starts from DD-021's current summary.                                                                                                                                                                              |
+| Business Fields and description       | ~~Edit business-tagged Fields, Contract value and effective date, and the live record's business description.~~ DD-026 makes these read-only. Legal-tagged Fields stay outside the Portal.                                                                                           |
+| Supporting Documents                  | ~~Upload supporting Documents and add Versions to supporting Document chains, subject to ordinary Document access.~~ DD-024 allows Documents and Versions, including the primary Contract chain.                                                                                     |
+| Primary Contract Document             | ~~Read and download the current Version under DD-021's reader rules. Uploading a primary Version, replacing it, or changing the primary designation stays Member+.~~ DD-024 allows every Version to be read and new Versions appended; primary and executed designations stay Legal. |
+| Record comments and reply attachments | Read and post at Full Thread (`shared`), using the record's conversation and attachment machinery.                                                                                                                                                                                   |
+| Original request                      | Read the original submission. It is a historical snapshot and cannot be edited through the record.                                                                                                                                                                                   |
+| Legal actions                         | Status, Type, parties, legal Fields, owners, ~~roster~~ member removals and Confidential team changes (DD-026), confidentiality, ~~primary Document~~ primary designation (DD-024), approvals, signature, lifecycle, Key dates, Tasks, and relationship mutations stay Member+.      |
 
 Business Users continue to create Requests rather than top-level Contracts or Matters. Their writes and uploads retain their identity in the Activity feed and Audit log under DD-017.
 
@@ -1139,7 +1139,7 @@ Portal notification settings expose Request updates, mentions, and activity on r
 
 Legal Only and Working Team content is not exposed through the Portal. Existing comment tiers and historical entries are preserved; migration does not republish Working Team comments as Full Thread. Former Contributors therefore lose access to Working Team content when their accounts become Business Users. Changing the remaining staff composer tiers or defaults is not decided here.
 
-The Portal design record will set the page layout and detailed read projection. DD-021's exclusions of legal Fields, internal AI evidence, run details, Tasks, and History continue for the Contract Portal page unless that review explicitly amends them. The Contract's existing Unverified markers remain visible.
+The Portal design record will set the page layout and detailed read projection. DD-021's exclusions of legal Fields, internal AI evidence, run details, Tasks, ~~and History~~ continue for the Contract Portal page. DES-079 adds History filtered to Full Thread at the server, with current Field and record access enforced. The Contract's existing Unverified markers remain visible.
 
 #### 5. A converted Request becomes a link to the record
 
@@ -1205,30 +1205,76 @@ After product review, write one Portal design record covering Contract and Matte
 
 The sequence is a development order. Do not deploy an intermediate account migration that removes a former Contributor's working surface before the corresponding Portal surface is available.
 
+## DD-024: Business Users work with Document versions on their records
+
+- **Status:** Accepted under Blair's 2026-09-12 instruction to redesign Portal Documents and allow new Contract versions and other uploads
+- **Date:** 2026-09-12
+
+Contracts and Matters expose one Documents section in the Portal. Business Users on the record's team can read each accessible Document's full Version history, preview or download any Version, upload a new Document, and append a Version to an existing Document, including the primary Contract Document. The immutable chain remains linear. The next Version becomes current; it neither changes the primary Document designation nor moves the executed Version pin.
+
+Primary and executed designations, existing metadata edits, confidentiality, folder management, archive and deletion remain Legal actions. A Business User's first upload does not automatically become primary. The existing record membership, Document audience and archive checks apply before upload and again under the record lock. Portal uploads by staff use this same Business User permission grid. Revoking membership removes subsequent list, history, byte-read and upload access.
+
+This amends DD-021's current-primary-Version read limit and DD-023's supporting-only upload grid. DES-081 defines the unified presentation.
+
+## DD-025: Business Owner replaces the seeded Business sponsor Field
+
+- **Status:** Accepted under Blair's 2026-09-12 instruction to remove Business Sponsor from the database
+- **Date:** 2026-09-12
+
+Business sponsor was a demo custom Field that duplicated Business Owner, contrary to DD-021's clarification. Retire its catalog definition, Type attachments, live custom values, template defaults and conversion suggestions. Before removal, copy a valid user assignment into an empty Business Owner on a Contract or Matter. Existing Business Owners take precedence. This does not add a team membership or grant Portal access. Historical activity and analysis records remain historical evidence.
+
+The demo seed assigns Business Owner directly and no longer creates the duplicate Field. The migration is a one-time correction; ordinary custom Fields keep MTR-014's archive model.
+
+## DD-026: Portal contributions are Documents, comments and team additions
+
+- **Status:** Accepted
+- **Date:** 2026-09-12
+
+### Context
+
+After a Request is submitted and converted, Legal maintains the record. Business Users need to supply paper, discuss the work and add colleagues, without changing its Fields.
+
+### Decision
+
+Portal Contract and Matter record Fields are read-only, including Description, business-tagged Fields, Value, effective date, Owning department and Region. They display the same current values maintained through the full app. This applies to every reached Portal record, including records created without a Request. The Request submission form still collects the initial ask.
+
+Business Users on a record team can upload Documents and Versions under DD-024, post and manage their own Full Thread comments, and add existing active people to that record's team. The shared roster and Add team member dialog are used on both surfaces. A duplicate addition creates no extra membership. Adding a Business User grants Portal access through the existing team row.
+
+Only Legal may change Confidential teams under the existing CTR-023 and Matter audience rules. The Portal offers neither member removal nor account invitations. Staff viewing the Portal get the same limits. Team additions recheck membership, archive state and Confidential status under the record lock, lock the selected account against archival, and append the usual team activity event.
+
+### Consequences
+
+This supersedes DD-015's business Field edit permission as carried into DD-023, CTR-025's Portal classification edits, and DD-023's restriction of all roster changes to Legal. The Portal Field PATCH routes are removed; staff Field writes remain Member+. Field visibility, private comment tiers, Document permissions, Request conversion and existing data are unchanged. No schema migration is required.
+
+---
+
 ## Index of decisions
 
-| #      | Decision                                                                                  | Status                            |
-| ------ | ----------------------------------------------------------------------------------------- | --------------------------------- |
-| DD-001 | Internal-tool-first development model with portable architecture                          | Accepted                          |
-| DD-002 | Reference persona — small in-house legal team (2–10 people)                               | Accepted                          |
-| DD-003 | v1 build queue starts with Contract Lifecycle Management                                  | Accepted                          |
-| DD-004 | Front-end-driven design pass; full mocks for all modules up front                         | Accepted                          |
-| DD-005 | Restructure scope into functional modules + cross-cutting capabilities                    | Accepted                          |
-| DD-006 | Add Entity Management as a functional module                                              | Accepted                          |
-| DD-007 | Layered data model — Documents → Contracts → Matters; Entities orthogonal                 | Accepted                          |
-| DD-008 | Separate `entities` and `counterparties` tables, with `parties_view` abstraction          | Accepted                          |
-| DD-009 | Single-tenant per deployment                                                              | Accepted                          |
-| DD-010 | Layered intake strategy — ChatOps + magic-link form + email parser                        | Accepted                          |
-| DD-011 | License — AGPL v3                                                                         | Accepted                          |
-| DD-012 | Project name — keep "OpenLaw" with documented rename trigger                              | Accepted                          |
-| DD-013 | Four-role permission model — Administrator, Legal Team Member, Contributor, Business User | Accepted                          |
-| DD-014 | Sensitive matter gating — confidential flag, opt-in restriction                           | Accepted                          |
-| DD-015 | Contributor permission grid — read, comment, upload, edit business fields                 | Accepted                          |
-| DD-016 | Comment visibility — three audience tiers (Legal Only / Working Team / Full Thread)       | Accepted                          |
-| DD-017 | Activity tracking — two-layer model (per-entity activity feed + system-wide audit log)    | Accepted                          |
-| DD-018 | Work-model doctrine — dual workspaces with the deliverable rule                           | Accepted                          |
-| DD-019 | Saved list views — private to one person, one `jsonb` config, saving is an act            | Accepted                          |
-| DD-020 | Product documentation is public, versioned, and separate from Knowledge                   | Accepted                          |
-| DD-021 | Business Users see the Contracts they are stakeholders on, in the portal                  | Accepted; implemented in #808     |
-| DD-022 | Auto-Docs — a new destination that fills approved templates from a form                   | Accepted direction; grill pending |
-| DD-023 | Three account types, one team roster, and Portal work on Contracts and Matters            | Accepted                          |
+| #      | Decision                                                                                  | Status                                                                      |
+| ------ | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| DD-001 | Internal-tool-first development model with portable architecture                          | Accepted                                                                    |
+| DD-002 | Reference persona — small in-house legal team (2–10 people)                               | Accepted                                                                    |
+| DD-003 | v1 build queue starts with Contract Lifecycle Management                                  | Accepted                                                                    |
+| DD-004 | Front-end-driven design pass; full mocks for all modules up front                         | Accepted                                                                    |
+| DD-005 | Restructure scope into functional modules + cross-cutting capabilities                    | Accepted                                                                    |
+| DD-006 | Add Entity Management as a functional module                                              | Accepted                                                                    |
+| DD-007 | Layered data model — Documents → Contracts → Matters; Entities orthogonal                 | Accepted                                                                    |
+| DD-008 | Separate `entities` and `counterparties` tables, with `parties_view` abstraction          | Accepted                                                                    |
+| DD-009 | Single-tenant per deployment                                                              | Accepted                                                                    |
+| DD-010 | Layered intake strategy — ChatOps + magic-link form + email parser                        | Accepted                                                                    |
+| DD-011 | License — AGPL v3                                                                         | Accepted                                                                    |
+| DD-012 | Project name — keep "OpenLaw" with documented rename trigger                              | Accepted                                                                    |
+| DD-013 | Four-role permission model — Administrator, Legal Team Member, Contributor, Business User | Accepted                                                                    |
+| DD-014 | Sensitive matter gating — confidential flag, opt-in restriction                           | Accepted                                                                    |
+| DD-015 | Contributor permission grid — read, comment, upload, edit business fields                 | Accepted                                                                    |
+| DD-016 | Comment visibility — three audience tiers (Legal Only / Working Team / Full Thread)       | Accepted                                                                    |
+| DD-017 | Activity tracking — two-layer model (per-entity activity feed + system-wide audit log)    | Accepted                                                                    |
+| DD-018 | Work-model doctrine — dual workspaces with the deliverable rule                           | Accepted                                                                    |
+| DD-019 | Saved list views — private to one person, one `jsonb` config, saving is an act            | Accepted                                                                    |
+| DD-020 | Product documentation is public, versioned, and separate from Knowledge                   | Accepted                                                                    |
+| DD-021 | Business Users see the Contracts they are stakeholders on, in the portal                  | Accepted; implemented in #808                                               |
+| DD-022 | Auto-Docs — a new destination that fills approved templates from a form                   | Accepted direction; grill pending                                           |
+| DD-023 | Three account types, one team roster, and Portal work on Contracts and Matters            | Accepted; Portal Field edits and the Legal-only roster superseded by DD-026 |
+| DD-024 | Business Users work with Document versions on their records                               | Accepted                                                                    |
+| DD-025 | Business Owner replaces the seeded Business sponsor Field                                 | Accepted                                                                    |
+| DD-026 | Portal contributions are Documents, comments and team additions                           | Accepted                                                                    |

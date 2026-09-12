@@ -95,7 +95,7 @@ export async function conversionEvidence(
 ): Promise<Evidence> {
   const citations: Evidence["citations"] = [];
   for (const citation of proposal?.citations ?? []) {
-    const live = source.sources.find(
+    const live = [...source.sources, source.legacyTitleSource].find(
       (s) => s.id === citation.sourceId && s.revision === citation.revision,
     );
     if (live && normalizeQuote(live.text).includes(normalizeQuote(citation.quote))) {

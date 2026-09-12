@@ -111,18 +111,23 @@ test("Business Owner is a statement, and team membership grants revocable Portal
     await portal.goto("/portal/contracts");
     await portal.getByRole("link", { name: contract.title }).click();
     await expect(portal.getByRole("heading", { name: contract.title })).toBeVisible();
-    await expect(portal.getByLabel("Description", { exact: true })).toBeEditable();
-    const saved = portal.waitForResponse(
-      (response) =>
-        response.url().endsWith(`${portalPath}/work`) && response.request().method() === "PATCH",
-    );
-    await portal
-      .getByLabel("Description", { exact: true })
-      .fill("The business needs an updated delivery schedule.");
-    await portal.getByLabel("Description", { exact: true }).blur();
-    expect((await saved).status()).toBe(200);
+    const fields = portal.getByRole("region", { name: "Fields", exact: true });
+    await expect(fields.getByText("Description", { exact: true })).toBeVisible();
+    await expect(fields.getByRole("textbox")).toHaveCount(0);
+    const description = "The business needs an updated delivery schedule.";
+    const refused = await portal.request.patch(`${portalPath}/work`, {
+      data: { description },
+    });
+    expect(refused.status(), await refused.text()).toBe(404);
+    const saved = await page.request.patch(`/api/v1/contracts/${contract.number}`, {
+      data: { description },
+    });
+    expect(saved.status(), await saved.text()).toBe(200);
+    await portal.reload();
+    await expect(fields.getByText(description, { exact: true })).toBeVisible();
+    await expect(fields.getByRole("textbox")).toHaveCount(0);
     await expect(portal.getByRole("button", { name: "Contract actions" })).toHaveCount(0);
-    await portal.getByRole("button", { name: "Read Document" }).click();
+    await portal.getByRole("button", { name: PRIMARY_FILENAME, exact: true }).click();
     const reader = portal.getByRole("complementary", { name: PRIMARY_FILENAME });
     const preview = reader.getByRole("img", { name: PRIMARY_FILENAME });
     await expect(preview).toHaveAttribute("src", `${documentPath}/preview`);

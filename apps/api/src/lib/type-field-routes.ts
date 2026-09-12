@@ -66,6 +66,9 @@ export interface TypeFieldScopeRule {
   /** The field scopes this rule allows — the catalog's own vocabulary,
    * so a mount cannot name a scope no field can carry. */
   scopes: readonly [FieldModuleScope, ...FieldModuleScope[]];
+  /** Slugs refused even inside those scopes: built-in attributes the
+   * record carries as columns (CTR-025), which no type may attach again. */
+  excludedSlugs?: readonly string[];
   /** The refusal line when a field's scope is outside them. */
   refusal: string;
 }
@@ -302,7 +305,10 @@ export function typeFieldRoutes<TRow extends TaxonomyRow = TaxonomyRow>(
           // The rule is resolved here, under the type's own lock: what
           // it reads off the row cannot change while this attach runs.
           const rule = scopeRuleFor(type);
-          if (!rule.scopes.includes(field.moduleScope)) {
+          if (
+            !rule.scopes.includes(field.moduleScope) ||
+            rule.excludedSlugs?.includes(field.slug)
+          ) {
             throw httpError(400, rule.refusal);
           }
           if (field.archivedAt) {

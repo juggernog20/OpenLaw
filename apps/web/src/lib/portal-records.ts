@@ -7,11 +7,18 @@ export type PortalRecordModule = "contract" | "matter";
 export type PortalWork =
   paths["/api/v1/portal/contracts/{number}/work"]["get"]["responses"]["200"]["content"]["application/json"]["work"];
 export type PortalDocuments =
-  paths["/api/v1/portal/contracts/{number}/supporting-documents"]["get"]["responses"]["200"]["content"]["application/json"];
+  paths["/api/v1/portal/contracts/{number}/documents"]["get"]["responses"]["200"]["content"]["application/json"];
+export type PortalDocument = PortalDocuments["documents"][number];
+export type PortalDocumentVersion = PortalDocument["versions"][number];
 
-export function readPortalDocuments(module: PortalRecordModule, number: number, cursor?: string) {
-  return api.GET(`/api/v1/portal/${module}s/{number}/supporting-documents`, {
-    params: { path: { number }, query: cursor ? { cursor } : {} },
+export function readPortalDocuments(
+  module: PortalRecordModule,
+  number: number,
+  cursor?: string,
+  q?: string,
+) {
+  return api.GET(`/api/v1/portal/${module}s/{number}/documents`, {
+    params: { path: { number }, query: { ...(cursor ? { cursor } : {}), ...(q ? { q } : {}) } },
   });
 }
 
@@ -20,27 +27,7 @@ export async function loadPortalWork(module: PortalRecordModule, number: number)
     params: { path: { number } },
   });
   if (!data) throw new Error("This record could not be read.");
-  const [documents, thread] = await Promise.all([
-    readPortalDocuments(module, number),
-    api
-      .GET("/api/v1/comments", {
-        params: {
-          query: { entityType: module, entityId: data.work.id, visibility: "full_thread" },
-        },
-      })
-      .catch(() => ({ data: undefined })),
-  ]);
+  const documents = await readPortalDocuments(module, number);
   if (!documents.data) throw new Error("The Documents could not be read.");
-  return { work: data.work, documents: documents.data, thread: thread.data ?? null };
-}
-
-export function savePortalWork(
-  module: PortalRecordModule,
-  number: number,
-  body: paths["/api/v1/portal/contracts/{number}/work"]["patch"]["requestBody"]["content"]["application/json"],
-) {
-  return api.PATCH(`/api/v1/portal/${module}s/{number}/work`, {
-    params: { path: { number } },
-    body,
-  });
+  return { work: data.work, documents: documents.data };
 }

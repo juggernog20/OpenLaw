@@ -12,9 +12,12 @@ import { isMemberPlus, type Role } from "../../lib/roles";
 import { useRetainedLiveEvents, type LiveEventRecordScope } from "../../lib/events";
 import { Avatar } from "../avatar";
 import { PortalThemeMenu } from "./portal-theme-menu";
+import { PortalNav } from "./portal-nav";
 import { NotificationBell } from "../notification-bell";
 import { SkipLink } from "../skip-link";
 import { Button } from "../ui/button";
+import { RecordApplets } from "../shell/record-applets";
+import type { Applet } from "../shell/applets";
 
 /** The signed-in identity and the role used for the staff return control. */
 export interface PortalUser {
@@ -31,18 +34,33 @@ export function PortalShell({
   onSignOut,
   recordScope,
   wide = false,
+  applets,
+  layer,
+  contentCovered,
   children,
 }: Readonly<{
   user: PortalUser;
   onSignOut: () => void;
   recordScope?: LiveEventRecordScope;
   wide?: boolean;
+  applets?: Applet[];
+  layer?: ReactNode;
+  contentCovered?: boolean;
   children: ReactNode;
 }>) {
   const intl = useIntl();
   // The portal is the second authenticated shell over the same tab-wide
   // channel. Consumers subscribe to the module and never open a stream.
   useRetainedLiveEvents(recordScope);
+  const content = (
+    <div className="@container/page h-full overflow-y-auto px-page-x pt-8 pb-16">
+      <div
+        className={`mx-auto flex w-full min-w-0 flex-col gap-section-gap ${wide ? "" : "max-w-(--width-portal-col)"}`}
+      >
+        {children}
+      </div>
+    </div>
+  );
 
   return (
     <div className="@container/shell flex h-dvh flex-col overflow-hidden bg-canvas text-primary">
@@ -103,6 +121,7 @@ export function PortalShell({
           </Button>
         </div>
       </header>
+      <PortalNav />
       {isMemberPlus(user.role) && (
         <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border-default bg-raised px-page-x py-3">
           <div className="flex min-w-0 flex-col gap-1">
@@ -135,27 +154,20 @@ export function PortalShell({
       <main
         id="main"
         tabIndex={-1}
-        className="@container/page min-h-0 flex-1 overflow-y-auto px-page-x pt-8 pb-16"
+        className="flex min-h-0 flex-1 [--width-panel:min(20rem,calc(100cqw-var(--width-activitybar)))]"
       >
-        <div
-          className={`mx-auto flex w-full flex-col gap-section-gap ${wide ? "" : "max-w-(--width-portal-col)"}`}
-        >
-          <nav
-            className="flex flex-wrap gap-5"
-            aria-label={intl.formatMessage({ id: "portal.navigation", defaultMessage: "Portal" })}
+        {applets ? (
+          <RecordApplets
+            applets={applets}
+            recordKey={recordScope?.entityId}
+            layer={layer}
+            contentCovered={contentCovered}
           >
-            <Link className="text-base text-link" to="/portal">
-              <FormattedMessage id="portal.navigation.requests" defaultMessage="Requests" />
-            </Link>
-            <Link className="text-base text-link" to="/portal/contracts">
-              <FormattedMessage id="portal.navigation.contracts" defaultMessage="Contracts" />
-            </Link>
-            <Link className="text-base text-link" to="/portal/matters">
-              <FormattedMessage id="portal.navigation.matters" defaultMessage="Matters" />
-            </Link>
-          </nav>
-          {children}
-        </div>
+            {content}
+          </RecordApplets>
+        ) : (
+          <div className="min-h-0 min-w-0 flex-1">{content}</div>
+        )}
       </main>
     </div>
   );

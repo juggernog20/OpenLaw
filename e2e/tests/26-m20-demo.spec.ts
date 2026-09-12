@@ -37,7 +37,7 @@
  * detached and the requester is archived, so the never-reset instance
  * (TECH-018) is left as the run found it. The Request itself stays: there
  * is no route that deletes one, because M21 is where a Request's fate is
- * decided. Its requester is archived and its summary is per-run, so it
+ * decided. Its requester is archived and its title is per-run, so it
  * reaches no later run's screens.
  */
 
@@ -76,9 +76,9 @@ const FIELD_SLUG = "governing_law";
 const FIELD_NAME = "Governing law";
 const FIELD_ANSWER = "England and Wales";
 
-/** What the requester asks for. The summary is per-run, so the mail
+/** What the requester asks for. The title is per-run, so the mail
  * filter and the bell items pin to this run's Request. */
-const SUMMARY = `E2E M20 NDA with Northwind ${Date.now()}`;
+const TITLE = `E2E M20 NDA with Northwind ${Date.now()}`;
 const DESCRIPTION = "One-way NDA ahead of the diligence call. Their paper, our review.";
 const ATTACHMENT = "nda-redline.txt";
 
@@ -208,9 +208,11 @@ async function enterPortalByMagicLink(
   return page;
 }
 
-/** The one conversation card the portal draws. */
-function conversation(page: Page) {
-  return page.getByRole("region", { name: "Conversation" });
+/** Open the shared Comments applet on the Portal record. */
+async function conversation(page: Page) {
+  const panel = page.getByRole("complementary", { name: "Comments", exact: true });
+  if (!(await panel.isVisible())) await page.getByRole("button", { name: /^Comments/ }).click();
+  return panel;
 }
 
 test.describe.serial("M20 demo path", () => {
@@ -319,7 +321,7 @@ test.describe.serial("M20 demo path", () => {
 
       // The four basics are drawn as facts about every form (INT-002's
       // M19/4 addendum), and the attached field follows them.
-      await expect(portal.getByLabel("Summary")).toBeVisible();
+      await expect(portal.getByLabel("Title")).toBeVisible();
       await expect(portal.getByLabel("Description")).toBeVisible();
       await expect(portal.getByRole("button", { name: "Choose files" })).toBeVisible();
       await expect(portal.getByLabel("Urgency")).toBeVisible();
@@ -330,15 +332,15 @@ test.describe.serial("M20 demo path", () => {
       // born `medium`, as a contract's priority is.
       await portal.getByRole("button", { name: "Submit request" }).click();
       await expect(
-        portal.getByRole("alert").filter({ hasText: `Summary, Description, and ${FIELD_NAME}` }),
+        portal.getByRole("alert").filter({ hasText: `Title, Description, and ${FIELD_NAME}` }),
       ).toBeVisible();
       // And again on each box, because a sentence cannot point at one.
-      await expect(portal.getByText("Summary is required.")).toBeVisible();
+      await expect(portal.getByText("Title is required.")).toBeVisible();
       await expect(portal.getByText(`${FIELD_NAME} is required.`)).toBeVisible();
 
       // ---- The ask, with its paper ----
 
-      await portal.getByLabel("Summary").fill(SUMMARY);
+      await portal.getByLabel("Title").fill(TITLE);
       await portal.getByLabel("Description").fill(DESCRIPTION);
       await portal.getByLabel("Urgency").selectOption("high");
       await portal.getByLabel(FIELD_NAME).fill(FIELD_ANSWER);
@@ -389,7 +391,7 @@ test.describe.serial("M20 demo path", () => {
 
       await portal.getByRole("link", { name: "Back to the portal" }).click();
       await expect(portal).toHaveURL(/\/portal$/);
-      const row = myRequests.getByRole("link", { name: new RegExp(SUMMARY) });
+      const row = myRequests.getByRole("link", { name: new RegExp(TITLE) });
       await expect(row).toContainText(reference);
       await expect(row).toContainText(TYPE_NAME);
       // The requester's own word for `new` (the INT-003 M21/6 addendum).
@@ -401,7 +403,7 @@ test.describe.serial("M20 demo path", () => {
 
       await row.click();
       await expect(portal).toHaveURL(new RegExp(`/portal/requests/${String(number)}$`));
-      await expect(portal.getByRole("heading", { name: SUMMARY })).toBeVisible();
+      await expect(portal.getByRole("heading", { name: TITLE })).toBeVisible();
       await expect(portal.getByText(`${reference} · ${TYPE_NAME} · Submitted`)).toBeVisible();
       await expect(
         portal.getByText("Legal has received your request.", { exact: false }),
@@ -425,17 +427,17 @@ test.describe.serial("M20 demo path", () => {
       // The card draws before anybody has replied: it is the way to
       // start the conversation rather than a claim about one (the
       // INT-001 M20/7 addendum).
-      const thread = conversation(portal);
+      const thread = await conversation(portal);
       await expect(thread).toBeVisible();
       const posted = portal.waitForResponse(
         (response) =>
           response.url().endsWith("/api/v1/comments") && response.request().method() === "POST",
       );
-      await thread.getByLabel("Reply to Legal").fill(REQUESTER_REPLY);
-      await thread.getByRole("button", { name: "Send" }).click();
+      await thread.getByLabel("New comment").fill(REQUESTER_REPLY);
+      await thread.getByRole("button", { name: "Comment", exact: true }).click();
       expect((await posted).status()).toBe(201);
       await expect(thread.getByText(REQUESTER_REPLY)).toBeVisible();
-      await expect(thread.getByText("You", { exact: true })).toBeVisible();
+      await expect(thread.getByText("Full thread", { exact: true }).first()).toBeVisible();
 
       // Legal answers. There is no staff surface for a Request until
       // M21's Inbox, so the Administrator posts at the seam — the same
@@ -473,8 +475,10 @@ test.describe.serial("M20 demo path", () => {
       // The reply reaches the portal three ways. First on the thread,
       // where anybody who is not the reader is Legal.
       await portal.reload();
-      await expect(conversation(portal).getByText(STAFF_REPLY)).toBeVisible();
-      await expect(conversation(portal).getByText("Legal", { exact: true })).toBeVisible();
+      await expect((await conversation(portal)).getByText(STAFF_REPLY)).toBeVisible();
+      await expect(
+        (await conversation(portal)).getByText("Full thread", { exact: true }).first(),
+      ).toBeVisible();
 
       // Second as email, because a requester does not live in the app and
       // INT-003 declined the poke button on that basis.
@@ -493,10 +497,10 @@ test.describe.serial("M20 demo path", () => {
       await portal.getByRole("button", { name: /^Notifications, 2 unread$/ }).click();
       const centre = portal.getByRole("dialog", { name: "Notifications" });
       await expect(
-        centre.getByRole("link", { name: new RegExp(`replied on your request ${SUMMARY}`) }),
+        centre.getByRole("link", { name: new RegExp(`replied on your request ${TITLE}`) }),
       ).toHaveAttribute("href", `/portal/requests/${String(number)}`);
       await expect(
-        centre.getByRole("link", { name: new RegExp(`received your request ${SUMMARY}`) }),
+        centre.getByRole("link", { name: new RegExp(`received your request ${TITLE}`) }),
       ).toBeVisible();
       await portal.keyboard.press("Escape");
 

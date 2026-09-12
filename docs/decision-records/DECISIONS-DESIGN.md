@@ -257,11 +257,12 @@ The reference implementation is `styles/themes/light.css`, `styles/themes/warm.c
 - `--border-muted` — inner row dividers (table rows, list items inside a card).
 - `--border-on-inverted` — borders within the `--bg-inverted` region.
 
-#### Text (8 roles)
+#### Text (9 roles)
 
 - `--text-primary` — body, h1–h3.
 - `--text-muted` — secondary copy, descriptions, timestamps.
-- `--text-subtle` — placeholder, disabled.
+- `--text-subtle` — ~~placeholder, disabled~~ disabled and keyboard hints. Placeholders use `--text-placeholder` under DES-082.
+- `--text-placeholder` — input and text-area placeholders (DES-082, 2026-09-12). Each theme sets it to its `--text-muted` value.
 - `--text-on-inverted` — text rendered on `--bg-inverted`.
 - `--text-on-accent` — text rendered on `--accent` fill.
 - `--text-on-cta` — text rendered on `--cta-primary` fill.
@@ -794,7 +795,7 @@ The themes, geometry, typography, and keyboard contract are all locked. Before c
 
 **Implementation clarification (2026-08-10, #42):** the contrast lint gate is `styles/lint-contrast.mjs`, run as `pnpm lint:contrast` and inside the aggregate `pnpm check` (so it gates CI). It checks every text/surface and status bg/fg pair from DES-005, the DES-018 severe/neutral families, the DES-019 chrome text pairs, the badge, confidentiality, and avatar pairs, and the file-type colors against canvas — 123 pairs across the three themes. Category calls made when the pair table was built:
 
-- `--text-subtle` is held to the 3:1 floor, not 4.5:1. Its only roles are placeholder and disabled text (DES-005); WCAG 1.4.3 exempts disabled text, and placeholders are held to the non-text floor instead of exempted. It is never body copy. Holding it to 4.5:1 would collapse it into `--text-muted` and erase the text tier in Warm.
+- `--text-subtle` is held to the 3:1 floor, not 4.5:1. Its only roles are placeholder and disabled text (DES-005); WCAG 1.4.3 exempts disabled text, and placeholders are held to the non-text floor instead of exempted. It is never body copy. Holding it to 4.5:1 would collapse it into `--text-muted` and erase the text tier in Warm. _Superseded in part by DES-082 (2026-09-12): placeholders now render in `--text-placeholder`, which the gate holds to the 4.5:1 body threshold. `--text-subtle` keeps the 3:1 floor for disabled text and keyboard hints only._
 - Avatar initials and the file-type icon squares are graphical objects at 3:1. The user's name accompanies the avatar in accessible contexts; DES-019's Warm terracotta avatar reads 3.1:1. _The avatar classification is superseded by the 2026-09-10 addendum below._
 - `--text-on-accent` × `--accent` is **not** checked yet. Nothing renders on the accent fill today and the pair reads 2.5:1 in Light/Dark. It must be fixed and added to the gate when mention chips land.
 
@@ -1322,12 +1323,14 @@ Eight chrome color variables join the theme files, one value per theme, consumed
 
 The Light column is exactly what the shell rendered before this record, so Light is unchanged.
 
+_DES-082 (2026-09-12) added a ninth variable, `--chrome-search-placeholder` (`#7D8590` Light, `#6F6759` Warm, `#8B949E` Dark). The header search feeds it into `--text-placeholder`, so the search placeholder stays readable on Light's dark chrome._
+
 **Warm avatar (amends DES-018 point 3):** Warm's avatar is terracotta (`--avatar-bg: #C97B5C`, `--avatar-fg: #FBFAF7`) per the updated mock — blue is the one hue Warm's palette refuses. Light and Dark keep the light-blue treatment; the "no per-person hue hashing" rule is untouched. _The `--avatar-fg` value here is superseded. #756 (2026-09-10) moved Warm's initials to `#1F2328`, because the cream reads 3.11:1 on the terracotta and 11px initials are held to 4.5:1. See the avatar contrast addendum under DES-011. The terracotta background and the rest of this clause stand._
 
 ### Recorded normalization points (mock deviations accepted)
 
 1. Nav labels stay 14px in every theme (DES-001 theme-invariant typography); the Warm frame's 13px labels are treated as frame noise.
-2. Search placeholder, crumb slash, and the `/` key hint stay `--text-subtle` in every theme; Dark renders `#6E7681` where its frame shows `#7D8590`, and Warm's key hint renders `#A8A294` where its frame shows `#7A7264`.
+2. Search placeholder, crumb slash, and the `/` key hint stay `--text-subtle` in every theme; Dark renders `#6E7681` where its frame shows `#7D8590`, and Warm's key hint renders `#A8A294` where its frame shows `#7A7264`. _Amended by DES-082 (2026-09-12): the search placeholder now takes `--chrome-search-placeholder`, which is the frame's `#7D8590` in Light and `#8B949E` in Dark. The crumb slash and the `/` key hint stay `--text-subtle`._
 3. The Dark sub-bar title stays `--text-primary` (`#E6EDF3`) where its frame shows `#F0F6FC`.
 4. Warm's brand chip is 32px (the shell's icon slot) where its frame draws 30px, and the brand glyph stays the 20px Lucide scale in every theme (the Warm frame shows an 18px glyph).
 5. The search placeholder is "Type / to search" in every theme, as the Light and Dark frames draw it. The Warm frame's longer "Type / to search matters, contracts, entities…" copy describes the M25 cross-module search scope, not the M4 shell. (Added during the #49 acceptance comparison.) _Superseded for M25 by DES-015's 2026-08-28 addendum: the placeholder now names Contracts, Matters, and Documents while the separate `/` chip keeps the shortcut visible._
@@ -3180,7 +3183,7 @@ Visual references: [Linear's property and status filter menus](https://mobbin.co
 
 ## DES-047: The Team roster is an activity-bar applet (amends DES-016, DES-032, DES-028)
 
-**2026-09-11 amendment:** DES-076 keeps the Contract team applet and its fragment. The roster shows responsibility and Creator statements, then one membership row per person. It has no tags.
+**2026-09-11 amendment:** DES-076 keeps the Contract team applet and its fragment. ~~The roster shows responsibility and Creator statements, then one membership row per person.~~ DES-080 combines each person's statements and membership into one row. It has no tags.
 
 - **Status:** Accepted
 - **Date:** 2026-08-17
@@ -4653,17 +4656,17 @@ DD-023 gives Business Users one record team grant and moves their work onto Cont
 
 ~~Your Contracts and Your Matters are flat paginated lists in the Portal navigation.~~ DES-077 replaces the flat lists with managed tables, search, filters and sorting. Each row opens its record. The record page keeps the Portal shell and shows its reference, title, business summary, owner statements, business Fields, supporting Documents, Conversation, and Original request. Contract dates and the current primary Document keep DD-021's presentation. Matters show their Type, Status, Matter Manager, and Business Owner.
 
-Business Fields reuse the shared typed Field controls. Contract value and effective date are editable here too. The summary reflects successful changes. A save commits one Field and reports failure beside that control. Description edits change the live record only. Original request is read-only, with one original submission per converted Request. A direct record has no Original request block. Reference Fields offer scoped choices; Confidential Entities never enter a Portal picker.
+~~Business Fields reuse the shared typed Field controls. Contract value and effective date are editable here too. The summary reflects successful changes. A save commits one Field and reports failure beside that control. Description edits change the live record only.~~ DD-026 and DES-083 replace these with read-only record values. Original request is read-only, with one original submission per converted Request. A direct record has no Original request block. ~~Reference Fields offer scoped choices; Confidential Entities never enter a Portal picker.~~ DES-083 displays reference names read from the record; Confidential Entity names remain withheld.
 
 Supporting Documents show their current Version, Read and Download controls, and an Add Version action. Upload creates supporting paper. Contract primary paper remains in its own read-only block. Both use the existing Document reader. Uploading a supporting Document never claims an empty primary designation.
 
-Conversation reuses the Portal thread with the Contract or Matter reference. Its composer posts Full Thread only. The page offers no visibility selector. Internal comments, Tasks, History, AI run detail, legal Fields, and legal action menus do not appear.
+Conversation reuses the Portal thread with the Contract or Matter reference. Its composer posts Full Thread only. The page offers no visibility selector. Internal comments, Tasks, ~~History,~~ AI run detail, legal Fields, and legal action menus do not appear. DES-079 adds filtered History and moves Comments and team context into the shared applets.
 
 A converted Request address redirects to its record and disappears from Your Requests. Resolved and declined Requests retain their thread. The archived-record exception shows the Requester's original ask and an archived notice, with no composer or paper access. The full-app converted Request shows its original envelope, conversion actor and time, and the reachable record link. Its thread and paper controls are removed.
 
 Portal notification settings offer Request updates, Mentions, and Activity on your records. The latter two reuse the existing event groups with Portal audience copy. Staff-only groups and Briefing controls stay outside the Portal.
 
-The full-app Contract team and Matter team applets show owner and Creator statements, then one membership row per person. Add team member selects only a person. Remove acts on that person's membership. Statements carry no remove control. Membership removal preserves Creator provenance. The existing Confidential lock and focus-after-removal rule apply to the person control.
+~~The full-app Contract team and Matter team applets show owner and Creator statements, then one membership row per person.~~ DES-080 combines each person's statements and membership into one row on both surfaces. Add team member selects only a person. Remove acts on that person's membership. Statements carry no remove control. Membership removal preserves Creator provenance. The existing Confidential lock and focus-after-removal rule apply to the person control.
 
 ### Consequences
 
@@ -4691,6 +4694,112 @@ Search, filtering, sorting, counts and paging run on the server over current tea
 ### Consequences
 
 This supersedes only DES-076's flat-list presentation. DD-023's account types, Portal write grid, team grant and Confidential gate stand. No staff taxonomy, user picker, saved-view or record endpoint is required to populate these lists. The API, generated client, Portal guide and browser acceptance tests follow this decision.
+
+## DES-078: Portal destinations share a persistent navigation bar
+
+- **Status:** Accepted under Blair's 2026-09-12 instruction
+- **Date:** 2026-09-12
+
+### Decision
+
+Requests, Contracts and Matters sit in one full-width navigation bar directly below the Portal header. The bar uses the full app's navigation height, theme colors, icons and accent underline. It stays outside the scrolling page content, in the same position on lists and records. On narrow screens the labels remain visible and icons yield their space.
+
+The current destination has an underline, stronger text and `aria-current="page"`. Requests stays current on the Request form and Request detail; Contracts and Matters stay current on their respective records. Settings and Help do not mark a work destination current. These are ordinary keyboard-accessible links to their existing addresses.
+
+The redundant Your Contracts shortcut on the Requests home is removed. DES-076's record pages and DES-077's list headings and controls retain their existing presentation.
+
+## DES-079: Portal records use the shared applets
+
+- **Status:** Accepted under Blair's 2026-09-12 instructions to add applets and History, preserve permissions, and align their features with the main app
+- **Date:** 2026-09-12
+
+### Audit and decision
+
+The Portal conversation was a separate component. Its large inline rows, author pills and scrolling reply box differed from the main Comments applet, and it lacked mentions, unread counts, comment count, editing and deletion. Copying the activity bar around that component would preserve these differences. The Portal now mounts the main Comments applet. History uses the main Activity feed, and the roster uses the shared TeamRoster. The applet rail, panel, icons, spacing, focus restoration and Escape behavior are shared.
+
+| Area           | Alignment                                                                                                                                         | Permission boundary                                                                                                                                                                                        |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Comments       | Same rows, timestamps, audience labels, count, unread badge, mentions, attachments, pinned composer, pagination, edit/delete menus and tombstones | Full Thread only; authors may correct their own comments; Administrator redaction and Legal's attachment filing controls remain restricted                                                                 |
+| Team           | Same icon, owner and Creator statements, avatars and membership rows                                                                              | ~~Business Users read the roster; membership changes remain Legal actions under DD-023 and CTR-023~~ DD-026 allows additions on non-Confidential records; removal and Confidential team changes stay Legal |
+| History        | Same narration, timestamps, pagination and live refresh                                                                                           | Server reads Full Thread only, with no private rows, counts or cursors                                                                                                                                     |
+| Document tools | Same attachment preview and download components                                                                                                   | Global Document search, primary designation and filing into the legal record remain outside the Business User permission grid                                                                              |
+| Panel behavior | Same open, close, switch, focus and Escape controls                                                                                               | Portal width is constrained to fit the screen                                                                                                                                                              |
+
+Contract and Matter pages offer Team, Comments and History. Requests offer Comments and History. A converted Request follows DD-023's redirect; its archived-record stub has no applets. Fields, business summary, supporting Documents and Original request stay in the main content. The `#portal-request-composer` address opens Comments. Closing or switching an applet preserves the draft, attachments and selected mentions on the current record. Navigating to a different record clears them. Multiline Fields and comment controls use AutoResizeTextarea, including growing, shrinking and width changes.
+
+### Server permissions
+
+Portal History requires current team membership, or ownership of an unconverted Request. It selects `full_thread` entries before pagination. Legal Only, Working Team and Administrator-only history never enters the response. No migration republishes existing audit entries. Shared comment events and business record edits are supported; unknown action families are omitted. Historical edits are projected through the current attached business Fields, with inaccessible Entity changes omitted. Legal Fields and restricted Document payloads cannot enter the feed. Portal refreshes replace cached history pages so a newly restricted projection is removed.
+
+The shared Comments client identifies Portal calls to the server. This can only narrow the authenticated audience to a Business User's access, including for staff previewing the Portal. It applies to the thread, unread count, mention candidates, posting, editing and deletion. Business Users cannot recover private comments by omitting that hint: their account role still enforces the same boundary. Candidate tiers are restricted to the viewer's audience.
+
+A Portal read advances a separate Full Thread read marker. It cannot clear unseen private comments from the staff app's unread badge. The normal staff read still marks all comments in its audience as read. Conversion carries both markers to the resulting record.
+
+### Consequences
+
+This amends DES-076's inline Conversation and History exclusion and DD-023's inherited History exclusion. The account types, team grant, confidential gate and write grid are unchanged. The Portal no longer maintains a second conversation component. Sharing the composer also preserves drafts when staff switch applets.
+
+## DES-080: One Team roster row per person
+
+- **Status:** Accepted under Blair's 2026-09-12 instruction to stop repeating the same person in the Portal roster and align the applets
+- **Date:** 2026-09-12
+
+The shared Contract team and Matter team roster shows each person once in both the Portal and full app. Legal Owner or Matter Manager, Business Owner, Creator and team membership are combined by user ID. All distinct responsibility statements appear together beside one avatar and name. Two people who share a display name remain separate people. The first occurrence determines row order.
+
+The full app keeps one membership removal control when the person has a removable team membership. It removes only that membership. Owner and Creator statements remain, and the existing focus-after-removal rule still applies. Responsibility alone supplies no removal control or Portal access. The Portal roster remains read-only.
+
+This amends DES-047, DES-075, DES-076 and DES-079's separate statement and membership rows. It changes presentation only; the team grant and Confidential gate are unchanged.
+
+## DES-081: One Documents section for Portal Contracts and Matters
+
+- **Status:** Accepted under Blair's 2026-09-12 instructions to combine primary and supporting paper and show Versions without duplicating the current Version
+- **Date:** 2026-09-12
+
+Replace the separate primary card and Supporting Documents card with one Documents section on each record. The primary Contract Document comes first and carries its designation. Each Document row shows its name, current Version, Kind, uploader, upload date, size and optional note. The name opens the shared document panel beside the record and applets; each Version also has its own download.
+
+The current Version appears once on the main row. Only earlier Versions expand beneath it, newest first. A sole Version has no history control. The executed pin appears as Signed copy, distinct from the uploader's Kind and from Current.
+
+The section accepts file drops and provides a click upload control. Both open one dialog: create new Documents or add one Version to an existing Document, choose Kind and optionally write a note. Add version on a row selects that Document. Multiple files create separate Documents; appending a Version takes one file. Partial success is retained, with errors beside failed files and a retry that skips successes. Closing a busy upload is prevented; completed reads and dialogs restore their initiating control's focus.
+
+Search matches Document names and Version filenames on the server, with scoped pagination. The Portal offers no primary/executed designation changes, folder administration or deletion. DD-024 sets the write boundary. This amends DES-076 and DES-079's separate primary and supporting Document surfaces.
+
+## DES-082: One theme colour for placeholders
+
+- **Status:** Accepted
+- **Date:** 2026-09-12
+
+### Context
+
+Inputs used an explicit muted placeholder while text areas inherited a translucent browser default. The Request Title and Description prompts therefore appeared in different colours.
+
+### Decision
+
+All input and text-area placeholders use `--text-placeholder` at full opacity through the shared base stylesheet. Each theme defines this token with its muted text colour. Components do not set their own placeholder colours.
+
+The header search uses `--chrome-search-placeholder` through the same placeholder token. This supplies a lighter foreground on Light's dark header; Warm and Dark retain their normal placeholder colour. Both token roles meet the existing 4.5:1 text contrast threshold against their supported surfaces.
+
+### Rationale
+
+A shared default keeps forms, searches, pickers and comment composers consistent, including controls added later. A theme-owned header value preserves readability on its different background.
+
+### Consequences
+
+DES-005's former placeholder use of `--text-subtle` is superseded. The contrast check covers both placeholder tokens in all three themes. Browser-default transparency and component-specific placeholder utilities are removed.
+
+---
+
+## DES-083: Portal record values are read-only; the Team applet can add members
+
+- **Status:** Accepted
+- **Date:** 2026-09-12
+
+Portal Overview and Fields display labelled values from the full app record, with the shared unset wording for empty values. They contain no Field inputs, save controls or local edit drafts. Owning department and Region join the other Contract Overview facts. Value and effective date appear once in Overview. Business Field values retain typed date, number, list, boolean and reference-name formatting. Original request stays a read-only snapshot.
+
+The Team applet uses the shared roster and Add team member dialog. Its header add control becomes available after the current Portal team read permits it. The picker offers active existing people who are not already members. A failed add retains the choice and displays the server error. Closing the dialog restores the Add control so Escape can close the applet. Successful additions update the shared roster without duplicating owner or Creator statements. Confidential records explain that Legal must add members. No removal control appears in the Portal.
+
+DD-026 governs these permissions at the server. Documents and Comments retain their existing contribution controls; comment drafts still survive applet changes. This supersedes DES-076's editable business Fields and DES-079's read-only team boundary.
+
+---
 
 ## Index of decisions
 
@@ -4771,8 +4880,14 @@ This supersedes only DES-076's flat-list presentation. DD-023's account types, P
 | DES-073 | Help has a discoverable entry in each shell and a public formal reader (extends DES-072)                                                                             | Accepted                                                                                                   |
 | DES-074 | Documentation and Help share the application design system                                                                                                           | Accepted                                                                                                   |
 | DES-075 | The Contract team applet holds stakeholders, and the AI analysis card is the Fields section's (amends DES-047, DES-070; extends DD-021, DES-032)                     | Accepted                                                                                                   |
-| DES-076 | Portal Contracts and Matters carry the business work                                                                                                                 | Accepted                                                                                                   |
+| DES-076 | Portal Contracts and Matters carry the business work                                                                                                                 | Accepted; editable business Fields superseded by DES-083                                                   |
 | DES-077 | Portal record lists use the managed table (supersedes DES-076's flat-list presentation)                                                                              | Accepted                                                                                                   |
+| DES-078 | Portal destinations share a persistent navigation bar                                                                                                                | Accepted                                                                                                   |
+| DES-079 | Portal records use the shared applets                                                                                                                                | Accepted; the read-only Team boundary superseded by DES-083                                                |
+| DES-080 | One Team roster row per person                                                                                                                                       | Accepted                                                                                                   |
+| DES-081 | One Documents section for Portal Contracts and Matters                                                                                                               | Accepted                                                                                                   |
+| DES-082 | One theme colour for placeholders                                                                                                                                    | Accepted                                                                                                   |
+| DES-083 | Portal record values are read-only; the Team applet can add members                                                                                                  | Accepted                                                                                                   |
 
 ### DES-016 addendum (2026-09-11, #827) — Request source reading above Convert
 

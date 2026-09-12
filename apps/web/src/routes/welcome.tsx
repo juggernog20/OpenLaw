@@ -1856,7 +1856,7 @@ export function WelcomePage() {
                               id: "settings.eSignature.privateKey.placeholder",
                               defaultMessage: "-----BEGIN RSA PRIVATE KEY-----",
                             })}
-                            className="w-full rounded-button border border-border-default bg-raised px-2.5 py-1.5 text-sm text-primary placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
+                            className="w-full rounded-button border border-border-default bg-raised px-2.5 py-1.5 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
                           />
                           {signingConnector.hasPrivateKey && (
                             <p className="text-sm text-muted">

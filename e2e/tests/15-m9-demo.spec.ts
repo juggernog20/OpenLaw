@@ -325,11 +325,15 @@ test.describe.serial("M9 demo path", () => {
 
       await contributorPage.goto(`/portal/contracts/${contract.number}`);
       await expect(contributorPage.getByRole("heading", { level: 1, name: renamed })).toBeVisible();
-      const theirThread = contributorPage.getByRole("region", { name: "Conversation" });
+      await contributorPage.getByRole("button", { name: /^Comments/ }).click();
+      const theirThread = contributorPage.getByRole("complementary", {
+        name: "Comments",
+        exact: true,
+      });
       await expect(theirThread.getByText(FULL_THREAD_COMMENT)).toBeVisible();
       await expect(theirThread.getByText(LEGAL_ONLY_COMMENT)).toHaveCount(0);
       await expect(theirThread.getByRole("radio")).toHaveCount(0);
-      await expect(contributorPage.getByRole("button", { name: "History" })).toHaveCount(0);
+      await expect(contributorPage.getByRole("button", { name: "History" })).toBeVisible();
 
       const theirThreadRead = await contributorPage.request.get(
         `/api/v1/comments?entityType=contract&entityId=${contract.id}`,

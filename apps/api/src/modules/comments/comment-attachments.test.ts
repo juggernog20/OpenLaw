@@ -149,14 +149,14 @@ async function contractWithContributor(title: string) {
   return contract;
 }
 
-async function submittedRequest(summary: string): Promise<string> {
+async function submittedRequest(title: string): Promise<string> {
   const response = await harness.app.inject({
     method: "POST",
     url: "/api/v1/requests",
     cookies: requesterCookies,
     payload: {
       requestTypeId,
-      summary,
+      title,
       description: "The counterparty returned its markup.",
       urgency: "high",
     },

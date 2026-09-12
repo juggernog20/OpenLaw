@@ -212,9 +212,8 @@ export type CommentRevision = typeof commentRevisions.$inferSelect;
  * watermark can sit on any record a thread can. The CHECK admits the
  * same four types for the same reason.
  *
- * Nothing here is content. It is one person's place in one conversation,
- * so it carries no tier of its own: the tier predicate is applied to the
- * comments being counted, never to the watermark.
+ * Full Thread has a separate watermark so opening the Portal cannot mark
+ * unread Legal Only or Working Team comments as read (DES-079).
  */
 export const commentLastRead = pgTable(
   "comment_last_read",
@@ -228,7 +227,9 @@ export const commentLastRead = pgTable(
     /** Polymorphic with entity_type, so no FK (SCHEMA.md). */
     entityId: text("entity_id").notNull(),
     /** When this reader last opened this record's thread. */
-    readAt: timestamp("read_at", { withTimezone: true }).notNull().defaultNow(),
+    readAt: timestamp("read_at", { withTimezone: true }).defaultNow(),
+    /** Portal reads must not clear unread Legal Only or Working Team comments. */
+    fullThreadReadAt: timestamp("full_thread_read_at", { withTimezone: true }),
   },
   (table) => [
     primaryKey({

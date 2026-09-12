@@ -26,7 +26,7 @@
  *
  * **The right card takes locked rows above the attachments.** `basics`
  * is what a form always collects whatever an Administrator configures
- * — ST14's Summary, Description, Attachments, and Urgency (INT-002).
+ * — ST14's Title, Description, Attachments, and Urgency (INT-002).
  * They are stated, not configured: no catalog row is behind them,
  * nothing detaches them, and their required flags are facts, so the
  * card draws them disabled and never offers them in the Attach menu.
@@ -101,7 +101,7 @@ export interface EditorCatalogRow {
 
 /**
  * One row the mount states rather than configures: what this kind of
- * form always collects (ST14's four basics — INT-002 fixes Summary,
+ * form always collects (ST14's four basics — INT-002 fixes Title,
  * Description, Attachments, and Urgency on every request form).
  *
  * It is not an attachment. There is no catalog row behind it, nothing
@@ -113,8 +113,7 @@ export interface EditorBasicRow {
   /** React key and test handle; never shown. */
   key: string;
   name: MessageDescriptor;
-  /** The type caption beside the name — "Long text", or the DES-018
-   * severity ramp for Urgency. */
+  /** The type caption beside the name, such as "Long text" or "Single select". */
   caption: MessageDescriptor;
   isRequired: boolean;
 }
@@ -195,7 +194,7 @@ export interface TypeEditorAttachmentsMessages {
   reorder: MessageDescriptor;
   moved: MessageDescriptor;
   globalCaption: MessageDescriptor;
-  help: MessageDescriptor;
+  help?: MessageDescriptor;
 }
 
 /**
@@ -431,7 +430,7 @@ function AttachedFieldsCard({
           <span className="flex-1 ps-1 text-xs font-semibold text-muted">
             <FormattedMessage {...messages.fieldColumn} />
           </span>
-          <span className="w-24 px-3 text-xs font-semibold text-muted">
+          <span className="w-24 shrink-0 px-3 text-xs font-semibold text-muted">
             <FormattedMessage {...messages.requiredColumn} />
           </span>
           <span className="w-11 shrink-0" />
@@ -452,7 +451,7 @@ function AttachedFieldsCard({
             {locked.rows.map((basic) => (
               <li
                 key={basic.key}
-                className="flex h-11 items-center border-b border-border-muted pe-3"
+                className="flex min-h-11 items-center border-b border-border-muted py-2 pe-3"
               >
                 <span className="flex w-9 shrink-0 justify-center">
                   <Lock size={16} aria-hidden="true" className="text-muted" />
@@ -463,15 +462,15 @@ function AttachedFieldsCard({
                     />
                   </span>
                 </span>
-                <span className="flex min-w-0 flex-1 items-center gap-2 ps-1">
-                  <span className="truncate text-base font-medium text-primary">
+                <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-0.5 ps-1">
+                  <span className="max-w-full text-base font-medium break-words text-primary">
                     <FormattedMessage {...basic.name} />
                   </span>
-                  <span className="text-sm whitespace-nowrap text-muted">
+                  <span className="min-w-0 text-sm break-words text-muted">
                     <FormattedMessage {...basic.caption} />
                   </span>
                 </span>
-                <span className="flex w-24 items-center px-3">
+                <span className="flex w-24 shrink-0 items-center px-3">
                   <Checkbox
                     checked={basic.isRequired}
                     disabled
@@ -622,9 +621,11 @@ function AttachedFieldsCard({
           )}
         </div>
       </SettingsCard>
-      <p className="text-sm text-muted">
-        <FormattedMessage {...messages.help} />
-      </p>
+      {messages.help && (
+        <p className="text-sm text-muted">
+          <FormattedMessage {...messages.help} />
+        </p>
+      )}
     </div>
   );
 }
@@ -637,6 +638,7 @@ export function TypeEditorScreen({
   messages,
   identityExtra,
   attachments,
+  showSlug = true,
 }: Readonly<{
   initialType: EditorTypeRow;
   /** The module's section head (title + tab strip). */
@@ -645,6 +647,7 @@ export function TypeEditorScreen({
   backPath: string;
   api: TypeEditorIdentityApi;
   messages: TypeEditorIdentityMessages;
+  showSlug?: boolean;
   /**
    * One more control on the left card, below the slug (ST14's Target
    * select and its help line). It owns its own save, because what it
@@ -765,21 +768,23 @@ export function TypeEditorScreen({
               </div>
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="type-slug">
-                <FormattedMessage {...messages.slug} />
-              </Label>
-              <Input
-                id="type-slug"
-                className="w-80 text-muted"
-                value={saved.slug}
-                readOnly
-                aria-describedby="type-slug-note"
-              />
-              <p id="type-slug-note" className="text-xs text-muted">
-                <FormattedMessage {...messages.slugNote} />
-              </p>
-            </div>
+            {showSlug && (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="type-slug">
+                  <FormattedMessage {...messages.slug} />
+                </Label>
+                <Input
+                  id="type-slug"
+                  className="w-80 text-muted"
+                  value={saved.slug}
+                  readOnly
+                  aria-describedby="type-slug-note"
+                />
+                <p id="type-slug-note" className="text-xs text-muted">
+                  <FormattedMessage {...messages.slugNote} />
+                </p>
+              </div>
+            )}
 
             {identityExtra}
 

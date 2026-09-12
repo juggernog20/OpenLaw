@@ -121,7 +121,7 @@ async function submitted(cookies = requesterCookies): Promise<number> {
     cookies,
     payload: {
       requestTypeId,
-      summary: "MSA renewal with Orion Cloud",
+      title: "MSA renewal with Orion Cloud",
       description: "They sent a redline on the liability cap.",
       urgency: "high",
     },

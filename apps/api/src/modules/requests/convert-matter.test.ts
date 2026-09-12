@@ -218,7 +218,7 @@ async function createRequestType(
 }
 
 async function submit(
-  summary: string,
+  title: string,
   typeId = boundRequestTypeId,
   customFields: Record<string, unknown> = {},
   urgency = "high",
@@ -229,7 +229,7 @@ async function submit(
     cookies: requesterCookies,
     payload: {
       requestTypeId: typeId,
-      summary,
+      title,
       description: "Please open this as legal work.",
       urgency,
       customFields,

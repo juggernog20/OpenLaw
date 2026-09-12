@@ -43,7 +43,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { History } from "lucide-react";
-import { defineMessage, FormattedMessage, useIntl } from "react-intl";
+import { defineMessage, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { api } from "../../lib/api";
 import {
   narrateActivity,
@@ -67,7 +67,7 @@ const ROW_GLYPH_SIZE = 16;
 export interface ActivityAppletOptions {
   /** The record the feed hangs off — its type and its id, never a
    * record-specific address. */
-  entityType: ActivityEntityType;
+  entityType: ActivityEntityType | "request";
   entityId: string;
   /** What the mount knows that the log does not: the custom fields a
    * `field.<slug>` change key names, and names for the ids the two
@@ -78,6 +78,10 @@ export interface ActivityAppletOptions {
    * then wears DES-009's lock-only micro-marker beside its timestamp,
    * so an entry copied out of the panel carries its restriction. */
   confidential?: boolean;
+  readPage?: (cursor: string | null) => Promise<ActivityPage | undefined>;
+  emptyMessage?: MessageDescriptor;
+  /** Portal refreshes discard older cached pages whose projection may have changed. */
+  replaceOnRefresh?: boolean;
 }
 
 /**
@@ -91,6 +95,9 @@ export function useActivityApplet({
   fields,
   referenceNames,
   confidential = false,
+  readPage,
+  emptyMessage,
+  replaceOnRefresh,
 }: ActivityAppletOptions): Applet {
   return {
     id: "history",
@@ -103,13 +110,16 @@ export function useActivityApplet({
         fields={fields}
         referenceNames={referenceNames}
         confidential={confidential}
+        readPage={readPage}
+        emptyMessage={emptyMessage}
+        replaceOnRefresh={replaceOnRefresh}
       />
     ),
   };
 }
 
 /** One page of the feed, as the read answers it. */
-type ActivityPage = { entries: ActivityEntry[]; nextCursor: string | null };
+export type ActivityPage = { entries: ActivityEntry[]; nextCursor: string | null };
 
 function ActivityFeed({
   entityType,
@@ -117,6 +127,9 @@ function ActivityFeed({
   fields,
   referenceNames,
   confidential = false,
+  readPage,
+  emptyMessage,
+  replaceOnRefresh = false,
 }: Readonly<ActivityAppletOptions>) {
   const intl = useIntl();
   const [entries, setEntries] = useState<ActivityEntry[] | null>(null);
@@ -159,6 +172,8 @@ function ActivityFeed({
   /** Asks for one page. Undefined when the read failed. */
   const fetchPage = useCallback(
     async (from: string | null) => {
+      if (readPage) return readPage(from).catch(() => undefined);
+      if (entityType === "request") return undefined;
       const { data } = await api
         .GET("/api/v1/activity", {
           params: { query: { entityType, entityId, ...(from ? { cursor: from } : {}) } },
@@ -166,7 +181,7 @@ function ActivityFeed({
         .catch(() => ({ data: undefined }));
       return data;
     },
-    [entityType, entityId],
+    [entityType, entityId, readPage],
   );
 
   /** Lands an older page's answer, unless the panel has moved on. */
@@ -197,14 +212,18 @@ function ActivityFeed({
       // With no feed on screen this is the first-page failure, whichever
       // read it was. A feed already drawn stays as it is; the next
       // prompt or reconnect asks again.
-      if (first) {
+      if (first || replaceOnRefresh) {
         setBusy(false);
         setLoadFailed(true);
+        if (replaceOnRefresh) {
+          setEntries(null);
+          setCursor(null);
+        }
       }
       return;
     }
     headLanded.current = issue;
-    if (first) {
+    if (first || replaceOnRefresh) {
       setBusy(false);
       setLoadFailed(false);
       setCursor(data.nextCursor);
@@ -233,7 +252,7 @@ function ActivityFeed({
       ...data.entries,
       ...(current ?? []).filter((entry) => !fresh.has(entry.id)),
     ]);
-  }, [fetchPage]);
+  }, [fetchPage, replaceOnRefresh]);
 
   useLayoutEffect(() => {
     const anchor = pendingScrollAnchor.current;
@@ -258,7 +277,7 @@ function ActivityFeed({
   useEffect(() => {
     generation.current += 1;
     headLanded.current = 0;
-    void readNewest();
+    queueMicrotask(() => void readNewest());
   }, [readNewest]);
 
   // The channel carries prompts, never feed content. Any record action
@@ -298,10 +317,14 @@ function ActivityFeed({
         )}
         {entries !== null && entries.length === 0 && (
           <p className="px-4 py-3 text-sm text-muted">
-            <FormattedMessage
-              id="activity.empty"
-              defaultMessage="Nothing has happened to this record yet. Every change to it shows up here."
-            />
+            {emptyMessage ? (
+              <FormattedMessage {...emptyMessage} />
+            ) : (
+              <FormattedMessage
+                id="activity.empty"
+                defaultMessage="Nothing has happened to this record yet. Every change to it shows up here."
+              />
+            )}
           </p>
         )}
         {entries !== null && entries.length > 0 && (

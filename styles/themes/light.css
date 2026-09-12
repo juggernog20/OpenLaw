@@ -36,6 +36,7 @@
   /* Text */
   --text-primary: #1f2328;
   --text-muted: #656d76;
+  --text-placeholder: #656d76;
   --text-subtle: #7d8590;
   --text-on-inverted: #f0f6fc;
   --text-on-accent: #1f2328;
@@ -98,6 +99,7 @@
    * shares the header color and the header needs no separating border. */
   --chrome-header-border: transparent;
   --chrome-search-bg: #0d1117;
+  --chrome-search-placeholder: #7d8590;
   --chrome-brand-chip: transparent;
   --chrome-brand-fg: #f0f6fc;
   --chrome-nav-bg: #0d1117;

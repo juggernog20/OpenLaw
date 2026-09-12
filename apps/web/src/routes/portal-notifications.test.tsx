@@ -47,7 +47,7 @@ function item(index: number, over: Partial<Item> = {}): Item {
     entityId: `r${index}`,
     payload: {
       requestNumber: 40 + index,
-      requestSummary: `Review the Northwind redline ${index}`,
+      requestTitle: `Review the Northwind redline ${index}`,
       actorName: "Rita Okonjo",
     },
     readAt: null,
@@ -188,7 +188,7 @@ describe("the portal bell (NOT-001, NOT-005)", () => {
           eventType: "request.status_changed",
           payload: {
             requestNumber: 41,
-            requestSummary: "Review the Northwind redline 1",
+            requestTitle: "Review the Northwind redline 1",
             from: "new",
             to: "converted",
           },
@@ -197,7 +197,7 @@ describe("the portal bell (NOT-001, NOT-005)", () => {
           eventType: "request.status_changed",
           payload: {
             requestNumber: 42,
-            requestSummary: "Review the Northwind redline 2",
+            requestTitle: "Review the Northwind redline 2",
             from: "new",
             to: "declined",
           },
@@ -232,13 +232,13 @@ describe("the portal bell (NOT-001, NOT-005)", () => {
         // status this build has no word for.
         item(1, {
           eventType: "request.status_changed",
-          payload: { requestNumber: 41, requestSummary: "Review the Northwind redline 1" },
+          payload: { requestNumber: 41, requestTitle: "Review the Northwind redline 1" },
         }),
         item(2, {
           eventType: "request.status_changed",
           payload: {
             requestNumber: 42,
-            requestSummary: "Review the Northwind redline 2",
+            requestTitle: "Review the Northwind redline 2",
             to: "parked",
           },
         }),

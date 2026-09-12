@@ -233,7 +233,7 @@ export interface MatterMentionedEvent extends MentionedOnAnyRecord {
  * A mention on a Request thread (M21/5).
  *
  * The Request names itself **behind** the seam rather than through the
- * caller, which is where every Request event's number and summary come
+ * caller, which is where every Request event's number and title come
  * from (M20/8): the audience read holds the row already, so asking the
  * comments module for two columns would be the same query twice. That
  * read is also what makes the M18/4 rule enforceable here rather than at
@@ -406,7 +406,7 @@ export interface MatterKeyDateReminderEvent {
  *
  * The Request names itself by its id alone, for group 2's reason: the
  * audience read behind the seam already holds the row, so R-### and the
- * summary come from there rather than from four call sites that would
+ * title come from there rather than from four call sites that would
  * each have to read them.
  *
  * **The audience is never on the wire either.** Every group-5 event is
@@ -454,7 +454,7 @@ export interface RequestRepliedEvent extends RequestEvent {
  *
  * NOT-002's group 4, and the one event on a Request whose audience is
  * not the Requester. The Request still names itself by its id alone —
- * R-### and the summary come from the audience read, as every other
+ * R-### and the title come from the audience read, as every other
  * Request event's do — and what the route adds is the two facts a
  * triager weighs before opening anything: what kind of ask it is, and
  * how hot the person who asked says it is.
@@ -1063,7 +1063,7 @@ async function fanOutToRecord(
  * Group 2's shape, said for the portal audience, and for its reasons:
  * every group-5 event resolves the same audience out of the same row,
  * and what they differ by is a slug and a payload key. The Request's
- * number and summary are **added** to the payload rather than taken from
+ * number and title are **added** to the payload rather than taken from
  * it, because every group-5 item and email names the Request the same
  * way.
  *
@@ -1094,7 +1094,7 @@ async function fanOutToRequest(
         payload: {
           ...payload,
           requestNumber: audience.requestNumber,
-          requestSummary: audience.summary,
+          requestTitle: audience.title,
           actorId: event.actorId,
           actorName: event.actorName,
         },
@@ -1114,7 +1114,7 @@ async function fanOutToRequest(
  * reason — a caller that could name the audience could name the wrong
  * people.
  *
- * The Request's number and summary come from that same read, and are
+ * The Request's number and title come from that same read, and are
  * **added** to the payload rather than taken from it, so every item and
  * every email about a Request names it the same way whichever bell drew
  * it.
@@ -1139,7 +1139,7 @@ async function fanOutToInbox(
         requestType: event.requestType,
         urgency: event.urgency,
         requestNumber: audience.requestNumber,
-        requestSummary: audience.summary,
+        requestTitle: audience.title,
         actorId: event.actorId,
         actorName: event.actorName,
       },
@@ -1194,7 +1194,7 @@ async function mentionedOnRequest(
       userId: row.userId,
       payload: {
         requestNumber: audience.requestNumber,
-        requestSummary: audience.summary,
+        requestTitle: audience.title,
         ...who,
         commentId: event.commentId,
       },
@@ -1419,7 +1419,7 @@ export function createNotifier(deps: NotifierDeps): Notifier {
             userId: event.assigneeId,
             payload: {
               requestNumber: audience.requestNumber,
-              requestSummary: audience.summary,
+              requestTitle: audience.title,
               actorId: event.actorId,
               actorName: event.actorName,
             },

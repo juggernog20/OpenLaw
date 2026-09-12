@@ -426,7 +426,7 @@ for (const ownerType of ["matter", "contract"] as const) {
           "primary-v2.pdf",
           Buffer.from("%PDF-1.7 primary chain"),
         );
-        expect(primaryAppend.statusCode, primaryAppend.body).toBe(403);
+        expect(primaryAppend.statusCode, primaryAppend.body).toBe(201);
       }
     });
 

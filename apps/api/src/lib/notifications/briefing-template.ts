@@ -245,7 +245,7 @@ function taskLine(row: TasksHomeSection["rows"][number]): string {
 }
 
 function intakeLine(row: InboxHomeSection["rows"][number]): string {
-  return `R-${row.number} ${row.summary} — ${row.requestType.displayName}, ${row.urgency}`;
+  return `R-${row.number} ${row.title} — ${row.requestType.displayName}, ${row.urgency}`;
 }
 
 interface OverflowLine {

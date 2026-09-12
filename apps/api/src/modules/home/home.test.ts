@@ -150,7 +150,7 @@ interface InboxSection {
   rows: Array<{
     id: string;
     number: number;
-    summary: string;
+    title: string;
     urgency: "low" | "medium" | "high" | "critical";
     requester: { id: string; displayName: string };
     createdAt: string;
@@ -1124,42 +1124,42 @@ describe("GET /api/v1/home", () => {
       {
         requestTypeId,
         requesterId,
-        summary: "Critical oldest",
+        title: "Critical oldest",
         urgency: "critical",
         createdAt: new Date("2026-08-01T09:00:00Z"),
       },
       {
         requestTypeId,
         requesterId,
-        summary: "Critical newer",
+        title: "Critical newer",
         urgency: "critical",
         createdAt: new Date("2026-08-02T09:00:00Z"),
       },
       {
         requestTypeId,
         requesterId,
-        summary: "High oldest",
+        title: "High oldest",
         urgency: "high",
         createdAt: new Date("2026-07-01T09:00:00Z"),
       },
       {
         requestTypeId,
         requesterId,
-        summary: "Medium request",
+        title: "Medium request",
         urgency: "medium",
         createdAt: new Date("2026-06-01T09:00:00Z"),
       },
       {
         requestTypeId,
         requesterId,
-        summary: "Low request",
+        title: "Low request",
         urgency: "low",
         createdAt: new Date("2026-05-01T09:00:00Z"),
       },
       {
         requestTypeId,
         requesterId,
-        summary: "Already resolved",
+        title: "Already resolved",
         urgency: "critical",
         status: "resolved",
         createdAt: new Date("2026-01-01T09:00:00Z"),
@@ -1169,7 +1169,7 @@ describe("GET /api/v1/home", () => {
     for (const viewer of [ADMIN, APPROVER]) {
       const section = inboxIn(await home(viewer));
       expect(section).toMatchObject({ type: "inbox", total: 5 });
-      expect(section!.rows.map((row) => row.summary)).toEqual([
+      expect(section!.rows.map((row) => row.title)).toEqual([
         "Critical oldest",
         "Critical newer",
         "High oldest",

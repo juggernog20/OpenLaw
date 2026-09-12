@@ -82,7 +82,7 @@ Former account type, removed by DD-023. Existing accounts become Business Users 
 _Avoid_: collaborator, guest, external user
 
 **Business User**:
-An employee who uses the Portal to submit Requests and work on non-archived Contracts and Matters they are on the team for. They edit business Fields, add supporting Documents and post Full Thread replies. Team membership is their only record grant [DD-023].
+An employee who uses the Portal to submit Requests and work on non-archived Contracts and Matters they are on the team for. They read business Fields, add Documents and Versions, including primary Contract Document Versions, post Full Thread replies, and add existing people to non-Confidential record teams. Record Fields remain managed by Legal [DD-026]. Team membership is their only record grant [DD-023, DD-024].
 _Avoid_: requester (that is a role on a specific Request), end user, customer
 
 **Member+**:
@@ -91,6 +91,12 @@ Shorthand for Administrators and Legal Team Members together — the access floo
 **Matter Manager**:
 The single accountable person on a Matter [MTR-003]. The Contract equivalent is stored the same way but labelled **Legal Owner** in Contract Overview [CTR-004, DD-021].
 _Avoid_: assignee, lead, responsible
+
+**Request Title**:
+The required short name for what the requester needs. Stored as `requests.title` and called Title in forms, Inbox, Portal, notifications and original submissions. Formerly labelled Summary [INT-009].
+
+**Owning department / Region**:
+Built-in, nullable Contract attributes describing its business classification. Both live in Overview for every Contract Type, outside its configurable Fields. Legal edits them in the full app; Business Users on the team read the same values in the Portal. Neither grants access [CTR-025, DD-026].
 
 **Business Owner**:
 The single nullable person named for the business on a Contract or Matter. Conversion sets the Requester as Business Owner and adds their team row. Changing the assignment later does not grant or remove access [DD-023].

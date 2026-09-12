@@ -1789,7 +1789,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** One request type's form definition (INT-002): the type, its attached catalog fields in display order, and the deflection links placed on this form. The four basics — Summary, Description, Attachments, Urgency — are fixed on every form and are drawn by the portal, so they are not answered here */
+    /** One request type's form definition (INT-002): the type, its attached catalog fields in display order, and the deflection links placed on this form. The four basics — Title, Description, Attachments, Urgency — are fixed on every form and are drawn by the portal, so they are not answered here */
     get: operations["readPortalRequestForm"];
     put?: never;
     post?: never;
@@ -1840,7 +1840,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. List eligible Contracts. */
+    /** DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads include its earlier Versions. List eligible Contracts. */
     get: operations["listPortalContracts"];
     put?: never;
     post?: never;
@@ -1857,7 +1857,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. Read selected Contract facts. */
+    /** DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads include its earlier Versions. Read selected Contract facts. */
     get: operations["readPortalContract"];
     put?: never;
     post?: never;
@@ -1874,7 +1874,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. */
+    /** DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads include its earlier Versions. */
     get: operations["downloadPortalContractVersion"];
     put?: never;
     post?: never;
@@ -1891,7 +1891,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. */
+    /** DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads include its earlier Versions. */
     get: operations["previewPortalContractVersion"];
     put?: never;
     post?: never;
@@ -1908,7 +1908,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. */
+    /** DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads include its earlier Versions. */
     get: operations["readPortalContractRendition"];
     put?: never;
     post?: never;
@@ -1925,7 +1925,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. */
+    /** DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads include its earlier Versions. */
     get: operations["readPortalContractEmail"];
     put?: never;
     post?: never;
@@ -1942,7 +1942,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. */
+    /** DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads include its earlier Versions. */
     get: operations["downloadPortalContractEmailAttachment"];
     put?: never;
     post?: never;
@@ -1959,7 +1959,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. */
+    /** DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads include its earlier Versions. */
     get: operations["previewPortalContractEmailAttachment"];
     put?: never;
     post?: never;
@@ -1982,22 +1982,6 @@ export interface paths {
     delete?: never;
     options?: never;
     head?: never;
-    patch: operations["updatePortalContractWork"];
-    trace?: never;
-  };
-  "/api/v1/portal/contracts/{number}/supporting-documents": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: operations["listPortalContractSupportingDocuments"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
     patch?: never;
     trace?: never;
   };
@@ -2014,17 +1998,82 @@ export interface paths {
     delete?: never;
     options?: never;
     head?: never;
-    patch: operations["updatePortalMatterWork"];
+    patch?: never;
     trace?: never;
   };
-  "/api/v1/portal/matters/{number}/supporting-documents": {
+  "/api/v1/portal/contracts/{number}/documents": {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    get: operations["listPortalMatterSupportingDocuments"];
+    get: operations["listPortalContractDocuments"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/matters/{number}/documents": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listPortalMatterDocuments"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/contracts/{number}/team": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["readPortalContractTeam"];
+    put?: never;
+    post: operations["addPortalContractTeamMember"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/matters/{number}/team": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["readPortalMatterTeam"];
+    put?: never;
+    post: operations["addPortalMatterTeamMember"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/activity": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Full Thread history for a reached Portal record. Other tiers leave no entries or counts. */
+    get: operations["listPortalActivity"];
     put?: never;
     post?: never;
     delete?: never;
@@ -2075,7 +2124,7 @@ export interface paths {
     /** The Inbox (INT-006, INT-007): the Requests whose fate is undecided, ordered by urgency rank — critical first — then age, oldest first, unless sort names a column, and paged by cursor. The answer is the `new` Requests by default; status choices or includeTriaged=true widen it to the converted, resolved, and declined ones with their outcomes. A converted row carries the contract or matter it became only when the caller reaches that record, and carries null otherwise (DD-014). Member+ only: a Contributor and a Business User are refused */
     get: operations["listInbox"];
     put?: never;
-    /** Submit a Request through a request type's portal form (INT-001). The Requester is the session; the type must be live; Summary, Description, and Urgency are required, as is every attached field the type marks required; values are accepted for exactly the fields the type attaches, and a user or entity field's value must name a live row */
+    /** Submit a Request through a request type's portal form (INT-001). The Requester is the session; the type must be live; Title, Description, and Urgency are required, as is every attached field the type marks required; values are accepted for exactly the fields the type attaches, and a user or entity field's value must name a live row */
     post: operations["submitRequest"];
     delete?: never;
     options?: never;
@@ -2441,7 +2490,7 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage may override the configured type or Re-target to the other module. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request summary, urgency defaulting priority unless overridden, the Request description, risk unset, the converting person as Matter Manager or Contract Owner, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. counterpartyName, contract conversions only, finds or creates the live counterparty of that name (case-insensitive) and links it as the primary; a matter conversion refuses it with 400. neededBy lands one "Needed by" key date on either record, past dates included. Matter conversions may apply a live template for the confirmed type; carried values and triager answers override its defaults. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Request remains the Requester's window. Member+ only
+     * Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage may override the configured type or Re-target to the other module. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request title, urgency defaulting priority unless overridden, the Request description, risk unset, the converting person as Matter Manager or Contract Owner, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. counterpartyName, contract conversions only, finds or creates the live counterparty of that name (case-insensitive) and links it as the primary; a matter conversion refuses it with 400. neededBy lands one "Needed by" key date on either record, past dates included. Matter conversions may apply a live template for the confirmed type; carried values and triager answers override its defaults. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Request remains the Requester's window. Member+ only
      * @description Contract conversion makes the Requester its Business Owner, granting Portal reads subject to DD-021 confidentiality. Matter conversion assigns no Business Owner.
      */
     post: operations["convertRequest"];
@@ -3455,7 +3504,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Append the next version to an existing document (DOC-001). The number is assigned under the owning record's row lock, so two revisions uploaded at the same moment take consecutive numbers rather than colliding, and the chain runs 1..n with no gaps. The version carries one of the six hand-set CTR-014 kinds and, when the uploader wrote one, a short note saying what changed in this round. Nothing about the versions already in the chain is touched: a file correction is another version, while the kind has its own one-column PATCH. Appends document.version_added on the owning record (DD-017). A Contributor on that record's live team may append only to a non-primary supporting chain; Matter paper has no primary chain. The kind and note fields must be sent before the file part. An archived owning record takes no new paper until it is restored. A document on a contract the uploader cannot reach answers 404, exactly as one that does not exist */
+    /** Append the next version to an existing document (DOC-001). The number is assigned under the owning record's row lock, so two revisions uploaded at the same moment take consecutive numbers rather than colliding, and the chain runs 1..n with no gaps. The version carries one of the six hand-set CTR-014 kinds and, when the uploader wrote one, a short note saying what changed in this round. Nothing about the versions already in the chain is touched: a file correction is another version, while the kind has its own one-column PATCH. Appends document.version_added on the owning record (DD-017). A Business User on that record's live team may append to any accessible Document, including the primary Contract Document. Primary and executed designations remain Legal actions. The kind and note fields must be sent before the file part. An archived owning record takes no new paper until it is restored. A document on a contract the uploader cannot reach answers 404, exactly as one that does not exist */
     post: operations["uploadDocumentVersion"];
     delete?: never;
     options?: never;
@@ -13616,6 +13665,8 @@ export interface operations {
         content: {
           "application/json": {
             work: {
+              owningDepartment?: string | null;
+              region?: string | null;
               value?: {
                 amount: number;
                 currency: string;
@@ -13667,7 +13718,7 @@ export interface operations {
               };
               originalRequests: {
                 number: number;
-                summary: string;
+                title: string;
                 description: string | null;
                 /** Format: date-time */
                 submittedAt: string;
@@ -13724,123 +13775,6 @@ export interface operations {
                 };
               }[];
             };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  updatePortalContractWork: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          value?: {
-            amount: number;
-            currency: string;
-            /** @enum {string} */
-            cadence: "one_time" | "monthly" | "annually";
-          } | null;
-          effectiveDate?: string | null;
-          description?: string | null;
-          customFields?: {
-            [key: string]: (string | number | boolean | string[]) | null;
-          };
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            value?: {
-              amount: number;
-              currency: string;
-              /** @enum {string} */
-              cadence: "one_time" | "monthly" | "annually";
-            } | null;
-            effectiveDate?: string | null;
-            description: string | null;
-            customFields: {
-              [key: string]: string | number | boolean | string[];
-            };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  listPortalContractSupportingDocuments: {
-    parameters: {
-      query?: {
-        cursor?: string;
-      };
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            documents: {
-              id: string;
-              title: string;
-              version: {
-                id: string;
-                versionNumber: number;
-                originalFilename: string;
-                mimeType: string;
-                byteSize: number;
-                /** @enum {string} */
-                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
-                /** @enum {string} */
-                kind:
-                  | "general"
-                  | "draft_ours"
-                  | "draft_theirs"
-                  | "redline_theirs"
-                  | "redline_ours"
-                  | "executed"
-                  | "amendment"
-                  | "generated_redline";
-              };
-            }[];
-            nextCursor: string | null;
           };
         };
       };
@@ -13874,6 +13808,8 @@ export interface operations {
         content: {
           "application/json": {
             work: {
+              owningDepartment?: string | null;
+              region?: string | null;
               value?: {
                 amount: number;
                 currency: string;
@@ -13925,7 +13861,7 @@ export interface operations {
               };
               originalRequests: {
                 number: number;
-                summary: string;
+                title: string;
                 description: string | null;
                 /** Format: date-time */
                 submittedAt: string;
@@ -13996,69 +13932,11 @@ export interface operations {
       };
     };
   };
-  updatePortalMatterWork: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          value?: {
-            amount: number;
-            currency: string;
-            /** @enum {string} */
-            cadence: "one_time" | "monthly" | "annually";
-          } | null;
-          effectiveDate?: string | null;
-          description?: string | null;
-          customFields?: {
-            [key: string]: (string | number | boolean | string[]) | null;
-          };
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            value?: {
-              amount: number;
-              currency: string;
-              /** @enum {string} */
-              cadence: "one_time" | "monthly" | "annually";
-            } | null;
-            effectiveDate?: string | null;
-            description: string | null;
-            customFields: {
-              [key: string]: string | number | boolean | string[];
-            };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  listPortalMatterSupportingDocuments: {
+  listPortalContractDocuments: {
     parameters: {
       query?: {
         cursor?: string;
+        q?: string;
       };
       header?: never;
       path: {
@@ -14078,7 +13956,8 @@ export interface operations {
             documents: {
               id: string;
               title: string;
-              version: {
+              isPrimary: boolean;
+              versions: {
                 id: string;
                 versionNumber: number;
                 originalFilename: string;
@@ -14096,6 +13975,352 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                note: string | null;
+                /** Format: date-time */
+                createdAt: string;
+                uploadedBy: {
+                  id: string;
+                  displayName: string;
+                  image: string | null;
+                };
+                isCurrent: boolean;
+                isExecuted: boolean;
+              }[];
+            }[];
+            nextCursor: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listPortalMatterDocuments: {
+    parameters: {
+      query?: {
+        cursor?: string;
+        q?: string;
+      };
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documents: {
+              id: string;
+              title: string;
+              isPrimary: boolean;
+              versions: {
+                id: string;
+                versionNumber: number;
+                originalFilename: string;
+                mimeType: string;
+                byteSize: number;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                /** @enum {string} */
+                kind:
+                  | "general"
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment"
+                  | "generated_redline";
+                note: string | null;
+                /** Format: date-time */
+                createdAt: string;
+                uploadedBy: {
+                  id: string;
+                  displayName: string;
+                  image: string | null;
+                };
+                isCurrent: boolean;
+                isExecuted: boolean;
+              }[];
+            }[];
+            nextCursor: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  readPortalContractTeam: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            team: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            }[];
+            manager: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            } | null;
+            businessOwner: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            } | null;
+            creator: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            } | null;
+            canAdd: boolean;
+            people: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  addPortalContractTeamMember: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          userId: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            team: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  readPortalMatterTeam: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            team: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            }[];
+            manager: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            } | null;
+            businessOwner: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            } | null;
+            creator: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            } | null;
+            canAdd: boolean;
+            people: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  addPortalMatterTeamMember: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          userId: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            team: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listPortalActivity: {
+    parameters: {
+      query: {
+        entityType: "contract" | "matter" | "request";
+        entityId: string;
+        cursor?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            entries: {
+              id: string;
+              action: string;
+              /** @enum {string} */
+              visibility: "legal_only" | "working_team" | "full_thread";
+              actor: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              /** Format: date-time */
+              createdAt: string;
+              payload: {
+                [key: string]: unknown;
               };
             }[];
             nextCursor: string | null;
@@ -14246,7 +14471,7 @@ export interface operations {
         receivedFrom?: string;
         receivedTo?: string;
         timeZone?: string;
-        sort?: "number" | "summary" | "type" | "requester" | "urgency" | "createdAt" | "status";
+        sort?: "number" | "title" | "type" | "requester" | "urgency" | "createdAt" | "status";
         dir?: "asc" | "desc";
         includeTriaged?: "true" | "false";
         cursor?: string;
@@ -14269,7 +14494,7 @@ export interface operations {
               number: number;
               /** @enum {string} */
               status: "new" | "converted" | "resolved" | "declined";
-              summary: string;
+              title: string;
               /** @enum {string} */
               urgency: "low" | "medium" | "high" | "critical";
               requestType: {
@@ -14334,7 +14559,7 @@ export interface operations {
       content: {
         "application/json": {
           requestTypeId: string;
-          summary: string;
+          title: string;
           description: string;
           /** @enum {string} */
           urgency: "low" | "medium" | "high" | "critical";
@@ -14358,7 +14583,7 @@ export interface operations {
               requestTypeId: string;
               /** @enum {string} */
               status: "new";
-              summary: string;
+              title: string;
               description: string | null;
               /** @enum {string} */
               urgency: "low" | "medium" | "high" | "critical";
@@ -14407,7 +14632,7 @@ export interface operations {
               number: number;
               /** @enum {string} */
               status: "new" | "converted" | "resolved" | "declined";
-              summary: string;
+              title: string;
               requestType: {
                 id: string;
                 slug: string;
@@ -14457,7 +14682,7 @@ export interface operations {
               number: number;
               /** @enum {string} */
               status: "new" | "converted" | "resolved" | "declined";
-              summary: string;
+              title: string;
               requestType: {
                 id: string;
                 slug: string;
@@ -14683,7 +14908,7 @@ export interface operations {
               number: number;
               /** @enum {string} */
               status: "new" | "converted" | "resolved" | "declined";
-              summary: string;
+              title: string;
               description: string | null;
               /** @enum {string} */
               urgency: "low" | "medium" | "high" | "critical";
@@ -14808,7 +15033,7 @@ export interface operations {
               number: number;
               /** @enum {string} */
               status: "new" | "converted" | "resolved" | "declined";
-              summary: string;
+              title: string;
               description: string | null;
               /** @enum {string} */
               urgency: "low" | "medium" | "high" | "critical";
@@ -14930,7 +15155,7 @@ export interface operations {
               number: number;
               /** @enum {string} */
               status: "new" | "converted" | "resolved" | "declined";
-              summary: string;
+              title: string;
               description: string | null;
               /** @enum {string} */
               urgency: "low" | "medium" | "high" | "critical";
@@ -15108,7 +15333,7 @@ export interface operations {
               number: number;
               /** @enum {string} */
               status: "new" | "converted" | "resolved" | "declined";
-              summary: string;
+              title: string;
               description: string | null;
               /** @enum {string} */
               urgency: "low" | "medium" | "high" | "critical";
@@ -15245,7 +15470,7 @@ export interface operations {
               number: number;
               /** @enum {string} */
               status: "new" | "converted" | "resolved" | "declined";
-              summary: string;
+              title: string;
               description: string | null;
               /** @enum {string} */
               urgency: "low" | "medium" | "high" | "critical";
@@ -15831,7 +16056,7 @@ export interface operations {
               number: number;
               /** @enum {string} */
               status: "new" | "converted" | "resolved" | "declined";
-              summary: string;
+              title: string;
               description: string | null;
               /** @enum {string} */
               urgency: "low" | "medium" | "high" | "critical";
@@ -16627,6 +16852,8 @@ export interface operations {
               daysRemaining: number | null;
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
+              owningDepartment: string | null;
+              region: string | null;
               description: string | null;
               nextDeadline: {
                 /** Format: date */
@@ -16690,6 +16917,8 @@ export interface operations {
       content: {
         "application/json": {
           title: string;
+          owningDepartment?: string | null;
+          region?: string | null;
           contractTypeId: string;
           customFields?: {
             [key: string]: (string | number | boolean | string[]) | null;
@@ -16773,6 +17002,8 @@ export interface operations {
               daysRemaining: number | null;
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
+              owningDepartment: string | null;
+              region: string | null;
               description: string | null;
               nextDeadline: {
                 /** Format: date */
@@ -17048,6 +17279,8 @@ export interface operations {
               daysRemaining: number | null;
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
+              owningDepartment: string | null;
+              region: string | null;
               description: string | null;
               nextDeadline: {
                 /** Format: date */
@@ -17236,6 +17469,8 @@ export interface operations {
         "application/json": {
           title?: string;
           description?: string | null;
+          owningDepartment?: string | null;
+          region?: string | null;
           managerId?: string | null;
           businessOwnerId?: string | null;
           entityId?: string | null;
@@ -17332,6 +17567,8 @@ export interface operations {
               daysRemaining: number | null;
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
+              owningDepartment: string | null;
+              region: string | null;
               description: string | null;
               nextDeadline: {
                 /** Format: date */
@@ -17559,6 +17796,8 @@ export interface operations {
               daysRemaining: number | null;
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
+              owningDepartment: string | null;
+              region: string | null;
               description: string | null;
               nextDeadline: {
                 /** Format: date */
@@ -17687,6 +17926,8 @@ export interface operations {
               daysRemaining: number | null;
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
+              owningDepartment: string | null;
+              region: string | null;
               description: string | null;
               nextDeadline: {
                 /** Format: date */
@@ -17824,6 +18065,8 @@ export interface operations {
               daysRemaining: number | null;
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
+              owningDepartment: string | null;
+              region: string | null;
               description: string | null;
               nextDeadline: {
                 /** Format: date */
@@ -18080,6 +18323,8 @@ export interface operations {
               daysRemaining: number | null;
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
+              owningDepartment: string | null;
+              region: string | null;
               description: string | null;
               nextDeadline: {
                 /** Format: date */
@@ -18215,6 +18460,8 @@ export interface operations {
               daysRemaining: number | null;
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
+              owningDepartment: string | null;
+              region: string | null;
               description: string | null;
               nextDeadline: {
                 /** Format: date */
@@ -18350,6 +18597,8 @@ export interface operations {
               daysRemaining: number | null;
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
+              owningDepartment: string | null;
+              region: string | null;
               description: string | null;
               nextDeadline: {
                 /** Format: date */
@@ -18484,6 +18733,8 @@ export interface operations {
               daysRemaining: number | null;
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
+              owningDepartment: string | null;
+              region: string | null;
               description: string | null;
               nextDeadline: {
                 /** Format: date */
@@ -18612,6 +18863,8 @@ export interface operations {
               daysRemaining: number | null;
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
+              owningDepartment: string | null;
+              region: string | null;
               description: string | null;
               nextDeadline: {
                 /** Format: date */
@@ -29740,7 +29993,7 @@ export interface operations {
                   rows: {
                     id: string;
                     number: number;
-                    summary: string;
+                    title: string;
                     /** @enum {string} */
                     urgency: "low" | "medium" | "high" | "critical";
                     requestType: {

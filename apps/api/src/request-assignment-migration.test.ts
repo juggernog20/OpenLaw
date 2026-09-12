@@ -45,11 +45,9 @@ it("repairs the Home branch history without losing existing Request assignments"
       ('a74c7240bdfda1ef490996e0295d81f23f6d81e53a2d79b6f4b814f6ed12af19', 1788637394684),
       ('65218ed7fcce341502e52bbb3e0bf61609aa07389b9a58ecaa4af39795c8e6b0', 1788771065247)`);
     await runMigrations(db);
-    const assigned = await db.execute(sql`select summary, assignee_id from requests
+    const assigned = await db.execute(sql`select title, assignee_id from requests
       where id = 'branch-request'`);
-    expect(assigned.rows).toEqual([
-      { summary: "Assigned Request", assignee_id: "branch-requester" },
-    ]);
+    expect(assigned.rows).toEqual([{ title: "Assigned Request", assignee_id: "branch-requester" }]);
     const columns = await db.execute<{ table_name: string; column_name: string }>(sql`
       select table_name, column_name from information_schema.columns
       where table_schema = 'public' and (
@@ -75,9 +73,9 @@ it("adds Request assignment after the existing onboarding and account migrations
       select 'existing-request', id, 'existing-requester', 'Existing Request', 'medium'
       from request_types limit 1`);
     await runMigrations(db);
-    const result = await db.execute(sql`select summary, assignee_id from requests
+    const result = await db.execute(sql`select title, assignee_id from requests
       where id = 'existing-request'`);
-    expect(result.rows).toEqual([{ summary: "Existing Request", assignee_id: null }]);
+    expect(result.rows).toEqual([{ title: "Existing Request", assignee_id: null }]);
     await db.execute(sql`update requests set assignee_id = 'existing-requester'
       where id = 'existing-request'`);
     const columns = await db.execute<{ column_name: string }>(sql`

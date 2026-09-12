@@ -77,7 +77,7 @@ const FULL_BRIEFING: BriefingMail = {
       {
         id: "request-1",
         number: 1029,
-        summary: "Review distributor redline",
+        title: "Review distributor redline",
         urgency: "high",
         requestType: { id: "request-type-1", displayName: "Contract review" },
         requester: { id: "requester-2", displayName: "Priya Raman" },

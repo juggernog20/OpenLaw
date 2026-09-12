@@ -228,6 +228,7 @@ import {
 } from "@openlaw/shared";
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import { assertApprovalGate, type UnresolvedApproval } from "../../lib/soft-gate.js";
+import { MAX_CONTRACT_CLASSIFICATION_LENGTH } from "@openlaw/shared";
 import { createContract, CONTRACT_RENEWAL_VEHICLES } from "./create.js";
 import { AnalysisRunSchema, latestAnalysisRun } from "../contract-analysis/routes.js";
 import { clearAiUnverified } from "../../lib/ai-unverified.js";
@@ -511,6 +512,8 @@ const ContractRowSchema = z.object({
    * dialog should keep a second copy of.
    */
   proposedRenewalExpiry: z.iso.date().nullable(),
+  owningDepartment: z.string().nullable(),
+  region: z.string().nullable(),
   description: z.string().nullable(),
   nextDeadline: NextDeadlineSchema,
   /** CTR-016's custom fields, keyed by the catalog field's slug. Which
@@ -858,6 +861,8 @@ function toRow(
     // copy that drifts.
     renewalPendingConfirmation: renewalPending(row),
     proposedRenewalExpiry: proposedRollExpiry(row),
+    owningDepartment: row.owningDepartment,
+    region: row.region,
     description: row.description,
     nextDeadline: context.nextDeadline ?? null,
     customFields,
@@ -2051,6 +2056,13 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         // carrying one is refused rather than silently ignored.
         body: z.strictObject({
           title: TitleSchema,
+          owningDepartment: z
+            .string()
+            .trim()
+            .max(MAX_CONTRACT_CLASSIFICATION_LENGTH)
+            .nullable()
+            .optional(),
+          region: z.string().trim().max(MAX_CONTRACT_CLASSIFICATION_LENGTH).nullable().optional(),
           contractTypeId: z.string(),
           /** The type's fields, keyed by slug. Only the required ones
            * have to be here — the rest are set on the record — and a
@@ -2125,6 +2137,8 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           actorId: request.user.id,
           title,
           contractTypeId,
+          owningDepartment: request.body.owningDepartment,
+          region: request.body.region,
           customFields: request.body.customFields,
           isConfidential: request.body.isConfidential,
           managerId: request.body.managerId,
@@ -2198,6 +2212,13 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         body: z.strictObject({
           title: TitleSchema.optional(),
           description: DescriptionSchema.nullable().optional(),
+          owningDepartment: z
+            .string()
+            .trim()
+            .max(MAX_CONTRACT_CLASSIFICATION_LENGTH)
+            .nullable()
+            .optional(),
+          region: z.string().trim().max(MAX_CONTRACT_CLASSIFICATION_LENGTH).nullable().optional(),
           /** CTR-004's Owner. `null` clears it back to unassigned —
            * a real state (triage), not an absent field. */
           managerId: z.string().nullable().optional(),
@@ -2288,11 +2309,17 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         const current = await lockedContract(tx, request.params.number, request.user);
         let businessAttached: AttachedCustomField[] | null = null;
         if (request.user.role === "business_user") {
-          const allowed = new Set(["value", "effectiveDate", "customFields"]);
+          const allowed = new Set([
+            "value",
+            "effectiveDate",
+            "owningDepartment",
+            "region",
+            "customFields",
+          ]);
           if (Object.keys(body).some((key) => !allowed.has(key))) {
             throw httpError(
               403,
-              "Contributors can edit only the value, effective date, and business Fields on this contract.",
+              "Business Users can edit only the value, effective date, owning department, region, and business Fields on this Contract.",
             );
           }
           if (body.customFields !== undefined) {
@@ -2328,6 +2355,15 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           if (next !== target.description) {
             patch.description = next;
             changed.description = { from: target.description, to: next };
+          }
+        }
+
+        for (const key of ["owningDepartment", "region"] as const) {
+          if (body[key] === undefined) continue;
+          const next = body[key]?.trim() || null;
+          if (next !== target[key]) {
+            patch[key] = next;
+            changed[key] = { from: target[key], to: next };
           }
         }
 

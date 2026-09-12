@@ -543,14 +543,14 @@ describe("GET /api/events", () => {
     const contributor = await EventStream.open(streamUrl(), contributorCookies);
 
     try {
-      const submit = async (requestTypeId: string, summary: string) => {
+      const submit = async (requestTypeId: string, title: string) => {
         const response = await harness.app.inject({
           method: "POST",
           url: "/api/v1/requests",
           cookies: requesterCookies,
           payload: {
             requestTypeId,
-            summary,
+            title,
             description: "The live Inbox count needs this Request.",
             urgency: "medium",
           },
@@ -624,14 +624,14 @@ describe("GET /api/events", () => {
   it("serializes totals when two Request dispositions finish together", async () => {
     const member = await EventStream.open(streamUrl(), memberCookies);
     try {
-      const submit = async (summary: string) => {
+      const submit = async (title: string) => {
         const response = await harness.app.inject({
           method: "POST",
           url: "/api/v1/requests",
           cookies: requesterCookies,
           payload: {
             requestTypeId: contractRequestTypeId,
-            summary,
+            title,
             description: "Two triagers are clearing different Requests.",
             urgency: "low",
           },

@@ -364,7 +364,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
         'request'::text as kind,
         ${requests.id} as id,
         ${requests.number} as number,
-        ${requests.summary} as title,
+        ${requests.title} as title,
         false as is_confidential,
         5::integer as kind_order,
         ${requestExact} as exact_number,

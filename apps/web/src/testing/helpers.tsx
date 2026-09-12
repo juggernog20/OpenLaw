@@ -433,9 +433,7 @@ export function stubApi(state: ApiState) {
       });
     }
     if (
-      /^\/api\/v1\/portal\/(contracts|matters)\/\d+\/supporting-documents$/.test(
-        call.url.pathname,
-      ) &&
+      /^\/api\/v1\/portal\/(contracts|matters)\/\d+\/documents$/.test(call.url.pathname) &&
       call.method === "GET"
     )
       return json(200, { documents: [], nextCursor: null });

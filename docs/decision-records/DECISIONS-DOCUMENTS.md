@@ -220,6 +220,10 @@ M22 added `documents.matter_id`, made `contract_id` nullable, and replaced its o
 
 A reached Contributor may create a supporting Document on a live or closed Matter and append to a supporting chain, but cannot create folders, move or archive paper, change confidentiality, or use primary and executed designations. The upload creates one `matter_id` owner and no Contract owner, and the resulting Document, Version, Activity, download, and notification reads continue to inherit the Matter gate. An archived Matter freezes even supporting upload; no Document gains a team or independent owner through this path.
 
+### Addendum (2026-09-12, DD-024) — Portal Document versions
+
+DD-024 permits new Versions on any accessible Contract or Matter Document, including the primary Contract chain, and reads of its full history. Designations and Document administration remain Legal actions. DES-081 replaces the separate Portal paper cards with one Documents section.
+
 ## DOC-009 — Storage & search: requirements here, engine picks routed to tech-stack
 
 - **Status** — Accepted

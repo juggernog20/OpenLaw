@@ -61,7 +61,7 @@
  * clears.
  */
 
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { FormattedMessage, defineMessage, useIntl, type IntlShape } from "react-intl";
 import { Eraser, Lock, MessageSquare, MoreHorizontal, Pencil, Trash2, X } from "lucide-react";
 import { Link } from "react-router";
@@ -80,6 +80,7 @@ import {
 import { api } from "../../lib/api";
 import {
   composerTiers,
+  commentHeaders,
   mentionText,
   mergeCommentWindow,
   namedInDraft,
@@ -146,6 +147,7 @@ const MAX_MENTION_QUERY = 40;
 
 export interface CommentAppletOptions {
   enabled?: boolean;
+  surface?: "portal";
   /** The record the thread hangs off — its type and its id, never a
    * record-specific address. */
   entityType: CommentEntityType;
@@ -180,6 +182,7 @@ export interface CommentAppletOptions {
  */
 export function useCommentApplet({
   enabled = true,
+  surface,
   entityType,
   entityId,
   role,
@@ -235,7 +238,10 @@ export function useCommentApplet({
     if (!enabled) return;
     const issue = (unreadIssued.current += 1);
     const { data } = await api
-      .GET("/api/v1/comments/unread", { params: { query: { entityType, entityId } } })
+      .GET("/api/v1/comments/unread", {
+        headers: commentHeaders(surface),
+        params: { query: { entityType, entityId } },
+      })
       .catch(() => ({ data: undefined }));
     if (!data || issue < unreadLanded.current) return;
     unreadLanded.current = issue;
@@ -243,7 +249,7 @@ export function useCommentApplet({
     // old badge from a frame, because the frame says nothing about what
     // this viewer can read (CMT-009).
     setUnread(data.unread);
-  }, [entityType, entityId, enabled]);
+  }, [entityType, entityId, enabled, surface]);
 
   useEffect(() => {
     void readUnread();
@@ -264,12 +270,15 @@ export function useCommentApplet({
   const markRead = useCallback(async () => {
     const issue = (unreadIssued.current += 1);
     const marked = await api
-      .POST("/api/v1/comments/read", { body: { entityType, entityId } })
+      .POST("/api/v1/comments/read", {
+        headers: commentHeaders(surface),
+        body: { entityType, entityId },
+      })
       .catch(() => ({ data: undefined }));
     if (!marked.data || issue < unreadLanded.current) return;
     unreadLanded.current = issue;
     setUnread(marked.data.unread);
-  }, [entityType, entityId]);
+  }, [entityType, entityId, surface]);
 
   const load = useCallback(async () => {
     const issue = (threadIssued.current += 1);
@@ -286,10 +295,16 @@ export function useCommentApplet({
     // a request at the moment somebody is being addressed.
     const [thread, people] = await Promise.all([
       api
-        .GET("/api/v1/comments", { params: { query: { entityType, entityId } } })
+        .GET("/api/v1/comments", {
+          headers: commentHeaders(surface),
+          params: { query: { entityType, entityId } },
+        })
         .catch(() => ({ data: undefined })),
       api
-        .GET("/api/v1/comments/mention-candidates", { params: { query: { entityType, entityId } } })
+        .GET("/api/v1/comments/mention-candidates", {
+          headers: commentHeaders(surface),
+          params: { query: { entityType, entityId } },
+        })
         .catch(() => ({ data: undefined })),
     ]);
     if (issue < threadCancelled.current) return;
@@ -315,7 +330,7 @@ export function useCommentApplet({
     // that remains, so the badge takes the server's number rather than
     // assuming zero.
     await markRead();
-  }, [entityType, entityId, markRead]);
+  }, [entityType, entityId, markRead, surface]);
 
   /** Re-asks the visible window after a content-free prompt. New rows
    * take their place in the flat chronological thread, and every row on
@@ -325,8 +340,22 @@ export function useCommentApplet({
   const refreshThread = useCallback(async () => {
     const issue = (threadIssued.current += 1);
     const throughId = commentsRef.current?.[0]?.id;
-    const data = await readCommentWindow(entityType, entityId, throughId);
-    if (!data || issue < threadLanded.current) return;
+    const data = await readCommentWindow(
+      entityType,
+      entityId,
+      throughId,
+      surface ? "full_thread" : undefined,
+      surface,
+    );
+    if (issue < threadLanded.current) return;
+    if (!data) {
+      if (surface === "portal") {
+        setComments(null);
+        setCursor(null);
+        setLoadFailed(true);
+      }
+      return;
+    }
     if (!panelOpen.current) {
       void readUnread();
       return;
@@ -340,7 +369,7 @@ export function useCommentApplet({
     );
     if (first || commentsRef.current?.[0]?.id === throughId) setCursor(data.nextCursor);
     await markRead();
-  }, [entityType, entityId, markRead, readUnread]);
+  }, [entityType, entityId, markRead, readUnread, surface]);
 
   /** One live re-ask at a time. Frames received during it collapse into
    * one trailing read, whose open/closed route is chosen when it runs. */
@@ -391,18 +420,33 @@ export function useCommentApplet({
   const older = useCallback(async (): Promise<Comment | null> => {
     if (cursor === null) return null;
     const { data } = await api
-      .GET("/api/v1/comments", { params: { query: { entityType, entityId, cursor } } })
+      .GET("/api/v1/comments", {
+        headers: commentHeaders(surface),
+        params: { query: { entityType, entityId, cursor } },
+      })
       .catch(() => ({ data: undefined }));
     if (!data) throw new Error("older comments");
     setComments((current) => [...data.comments, ...(current ?? [])]);
     setCursor(data.nextCursor);
     return data.comments[0] ?? null;
-  }, [entityType, entityId, cursor]);
+  }, [entityType, entityId, cursor, surface]);
+
+  const composer = useComposer({
+    entityType,
+    entityId,
+    role,
+    confidential,
+    candidates,
+    surface,
+    onPosted: (posted) =>
+      setComments((current) => (current === null ? null : mergeCommentWindow([posted], current))),
+  });
 
   return {
     id: "chat",
     icon: MessageSquare,
     label: CHAT_LABEL,
+    hash: surface === "portal" ? "portal-request-composer" : undefined,
     // CMT-004: chat is the only applet that carries one.
     badge: unread,
     onExpandedChange: changePanelOpen,
@@ -415,22 +459,13 @@ export function useCommentApplet({
         viewerId={viewerId}
         confidential={confidential}
         filing={filing}
+        surface={surface}
+        composer={composer}
         comments={comments}
-        candidates={candidates}
         loadFailed={loadFailed}
         onLoad={load}
         hasOlder={cursor !== null}
         onOlder={older}
-        // A thread that could not be read stays unread. Folding the
-        // posted row into the null sentinel would turn "we do not know
-        // what is here" into a one-row conversation, under a load error
-        // that is still on screen and beside a count claiming 1.
-        onPosted={(posted) =>
-          setComments((current) =>
-            // A live read may already include this post, or a later edit of it.
-            current === null ? null : mergeCommentWindow([posted], current),
-          )
-        }
         // A correction answers with the row as it now stands, so the
         // thread takes the server's word for it rather than guessing at
         // what changed. The row keeps its place: a tombstone that moved
@@ -479,12 +514,12 @@ function CommentThread({
   confidential,
   filing,
   comments,
-  candidates,
   loadFailed,
   onLoad,
   hasOlder,
   onOlder,
-  onPosted,
+  composer,
+  surface,
   onChanged,
 }: Readonly<{
   entityType: CommentEntityType;
@@ -495,7 +530,6 @@ function CommentThread({
   filing?: CommentFilingContext;
   /** null until the first read answers. */
   comments: readonly Comment[] | null;
-  candidates: readonly MentionCandidate[];
   loadFailed: boolean;
   onLoad: () => Promise<void>;
   /** There is thread before what is on screen (CTR-024). */
@@ -504,7 +538,8 @@ function CommentThread({
    * comment it brought — the row focus moves to (DES-031). Throws when
    * the read failed, which is what the control reports. */
   onOlder: () => Promise<Comment | null>;
-  onPosted: (comment: Comment) => void;
+  composer: ReactNode;
+  surface?: "portal";
   onChanged: (comment: Comment) => void;
 }>) {
   const intl = useIntl();
@@ -590,6 +625,7 @@ function CommentThread({
                 key={comment.id}
                 comment={comment}
                 role={role}
+                surface={surface}
                 viewerId={viewerId}
                 entityType={entityType}
                 entityId={entityId}
@@ -602,14 +638,7 @@ function CommentThread({
           </ol>
         )}
       </div>
-      <Composer
-        entityType={entityType}
-        entityId={entityId}
-        role={role}
-        confidential={confidential}
-        candidates={candidates}
-        onPosted={onPosted}
-      />
+      {composer}
     </div>
   );
 }
@@ -646,6 +675,7 @@ const TOMBSTONE = {
 function CommentRow({
   comment,
   role,
+  surface,
   viewerId,
   entityType,
   entityId,
@@ -656,6 +686,7 @@ function CommentRow({
 }: Readonly<{
   comment: Comment;
   role: Role;
+  surface?: "portal";
   viewerId: string;
   entityType: CommentEntityType;
   entityId: string;
@@ -726,6 +757,7 @@ function CommentRow({
     correct(
       () =>
         api.PATCH("/api/v1/comments/{commentId}", {
+          headers: commentHeaders(surface),
           params: { path: { commentId: comment.id } },
           body: { body },
         }),
@@ -740,9 +772,11 @@ function CommentRow({
       () =>
         removal === "delete"
           ? api.DELETE("/api/v1/comments/{commentId}", {
+              headers: commentHeaders(surface),
               params: { path: { commentId: comment.id } },
             })
           : api.POST("/api/v1/comments/{commentId}/redact", {
+              headers: commentHeaders(surface),
               params: { path: { commentId: comment.id } },
             }),
       intl.formatMessage({
@@ -1171,12 +1205,13 @@ function TierBadge({
  * hear it, offers the narrowest tier that includes everybody named, and
  * on cancel leaves the box exactly as it was. Promotion is a choice.
  */
-function Composer({
+function useComposer({
   entityType,
   entityId,
   role,
   confidential,
   candidates,
+  surface,
   onPosted,
 }: Readonly<{
   entityType: CommentEntityType;
@@ -1186,6 +1221,7 @@ function Composer({
    * and says that the bound holds at every tier. */
   confidential: boolean;
   candidates: readonly MentionCandidate[];
+  surface?: "portal";
   onPosted: (comment: Comment) => void;
 }>) {
   const intl = useIntl();
@@ -1230,6 +1266,31 @@ function Composer({
    * the same pre-render state value and both would pass. */
   const inFlight = useRef(false);
   const [busy, setBusy] = useState(false);
+
+  const generation = useRef(0);
+  useEffect(() => {
+    generation.current += 1;
+    inFlight.current = false;
+    return () => {
+      generation.current += 1;
+    };
+  }, [entityType, entityId]);
+
+  const key = `${entityType}:${entityId}`;
+  const [shownRecord, setShownRecord] = useState(key);
+  if (shownRecord !== key) {
+    setShownRecord(key);
+    setBusy(false);
+    setCaret(null);
+    setDraft("");
+    setFiles([]);
+    setPicked([]);
+    setPickedDocuments([]);
+    setQuery(null);
+    setPromotion(null);
+    setError(null);
+    setTier(tiers.includes(defaultTier) ? defaultTier : tiers[0]!);
+  }
 
   useEffect(() => {
     if (caret === null) return;
@@ -1352,6 +1413,7 @@ function Composer({
   async function post(visibility: CommentTier, mentions: readonly MentionCandidate[]) {
     const body = serializeDocumentLinks(draft.trim(), pickedDocuments);
     if (body === "" || inFlight.current) return;
+    const mine = generation.current;
     inFlight.current = true;
     setBusy(true);
     setError(null);
@@ -1364,12 +1426,16 @@ function Composer({
         mentions: mentions.map((person) => person.id),
       },
       files,
+      surface,
     )
       .catch(() => undefined)
       .finally(() => {
-        inFlight.current = false;
-        setBusy(false);
+        if (mine === generation.current) {
+          inFlight.current = false;
+          setBusy(false);
+        }
       });
+    if (mine !== generation.current) return;
     if (!result?.data) {
       setError(
         (await readProblem(result)).detail ??
@@ -1430,34 +1496,36 @@ function Composer({
         requestPost();
       }}
     >
-      <fieldset className="flex w-fit gap-0.5 rounded-button bg-control p-0.5">
-        <legend className="sr-only">
-          {intl.formatMessage({ id: "comments.tierGroup", defaultMessage: "Audience" })}
-        </legend>
-        {tiers.map((option) => (
-          <label
-            key={option}
-            className={cn(
-              "flex cursor-pointer items-center gap-1 rounded-chip px-2.5 py-1 text-xs",
-              "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-link",
-              option === tier
-                ? "border border-border-muted bg-raised font-semibold text-primary"
-                : "font-medium text-muted",
-            )}
-          >
-            <input
-              type="radio"
-              name="comment-tier"
-              value={option}
-              checked={option === tier}
-              onChange={() => setTier(option)}
-              className="sr-only"
-            />
-            {option === "legal_only" && <Lock size={LOCK_SIZE} aria-hidden="true" />}
-            {tierLabel(intl, option, entityType)}
-          </label>
-        ))}
-      </fieldset>
+      {tiers.length > 1 && (
+        <fieldset className="flex w-fit gap-0.5 rounded-button bg-control p-0.5">
+          <legend className="sr-only">
+            {intl.formatMessage({ id: "comments.tierGroup", defaultMessage: "Audience" })}
+          </legend>
+          {tiers.map((option) => (
+            <label
+              key={option}
+              className={cn(
+                "flex cursor-pointer items-center gap-1 rounded-chip px-2.5 py-1 text-xs",
+                "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-link",
+                option === tier
+                  ? "border border-border-muted bg-raised font-semibold text-primary"
+                  : "font-medium text-muted",
+              )}
+            >
+              <input
+                type="radio"
+                name="comment-tier"
+                value={option}
+                checked={option === tier}
+                onChange={() => setTier(option)}
+                className="sr-only"
+              />
+              {option === "legal_only" && <Lock size={LOCK_SIZE} aria-hidden="true" />}
+              {tierLabel(intl, option, entityType)}
+            </label>
+          ))}
+        </fieldset>
+      )}
       <div
         className="relative"
         onBlur={(event) => {

@@ -60,7 +60,7 @@ interface InboxRow {
   id: string;
   number: number;
   status: RequestStatus;
-  summary: string;
+  title: string;
   urgency: string;
   requestType: {
     id: string;
@@ -135,7 +135,7 @@ async function clearRequests() {
  * now.
  */
 async function plant(row: {
-  summary: string;
+  title: string;
   urgency: "low" | "medium" | "high" | "critical";
   createdAt: Date;
   status?: RequestStatus;
@@ -149,7 +149,7 @@ async function plant(row: {
     .values({
       requestTypeId: typeIds.get(row.slug ?? "nda_request")!,
       requesterId: row.requesterId ?? requesterId,
-      summary: row.summary,
+      title: row.title,
       description: "The ask, in full.",
       urgency: row.urgency,
       status: row.status ?? "new",
@@ -199,7 +199,7 @@ describe("Inbox column sorting", () => {
       const urgency = (["medium", "critical", "low", "high"] as const)[i % 4]!;
       const status = (["resolved", "new", "declined", "converted"] as const)[i % 4]!;
       const row = await plant({
-        summary: ["zebra", "Alpha", "beta"][i % 3]!,
+        title: ["zebra", "Alpha", "beta"][i % 3]!,
         urgency,
         status,
         createdAt: ago(i % 5),
@@ -216,8 +216,8 @@ describe("Inbox column sorting", () => {
       for (const dir of ["asc", "desc"] as const) {
         const value = (row: (typeof planted)[number]): string | number => {
           switch (sort) {
-            case "summary":
-              return row.summary.toLowerCase();
+            case "title":
+              return row.title.toLowerCase();
             case "urgency":
               return ["low", "medium", "high", "critical"].indexOf(row.urgency);
             case "status":
@@ -249,7 +249,7 @@ describe("Inbox column sorting", () => {
       }
     }
     const filtered = await readInbox(memberCookies, {
-      sort: "summary",
+      sort: "title",
       dir: "desc",
       urgency: "critical",
     });
@@ -268,7 +268,7 @@ describe("Inbox column sorting", () => {
   });
 
   it("rejects unknown sort columns and directions", async () => {
-    for (const query of [{ sort: "unknown" }, { sort: "summary", dir: "sideways" }] as Record<
+    for (const query of [{ sort: "unknown" }, { sort: "title", dir: "sideways" }] as Record<
       string,
       string
     >[]) {
@@ -302,26 +302,26 @@ describe("who may open the Inbox (INT-006, DD-013)", () => {
 describe("what is in the queue (INT-007)", () => {
   it("answers exactly the `new` Requests by default", async () => {
     await clearRequests();
-    await plant({ summary: "Still open", urgency: "medium", createdAt: ago(2) });
+    await plant({ title: "Still open", urgency: "medium", createdAt: ago(2) });
     for (const status of ["converted", "resolved", "declined"] as const) {
-      await plant({ summary: `Already ${status}`, urgency: "medium", createdAt: ago(1), status });
+      await plant({ title: `Already ${status}`, urgency: "medium", createdAt: ago(1), status });
     }
 
     const read = await readInbox(memberCookies);
     expect(read.statusCode, read.body).toBe(200);
-    expect(read.requests.map((row) => row.summary)).toEqual(["Still open"]);
+    expect(read.requests.map((row) => row.title)).toEqual(["Still open"]);
   });
 
   it("reveals the triaged Requests with their outcome when asked", async () => {
     await clearRequests();
-    await plant({ summary: "Still open", urgency: "medium", createdAt: ago(2) });
+    await plant({ title: "Still open", urgency: "medium", createdAt: ago(2) });
     for (const status of ["converted", "resolved", "declined"] as const) {
-      await plant({ summary: `Already ${status}`, urgency: "medium", createdAt: ago(1), status });
+      await plant({ title: `Already ${status}`, urgency: "medium", createdAt: ago(1), status });
     }
 
     const read = await readInbox(memberCookies, { includeTriaged: "true" });
     expect(read.statusCode, read.body).toBe(200);
-    const outcomes = new Map(read.requests.map((row) => [row.summary, row.status]));
+    const outcomes = new Map(read.requests.map((row) => [row.title, row.status]));
     expect(outcomes.get("Still open")).toBe("new");
     expect(outcomes.get("Already converted")).toBe("converted");
     expect(outcomes.get("Already resolved")).toBe("resolved");
@@ -331,7 +331,7 @@ describe("what is in the queue (INT-007)", () => {
   it("leaves an archived Request out of both views", async () => {
     await clearRequests();
     await plant({
-      summary: "Archived away",
+      title: "Archived away",
       urgency: "critical",
       createdAt: ago(1),
       archivedAt: NOW,
@@ -360,15 +360,15 @@ describe("the order the queue reads in (INT-006)", () => {
     await clearRequests();
     // Planted out of order on both axes, so neither insertion order nor
     // the reference sequence could produce the expected answer.
-    await plant({ summary: "medium, 1h", urgency: "medium", createdAt: ago(1) });
-    await plant({ summary: "critical, 1h", urgency: "critical", createdAt: ago(1) });
-    await plant({ summary: "low, 100h", urgency: "low", createdAt: ago(100) });
-    await plant({ summary: "critical, 5h", urgency: "critical", createdAt: ago(5) });
-    await plant({ summary: "high, 2h", urgency: "high", createdAt: ago(2) });
-    await plant({ summary: "medium, 50h", urgency: "medium", createdAt: ago(50) });
+    await plant({ title: "medium, 1h", urgency: "medium", createdAt: ago(1) });
+    await plant({ title: "critical, 1h", urgency: "critical", createdAt: ago(1) });
+    await plant({ title: "low, 100h", urgency: "low", createdAt: ago(100) });
+    await plant({ title: "critical, 5h", urgency: "critical", createdAt: ago(5) });
+    await plant({ title: "high, 2h", urgency: "high", createdAt: ago(2) });
+    await plant({ title: "medium, 50h", urgency: "medium", createdAt: ago(50) });
 
     const read = await readInbox(memberCookies);
-    expect(read.requests.map((row) => row.summary)).toEqual([
+    expect(read.requests.map((row) => row.title)).toEqual([
       "critical, 5h",
       "critical, 1h",
       "high, 2h",
@@ -386,13 +386,13 @@ describe("paging the queue (the house keyset pattern)", () => {
     // than only between them.
     const planted: string[] = [];
     for (let index = 0; index < 60; index += 1) {
-      const summary = `Queued ${String(index).padStart(2, "0")}`;
+      const title = `Queued ${String(index).padStart(2, "0")}`;
       await plant({
-        summary,
+        title,
         urgency: index < 30 ? "high" : "low",
         createdAt: ago(200 - index),
       });
-      planted.push(summary);
+      planted.push(title);
     }
 
     const first = await readInbox(memberCookies);
@@ -405,7 +405,7 @@ describe("paging the queue (the house keyset pattern)", () => {
     expect(second.requests).toHaveLength(10);
     expect(second.nextCursor).toBeNull();
 
-    const read = [...first.requests, ...second.requests].map((row) => row.summary);
+    const read = [...first.requests, ...second.requests].map((row) => row.title);
     expect(new Set(read).size).toBe(60);
     // The whole queue, in the one ordering: the thirty `high` rows
     // oldest first, then the thirty `low` ones.
@@ -414,7 +414,7 @@ describe("paging the queue (the house keyset pattern)", () => {
 
   it("refuses a cursor that names nothing with an empty page, not an error", async () => {
     await clearRequests();
-    await plant({ summary: "Still open", urgency: "medium", createdAt: ago(2) });
+    await plant({ title: "Still open", urgency: "medium", createdAt: ago(2) });
 
     // The boundary is read out of the table; a cursor naming no Request
     // resolves every comparison to NULL and the answer is a page of
@@ -439,7 +439,7 @@ describe("what one row carries (INT-007, I1)", () => {
   it("names the reference, the ask, the type and its target, the requester, and the age", async () => {
     await clearRequests();
     const stored = await plant({
-      summary: "NDA with Northwind Labs",
+      title: "NDA with Northwind Labs",
       urgency: "high",
       createdAt: ago(3),
       slug: "nda_request",
@@ -451,7 +451,7 @@ describe("what one row carries (INT-007, I1)", () => {
       id: stored.id,
       number: stored.number,
       status: "new",
-      summary: "NDA with Northwind Labs",
+      title: "NDA with Northwind Labs",
       urgency: "high",
       requestType: { displayName: "NDA request", targetModule: "contract", targetTypeName: "NDA" },
       requester: { id: requesterId, displayName: REQUESTER.displayName },
@@ -463,13 +463,13 @@ describe("what one row carries (INT-007, I1)", () => {
   it("reads a module-only target as the module alone, and no target as neither", async () => {
     await clearRequests();
     await plant({
-      summary: "Redline review",
+      title: "Redline review",
       urgency: "high",
       createdAt: ago(2),
       slug: "contract_review",
     });
     await plant({
-      summary: "One-off question",
+      title: "One-off question",
       urgency: "high",
       createdAt: ago(1),
       slug: "legal_question",
@@ -500,7 +500,7 @@ describe("the trail from ask to work (DD-014, CTR-018)", () => {
     await clearRequests();
     const contract = await createContract("Northwind Labs NDA", false);
     await plant({
-      summary: "NDA with Northwind Labs",
+      title: "NDA with Northwind Labs",
       urgency: "high",
       createdAt: ago(3),
       status: "converted",
@@ -517,7 +517,7 @@ describe("the trail from ask to work (DD-014, CTR-018)", () => {
     // Member is neither its Owner nor on its team (DD-014).
     const contract = await createContract("Project Cormorant", true);
     await plant({
-      summary: "Something quiet",
+      title: "Something quiet",
       urgency: "high",
       createdAt: ago(3),
       status: "converted",
@@ -527,7 +527,7 @@ describe("the trail from ask to work (DD-014, CTR-018)", () => {
     const withheld = await readInbox(memberCookies, { includeTriaged: "true" });
     expect(withheld.requests).toHaveLength(1);
     expect(withheld.requests[0]).toMatchObject({
-      summary: "Something quiet",
+      title: "Something quiet",
       status: "converted",
       // The withholding is the server's decision, and the row survives
       // it: the Request is still triage's business.
@@ -548,7 +548,7 @@ describe("the trail from ask to work (DD-014, CTR-018)", () => {
       .where(eq(users.email, MEMBER.email));
     await harness.db.insert(contractTeam).values({ contractId: contract.id, userId: member!.id });
     await plant({
-      summary: "Something quiet, shared",
+      title: "Something quiet, shared",
       urgency: "high",
       createdAt: ago(3),
       status: "converted",
@@ -563,7 +563,7 @@ describe("the trail from ask to work (DD-014, CTR-018)", () => {
     await clearRequests();
     const contract = await createContract("Northwind Labs NDA, retired", false);
     await plant({
-      summary: "NDA that ran its course",
+      title: "NDA that ran its course",
       urgency: "high",
       createdAt: ago(3),
       status: "converted",
@@ -579,7 +579,7 @@ describe("the trail from ask to work (DD-014, CTR-018)", () => {
     const read = await readInbox(memberCookies, { includeTriaged: "true" });
     expect(read.requests).toHaveLength(1);
     expect(read.requests[0]).toMatchObject({
-      summary: "NDA that ran its course",
+      title: "NDA that ran its course",
       status: "converted",
       convertedContract: null,
     });
@@ -593,15 +593,15 @@ describe("Inbox quick filters", () => {
     for (let i = 0; i < 53; i++)
       expected.push(
         await plant({
-          summary: `Match ${i}`,
+          title: `Match ${i}`,
           urgency: i % 2 ? "high" : "critical",
           createdAt: ago(i + 1),
           status: i % 2 ? "new" : "resolved",
         }),
       );
-    await plant({ summary: "Wrong urgency", urgency: "low", createdAt: ago(100) });
+    await plant({ title: "Wrong urgency", urgency: "low", createdAt: ago(100) });
     await plant({
-      summary: "Wrong status",
+      title: "Wrong status",
       urgency: "critical",
       status: "declined",
       createdAt: ago(101),
@@ -632,19 +632,19 @@ describe("Inbox quick filters", () => {
 
   it("treats received-date boundaries as inclusive civil dates in the viewer's timezone", async () => {
     await clearRequests();
-    for (const [summary, createdAt] of [
+    for (const [title, createdAt] of [
       ["Before", "2026-09-04T19:59:59Z"],
       ["Start", "2026-09-04T20:00:00Z"],
       ["End", "2026-09-05T19:59:59Z"],
       ["After", "2026-09-05T20:00:00Z"],
     ])
-      await plant({ summary: summary!, createdAt: new Date(createdAt!), urgency: "medium" });
+      await plant({ title: title!, createdAt: new Date(createdAt!), urgency: "medium" });
     const result = await readInbox(memberCookies, {
       receivedFrom: "2026-09-05",
       receivedTo: "2026-09-05",
       timeZone: "Asia/Dubai",
     });
-    expect(result.requests.map((r) => r.summary)).toEqual(["Start", "End"]);
+    expect(result.requests.map((r) => r.title)).toEqual(["Start", "End"]);
     expect(
       (await readInbox(memberCookies, { receivedFrom: "2026-09-06", receivedTo: "2026-09-05" }))
         .statusCode,
@@ -656,7 +656,7 @@ describe("Inbox quick filters", () => {
   it("offers requesters and types from triaged requests even when their type is archived, behind the triage gate", async () => {
     await clearRequests();
     const row = await plant({
-      summary: "Old type",
+      title: "Old type",
       urgency: "low",
       status: "resolved",
       createdAt: ago(2),

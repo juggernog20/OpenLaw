@@ -173,7 +173,7 @@ test.describe.serial("M22 demo path", () => {
         .getByRole("list", { name: "Request types" })
         .getByRole("link", { name: new RegExp(REQUEST_TYPE_NAME) })
         .click();
-      await portal.getByLabel("Summary").fill(CONVERTED_TITLE);
+      await portal.getByLabel("Title").fill(CONVERTED_TITLE);
       await portal.getByLabel("Description").fill("Please advise on the proposed launch.");
       const submitted = portal.waitForResponse(
         (response) =>

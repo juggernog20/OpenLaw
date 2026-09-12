@@ -20,7 +20,7 @@ import {
  * the closing reply is the natural thing to type. */
 const request = (overrides: Record<string, unknown> = {}) =>
   staffRequest({
-    summary: "Which NDA template do we use under $1k?",
+    title: "Which NDA template do we use under $1k?",
     description: "Small vendor, standard terms.",
     urgency: "low",
     ...overrides,

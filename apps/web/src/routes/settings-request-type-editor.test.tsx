@@ -226,8 +226,6 @@ const openEditor = (extra: ReturnType<typeof editorApi>) => {
   renderAt("/settings/intake/request-types/r2");
 };
 
-const targetSelect = () => screen.getByLabelText("Target");
-
 describe("the SET-002 gate on the editor", () => {
   it("bounces a Legal Team Member to their own settings", async () => {
     stubApi({ signedIn: MEMBER });
@@ -237,7 +235,7 @@ describe("the SET-002 gate on the editor", () => {
 });
 
 describe("identity (ST14's left card)", () => {
-  it("edits display name, description, and the immutable slug as a fact", async () => {
+  it("edits display name and description without showing the internal slug", async () => {
     const calls = newCalls();
     openEditor(editorApi(calls));
     const user = userEvent.setup();
@@ -245,9 +243,8 @@ describe("identity (ST14's left card)", () => {
     expect(screen.getByLabelText("Description")).toHaveValue(
       "Review of a counterparty contract or redline.",
     );
-    const slug = screen.getByLabelText("Slug");
-    expect(slug).toHaveValue("contract_review");
-    expect(slug).toHaveAttribute("readonly");
+    expect(screen.queryByLabelText("Slug")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Target")).not.toBeInTheDocument();
 
     await user.clear(screen.getByLabelText("Display name"));
     await user.type(screen.getByLabelText("Display name"), "Contract triage");
@@ -277,7 +274,7 @@ describe("the form definition (ST14's right card)", () => {
     expect(screen.getByText("Basics are always on the form")).toBeInTheDocument();
 
     for (const [name, required] of [
-      ["Summary", true],
+      ["Title", true],
       ["Description", true],
       ["Attachments", false],
       ["Urgency", true],
@@ -289,10 +286,10 @@ describe("the form definition (ST14's right card)", () => {
         screen.getByText(`${name} is always collected and can't be changed.`),
       ).toBeInTheDocument();
     }
-    // Urgency wears the severity ramp, not the pre-DES-018 wording.
-    expect(screen.getByText("Low · medium · high · critical")).toBeInTheDocument();
+    const urgencyRow = screen.getByRole("checkbox", { name: "Urgency required" }).closest("li")!;
+    expect(within(urgencyRow).getByText("Single select")).toBeInTheDocument();
     // A basic is stated, never detachable.
-    expect(screen.queryByRole("button", { name: "Detach Summary" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Detach Title" })).not.toBeInTheDocument();
     // Two lists in one card, each naming which it is.
     expect(screen.getByRole("list", { name: "Basics are always on the form" })).toBeInTheDocument();
     expect(screen.getByRole("list", { name: "Form fields" })).toBeInTheDocument();
@@ -310,42 +307,7 @@ describe("the form definition (ST14's right card)", () => {
     expect(within(menu).getByRole("menuitem", { name: /Department/ })).toBeInTheDocument();
     expect(within(menu).getByRole("menuitem", { name: /Governing law/ })).toBeInTheDocument();
     expect(within(menu).queryByText("Practice area")).not.toBeInTheDocument();
-    expect(within(menu).queryByText("Summary")).not.toBeInTheDocument();
-  });
-
-  it("re-scopes the menu when the target is re-pointed, with no reload", async () => {
-    openEditor(editorApi(newCalls()));
-    const user = userEvent.setup();
-    await screen.findByText("Form fields");
-
-    await user.selectOptions(targetSelect(), "matter:mt-lit");
-    await waitFor(() => expect(targetSelect()).toHaveValue("matter:mt-lit"));
-    await user.click(screen.getByRole("button", { name: "Attach field" }));
-    const menu = await screen.findByRole("menu");
-    expect(within(menu).getByText("Practice area")).toBeInTheDocument();
-    expect(within(menu).getByText("Department")).toBeInTheDocument();
-    expect(within(menu).queryByText("Governing law")).not.toBeInTheDocument();
-  });
-
-  it("scopes the menu by the saved target, never by a pick the server refused", async () => {
-    openEditor(
-      editorApi(newCalls(), review(), {
-        status: 409,
-        detail: "Counterparty name does not fit that target. Detach it from the form first.",
-      }),
-    );
-    const user = userEvent.setup();
-    await screen.findByText("Form fields");
-    await user.selectOptions(targetSelect(), "matter:mt-lit");
-    await screen.findByText(
-      "Counterparty name does not fit that target. Detach it from the form first.",
-    );
-
-    await user.click(screen.getByRole("button", { name: "Attach field" }));
-    const menu = await screen.findByRole("menu");
-    // The row is still contract-targeted, so the menu still is.
-    expect(within(menu).getByText("Governing law")).toBeInTheDocument();
-    expect(within(menu).queryByText("Practice area")).not.toBeInTheDocument();
+    expect(within(menu).queryByText("Title")).not.toBeInTheDocument();
   });
 
   it("attaches a field and announces it", async () => {
@@ -367,7 +329,7 @@ describe("the form definition (ST14's right card)", () => {
     await user.click(screen.getByRole("button", { name: "Detach Counterparty name" }));
     await waitFor(() => expect(calls.detached).toEqual(["f-cp"]));
     await waitFor(() => expect(screen.queryByText("Counterparty name")).not.toBeInTheDocument());
-    expect(screen.getByRole("checkbox", { name: "Summary required" })).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: "Title required" })).toBeInTheDocument();
   });
 
   /**
@@ -392,11 +354,6 @@ describe("the form definition (ST14's right card)", () => {
     // disabled control.
     expect(box).toHaveAttribute("aria-describedby", reason.id);
     expect(reason.id).not.toBe("");
-    // Said on the screen as well, for everybody who is not using a
-    // reader — a disabled box alone explains nothing.
-    expect(
-      screen.getByText(/A user or entity field can be on the form but can't be required/),
-    ).toBeInTheDocument();
   });
 
   it("leaves the row itself a row: it still detaches and still reorders", async () => {
@@ -408,134 +365,6 @@ describe("the form definition (ST14's right card)", () => {
     ).toBeInTheDocument();
     // Only this row's box is locked; an ordinary field keeps its own.
     expect(screen.getByRole("checkbox", { name: "Counterparty name required" })).toBeEnabled();
-  });
-});
-
-describe("the target (INT-002)", () => {
-  it("groups the options: no target, the Matter module, the Contract module", async () => {
-    openEditor(editorApi(newCalls()));
-    const select = await screen.findByLabelText("Target");
-    expect(within(select).getByRole("group", { name: "Matter" })).toBeInTheDocument();
-    expect(within(select).getByRole("group", { name: "Contract" })).toBeInTheDocument();
-    expect(
-      within(select)
-        .getAllByRole("option")
-        .map((option) => option.textContent),
-    ).toEqual(["No target", "Matter", "Litigation", "Contract", "NDA", "MSA"]);
-  });
-
-  it("offers live types only", async () => {
-    openEditor(editorApi(newCalls()));
-    const select = await screen.findByLabelText("Target");
-    expect(within(select).queryByRole("option", { name: "Retired kind" })).not.toBeInTheDocument();
-    expect(
-      within(select).queryByRole("option", { name: "Retired matters" }),
-    ).not.toBeInTheDocument();
-  });
-
-  it("shows the module-only state and says what conversion will do", async () => {
-    openEditor(editorApi(newCalls()));
-    expect(await screen.findByLabelText("Target")).toHaveValue("contract");
-    expect(
-      screen.getByText(
-        "Converting a request of this type creates a contract; the reviewer picks the " +
-          "contract type at conversion.",
-      ),
-    ).toBeInTheDocument();
-  });
-
-  it("names a contract type in one pick, and the help line follows", async () => {
-    const calls = newCalls();
-    openEditor(editorApi(calls));
-    const user = userEvent.setup();
-    await screen.findByLabelText("Target");
-    await user.selectOptions(targetSelect(), "contract:ct-nda");
-    await waitFor(() =>
-      expect(calls.patches).toEqual([{ targetModule: "contract", targetTypeId: "ct-nda" }]),
-    );
-    expect(
-      await screen.findByText(
-        "Converting a request of this type creates a contract of the NDA type.",
-      ),
-    ).toBeInTheDocument();
-  });
-
-  it("re-points at a matter type, and at no target at all", async () => {
-    const calls = newCalls();
-    openEditor(editorApi(calls));
-    const user = userEvent.setup();
-    await screen.findByLabelText("Target");
-
-    await user.selectOptions(targetSelect(), "matter:mt-lit");
-    await waitFor(() =>
-      expect(calls.patches).toEqual([{ targetModule: "matter", targetTypeId: "mt-lit" }]),
-    );
-    expect(
-      await screen.findByText(
-        "Converting a request of this type creates a matter of the Litigation type.",
-      ),
-    ).toBeInTheDocument();
-
-    await user.selectOptions(targetSelect(), "");
-    await waitFor(() => expect(calls.patches).toHaveLength(2));
-    expect(calls.patches[1]).toEqual({ targetModule: null, targetTypeId: null });
-    expect(
-      await screen.findByText(
-        "Converting a request of this type creates no record. It is answered in the " +
-          "thread and resolved there.",
-      ),
-    ).toBeInTheDocument();
-  });
-
-  it("keeps an archived target selected, marks it, and flags it", async () => {
-    openEditor(editorApi(newCalls(), review({ targetTypeId: "ct-old" })));
-    const select = await screen.findByLabelText("Target");
-    expect(select).toHaveValue("contract:ct-old");
-    expect(within(select).getByRole("option", { name: "Retired kind (archived)" })).toBeVisible();
-    expect(
-      screen.getByText(
-        "Retired kind is archived. Requests of this type convert with no type until you " +
-          "pick a live one.",
-      ),
-    ).toBeInTheDocument();
-  });
-
-  it("puts back what the server still holds when the change is refused", async () => {
-    const calls = newCalls();
-    openEditor(
-      editorApi(calls, review(), {
-        status: 400,
-        detail: "The target must be a live contract type.",
-      }),
-    );
-    const user = userEvent.setup();
-    await screen.findByLabelText("Target");
-    await user.selectOptions(targetSelect(), "contract:ct-nda");
-    // The API's own refusal is more actionable than any generic line.
-    expect(await screen.findByText("The target must be a live contract type.")).toBeInTheDocument();
-    await waitFor(() => expect(targetSelect()).toHaveValue("contract"));
-  });
-
-  it("shows the strand refusal by name and leaves the form as it was", async () => {
-    const calls = newCalls();
-    openEditor(
-      editorApi(calls, review(), {
-        status: 409,
-        detail: "Counterparty name does not fit that target. Detach it from the form first.",
-      }),
-    );
-    const user = userEvent.setup();
-    await screen.findByLabelText("Target");
-    await user.selectOptions(targetSelect(), "matter:mt-lit");
-    expect(
-      await screen.findByText(
-        "Counterparty name does not fit that target. Detach it from the form first.",
-      ),
-    ).toBeInTheDocument();
-    // The refusal put the control back, so the menu is scoped to the
-    // target the server still holds.
-    await waitFor(() => expect(targetSelect()).toHaveValue("contract"));
-    expect(screen.getByText("Counterparty name")).toBeInTheDocument();
   });
 });
 
@@ -572,20 +401,16 @@ describe("moving between two request types on the same route (#372)", () => {
     };
   }
 
-  it("reseeds the target and the form when :typeId changes", async () => {
+  it("reseeds the form and field scope when :typeId changes", async () => {
     stubApi({ signedIn: ADMIN, extra: twoTypes(newCalls()) });
     const { router } = renderAt("/settings/intake/request-types/r2");
     expect(await screen.findByLabelText("Display name")).toHaveValue("Contract review");
-    expect(targetSelect()).toHaveValue("contract");
 
     await router.navigate("/settings/intake/request-types/r3");
 
     await waitFor(() =>
       expect(screen.getByLabelText("Display name")).toHaveValue("Legal question"),
     );
-    // The target lives on the page, not on the shared screen — it is the
-    // piece keying the screen alone would have left behind.
-    expect(targetSelect()).toHaveValue("");
     expect(screen.queryByText("Counterparty name")).not.toBeInTheDocument();
 
     // No target means global fields only, so the menu proves the scope
@@ -598,11 +423,11 @@ describe("moving between two request types on the same route (#372)", () => {
   });
 });
 
-it("saves a whole calendar-day turnaround, rejects fractions, and clears back to no suggestion", async () => {
+it("saves a whole business-day turnaround, rejects fractions, and clears back to no suggestion", async () => {
   const calls = newCalls();
   openEditor(editorApi(calls));
   const user = userEvent.setup();
-  const input = await screen.findByLabelText("Turnaround (calendar days)");
+  const input = await screen.findByLabelText("Target turnaround (business days)");
   expect(input).toHaveValue(null);
   await user.type(input, "3{Enter}");
   await waitFor(() => expect(calls.patches).toEqual([{ turnaroundDays: 3 }]));
@@ -622,7 +447,7 @@ it("drops the turnaround refusal as soon as the text it was about changes", asyn
   const calls = newCalls();
   openEditor(editorApi(calls));
   const user = userEvent.setup();
-  const input = await screen.findByLabelText("Turnaround (calendar days)");
+  const input = await screen.findByLabelText("Target turnaround (business days)");
   await user.type(input, "1.5{Enter}");
   expect(await screen.findByText(/Enter a whole number from 0/)).toBeInTheDocument();
 
@@ -655,7 +480,7 @@ it("keeps the keyboard in the turnaround box while an Enter save is in flight", 
   const calls = newCalls();
   const release = heldTurnaround(calls);
   const user = userEvent.setup();
-  const input = await screen.findByLabelText("Turnaround (calendar days)");
+  const input = await screen.findByLabelText("Target turnaround (business days)");
   await user.type(input, "3{Enter}");
   await waitFor(() => expect(calls.patches).toEqual([{ turnaroundDays: 3 }]));
 
@@ -693,7 +518,7 @@ it("keeps the keyboard in the turnaround box when the save is refused", async ()
     detail: "That turnaround is out of range.",
   });
   const user = userEvent.setup();
-  const input = await screen.findByLabelText("Turnaround (calendar days)");
+  const input = await screen.findByLabelText("Target turnaround (business days)");
   await user.type(input, "3{Enter}");
   await waitFor(() => expect(calls.patches).toEqual([{ turnaroundDays: 3 }]));
   expect(document.activeElement).toBe(input);

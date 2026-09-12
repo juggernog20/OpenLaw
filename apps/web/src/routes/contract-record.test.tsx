@@ -389,6 +389,8 @@ function contractRow(overrides: Partial<Record<string, unknown>> = {}) {
     daysRemaining: null,
     renewalPendingConfirmation: false,
     proposedRenewalExpiry: null,
+    owningDepartment: null,
+    region: null,
     description: "Three-year platform engagement.",
     customFields: {},
     aiUnverified: null,
@@ -2407,9 +2409,9 @@ describe("the /contracts/:number record page", () => {
     const user = userEvent.setup();
 
     const team = await openTeam(user);
-    expect(within(team).getAllByText("Ada Admin")).toHaveLength(2);
+    expect(within(team).getByText("Ada Admin")).toBeInTheDocument();
     expect(within(team).getByText("Creator")).toBeInTheDocument();
-    // Provenance is not membership: the creator has no remove control.
+    // The control removes membership, leaving the Creator statement.
     expect(
       within(team).getByRole("button", { name: "Take Ada Admin off the contract team" }),
     ).toBeInTheDocument();
@@ -2445,15 +2447,17 @@ describe("the /contracts/:number record page", () => {
     renderAt("/contracts/42");
     const user = userEvent.setup();
     const team = await openTeam(user);
+    const creator = within(team).getByText("Nadia Counsel");
     await user.click(
       within(team).getByRole("button", { name: "Take Nadia Counsel off the contract team" }),
     );
     await waitFor(() => expect(api.teamCalls).toEqual(["remove u2"]));
     expect(within(team).getByText("Creator")).toBeInTheDocument();
-    expect(within(team).getByText("Nadia Counsel")).toBeInTheDocument();
+    expect(within(team).getByText("Nadia Counsel")).toBe(creator);
     expect(
       within(team).queryByRole("button", { name: "Take Nadia Counsel off the contract team" }),
     ).not.toBeInTheDocument();
+    expect(within(team).getByRole("button", { name: "Add team member" })).toHaveFocus();
   });
 
   it("shows the API's refusal when a team change is turned down", async () => {
@@ -3215,7 +3219,7 @@ describe("the contract record's section tabs (DES-032)", () => {
     // The roster lives in the activity bar beside all sections, so the
     // DES-028 banner's "Manage team" fragment resolves from any of them.
     const team = await openTeam(user);
-    expect(within(team).getAllByText("Ada Admin")).toHaveLength(2);
+    expect(within(team).getByText("Ada Admin")).toBeInTheDocument();
   });
 
   it("lands a section the record does not have on the Overview", async () => {
@@ -10571,11 +10575,11 @@ describe("dropping a folder tree on the contract record (M13/5, DOC-011, DES-033
     expect(within(dialog).getByRole("heading", { name: "Import 4 files" })).toBeVisible();
     // The structure, drawn as a structure (DES-033 §9): the dropped
     // directory, what it holds, and the files inside each level. Read
-    // off the summary list itself, because the version-kind control
+    // off the title list itself, because the version-kind control
     // below it offers a kind called Executed too.
-    const summary = within(dialog).getByRole("list", { name: "What this import will create" });
+    const title = within(dialog).getByRole("list", { name: "What this import will create" });
     expect(
-      within(summary)
+      within(title)
         .getAllByRole("listitem")
         .map((line) => line.textContent),
     ).toEqual([
@@ -11099,7 +11103,7 @@ it("toggles the current and requester descriptions without replacing the saved c
             ...body,
             originalIntake: {
               number: 100,
-              description: "Requester context omitted from the summary.",
+              description: "Requester context omitted from the title.",
             },
           }),
         );
@@ -11110,7 +11114,7 @@ it("toggles the current and requester descriptions without replacing the saved c
   const toggle = await screen.findByRole("switch", { name: "Show requester description" });
   expect(screen.getByLabelText("Description")).toHaveValue("Three-year platform engagement.");
   await user.click(toggle);
-  expect(screen.getByText("Requester context omitted from the summary.")).toBeVisible();
+  expect(screen.getByText("Requester context omitted from the title.")).toBeVisible();
   expect(screen.queryByRole("textbox", { name: "Description" })).toBeNull();
   await user.click(toggle);
   expect(screen.getByLabelText("Description")).toHaveValue("Three-year platform engagement.");
@@ -11124,4 +11128,26 @@ it("toggles the current and requester descriptions without replacing the saved c
   );
   await user.click(toggle);
   expect(screen.getByLabelText("Description")).toHaveValue("Lawyer's updated description");
+});
+
+it("keeps built-in classification on Overview and out of Fields", async () => {
+  const api = recordApi(contractRow({ owningDepartment: "Sales", region: "EMEA" }));
+  stubApi({ signedIn: MEMBER, extra: api.handler });
+  renderAt("/contracts/42");
+  const user = userEvent.setup();
+  const department = await screen.findByRole("textbox", { name: "Owning department" });
+  expect(department).toHaveValue("Sales");
+  expect(screen.getByRole("textbox", { name: "Region" })).toHaveValue("EMEA");
+  await user.clear(department);
+  await user.type(department, "Procurement");
+  await user.tab();
+  await waitFor(() => expect(api.patches).toContainEqual({ owningDepartment: "Procurement" }));
+  await user.click(screen.getByRole("link", { name: "Fields" }));
+  await screen.findByRole("region", { name: "Fields" });
+  expect(screen.queryByRole("textbox", { name: "Owning department" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("textbox", { name: "Region" })).not.toBeInTheDocument();
+  await user.click(screen.getByRole("link", { name: "Overview" }));
+  expect(await screen.findByRole("textbox", { name: "Owning department" })).toHaveValue(
+    "Procurement",
+  );
 });

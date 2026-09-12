@@ -103,7 +103,7 @@ const as = (fixture: { email: string }): Record<string, string> => {
 interface RequestRow {
   id: string;
   number: number;
-  summary: string;
+  title: string;
 }
 
 beforeAll(async () => {
@@ -161,7 +161,7 @@ afterAll(async () => {
 /** Submits a Request through the portal form, as a requester does. */
 async function submit(
   fixture: { email: string },
-  summary: string,
+  title: string,
   urgency: "low" | "medium" | "high" | "critical" = "high",
 ): Promise<RequestRow> {
   const res = await harness.app.inject({
@@ -170,14 +170,14 @@ async function submit(
     cookies: as(fixture),
     payload: {
       requestTypeId: contractReviewTypeId,
-      summary,
+      title,
       description: "They sent a redline on the liability cap.",
       urgency,
     },
   });
   expect(res.statusCode, res.body).toBe(201);
   const row = res.json().request as RequestRow;
-  return { id: row.id, number: row.number, summary: row.summary };
+  return { id: row.id, number: row.number, title: row.title };
 }
 
 /** Every notification row one person holds, newest first. */
@@ -216,7 +216,7 @@ async function settles(what: string, ready: () => boolean): Promise<void> {
 
 /** The messages this person has been sent about this Request, by its
  * R-### reference — which the arrival's subject line carries as
- * `R-### · summary`. The separator is part of the match, because `R-1`
+ * `R-### · title`. The separator is part of the match, because `R-1`
  * is a prefix of `R-10` and this suite mints numbers past nine. */
 const mailAbout = (fixture: { email: string }, request: RequestRow) =>
   harness.mailer
@@ -240,7 +240,7 @@ describe("a Request arriving in the Inbox (INT-006, NOT-002 group 4)", () => {
       ).toEqual(["request.submitted"]);
       expect(rows[0]!.readAt).toBeNull();
       expect(rows[0]!.payload.requestNumber).toBe(request.number);
-      expect(rows[0]!.payload.requestSummary).toBe(request.summary);
+      expect(rows[0]!.payload.requestTitle).toBe(request.title);
       expect(rows[0]!.payload.requestType).toBe(contractReviewName);
       expect(rows[0]!.payload.urgency).toBe("critical");
       expect(rows[0]!.payload.actorName).toBe(REQUESTER.displayName);
@@ -307,7 +307,7 @@ describe("group 4's email (NOT-002)", () => {
     const message = mailAbout(SUBSCRIBER, request)[0]!;
     expect(message.subject).toContain("New request");
     expect(message.text).toContain(inboxLink(request));
-    expect(message.text).toContain(request.summary);
+    expect(message.text).toContain(request.title);
     expect(message.text).toContain(REQUESTER.displayName);
     expect(message.text).toContain(contractReviewName);
 

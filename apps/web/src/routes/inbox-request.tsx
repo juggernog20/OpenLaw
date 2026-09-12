@@ -284,7 +284,7 @@ export function InboxRequestPage() {
             <ChevronRight size={16} aria-hidden="true" className="shrink-0 text-subtle" />
             <span className="shrink-0 text-base font-medium text-muted">{reference}</span>
             <h1 id="page-title" className="truncate text-md font-semibold">
-              {request.summary}
+              {request.title}
             </h1>
             <span
               className={`inline-flex shrink-0 rounded-pill px-2 py-0.5 text-xs font-medium ${REQUEST_STATUS_PILL[request.status]}`}
@@ -374,12 +374,12 @@ export function InboxRequestPage() {
           onResolve={(reply) => dispose(() => resolveRequest(request.number, reply))}
         />
       )}
-      {/* Reference then summary, composed as one message — the separator
+      {/* Reference then title, composed as one message — the separator
           is locale copy, not code (DES-013). */}
       <PageTitle
         title={intl.formatMessage(
-          { id: "inbox.request.documentTitle", defaultMessage: "{reference} · {summary}" },
-          { reference, summary: request.summary },
+          { id: "inbox.request.documentTitle", defaultMessage: "{reference} · {title}" },
+          { reference, title: request.title },
         )}
       />
       <RecordApplets applets={request.status === "converted" ? [] : [chatApplet]}>

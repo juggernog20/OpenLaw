@@ -530,7 +530,7 @@ describe("the notification centre", () => {
     expect(link).toHaveAttribute("href", "/contracts/41/approvals");
   });
 
-  it("opens Home from the daily briefing summary", async () => {
+  it("opens Home from the daily briefing title", async () => {
     const user = userEvent.setup();
     bellApi({
       unread: 1,
@@ -701,7 +701,7 @@ describe("the notification centre", () => {
     // One slug on two records (M21/5). A mention on a Request is a
     // mention of a triager — the Requester is never mention-notified —
     // so it addresses the staff detail, not the portal one, and the
-    // sentence names the Request by the summary the requester wrote.
+    // sentence names the Request by the title the requester wrote.
     const user = userEvent.setup();
     bellApi({
       unread: 1,
@@ -714,7 +714,7 @@ describe("the notification centre", () => {
               entityId: "r1",
               payload: {
                 requestNumber: 42,
-                requestSummary: "Review the Northwind supply redline",
+                requestTitle: "Review the Northwind supply redline",
                 commentId: "cm1",
                 actorName: "Omar Dib",
               },

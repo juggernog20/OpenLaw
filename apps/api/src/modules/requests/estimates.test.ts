@@ -33,7 +33,7 @@ async function submit() {
     cookies: cast.requesterCookies,
     payload: {
       requestTypeId: typeId,
-      summary: "Estimate this review",
+      title: "Estimate this review",
       description: "Review the proposed NDA.",
       urgency: "medium",
     },
@@ -43,11 +43,11 @@ async function submit() {
     id: true,
     number: true,
     status: true,
-    summary: true,
+    title: true,
   }).parse(res.json().request);
   expect(request.id).not.toBe("");
   expect(request.number).toBeGreaterThan(0);
-  expect(request).toMatchObject({ status: "new", summary: "Estimate this review" });
+  expect(request).toMatchObject({ status: "new", title: "Estimate this review" });
   return request;
 }
 function estimate(number: number, expectedBy: unknown, cookies = cast.memberCookies) {
@@ -67,7 +67,7 @@ async function detail(number: number, portal = false) {
   expect(res.statusCode, res.body).toBe(200);
   return res.json().request;
 }
-it("offers an org-timezone calendar-day suggestion without writing or clamping the estimate", async () => {
+it("offers an org-timezone business-day suggestion without writing or clamping the estimate", async () => {
   const request = await submit();
   await harness.db.update(orgSettings).set({ defaultTimezone: "America/Los_Angeles" });
   await harness.db
@@ -76,11 +76,11 @@ it("offers an org-timezone calendar-day suggestion without writing or clamping t
     .where(eq(requestTypes.id, typeId));
   await harness.db
     .update(requests)
-    .set({ createdAt: new Date("2026-03-08T07:30:00Z"), customFields: { needed_by: "2026-03-08" } })
+    .set({ createdAt: new Date("2026-03-09T06:30:00Z"), customFields: { needed_by: "2026-03-08" } })
     .where(eq(requests.id, request.id));
   expect(await detail(request.number)).toMatchObject({
     expectedBy: null,
-    suggestedExpectedBy: "2026-03-09",
+    suggestedExpectedBy: "2026-03-10",
     customFields: { needed_by: "2026-03-08" },
   });
   expect((await estimate(request.number, "2026-03-09")).statusCode).toBe(200);
@@ -90,7 +90,7 @@ it("offers an org-timezone calendar-day suggestion without writing or clamping t
     .where(eq(requestTypes.id, typeId));
   expect(await detail(request.number)).toMatchObject({
     expectedBy: "2026-03-09",
-    suggestedExpectedBy: "2026-03-12",
+    suggestedExpectedBy: "2026-03-13",
   });
   expect((await estimate(request.number, null)).statusCode).toBe(200);
   expect((await detail(request.number)).expectedBy).toBeNull();

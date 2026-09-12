@@ -6,7 +6,7 @@
  * submission earns.
  *
  * **The form is a read, not a second copy of the rule.** The four fixed
- * basics — Summary, Description, Attachments, Urgency — are drawn here
+ * basics — Title, Description, Attachments, Urgency — are drawn here
  * because INT-002's M19/4 addendum makes them a fact about every form
  * rather than a configuration of one. Everything after them is the
  * request type's attached catalog fields, in the Administrator's
@@ -32,7 +32,7 @@
  *    title is the name alone. It is the I5 picker's normalization,
  *    applied to the same row on the next screen.
  * 2. I6 places Attachments last, under the type's own fields. The four
- *    basics render first, in INT-002's order — Summary, Description,
+ *    basics render first, in INT-002's order — Title, Description,
  *    Attachments, Urgency — which is the order the M19 editor locks
  *    them in. The Administrator reads the form as four basics over the
  *    attached fields, and the requester fills in the same thing.
@@ -91,11 +91,12 @@ import {
   type CustomFieldDraft,
   type CustomFieldValue,
 } from "../lib/custom-fields";
-import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
+import { CONTROL_CLASS } from "../lib/form-controls";
 import { problem as readProblem } from "../lib/problem";
 import { attachToRequest, MAX_REQUEST_ATTACHMENTS, requestReference } from "../lib/requests";
 import { currentUser, useSignOut } from "../lib/session";
 import { CustomFieldControl } from "../components/custom-field-control";
+import { AutoResizeTextarea } from "../components/auto-resize-textarea";
 import { PageTitle } from "../components/page-title";
 import { PortalBackLink } from "../components/portal/back-link";
 import { DeflectionPanel } from "../components/portal/deflection-panel";
@@ -134,13 +135,8 @@ const TITLE = defineMessage({
   defaultMessage: "New request",
 });
 
-/** The Urgency hint's id. Written rather than generated, because the
- * control is one of a kind on this screen and the hint is one line
- * above it. */
-const URGENCY_HINT_ID = "request-urgency-help";
-
 /** The three basics that carry a value. Attachments are the fourth. */
-type BasicKey = "summary" | "description" | "urgency";
+type BasicKey = "title" | "description" | "urgency";
 
 /** What the confirmation knows: the Request that exists, whether its
  * paper is still going up, and the files that did not make it with the
@@ -159,7 +155,7 @@ export function PortalRequestFormPage() {
     useLoaderData<typeof portalRequestFormLoader>();
   const intl = useIntl();
 
-  const [summary, setSummary] = useState("");
+  const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   /** DES-018's ramp, and `medium` until the requester says otherwise —
    * the same default a contract's priority is born with. */
@@ -201,9 +197,9 @@ export function PortalRequestFormPage() {
     // refusal sentence names fields, and a sentence cannot point.
     const missing: string[] = [];
     const marks = new Set<string>();
-    if (summary.trim() === "") {
-      missing.push(intl.formatMessage(BASIC_LABELS.summary));
-      marks.add("summary");
+    if (title.trim() === "") {
+      missing.push(intl.formatMessage(BASIC_LABELS.title));
+      marks.add("title");
     }
     if (description.trim() === "") {
       missing.push(intl.formatMessage(BASIC_LABELS.description));
@@ -258,7 +254,7 @@ export function PortalRequestFormPage() {
       .POST("/api/v1/requests", {
         body: {
           requestTypeId: requestType.id,
-          summary: summary.trim(),
+          title: title.trim(),
           description: description.trim(),
           urgency,
           customFields,
@@ -339,24 +335,24 @@ export function PortalRequestFormPage() {
               </div>
               <div className="flex flex-col gap-5 p-4">
                 <Field
-                  htmlFor="request-summary"
-                  label={intl.formatMessage(BASIC_LABELS.summary)}
+                  htmlFor="request-title"
+                  label={intl.formatMessage(BASIC_LABELS.title)}
                   required
-                  unanswered={unanswered.has("summary")}
+                  unanswered={unanswered.has("title")}
                 >
                   <Input
-                    id="request-summary"
+                    id="request-title"
                     autoFocus
-                    value={summary}
+                    value={title}
                     aria-required="true"
-                    aria-invalid={unanswered.has("summary") || undefined}
+                    aria-invalid={unanswered.has("title") || undefined}
                     placeholder={intl.formatMessage({
                       id: "portal.form.summaryHint",
-                      defaultMessage: "One line — what do you need?",
+                      defaultMessage: "Enter a descriptive title for your request",
                     })}
                     onChange={(event) => {
-                      setSummary(event.target.value);
-                      clearMark("summary");
+                      setTitle(event.target.value);
+                      clearMark("title");
                     }}
                   />
                 </Field>
@@ -366,11 +362,10 @@ export function PortalRequestFormPage() {
                   required
                   unanswered={unanswered.has("description")}
                 >
-                  <textarea
+                  <AutoResizeTextarea
                     id="request-description"
                     rows={4}
                     value={description}
-                    className={TEXTAREA_CLASS}
                     aria-required="true"
                     aria-invalid={unanswered.has("description") || undefined}
                     placeholder={intl.formatMessage({
@@ -392,18 +387,12 @@ export function PortalRequestFormPage() {
                   htmlFor="request-urgency"
                   label={intl.formatMessage(BASIC_LABELS.urgency)}
                   required
-                  hintId={URGENCY_HINT_ID}
-                  hint={intl.formatMessage({
-                    id: "portal.form.urgencyHint",
-                    defaultMessage: "How soon Legal should look at it.",
-                  })}
                 >
                   <select
                     id="request-urgency"
                     value={urgency}
                     className={CONTROL_CLASS}
                     aria-required="true"
-                    aria-describedby={URGENCY_HINT_ID}
                     // Read back off the ramp rather than asserted onto
                     // it: the four options are the only ones the select
                     // draws, and this is what makes that a fact rather
@@ -484,7 +473,7 @@ export function PortalRequestFormPage() {
 /** The four basics' labels, said once: the form draws them and the
  * refusal names them, and two spellings would be two fields. */
 const BASIC_LABELS = {
-  summary: defineMessage({ id: "portal.form.summary", defaultMessage: "Summary" }),
+  title: defineMessage({ id: "portal.form.title", defaultMessage: "Title" }),
   description: defineMessage({ id: "portal.form.description", defaultMessage: "Description" }),
   attachments: defineMessage({ id: "portal.form.attachments", defaultMessage: "Attachments" }),
   urgency: defineMessage({ id: "portal.form.urgency", defaultMessage: "Urgency" }),

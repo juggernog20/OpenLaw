@@ -84,7 +84,7 @@ async function convert(
     .values({
       requestTypeId,
       requesterId: cast.requesterId,
-      summary: "Agreement",
+      title: "Agreement",
       description: "Effective October 1, 2026. Notice is 30 days.",
       urgency: "medium",
     })
@@ -434,7 +434,7 @@ it("keeps an explicitly cleared Counterparty empty after conversion", async () =
   const { contract, runs } = await convert({ counterpartyCleared: true }, async (id) => {
     answers.counterparty = {
       value: "Post analysis counterparty",
-      sourceId: `request:${id}:summary`,
+      sourceId: `request:${id}:title`,
       evidence: "Agreement",
     };
   });

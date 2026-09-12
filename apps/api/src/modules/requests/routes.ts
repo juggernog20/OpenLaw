@@ -19,7 +19,7 @@
  * and nothing to forge.
  *
  * The form definition is read, not restated. What a form collects is
- * the four fixed basics — Summary, Description, Attachments, Urgency,
+ * the four fixed basics — Title, Description, Attachments, Urgency,
  * fixed by the INT-002 M19/4 addendum and therefore stated in code
  * here, because a fixed set is a fact about the form rather than a
  * configuration of it — plus the type's attached catalog fields, which
@@ -171,7 +171,7 @@ const RequestSchema = z.object({
   number: z.number().int(),
   requestTypeId: z.string(),
   status: z.literal("new"),
-  summary: z.string(),
+  title: z.string(),
   description: z.string().nullable(),
   urgency: z.enum(SEVERITY_LEVELS),
   /** What the form collected, keyed by field slug (INT-002). */
@@ -200,7 +200,7 @@ const MyRequestRowSchema = z.object({
   /** Rendered R-###; it is also what the detail is addressed by. */
   number: z.number().int(),
   status: z.enum(REQUEST_STATUSES),
-  summary: z.string(),
+  title: z.string(),
   requestType: RequestTypeRefSchema,
   /** The age the list states, computed by the reader. */
   createdAt: z.string(),
@@ -227,14 +227,14 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "Submit a Request through a request type's portal form " +
           "(INT-001). The Requester is the session; the type must be " +
-          "live; Summary, Description, and Urgency are required, as is " +
+          "live; Title, Description, and Urgency are required, as is " +
           "every attached field the type marks required; values are " +
           "accepted for exactly the fields the type attaches, and a " +
           "user or entity field's value must name a live row",
         tags: ["requests"],
         body: z.strictObject({
           requestTypeId: z.string(),
-          summary: z.string(),
+          title: z.string(),
           description: z.string(),
           /** DES-018's four severity levels and nothing else. */
           urgency: z.enum(SEVERITY_LEVELS),
@@ -291,10 +291,10 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         // The one refusal, over the basics and the attachments
         // together. Two refusals would make a requester press Submit
         // twice to learn two halves of the same answer.
-        const summary = body.summary.trim();
+        const title = body.title.trim();
         const description = body.description.trim();
         assertAnswered([
-          { name: "Summary", answered: summary !== "" },
+          { name: "Title", answered: title !== "" },
           { name: "Description", answered: description !== "" },
           ...attached
             .filter((field) => field.isRequired)
@@ -312,7 +312,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
             // is no body field to forge and no route to create one on
             // somebody else's behalf.
             requesterId: request.user.id,
-            summary,
+            title,
             description,
             urgency: body.urgency,
             customFields,
@@ -321,7 +321,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
 
         // DD-017's narration, in the same transaction as the insert, so
         // no Request can exist without the entry that says who asked.
-        // The payload carries no free text — not the summary, and not
+        // The payload carries no free text — not the title, and not
         // the collected values, only the slugs that were answered. The
         // log is append-only, so a requester's own words could never
         // leave it again; R-42 is the Request's name, and the number
@@ -376,7 +376,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
           number: created.number,
           requestTypeId: created.requestTypeId,
           status: "new" as const,
-          summary: created.summary,
+          title: created.title,
           description: created.description,
           urgency: created.urgency,
           customFields: created.customFields,
@@ -411,7 +411,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
           id: requests.id,
           number: requests.number,
           status: requests.status,
-          summary: requests.summary,
+          title: requests.title,
           createdAt: requests.createdAt,
           typeId: requestTypes.id,
           typeSlug: requestTypes.slug,
@@ -499,7 +499,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
           status: requests.status,
           convertedContractId: requests.convertedContractId,
           convertedMatterId: requests.convertedMatterId,
-          summary: requests.summary,
+          title: requests.title,
           description: requests.description,
           urgency: requests.urgency,
           customFields: requests.customFields,
@@ -880,7 +880,7 @@ function toRow<T extends RequestRowColumns>(row: T, today: string) {
     id: row.id,
     number: row.number,
     status: row.status,
-    summary: row.summary,
+    title: row.title,
     owner: row.owner,
     expectedBy: row.expectedBy,
     estimatePassed:
@@ -898,7 +898,7 @@ interface RequestRowColumns {
   id: string;
   number: number;
   status: (typeof REQUEST_STATUSES)[number];
-  summary: string;
+  title: string;
   createdAt: Date;
   typeId: string;
   typeSlug: string;

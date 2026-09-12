@@ -103,7 +103,7 @@ export function TimezonePicker({
           id: "timezone.searchPlaceholder",
           defaultMessage: "Search timezones",
         })}
-        className="h-8 w-full rounded-button border border-border-default bg-raised px-2 text-sm text-primary placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
+        className="h-8 w-full rounded-button border border-border-default bg-raised px-2 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
         value={editing ? editing.query : displayValue}
         onFocus={() => setEditing({ query: "", activeIndex: 0 })}
         onChange={(event) => setEditing({ query: event.target.value, activeIndex: 0 })}

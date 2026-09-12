@@ -265,9 +265,14 @@ async function sendNotificationEmail(
     });
     if (!reachable.has(row.userId)) return "unreachable";
     const number = addressOf(payload.requestNumber);
-    const summary = typeof payload.requestSummary === "string" ? payload.requestSummary : "";
-    if (number === null || summary === "") return "unaddressable";
-    record = { entityType: "request", number, summary };
+    const title =
+      typeof payload.requestTitle === "string"
+        ? payload.requestTitle
+        : typeof payload.requestSummary === "string"
+          ? payload.requestSummary
+          : "";
+    if (number === null || title === "") return "unaddressable";
+    record = { entityType: "request", number, title };
   } else {
     return "unreachable";
   }

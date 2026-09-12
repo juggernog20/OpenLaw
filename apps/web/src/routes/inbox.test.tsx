@@ -35,7 +35,7 @@ function inboxRow(overrides: Partial<Record<string, unknown>> = {}) {
     id: "r1",
     number: 48,
     status: "new",
-    summary: "Injunction threat — Meridian dispute letter",
+    title: "Injunction threat — Meridian dispute letter",
     urgency: "critical",
     requestType: {
       id: "rt-nda",
@@ -81,22 +81,22 @@ describe("the Inbox destination", () => {
     const { router } = renderAt("/inbox");
     const user = userEvent.setup();
     await screen.findByRole("table");
-    for (const name of ["Ref", "Summary", "Type", "Requester", "Urgency", "Age", "Status"]) {
+    for (const name of ["Ref", "Title", "Type", "Requester", "Urgency", "Age", "Status"]) {
       expect(
         within(screen.getByRole("columnheader", { name })).getByRole("button", { name }),
       ).toBeInTheDocument();
     }
     for (const dir of ["asc", "desc", null]) {
       await act(async () => {
-        await user.click(screen.getByRole("button", { name: "Summary" }));
+        await user.click(screen.getByRole("button", { name: "Title" }));
         await vi.waitFor(() => {
           expect(new URLSearchParams(router.state.location.search).get("dir")).toBe(dir);
           expect(router.state.navigation.state).toBe("idle");
         });
       });
-      expect(api.asked.at(-1)?.searchParams.get("sort")).toBe(dir ? "summary" : null);
+      expect(api.asked.at(-1)?.searchParams.get("sort")).toBe(dir ? "title" : null);
       expect(api.asked.at(-1)?.searchParams.get("status")).toBe("new");
-      const header = screen.getByRole("columnheader", { name: "Summary" });
+      const header = screen.getByRole("columnheader", { name: "Title" });
       if (dir) {
         expect(header).toHaveAttribute("aria-sort", dir === "asc" ? "ascending" : "descending");
         expect(screen.queryByText("Ordered by urgency, then age")).not.toBeInTheDocument();
@@ -108,7 +108,7 @@ describe("the Inbox destination", () => {
     await act(async () => {
       await router.navigate(-1);
     });
-    expect(screen.getByRole("columnheader", { name: "Summary" })).toHaveAttribute(
+    expect(screen.getByRole("columnheader", { name: "Title" })).toHaveAttribute(
       "aria-sort",
       "descending",
     );
@@ -126,11 +126,11 @@ describe("the Inbox destination", () => {
     });
     const { router } = renderAt("/inbox");
     const user = userEvent.setup();
-    await user.click(await screen.findByRole("button", { name: "Summary" }));
+    await user.click(await screen.findByRole("button", { name: "Title" }));
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "The Inbox could not be read. Try again.",
     );
-    expect(screen.getByRole("columnheader", { name: "Summary" })).not.toHaveAttribute("aria-sort");
+    expect(screen.getByRole("columnheader", { name: "Title" })).not.toHaveAttribute("aria-sort");
     expect(screen.getByRole("row", { name: /Injunction threat/ })).toBeInTheDocument();
     expect(router.state.location.search).toBe("");
   });
@@ -164,7 +164,7 @@ describe("the Inbox destination", () => {
         inboxRow({
           id: "r2",
           number: 45,
-          summary: "Orion Cloud MSA renewal",
+          title: "Orion Cloud MSA renewal",
           requestType: {
             id: "rt-review",
             displayName: "Contract review",
@@ -175,7 +175,7 @@ describe("the Inbox destination", () => {
         inboxRow({
           id: "r3",
           number: 46,
-          summary: "EU customer data processing question",
+          title: "EU customer data processing question",
           requestType: {
             id: "rt-question",
             displayName: "Legal question",
@@ -221,7 +221,7 @@ describe("the Inbox destination", () => {
           id: "r9",
           number: 39,
           status: "declined",
-          summary: "Trademark check for Northstar",
+          title: "Trademark check for Northstar",
         }),
       ],
     );
@@ -281,7 +281,7 @@ describe("the Inbox destination", () => {
             id: "r5",
             number: 44,
             status: "converted",
-            summary: "NDA with Northwind Labs",
+            title: "NDA with Northwind Labs",
             convertedContract: { number: 91 },
             convertedRecord: { module: "contract", number: 91 },
           }),
@@ -309,7 +309,7 @@ describe("the Inbox destination", () => {
             id: "r-matter",
             number: 42,
             status: "converted",
-            summary: "Meridian dispute",
+            title: "Meridian dispute",
             convertedContract: null,
             convertedRecord: { module: "matter", number: 12 },
           }),
@@ -334,7 +334,7 @@ describe("the Inbox destination", () => {
             id: "r6",
             number: 43,
             status: "converted",
-            summary: "Something quiet",
+            title: "Something quiet",
             // The withholding is the server's decision: the client is
             // never handed a reference it must decide not to render.
             convertedContract: null,
@@ -353,7 +353,7 @@ describe("the Inbox destination", () => {
 
   it("appends the next page in place, carrying filters and sorting with the cursor", async () => {
     const FIRST = [inboxRow()];
-    const SECOND = [inboxRow({ id: "r2", number: 45, summary: "Orion Cloud MSA renewal" })];
+    const SECOND = [inboxRow({ id: "r2", number: 45, title: "Orion Cloud MSA renewal" })];
     const asked: URL[] = [];
     stubApi({
       signedIn: MEMBER,
@@ -447,7 +447,7 @@ describe("Inbox filters and views", () => {
           requests: [
             inboxRow({
               id: call.url.searchParams.has("cursor") ? "r2" : "r1",
-              summary: call.url.searchParams.has("cursor") ? "Next page" : "First page",
+              title: call.url.searchParams.has("cursor") ? "Next page" : "First page",
             }),
           ],
           nextCursor: call.url.searchParams.has("cursor") ? null : "r1",

@@ -31,6 +31,7 @@ import {
   contractTypes,
   counterparties,
   eq,
+  requests,
   requestTypes,
   users,
 } from "@openlaw/db";
@@ -229,7 +230,7 @@ async function makeRequestType(
 
 /** Submits one Request as the Business User, and answers the row. */
 async function submit(
-  summary: string,
+  title: string,
   options: { typeId?: string; customFields?: Record<string, unknown>; urgency?: string } = {},
 ): Promise<{ id: string; number: number }> {
   const res = await harness.app.inject({
@@ -238,7 +239,7 @@ async function submit(
     cookies: requesterCookies,
     payload: {
       requestTypeId: options.typeId ?? requestTypeIds.get("nda_request"),
-      summary,
+      title,
       description: "For the pilot kicking off next month.",
       urgency: options.urgency ?? "high",
       ...(options.customFields ? { customFields: options.customFields } : {}),
@@ -386,7 +387,7 @@ describe("the target is confirmed, never classified (DD-018, INT-002)", () => {
       customFields: { [slug]: "Revised party" },
     });
     expect(await stored(request.id)).toMatchObject({
-      summary: "Original request",
+      title: "Original request",
       urgency: "critical",
       customFields: { [slug]: "Original party" },
     });
@@ -504,7 +505,7 @@ describe("what the record is born with (INT-002, MTR-012, CTR-016)", () => {
     expect(contract.customFields[fieldSlugs.get("Counterparty")!]).toBe("Northwind Labs");
   });
 
-  it("seeds the title from the summary when the dialog sends the summary back", async () => {
+  it("seeds the title from the title when the dialog sends the title back", async () => {
     const request = await submit("Northwind Labs mutual NDA");
     const res = await convert(request.number, { title: "Northwind Labs mutual NDA" });
     expect(res.statusCode, res.body).toBe(200);
@@ -1038,5 +1039,20 @@ describe("what the form collected beside the Fields (INT-002, focus group 2026-0
     const actions = (await entriesOn("contract", contract.id)).map((row) => row.action);
     expect(actions).not.toContain("contract.counterparty_added");
     expect(actions).not.toContain("key_date.added");
+  });
+});
+
+it("carries legacy Request classification into built-in Contract attributes", async () => {
+  const request = await submit("Classification before conversion");
+  await harness.db
+    .update(requests)
+    .set({ customFields: { owning_department: "Finance", region: "EMEA" } })
+    .where(eq(requests.id, request.id));
+  const res = await convert(request.number, { title: "Classified contract" });
+  expect(res.statusCode, res.body).toBe(200);
+  const contract = await contractNumbered(res.json().request.convertedContract.number as number);
+  expect(contract).toMatchObject({ owningDepartment: "Finance", region: "EMEA", customFields: {} });
+  expect(await stored(request.id)).toMatchObject({
+    customFields: { owning_department: "Finance", region: "EMEA" },
   });
 });

@@ -44,7 +44,7 @@ export const requestTypes = pgTable(
   "request_types",
   {
     ...taxonomyColumns(),
-    /** INT-003: calendar days offered to triage as an unconfirmed estimate; NULL means no suggestion. */
+    /** INT-003: business days offered to triage as an unconfirmed estimate; NULL means no suggestion. */
     turnaroundDays: integer("turnaround_days"),
     /** What converting one of these requests creates: NULL (nothing),
      * `matter`, or `contract`. */

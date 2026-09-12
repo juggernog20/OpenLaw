@@ -304,7 +304,7 @@ export interface RequestAudience {
   requestNumber: number;
   /** What the Requester called their ask. It names the Request in the
    * item and in the subject line, the way a contract's title does. */
-  summary: string;
+  title: string;
   /**
    * Who asked (DD-013) — **the whole audience of every group-5 event**.
    *
@@ -327,7 +327,7 @@ export interface RequestAudience {
  * same one the thread's `request` arm gives (CMT-010): a frozen record
  * is not something to send anybody a message about.
  *
- * The number and the summary ride along because this read already holds
+ * The number and the title ride along because this read already holds
  * the row, exactly as {@link contractRecordAudience}'s do: a group-5
  * event is raised from the submission route, from the thread, and (from
  * M21) from the disposition routes, and asking each of them for two
@@ -340,7 +340,7 @@ export async function requestAudience(
   const [record] = await db
     .select({
       number: requests.number,
-      summary: requests.summary,
+      title: requests.title,
       requesterId: requests.requesterId,
     })
     .from(requests)
@@ -349,7 +349,7 @@ export async function requestAudience(
   if (!record) return null;
   return {
     requestNumber: record.number,
-    summary: record.summary,
+    title: record.title,
     requesterId: record.requesterId,
   };
 }

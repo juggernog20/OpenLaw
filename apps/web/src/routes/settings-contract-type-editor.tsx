@@ -9,6 +9,8 @@
  * the API's 403 is the real refusal.
  */
 
+import { CONTRACT_OVERVIEW_FIELD_SLUGS } from "@openlaw/shared";
+
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { defineMessages } from "react-intl";
 import { api } from "../lib/api";
@@ -32,7 +34,9 @@ export async function settingsContractTypeEditorLoader({ params }: LoaderFunctio
   return {
     contractType: typeRes.data.contractType,
     attachedFields: attachedRes.data.attachedFields,
-    catalog: catalogRes.data.fields,
+    catalog: catalogRes.data.fields.filter(
+      (field) => !CONTRACT_OVERVIEW_FIELD_SLUGS.includes(field.slug),
+    ),
   };
 }
 

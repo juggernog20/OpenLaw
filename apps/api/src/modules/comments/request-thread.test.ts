@@ -143,14 +143,14 @@ afterAll(async () => {
 
 /** One Request through the portal's own door, answered by its id — the
  * reference the thread is keyed by (CMT-010). */
-async function submit(cookies: Record<string, string>, summary: string): Promise<string> {
+async function submit(cookies: Record<string, string>, title: string): Promise<string> {
   const res = await harness.app.inject({
     method: "POST",
     url: "/api/v1/requests",
     cookies,
     payload: {
       requestTypeId: contractReviewTypeId,
-      summary,
+      title,
       description: "They sent a redline on the liability cap.",
       urgency: "high",
     },

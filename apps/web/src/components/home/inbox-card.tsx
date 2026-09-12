@@ -30,7 +30,7 @@ export function HomeInboxCard({ section }: Readonly<{ section: InboxHomeSection 
                 <Inbox size={16} aria-hidden="true" />
               </span>
               <span className="min-w-0">
-                <span className="block truncate text-md font-medium">{row.summary}</span>
+                <span className="block truncate text-md font-medium">{row.title}</span>
                 <span className="block truncate text-xs text-muted">
                   <FormattedMessage
                     id="home.inbox.request"

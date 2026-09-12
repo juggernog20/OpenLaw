@@ -97,7 +97,7 @@ const as = (fixture: { email: string }): Record<string, string> => {
 interface RequestRow {
   id: string;
   number: number;
-  summary: string;
+  title: string;
 }
 
 beforeAll(async () => {
@@ -145,21 +145,21 @@ afterAll(async () => {
 });
 
 /** Submits a Request through the portal form, as a requester does. */
-async function submit(fixture: { email: string }, summary: string): Promise<RequestRow> {
+async function submit(fixture: { email: string }, title: string): Promise<RequestRow> {
   const res = await harness.app.inject({
     method: "POST",
     url: "/api/v1/requests",
     cookies: as(fixture),
     payload: {
       requestTypeId: contractReviewTypeId,
-      summary,
+      title,
       description: "They sent a redline on the liability cap.",
       urgency: "high",
     },
   });
   expect(res.statusCode, res.body).toBe(201);
   const row = res.json().request as RequestRow;
-  return { id: row.id, number: row.number, summary: row.summary };
+  return { id: row.id, number: row.number, title: row.title };
 }
 
 /** Posts one comment on a Request's thread, naming whoever it names. */
@@ -247,7 +247,7 @@ const itemsOn = async (
 };
 
 describe("being named on a Request thread (NOT-002 group 1, M18/1)", () => {
-  it("writes the named Member+ a mention carrying R-### and the summary", async () => {
+  it("writes the named Member+ a mention carrying R-### and the title", async () => {
     const request = await submit(REQUESTER, "Review the Northwind supply redline");
     const commentId = await say(
       TRIAGER,
@@ -263,7 +263,7 @@ describe("being named on a Request thread (NOT-002 group 1, M18/1)", () => {
     expect(rows.map((row) => row.eventType)).toEqual(["comment.mentioned", "request.submitted"]);
     expect(rows[0]!.readAt).toBeNull();
     expect(rows[0]!.payload.requestNumber).toBe(request.number);
-    expect(rows[0]!.payload.requestSummary).toBe(request.summary);
+    expect(rows[0]!.payload.requestTitle).toBe(request.title);
     expect(rows[0]!.payload.actorName).toBe(TRIAGER.displayName);
     expect(rows[0]!.payload.commentId).toBe(commentId);
     // The words are never in the payload: the tier is enforced on the
@@ -345,7 +345,7 @@ describe("the Requester and the mention (M18/4)", () => {
 });
 
 describe("the mention's email (NOT-002 group 1)", () => {
-  it("leaves at once, names R-### and the summary, and links to the staff detail", async () => {
+  it("leaves at once, names R-### and the title, and links to the staff detail", async () => {
     const request = await submit(REQUESTER, "Review the Aperture MSA");
     await say(TRIAGER, request, `Your call, @${COLLEAGUE.displayName}.`, "working_team", [
       COLLEAGUE,
@@ -361,7 +361,7 @@ describe("the mention's email (NOT-002 group 1)", () => {
       () => mailAbout(COLLEAGUE, request).length > 0,
     );
     const message = mailAbout(COLLEAGUE, request)[0]!;
-    expect(message.subject).toContain(`R-${request.number} · ${request.summary}`);
+    expect(message.subject).toContain(`R-${request.number} · ${request.title}`);
     expect(message.text).toContain(TRIAGER.displayName);
     expect(message.text).toContain(`http://localhost/inbox/${request.number}`);
     // The reader is staff, so the portal address is never offered.

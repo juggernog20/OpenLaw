@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { fitColumnWidths, resizeColumnWidths } from "./table-widths";
 
 const columns = [
-  { key: "summary", width: 300, minWidth: 180, flex: true },
+  { key: "title", width: 300, minWidth: 180, flex: true },
   { key: "type", width: 180, minWidth: 100, flex: false },
   { key: "requester", width: 160, minWidth: 100, flex: false },
 ];
@@ -13,16 +13,16 @@ describe("data column space beside pinned actions", () => {
   it("gives the flex column the remaining space", () => {
     expect(fitColumnWidths(columns, 800)).toEqual([460, 180, 160]);
   });
-  it("resizes an ordinary column using only Summary's spare space", () => {
+  it("resizes an ordinary column using only Title's spare space", () => {
     expect(resizeColumnWidths(columns, 800, "type", 230)).toEqual([410, 230, 160]);
     expect(resizeColumnWidths(columns, 800, "type", 1200)).toEqual([180, 460, 160]);
   });
-  it("returns freed space to Summary", () => {
+  it("returns freed space to Title", () => {
     expect(resizeColumnWidths(columns, 800, "requester", 100)).toEqual([520, 180, 100]);
   });
-  it("trades only with the next column when Summary itself is dragged", () => {
-    expect(resizeColumnWidths(columns, 600, "summary", 1200)).toEqual([340, 100, 160]);
-    expect(resizeColumnWidths(columns, 600, "summary", 180)).toEqual([180, 260, 160]);
+  it("trades only with the next column when Title itself is dragged", () => {
+    expect(resizeColumnWidths(columns, 600, "title", 1200)).toEqual([340, 100, 160]);
+    expect(resizeColumnWidths(columns, 600, "title", 180)).toEqual([180, 260, 160]);
   });
   it("fits oversized saved widths when the viewport shrinks", () => {
     const fitted = fitColumnWidths(

@@ -18697,7 +18697,7 @@
     "/api/v1/portal/request-types/{slug}": {
       "get": {
         "operationId": "readPortalRequestForm",
-        "summary": "One request type's form definition (INT-002): the type, its attached catalog fields in display order, and the deflection links placed on this form. The four basics — Summary, Description, Attachments, Urgency — are fixed on every form and are drawn by the portal, so they are not answered here",
+        "summary": "One request type's form definition (INT-002): the type, its attached catalog fields in display order, and the deflection links placed on this form. The four basics — Title, Description, Attachments, Urgency — are fixed on every form and are drawn by the portal, so they are not answered here",
         "tags": ["portal"],
         "parameters": [
           {
@@ -19077,7 +19077,7 @@
     "/api/v1/portal/contracts": {
       "get": {
         "operationId": "listPortalContracts",
-        "summary": "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. List eligible Contracts.",
+        "summary": "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads include its earlier Versions. List eligible Contracts.",
         "tags": ["portal"],
         "parameters": [
           {
@@ -19460,7 +19460,7 @@
     "/api/v1/portal/contracts/{number}": {
       "get": {
         "operationId": "readPortalContract",
-        "summary": "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. Read selected Contract facts.",
+        "summary": "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads include its earlier Versions. Read selected Contract facts.",
         "tags": ["portal"],
         "parameters": [
           {
@@ -19776,7 +19776,7 @@
     "/api/v1/portal/contracts/{number}/documents/{documentId}/versions/{versionId}/download": {
       "get": {
         "operationId": "downloadPortalContractVersion",
-        "summary": "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. ",
+        "summary": "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads include its earlier Versions. ",
         "tags": ["portal"],
         "parameters": [
           {
@@ -19836,7 +19836,7 @@
     "/api/v1/portal/contracts/{number}/documents/{documentId}/versions/{versionId}/preview": {
       "get": {
         "operationId": "previewPortalContractVersion",
-        "summary": "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. ",
+        "summary": "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads include its earlier Versions. ",
         "tags": ["portal"],
         "parameters": [
           {
@@ -19896,7 +19896,7 @@
     "/api/v1/portal/contracts/{number}/documents/{documentId}/versions/{versionId}/rendition": {
       "get": {
         "operationId": "readPortalContractRendition",
-        "summary": "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. ",
+        "summary": "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads include its earlier Versions. ",
         "tags": ["portal"],
         "parameters": [
           {
@@ -19982,7 +19982,7 @@
     "/api/v1/portal/contracts/{number}/documents/{documentId}/versions/{versionId}/email": {
       "get": {
         "operationId": "readPortalContractEmail",
-        "summary": "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. ",
+        "summary": "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads include its earlier Versions. ",
         "tags": ["portal"],
         "parameters": [
           {
@@ -20191,7 +20191,7 @@
     "/api/v1/portal/contracts/{number}/documents/{documentId}/versions/{versionId}/attachments/{attachmentIndex}/download": {
       "get": {
         "operationId": "downloadPortalContractEmailAttachment",
-        "summary": "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. ",
+        "summary": "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads include its earlier Versions. ",
         "tags": ["portal"],
         "parameters": [
           {
@@ -20261,7 +20261,7 @@
     "/api/v1/portal/contracts/{number}/documents/{documentId}/versions/{versionId}/attachments/{attachmentIndex}/preview": {
       "get": {
         "operationId": "previewPortalContractEmailAttachment",
-        "summary": "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. ",
+        "summary": "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads include its earlier Versions. ",
         "tags": ["portal"],
         "parameters": [
           {
@@ -20355,6 +20355,12 @@
                     "work": {
                       "type": "object",
                       "properties": {
+                        "owningDepartment": {
+                          "type": ["string", "null"]
+                        },
+                        "region": {
+                          "type": ["string", "null"]
+                        },
                         "value": {
                           "anyOf": [
                             {
@@ -20557,7 +20563,7 @@
                                 "minimum": -9007199254740991,
                                 "maximum": 9007199254740991
                               },
-                              "summary": {
+                              "title": {
                                 "type": "string"
                               },
                               "description": {
@@ -20762,7 +20768,7 @@
                             },
                             "required": [
                               "number",
-                              "summary",
+                              "title",
                               "description",
                               "submittedAt",
                               "requester",
@@ -20788,328 +20794,6 @@
                     }
                   },
                   "required": ["work"],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Problem details (RFC 9457)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      },
-      "patch": {
-        "operationId": "updatePortalContractWork",
-        "tags": ["portal"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "value": {
-                    "anyOf": [
-                      {
-                        "type": "object",
-                        "properties": {
-                          "amount": {
-                            "type": "integer",
-                            "minimum": 0,
-                            "maximum": 9007199254740991
-                          },
-                          "currency": {
-                            "type": "string"
-                          },
-                          "cadence": {
-                            "type": "string",
-                            "enum": ["one_time", "monthly", "annually"]
-                          }
-                        },
-                        "required": ["amount", "currency", "cadence"],
-                        "additionalProperties": false
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "effectiveDate": {
-                    "anyOf": [
-                      {
-                        "type": "string",
-                        "format": "date",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "description": {
-                    "anyOf": [
-                      {
-                        "type": "string",
-                        "maxLength": 50000
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "customFields": {
-                    "type": "object",
-                    "propertyNames": {
-                      "type": "string"
-                    },
-                    "additionalProperties": {
-                      "anyOf": [
-                        {
-                          "anyOf": [
-                            {
-                              "type": "string"
-                            },
-                            {
-                              "type": "number"
-                            },
-                            {
-                              "type": "boolean"
-                            },
-                            {
-                              "type": "array",
-                              "items": {
-                                "type": "string"
-                              }
-                            }
-                          ]
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    }
-                  }
-                },
-                "additionalProperties": false
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "schema": {
-              "type": "integer",
-              "exclusiveMinimum": 0,
-              "maximum": 9007199254740991
-            },
-            "in": "path",
-            "name": "number",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "value": {
-                      "anyOf": [
-                        {
-                          "type": "object",
-                          "properties": {
-                            "amount": {
-                              "type": "integer",
-                              "minimum": 0,
-                              "maximum": 9007199254740991
-                            },
-                            "currency": {
-                              "type": "string"
-                            },
-                            "cadence": {
-                              "type": "string",
-                              "enum": ["one_time", "monthly", "annually"]
-                            }
-                          },
-                          "required": ["amount", "currency", "cadence"],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "effectiveDate": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "format": "date",
-                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "description": {
-                      "type": ["string", "null"]
-                    },
-                    "customFields": {
-                      "type": "object",
-                      "propertyNames": {
-                        "type": "string"
-                      },
-                      "additionalProperties": {
-                        "anyOf": [
-                          {
-                            "type": "string"
-                          },
-                          {
-                            "type": "number"
-                          },
-                          {
-                            "type": "boolean"
-                          },
-                          {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          }
-                        ]
-                      }
-                    }
-                  },
-                  "required": ["description", "customFields"],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Problem details (RFC 9457)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/portal/contracts/{number}/supporting-documents": {
-      "get": {
-        "operationId": "listPortalContractSupportingDocuments",
-        "tags": ["portal"],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "query",
-            "name": "cursor",
-            "required": false
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "exclusiveMinimum": 0,
-              "maximum": 9007199254740991
-            },
-            "in": "path",
-            "name": "number",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "documents": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "string"
-                          },
-                          "title": {
-                            "type": "string"
-                          },
-                          "version": {
-                            "type": "object",
-                            "properties": {
-                              "id": {
-                                "type": "string"
-                              },
-                              "versionNumber": {
-                                "type": "integer",
-                                "minimum": -9007199254740991,
-                                "maximum": 9007199254740991
-                              },
-                              "originalFilename": {
-                                "type": "string"
-                              },
-                              "mimeType": {
-                                "type": "string"
-                              },
-                              "byteSize": {
-                                "type": "number"
-                              },
-                              "renderFamily": {
-                                "type": "string",
-                                "enum": ["pdf", "image", "word", "presentation", "email", "other"]
-                              },
-                              "kind": {
-                                "type": "string",
-                                "enum": [
-                                  "general",
-                                  "draft_ours",
-                                  "draft_theirs",
-                                  "redline_theirs",
-                                  "redline_ours",
-                                  "executed",
-                                  "amendment",
-                                  "generated_redline"
-                                ]
-                              }
-                            },
-                            "required": [
-                              "id",
-                              "versionNumber",
-                              "originalFilename",
-                              "mimeType",
-                              "byteSize",
-                              "renderFamily",
-                              "kind"
-                            ],
-                            "additionalProperties": false
-                          }
-                        },
-                        "required": ["id", "title", "version"],
-                        "additionalProperties": false
-                      }
-                    },
-                    "nextCursor": {
-                      "type": ["string", "null"]
-                    }
-                  },
-                  "required": ["documents", "nextCursor"],
                   "additionalProperties": false
                 }
               }
@@ -21155,6 +20839,12 @@
                     "work": {
                       "type": "object",
                       "properties": {
+                        "owningDepartment": {
+                          "type": ["string", "null"]
+                        },
+                        "region": {
+                          "type": ["string", "null"]
+                        },
                         "value": {
                           "anyOf": [
                             {
@@ -21357,7 +21047,7 @@
                                 "minimum": -9007199254740991,
                                 "maximum": 9007199254740991
                               },
-                              "summary": {
+                              "title": {
                                 "type": "string"
                               },
                               "description": {
@@ -21562,7 +21252,7 @@
                             },
                             "required": [
                               "number",
-                              "summary",
+                              "title",
                               "description",
                               "submittedAt",
                               "requester",
@@ -21604,213 +21294,11 @@
             }
           }
         }
-      },
-      "patch": {
-        "operationId": "updatePortalMatterWork",
-        "tags": ["portal"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "value": {
-                    "anyOf": [
-                      {
-                        "type": "object",
-                        "properties": {
-                          "amount": {
-                            "type": "integer",
-                            "minimum": 0,
-                            "maximum": 9007199254740991
-                          },
-                          "currency": {
-                            "type": "string"
-                          },
-                          "cadence": {
-                            "type": "string",
-                            "enum": ["one_time", "monthly", "annually"]
-                          }
-                        },
-                        "required": ["amount", "currency", "cadence"],
-                        "additionalProperties": false
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "effectiveDate": {
-                    "anyOf": [
-                      {
-                        "type": "string",
-                        "format": "date",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "description": {
-                    "anyOf": [
-                      {
-                        "type": "string",
-                        "maxLength": 50000
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "customFields": {
-                    "type": "object",
-                    "propertyNames": {
-                      "type": "string"
-                    },
-                    "additionalProperties": {
-                      "anyOf": [
-                        {
-                          "anyOf": [
-                            {
-                              "type": "string"
-                            },
-                            {
-                              "type": "number"
-                            },
-                            {
-                              "type": "boolean"
-                            },
-                            {
-                              "type": "array",
-                              "items": {
-                                "type": "string"
-                              }
-                            }
-                          ]
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    }
-                  }
-                },
-                "additionalProperties": false
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "schema": {
-              "type": "integer",
-              "exclusiveMinimum": 0,
-              "maximum": 9007199254740991
-            },
-            "in": "path",
-            "name": "number",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "value": {
-                      "anyOf": [
-                        {
-                          "type": "object",
-                          "properties": {
-                            "amount": {
-                              "type": "integer",
-                              "minimum": 0,
-                              "maximum": 9007199254740991
-                            },
-                            "currency": {
-                              "type": "string"
-                            },
-                            "cadence": {
-                              "type": "string",
-                              "enum": ["one_time", "monthly", "annually"]
-                            }
-                          },
-                          "required": ["amount", "currency", "cadence"],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "effectiveDate": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "format": "date",
-                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "description": {
-                      "type": ["string", "null"]
-                    },
-                    "customFields": {
-                      "type": "object",
-                      "propertyNames": {
-                        "type": "string"
-                      },
-                      "additionalProperties": {
-                        "anyOf": [
-                          {
-                            "type": "string"
-                          },
-                          {
-                            "type": "number"
-                          },
-                          {
-                            "type": "boolean"
-                          },
-                          {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          }
-                        ]
-                      }
-                    }
-                  },
-                  "required": ["description", "customFields"],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Problem details (RFC 9457)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
       }
     },
-    "/api/v1/portal/matters/{number}/supporting-documents": {
+    "/api/v1/portal/contracts/{number}/documents": {
       "get": {
-        "operationId": "listPortalMatterSupportingDocuments",
+        "operationId": "listPortalContractDocuments",
         "tags": ["portal"],
         "parameters": [
           {
@@ -21819,6 +21307,15 @@
             },
             "in": "query",
             "name": "cursor",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "in": "query",
+            "name": "q",
             "required": false
           },
           {
@@ -21851,57 +21348,98 @@
                           "title": {
                             "type": "string"
                           },
-                          "version": {
-                            "type": "object",
-                            "properties": {
-                              "id": {
-                                "type": "string"
+                          "isPrimary": {
+                            "type": "boolean"
+                          },
+                          "versions": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "versionNumber": {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "originalFilename": {
+                                  "type": "string"
+                                },
+                                "mimeType": {
+                                  "type": "string"
+                                },
+                                "byteSize": {
+                                  "type": "number"
+                                },
+                                "renderFamily": {
+                                  "type": "string",
+                                  "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                                },
+                                "kind": {
+                                  "type": "string",
+                                  "enum": [
+                                    "general",
+                                    "draft_ours",
+                                    "draft_theirs",
+                                    "redline_theirs",
+                                    "redline_ours",
+                                    "executed",
+                                    "amendment",
+                                    "generated_redline"
+                                  ]
+                                },
+                                "note": {
+                                  "type": ["string", "null"]
+                                },
+                                "createdAt": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                },
+                                "uploadedBy": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "displayName": {
+                                      "type": "string"
+                                    },
+                                    "image": {
+                                      "type": ["string", "null"]
+                                    }
+                                  },
+                                  "required": ["id", "displayName", "image"],
+                                  "additionalProperties": false
+                                },
+                                "isCurrent": {
+                                  "type": "boolean"
+                                },
+                                "isExecuted": {
+                                  "type": "boolean"
+                                }
                               },
-                              "versionNumber": {
-                                "type": "integer",
-                                "minimum": -9007199254740991,
-                                "maximum": 9007199254740991
-                              },
-                              "originalFilename": {
-                                "type": "string"
-                              },
-                              "mimeType": {
-                                "type": "string"
-                              },
-                              "byteSize": {
-                                "type": "number"
-                              },
-                              "renderFamily": {
-                                "type": "string",
-                                "enum": ["pdf", "image", "word", "presentation", "email", "other"]
-                              },
-                              "kind": {
-                                "type": "string",
-                                "enum": [
-                                  "general",
-                                  "draft_ours",
-                                  "draft_theirs",
-                                  "redline_theirs",
-                                  "redline_ours",
-                                  "executed",
-                                  "amendment",
-                                  "generated_redline"
-                                ]
-                              }
-                            },
-                            "required": [
-                              "id",
-                              "versionNumber",
-                              "originalFilename",
-                              "mimeType",
-                              "byteSize",
-                              "renderFamily",
-                              "kind"
-                            ],
-                            "additionalProperties": false
+                              "required": [
+                                "id",
+                                "versionNumber",
+                                "originalFilename",
+                                "mimeType",
+                                "byteSize",
+                                "renderFamily",
+                                "kind",
+                                "note",
+                                "createdAt",
+                                "uploadedBy",
+                                "isCurrent",
+                                "isExecuted"
+                              ],
+                              "additionalProperties": false
+                            }
                           }
                         },
-                        "required": ["id", "title", "version"],
+                        "required": ["id", "title", "isPrimary", "versions"],
                         "additionalProperties": false
                       }
                     },
@@ -21910,6 +21448,803 @@
                     }
                   },
                   "required": ["documents", "nextCursor"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/matters/{number}/documents": {
+      "get": {
+        "operationId": "listPortalMatterDocuments",
+        "tags": ["portal"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "cursor",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "in": "query",
+            "name": "q",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documents": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "isPrimary": {
+                            "type": "boolean"
+                          },
+                          "versions": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "versionNumber": {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "originalFilename": {
+                                  "type": "string"
+                                },
+                                "mimeType": {
+                                  "type": "string"
+                                },
+                                "byteSize": {
+                                  "type": "number"
+                                },
+                                "renderFamily": {
+                                  "type": "string",
+                                  "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                                },
+                                "kind": {
+                                  "type": "string",
+                                  "enum": [
+                                    "general",
+                                    "draft_ours",
+                                    "draft_theirs",
+                                    "redline_theirs",
+                                    "redline_ours",
+                                    "executed",
+                                    "amendment",
+                                    "generated_redline"
+                                  ]
+                                },
+                                "note": {
+                                  "type": ["string", "null"]
+                                },
+                                "createdAt": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                },
+                                "uploadedBy": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "displayName": {
+                                      "type": "string"
+                                    },
+                                    "image": {
+                                      "type": ["string", "null"]
+                                    }
+                                  },
+                                  "required": ["id", "displayName", "image"],
+                                  "additionalProperties": false
+                                },
+                                "isCurrent": {
+                                  "type": "boolean"
+                                },
+                                "isExecuted": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "versionNumber",
+                                "originalFilename",
+                                "mimeType",
+                                "byteSize",
+                                "renderFamily",
+                                "kind",
+                                "note",
+                                "createdAt",
+                                "uploadedBy",
+                                "isCurrent",
+                                "isExecuted"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": ["id", "title", "isPrimary", "versions"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "nextCursor": {
+                      "type": ["string", "null"]
+                    }
+                  },
+                  "required": ["documents", "nextCursor"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/contracts/{number}/team": {
+      "get": {
+        "operationId": "readPortalContractTeam",
+        "tags": ["portal"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "team": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "image": {
+                            "type": ["string", "null"]
+                          },
+                          "archived": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": ["id", "displayName", "image", "archived"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "manager": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "image": {
+                              "type": ["string", "null"]
+                            },
+                            "archived": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": ["id", "displayName", "image", "archived"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "businessOwner": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "image": {
+                              "type": ["string", "null"]
+                            },
+                            "archived": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": ["id", "displayName", "image", "archived"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "creator": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "image": {
+                              "type": ["string", "null"]
+                            },
+                            "archived": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": ["id", "displayName", "image", "archived"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "canAdd": {
+                      "type": "boolean"
+                    },
+                    "people": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "image": {
+                            "type": ["string", "null"]
+                          },
+                          "archived": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": ["id", "displayName", "image", "archived"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["team", "manager", "businessOwner", "creator", "canAdd", "people"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "addPortalContractTeamMember",
+        "tags": ["portal"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": ["userId"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "team": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "image": {
+                            "type": ["string", "null"]
+                          },
+                          "archived": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": ["id", "displayName", "image", "archived"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["team"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/matters/{number}/team": {
+      "get": {
+        "operationId": "readPortalMatterTeam",
+        "tags": ["portal"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "team": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "image": {
+                            "type": ["string", "null"]
+                          },
+                          "archived": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": ["id", "displayName", "image", "archived"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "manager": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "image": {
+                              "type": ["string", "null"]
+                            },
+                            "archived": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": ["id", "displayName", "image", "archived"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "businessOwner": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "image": {
+                              "type": ["string", "null"]
+                            },
+                            "archived": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": ["id", "displayName", "image", "archived"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "creator": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "image": {
+                              "type": ["string", "null"]
+                            },
+                            "archived": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": ["id", "displayName", "image", "archived"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "canAdd": {
+                      "type": "boolean"
+                    },
+                    "people": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "image": {
+                            "type": ["string", "null"]
+                          },
+                          "archived": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": ["id", "displayName", "image", "archived"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["team", "manager", "businessOwner", "creator", "canAdd", "people"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "addPortalMatterTeamMember",
+        "tags": ["portal"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": ["userId"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "team": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "image": {
+                            "type": ["string", "null"]
+                          },
+                          "archived": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": ["id", "displayName", "image", "archived"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["team"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/activity": {
+      "get": {
+        "operationId": "listPortalActivity",
+        "summary": "Full Thread history for a reached Portal record. Other tiers leave no entries or counts.",
+        "tags": ["portal"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["contract", "matter", "request"]
+            },
+            "in": "query",
+            "name": "entityType",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "query",
+            "name": "entityId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "query",
+            "name": "cursor",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "entries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "action": {
+                            "type": "string"
+                          },
+                          "visibility": {
+                            "type": "string",
+                            "enum": ["legal_only", "working_team", "full_thread"]
+                          },
+                          "actor": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "displayName": {
+                                    "type": "string"
+                                  },
+                                  "image": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "archived": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": ["id", "displayName", "image", "archived"],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                          },
+                          "payload": {
+                            "type": "object",
+                            "propertyNames": {
+                              "type": "string"
+                            },
+                            "additionalProperties": {}
+                          }
+                        },
+                        "required": ["id", "action", "visibility", "actor", "createdAt", "payload"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "nextCursor": {
+                      "type": ["string", "null"]
+                    }
+                  },
+                  "required": ["entries", "nextCursor"],
                   "additionalProperties": false
                 }
               }
@@ -22318,7 +22653,7 @@
     "/api/v1/requests": {
       "post": {
         "operationId": "submitRequest",
-        "summary": "Submit a Request through a request type's portal form (INT-001). The Requester is the session; the type must be live; Summary, Description, and Urgency are required, as is every attached field the type marks required; values are accepted for exactly the fields the type attaches, and a user or entity field's value must name a live row",
+        "summary": "Submit a Request through a request type's portal form (INT-001). The Requester is the session; the type must be live; Title, Description, and Urgency are required, as is every attached field the type marks required; values are accepted for exactly the fields the type attaches, and a user or entity field's value must name a live row",
         "tags": ["requests"],
         "requestBody": {
           "required": true,
@@ -22330,7 +22665,7 @@
                   "requestTypeId": {
                     "type": "string"
                   },
-                  "summary": {
+                  "title": {
                     "type": "string"
                   },
                   "description": {
@@ -22373,7 +22708,7 @@
                     }
                   }
                 },
-                "required": ["requestTypeId", "summary", "description", "urgency"],
+                "required": ["requestTypeId", "title", "description", "urgency"],
                 "additionalProperties": false
               }
             }
@@ -22405,7 +22740,7 @@
                           "type": "string",
                           "enum": ["new"]
                         },
-                        "summary": {
+                        "title": {
                           "type": "string"
                         },
                         "description": {
@@ -22449,7 +22784,7 @@
                         "number",
                         "requestTypeId",
                         "status",
-                        "summary",
+                        "title",
                         "description",
                         "urgency",
                         "customFields",
@@ -22552,7 +22887,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["number", "summary", "type", "requester", "urgency", "createdAt", "status"]
+              "enum": ["number", "title", "type", "requester", "urgency", "createdAt", "status"]
             },
             "in": "query",
             "name": "sort",
@@ -22612,7 +22947,7 @@
                             "type": "string",
                             "enum": ["new", "converted", "resolved", "declined"]
                           },
-                          "summary": {
+                          "title": {
                             "type": "string"
                           },
                           "urgency": {
@@ -22761,7 +23096,7 @@
                           "id",
                           "number",
                           "status",
-                          "summary",
+                          "title",
                           "urgency",
                           "requestType",
                           "requester",
@@ -22863,7 +23198,7 @@
                             "type": "string",
                             "enum": ["new", "converted", "resolved", "declined"]
                           },
-                          "summary": {
+                          "title": {
                             "type": "string"
                           },
                           "requestType": {
@@ -22893,7 +23228,7 @@
                           "id",
                           "number",
                           "status",
-                          "summary",
+                          "title",
                           "requestType",
                           "createdAt"
                         ],
@@ -22992,7 +23327,7 @@
                           "type": "string",
                           "enum": ["new", "converted", "resolved", "declined"]
                         },
-                        "summary": {
+                        "title": {
                           "type": "string"
                         },
                         "requestType": {
@@ -23057,7 +23392,7 @@
                         "id",
                         "number",
                         "status",
-                        "summary",
+                        "title",
                         "requestType",
                         "createdAt",
                         "description",
@@ -23573,7 +23908,7 @@
                           "type": "string",
                           "enum": ["new", "converted", "resolved", "declined"]
                         },
-                        "summary": {
+                        "title": {
                           "type": "string"
                         },
                         "description": {
@@ -23783,7 +24118,7 @@
                         "id",
                         "number",
                         "status",
-                        "summary",
+                        "title",
                         "description",
                         "urgency",
                         "customFields",
@@ -23937,7 +24272,7 @@
                           "type": "string",
                           "enum": ["new", "converted", "resolved", "declined"]
                         },
-                        "summary": {
+                        "title": {
                           "type": "string"
                         },
                         "description": {
@@ -24147,7 +24482,7 @@
                         "id",
                         "number",
                         "status",
-                        "summary",
+                        "title",
                         "description",
                         "urgency",
                         "customFields",
@@ -24288,7 +24623,7 @@
                           "type": "string",
                           "enum": ["new", "converted", "resolved", "declined"]
                         },
-                        "summary": {
+                        "title": {
                           "type": "string"
                         },
                         "description": {
@@ -24498,7 +24833,7 @@
                         "id",
                         "number",
                         "status",
-                        "summary",
+                        "title",
                         "description",
                         "urgency",
                         "customFields",
@@ -24831,7 +25166,7 @@
                           "type": "string",
                           "enum": ["new", "converted", "resolved", "declined"]
                         },
-                        "summary": {
+                        "title": {
                           "type": "string"
                         },
                         "description": {
@@ -25041,7 +25376,7 @@
                         "id",
                         "number",
                         "status",
-                        "summary",
+                        "title",
                         "description",
                         "urgency",
                         "customFields",
@@ -25255,7 +25590,7 @@
                           "type": "string",
                           "enum": ["new", "converted", "resolved", "declined"]
                         },
-                        "summary": {
+                        "title": {
                           "type": "string"
                         },
                         "description": {
@@ -25465,7 +25800,7 @@
                         "id",
                         "number",
                         "status",
-                        "summary",
+                        "title",
                         "description",
                         "urgency",
                         "customFields",
@@ -26669,7 +27004,7 @@
     "/api/v1/requests/{number}/convert": {
       "post": {
         "operationId": "convertRequest",
-        "summary": "Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage may override the configured type or Re-target to the other module. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request summary, urgency defaulting priority unless overridden, the Request description, risk unset, the converting person as Matter Manager or Contract Owner, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. counterpartyName, contract conversions only, finds or creates the live counterparty of that name (case-insensitive) and links it as the primary; a matter conversion refuses it with 400. neededBy lands one \"Needed by\" key date on either record, past dates included. Matter conversions may apply a live template for the confirmed type; carried values and triager answers override its defaults. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Request remains the Requester's window. Member+ only",
+        "summary": "Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage may override the configured type or Re-target to the other module. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request title, urgency defaulting priority unless overridden, the Request description, risk unset, the converting person as Matter Manager or Contract Owner, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. counterpartyName, contract conversions only, finds or creates the live counterparty of that name (case-insensitive) and links it as the primary; a matter conversion refuses it with 400. neededBy lands one \"Needed by\" key date on either record, past dates included. Matter conversions may apply a live template for the confirmed type; carried values and triager answers override its defaults. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Request remains the Requester's window. Member+ only",
         "tags": ["requests"],
         "description": "Contract conversion makes the Requester its Business Owner, granting Portal reads subject to DD-021 confidentiality. Matter conversion assigns no Business Owner.",
         "requestBody": {
@@ -26806,7 +27141,7 @@
                           "type": "string",
                           "enum": ["new", "converted", "resolved", "declined"]
                         },
-                        "summary": {
+                        "title": {
                           "type": "string"
                         },
                         "description": {
@@ -27016,7 +27351,7 @@
                         "id",
                         "number",
                         "status",
-                        "summary",
+                        "title",
                         "description",
                         "urgency",
                         "customFields",
@@ -28934,6 +29269,12 @@
                               }
                             ]
                           },
+                          "owningDepartment": {
+                            "type": ["string", "null"]
+                          },
+                          "region": {
+                            "type": ["string", "null"]
+                          },
                           "description": {
                             "type": ["string", "null"]
                           },
@@ -29110,6 +29451,8 @@
                           "daysRemaining",
                           "renewalPendingConfirmation",
                           "proposedRenewalExpiry",
+                          "owningDepartment",
+                          "region",
                           "description",
                           "nextDeadline",
                           "customFields",
@@ -29165,6 +29508,28 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 200
+                  },
+                  "owningDepartment": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 200
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "region": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 200
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   },
                   "contractTypeId": {
                     "type": "string"
@@ -29519,6 +29884,12 @@
                             }
                           ]
                         },
+                        "owningDepartment": {
+                          "type": ["string", "null"]
+                        },
+                        "region": {
+                          "type": ["string", "null"]
+                        },
                         "description": {
                           "type": ["string", "null"]
                         },
@@ -29695,6 +30066,8 @@
                         "daysRemaining",
                         "renewalPendingConfirmation",
                         "proposedRenewalExpiry",
+                        "owningDepartment",
+                        "region",
                         "description",
                         "nextDeadline",
                         "customFields",
@@ -30358,6 +30731,12 @@
                             }
                           ]
                         },
+                        "owningDepartment": {
+                          "type": ["string", "null"]
+                        },
+                        "region": {
+                          "type": ["string", "null"]
+                        },
                         "description": {
                           "type": ["string", "null"]
                         },
@@ -30534,6 +30913,8 @@
                         "daysRemaining",
                         "renewalPendingConfirmation",
                         "proposedRenewalExpiry",
+                        "owningDepartment",
+                        "region",
                         "description",
                         "nextDeadline",
                         "customFields",
@@ -31076,6 +31457,28 @@
                       }
                     ]
                   },
+                  "owningDepartment": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 200
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "region": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 200
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "managerId": {
                     "type": ["string", "null"]
                   },
@@ -31524,6 +31927,12 @@
                             }
                           ]
                         },
+                        "owningDepartment": {
+                          "type": ["string", "null"]
+                        },
+                        "region": {
+                          "type": ["string", "null"]
+                        },
                         "description": {
                           "type": ["string", "null"]
                         },
@@ -31700,6 +32109,8 @@
                         "daysRemaining",
                         "renewalPendingConfirmation",
                         "proposedRenewalExpiry",
+                        "owningDepartment",
+                        "region",
                         "description",
                         "nextDeadline",
                         "customFields",
@@ -32294,6 +32705,12 @@
                             }
                           ]
                         },
+                        "owningDepartment": {
+                          "type": ["string", "null"]
+                        },
+                        "region": {
+                          "type": ["string", "null"]
+                        },
                         "description": {
                           "type": ["string", "null"]
                         },
@@ -32470,6 +32887,8 @@
                         "daysRemaining",
                         "renewalPendingConfirmation",
                         "proposedRenewalExpiry",
+                        "owningDepartment",
+                        "region",
                         "description",
                         "nextDeadline",
                         "customFields",
@@ -32803,6 +33222,12 @@
                             }
                           ]
                         },
+                        "owningDepartment": {
+                          "type": ["string", "null"]
+                        },
+                        "region": {
+                          "type": ["string", "null"]
+                        },
                         "description": {
                           "type": ["string", "null"]
                         },
@@ -32979,6 +33404,8 @@
                         "daysRemaining",
                         "renewalPendingConfirmation",
                         "proposedRenewalExpiry",
+                        "owningDepartment",
+                        "region",
                         "description",
                         "nextDeadline",
                         "customFields",
@@ -33336,6 +33763,12 @@
                             }
                           ]
                         },
+                        "owningDepartment": {
+                          "type": ["string", "null"]
+                        },
+                        "region": {
+                          "type": ["string", "null"]
+                        },
                         "description": {
                           "type": ["string", "null"]
                         },
@@ -33512,6 +33945,8 @@
                         "daysRemaining",
                         "renewalPendingConfirmation",
                         "proposedRenewalExpiry",
+                        "owningDepartment",
+                        "region",
                         "description",
                         "nextDeadline",
                         "customFields",
@@ -34129,6 +34564,12 @@
                             }
                           ]
                         },
+                        "owningDepartment": {
+                          "type": ["string", "null"]
+                        },
+                        "region": {
+                          "type": ["string", "null"]
+                        },
                         "description": {
                           "type": ["string", "null"]
                         },
@@ -34305,6 +34746,8 @@
                         "daysRemaining",
                         "renewalPendingConfirmation",
                         "proposedRenewalExpiry",
+                        "owningDepartment",
+                        "region",
                         "description",
                         "nextDeadline",
                         "customFields",
@@ -34668,6 +35111,12 @@
                             }
                           ]
                         },
+                        "owningDepartment": {
+                          "type": ["string", "null"]
+                        },
+                        "region": {
+                          "type": ["string", "null"]
+                        },
                         "description": {
                           "type": ["string", "null"]
                         },
@@ -34844,6 +35293,8 @@
                         "daysRemaining",
                         "renewalPendingConfirmation",
                         "proposedRenewalExpiry",
+                        "owningDepartment",
+                        "region",
                         "description",
                         "nextDeadline",
                         "customFields",
@@ -35207,6 +35658,12 @@
                             }
                           ]
                         },
+                        "owningDepartment": {
+                          "type": ["string", "null"]
+                        },
+                        "region": {
+                          "type": ["string", "null"]
+                        },
                         "description": {
                           "type": ["string", "null"]
                         },
@@ -35383,6 +35840,8 @@
                         "daysRemaining",
                         "renewalPendingConfirmation",
                         "proposedRenewalExpiry",
+                        "owningDepartment",
+                        "region",
                         "description",
                         "nextDeadline",
                         "customFields",
@@ -35738,6 +36197,12 @@
                             }
                           ]
                         },
+                        "owningDepartment": {
+                          "type": ["string", "null"]
+                        },
+                        "region": {
+                          "type": ["string", "null"]
+                        },
                         "description": {
                           "type": ["string", "null"]
                         },
@@ -35914,6 +36379,8 @@
                         "daysRemaining",
                         "renewalPendingConfirmation",
                         "proposedRenewalExpiry",
+                        "owningDepartment",
+                        "region",
                         "description",
                         "nextDeadline",
                         "customFields",
@@ -36247,6 +36714,12 @@
                             }
                           ]
                         },
+                        "owningDepartment": {
+                          "type": ["string", "null"]
+                        },
+                        "region": {
+                          "type": ["string", "null"]
+                        },
                         "description": {
                           "type": ["string", "null"]
                         },
@@ -36423,6 +36896,8 @@
                         "daysRemaining",
                         "renewalPendingConfirmation",
                         "proposedRenewalExpiry",
+                        "owningDepartment",
+                        "region",
                         "description",
                         "nextDeadline",
                         "customFields",
@@ -45257,7 +45732,7 @@
     "/api/v1/documents/{documentId}/versions": {
       "post": {
         "operationId": "uploadDocumentVersion",
-        "summary": "Append the next version to an existing document (DOC-001). The number is assigned under the owning record's row lock, so two revisions uploaded at the same moment take consecutive numbers rather than colliding, and the chain runs 1..n with no gaps. The version carries one of the six hand-set CTR-014 kinds and, when the uploader wrote one, a short note saying what changed in this round. Nothing about the versions already in the chain is touched: a file correction is another version, while the kind has its own one-column PATCH. Appends document.version_added on the owning record (DD-017). A Contributor on that record's live team may append only to a non-primary supporting chain; Matter paper has no primary chain. The kind and note fields must be sent before the file part. An archived owning record takes no new paper until it is restored. A document on a contract the uploader cannot reach answers 404, exactly as one that does not exist",
+        "summary": "Append the next version to an existing document (DOC-001). The number is assigned under the owning record's row lock, so two revisions uploaded at the same moment take consecutive numbers rather than colliding, and the chain runs 1..n with no gaps. The version carries one of the six hand-set CTR-014 kinds and, when the uploader wrote one, a short note saying what changed in this round. Nothing about the versions already in the chain is touched: a file correction is another version, while the kind has its own one-column PATCH. Appends document.version_added on the owning record (DD-017). A Business User on that record's live team may append to any accessible Document, including the primary Contract Document. Primary and executed designations remain Legal actions. The kind and note fields must be sent before the file part. An archived owning record takes no new paper until it is restored. A document on a contract the uploader cannot reach answers 404, exactly as one that does not exist",
         "tags": ["documents"],
         "requestBody": {
           "required": true,
@@ -66349,7 +66824,7 @@
                                       "exclusiveMinimum": 0,
                                       "maximum": 9007199254740991
                                     },
-                                    "summary": {
+                                    "title": {
                                       "type": "string"
                                     },
                                     "urgency": {
@@ -66391,7 +66866,7 @@
                                   "required": [
                                     "id",
                                     "number",
-                                    "summary",
+                                    "title",
                                     "urgency",
                                     "requestType",
                                     "requester",

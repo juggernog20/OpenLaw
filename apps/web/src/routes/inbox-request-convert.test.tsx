@@ -193,7 +193,7 @@ const MATTER_TYPES = [
  * values, one of which the NDA type has no field for. */
 const request = (overrides: Record<string, unknown> = {}) =>
   staffRequest({
-    summary: "Northwind Labs mutual NDA",
+    title: "Northwind Labs mutual NDA",
     description: "Small vendor, standard terms.",
     customFields: { opposing_party: "Northwind Labs", deal_desk_region: "EMEA" },
     ...overrides,
@@ -341,7 +341,7 @@ describe("the Triage menu (INT-007)", () => {
 });
 
 describe("the prefill (INT-002, MTR-012)", () => {
-  it("seeds the title from the summary and says where it came from", async () => {
+  it("seeds the title from the title and says where it came from", async () => {
     const user = userEvent.setup();
     open(requestApi());
     const dialog = await openConvert(user);
@@ -1305,8 +1305,8 @@ describe("Matter Conversion drafts", () => {
               available: true,
               citations: [
                 {
-                  sourceId: "request:45:summary",
-                  label: "Request summary",
+                  sourceId: "request:45:title",
+                  label: "Request title",
                   text: "Opening context",
                   quote: "Opening context",
                 },

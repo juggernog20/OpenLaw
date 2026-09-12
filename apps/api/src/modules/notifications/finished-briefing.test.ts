@@ -217,7 +217,7 @@ beforeAll(async () => {
   await harness.db.insert(requests).values({
     requestTypeId: requestType!.id,
     requesterId: idOf(REQUESTER),
-    summary: "Review the intake redline",
+    title: "Review the intake redline",
     description: "Please review it.",
     urgency: "high",
   });

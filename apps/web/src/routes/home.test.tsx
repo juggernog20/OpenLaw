@@ -176,7 +176,7 @@ const inboxSection = {
     {
       id: "request-1",
       number: 1042,
-      summary: "Data processing addendum review",
+      title: "Data processing addendum review",
       urgency: "high",
       requestType: { id: "type-1", displayName: "Sales" },
       requester: { id: "user-1", displayName: "Priya Nair" },

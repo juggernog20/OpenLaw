@@ -293,6 +293,13 @@ describe("the portal chrome", () => {
       "href",
       "/portal/contracts",
     );
+    const nav = screen.getByRole("navigation", { name: "Portal" });
+    expect(within(nav).getByRole("link", { name: "Requests" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.getByRole("main")).not.toContainElement(nav);
+    expect(screen.queryByRole("link", { name: "Your Contracts" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Entities" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Settings" })).not.toBeInTheDocument();
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
@@ -505,7 +512,7 @@ describe("my-requests", () => {
       id: "rq1",
       number: 45,
       status: "new",
-      summary: "Orion Cloud MSA renewal — redline review",
+      title: "Orion Cloud MSA renewal — redline review",
       requestType: { id: "rt2", slug: "contract_review", displayName: "Contract review" },
       createdAt: FIVE_HOURS_AGO,
     },
@@ -516,7 +523,7 @@ describe("my-requests", () => {
       id: "rq2",
       number: 38,
       status: "converted",
-      summary: "Marketing agency SOW — Q3 campaign",
+      title: "Marketing agency SOW — Q3 campaign",
       requestType: { id: "rt2", slug: "contract_review", displayName: "Contract review" },
       createdAt: "2026-07-28T09:00:00.000Z",
     },
@@ -527,7 +534,7 @@ describe("my-requests", () => {
       id: "rq3",
       number: 31,
       status: "resolved",
-      summary: "Office sublease question",
+      title: "Office sublease question",
       requestType: { id: "rt3", slug: "legal_question", displayName: "Legal question" },
       createdAt: "2026-07-12T09:00:00.000Z",
     },
@@ -538,7 +545,7 @@ describe("my-requests", () => {
       id: "rq4",
       number: 22,
       status: "declined",
-      summary: "Personal apartment lease",
+      title: "Personal apartment lease",
       requestType: { id: "rt3", slug: "legal_question", displayName: "Legal question" },
       createdAt: "2026-06-30T09:00:00.000Z",
     },
@@ -556,7 +563,7 @@ describe("my-requests", () => {
     return portalHome({ requestTypes: SEED_TYPES, requests });
   }
 
-  it("draws the number, the summary, the type, the status, and the age", async () => {
+  it("draws the number, the title, the type, the status, and the age", async () => {
     stubApi({ signedIn: REQUESTER, extra: homeWith([MINE[0]!]) });
     renderAt("/portal");
 

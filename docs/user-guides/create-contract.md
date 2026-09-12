@@ -17,7 +17,7 @@ The new Contract starts in the configured system Draft Status. It needs its own 
 
 ## Record the parties and ownership
 
-On **Overview**, use the **Contract** card to choose **Owner** and **Our entity**. Choose an active eligible person and the Entity that is party to this Contract. **Unassigned** clears the Owner; **Not known yet** leaves our Entity unset. Record **Priority**, **Risk**, and **Description** as needed. In **Value**, enter the **Amount**, choose **Currency**, and check **Cadence**. Leave the Value group or press Enter to save all three together. Emptying the amount removes the value.
+On **Overview**, use the **Contract** card to choose **Owner** and **Our entity**. Choose an active eligible person and the Entity that is party to this Contract. **Unassigned** clears the Owner; **Not known yet** leaves our Entity unset. Record **Owning department** and **Region** here too. These are available for every Contract type. Text saves when you leave the input or press Enter; clearing it removes the value. Record **Priority**, **Risk**, and **Description** as needed. In **Value**, enter the **Amount**, choose **Currency**, and check **Cadence**. Leave the Value group or press Enter to save all three together. Emptying the amount removes the value.
 
 Under **Counterparties**, search and select each party. If a name is new, inspect the offered create action before selecting it. The first linked Counterparty is primary; use **Make primary** to change that designation. Removing a Counterparty from this Contract removes its link, not the Counterparty record.
 

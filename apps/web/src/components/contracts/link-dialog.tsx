@@ -335,7 +335,7 @@ function CandidatePicker({
         aria-busy={searching}
         autoComplete="off"
         spellCheck={false}
-        className="w-full rounded-button border border-border-default bg-raised px-3 py-1.5 text-sm text-primary placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+        className="w-full rounded-button border border-border-default bg-raised px-3 py-1.5 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
         aria-label={intl.formatMessage(MESSAGES.pickerPlaceholder)}
         placeholder={intl.formatMessage(MESSAGES.pickerPlaceholder)}
         value={query}

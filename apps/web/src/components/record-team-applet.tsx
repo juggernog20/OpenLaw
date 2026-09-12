@@ -146,6 +146,7 @@ function TeamPanel({
       )}
       {adding && (
         <AddTeamDialog
+          returnFocusRef={addControl}
           module={module}
           number={number}
           users={users.filter(
@@ -160,7 +161,9 @@ function TeamPanel({
   );
 }
 
-function AddTeamDialog({
+export function AddTeamDialog({
+  returnFocusRef,
+  surface,
   module,
   number,
   users,
@@ -168,6 +171,8 @@ function AddTeamDialog({
   onOpenChange,
   onAdded,
 }: Readonly<{
+  returnFocusRef: RefObject<HTMLButtonElement | null>;
+  surface?: "portal";
   module: "contract" | "matter";
   number: number;
   users: readonly TeamPerson[];
@@ -191,7 +196,11 @@ function AddTeamDialog({
     setError(null);
     const result = await api
       .POST(
-        module === "contract" ? "/api/v1/contracts/{number}/team" : "/api/v1/matters/{number}/team",
+        surface === "portal"
+          ? `/api/v1/portal/${module}s/{number}/team`
+          : module === "contract"
+            ? "/api/v1/contracts/{number}/team"
+            : "/api/v1/matters/{number}/team",
         {
           params: { path: { number } },
           body: { userId },
@@ -214,7 +223,14 @@ function AddTeamDialog({
   }
   return (
     <Dialog open onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent
+        onCloseAutoFocus={(event) => {
+          if (returnFocusRef.current?.isConnected) {
+            event.preventDefault();
+            returnFocusRef.current.focus();
+          }
+        }}
+      >
         <DialogTitle>
           <FormattedMessage id="record.team.add" defaultMessage="Add team member" />
         </DialogTitle>

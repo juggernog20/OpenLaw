@@ -595,6 +595,7 @@ function attachmentUrl(documentId: string, versionId: string, index: number): st
 export interface UploadDraft {
   file: File;
   kind: HandSetDocumentVersionKind;
+  surface?: "portal";
   /** Empty when the uploader wrote nothing — the seam stores NULL. */
   note: string;
 }
@@ -710,7 +711,11 @@ async function send(url: string, draft: DocumentUploadDraft): Promise<UploadOutc
   }
   form.append("file", draft.file, draft.file.name);
   try {
-    const response = await fetch(url, { method: "POST", body: form });
+    const response = await fetch(url, {
+      method: "POST",
+      body: form,
+      ...(draft.surface === "portal" ? { headers: { "x-openlaw-surface": "portal" } } : {}),
+    });
     if (!response.ok) {
       return { ok: false, ...(await problem(response)) };
     }

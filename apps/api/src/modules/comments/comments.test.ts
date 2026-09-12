@@ -766,11 +766,11 @@ describe("who a comment on a record can address", () => {
     expect(named).not.toContain(business);
   });
 
-  it("gives a Contributor on the team the same list, all of it reachable at Working Team", async () => {
+  it("gives a Business User the same reachable people with only their shared tier", async () => {
     const contract = await contractWithTeam("Contributor's typeahead");
     const theirs = await candidates(contributorCookies, contract.id);
     const ours = await candidates(memberCookies, contract.id);
-    expect(theirs).toEqual(ours);
+    expect(theirs).toEqual(ours.map((person) => ({ ...person, tiers: ["full_thread"] })));
     // Which is why a Contributor's typeahead can never produce a mention
     // that would need Legal Only: everyone it offers hears Working Team,
     // and Working Team is a segment their composer has.

@@ -36,16 +36,16 @@ Another Business User's Request link does not grant you access to that Request. 
 
 ## Read your Contracts
 
-Select **Your Contracts** in the Portal navigation. The list contains non-archived Contracts whose teams include you. Open a row and check its C- reference, title, Counterparty, Stage, owners, terms, dates and Value. **Unverified** means Legal has not confirmed that value. Check it with Legal before relying on it.
+Select **Contracts** in the Portal navigation bar. The page is titled **Your Contracts**. The list contains non-archived Contracts whose teams include you. Open a row and check its C- reference, title, Counterparty, Stage, owners, terms, dates and Value. **Unverified** means Legal has not confirmed that value. Check it with Legal before relying on it.
 
-Under **Primary Document**, select **Read Document** or **Download** for the current Version. If no primary Document is available, the page says so. Use **Your Contracts** to return to the list and **Next page** for more records.
+Under **Primary Document**, select **Read Document** or **Download** for the current Version. If no primary Document is available, the page says so. Use **Your Contracts** to return to the list and **Show more** for more records.
 
 ## Open your Matters
 
-Select **Your Matters** and open a row. Check its M- reference, title, Type, Status, Matter Manager and Business Owner. The list uses the same current-team rule as Contracts.
+Select **Matters** in the Portal navigation bar and open a row. Check its M- reference, title, Type, Status, Matter Manager and Business Owner. The list uses the same current-team rule as Contracts.
 
 ## Work with Legal on a record
 
-Both record pages offer business **Fields**, **Supporting Documents**, **Conversation**, and any read-only **Original request** submissions. Follow [Work on a shared Contract or Matter](contributor-guide.md) to edit a Field, upload paper or reply.
+Both record pages offer business **Fields**, **Documents** with their Versions, and any read-only **Original request** submissions. The applet bar on the right holds **Comments**, **History**, and **Contract team** or **Matter team**. Follow [Work on a shared Contract or Matter](contributor-guide.md) to read record Fields, upload paper, reply or add a team member.
 
 At conversion, you become Business Owner and join the new record's team. Your Request address redirects there. Later changes to Business Owner do not change membership. If a record disappears, ask Legal to check your team row and its archive state. A saved link does not preserve access.

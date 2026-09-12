@@ -174,7 +174,7 @@ export function CounterpartyPicker({
           id: "counterparty.picker.placeholder",
           defaultMessage: "Find or create a counterparty",
         })}
-        className="h-8 w-full rounded-button border border-border-default bg-raised px-2.5 text-sm text-primary placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link disabled:pointer-events-none disabled:opacity-50"
+        className="h-8 w-full rounded-button border border-border-default bg-raised px-2.5 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link disabled:pointer-events-none disabled:opacity-50"
         value={query}
         onFocus={() => setOpen(true)}
         onChange={(event) => {

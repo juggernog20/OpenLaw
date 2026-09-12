@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** DD-023: Contract facts and business work for the Portal team. */
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { loadPortalWork } from "../lib/portal-records";
@@ -15,11 +15,8 @@ import {
   termTypeLabel,
 } from "../lib/contracts";
 import { formatShortDate } from "../lib/format";
-import { portalContractReader } from "../lib/portal-contracts";
-import { PortalShell } from "../components/portal/portal-shell";
+import { PortalRecordShell } from "../components/portal/record-shell";
 import { PageTitle } from "../components/page-title";
-import { Button } from "../components/ui/button";
-import { DocPanel } from "../components/documents/doc-panel";
 import { UnverifiedMarker } from "../components/contracts/ai-analysis-card";
 
 export async function portalContractLoader({ params }: LoaderFunctionArgs) {
@@ -43,10 +40,6 @@ export function PortalContractPage() {
   const { user, contract, recordWork } = useLoaderData<typeof portalContractLoader>();
   const intl = useIntl();
   const signOut = useSignOut("/portal/enter");
-  const [reading, setReading] = useState(false);
-  const [covers, setCovers] = useState(true);
-  const readButton = useRef<HTMLButtonElement>(null);
-  const reader = useMemo(() => portalContractReader(contract?.number ?? 0), [contract?.number]);
   const title =
     contract?.title ??
     intl.formatMessage({ id: "portal.contract.notFound", defaultMessage: "Contract not found" });
@@ -69,7 +62,13 @@ export function PortalContractPage() {
     );
   }
   return (
-    <PortalShell
+    <PortalRecordShell
+      key={recordWork?.work.id}
+      entityType="contract"
+      entityId={recordWork?.work.id}
+      number={contract?.number ?? 0}
+      viewerId={user.id}
+      work={recordWork?.work}
       user={user}
       onSignOut={() => void signOut()}
       recordScope={
@@ -94,25 +93,31 @@ export function PortalContractPage() {
           />
         </p>
       ) : (
-        <div className="@container/record relative flex min-h-144 gap-4">
-          <div className="flex min-w-0 flex-1 flex-col gap-4" inert={reading && covers}>
-            {contract.unverifiedFields.length > 0 && (
-              <p className="rounded-card border border-border-default bg-raised p-4 text-base text-muted">
-                <FormattedMessage
-                  id="portal.contract.unverifiedExplanation"
-                  defaultMessage="Legal has not yet verified the values marked Unverified. Confirm them with Legal before relying on them."
-                />
-              </p>
-            )}
-            {contract.renewalPendingConfirmation && (
-              <p className="text-base text-muted">
-                <FormattedMessage
-                  id="portal.contract.renewalPending"
-                  defaultMessage="Renewal is pending confirmation by Legal."
-                />
-              </p>
-            )}
-            <dl className="grid grid-cols-1 gap-5 rounded-card border border-border-default bg-raised p-5 @sm/record:grid-cols-2">
+        <div className="flex min-w-0 flex-col gap-4">
+          {contract.unverifiedFields.length > 0 && (
+            <p className="rounded-card border border-border-default bg-raised p-4 text-base text-muted">
+              <FormattedMessage
+                id="portal.contract.unverifiedExplanation"
+                defaultMessage="Legal has not yet verified the values marked Unverified. Confirm them with Legal before relying on them."
+              />
+            </p>
+          )}
+          {contract.renewalPendingConfirmation && (
+            <p className="text-base text-muted">
+              <FormattedMessage
+                id="portal.contract.renewalPending"
+                defaultMessage="Renewal is pending confirmation by Legal."
+              />
+            </p>
+          )}
+          <section
+            aria-labelledby="portal-overview-heading"
+            className="flex flex-col gap-5 rounded-card border border-border-default bg-raised p-5"
+          >
+            <h2 id="portal-overview-heading" className="text-lg font-semibold">
+              <FormattedMessage id="contracts.record.tab.overview" defaultMessage="Overview" />
+            </h2>
+            <dl className="grid grid-cols-1 gap-5 @sm/record:grid-cols-2">
               {fact(
                 <FormattedMessage
                   id="portal.contract.counterparty"
@@ -135,6 +140,17 @@ export function PortalContractPage() {
               {fact(
                 <FormattedMessage id="contracts.form.legalOwner" defaultMessage="Legal Owner" />,
                 contract.legalOwner?.displayName ?? unset,
+              )}
+              {fact(
+                <FormattedMessage
+                  id="contracts.form.owningDepartment"
+                  defaultMessage="Owning department"
+                />,
+                recordWork?.work.owningDepartment ?? unset,
+              )}
+              {fact(
+                <FormattedMessage id="contracts.form.region" defaultMessage="Region" />,
+                recordWork?.work.region ?? unset,
               )}
               {fact(
                 <FormattedMessage id="portal.contract.termType" defaultMessage="Term type" />,
@@ -184,66 +200,12 @@ export function PortalContractPage() {
                 flagged("expiryDate") || flagged("noticePeriodDays"),
               )}
             </dl>
-            {contract.primaryDocument ? (
-              <section className="rounded-card border border-border-default bg-raised p-5">
-                <h2 className="text-base font-semibold">
-                  <FormattedMessage
-                    id="portal.contract.primaryDocument"
-                    defaultMessage="Primary Document"
-                  />
-                </h2>
-                <p className="my-3 text-base">{contract.primaryDocument.title}</p>
-                <div className="flex gap-3">
-                  <Button ref={readButton} onClick={() => setReading(true)}>
-                    <FormattedMessage
-                      id="portal.contract.readDocument"
-                      defaultMessage="Read Document"
-                    />
-                  </Button>
-                  <Button asChild variant="secondary">
-                    <a
-                      href={reader.documentDownloadHref(
-                        contract.primaryDocument.id,
-                        contract.primaryDocument.version.id,
-                      )}
-                    >
-                      <FormattedMessage id="docPanel.download" defaultMessage="Download" />
-                    </a>
-                  </Button>
-                </div>
-              </section>
-            ) : (
-              <p className="text-base text-muted">
-                <FormattedMessage
-                  id="portal.contract.noDocument"
-                  defaultMessage="No primary Document is available to you."
-                />
-              </p>
-            )}
-            {recordWork && (
-              <PortalRecordWork
-                module="contract"
-                number={contract.number}
-                viewerId={user.id}
-                {...recordWork}
-              />
-            )}
-          </div>
-          {reading && contract.primaryDocument && (
-            <DocPanel
-              documentId={contract.primaryDocument.id}
-              title={contract.primaryDocument.title}
-              version={contract.primaryDocument.version}
-              source={reader}
-              onDockedChange={(docked) => setCovers(!docked)}
-              onClose={() => {
-                setReading(false);
-                setTimeout(() => readButton.current?.focus(), 0);
-              }}
-            />
+          </section>
+          {recordWork && (
+            <PortalRecordWork module="contract" number={contract.number} {...recordWork} />
           )}
         </div>
       )}
-    </PortalShell>
+    </PortalRecordShell>
   );
 }

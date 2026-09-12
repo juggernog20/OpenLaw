@@ -121,6 +121,8 @@ export interface CreateContractInput {
   actorId: string;
   title: string;
   description?: string | null;
+  owningDepartment?: string | null | undefined;
+  region?: string | null | undefined;
   contractTypeId: string;
   /** The type's fields, keyed by slug. Only the hard-required ones have
    * to be here — the rest are set on the record — and a slug the type
@@ -310,6 +312,8 @@ export async function createContract(
     .values({
       title: title.trim(),
       description: input.description?.trim() || null,
+      owningDepartment: input.owningDepartment?.trim() || null,
+      region: input.region?.trim() || null,
       contractTypeId: contractType.id,
       statusId: draft.id,
       managerId,

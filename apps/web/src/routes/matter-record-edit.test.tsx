@@ -1313,7 +1313,7 @@ it("toggles the current and requester descriptions without replacing the saved m
       }
       return json(200, {
         ...record(saved),
-        originalIntake: { number: 100, description: "Requester context omitted from the summary." },
+        originalIntake: { number: 100, description: "Requester context omitted from the title." },
       });
     },
   });
@@ -1321,7 +1321,7 @@ it("toggles the current and requester descriptions without replacing the saved m
   const toggle = await screen.findByRole("switch", { name: "Show requester description" });
   expect(screen.getByLabelText("Description")).toHaveValue("Initial description");
   await user.click(toggle);
-  expect(screen.getByText("Requester context omitted from the summary.")).toBeVisible();
+  expect(screen.getByText("Requester context omitted from the title.")).toBeVisible();
   expect(screen.queryByRole("textbox", { name: "Description" })).toBeNull();
   await user.click(toggle);
   expect(screen.getByLabelText("Description")).toHaveValue("Initial description");

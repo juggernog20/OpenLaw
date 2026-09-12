@@ -229,30 +229,38 @@ test.describe.serial("M23 deployer journey", () => {
       await team.getByRole("button", { name: "Add" }).click();
       await expect(teamPanel.getByText(COUNSEL.displayName)).toBeVisible();
 
+      const recorded = await page.request.patch(`/api/v1/matters/${matter.number}`, {
+        data: { customFields: { [field.slug]: FIELD_VALUE } },
+      });
+      expect(recorded.status(), await recorded.text()).toBe(200);
       const contributor = counsel.page;
       await contributor.goto(`/portal/matters/${matter.number}`);
-      const businessField = contributor.getByLabel(new RegExp(FIELD_NAME));
-      await businessField.fill(FIELD_VALUE);
-      const fieldSaved = contributor.waitForResponse(
-        (response) =>
-          response.url().endsWith(`/api/v1/portal/matters/${matter.number}/work`) &&
-          response.request().method() === "PATCH",
+      const fields = contributor.getByRole("region", { name: "Fields", exact: true });
+      await expect(fields.getByText(FIELD_NAME, { exact: true })).toBeVisible();
+      await expect(fields.getByText(FIELD_VALUE, { exact: true })).toBeVisible();
+      await expect(fields.getByRole("textbox")).toHaveCount(0);
+      const refused = await contributor.request.patch(
+        `/api/v1/portal/matters/${matter.number}/work`,
+        { data: { customFields: { [field.slug]: "A forbidden edit" } } },
       );
-      await businessField.press("Tab");
-      expect((await fieldSaved).status()).toBe(200);
+      expect(refused.status(), await refused.text()).toBe(404);
 
       const uploaded = contributor.waitForResponse(
         (response) =>
           response.url().endsWith(`/api/v1/matters/${matter.number}/documents`) &&
           response.request().method() === "POST",
       );
-      await contributor.getByLabel("Upload Document", { exact: true }).setInputFiles({
+      await contributor.getByRole("button", { name: "Upload documents", exact: true }).click();
+      const uploadDialog = contributor.getByRole("dialog", { name: "Upload documents" });
+      await uploadDialog.getByLabel("Files to upload").setInputFiles({
         name: DOCUMENT,
         mimeType: "text/plain",
         buffer: Buffer.from("Supporting business diligence.\n"),
       });
+      await uploadDialog.getByRole("button", { name: "Upload", exact: true }).click();
       expect((await uploaded).status()).toBe(201);
-      await expect(contributor.getByText(DOCUMENT)).toBeVisible();
+      await expect(uploadDialog).toBeHidden();
+      await expect(contributor.getByRole("button", { name: DOCUMENT, exact: true })).toBeVisible();
 
       await contributor.goto(`/portal/matters/${matter.number}`);
       // Anchor on the rendered record first: the absence assertions
@@ -305,7 +313,7 @@ test.describe.serial("M23 deployer journey", () => {
       await expect(comments.getByText(POST_CLOSE_COMMENT)).toBeVisible();
 
       await contributor.reload();
-      await expect(contributor.getByLabel(new RegExp(FIELD_NAME))).toHaveValue(FIELD_VALUE);
+      await expect(fields.getByText(FIELD_VALUE, { exact: true })).toBeVisible();
     } catch (error) {
       journeyError = error;
       throw error;

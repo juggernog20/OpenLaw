@@ -149,7 +149,7 @@ export function ConvertDialog({
   function carriedValue(slug: string): unknown {
     if (slug.startsWith("field:")) return request.customFields[slug.slice(6)];
     const values: Record<string, unknown> = {
-      title: request.summary,
+      title: request.title,
       description: request.description,
       priority: request.urgency,
       counterparty: collectedText(fields, request, INTAKE_CARRY_SLUGS.counterpartyName),
@@ -224,7 +224,7 @@ export function ConvertDialog({
   });
   const pickedId = pickedIds[targetModule];
   const [templateId, setTemplateId] = useState("");
-  const [title, setTitle] = useState(String(suggestions.title?.value ?? request.summary));
+  const [title, setTitle] = useState(String(suggestions.title?.value ?? request.title));
   const [priority, setPriority] = useState<StaffRequest["urgency"]>(
     SEVERITY_LEVELS.find((level) => level === suggestions.priority?.value) ?? request.urgency,
   );
@@ -284,7 +284,7 @@ export function ConvertDialog({
         }
         continue;
       }
-      if (slug === "title") setTitle(request.summary);
+      if (slug === "title") setTitle(request.title);
       else if (slug === "priority") setPriority(request.urgency);
       else if (slug === "description") setDescription(request.description ?? "");
       else if (slug === "needed_by")

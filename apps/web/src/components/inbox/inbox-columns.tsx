@@ -32,10 +32,10 @@ const COLUMNS: ColumnDef<InboxRow>[] = [
     ),
   },
   {
-    key: "summary",
-    sortKey: "summary",
-    header: <FormattedMessage id="inbox.column.summary" defaultMessage="Summary" />,
-    label: (intl) => intl.formatMessage({ id: "inbox.column.summary", defaultMessage: "Summary" }),
+    key: "title",
+    sortKey: "title",
+    header: <FormattedMessage id="inbox.column.title" defaultMessage="Title" />,
+    label: (intl) => intl.formatMessage({ id: "inbox.column.title", defaultMessage: "Title" }),
     defaultWidth: 300,
     minWidth: 192,
     required: true,
@@ -44,7 +44,7 @@ const COLUMNS: ColumnDef<InboxRow>[] = [
         to={`/inbox/${row.number}`}
         className="truncate rounded-chip font-medium text-primary hover:text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
       >
-        {row.summary}
+        {row.title}
       </Link>
     ),
   },
@@ -140,8 +140,8 @@ const COLUMNS: ColumnDef<InboxRow>[] = [
 export const INBOX_CATALOGUE: ColumnCatalogue<InboxRow> = {
   surface: "inbox",
   columns: COLUMNS,
-  defaultColumnKeys: ["reference", "summary", "type", "requester", "urgency", "age", "outcome"],
-  flexColumnKey: "summary",
+  defaultColumnKeys: ["reference", "title", "type", "requester", "urgency", "age", "outcome"],
+  flexColumnKey: "title",
 };
 export function defaultInboxLayout(): Layout {
   return { ...builtInLayout(INBOX_CATALOGUE), filters: { status: "new" } };

@@ -162,17 +162,14 @@ afterAll(async () => {
 });
 
 /** Submits one Request, as whoever is asking. */
-async function submit(
-  summary: string,
-  fixture: { email: string } = REQUESTER,
-): Promise<RequestRow> {
+async function submit(title: string, fixture: { email: string } = REQUESTER): Promise<RequestRow> {
   const res = await harness.app.inject({
     method: "POST",
     url: "/api/v1/requests",
     cookies: as(fixture),
     payload: {
       requestTypeId: ndaRequestTypeId,
-      summary,
+      title,
       description: "They sent a redline on the liability cap.",
       urgency: "high",
     },

@@ -10,6 +10,7 @@
  * behavior set.
  */
 
+import { CONTRACT_OVERVIEW_FIELD_SLUGS } from "@openlaw/shared";
 import { contractTypeFields, contractTypes } from "@openlaw/db";
 import { typeFieldRoutes } from "../../lib/type-field-routes.js";
 
@@ -22,7 +23,9 @@ export const attachedFieldsRoutes = typeFieldRoutes({
   noun: "contract type",
   scopeRule: {
     scopes: ["contract", "global"],
-    refusal: "Only contract-scoped and global fields attach to contract types.",
+    excludedSlugs: CONTRACT_OVERVIEW_FIELD_SLUGS,
+    refusal:
+      "Only contract-scoped and global fields attach to contract types. Owning department and Region are built-in Overview attributes.",
   },
   scopeSummary: "contract-scoped and global fields only (CTR-016)",
   actionPrefix: "contract_type_field",

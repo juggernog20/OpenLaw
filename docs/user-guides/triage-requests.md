@@ -19,7 +19,7 @@ Assignment records responsibility without reserving the Request. Another Legal T
 
 ## Confirm a return estimate
 
-On the Request page, find **Expected back (estimate)**. Choose a date, or select **Use suggested date** when a suggestion is available. The suggestion uses the Request type's calendar-day turnaround from the submission date in the organization's timezone. Check the saved indication. Use **Clear estimate** to remove a confirmed date.
+On the Request page, find **Expected back (estimate)**. Choose a date, or select **Use suggested date** when a suggestion is available. The suggestion uses the Request type's business-day turnaround from the submission date in the organization's timezone. Check the saved indication. Use **Clear estimate** to remove a confirmed date.
 
 The estimate stays separate from the Requester's **Needed by** date. If Needed by is earlier than the suggestion, consider it when choosing a date; the app does not silently move the estimate earlier. Changing the request type's turnaround later does not overwrite an estimate already saved on a Request.
 
