@@ -135,6 +135,8 @@
  * Users are bounced home, and the API's 403 is the real refusal.
  */
 
+import { MAX_CONTRACT_CLASSIFICATION_LENGTH } from "@openlaw/shared";
+
 import { ValueField } from "../components/contracts/value-field";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
@@ -454,7 +456,7 @@ export async function contractRecordLoader({ params, request }: LoaderFunctionAr
 /** The fields that commit as free text (DES-017); the Owner, our
  * signing entity, the type, the status, priority, and risk have their
  * own selects, and the counterparties have their own routes. */
-type TextFieldKey = "title" | "description";
+type TextFieldKey = "title" | "description" | "owningDepartment" | "region";
 /**
  * The four term fields that commit as typed text (CTR-006, DES-017):
  * two calendar dates and two counts. The term type is the fifth, and it
@@ -495,7 +497,12 @@ type FieldKey =
 const NOT_RECORDED = defineMessage({ id: "contracts.record.notRecorded", defaultMessage: "—" });
 
 function textDrafts(row: ContractRow): Record<TextFieldKey, string> {
-  return { title: row.title, description: row.description ?? "" };
+  return {
+    title: row.title,
+    description: row.description ?? "",
+    owningDepartment: row.owningDepartment ?? "",
+    region: row.region ?? "",
+  };
 }
 
 function termDrafts(row: ContractRow): Record<TermDraftKey, string> {
@@ -1539,7 +1546,12 @@ function ContractRecord() {
     adoptSaved(row);
     setAttached(data.fields);
     setRefs(data.customFieldRefs);
-    if (key === "title" || key === "description") {
+    if (
+      key === "title" ||
+      key === "description" ||
+      key === "owningDepartment" ||
+      key === "region"
+    ) {
       setDrafts((current) => ({ ...current, [key]: textDrafts(row)[key] }));
     }
     // A term-type commit re-seeds all four term inputs: it clears the
@@ -1746,7 +1758,7 @@ function ContractRecord() {
     // the blur that follows must not send a duplicate.
     if (fieldStatus[key] === "saving") return;
     const draft = drafts[key].trim();
-    const savedValue = key === "title" ? saved.title : (saved.description ?? "");
+    const savedValue = saved[key] ?? "";
     if (draft === savedValue || (key === "title" && draft === "")) {
       // Nothing to save (or nothing valid): revert per DES-017.
       setDrafts((current) => ({ ...current, [key]: savedValue }));
@@ -1758,7 +1770,7 @@ function ContractRecord() {
   function revertText(key: TextFieldKey) {
     setDrafts((current) => ({
       ...current,
-      [key]: key === "title" ? saved.title : (saved.description ?? ""),
+      [key]: saved[key] ?? "",
     }));
   }
 
@@ -2369,6 +2381,40 @@ function ContractRecord() {
                       {unverifiedMarker("contract_type")}
                       {confirmationControl("contract_type")}
                     </div>
+                    {(["owningDepartment", "region"] as const).map((key) => (
+                      <div key={key} className="flex flex-col gap-1.5">
+                        <Label htmlFor={`contract-${key}`}>
+                          {key === "owningDepartment" ? (
+                            <FormattedMessage
+                              id="contracts.form.owningDepartment"
+                              defaultMessage="Owning department"
+                            />
+                          ) : (
+                            <FormattedMessage id="contracts.form.region" defaultMessage="Region" />
+                          )}
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            id={`contract-${key}`}
+                            value={drafts[key]}
+                            maxLength={MAX_CONTRACT_CLASSIFICATION_LENGTH}
+                            disabled={frozen}
+                            onChange={(event) =>
+                              setDrafts((current) => ({ ...current, [key]: event.target.value }))
+                            }
+                            onBlur={() => commitText(key)}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter") commitText(key);
+                              if (event.key === "Escape") revertText(key);
+                            }}
+                          />
+                          <StatusNote
+                            status={fieldStatus[key] ?? "idle"}
+                            detail={fieldError[key]}
+                          />
+                        </div>
+                      </div>
+                    ))}
                     <div className="flex flex-col gap-1.5">
                       <Label htmlFor="contract-business-owner">
                         <FormattedMessage

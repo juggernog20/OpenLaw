@@ -449,7 +449,7 @@ function armFor(eventType: string): Arm | undefined {
 }
 
 /**
- * How the sentence names the record: its snapshotted title or summary,
+ * How the sentence names the record: its snapshotted title,
  * else its number, else neither.
  *
  * Two entity kinds, two pairs of payload keys, and the fallback chain is
@@ -461,8 +461,8 @@ function recordName(intl: IntlShape, item: BellItem): string {
     return text(item.payload, "entityLegalName") ?? intl.formatMessage(UNNAMED);
   }
   if (item.entityType === "request") {
-    const summary = text(item.payload, "requestSummary");
-    if (summary) return summary;
+    const title = text(item.payload, "requestTitle") ?? text(item.payload, "requestSummary");
+    if (title) return title;
     const number = wholeNumber(item.payload, "requestNumber");
     return number === null
       ? intl.formatMessage(UNNAMED)

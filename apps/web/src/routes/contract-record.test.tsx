@@ -389,6 +389,8 @@ function contractRow(overrides: Partial<Record<string, unknown>> = {}) {
     daysRemaining: null,
     renewalPendingConfirmation: false,
     proposedRenewalExpiry: null,
+    owningDepartment: null,
+    region: null,
     description: "Three-year platform engagement.",
     customFields: {},
     aiUnverified: null,
@@ -10573,11 +10575,11 @@ describe("dropping a folder tree on the contract record (M13/5, DOC-011, DES-033
     expect(within(dialog).getByRole("heading", { name: "Import 4 files" })).toBeVisible();
     // The structure, drawn as a structure (DES-033 §9): the dropped
     // directory, what it holds, and the files inside each level. Read
-    // off the summary list itself, because the version-kind control
+    // off the title list itself, because the version-kind control
     // below it offers a kind called Executed too.
-    const summary = within(dialog).getByRole("list", { name: "What this import will create" });
+    const title = within(dialog).getByRole("list", { name: "What this import will create" });
     expect(
-      within(summary)
+      within(title)
         .getAllByRole("listitem")
         .map((line) => line.textContent),
     ).toEqual([
@@ -11101,7 +11103,7 @@ it("toggles the current and requester descriptions without replacing the saved c
             ...body,
             originalIntake: {
               number: 100,
-              description: "Requester context omitted from the summary.",
+              description: "Requester context omitted from the title.",
             },
           }),
         );
@@ -11112,7 +11114,7 @@ it("toggles the current and requester descriptions without replacing the saved c
   const toggle = await screen.findByRole("switch", { name: "Show requester description" });
   expect(screen.getByLabelText("Description")).toHaveValue("Three-year platform engagement.");
   await user.click(toggle);
-  expect(screen.getByText("Requester context omitted from the summary.")).toBeVisible();
+  expect(screen.getByText("Requester context omitted from the title.")).toBeVisible();
   expect(screen.queryByRole("textbox", { name: "Description" })).toBeNull();
   await user.click(toggle);
   expect(screen.getByLabelText("Description")).toHaveValue("Three-year platform engagement.");
@@ -11126,4 +11128,26 @@ it("toggles the current and requester descriptions without replacing the saved c
   );
   await user.click(toggle);
   expect(screen.getByLabelText("Description")).toHaveValue("Lawyer's updated description");
+});
+
+it("keeps built-in classification on Overview and out of Fields", async () => {
+  const api = recordApi(contractRow({ owningDepartment: "Sales", region: "EMEA" }));
+  stubApi({ signedIn: MEMBER, extra: api.handler });
+  renderAt("/contracts/42");
+  const user = userEvent.setup();
+  const department = await screen.findByRole("textbox", { name: "Owning department" });
+  expect(department).toHaveValue("Sales");
+  expect(screen.getByRole("textbox", { name: "Region" })).toHaveValue("EMEA");
+  await user.clear(department);
+  await user.type(department, "Procurement");
+  await user.tab();
+  await waitFor(() => expect(api.patches).toContainEqual({ owningDepartment: "Procurement" }));
+  await user.click(screen.getByRole("link", { name: "Fields" }));
+  await screen.findByRole("region", { name: "Fields" });
+  expect(screen.queryByRole("textbox", { name: "Owning department" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("textbox", { name: "Region" })).not.toBeInTheDocument();
+  await user.click(screen.getByRole("link", { name: "Overview" }));
+  expect(await screen.findByRole("textbox", { name: "Owning department" })).toHaveValue(
+    "Procurement",
+  );
 });

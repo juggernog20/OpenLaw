@@ -88,7 +88,7 @@ export interface DispositionScaffold {
   /**
    * The messages one person has been sent about one Request, by its
    * R-### reference — which every group-5 subject line carries as
-   * `R-### · summary`. The separator is part of the match, because
+   * `R-### · title`. The separator is part of the match, because
    * `R-1` is a prefix of `R-10`.
    */
   mailAbout: (email: string, number: number) => ReturnType<TestHarness["mailer"]["messagesTo"]>;

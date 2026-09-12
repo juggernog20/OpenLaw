@@ -509,7 +509,7 @@ export type MatterSortKey = (typeof MATTER_SORT_KEYS)[number];
 /** Columns the Inbox can sort across the full queue. */
 export const INBOX_SORT_KEYS = [
   "number",
-  "summary",
+  "title",
   "type",
   "requester",
   "urgency",
@@ -608,3 +608,7 @@ export {
   PORTAL_CONTRACT_FILTER_KEYS,
   PORTAL_MATTER_FILTER_KEYS,
 } from "./portal-lists.js";
+
+/** Built-in Contract classification, outside the type's configurable Fields. */
+export const CONTRACT_OVERVIEW_FIELD_SLUGS: readonly string[] = ["owning_department", "region"];
+export const MAX_CONTRACT_CLASSIFICATION_LENGTH = 200;

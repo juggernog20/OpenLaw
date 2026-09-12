@@ -241,14 +241,15 @@ import { boundedQueueAsk } from "../../pipeline/jobs.js";
 import { needsDisplayRendition } from "../../pipeline/display-conversion.js";
 import { extractsText } from "../../pipeline/text-extraction.js";
 
-/** Supporting uploads and record paper reads are the Document surface a
- * Business User receives (DD-023). Reach still comes from the owning
+/** Uploads, Versions and record paper reads are the Document surface a
+ * Business User receives (DD-024). Reach still comes from the owning
  * record's live team predicate; the role floor alone grants nothing. */
-const requireSupportingUploader = requireRole(
-  "administrator",
-  "legal_team_member",
-  "business_user",
-);
+const requireUploadRole = requireRole("administrator", "legal_team_member", "business_user");
+async function requireSupportingUploader(request: Parameters<typeof requireUploadRole>[0]) {
+  await requireUploadRole(request);
+  if (request.headers["x-openlaw-surface"] === "portal")
+    request.user = { ...request.user, role: "business_user" };
+}
 const requireRecordDocumentReader = requireSupportingUploader;
 
 /** Every Document administration action keeps the Member+ floor. */
@@ -2414,9 +2415,9 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "the chain is touched: a file correction is another version, " +
           "while the kind has its own one-column PATCH. Appends " +
           "document.version_added on the owning " +
-          "record (DD-017). A Contributor on that record's live team " +
-          "may append only to a non-primary supporting chain; Matter paper " +
-          "has no primary chain. The kind and note fields must be sent " +
+          "record (DD-017). A Business User on that record's live team " +
+          "may append to any accessible Document, including the primary Contract " +
+          "Document. Primary and executed designations remain Legal actions. The kind and note fields must be sent " +
           "before the file part. An archived owning record takes no new paper " +
           "until it is restored. A document on a contract the uploader " +
           "cannot reach answers 404, exactly as one that does not exist",
@@ -2432,16 +2433,6 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       // Before a byte is read, for the reason the create path gives.
       const reached = await reachedDocument(app.db, request.user, documentId);
       assertOpenDocument(reached);
-      if (
-        request.user.role === "business_user" &&
-        reached.owner.kind === "contract" &&
-        reached.primaryDocumentId === reached.id
-      ) {
-        throw httpError(
-          403,
-          "Business Users cannot append a Version to the primary Contract Document.",
-        );
-      }
 
       const versionId = uuidv7();
       const file = await receiveUpload(
@@ -2454,7 +2445,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       // The seam's transaction, for the create path's reason: a new
       // round on a chain is ambient movement on the record (NOT-002
       // group 2). The storage wrapper removes the fresh blob if the
-      // locked reach/freeze/primary answer changed while it streamed.
+      // locked reach or archival state changed while it streamed.
       const updated = await withStoredFile(request, file, () =>
         app.notifier.notifying(async (tx) => {
           // The owning contract's row is held here, and this is the lock
@@ -2464,16 +2455,6 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           // has committed its row and then reads the number it wrote.
           const locked = await reachedDocument(tx, request.user, documentId, true);
           assertOpenDocument(locked);
-          if (
-            request.user.role === "business_user" &&
-            locked.owner.kind === "contract" &&
-            locked.primaryDocumentId === locked.id
-          ) {
-            throw httpError(
-              403,
-              "Business Users cannot append a Version to the primary Contract Document.",
-            );
-          }
 
           const versionNumber = await nextVersionNumber(tx, documentId);
 
@@ -4369,10 +4350,6 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             ? and(
                 isNull(documents.archivedAt),
                 or(isNotNull(documents.contractId), isNotNull(documents.matterId)),
-                or(
-                  isNull(contracts.primaryDocumentId),
-                  sql`${contracts.primaryDocumentId} <> ${documents.id}`,
-                ),
               )
             : undefined,
         ),

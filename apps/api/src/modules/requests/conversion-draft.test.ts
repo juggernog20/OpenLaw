@@ -66,7 +66,7 @@ async function ask() {
     .values({
       requestTypeId,
       requesterId: cast.requesterId,
-      summary: "Original ask",
+      title: "Original ask",
       description: "Respond by October 1",
       urgency: "medium",
     })
@@ -228,7 +228,7 @@ it("rejects stale sources and forged acceptance, while edited values remain huma
   const row = await ask();
   answers.title = {
     value: "Suggested title",
-    sourceId: `request:${row.id}:summary`,
+    sourceId: `request:${row.id}:title`,
     evidence: "Original ask",
   };
   const made = await prepare(row.number);
@@ -280,7 +280,7 @@ it("flags unresolved contradictions and rejects a quote assigned to the wrong so
   const row = await ask();
   answers.title = {
     value: "Invented",
-    sourceId: `request:${row.id}:summary`,
+    sourceId: `request:${row.id}:title`,
     evidence: "Respond by October 1",
   };
   answers.needed_by = {
@@ -880,7 +880,7 @@ it("prepares Contracts independently and accepts only matching reviewed values",
   await harness.db.update(aiConnector).set({ disabledAt: null });
   answers.title = {
     value: "Prepared Contract",
-    sourceId: `request:${row.id}:summary`,
+    sourceId: `request:${row.id}:title`,
     evidence: "Original ask",
   };
   answers.description = {
@@ -890,7 +890,7 @@ it("prepares Contracts independently and accepts only matching reviewed values",
   };
   answers.counterparty = {
     value: "Acme",
-    sourceId: `request:${row.id}:summary`,
+    sourceId: `request:${row.id}:title`,
     evidence: "Original ask",
   };
   const prepared = await start();
@@ -1177,7 +1177,7 @@ it("rejects Contract claims from another module or Type, and late results after 
   const types = await harness.db.select().from(contractTypes).limit(2);
   answers.title = {
     value: "Supported title",
-    sourceId: `request:${row.id}:summary`,
+    sourceId: `request:${row.id}:title`,
     evidence: "Original ask",
   };
   const make = (targetModule: "matter" | "contract", targetTypeId: string) =>
@@ -1228,7 +1228,7 @@ it("rejects Contract claims from another module or Type, and late results after 
       {
         slug: "title",
         value: "Late title",
-        sourceId: `request:${second.id}:summary`,
+        sourceId: `request:${second.id}:title`,
         evidence: "Original ask",
       },
     ];
@@ -1245,9 +1245,9 @@ it("rejects Contract claims from another module or Type, and late results after 
 it("does not turn unchanged Request answers into AI-generated suggestions", async () => {
   const row = await ask();
   answers.title = {
-    value: row.summary,
-    sourceId: `request:${row.id}:summary`,
-    evidence: row.summary,
+    value: row.title,
+    sourceId: `request:${row.id}:title`,
+    evidence: row.title,
   };
   answers.priority = {
     value: row.urgency,
@@ -1271,4 +1271,55 @@ it("does not turn unchanged Request answers into AI-generated suggestions", asyn
   expect(read.json().draft.state).toBe("ready");
   expect(read.json().draft.suggestions).not.toHaveProperty("title");
   expect(read.json().draft.suggestions).not.toHaveProperty("priority");
+});
+
+it("reads saved Title evidence from before the Request field rename", async () => {
+  const { conversionSources, hash } = await import("../../lib/conversion-draft.js");
+  const { conversionEvidence } = await import("./conversion-evidence.js");
+  const row = await ask();
+  const legacy = {
+    id: `request:${row.id}:summary`,
+    kind: "request" as const,
+    label: `R-${row.number} summary`,
+    text: row.title,
+    createdAt: row.createdAt.toISOString(),
+  };
+  const proposal = {
+    value: row.title,
+    citations: [{ sourceId: legacy.id, revision: hash(legacy), quote: row.title }],
+  };
+  const viewer = {
+    id: cast.memberId,
+    role: "legal_team_member" as const,
+    email: "member@example.com",
+    displayName: "Member",
+    theme: "light" as const,
+    timezone: null,
+  };
+  const source = await conversionSources(harness.db, row.id);
+  expect(source.sources.some((item) => item.id.endsWith(":title"))).toBe(true);
+  expect(source.sources.some((item) => item.id.endsWith(":summary"))).toBe(false);
+  const result = await conversionEvidence(
+    harness.db,
+    viewer,
+    source,
+    { id: "legacy-draft", attachmentReads: [] },
+    proposal,
+  );
+  expect(result).toMatchObject({
+    available: true,
+    citations: [{ label: `R-${row.number} title`, text: row.title }],
+  });
+  await harness.db
+    .update(requests)
+    .set({ title: "Changed since the evidence was saved" })
+    .where(eq(requests.id, row.id));
+  const changed = await conversionEvidence(
+    harness.db,
+    viewer,
+    await conversionSources(harness.db, row.id),
+    { id: "legacy-draft", attachmentReads: [] },
+    proposal,
+  );
+  expect(changed.available).toBe(false);
 });

@@ -44,12 +44,12 @@ afterAll(async () => {
 it.each(["contract", "matter"] as const)(
   "preserves original intake on the %s after description edits and enforces both audiences",
   async (module) => {
-    const description = "Original requester context.\nAn exception that the summary leaves out.";
+    const description = "Original requester context.\nAn exception that the title leaves out.";
     const submitted = await harness.app.inject({
       method: "POST",
       url: "/api/v1/requests",
       cookies: cast.requesterCookies,
-      payload: { requestTypeId, summary: "Compare descriptions", description, urgency: "medium" },
+      payload: { requestTypeId, title: "Compare descriptions", description, urgency: "medium" },
     });
     expect(submitted.statusCode, submitted.body).toBe(201);
     const original = submitted.json().request;
@@ -110,7 +110,7 @@ it.each(["contract", "matter"] as const)(
     expect(portal.json().work.originalRequests).toEqual([
       expect.objectContaining({ number: original.number, description }),
     ]);
-    expect(limited.body).not.toContain("An exception that the summary leaves out.");
+    expect(limited.body).not.toContain("An exception that the title leaves out.");
 
     const table = module === "contract" ? contracts : matters;
     await harness.db.update(table).set({ isConfidential: true }).where(eq(table.id, id));

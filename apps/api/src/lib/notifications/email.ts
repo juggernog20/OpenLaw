@@ -53,7 +53,7 @@ import { requestSideOf } from "./catalog.js";
 export type MailRecord =
   | { entityType: "matter"; number: number; title: string }
   | { entityType: "contract"; number: number; title: string }
-  | { entityType: "request"; number: number; summary: string };
+  | { entityType: "request"; number: number; title: string };
 
 /** One notification, as the template layer needs it described. */
 export interface NotificationMail {
@@ -244,9 +244,9 @@ function matterMail(
  * triagers. The portal address is the Requester's, and a message that
  * sent staff there would land them on somebody else's window.
  *
- * **Every message names the Request as `R-### · summary`**, the way the
+ * **Every message names the Request as `R-### · title`**, the way the
  * requester's own messages do: the reference is what gets quoted, the
- * summary is what gets recognised.
+ * title is what gets recognised.
  *
  * **The register is DES-051's**, like every other message here.
  */
@@ -256,7 +256,7 @@ function staffRequestMail(
   to: string,
   baseUrl: string,
 ): MailMessage | null {
-  const named = `${requestReference(record.number)} · ${record.summary}`;
+  const named = `${requestReference(record.number)} · ${record.title}`;
   const link = inboxRequestLink(baseUrl, record.number);
   const hello = `Hello ${notification.recipientName},`;
   const who = notification.actorName ?? "Somebody";
@@ -584,7 +584,7 @@ function contractMail(
  * button on the promise that notifications would reach them instead, so
  * the copy is written for somebody who may not have opened the portal
  * since they submitted: every message names the Request by its R-###
- * reference and by the summary they wrote, and every one of them links
+ * reference and by the title they wrote, and every one of them links
  * to it.
  *
  * **The register is DES-051's**, like every other message here: warm,
@@ -600,10 +600,10 @@ function requestMail(
   const reference = requestReference(record.number);
   const who = notification.actorName ?? "Somebody";
   const hello = `Hello ${notification.recipientName},`;
-  // Reference then summary, the way the portal's own detail page titles
-  // itself: the reference is what a requester quotes, and the summary is
+  // Reference then title, the way the portal's own detail page titles
+  // itself: the reference is what a requester quotes, and the title is
   // what they recognise.
-  const named = `${reference} · ${record.summary}`;
+  const named = `${reference} · ${record.title}`;
   switch (notification.eventType) {
     case "request.created":
       return {

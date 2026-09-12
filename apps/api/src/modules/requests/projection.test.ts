@@ -110,7 +110,7 @@ async function plantRequest(convertedContractId: string | null) {
     .values({
       requestTypeId,
       requesterId,
-      summary: "Projection fixture",
+      title: "Projection fixture",
       urgency: "medium",
       status: convertedContractId === null ? "new" : "converted",
       convertedContractId,

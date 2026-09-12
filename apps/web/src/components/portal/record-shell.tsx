@@ -1,17 +1,37 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import { useCallback, useEffect, useState, type ComponentProps } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentProps,
+} from "react";
 import { User } from "lucide-react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../../lib/api";
-import type { PortalWork } from "../../lib/portal-records";
+import type { PortalDocument, PortalDocumentVersion, PortalWork } from "../../lib/portal-records";
+import { portalContractReader } from "../../lib/portal-contracts";
+import { DocPanel } from "../documents/doc-panel";
 import { useActivityApplet } from "../activity/activity-applet";
 import type { Applet } from "../shell/applets";
 import { TeamRoster, type TeamRosterEntry } from "../team-roster";
 import { Button } from "../ui/button";
 import { PortalShell } from "./portal-shell";
 import { useCommentApplet } from "../comments/comment-applet";
+
+const DocumentPanelContext = createContext<
+  ((document: PortalDocument, version: PortalDocumentVersion, trigger: HTMLElement) => void) | null
+>(null);
+export function usePortalDocumentPanel() {
+  const open = useContext(DocumentPanelContext);
+  if (!open) throw new Error("Portal documents require a record shell.");
+  return open;
+}
 
 /** Mount keyed by record id so drafts and pages cannot cross a record navigation. */
 export function PortalRecordShell({
@@ -30,6 +50,20 @@ export function PortalRecordShell({
     work?: PortalWork;
   }
 >) {
+  const [reading, setReading] = useState<{
+    document: PortalDocument;
+    version: PortalDocumentVersion;
+  } | null>(null);
+  const [covers, setCovers] = useState(true);
+  const readTrigger = useRef<HTMLElement | null>(null);
+  const primaryReader = useMemo(() => portalContractReader(number), [number]);
+  const openDocument = useCallback(
+    (document: PortalDocument, version: PortalDocumentVersion, trigger: HTMLElement) => {
+      readTrigger.current = trigger;
+      setReading({ document, version });
+    },
+    [],
+  );
   const conversation = useCommentApplet({
     enabled: !!entityId,
     surface: "portal",
@@ -77,10 +111,32 @@ export function PortalRecordShell({
           render: () => <PortalTeam module={entityType} number={number} />,
         };
   return (
-    <PortalShell
-      {...shell}
-      applets={entityId ? [...(team ? [team] : []), conversation, history] : undefined}
-    />
+    <DocumentPanelContext value={openDocument}>
+      <PortalShell
+        {...shell}
+        contentCovered={reading !== null && covers}
+        layer={
+          reading ? (
+            <DocPanel
+              documentId={reading.document.id}
+              title={reading.document.title}
+              version={reading.version}
+              source={
+                entityType === "contract" && reading.document.isPrimary ? primaryReader : undefined
+              }
+              onDockedChange={(docked) => setCovers(!docked)}
+              onClose={() => {
+                setReading(null);
+                setTimeout(() => {
+                  if (readTrigger.current?.isConnected) readTrigger.current.focus();
+                }, 0);
+              }}
+            />
+          ) : undefined
+        }
+        applets={entityId ? [...(team ? [team] : []), conversation, history] : undefined}
+      />
+    </DocumentPanelContext>
   );
 }
 

@@ -4747,6 +4747,19 @@ The full app keeps one membership removal control when the person has a removabl
 
 This amends DES-047, DES-075, DES-076 and DES-079's separate statement and membership rows. It changes presentation only; the team grant and Confidential gate are unchanged.
 
+## DES-081: One Documents section for Portal Contracts and Matters
+
+- **Status:** Accepted under Blair's 2026-09-12 instructions to combine primary and supporting paper and show Versions without duplicating the current Version
+- **Date:** 2026-09-12
+
+Replace the separate primary card and Supporting Documents card with one Documents section on each record. The primary Contract Document comes first and carries its designation. Each Document row shows its name, current Version, Kind, uploader, upload date, size and optional note. The name opens the shared document panel beside the record and applets; each Version also has its own download.
+
+The current Version appears once on the main row. Only earlier Versions expand beneath it, newest first. A sole Version has no history control. The executed pin appears as Signed copy, distinct from the uploader's Kind and from Current.
+
+The section accepts file drops and provides a click upload control. Both open one dialog: create new Documents or add one Version to an existing Document, choose Kind and optionally write a note. Add version on a row selects that Document. Multiple files create separate Documents; appending a Version takes one file. Partial success is retained, with errors beside failed files and a retry that skips successes. Closing a busy upload is prevented; completed reads and dialogs restore their initiating control's focus.
+
+Search matches Document names and Version filenames on the server, with scoped pagination. The Portal offers no primary/executed designation changes, folder administration or deletion. DD-024 sets the write boundary. This amends DES-076 and DES-079's separate primary and supporting Document surfaces.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                     |
@@ -4831,6 +4844,7 @@ This amends DES-047, DES-075, DES-076 and DES-079's separate statement and membe
 | DES-078 | Portal destinations share a persistent navigation bar                                                                                                                | Accepted                                                                                                   |
 | DES-079 | Portal records use the shared applets                                                                                                                                | Accepted                                                                                                   |
 | DES-080 | One Team roster row per person                                                                                                                                       | Accepted                                                                                                   |
+| DES-081 | One Documents section for Portal Contracts and Matters                                                                                                               | Accepted                                                                                                   |
 
 ### DES-016 addendum (2026-09-11, #827) — Request source reading above Convert
 

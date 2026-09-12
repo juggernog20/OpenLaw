@@ -401,7 +401,7 @@ export const REQUEST_KINDS = [
   {
     typeSlug: "nda_request",
     turnaroundDays: 3,
-    summaries: [
+    titles: [
       "NDA for {cp} before the product demo",
       "Mutual NDA with {cp} ahead of a pilot",
       "NDA needed for the {cp} RFP",
@@ -416,7 +416,7 @@ export const REQUEST_KINDS = [
   {
     typeSlug: "contract_review",
     turnaroundDays: 7,
-    summaries: [
+    titles: [
       "Review {cp} order form before quarter end",
       "{cp} has redlined our MSA",
       "Vendor terms review - {cp}",
@@ -432,7 +432,7 @@ export const REQUEST_KINDS = [
   {
     typeSlug: "legal_question",
     turnaroundDays: 2,
-    summaries: [
+    titles: [
       "Can we name {cp} as a reference customer?",
       "Do we need a DPA for an analytics tool?",
       "What can the autumn campaign claim about accuracy?",
@@ -451,7 +451,7 @@ export const REQUEST_KINDS = [
     displayName: "Vendor onboarding",
     isNew: true,
     targetModule: "contract",
-    summaries: [
+    titles: [
       "New vendor - {cp} - security tooling",
       "New vendor - {cp} - translation services",
       "Renew {cp} for another year",
@@ -468,7 +468,7 @@ export const REQUEST_KINDS = [
     displayName: "Employment question",
     isNew: true,
     targetModule: "matter",
-    summaries: [
+    titles: [
       "Notice period for a resignation in Germany",
       "Can we extend a probation period in France?",
       "Reference request for a former employee",
@@ -701,23 +701,6 @@ export const KNOWLEDGE_FOLDERS = [
  */
 export const CUSTOM_FIELDS = [
   {
-    displayName: "Business sponsor",
-    moduleScope: "contract",
-    fieldType: "user",
-    fieldTag: "business",
-    description: "Who in the business owns this deal.",
-    attach: { contract: ["msa", "sales", "sow", "vendor", "reseller"] },
-  },
-  {
-    displayName: "Owning department",
-    moduleScope: "contract",
-    fieldType: "single_select",
-    fieldTag: "business",
-    options: ["Sales", "Procurement", "Engineering", "People", "Finance", "Marketing"],
-    attach: { contract: ["msa", "sales", "sow", "vendor", "reseller", "license", "lease"] },
-    required: { contract: ["vendor"] },
-  },
-  {
     displayName: "Security review",
     moduleScope: "contract",
     fieldType: "single_select",
@@ -831,7 +814,6 @@ export const CUSTOM_FIELDS = [
     fieldTag: "business",
     options: ["EMEA", "Americas", "APAC"],
     attach: {
-      contract: ["msa", "sales", "vendor", "reseller"],
       matter: ["commercial", "corporate"],
       entity: ["corporation", "llc"],
     },

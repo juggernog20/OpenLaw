@@ -7,11 +7,18 @@ export type PortalRecordModule = "contract" | "matter";
 export type PortalWork =
   paths["/api/v1/portal/contracts/{number}/work"]["get"]["responses"]["200"]["content"]["application/json"]["work"];
 export type PortalDocuments =
-  paths["/api/v1/portal/contracts/{number}/supporting-documents"]["get"]["responses"]["200"]["content"]["application/json"];
+  paths["/api/v1/portal/contracts/{number}/documents"]["get"]["responses"]["200"]["content"]["application/json"];
+export type PortalDocument = PortalDocuments["documents"][number];
+export type PortalDocumentVersion = PortalDocument["versions"][number];
 
-export function readPortalDocuments(module: PortalRecordModule, number: number, cursor?: string) {
-  return api.GET(`/api/v1/portal/${module}s/{number}/supporting-documents`, {
-    params: { path: { number }, query: cursor ? { cursor } : {} },
+export function readPortalDocuments(
+  module: PortalRecordModule,
+  number: number,
+  cursor?: string,
+  q?: string,
+) {
+  return api.GET(`/api/v1/portal/${module}s/{number}/documents`, {
+    params: { path: { number }, query: { ...(cursor ? { cursor } : {}), ...(q ? { q } : {}) } },
   });
 }
 

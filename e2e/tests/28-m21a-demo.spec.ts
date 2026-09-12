@@ -40,7 +40,7 @@ const MEMBER = {
   role: "legal_team_member",
   password: "correct-horse-battery",
 } as const;
-const SUMMARY = `E2E M21A Northwind NDA ${Date.now()}`;
+const TITLE = `E2E M21A Northwind NDA ${Date.now()}`;
 const REQUEST_TYPE_NAME = "NDA request";
 const DRAFT_FILE = "northwind-draft.txt";
 const DRAFT_NOTE = "Round one — Legal draft.";
@@ -188,7 +188,7 @@ test.describe.serial("M21A demo path", () => {
         .getByRole("list", { name: "Request types" })
         .getByRole("link", { name: new RegExp(REQUEST_TYPE_NAME) })
         .click();
-      await portal.getByLabel("Summary").fill(SUMMARY);
+      await portal.getByLabel("Title").fill(TITLE);
       await portal.getByLabel("Description").fill("Please review the Northwind NDA.");
       const created = portal.waitForResponse(
         (response) =>

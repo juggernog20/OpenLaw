@@ -4,6 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   activityLog,
   contracts,
+  documents,
   eq,
   matters,
   notifications,
@@ -68,13 +69,16 @@ async function create(module: "contract" | "matter" = "contract") {
   return response.json()[module] as { id: string; number: number };
 }
 
-function upload(url: string, cookies = business) {
+function upload(url: string, cookies = business, portal = false) {
   const boundary = "portal-work-upload";
   return harness.app.inject({
     method: "POST",
     url,
     cookies,
-    headers: { "content-type": `multipart/form-data; boundary=${boundary}` },
+    headers: {
+      "content-type": `multipart/form-data; boundary=${boundary}`,
+      ...(portal ? { "x-openlaw-surface": "portal" } : {}),
+    },
     payload: Buffer.from(
       `--${boundary}\r\ncontent-disposition: form-data; name="kind"\r\n\r\ngeneral\r\n--${boundary}\r\ncontent-disposition: form-data; name="file"; filename="support.txt"\r\ncontent-type: text/plain\r\n\r\nBusiness support\r\n--${boundary}--\r\n`,
     ),
@@ -252,6 +256,50 @@ describe.each(["contract", "matter"] as const)("DD-023 Portal %s work", (module)
       });
       expect([400, 403]).toContain(refused.statusCode);
     }
+    const classification = await harness.app.inject({
+      method: "PATCH",
+      url: path,
+      cookies: business,
+      payload: { owningDepartment: "  Procurement  ", region: "EMEA" },
+    });
+    if (module === "contract") {
+      expect(classification.statusCode, classification.body).toBe(200);
+      expect(classification.json()).toMatchObject({
+        owningDepartment: "Procurement",
+        region: "EMEA",
+      });
+      const reread = await harness.app.inject({ method: "GET", url: path, cookies: business });
+      expect(reread.json().work).toMatchObject({ owningDepartment: "Procurement", region: "EMEA" });
+      expect(reread.json().work.customFields).not.toHaveProperty("owning_department");
+      const full = await harness.app.inject({ method: "GET", url: staff, cookies: admin });
+      expect(full.json().contract).toMatchObject({
+        owningDepartment: "Procurement",
+        region: "EMEA",
+      });
+      const history = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/portal/activity?entityType=contract&entityId=${full.json().contract.id}`,
+        cookies: business,
+      });
+      expect(history.json().entries[0].payload.changed).toMatchObject({
+        owningDepartment: { from: null, to: "Procurement" },
+      });
+      const edited = await harness.app.inject({
+        method: "PATCH",
+        url: staff,
+        cookies: admin,
+        payload: { region: "Americas" },
+      });
+      expect(edited.statusCode, edited.body).toBe(200);
+      expect(edited.json().contract.region).toBe("Americas");
+      const cleared = await harness.app.inject({
+        method: "PATCH",
+        url: path,
+        cookies: business,
+        payload: { owningDepartment: " " },
+      });
+      expect(cleared.json()).toMatchObject({ owningDepartment: null, region: "Americas" });
+    } else expect(classification.statusCode).toBe(400);
     const stored = await harness.app.inject({ method: "GET", url: staff, cookies: admin });
     expect(stored.json()[module].customFields[slugs[1]!]).toBe(998);
     await harness.app.inject({
@@ -265,13 +313,13 @@ describe.each(["contract", "matter"] as const)("DD-023 Portal %s work", (module)
           method: "PATCH",
           url: path,
           cookies: business,
-          payload: { description: "Revoked" },
+          payload: module === "contract" ? { region: "Revoked" } : { description: "Revoked" },
         })
       ).statusCode,
     ).toBe(404);
   });
 
-  it("uploads supporting Documents and versions without gaining the primary or repository", async () => {
+  it("uploads Documents and versions without gaining primary designation or the repository", async () => {
     const record = await create(module);
     const staff = `/api/v1/${module}s/${record.number}`;
     await harness.app.inject({
@@ -308,10 +356,10 @@ describe.each(["contract", "matter"] as const)("DD-023 Portal %s work", (module)
         .update(contracts)
         .set({ primaryDocumentId: documentId })
         .where(eq(contracts.id, record.id));
-      expect((await upload(`/api/v1/documents/${documentId}/versions`)).statusCode).toBe(403);
+      expect((await upload(`/api/v1/documents/${documentId}/versions`)).statusCode).toBe(201);
       expect(
         (await harness.app.inject({ method: "GET", url: bytes, cookies: business })).statusCode,
-      ).toBe(404);
+      ).toBe(200);
     }
     await harness.app.inject({
       method: "DELETE",
@@ -322,6 +370,124 @@ describe.each(["contract", "matter"] as const)("DD-023 Portal %s work", (module)
     expect(
       (await harness.app.inject({ method: "GET", url: bytes, cookies: business })).statusCode,
     ).toBe(404);
+  });
+
+  it("lists one document with its complete version history and withdraws it with record access", async () => {
+    const record = await create(module);
+    const staff = `/api/v1/${module}s/${record.number}`;
+    await harness.app.inject({
+      method: "POST",
+      url: `${staff}/team`,
+      cookies: admin,
+      payload: { userId: businessId },
+    });
+    const first = await upload(`${staff}/documents`, admin);
+    expect(first.statusCode, first.body).toBe(201);
+    const document = first.json().document;
+    expect((await upload(`/api/v1/documents/${document.id}/versions`)).statusCode).toBe(201);
+    const path = `/api/v1/portal/${module}s/${record.number}/documents`;
+    const listed = await harness.app.inject({ method: "GET", url: path, cookies: business });
+    expect(listed.statusCode, listed.body).toBe(200);
+    expect(listed.headers["cache-control"]).toBe("private, no-store");
+    expect(listed.json().documents).toHaveLength(1);
+    expect(listed.json().documents[0]).toMatchObject({
+      id: document.id,
+      isPrimary: module === "contract",
+      versions: [
+        { versionNumber: 2, isCurrent: true, uploadedBy: { displayName: "Business colleague" } },
+        { versionNumber: 1, isCurrent: false },
+      ],
+    });
+    expect(JSON.stringify(listed.json())).not.toContain("fileRef");
+    expect(JSON.stringify(listed.json())).not.toContain("email");
+    const absent = await harness.app.inject({
+      method: "GET",
+      url: `${path}?q=absent`,
+      cookies: business,
+    });
+    expect(absent.json().documents).toEqual([]);
+    const other = await create(module);
+    const otherFile = await upload(`/api/v1/${module}s/${other.number}/documents`, admin);
+    const forged = await harness.app.inject({
+      method: "GET",
+      url: `${path}?cursor=${otherFile.json().document.id}`,
+      cookies: business,
+    });
+    expect(forged.json()).toEqual({ documents: [], nextCursor: null });
+    await harness.app.inject({
+      method: "DELETE",
+      url: `${staff}/team/${businessId}`,
+      cookies: admin,
+    });
+    expect(
+      (await harness.app.inject({ method: "GET", url: path, cookies: business })).statusCode,
+    ).toBe(404);
+    expect((await upload(`/api/v1/documents/${document.id}/versions`)).statusCode).toBe(404);
+  });
+
+  it("keeps staff uploads in the Portal inside the Business User permission grid", async () => {
+    const record = await create(module);
+    const path = `/api/v1/${module}s/${record.number}/documents`;
+    const added = await upload(path, admin, true);
+    expect(added.statusCode, added.body).toBe(201);
+    expect(added.json().document.isPrimary).toBe(false);
+    const me = await harness.app.inject({ method: "GET", url: "/api/v1/me", cookies: admin });
+    await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/${module}s/${record.number}/team/${me.json().user.id}`,
+      cookies: admin,
+    });
+    expect((await upload(path, admin, true)).statusCode).toBe(404);
+  });
+
+  it("pages after the primary Document and searches historical filenames", async () => {
+    const record = await create(module);
+    const staff = `/api/v1/${module}s/${record.number}`;
+    await harness.app.inject({
+      method: "POST",
+      url: `${staff}/team`,
+      cookies: admin,
+      payload: { userId: businessId },
+    });
+    const first = (await upload(`${staff}/documents`, admin)).json().document;
+    await harness.db
+      .update(documents)
+      .set({ title: "Agreement" })
+      .where(eq(documents.id, first.id));
+    for (let i = 0; i < 50; i++) {
+      const added = await upload(`${staff}/documents`);
+      expect(added.statusCode, added.body).toBe(201);
+    }
+    const path = `/api/v1/portal/${module}s/${record.number}/documents`;
+    const head = await harness.app.inject({ method: "GET", url: path, cookies: business });
+    expect(head.json().documents).toHaveLength(50);
+    if (module === "contract") expect(head.json().documents[0].id).toBe(first.id);
+    const next = await harness.app.inject({
+      method: "GET",
+      url: `${path}?cursor=${head.json().nextCursor}`,
+      cookies: business,
+    });
+    expect(next.json().documents).toHaveLength(1);
+    expect(next.json().nextCursor).toBeNull();
+    expect(
+      new Set([...head.json().documents, ...next.json().documents].map((row) => row.id)).size,
+    ).toBe(51);
+    const named = await harness.app.inject({
+      method: "GET",
+      url: `${path}?q=AGREEMENT`,
+      cookies: business,
+    });
+    expect(named.json().documents.map((row: { id: string }) => row.id)).toEqual([first.id]);
+    const filename = await harness.app.inject({
+      method: "GET",
+      url: `${path}?q=support.txt`,
+      cookies: business,
+    });
+    expect(filename.json().documents).toHaveLength(50);
+    expect(
+      (await harness.app.inject({ method: "GET", url: `${path}?q=%25`, cookies: business })).json()
+        .documents,
+    ).toEqual([]);
   });
 
   it("removes record news and old Request notifications from both the bell and count after revocation", async () => {
@@ -351,7 +517,7 @@ describe.each(["contract", "matter"] as const)("DD-023 Portal %s work", (module)
       .values({
         requesterId: businessId,
         requestTypeId: type!.id,
-        summary: "Original ask",
+        title: "Original ask",
         urgency: "medium",
         status: "converted",
         ...(module === "contract"
@@ -429,7 +595,7 @@ describe.each(["contract", "matter"] as const)("DD-023 Portal %s work", (module)
       .values({
         requesterId: businessId,
         requestTypeId: type!.id,
-        summary: "Original business ask",
+        title: "Original business ask",
         description: "Submission remains unchanged",
         urgency: "medium",
         status: "converted",
@@ -455,7 +621,7 @@ describe.each(["contract", "matter"] as const)("DD-023 Portal %s work", (module)
     });
     expect(work.json().work.originalRequests).toEqual([
       expect.objectContaining({
-        summary: "Original business ask",
+        title: "Original business ask",
         description: "Submission remains unchanged",
       }),
     ]);
@@ -821,7 +987,7 @@ it("keeps Request History with its Requester and closes it after conversion", as
     .values({
       requesterId: businessId,
       requestTypeId: type!.id,
-      summary: "History request",
+      title: "History request",
       urgency: "medium",
     })
     .returning();

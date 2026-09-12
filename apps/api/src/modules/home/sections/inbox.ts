@@ -22,7 +22,7 @@ import { HOME_SECTION_LIMIT } from "./approvals.js";
 export const InboxHomeRowSchema = z.object({
   id: z.string(),
   number: z.number().int().positive(),
-  summary: z.string(),
+  title: z.string(),
   urgency: z.enum(SEVERITY_LEVELS),
   requestType: z.object({ id: z.string(), displayName: z.string() }),
   requester: z.object({ id: z.string(), displayName: z.string() }),
@@ -49,7 +49,7 @@ export async function readInboxHomeSection(
     .select({
       id: requests.id,
       number: requests.number,
-      summary: requests.summary,
+      title: requests.title,
       urgency: requests.urgency,
       requestTypeId: requestTypes.id,
       requestTypeDisplayName: requestTypes.displayName,
@@ -73,7 +73,7 @@ export async function readInboxHomeSection(
     rows: rows.map((row) => ({
       id: row.id,
       number: row.number,
-      summary: row.summary,
+      title: row.title,
       urgency: row.urgency,
       requestType: { id: row.requestTypeId, displayName: row.requestTypeDisplayName },
       requester: { id: row.requesterId, displayName: row.requesterDisplayName },

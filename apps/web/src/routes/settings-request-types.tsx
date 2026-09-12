@@ -89,7 +89,7 @@ const MESSAGES = defineMessages({
   help: {
     id: "settings.requestTypes.help",
     defaultMessage:
-      "Every form collects summary, description, attachments, and urgency. Attached " +
+      "Every form collects title, description, attachments, and urgency. Attached " +
       "catalog fields carry their values into the converted matter or contract.",
   },
   renameLabel: { id: "settings.requestTypes.renameLabel", defaultMessage: "Rename {name}" },

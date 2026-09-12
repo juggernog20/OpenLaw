@@ -49,7 +49,7 @@ interface MyRequestRow {
   id: string;
   number: number;
   status: string;
-  summary: string;
+  title: string;
   requestType: { id: string; slug: string; displayName: string };
   createdAt: string;
 }
@@ -157,7 +157,7 @@ afterAll(async () => {
 function completeBody(overrides: Record<string, unknown> = {}) {
   return {
     requestTypeId: typeIds.get("contract_review"),
-    summary: "MSA renewal with Orion Cloud",
+    title: "MSA renewal with Orion Cloud",
     description: "They sent a redline on the liability cap. We need it back by Friday.",
     urgency: "high",
     customFields: { counterparty_name: "Orion Cloud" },
@@ -193,7 +193,7 @@ describe("submitting a Request", () => {
     const stored = await storedRequest(answered.id);
     expect(stored.number).toBe(answered.number);
     expect(stored.status).toBe("new");
-    expect(stored.summary).toBe("MSA renewal with Orion Cloud");
+    expect(stored.title).toBe("MSA renewal with Orion Cloud");
     expect(stored.urgency).toBe("high");
     // Keyed by the field's slug, not its id or its display name — the
     // slug is what survives a rename, and what conversion reads.
@@ -201,8 +201,8 @@ describe("submitting a Request", () => {
   });
 
   it("draws each number from the global sequence, in order", async () => {
-    const first = await submit(completeBody({ summary: "First" }));
-    const second = await submit(completeBody({ summary: "Second" }));
+    const first = await submit(completeBody({ title: "First" }));
+    const second = await submit(completeBody({ title: "Second" }));
     expect(first.statusCode, first.body).toBe(201);
     expect(second.statusCode, second.body).toBe(201);
     expect(second.json().request.number).toBeGreaterThan(first.json().request.number);
@@ -246,10 +246,10 @@ describe("submitting a Request", () => {
 });
 
 describe("the basics every form collects", () => {
-  it("requires Summary, Description, and Urgency", async () => {
-    const blankSummary = await submit(completeBody({ summary: "   " }));
-    expect(blankSummary.statusCode, blankSummary.body).toBe(400);
-    expect(blankSummary.json().detail).toContain("Summary");
+  it("requires Title, Description, and Urgency", async () => {
+    const blankTitle = await submit(completeBody({ title: "   " }));
+    expect(blankTitle.statusCode, blankTitle.body).toBe(400);
+    expect(blankTitle.json().detail).toContain("Title");
 
     const blankDescription = await submit(completeBody({ description: "" }));
     expect(blankDescription.statusCode, blankDescription.body).toBe(400);
@@ -263,10 +263,10 @@ describe("the basics every form collects", () => {
     // A person who has to fill something in needs to know which
     // something — and pressing Submit twice to learn two halves of the
     // same answer is the thing this avoids.
-    const res = await submit(completeBody({ summary: "", description: "", customFields: {} }));
+    const res = await submit(completeBody({ title: "", description: "", customFields: {} }));
     expect(res.statusCode, res.body).toBe(400);
     const detail = res.json().detail as string;
-    expect(detail).toContain("Summary");
+    expect(detail).toContain("Title");
     expect(detail).toContain("Description");
     expect(detail).toContain("Counterparty name");
   });
@@ -444,7 +444,7 @@ describe("an archived request type", () => {
 
 describe("the activity a submission writes", () => {
   it("narrates the creation against the Request (DD-017)", async () => {
-    const res = await submit(completeBody({ summary: "Narrated ask" }));
+    const res = await submit(completeBody({ title: "Narrated ask" }));
     expect(res.statusCode, res.body).toBe(201);
     const created = res.json().request;
 
@@ -455,7 +455,7 @@ describe("the activity a submission writes", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]!.action).toBe("request.created");
     expect(rows[0]!.actorId).toBe(requesterId);
-    // No free text at all — not the summary, not the values. The log
+    // No free text at all — not the title, not the values. The log
     // is append-only, so a requester's own words could never leave it
     // again; R-42 is the Request's name and the number never changes.
     expect(rows[0]!.payload).toEqual({
@@ -471,7 +471,7 @@ describe("the activity a submission writes", () => {
       .select()
       .from(activityLog)
       .where(eq(activityLog.entityType, "request"));
-    const res = await submit(completeBody({ summary: "" }));
+    const res = await submit(completeBody({ title: "" }));
     expect(res.statusCode, res.body).toBe(400);
     const after = await harness.db
       .select()
@@ -553,8 +553,8 @@ describe("the form definition a requester reads", () => {
 
 describe("one requester's Requests", () => {
   it("are their own — two requesters' submissions never share a row", async () => {
-    const mine = await submit(completeBody({ summary: "Mine" }));
-    const theirs = await submit(completeBody({ summary: "Theirs" }), otherCookies);
+    const mine = await submit(completeBody({ title: "Mine" }));
+    const theirs = await submit(completeBody({ title: "Theirs" }), otherCookies);
     expect(mine.statusCode, mine.body).toBe(201);
     expect(theirs.statusCode, theirs.body).toBe(201);
     expect((await storedRequest(mine.json().request.id)).requesterId).toBe(requesterId);
@@ -580,14 +580,14 @@ describe("my-requests", () => {
     return res.json().requests as MyRequestRow[];
   }
 
-  it("answers the row the list draws: number, summary, type, status, and age", async () => {
-    const created = await submit(completeBody({ summary: "Row shape" }));
+  it("answers the row the list draws: number, title, type, status, and age", async () => {
+    const created = await submit(completeBody({ title: "Row shape" }));
     expect(created.statusCode, created.body).toBe(201);
     const { number } = created.json().request;
 
     const row = (await myRequests()).find((candidate) => candidate.number === number);
     expect(row).toBeDefined();
-    expect(row!.summary).toBe("Row shape");
+    expect(row!.title).toBe("Row shape");
     expect(row!.status).toBe("new");
     expect(row!.requestType.displayName).toBe("Contract review");
     expect(row!.requestType.slug).toBe("contract_review");
@@ -596,8 +596,8 @@ describe("my-requests", () => {
   });
 
   it("answers newest first", async () => {
-    const first = await submit(completeBody({ summary: "Older" }));
-    const second = await submit(completeBody({ summary: "Newer" }));
+    const first = await submit(completeBody({ title: "Older" }));
+    const second = await submit(completeBody({ title: "Newer" }));
     expect(first.statusCode, first.body).toBe(201);
     expect(second.statusCode, second.body).toBe(201);
 
@@ -608,7 +608,7 @@ describe("my-requests", () => {
   });
 
   it("never carries another requester's Request", async () => {
-    const theirs = await submit(completeBody({ summary: "Not yours" }), otherCookies);
+    const theirs = await submit(completeBody({ title: "Not yours" }), otherCookies);
     expect(theirs.statusCode, theirs.body).toBe(201);
     const theirNumber = theirs.json().request.number;
 
@@ -619,8 +619,8 @@ describe("my-requests", () => {
   });
 
   it("applies the same rule to Member+ staff, who see only what they submitted", async () => {
-    const staff = await submit(completeBody({ summary: "A lawyer's own ask" }), memberCookies);
-    const requester = await submit(completeBody({ summary: "Not the lawyer's" }));
+    const staff = await submit(completeBody({ title: "A lawyer's own ask" }), memberCookies);
+    const requester = await submit(completeBody({ title: "Not the lawyer's" }));
     expect(staff.statusCode, staff.body).toBe(201);
     expect(requester.statusCode, requester.body).toBe(201);
 
@@ -650,7 +650,7 @@ describe("the request detail", () => {
   it("answers the envelope and the values with the fields that name them", async () => {
     const created = await submit(
       completeBody({
-        summary: "Detail shape",
+        title: "Detail shape",
         customFields: { counterparty_name: "Orion Cloud", paper_side: "Theirs" },
       }),
     );
@@ -662,7 +662,7 @@ describe("the request detail", () => {
     expect(detail.request.number).toBe(created.json().request.number);
     expect(detail.request.status).toBe("new");
     expect(detail.request.urgency).toBe("high");
-    expect(detail.request.summary).toBe("Detail shape");
+    expect(detail.request.title).toBe("Detail shape");
     expect(detail.request.description).toContain("liability cap");
     expect(detail.request.requestType.displayName).toBe("Contract review");
     expect(detail.request.declinedReason).toBeNull();
@@ -680,7 +680,7 @@ describe("the request detail", () => {
   });
 
   it("refuses another requester's Request the way it refuses one that does not exist", async () => {
-    const theirs = await submit(completeBody({ summary: "Not yours" }), otherCookies);
+    const theirs = await submit(completeBody({ title: "Not yours" }), otherCookies);
     expect(theirs.statusCode, theirs.body).toBe(201);
 
     const trespass = await readDetail(theirs.json().request.number);
@@ -694,7 +694,7 @@ describe("the request detail", () => {
   });
 
   it("does not expose a converted Request whose destination is missing", async () => {
-    const created = await submit(completeBody({ summary: "Converted without a destination" }));
+    const created = await submit(completeBody({ title: "Converted without a destination" }));
     expect(created.statusCode, created.body).toBe(201);
     const { id, number } = created.json().request;
     await harness.db.update(requests).set({ status: "converted" }).where(eq(requests.id, id));
@@ -709,7 +709,7 @@ describe("the request detail", () => {
   });
 
   it("carries the decline reason on a declined Request (INT-006)", async () => {
-    const created = await submit(completeBody({ summary: "Turned down" }));
+    const created = await submit(completeBody({ title: "Turned down" }));
     expect(created.statusCode, created.body).toBe(201);
     const { id, number } = created.json().request;
     await harness.db
@@ -724,7 +724,7 @@ describe("the request detail", () => {
   });
 
   it("refuses a caller with no session", async () => {
-    const created = await submit(completeBody({ summary: "Needs a session" }));
+    const created = await submit(completeBody({ title: "Needs a session" }));
     expect(created.statusCode, created.body).toBe(201);
     const res = await harness.app.inject({
       method: "GET",
@@ -797,7 +797,7 @@ describe("the two field types that name a row", () => {
   function ndaBody(customFields: Record<string, unknown>) {
     return {
       requestTypeId: typeIds.get("nda_request"),
-      summary: "Mutual NDA with Orion Cloud",
+      title: "Mutual NDA with Orion Cloud",
       description: "For the pilot kicking off next month.",
       urgency: "medium",
       customFields,

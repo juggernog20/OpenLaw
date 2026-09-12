@@ -24,7 +24,7 @@
  * never reaches here: the FK demotes the row to the module alone.
  *
  * **The right card is the form definition** (#355). It opens with the
- * four basics — Summary, Description, Attachments, and Urgency — as
+ * four basics — Title, Description, Attachments, and Urgency — as
  * locked rows stating what every request form collects (INT-002), and
  * below them the catalog fields the Administrator attached. Which
  * fields the Attach menu offers follows the target, the same rule the
@@ -178,7 +178,7 @@ const REQUIRED_RULE: EditorRequiredRule = {
 
 /**
  * The four basics (INT-002): what every request form collects, whatever
- * an Administrator configures. Summary, Description, and Urgency are
+ * an Administrator configures. Title, Description, and Urgency are
  * required; Attachments are optional. Urgency wears the DES-018
  * severity ramp.
  */
@@ -191,8 +191,8 @@ const BASICS = defineMessages({
     id: "settings.requestTypeEditor.basicLocked",
     defaultMessage: "{name} is always collected and can't be changed.",
   },
-  summary: { id: "settings.requestTypeEditor.basicSummary", defaultMessage: "Summary" },
-  summaryType: { id: "settings.requestTypeEditor.basicSummaryType", defaultMessage: "Text" },
+  title: { id: "settings.requestTypeEditor.basicTitle", defaultMessage: "Title" },
+  summaryType: { id: "settings.requestTypeEditor.basicTitleType", defaultMessage: "Text" },
   description: { id: "settings.requestTypeEditor.basicDescription", defaultMessage: "Description" },
   descriptionType: {
     id: "settings.requestTypeEditor.basicDescriptionType",
@@ -217,7 +217,7 @@ const BASICS_SLOT: TypeEditorBasics = {
   caption: BASICS.caption,
   locked: BASICS.locked,
   rows: [
-    { key: "summary", name: BASICS.summary, caption: BASICS.summaryType, isRequired: true },
+    { key: "title", name: BASICS.title, caption: BASICS.summaryType, isRequired: true },
     {
       key: "description",
       name: BASICS.description,

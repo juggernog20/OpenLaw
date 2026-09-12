@@ -208,7 +208,7 @@ type MatterStatusPayloads = {
  * dispositions narrate here (M21/7, M21/8, M21/9).
  *
  * The payload carries the Request's `number` and **no free text at
- * all** — not the summary, not the collected values, and not the
+ * all** — not the title, not the collected values, and not the
  * decline reason. Only the slugs that were answered. A `contract.*`
  * payload carries its title so an entry goes on naming the record after
  * a rename; a Request needs no such thing, because R-42 *is* its name

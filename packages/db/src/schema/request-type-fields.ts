@@ -14,7 +14,7 @@
  * application-enforced, as CTR-016's is, because it reads a column on
  * the owning row rather than a constant.
  *
- * The four basics every form collects (Summary, Description,
+ * The four basics every form collects (Title, Description,
  * Attachments, and Urgency) are not rows here. They are fixed by
  * INT-002, so nothing configures them and nothing needs a join row to
  * record that they are on.

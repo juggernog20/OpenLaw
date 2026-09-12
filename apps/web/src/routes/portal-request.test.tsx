@@ -89,7 +89,7 @@ function detail(
       id: "rq1",
       number: 45,
       status: overrides.status ?? "new",
-      summary: "Orion Cloud MSA renewal — redline review",
+      title: "Orion Cloud MSA renewal — redline review",
       requestType: { id: "rt2", slug: "contract_review", displayName: "Contract review" },
       createdAt: "2026-08-06T09:14:00.000Z",
       description:
@@ -175,7 +175,7 @@ function stubs(...handlers: ((call: StubCall) => StubAnswer)[]) {
 }
 
 describe("the request envelope", () => {
-  it("draws the summary, the status, and the R-### · type · submitted line", async () => {
+  it("draws the title, the status, and the R-### · type · submitted line", async () => {
     stubApi({ signedIn: REQUESTER, extra: detailRead(detail()) });
     renderAt("/portal/requests/45");
 

@@ -21,7 +21,7 @@
  * and it reaches the Administrator who set the flag rather than the
  * requester who would meet it (the INT-002 M20/11 addendum).
  *
- * The four basics (Summary, Description, Attachments, Urgency) are not
+ * The four basics (Title, Description, Attachments, Urgency) are not
  * attachments. INT-002 fixes them on every form, so they have no rows
  * here and never reach these routes. The editor draws them as locked
  * rows above the ones that do.

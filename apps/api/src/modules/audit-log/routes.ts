@@ -447,7 +447,7 @@ async function resolveEntityRefs(
   );
   read("request", (ids) =>
     db
-      .select({ id: requests.id, number: requests.number, title: requests.summary })
+      .select({ id: requests.id, number: requests.number, title: requests.title })
       .from(requests)
       .where(inArray(requests.id, ids)),
   );

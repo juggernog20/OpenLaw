@@ -336,7 +336,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} turnaroundDays {Turnaround (calendar days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Owning department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} turnaroundDays {Turnaround (calendar days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -1367,11 +1367,20 @@
   "common.cancel": {
     "defaultMessage": "Cancel"
   },
+  "common.clear": {
+    "defaultMessage": "Clear"
+  },
   "common.remove": {
     "defaultMessage": "Remove"
   },
   "common.retry": {
     "defaultMessage": "Try again"
+  },
+  "common.search": {
+    "defaultMessage": "Search"
+  },
+  "common.showMore": {
+    "defaultMessage": "Show more"
   },
   "confidential.marker": {
     "defaultMessage": "Confidential"
@@ -1760,6 +1769,9 @@
   "contracts.form.owner": {
     "defaultMessage": "Owner"
   },
+  "contracts.form.owningDepartment": {
+    "defaultMessage": "Owning department"
+  },
   "contracts.form.prefillChild": {
     "defaultMessage": "Prefilled from {reference} and born under it. The counterparties, our entity, the value, and the term came across; the team, the status, and the Confidential flag did not. Edit anything before you create it."
   },
@@ -1768,6 +1780,9 @@
   },
   "contracts.form.priority": {
     "defaultMessage": "Priority"
+  },
+  "contracts.form.region": {
+    "defaultMessage": "Region"
   },
   "contracts.form.renewalPeriod": {
     "defaultMessage": "Renewal period (months)"
@@ -3128,6 +3143,9 @@
   "documents.countLabel": {
     "defaultMessage": "{count, plural, one {# document} other {# documents}}"
   },
+  "documents.current": {
+    "defaultMessage": "Current"
+  },
   "documents.delete.body": {
     "defaultMessage": "{title} and its {count, plural, one {# version} other {# versions}} are removed, and the stored files with them. You cannot undo this."
   },
@@ -3325,6 +3343,9 @@
   },
   "documents.kind": {
     "defaultMessage": "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} redline_theirs {Redline · theirs} redline_ours {Redline · ours} executed {Executed} amendment {Amendment} general {General} generated_redline {Generated redline} other {Unknown}}"
+  },
+  "documents.kindLabel": {
+    "defaultMessage": "Kind"
   },
   "documents.list.column.actions": {
     "defaultMessage": "Actions"
@@ -4490,8 +4511,8 @@
   "inbox.column.status": {
     "defaultMessage": "Status"
   },
-  "inbox.column.summary": {
-    "defaultMessage": "Summary"
+  "inbox.column.title": {
+    "defaultMessage": "Title"
   },
   "inbox.column.type": {
     "defaultMessage": "Type"
@@ -4560,7 +4581,7 @@
     "defaultMessage": "Description"
   },
   "inbox.request.documentTitle": {
-    "defaultMessage": "{reference} · {summary}"
+    "defaultMessage": "{reference} · {title}"
   },
   "inbox.request.noAttachments": {
     "defaultMessage": "No files travelled with this request."
@@ -5753,9 +5774,6 @@
   "portal.contract.months": {
     "defaultMessage": "{count, plural, one {# month} other {# months}}"
   },
-  "portal.contract.noDocument": {
-    "defaultMessage": "No primary Document is available to you."
-  },
   "portal.contract.notFound": {
     "defaultMessage": "Contract not found"
   },
@@ -5764,12 +5782,6 @@
   },
   "portal.contract.noticeDeadline": {
     "defaultMessage": "Notice deadline"
-  },
-  "portal.contract.primaryDocument": {
-    "defaultMessage": "Primary Document"
-  },
-  "portal.contract.readDocument": {
-    "defaultMessage": "Read Document"
   },
   "portal.contract.renewalPending": {
     "defaultMessage": "Renewal is pending confirmation by Legal."
@@ -5806,6 +5818,78 @@
   },
   "portal.deflection.newTab": {
     "defaultMessage": "(opens in a new tab)"
+  },
+  "portal.documents.chooseFiles": {
+    "defaultMessage": "Drop files or choose files"
+  },
+  "portal.documents.download": {
+    "defaultMessage": "Download {name}, version {version}"
+  },
+  "portal.documents.drop": {
+    "defaultMessage": "Drop files here or click to upload"
+  },
+  "portal.documents.earlierVersions": {
+    "defaultMessage": "{count, plural, one {# earlier version} other {# earlier versions}}"
+  },
+  "portal.documents.empty": {
+    "defaultMessage": "No Documents yet."
+  },
+  "portal.documents.fileUploaded": {
+    "defaultMessage": "Uploaded"
+  },
+  "portal.documents.files": {
+    "defaultMessage": "Files to upload"
+  },
+  "portal.documents.newDocuments": {
+    "defaultMessage": "New documents"
+  },
+  "portal.documents.noResults": {
+    "defaultMessage": "No Documents match your search."
+  },
+  "portal.documents.note": {
+    "defaultMessage": "Note (optional)"
+  },
+  "portal.documents.primary": {
+    "defaultMessage": "Primary Document"
+  },
+  "portal.documents.readFailed": {
+    "defaultMessage": "The Documents could not be read."
+  },
+  "portal.documents.removeFile": {
+    "defaultMessage": "Remove {name}"
+  },
+  "portal.documents.retryFiles": {
+    "defaultMessage": "Retry failed uploads"
+  },
+  "portal.documents.search": {
+    "defaultMessage": "Search Documents"
+  },
+  "portal.documents.searchPlaceholder": {
+    "defaultMessage": "Search by document name or filename"
+  },
+  "portal.documents.signedCopy": {
+    "defaultMessage": "Signed copy"
+  },
+  "portal.documents.upload": {
+    "defaultMessage": "Upload documents"
+  },
+  "portal.documents.uploadAction": {
+    "defaultMessage": "Upload"
+  },
+  "portal.documents.uploadAs": {
+    "defaultMessage": "Add as"
+  },
+  "portal.documents.uploaded": {
+    "defaultMessage": "{count, plural, one {# file uploaded.} other {# files uploaded.}}"
+  },
+  "portal.documents.uploading": {
+    "defaultMessage": "Uploading…"
+  },
+  "portal.documents.version": {
+    "defaultMessage": "Version {number}"
+  },
+  "portal.documents.versionOf": {
+    "defaultMessage": "New version of {name}"
   },
   "portal.entry.closed": {
     "defaultMessage": "Sign-in links are switched off. Use your organization's sign-in to reach the portal."
@@ -5894,11 +5978,11 @@
   "portal.form.submitError": {
     "defaultMessage": "The request could not be submitted."
   },
-  "portal.form.summary": {
-    "defaultMessage": "Summary"
-  },
   "portal.form.summaryHint": {
-    "defaultMessage": "One line — what do you need?"
+    "defaultMessage": "Enter a descriptive title for your request"
+  },
+  "portal.form.title": {
+    "defaultMessage": "Title"
   },
   "portal.form.urgency": {
     "defaultMessage": "Urgency"
@@ -6071,14 +6155,11 @@
   "portal.navigation.requests": {
     "defaultMessage": "Requests"
   },
-  "portal.record.addVersion": {
-    "defaultMessage": "Add version"
-  },
   "portal.record.description": {
     "defaultMessage": "Description"
   },
   "portal.record.documents": {
-    "defaultMessage": "Supporting Documents"
+    "defaultMessage": "Documents"
   },
   "portal.record.failed": {
     "defaultMessage": "The change could not be saved. Try again."
@@ -6088,12 +6169,6 @@
   },
   "portal.record.invalidNumber": {
     "defaultMessage": "Enter a number."
-  },
-  "portal.record.moreDocuments": {
-    "defaultMessage": "More Documents"
-  },
-  "portal.record.noSupporting": {
-    "defaultMessage": "No supporting Documents yet."
   },
   "portal.record.originalMeta": {
     "defaultMessage": "R-{number} · {requester} · Submitted {date}"
@@ -6106,9 +6181,6 @@
   },
   "portal.record.retrySave": {
     "defaultMessage": "Retry save"
-  },
-  "portal.record.upload": {
-    "defaultMessage": "Upload Document"
   },
   "portal.request.archivedRecord": {
     "defaultMessage": "The record created from this Request was archived. Your original request is shown below."
@@ -6132,7 +6204,7 @@
     "defaultMessage": "{value, select, true {Yes} other {No}}"
   },
   "portal.request.documentTitle": {
-    "defaultMessage": "{reference} · {summary}"
+    "defaultMessage": "{reference} · {title}"
   },
   "portal.request.meta": {
     "defaultMessage": "{reference} · {requestType} · Submitted {submitted}"
@@ -8564,10 +8636,10 @@
   "settings.requestTypeEditor.basicLocked": {
     "defaultMessage": "{name} is always collected and can't be changed."
   },
-  "settings.requestTypeEditor.basicSummary": {
-    "defaultMessage": "Summary"
+  "settings.requestTypeEditor.basicTitle": {
+    "defaultMessage": "Title"
   },
-  "settings.requestTypeEditor.basicSummaryType": {
+  "settings.requestTypeEditor.basicTitleType": {
     "defaultMessage": "Text"
   },
   "settings.requestTypeEditor.basicUrgency": {
@@ -8706,7 +8778,7 @@
     "defaultMessage": "Form fields:"
   },
   "settings.requestTypes.help": {
-    "defaultMessage": "Every form collects summary, description, attachments, and urgency. Attached catalog fields carry their values into the converted matter or contract."
+    "defaultMessage": "Every form collects title, description, attachments, and urgency. Attached catalog fields carry their values into the converted matter or contract."
   },
   "settings.requestTypes.moved": {
     "defaultMessage": "{name} moved to position {position} of {total}."

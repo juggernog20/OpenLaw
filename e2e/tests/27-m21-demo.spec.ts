@@ -81,9 +81,9 @@ const FIELD_SLUG = "governing_law";
 const FIELD_NAME = "Governing law";
 const FIELD_ANSWER = "England and Wales";
 
-/** What the requester asks for. The summary is per-run, so the mail
+/** What the requester asks for. The title is per-run, so the mail
  * filter, the Inbox row, and the bell items all pin to this run. */
-const SUMMARY = `E2E M21 NDA with Northwind ${Date.now()}`;
+const TITLE = `E2E M21 NDA with Northwind ${Date.now()}`;
 const DESCRIPTION = "One-way NDA ahead of the diligence call. Their paper, our review.";
 const ATTACHMENT = "nda-redline.txt";
 const ATTACHMENT_BODY = "Clause 7.2 — governing law, marked up.\n";
@@ -290,12 +290,12 @@ async function requesterDisplayName(request: APIRequestContext): Promise<string>
   return row!.displayName;
 }
 
-/** Leaves every contract this run's summary named inert (TECH-018). */
+/** Leaves every contract this run's title named inert (TECH-018). */
 async function ensureDemoContractsInert(request: APIRequestContext): Promise<void> {
   const listed = await request.get("/api/v1/contracts?includeEnded=true");
   expect(listed.status(), await listed.text()).toBe(200);
   for (const row of ContractRows.parse(await listed.json()).contracts.filter((contract) =>
-    contract.title.startsWith(SUMMARY),
+    contract.title.startsWith(TITLE),
   )) {
     const archived = await request.post(`/api/v1/contracts/${String(row.number)}/archive`);
     expect(archived.status(), await archived.text()).toBe(200);
@@ -436,7 +436,7 @@ test.describe.serial("M21 demo path", () => {
       await picker.getByRole("link", { name: new RegExp(REQUEST_TYPE_NAME) }).click();
       await expect(portal).toHaveURL(new RegExp(`/portal/new/${REQUEST_TYPE_SLUG}$`));
 
-      await portal.getByLabel("Summary").fill(SUMMARY);
+      await portal.getByLabel("Title").fill(TITLE);
       await portal.getByLabel("Description").fill(DESCRIPTION);
       await portal.getByLabel("Urgency").selectOption("high");
       await portal.getByLabel(FIELD_NAME).fill(FIELD_ANSWER);
@@ -498,7 +498,7 @@ test.describe.serial("M21 demo path", () => {
       await page.getByRole("button", { name: /^Notifications/ }).click();
       const centre = page.getByRole("dialog", { name: "Notifications" });
       await expect(
-        centre.getByRole("link", { name: new RegExp(`submitted a new request: ${SUMMARY}`) }),
+        centre.getByRole("link", { name: new RegExp(`submitted a new request: ${TITLE}`) }),
       ).toHaveAttribute("href", `/inbox/${String(number)}`);
       await page.keyboard.press("Escape");
 
@@ -513,7 +513,7 @@ test.describe.serial("M21 demo path", () => {
       // I1's row, as INT-007 revised it: the reference, the ask, the
       // front door with the routing bound to it, who asked, how urgent
       // they said it is, its status, and the Assign button.
-      const row = page.getByRole("row").filter({ hasText: SUMMARY });
+      const row = page.getByRole("row").filter({ hasText: TITLE });
       await expect(row).toBeVisible();
       await expect(row).toContainText(reference);
       await expect(row).toContainText(REQUEST_TYPE_NAME);
@@ -524,14 +524,14 @@ test.describe.serial("M21 demo path", () => {
       // than leaving the reader to infer it (INT-006).
       await expect(page.getByText("Ordered by urgency, then age")).toBeVisible();
 
-      // Open the Request from its summary; Assign now chooses its triager.
+      // Open the Request from its title; Assign now chooses its triager.
       await expect(row.getByRole("button", { name: `Assign ${reference}` })).toBeVisible();
-      await row.getByRole("link", { name: SUMMARY, exact: true }).click();
+      await row.getByRole("link", { name: TITLE, exact: true }).click();
       await expect(page).toHaveURL(new RegExp(`/inbox/${String(number)}$`));
 
       // ---- The staff detail (I2) ----
 
-      await expect(page.getByRole("heading", { level: 1, name: SUMMARY })).toBeVisible();
+      await expect(page.getByRole("heading", { level: 1, name: TITLE })).toBeVisible();
       // The hero's envelope. The routing sits beside the front door
       // rather than inside it, because "Contract · NDA" and "NDA
       // request" answer different questions: one is the form the
@@ -565,7 +565,7 @@ test.describe.serial("M21 demo path", () => {
 
       // INT-002's UX addendum: routing and carried values are editable,
       // with the Request's defaults populated before conversion.
-      await expect(dialog.getByLabel(/^Title/)).toHaveValue(SUMMARY);
+      await expect(dialog.getByLabel(/^Title/)).toHaveValue(TITLE);
       await expect(dialog.getByText(`${REQUEST_TYPE_NAME} · submitted by`)).toBeVisible();
       const targetType = dialog.getByRole("combobox", { name: "Contract type", exact: true });
       await expect(targetType).toHaveValue(targetTypeId);
@@ -610,7 +610,7 @@ test.describe.serial("M21 demo path", () => {
 
       await contractLink.click();
       await expect(page).toHaveURL(new RegExp(`/contracts/${String(contractNumber)}$`));
-      await expect(page.getByRole("heading", { level: 1, name: SUMMARY })).toBeVisible();
+      await expect(page.getByRole("heading", { level: 1, name: TITLE })).toBeVisible();
 
       // An ordinary contract, born with the values carried: the C-###
       // sequence, the draft-stage seed, the triager as Owner, no team
@@ -620,7 +620,7 @@ test.describe.serial("M21 demo path", () => {
       const record = await page.request.get(`/api/v1/contracts/${String(contractNumber)}`);
       expect(record.status(), await record.text()).toBe(200);
       const parsed = ContractRecord.parse(await record.json());
-      expect(parsed.contract.title).toBe(SUMMARY);
+      expect(parsed.contract.title).toBe(TITLE);
       expect(parsed.contract.priority).toBe("high");
       expect(parsed.contract.risk).toBeNull();
       expect(parsed.contract.stage).toBe("draft");
@@ -714,13 +714,13 @@ test.describe.serial("M21 demo path", () => {
       await portal.getByRole("button", { name: /^Notifications/ }).click();
       const portalCentre = portal.getByRole("dialog", { name: "Notifications" });
       await expect(
-        portalCentre.getByRole("link", { name: new RegExp(`replied on your request ${SUMMARY}`) }),
+        portalCentre.getByRole("link", { name: new RegExp(`replied on your request ${TITLE}`) }),
       ).toHaveAttribute("href", `/portal/requests/${String(number)}`);
       // The item names the status it moved to, in the requester's own
       // vocabulary rather than the enum's (NOT-005, 2026-09-09).
       await expect(
         portalCentre.getByRole("link", {
-          name: new RegExp(`Your request ${SUMMARY} is now In progress`),
+          name: new RegExp(`Your request ${TITLE} is now In progress`),
         }),
       ).toBeVisible();
       await portal.keyboard.press("Escape");

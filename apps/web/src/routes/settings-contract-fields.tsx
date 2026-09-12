@@ -16,6 +16,8 @@
  * 403 is the real refusal.
  */
 
+import { CONTRACT_OVERVIEW_FIELD_SLUGS } from "@openlaw/shared";
+
 import { useRef, useState, type ReactNode } from "react";
 import type { paths } from "@openlaw/api-client";
 import { redirect, useLoaderData } from "react-router";
@@ -89,7 +91,10 @@ type ApiField =
 type FieldRow = ApiField & { moduleScope: Scope };
 
 function isFieldRow(field: ApiField, module: ModuleScope): field is FieldRow {
-  return field.moduleScope === module || field.moduleScope === "global";
+  return (
+    (module !== "contract" || !CONTRACT_OVERVIEW_FIELD_SLUGS.includes(field.slug)) &&
+    (field.moduleScope === module || field.moduleScope === "global")
+  );
 }
 
 function fieldRow(field: ApiField, module: ModuleScope): FieldRow {

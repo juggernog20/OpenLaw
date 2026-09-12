@@ -55,7 +55,6 @@ function row(title: string, id = "first") {
     id,
     number: id === "first" ? 1 : 2,
     title,
-    summary: title,
     contractTypeId: "type",
     contractTypeName: "NDA",
     matterTypeId: "type",

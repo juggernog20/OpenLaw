@@ -1045,7 +1045,7 @@ The portal's job is to stop the inbox back-and-forth (PRODUCT.md principle 3). "
 
 ~~Your Contracts is one flat paginated list; DD-019 views do not apply. The detail exposes title, primary counterparty, stage, both owner names, value, term type, effective and expiry dates, renewal period, notice deadline, and renewal-pending state. Existing CTR-008 Unverified markers remain visible with an explanation; internal evidence, run details, legal Fields, Tasks and History are excluded. No new Contract comment surface or stage-change notification is added. Existing Request threads are unchanged.~~
 
-The existing Document reader uses dedicated Portal endpoints. Every metadata, byte, rendition, email and attachment request checks affiliation and confidentiality again, and accepts only the current Version of the current primary Document. Staff Document endpoints retain their existing access rules. Reporting stays deferred; this is a read on records the person already has a stake in, not a dashboard.
+The existing Document reader uses dedicated Portal endpoints. Every metadata, byte, rendition, email and attachment request checks affiliation and confidentiality again, and ~~accepts only the current Version of the current primary Document~~ accepts every Version of the current primary Document under DD-024. Staff Document endpoints retain their existing access rules. Reporting stays deferred; this is a read on records the person already has a stake in, not a dashboard.
 
 ## DD-022: Auto-Docs — a new destination that fills approved templates from a form
 
@@ -1121,15 +1121,15 @@ Closing a Matter or Ending a Contract does not revoke its team's access or freez
 
 DD-015's business contribution permissions move to Business Users on the record's team, through the Portal. The comment permission is **Full Thread (`shared`) only**.
 
-| Surface or action                     | Business User on the team                                                                                                                                                           |
-| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Record summary                        | Read the business-facing Contract or Matter details. The Contract starts from DD-021's current summary.                                                                             |
-| Business Fields and description       | Edit business-tagged Fields, Contract value and effective date, and the live record's business description. Legal-tagged Fields stay outside the Portal.                            |
-| Supporting Documents                  | Upload supporting Documents and add Versions to supporting Document chains, subject to ordinary Document access.                                                                    |
-| Primary Contract Document             | Read and download the current Version under DD-021's reader rules. Uploading a primary Version, replacing it, or changing the primary designation stays Member+.                    |
-| Record comments and reply attachments | Read and post at Full Thread (`shared`), using the record's conversation and attachment machinery.                                                                                  |
-| Original request                      | Read the original submission. It is a historical snapshot and cannot be edited through the record.                                                                                  |
-| Legal actions                         | Status, Type, parties, legal Fields, owners, roster, confidentiality, primary Document, approvals, signature, lifecycle, Key dates, Tasks, and relationship mutations stay Member+. |
+| Surface or action                     | Business User on the team                                                                                                                                                                                                                                                            |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Record summary                        | Read the business-facing Contract or Matter details. The Contract starts from DD-021's current summary.                                                                                                                                                                              |
+| Business Fields and description       | Edit business-tagged Fields, Contract value and effective date, and the live record's business description. Legal-tagged Fields stay outside the Portal.                                                                                                                             |
+| Supporting Documents                  | ~~Upload supporting Documents and add Versions to supporting Document chains, subject to ordinary Document access.~~ DD-024 allows Documents and Versions, including the primary Contract chain.                                                                                     |
+| Primary Contract Document             | ~~Read and download the current Version under DD-021's reader rules. Uploading a primary Version, replacing it, or changing the primary designation stays Member+.~~ DD-024 allows every Version to be read and new Versions appended; primary and executed designations stay Legal. |
+| Record comments and reply attachments | Read and post at Full Thread (`shared`), using the record's conversation and attachment machinery.                                                                                                                                                                                   |
+| Original request                      | Read the original submission. It is a historical snapshot and cannot be edited through the record.                                                                                                                                                                                   |
+| Legal actions                         | Status, Type, parties, legal Fields, owners, roster, confidentiality, ~~primary Document~~ primary designation (DD-024), approvals, signature, lifecycle, Key dates, Tasks, and relationship mutations stay Member+.                                                                 |
 
 Business Users continue to create Requests rather than top-level Contracts or Matters. Their writes and uploads retain their identity in the Activity feed and Audit log under DD-017.
 
@@ -1205,6 +1205,26 @@ After product review, write one Portal design record covering Contract and Matte
 
 The sequence is a development order. Do not deploy an intermediate account migration that removes a former Contributor's working surface before the corresponding Portal surface is available.
 
+## DD-024: Business Users work with Document versions on their records
+
+- **Status:** Accepted under Blair's 2026-09-12 instruction to redesign Portal Documents and allow new Contract versions and other uploads
+- **Date:** 2026-09-12
+
+Contracts and Matters expose one Documents section in the Portal. Business Users on the record's team can read each accessible Document's full Version history, preview or download any Version, upload a new Document, and append a Version to an existing Document, including the primary Contract Document. The immutable chain remains linear. The next Version becomes current; it neither changes the primary Document designation nor moves the executed Version pin.
+
+Primary and executed designations, existing metadata edits, confidentiality, folder management, archive and deletion remain Legal actions. A Business User's first upload does not automatically become primary. The existing record membership, Document audience and archive checks apply before upload and again under the record lock. Portal uploads by staff use this same Business User permission grid. Revoking membership removes subsequent list, history, byte-read and upload access.
+
+This amends DD-021's current-primary-Version read limit and DD-023's supporting-only upload grid. DES-081 defines the unified presentation.
+
+## DD-025: Business Owner replaces the seeded Business sponsor Field
+
+- **Status:** Accepted under Blair's 2026-09-12 instruction to remove Business Sponsor from the database
+- **Date:** 2026-09-12
+
+Business sponsor was a demo custom Field that duplicated Business Owner, contrary to DD-021's clarification. Retire its catalog definition, Type attachments, live custom values, template defaults and conversion suggestions. Before removal, copy a valid user assignment into an empty Business Owner on a Contract or Matter. Existing Business Owners take precedence. This does not add a team membership or grant Portal access. Historical activity and analysis records remain historical evidence.
+
+The demo seed assigns Business Owner directly and no longer creates the duplicate Field. The migration is a one-time correction; ordinary custom Fields keep MTR-014's archive model.
+
 ## Index of decisions
 
 | #      | Decision                                                                                  | Status                            |
@@ -1232,3 +1252,5 @@ The sequence is a development order. Do not deploy an intermediate account migra
 | DD-021 | Business Users see the Contracts they are stakeholders on, in the portal                  | Accepted; implemented in #808     |
 | DD-022 | Auto-Docs — a new destination that fills approved templates from a form                   | Accepted direction; grill pending |
 | DD-023 | Three account types, one team roster, and Portal work on Contracts and Matters            | Accepted                          |
+| DD-024 | Business Users work with Document versions on their records                               | Accepted                          |
+| DD-025 | Business Owner replaces the seeded Business sponsor Field                                 | Accepted                          |

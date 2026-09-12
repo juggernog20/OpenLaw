@@ -104,7 +104,7 @@ const as = (fixture: { email: string }): Record<string, string> => {
 interface RequestRow {
   id: string;
   number: number;
-  summary: string;
+  title: string;
 }
 
 beforeAll(async () => {
@@ -151,21 +151,21 @@ afterAll(async () => {
 });
 
 /** Submits a Request through the portal form, as a requester does. */
-async function submit(fixture: { email: string }, summary: string): Promise<RequestRow> {
+async function submit(fixture: { email: string }, title: string): Promise<RequestRow> {
   const res = await harness.app.inject({
     method: "POST",
     url: "/api/v1/requests",
     cookies: as(fixture),
     payload: {
       requestTypeId: contractReviewTypeId,
-      summary,
+      title,
       description: "They sent a redline on the liability cap.",
       urgency: "high",
     },
   });
   expect(res.statusCode, res.body).toBe(201);
   const row = res.json().request as RequestRow;
-  return { id: row.id, number: row.number, summary: row.summary };
+  return { id: row.id, number: row.number, title: row.title };
 }
 
 /** Posts one comment on a Request's thread, at a tier. */
@@ -241,7 +241,7 @@ async function settles(what: string, ready: () => boolean): Promise<void> {
 
 /** The messages this person has been sent about this Request, by its
  * R-### reference — which every group-5 subject line carries as
- * `R-### · summary`. The separator is part of the match, because `R-1`
+ * `R-### · title`. The separator is part of the match, because `R-1`
  * is a prefix of `R-10` and this suite mints numbers past nine. */
 const mailAbout = (fixture: { email: string }, request: RequestRow) =>
   harness.mailer
@@ -280,14 +280,14 @@ describe("submitting a Request (INT-001)", () => {
     expect(rows[0]!.readAt).toBeNull();
     expect(rows[0]!.emailOwed).toBe(true);
     expect(rows[0]!.payload.requestNumber).toBe(request.number);
-    expect(rows[0]!.payload.requestSummary).toBe(request.summary);
+    expect(rows[0]!.payload.requestTitle).toBe(request.title);
     expect(rows[0]!.payload.actorName).toBe(REQUESTER.displayName);
 
     // The email is the queue's, so this is the one thing to wait for. It
     // deep-links into the portal, not into the staff application.
     const message = await oneMailAbout(REQUESTER, request, "We have your request");
     expect(message.text).toContain(portalLink(request));
-    expect(message.text).toContain(request.summary);
+    expect(message.text).toContain(request.title);
     expect(message.text).toContain(REQUESTER.displayName);
   });
 
@@ -556,7 +556,7 @@ describe("the portal bell (NOT-001, NOT-005, M20/9)", () => {
     // The portal detail is addressed by R-###, so the payload carries
     // the number rather than making the surface look it up.
     expect(receipt!.payload.requestNumber).toBe(request.number);
-    expect(receipt!.payload.requestSummary).toBe(request.summary);
+    expect(receipt!.payload.requestTitle).toBe(request.title);
     expect(await badge(REQUESTER, "portal")).toBeGreaterThan(0);
   });
 

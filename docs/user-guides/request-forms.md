@@ -32,7 +32,7 @@ The Portal's request-type card shows this duration as an estimate. On an individ
 2. Turn on that Field's **Required** checkbox if the Requester must answer it. Wait for the save to finish.
 3. Repeat for the other Fields you need. Use the reorder controls to put them in a useful order; with a reorder control focused, the arrow keys move its Field.
 
-Plan the form around its fixed basics: **Summary**, **Description**, **Attachments**, and **Urgency**. Summary, Description, and Urgency are required; attachments are optional. These basics cannot be removed or reordered here.
+Plan the form around its fixed basics: **Title**, **Description**, **Attachments**, and **Urgency**. Title, Description, and Urgency are required; attachments are optional. These basics cannot be removed or reordered here.
 
 Choose Contract-scoped or Global Fields for a Contract form, and Matter-scoped or Global Fields for a Matter form. User and Entity Fields cannot be required on a Portal form, because the Portal does not offer those records for the Requester to choose. **Detach** removes a form attachment without deleting its catalog definition or earlier answers.
 

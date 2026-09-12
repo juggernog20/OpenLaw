@@ -310,7 +310,7 @@ test.describe.serial("M19 demo path", () => {
       // DES-018 severity ramp, which is what ST14's redrawn row reads.
       const basics = page.getByRole("list", { name: "Basics are always on the form" });
       for (const [name, caption] of [
-        ["Summary", "Text"],
+        ["Title", "Text"],
         ["Description", "Long text"],
         ["Attachments", "Files"],
         ["Urgency", "Low · medium · high · critical"],
@@ -318,7 +318,7 @@ test.describe.serial("M19 demo path", () => {
         await expect(basics.getByText(caption, { exact: true })).toBeVisible();
         await expect(basics.getByRole("checkbox", { name: `${name} required` })).toBeDisabled();
       }
-      // Summary, Description, and Urgency are required on every form;
+      // Title, Description, and Urgency are required on every form;
       // Attachments are optional. Nobody may change any of the four.
       expect(await basics.getByRole("checkbox", { checked: true }).count()).toBe(3);
 

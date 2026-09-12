@@ -123,7 +123,7 @@ function openForm(state: Parameters<typeof portalForm>[0] = {}): Submissions {
 }
 
 async function fillComplete(user: ReturnType<typeof userEvent.setup>) {
-  await user.type(await screen.findByLabelText(/^Summary/), "MSA renewal with Orion Cloud");
+  await user.type(await screen.findByLabelText(/^Title/), "MSA renewal with Orion Cloud");
   await user.type(screen.getByLabelText(/^Description/), "They sent a redline on the cap.");
   await user.selectOptions(screen.getByLabelText(/^Urgency/), "high");
   await user.type(screen.getByLabelText(/^Counterparty/), "Orion Cloud");
@@ -140,7 +140,10 @@ describe("the request type's form", () => {
     openForm({ fields: [] });
     // INT-002's basics: three that carry a value, and Attachments,
     // which is on the form whatever the Administrator configured.
-    expect(await screen.findByLabelText(/^Summary/)).toBeInTheDocument();
+    expect(await screen.findByLabelText(/^Title/)).toHaveAttribute(
+      "placeholder",
+      "Enter a descriptive title for your request",
+    );
     expect(screen.getByLabelText(/^Description/)).toBeInTheDocument();
     expect(screen.getByLabelText(/^Urgency/)).toBeInTheDocument();
     expect(screen.getByText("Attachments")).toBeInTheDocument();
@@ -175,7 +178,7 @@ describe("the request type's form", () => {
     openForm();
     // The three required basics plus the one attached field the
     // Administrator marked; Attachments and Paper side are not marked.
-    for (const label of [/^Summary/, /^Description/, /^Urgency/, /^Counterparty/]) {
+    for (const label of [/^Title/, /^Description/, /^Urgency/, /^Counterparty/]) {
       expect(await screen.findByLabelText(label)).toHaveAttribute("aria-required", "true");
     }
     expect(screen.getByLabelText(/^Paper side/)).not.toHaveAttribute("aria-required", "true");
@@ -233,7 +236,7 @@ describe("submitting the form", () => {
     await screen.findByRole("heading", { name: /R-42/ });
     expect(submissions.bodies[0]).toEqual({
       requestTypeId: "rt2",
-      summary: "MSA renewal with Orion Cloud",
+      title: "MSA renewal with Orion Cloud",
       description: "They sent a redline on the cap.",
       urgency: "high",
       customFields: { counterparty: "Orion Cloud", paper_side: "Theirs" },
@@ -255,7 +258,7 @@ describe("submitting the form", () => {
   it("refuses an incomplete form and says so on the fields", async () => {
     const user = userEvent.setup();
     const submissions = openForm();
-    await user.type(await screen.findByLabelText(/^Summary/), "MSA renewal");
+    await user.type(await screen.findByLabelText(/^Title/), "MSA renewal");
     await user.click(screen.getByRole("button", { name: "Submit request" }));
 
     // The sentence names every gap…
@@ -272,10 +275,10 @@ describe("submitting the form", () => {
     const user = userEvent.setup();
     openForm({ fields: [] });
     await user.click(await screen.findByRole("button", { name: "Submit request" }));
-    expect(await screen.findByText("Summary is required.")).toBeInTheDocument();
+    expect(await screen.findByText("Title is required.")).toBeInTheDocument();
 
-    await user.type(screen.getByLabelText(/^Summary/), "MSA renewal");
-    expect(screen.queryByText("Summary is required.")).not.toBeInTheDocument();
+    await user.type(screen.getByLabelText(/^Title/), "MSA renewal");
+    expect(screen.queryByText("Title is required.")).not.toBeInTheDocument();
     expect(screen.getByText("Description is required.")).toBeInTheDocument();
   });
 
@@ -296,7 +299,7 @@ describe("submitting the form", () => {
   it("sends no requester — the Requester is the session", async () => {
     const user = userEvent.setup();
     const submissions = openForm({ fields: [] });
-    await user.type(await screen.findByLabelText(/^Summary/), "A question");
+    await user.type(await screen.findByLabelText(/^Title/), "A question");
     await user.type(screen.getByLabelText(/^Description/), "About the standard NDA.");
     await user.click(screen.getByRole("button", { name: "Submit request" }));
 
@@ -305,7 +308,7 @@ describe("submitting the form", () => {
       "customFields",
       "description",
       "requestTypeId",
-      "summary",
+      "title",
       "urgency",
     ]);
   });
@@ -337,7 +340,7 @@ describe("the Attachments basic", () => {
       file("redline.pdf"),
       file("term-sheet.pdf"),
     ]);
-    await user.type(screen.getByLabelText(/^Summary/), "MSA renewal");
+    await user.type(screen.getByLabelText(/^Title/), "MSA renewal");
     await user.type(screen.getByLabelText(/^Description/), "They sent a redline.");
     await user.click(screen.getByRole("button", { name: "Submit request" }));
 
@@ -353,7 +356,7 @@ describe("the Attachments basic", () => {
   it("submits with no attachments at all, and uploads nothing", async () => {
     const user = userEvent.setup();
     const submissions = openForm({ fields: [] });
-    await user.type(await screen.findByLabelText(/^Summary/), "A question");
+    await user.type(await screen.findByLabelText(/^Title/), "A question");
     await user.type(screen.getByLabelText(/^Description/), "About the standard NDA.");
     await user.click(screen.getByRole("button", { name: "Submit request" }));
 
@@ -375,7 +378,7 @@ describe("the Attachments basic", () => {
       file("redline.pdf"),
       file("term-sheet.pdf"),
     ]);
-    await user.type(screen.getByLabelText(/^Summary/), "MSA renewal");
+    await user.type(screen.getByLabelText(/^Title/), "MSA renewal");
     await user.type(screen.getByLabelText(/^Description/), "They sent a redline.");
     await user.click(screen.getByRole("button", { name: "Submit request" }));
 
@@ -412,7 +415,7 @@ describe("the Attachments basic", () => {
         }),
     });
     await user.upload(await screen.findByLabelText("Attachments"), file("markup.pdf"));
-    await user.type(screen.getByLabelText(/^Summary/), "MSA renewal");
+    await user.type(screen.getByLabelText(/^Title/), "MSA renewal");
     await user.type(screen.getByLabelText(/^Description/), "They sent a redline.");
     await user.click(screen.getByRole("button", { name: "Submit request" }));
 

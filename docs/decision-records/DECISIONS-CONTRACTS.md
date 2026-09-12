@@ -464,6 +464,7 @@ The Team panel groups entries by person: one avatar and name, with every held ro
 | CTR-022 | Confidential flag: the Owner joins, and CMT-007 replaces the watcher grant       | Accepted                                                                                          |
 | CTR-023 | Confidential team: the roster is an audience decision (extends CTR-022)          | Accepted                                                                                          |
 | CTR-024 | Bounding the lists: keyset cursor, server-fixed page of 50, and no total         | Accepted                                                                                          |
+| CTR-025 | Owning department and Region are built-in Overview attributes                    | Accepted                                                                                          |
 
 ### CTR-005 UX review addendum — record Due date (2026-09-06; superseded)
 
@@ -528,3 +529,12 @@ Original promoted primary paper is covered by the conversion run, so its asynchr
 The existing term dependencies, Value group, validation and Counterparty match-only rules apply. Human values and confirmations win. Explicit clears from conversion or subsequent edits remain protected even when a value was already empty, including on retry. The writer keeps Conversion draft custom values and assigns new Analysis values their own run markers. New values carry Unverified, the DES-070 purple treatment and source sparkles. Saved citations use original identities and promoted Versions without an AI call. Document confidentiality and Field-tag narrowing cannot leave unreviewed derived values in broader Fields.
 
 The Contract page revalidates while a run is pending and keeps typed drafts. Retry is explicit after failure and uses the current Type and sources; concurrent retry requests share one pending run. Disabled workflows leave saved evidence and confirm/edit usable. The two graduated FUTURE-FEATURES entries cite INT-008, DES-070 and this CTR-008 addendum.
+
+## CTR-025 — Owning department and Region are built-in Overview attributes
+
+- **Status** — Accepted
+- **Date** — 2026-09-12
+- **Context** — These describe the business responsible for a Contract, rather than information extracted from its terms. The demo catalog incorrectly treated them as type-specific custom Fields.
+- **Decision** — Every Contract carries nullable `owning_department` and `region` attributes. Both appear in Overview in the main app and Portal, alongside ownership. They accept organization-specific text, up to 200 characters, with blank normalized to null. They are available for every Contract Type and do not depend on a Field attachment. Reachable staff and Business Users on the team may edit them; changing either grants no access. The Fields section remains the Type's substantive Contract Fields.
+- **Migration** — Copy existing Contract custom values into these attributes, remove their duplicate values and Contract Type attachments, and remove the old classification keys from active AI review state. Preserve historical evidence. Existing Request answers still carry into the attributes at Contract conversion. The original submissions remain intact. Catalog definitions remain available where needed by Requests and other modules, including the shared Region Field on Matters and Entities; Contracts Settings excludes these two slugs and refuses attaching them to a Contract Type.
+- **Consequences** — Demo Contracts seed the built-in attributes. No department or region vocabulary is hard-coded into application controls. These are business classification, with no AI extraction prompt and no authorization effect. This amends CTR-016 and DES-032 for the two former seeded Fields.

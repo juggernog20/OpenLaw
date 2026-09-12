@@ -76,13 +76,13 @@ export function PortalRequestPage() {
       onSignOut={() => void signOut()}
       recordScope={{ entityType: "request", entityId: request.id }}
     >
-      {/* Reference then summary, composed as one message — the
+      {/* Reference then title, composed as one message — the
           separator is locale copy, not code (DES-013). The contract
           record's own document title is the sibling. */}
       <PageTitle
         title={intl.formatMessage(
-          { id: "portal.request.documentTitle", defaultMessage: "{reference} · {summary}" },
-          { reference, summary: request.summary },
+          { id: "portal.request.documentTitle", defaultMessage: "{reference} · {title}" },
+          { reference, title: request.title },
         )}
       />
       <PortalBackLink>
@@ -90,7 +90,7 @@ export function PortalRequestPage() {
       </PortalBackLink>
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="min-w-0 text-2xl font-semibold break-words">{request.summary}</h1>
+          <h1 className="min-w-0 text-2xl font-semibold break-words">{request.title}</h1>
           <span
             className={`inline-flex shrink-0 rounded-pill px-2 py-0.5 text-xs font-medium ${REQUEST_STATUS_PILL[request.status]}`}
           >

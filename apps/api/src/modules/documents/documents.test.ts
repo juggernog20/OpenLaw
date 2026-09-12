@@ -1381,13 +1381,13 @@ describe("who reaches a contract's paper", () => {
     expect(write.statusCode).toBe(404);
   });
 
-  it("refuses a Contributor on the primary chain and on Document metadata", async () => {
+  it("lets a Business User append a primary Version while refusing Document metadata edits", async () => {
     const contract = await newContract("Orion Cloud — the Contributor's revision");
     await putOnTeam(contract.number, idOf(CONTRIBUTOR));
     const document = await uploaded(adminCookies, contract.number);
 
     const version = await addVersion(contributorCookies, document.id);
-    expect(version.statusCode, version.body).toBe(403);
+    expect(version.statusCode, version.body).toBe(201);
     const rename = await patchDocument(contributorCookies, document.id, { title: "Mine now" });
     expect(rename.statusCode, rename.body).toBe(403);
   });

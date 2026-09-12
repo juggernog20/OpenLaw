@@ -7,11 +7,10 @@ import { severityLabel } from "../../lib/contracts";
 import { portalContractReader } from "../../lib/portal-contracts";
 import type { ContractValue } from "../../lib/contracts";
 import { Input } from "../ui/input";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { CustomFieldControl } from "../custom-field-control";
 import { AutoResizeTextarea } from "../auto-resize-textarea";
-import { DocPanel } from "../documents/doc-panel";
 import { Button } from "../ui/button";
 import {
   commitsOnChange,
@@ -21,15 +20,11 @@ import {
   type AttachedField,
   type CustomFieldDraft,
 } from "../../lib/custom-fields";
-import {
-  documentDownloadHref,
-  uploadDocumentVersion,
-  uploadRecordDocument,
-} from "../../lib/documents";
+import { documentDownloadHref } from "../../lib/documents";
+import { PortalDocumentsSection } from "./documents-section";
 import { formatShortDate } from "../../lib/format";
 import { problem } from "../../lib/problem";
 import {
-  readPortalDocuments,
   savePortalWork,
   type PortalDocuments,
   type PortalRecordModule,
@@ -111,7 +106,7 @@ export function PortalRecordWork({
           />
         ))}
       </section>
-      <SupportingDocuments module={module} number={number} initial={documents} />
+      <PortalDocumentsSection module={module} number={number} initial={documents} />
       {work.originalRequests.map((original) => (
         <section className={card} key={original.number}>
           <h2 className="text-lg font-semibold">
@@ -120,7 +115,7 @@ export function PortalRecordWork({
               defaultMessage="Original request"
             />
           </h2>
-          <p className="font-medium">{original.summary}</p>
+          <p className="font-medium">{original.title}</p>
           <p className="text-sm text-muted">
             <FormattedMessage
               id="portal.record.originalMeta"
@@ -282,178 +277,6 @@ function BusinessField({
             <FormattedMessage id="portal.record.retrySave" defaultMessage="Retry save" />
           </Button>
         </>
-      )}
-    </div>
-  );
-}
-
-function SupportingDocuments({
-  module,
-  number,
-  initial,
-}: Readonly<{ module: PortalRecordModule; number: number; initial: PortalDocuments }>) {
-  const intl = useIntl();
-  const [data, setData] = useState(initial);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [reading, setReading] = useState<PortalDocuments["documents"][number] | null>(null);
-  const [covers, setCovers] = useState(true);
-  const [target, setTarget] = useState<string | null>(null);
-  const input = useRef<HTMLInputElement>(null);
-  const trigger = useRef<HTMLButtonElement | null>(null);
-  async function upload(file: File) {
-    setBusy(true);
-    setError(null);
-    const draft = { file, kind: "general" as const, note: "" };
-    const outcome = await (target
-      ? uploadDocumentVersion(target, draft)
-      : uploadRecordDocument({ entityType: module, number }, draft));
-    if (!outcome.ok)
-      setError(
-        outcome.detail ??
-          intl.formatMessage({
-            id: "portal.record.failed",
-            defaultMessage: "The change could not be saved. Try again.",
-          }),
-      );
-    else {
-      const result = await readPortalDocuments(module, number).catch(() => undefined);
-      if (result?.data) setData(result.data);
-      else
-        setError(
-          (await problem(result)).detail ??
-            intl.formatMessage({
-              id: "portal.record.failed",
-              defaultMessage: "The change could not be saved. Try again.",
-            }),
-        );
-    }
-    setBusy(false);
-  }
-  async function more() {
-    if (!data.nextCursor || busy) return;
-    setBusy(true);
-    setError(null);
-    const result = await readPortalDocuments(module, number, data.nextCursor).catch(
-      () => undefined,
-    );
-    if (result?.data)
-      setData((previous) => ({
-        documents: [...previous.documents, ...result.data.documents],
-        nextCursor: result.data.nextCursor,
-      }));
-    else
-      setError(
-        (await problem(result)).detail ??
-          intl.formatMessage({
-            id: "portal.record.failed",
-            defaultMessage: "The change could not be saved. Try again.",
-          }),
-      );
-    setBusy(false);
-  }
-  return (
-    <div className="@container/record relative flex min-w-0 gap-4">
-      <section
-        className={`${card} min-w-0 flex-1`}
-        aria-labelledby="portal-documents-heading"
-        inert={reading !== null && covers}
-      >
-        <h2 id="portal-documents-heading" className="text-lg font-semibold">
-          <FormattedMessage id="portal.record.documents" defaultMessage="Supporting Documents" />
-        </h2>
-        <input
-          ref={input}
-          type="file"
-          className="hidden"
-          aria-label={intl.formatMessage({
-            id: "portal.record.upload",
-            defaultMessage: "Upload Document",
-          })}
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            event.target.value = "";
-            if (file) void upload(file);
-          }}
-        />
-        <Button
-          disabled={busy}
-          onClick={() => {
-            setTarget(null);
-            input.current?.click();
-          }}
-        >
-          <FormattedMessage id="portal.record.upload" defaultMessage="Upload Document" />
-        </Button>
-        {error && (
-          <p role="alert" className="text-base text-status-danger-fg">
-            {error}
-          </p>
-        )}
-        {data.documents.length === 0 && (
-          <p className="text-muted">
-            <FormattedMessage
-              id="portal.record.noSupporting"
-              defaultMessage="No supporting Documents yet."
-            />
-          </p>
-        )}
-        <ul className="flex flex-col gap-4">
-          {data.documents.map((document) => (
-            <li
-              key={document.id}
-              className="flex flex-col gap-2 border-b border-border-default pb-4"
-            >
-              <p className="font-medium">{document.title}</p>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="secondary"
-                  onClick={(event) => {
-                    trigger.current = event.currentTarget;
-                    setReading(document);
-                  }}
-                >
-                  <FormattedMessage
-                    id="portal.contract.readDocument"
-                    defaultMessage="Read Document"
-                  />
-                </Button>
-                <Button variant="secondary" asChild>
-                  <a href={documentDownloadHref(document.id, document.version.id)}>
-                    <FormattedMessage id="docPanel.download" defaultMessage="Download" />
-                  </a>
-                </Button>
-                <Button
-                  variant="secondary"
-                  disabled={busy}
-                  onClick={() => {
-                    setTarget(document.id);
-                    input.current?.click();
-                  }}
-                >
-                  <FormattedMessage id="portal.record.addVersion" defaultMessage="Add version" />
-                </Button>
-              </div>
-            </li>
-          ))}
-        </ul>
-        {data.nextCursor && (
-          <Button disabled={busy} variant="secondary" onClick={() => void more()}>
-            <FormattedMessage id="portal.record.moreDocuments" defaultMessage="More Documents" />
-          </Button>
-        )}
-      </section>
-      {reading && (
-        <DocPanel
-          documentId={reading.id}
-          title={reading.title}
-          version={reading.version}
-          onDockedChange={(docked) => setCovers(!docked)}
-          onClose={() => {
-            setReading(null);
-            setTimeout(() => trigger.current?.focus(), 0);
-          }}
-        />
       )}
     </div>
   );

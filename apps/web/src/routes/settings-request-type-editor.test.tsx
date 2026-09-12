@@ -277,7 +277,7 @@ describe("the form definition (ST14's right card)", () => {
     expect(screen.getByText("Basics are always on the form")).toBeInTheDocument();
 
     for (const [name, required] of [
-      ["Summary", true],
+      ["Title", true],
       ["Description", true],
       ["Attachments", false],
       ["Urgency", true],
@@ -292,7 +292,7 @@ describe("the form definition (ST14's right card)", () => {
     // Urgency wears the severity ramp, not the pre-DES-018 wording.
     expect(screen.getByText("Low · medium · high · critical")).toBeInTheDocument();
     // A basic is stated, never detachable.
-    expect(screen.queryByRole("button", { name: "Detach Summary" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Detach Title" })).not.toBeInTheDocument();
     // Two lists in one card, each naming which it is.
     expect(screen.getByRole("list", { name: "Basics are always on the form" })).toBeInTheDocument();
     expect(screen.getByRole("list", { name: "Form fields" })).toBeInTheDocument();
@@ -310,7 +310,7 @@ describe("the form definition (ST14's right card)", () => {
     expect(within(menu).getByRole("menuitem", { name: /Department/ })).toBeInTheDocument();
     expect(within(menu).getByRole("menuitem", { name: /Governing law/ })).toBeInTheDocument();
     expect(within(menu).queryByText("Practice area")).not.toBeInTheDocument();
-    expect(within(menu).queryByText("Summary")).not.toBeInTheDocument();
+    expect(within(menu).queryByText("Title")).not.toBeInTheDocument();
   });
 
   it("re-scopes the menu when the target is re-pointed, with no reload", async () => {
@@ -367,7 +367,7 @@ describe("the form definition (ST14's right card)", () => {
     await user.click(screen.getByRole("button", { name: "Detach Counterparty name" }));
     await waitFor(() => expect(calls.detached).toEqual(["f-cp"]));
     await waitFor(() => expect(screen.queryByText("Counterparty name")).not.toBeInTheDocument());
-    expect(screen.getByRole("checkbox", { name: "Summary required" })).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: "Title required" })).toBeInTheDocument();
   });
 
   /**

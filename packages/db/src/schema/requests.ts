@@ -15,7 +15,7 @@
  * rather than an application convention — no write path can set or
  * correct it.
  *
- * **The basics are not configuration.** Summary, Description,
+ * **The basics are not configuration.** Title, Description,
  * Attachments, and Urgency are on every form by rule (the INT-002 M19/4
  * addendum), which is why three of them are columns here and none of
  * them is a `request_type_fields` row. Attachments are the fourth and
@@ -87,7 +87,7 @@ export const requests = pgTable(
     /** Born `new`; M21's disposition routes write the other three. */
     status: text("status", { enum: REQUEST_STATUSES }).notNull().default("new"),
     /** The one-line ask. Required on every form (INT-002). */
-    summary: text("summary").notNull(),
+    title: text("title").notNull(),
     /** The ask in full. Required on every form, so the column is only
      * nullable for the rows a later import might bring. */
     description: text("description"),
@@ -125,7 +125,7 @@ export const requests = pgTable(
     /** M25's row-owned Intake vector. The request type name and
      * requester name are query-time context, never copied labels. */
     searchVector: searchVector("search_vector").generatedAlwaysAs(sql`
-      setweight(to_tsvector('english', coalesce("summary", '')), 'A') ||
+      setweight(to_tsvector('english', coalesce("title", '')), 'A') ||
       setweight(to_tsvector('english', 'R-' || "number"::text), 'A') ||
       setweight(to_tsvector('english', coalesce("description", '')), 'B') ||
       setweight(to_tsvector('english', coalesce("status", '')), 'C')

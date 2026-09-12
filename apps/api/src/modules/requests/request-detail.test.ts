@@ -157,7 +157,7 @@ async function submit(body: Record<string, unknown> = {}): Promise<{ id: string;
     cookies: requesterCookies,
     payload: {
       requestTypeId: typeIds.get("nda_request"),
-      summary: "Mutual NDA with Orion Cloud",
+      title: "Mutual NDA with Orion Cloud",
       description: "For the pilot kicking off next month.",
       urgency: "high",
       ...body,
@@ -225,7 +225,7 @@ async function createEntity(legalName: string): Promise<string> {
 
 describe("who may open a Request (INT-006, DD-013)", () => {
   it("answers an Administrator and a Legal Team Member", async () => {
-    const { number } = await submit({ summary: "Open to triage" });
+    const { number } = await submit({ title: "Open to triage" });
     for (const cookies of [adminCookies, memberCookies]) {
       const res = await readDetail(number, cookies);
       expect(res.statusCode, res.body).toBe(200);
@@ -235,7 +235,7 @@ describe("who may open a Request (INT-006, DD-013)", () => {
   it("refuses a Contributor and a Business User with 403", async () => {
     // The Business User here is the Requester themselves: their window
     // is the portal mount, and this address is not theirs to read.
-    const { number } = await submit({ summary: "Not theirs to triage" });
+    const { number } = await submit({ title: "Not theirs to triage" });
     for (const cookies of [contributorCookies, requesterCookies]) {
       const res = await readDetail(number, cookies);
       expect(res.statusCode, res.body).toBe(403);
@@ -243,7 +243,7 @@ describe("who may open a Request (INT-006, DD-013)", () => {
   });
 
   it("refuses a caller with no session", async () => {
-    const { number } = await submit({ summary: "Needs a session" });
+    const { number } = await submit({ title: "Needs a session" });
     const res = await harness.app.inject({
       method: "GET",
       url: `/api/v1/requests/${number}`,
@@ -260,7 +260,7 @@ describe("who may open a Request (INT-006, DD-013)", () => {
 describe("the envelope (INT-006)", () => {
   it("answers the reference, the ask, the requester, and the front door", async () => {
     const { number } = await submit({
-      summary: "Mutual NDA with Orion Cloud",
+      title: "Mutual NDA with Orion Cloud",
       description: "For the pilot kicking off next month.",
       urgency: "critical",
     });
@@ -270,7 +270,7 @@ describe("the envelope (INT-006)", () => {
     const { request } = res.json();
     expect(request.number).toBe(number);
     expect(request.status).toBe("new");
-    expect(request.summary).toBe("Mutual NDA with Orion Cloud");
+    expect(request.title).toBe("Mutual NDA with Orion Cloud");
     expect(request.description).toContain("pilot");
     expect(request.urgency).toBe("critical");
     expect(request.declinedReason).toBeNull();
@@ -296,11 +296,11 @@ describe("the envelope (INT-006)", () => {
   it("reads a module-only target as the module alone, and no target as none", async () => {
     const moduleOnly = await submit({
       requestTypeId: typeIds.get("contract_review"),
-      summary: "Redline review",
+      title: "Redline review",
     });
     const noTarget = await submit({
       requestTypeId: typeIds.get("legal_question"),
-      summary: "Quick question",
+      title: "Quick question",
     });
 
     expect((await readDetail(moduleOnly.number)).json().request.requestType).toMatchObject({
@@ -317,7 +317,7 @@ describe("the envelope (INT-006)", () => {
 
   it("opens a Request whatever its status, and carries a decline's reason", async () => {
     for (const status of ["new", "converted", "resolved", "declined"] as RequestStatus[]) {
-      const { id, number } = await submit({ summary: `Already ${status}` });
+      const { id, number } = await submit({ title: `Already ${status}` });
       await harness.db
         .update(requests)
         .set({
@@ -339,7 +339,7 @@ describe("the envelope (INT-006)", () => {
   });
 
   it("answers 404 for an archived Request", async () => {
-    const { id, number } = await submit({ summary: "Archived away" });
+    const { id, number } = await submit({ title: "Archived away" });
     await harness.db.update(requests).set({ archivedAt: new Date() }).where(eq(requests.id, id));
 
     const res = await readDetail(number);
@@ -350,7 +350,7 @@ describe("the envelope (INT-006)", () => {
 describe("the values, labelled through the type's live fields (INT-002)", () => {
   it("names each value with the field that collected it, in the form's order", async () => {
     const { number } = await submit({
-      summary: "Labelled values",
+      title: "Labelled values",
       customFields: { [slug("Counterparty")]: "Orion Cloud Ltd" },
     });
 
@@ -370,7 +370,7 @@ describe("the values, labelled through the type's live fields (INT-002)", () => 
 
   it("stops naming a value whose field the Administrator has detached", async () => {
     const { number } = await submit({
-      summary: "Detached since",
+      title: "Detached since",
       customFields: {
         [slug("Counterparty")]: "Orion Cloud Ltd",
         [slug("Deal desk region")]: "EMEA",
@@ -406,7 +406,7 @@ describe("the values, labelled through the type's live fields (INT-002)", () => 
 
   it("stops naming a value whose field the Administrator has archived", async () => {
     const { number } = await submit({
-      summary: "Archived field",
+      title: "Archived field",
       customFields: { [slug("Deal desk region")]: "APAC" },
     });
 
@@ -438,7 +438,7 @@ describe("the values, labelled through the type's live fields (INT-002)", () => 
   it("resolves a person and an Entity into names", async () => {
     const entityId = await createEntity("Orion Cloud Holdings LLC");
     const { number } = await submit({
-      summary: "Named rows",
+      title: "Named rows",
       customFields: {
         [slug("Requesting manager")]: requesterId,
         [slug("Contracting entity")]: entityId,
@@ -462,7 +462,7 @@ describe("the values, labelled through the type's live fields (INT-002)", () => 
   it("withholds the legal name of a confidential Entity from a Legal Team Member with no grant", async () => {
     const entityId = await createEntity("Sealed Vehicle Ltd");
     const { number } = await submit({
-      summary: "Names a sealed Entity",
+      title: "Names a sealed Entity",
       customFields: { [slug("Contracting entity")]: entityId },
     });
     const sealed = await harness.app.inject({
@@ -486,7 +486,7 @@ describe("the values, labelled through the type's live fields (INT-002)", () => 
   it("goes on naming a person and an Entity that have since been archived", async () => {
     const entityId = await createEntity("Wound Down GmbH");
     const { number } = await submit({
-      summary: "Named rows that have left",
+      title: "Named rows that have left",
       customFields: {
         [slug("Requesting manager")]: requesterId,
         [slug("Contracting entity")]: entityId,
@@ -523,7 +523,7 @@ describe("the values, labelled through the type's live fields (INT-002)", () => 
 
   it("leaves an id that resolves to nothing as the id (the INT-001 M20/10 rule)", async () => {
     const stranded = "01a01b9d-0000-7000-8000-00000000dead";
-    const { id, number } = await submit({ summary: "A stranded reference" });
+    const { id, number } = await submit({ title: "A stranded reference" });
     // Written straight against the table: the submission route refuses
     // an id that names nobody, so the only way into this state is a row
     // whose target was hard-deleted afterwards.
@@ -563,13 +563,13 @@ describe("the trail from ask to work (DD-014, CTR-018)", () => {
   }
 
   it("carries no link on a Request nothing has been made of", async () => {
-    const { number } = await submit({ summary: "Still an ask" });
+    const { number } = await submit({ title: "Still an ask" });
     expect((await readDetail(number)).json().request.convertedContract).toBeNull();
   });
 
   it("names the record a conversion made", async () => {
     const contract = await createContract("Northwind Labs NDA", false);
-    const { id, number } = await submit({ summary: "Became a contract" });
+    const { id, number } = await submit({ title: "Became a contract" });
     await convert(id, contract.id);
 
     expect((await readDetail(number)).json().request.convertedContract).toEqual({
@@ -581,13 +581,13 @@ describe("the trail from ask to work (DD-014, CTR-018)", () => {
     // Confidential and created by the Administrator, so the Legal Team
     // Member is neither its Owner nor on its team (DD-014).
     const contract = await createContract("Project Cormorant", true);
-    const { id, number } = await submit({ summary: "Something quiet" });
+    const { id, number } = await submit({ title: "Something quiet" });
     await convert(id, contract.id);
 
     const withheld = await readDetail(number, memberCookies);
     expect(withheld.statusCode, withheld.body).toBe(200);
     expect(withheld.json().request).toMatchObject({
-      summary: "Something quiet",
+      title: "Something quiet",
       status: "converted",
       // The withholding is the server's decision, and the Request
       // survives it — it is still triage's business.
@@ -605,7 +605,7 @@ describe("the trail from ask to work (DD-014, CTR-018)", () => {
       .from(users)
       .where(eq(users.email, MEMBER.email));
     await harness.db.insert(contractTeam).values({ contractId: contract.id, userId: member!.id });
-    const { id, number } = await submit({ summary: "Something quiet, shared" });
+    const { id, number } = await submit({ title: "Something quiet, shared" });
     await convert(id, contract.id);
 
     expect((await readDetail(number)).json().request.convertedContract).toEqual({
@@ -615,7 +615,7 @@ describe("the trail from ask to work (DD-014, CTR-018)", () => {
 
   it("draws no link once the record is archived, and still opens", async () => {
     const contract = await createContract("Northwind Labs NDA, retired", false);
-    const { id, number } = await submit({ summary: "NDA that ran its course" });
+    const { id, number } = await submit({ title: "NDA that ran its course" });
     await convert(id, contract.id);
     await harness.db
       .update(contracts)
@@ -630,10 +630,10 @@ describe("the trail from ask to work (DD-014, CTR-018)", () => {
 
 describe("the paper, listed and downloaded through the staff mount", () => {
   it("lists every attachment, oldest first, and none when there are none", async () => {
-    const bare = await submit({ summary: "No paper" });
+    const bare = await submit({ title: "No paper" });
     expect((await readDetail(bare.number)).json().attachments).toEqual([]);
 
-    const { number } = await submit({ summary: "Two files" });
+    const { number } = await submit({ title: "Two files" });
     await attach(number, "orion-msa-redline-v3.pdf", Buffer.from("the redline"));
     await attach(number, "orion-pricing-schedule.pdf", Buffer.from("the pricing"));
 
@@ -645,7 +645,7 @@ describe("the paper, listed and downloaded through the staff mount", () => {
   });
 
   it("streams the bytes back under the portal download's own answer", async () => {
-    const { number } = await submit({ summary: "Downloadable" });
+    const { number } = await submit({ title: "Downloadable" });
     const attachmentId = await attach(
       number,
       "orion-msa-redline-v3.pdf",
@@ -683,7 +683,7 @@ describe("the paper, listed and downloaded through the staff mount", () => {
     ["image.png", Buffer.from("image bytes"), "image/png"],
     ["agreement.docx", fakeComparisonDocx(), "application/pdf"],
   ])("previews %s through the request access checks", async (filename, bytes, contentType) => {
-    const { number } = await submit({ summary: "Preview attachment" });
+    const { number } = await submit({ title: "Preview attachment" });
     const attachmentId = await attach(number, filename, bytes);
     const url = `/api/v1/requests/${number}/attachments/${attachmentId}?preview=true`;
     const response = await harness.app.inject({ method: "GET", url, cookies: memberCookies });
@@ -698,7 +698,7 @@ describe("the paper, listed and downloaded through the staff mount", () => {
     for (const cookies of [contributorCookies, requesterCookies]) {
       expect((await harness.app.inject({ method: "GET", url, cookies })).statusCode).toBe(403);
     }
-    const other = await submit({ summary: "Another request" });
+    const other = await submit({ title: "Another request" });
     expect(
       (
         await harness.app.inject({
@@ -721,7 +721,7 @@ describe("the paper, listed and downloaded through the staff mount", () => {
     ["unsafe.svg", 415],
     ["broken.docx", 422],
   ] as const)("keeps %s downloadable when preview is unavailable", async (filename, status) => {
-    const { number } = await submit({ summary: "Unavailable preview" });
+    const { number } = await submit({ title: "Unavailable preview" });
     const bytes = Buffer.from("not a previewable document");
     const id = await attach(number, filename, bytes);
     const url = `/api/v1/requests/${number}/attachments/${id}`;
@@ -740,8 +740,8 @@ describe("the paper, listed and downloaded through the staff mount", () => {
   });
 
   it("answers 404 for an attachment id belonging to another Request", async () => {
-    const mine = await submit({ summary: "Mine" });
-    const theirs = await submit({ summary: "Theirs" });
+    const mine = await submit({ title: "Mine" });
+    const theirs = await submit({ title: "Theirs" });
     const attachmentId = await attach(theirs.number, "elsewhere.pdf", Buffer.from("elsewhere"));
 
     const res = await harness.app.inject({
@@ -753,7 +753,7 @@ describe("the paper, listed and downloaded through the staff mount", () => {
   });
 
   it("answers 404 for an attachment id nobody has", async () => {
-    const { number } = await submit({ summary: "No such file" });
+    const { number } = await submit({ title: "No such file" });
     const res = await harness.app.inject({
       method: "GET",
       url: `/api/v1/requests/${number}/attachments/01a01b9d-0000-7000-8000-00000000dead`,
@@ -763,7 +763,7 @@ describe("the paper, listed and downloaded through the staff mount", () => {
   });
 
   it("refuses a Contributor and a Business User with 403", async () => {
-    const { number } = await submit({ summary: "Not theirs to download" });
+    const { number } = await submit({ title: "Not theirs to download" });
     const attachmentId = await attach(number, "orion.pdf", Buffer.from("the redline"));
 
     for (const cookies of [contributorCookies, requesterCookies]) {
@@ -783,7 +783,7 @@ describe("the thread, at every tier (DD-016, CMT-010)", () => {
    * screen actually sends, so the detail and the thread cannot drift
    * apart about what identifies a Request. */
   it("answers a Member+ every tier on the Request the detail names", async () => {
-    const { number } = await submit({ summary: "A conversation" });
+    const { number } = await submit({ title: "A conversation" });
     const requestId = (await readDetail(number)).json().request.id as string;
 
     for (const [cookies, visibility] of [

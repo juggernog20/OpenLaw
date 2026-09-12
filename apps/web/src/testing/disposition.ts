@@ -35,7 +35,7 @@ export const MEMBER = {
  * The Request the screen opens on, in whichever state a test needs.
  *
  * `new` and answerable by all three dispositions. A suite overrides the
- * summary, the urgency, the collected values, or the routing where its
+ * title, the urgency, the collected values, or the routing where its
  * own subject depends on one.
  */
 export function staffRequest(overrides: Record<string, unknown> = {}): Record<string, unknown> {
@@ -43,7 +43,7 @@ export function staffRequest(overrides: Record<string, unknown> = {}): Record<st
     id: "r1",
     number: 45,
     status: "new",
-    summary: "Orion Cloud MSA renewal — redline review",
+    title: "Orion Cloud MSA renewal — redline review",
     description: "They sent a redline of the liability cap.",
     urgency: "high",
     customFields: {},

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** The Member+ Inbox pressure summary. */
+/** The Member+ Inbox pressure title. */
 import { Inbox } from "lucide-react";
 import { Link } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -30,7 +30,7 @@ export function HomeInboxCard({ section }: Readonly<{ section: InboxHomeSection 
                 <Inbox size={16} aria-hidden="true" />
               </span>
               <span className="min-w-0">
-                <span className="block truncate text-md font-medium">{row.summary}</span>
+                <span className="block truncate text-md font-medium">{row.title}</span>
                 <span className="block truncate text-xs text-muted">
                   <FormattedMessage
                     id="home.inbox.request"

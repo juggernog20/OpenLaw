@@ -4,11 +4,11 @@ Your account type controls what you can do. Team membership controls which recor
 
 ## What each account can reach
 
-| Account           | Access and actions                                                                                                                                                                                 |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Administrator     | Full legal work and organization settings. Confidential Contracts and Matters still require named access.                                                                                          |
-| Legal Team Member | Full legal work on open records and Confidential records they can reach. Organization settings remain Administrator-only.                                                                          |
-| Business User     | Their own Requests and non-archived Contracts and Matters whose teams include them, through the Portal. They edit business Fields, upload supporting Documents and join Full Thread conversations. |
+| Account           | Access and actions                                                                                                                                                                                       |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Administrator     | Full legal work and organization settings. Confidential Contracts and Matters still require named access.                                                                                                |
+| Legal Team Member | Full legal work on open records and Confidential records they can reach. Organization settings remain Administrator-only.                                                                                |
+| Business User     | Their own Requests and non-archived Contracts and Matters whose teams include them, through the Portal. They edit business Fields, upload Documents and add Versions and join Full Thread conversations. |
 
 Contributor is no longer an account type. Existing Contributor accounts become Business Users and keep their team memberships. An Administrator can change an account to Legal Team Member when the person needs full legal work access.
 

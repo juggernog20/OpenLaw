@@ -262,7 +262,7 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "One request type's form definition (INT-002): the type, its " +
           "attached catalog fields in display order, and the deflection " +
-          "links placed on this form. The four basics — Summary, " +
+          "links placed on this form. The four basics — Title, " +
           "Description, Attachments, Urgency — are fixed on every form " +
           "and are drawn by the portal, so they are not answered here",
         tags: ["portal"],

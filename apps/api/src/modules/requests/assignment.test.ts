@@ -36,7 +36,7 @@ async function submit() {
     cookies: cast.requesterCookies,
     payload: {
       requestTypeId: typeId,
-      summary: "Choose who should triage",
+      title: "Choose who should triage",
       description: "Review the proposed NDA.",
       urgency: "medium",
     },

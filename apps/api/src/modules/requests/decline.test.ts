@@ -76,14 +76,14 @@ afterAll(async () => {
   await harness.stop();
 });
 
-async function submit(summary: string): Promise<{ id: string; number: number }> {
+async function submit(title: string): Promise<{ id: string; number: number }> {
   const res = await harness.app.inject({
     method: "POST",
     url: "/api/v1/requests",
     cookies: requesterCookies,
     payload: {
       requestTypeId: ndaTypeId,
-      summary,
+      title,
       description: "For the pilot kicking off next month.",
       urgency: "high",
     },

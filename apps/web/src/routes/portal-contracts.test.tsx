@@ -88,6 +88,27 @@ describe("Portal Contracts", () => {
       extra: (call) => {
         if (call.url.pathname === "/api/v1/portal/contracts/12")
           return json(200, { contract: { ...CONTRACT, primaryDocument: document } });
+        if (call.url.pathname === "/api/v1/portal/contracts/12/documents")
+          return json(200, {
+            documents: [
+              {
+                id: document.id,
+                title: document.title,
+                isPrimary: true,
+                versions: [
+                  {
+                    ...document.version,
+                    isCurrent: true,
+                    isExecuted: true,
+                    note: null,
+                    createdAt: "2026-09-12T12:00:00Z",
+                    uploadedBy: { id: "lawyer", displayName: "Legal person", image: null },
+                  },
+                ],
+              },
+            ],
+            nextCursor: null,
+          });
         if (call.url.pathname.startsWith("/api/v1/documents/")) staffReads.push(call.url.pathname);
         return undefined;
       },
@@ -98,7 +119,7 @@ describe("Portal Contracts", () => {
     expect(screen.getAllByText("Unverified").length).toBeGreaterThan(0);
     expect(screen.getByRole("textbox", { name: "Description" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "History" })).toBeInTheDocument();
-    await userEvent.setup().click(screen.getByRole("button", { name: "Read Document" }));
+    await userEvent.setup().click(screen.getByRole("button", { name: "Agreed terms" }));
     const panel = await screen.findByRole("complementary", { name: /Agreed terms/ });
     expect(within(panel).getByRole("img", { name: "signed.png" })).toHaveAttribute(
       "src",
@@ -146,6 +167,27 @@ it("opens email attachments through the Portal reader source", async () => {
       reads.push(call.url.pathname);
       if (call.url.pathname === "/api/v1/portal/contracts/12")
         return json(200, { contract: { ...CONTRACT, primaryDocument: document } });
+      if (call.url.pathname === "/api/v1/portal/contracts/12/documents")
+        return json(200, {
+          documents: [
+            {
+              id: document.id,
+              title: document.title,
+              isPrimary: true,
+              versions: [
+                {
+                  ...document.version,
+                  isCurrent: true,
+                  isExecuted: true,
+                  note: null,
+                  createdAt: "2026-09-12T12:00:00Z",
+                  uploadedBy: { id: "lawyer", displayName: "Legal person", image: null },
+                },
+              ],
+            },
+          ],
+          nextCursor: null,
+        });
       if (
         call.url.pathname ===
         "/api/v1/portal/contracts/12/documents/email-doc/versions/email-version/email"
@@ -177,7 +219,7 @@ it("opens email attachments through the Portal reader source", async () => {
   });
   renderAt("/portal/contracts/12");
   const user = userEvent.setup();
-  await user.click(await screen.findByRole("button", { name: "Read Document" }));
+  await user.click(await screen.findByRole("button", { name: "Signed email" }));
   const panel = await screen.findByRole("complementary", { name: /Signed email/ });
   expect(await within(panel).findByText("Attached signed terms.")).toBeVisible();
   await user.click(within(panel).getByRole("button", { name: /signed.png/ }));

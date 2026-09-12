@@ -143,7 +143,9 @@ export const portalAppletRoutes: FastifyPluginAsyncZod = async (app) => {
       const { entityType, entityId, cursor } = request.query;
       const keys = [
         "description",
-        ...(entityType === "contract" ? ["value", "effectiveDate"] : []),
+        ...(entityType === "contract"
+          ? ["value", "effectiveDate", "owningDepartment", "region"]
+          : []),
       ];
       const entityKeys: string[] = [];
       if (entityType === "request") {

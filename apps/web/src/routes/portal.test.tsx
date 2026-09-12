@@ -512,7 +512,7 @@ describe("my-requests", () => {
       id: "rq1",
       number: 45,
       status: "new",
-      summary: "Orion Cloud MSA renewal — redline review",
+      title: "Orion Cloud MSA renewal — redline review",
       requestType: { id: "rt2", slug: "contract_review", displayName: "Contract review" },
       createdAt: FIVE_HOURS_AGO,
     },
@@ -523,7 +523,7 @@ describe("my-requests", () => {
       id: "rq2",
       number: 38,
       status: "converted",
-      summary: "Marketing agency SOW — Q3 campaign",
+      title: "Marketing agency SOW — Q3 campaign",
       requestType: { id: "rt2", slug: "contract_review", displayName: "Contract review" },
       createdAt: "2026-07-28T09:00:00.000Z",
     },
@@ -534,7 +534,7 @@ describe("my-requests", () => {
       id: "rq3",
       number: 31,
       status: "resolved",
-      summary: "Office sublease question",
+      title: "Office sublease question",
       requestType: { id: "rt3", slug: "legal_question", displayName: "Legal question" },
       createdAt: "2026-07-12T09:00:00.000Z",
     },
@@ -545,7 +545,7 @@ describe("my-requests", () => {
       id: "rq4",
       number: 22,
       status: "declined",
-      summary: "Personal apartment lease",
+      title: "Personal apartment lease",
       requestType: { id: "rt3", slug: "legal_question", displayName: "Legal question" },
       createdAt: "2026-06-30T09:00:00.000Z",
     },
@@ -563,7 +563,7 @@ describe("my-requests", () => {
     return portalHome({ requestTypes: SEED_TYPES, requests });
   }
 
-  it("draws the number, the summary, the type, the status, and the age", async () => {
+  it("draws the number, the title, the type, the status, and the age", async () => {
     stubApi({ signedIn: REQUESTER, extra: homeWith([MINE[0]!]) });
     renderAt("/portal");
 

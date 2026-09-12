@@ -94,7 +94,7 @@ export async function conversionSources(db: Executor, requestId: string, lockSou
     all.push({ ...source, revision: hash(source), restricted });
   }
   for (const [name, value] of Object.entries({
-    summary: row.summary,
+    title: row.title,
     description: row.description,
     urgency: row.urgency,
   })) {
@@ -215,7 +215,20 @@ export async function conversionSources(db: Executor, requestId: string, lockSou
       author,
       createdAt,
     }));
-  return { row, all, sources, attachments, warnings: [...new Set(warnings)] };
+  // Saved evidence retains its original source identity and revision after the Title rename.
+  const legacyTitle = {
+    id: `request:${row.id}:summary`,
+    kind: "request" as const,
+    label: `R-${row.number} summary`,
+    text: row.title,
+    createdAt: row.createdAt.toISOString(),
+  };
+  const legacyTitleSource = {
+    ...legacyTitle,
+    revision: hash(legacyTitle),
+    label: `R-${row.number} title`,
+  };
+  return { row, all, sources, legacyTitleSource, attachments, warnings: [...new Set(warnings)] };
 }
 export async function conversionContext(
   db: Executor,
@@ -339,7 +352,7 @@ export function isCarriedConversionValue(
   row: Awaited<ReturnType<typeof conversionSources>>["row"],
 ) {
   const values: Record<string, unknown> = {
-    title: row.summary,
+    title: row.title,
     description: row.description,
     priority: row.urgency,
     counterparty: row.customFields[INTAKE_CARRY_SLUGS.counterpartyName],

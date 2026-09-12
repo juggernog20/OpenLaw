@@ -22,7 +22,7 @@ First follow [Create a Matter](create-matter.md): choose the template's Matter t
 
 Next configure a Matter-targeting [Request form](request-forms.md), submit a fictional Request, and follow [Convert a Request to a Contract or Matter](convert-request.md). Confirm the configured Matter type, or choose a type if the form left it to Legal, then select the template. Review carried answers and suggested defaults before confirming. Check the created Matter and its relative dates; conversion does not reuse the Request's age as the date anchor.
 
-Conversion starts from the Request's Summary and Urgency unless Legal reviews different values in the Convert dialog. AI preparation can propose supported values when enabled. The converting person becomes Matter Manager, so a Manager-targeted Task goes to that person. Risk stays unset even when the template has a Risk default. The template's title prefix and Priority do not replace the reviewed conversion values. Check the Manager, Risk and Task assignments on the new Matter.
+Conversion starts from the Request's Title and Urgency unless Legal reviews different values in the Convert dialog. AI preparation can propose supported values when enabled. The converting person becomes Matter Manager, so a Manager-targeted Task goes to that person. Risk stays unset even when the template has a Risk default. The template's title prefix and Priority do not replace the reviewed conversion values. Check the Manager, Risk and Task assignments on the new Matter.
 
 Values explicitly supplied at creation take precedence over template defaults. Clearing an optional Field in the creation dialog keeps it empty on the saved Matter. Untouched defaults still apply. Required Fields must have a value before creation.
 

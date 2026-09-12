@@ -514,7 +514,7 @@ const requestArm: CommentEntityArm = {
     // the Request's own two facts.
     //
     // Nothing about the Request travels with the event. The seam reads
-    // its number and its summary out of the audience read it does
+    // its number and its title out of the audience read it does
     // anyway, which is the shape every Request event takes (M20/8) — and
     // it is the only place that knows who the Requester is, which is
     // what makes the M18/4 rule the seam's rather than this arm's.

@@ -33,7 +33,7 @@ const WORK = {
   originalRequests: [
     {
       number: 8,
-      summary: "Please review",
+      title: "Please review",
       requester: "Original requester",
       urgency: "medium",
       documents: [],
@@ -72,6 +72,53 @@ const MATTER = {
   manager: null,
   businessOwner: null,
 };
+
+it("edits built-in Contract classification in Overview without adding configurable Fields", async () => {
+  const edits: unknown[] = [];
+  let fail = true;
+  stubApi({
+    signedIn: USER,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/portal/contracts/12")
+        return json(200, { contract: CONTRACT });
+      if (call.url.pathname === "/api/v1/portal/contracts/12/work") {
+        if (call.method === "GET")
+          return json(200, { work: { ...WORK, owningDepartment: "Sales", region: "EMEA" } });
+        edits.push(call.body);
+        if (fail) {
+          fail = false;
+          return problem(503, "Please retry the department.");
+        }
+        return json(200, {
+          description: WORK.description,
+          customFields: WORK.customFields,
+          owningDepartment: "Finance",
+          region: "EMEA",
+        });
+      }
+      return undefined;
+    },
+  });
+  renderAt("/portal/contracts/12");
+  const user = userEvent.setup();
+  const overview = within(await screen.findByRole("region", { name: "Overview" }));
+  const department = overview.getByRole("textbox", { name: "Owning department" });
+  expect(department).toHaveValue("Sales");
+  expect(overview.getByRole("textbox", { name: "Region" })).toHaveValue("EMEA");
+  const fields = within(screen.getByRole("region", { name: "Fields" }));
+  expect(fields.queryByRole("textbox", { name: "Owning department" })).not.toBeInTheDocument();
+  expect(fields.queryByRole("textbox", { name: "Region" })).not.toBeInTheDocument();
+  expect(fields.getByRole("textbox", { name: "Cost center" })).toBeInTheDocument();
+  await user.clear(department);
+  await user.type(department, "Finance");
+  await user.tab();
+  expect(await overview.findByRole("alert")).toHaveTextContent("Please retry the department.");
+  expect(department).toHaveValue("Finance");
+  await user.click(overview.getByRole("button", { name: "Retry save" }));
+  await waitFor(() =>
+    expect(edits).toEqual([{ owningDepartment: "Finance" }, { owningDepartment: "Finance" }]),
+  );
+});
 
 describe.each(["contract", "matter"] as const)("Portal %s work", (module) => {
   it("saves business inputs on the record, retains failed drafts, and keeps the original ask read-only", async () => {
@@ -425,22 +472,30 @@ it.each(["contract", "matter"] as const)(
           return json(200, module === "contract" ? { contract: CONTRACT } : { matter: MATTER });
         if (call.url.pathname === `/api/v1/portal/${module}s/12/work`)
           return json(200, { work: WORK });
-        if (call.url.pathname.endsWith("/supporting-documents"))
+        if (call.url.pathname === `/api/v1/portal/${module}s/12/documents`)
           return json(200, {
             documents: version
               ? [
                   {
                     id: "paper",
                     title: "Supporting file",
-                    version: {
-                      id: `version-${version}`,
-                      versionNumber: version,
-                      originalFilename: "support.txt",
-                      mimeType: "text/plain",
-                      byteSize: 7,
-                      renderFamily: "text",
-                      kind: "general",
-                    },
+                    isPrimary: false,
+                    versions: [
+                      {
+                        isCurrent: true,
+                        isExecuted: false,
+                        createdAt: "2026-09-12T12:00:00Z",
+                        uploadedBy: { id: USER.id, displayName: USER.displayName, image: null },
+                        note: null,
+                        id: `version-${version}`,
+                        versionNumber: version,
+                        originalFilename: "support.txt",
+                        mimeType: "text/plain",
+                        byteSize: 7,
+                        renderFamily: "other",
+                        kind: "general",
+                      },
+                    ],
                   },
                 ]
               : [],
@@ -462,12 +517,19 @@ it.each(["contract", "matter"] as const)(
     });
     renderAt(`/portal/${module}s/12`);
     const user = userEvent.setup();
-    const input = await screen.findByLabelText("Upload Document");
-    await user.click(screen.getByRole("button", { name: "Upload Document" }));
-    await user.upload(input, new File(["support"], "support.txt", { type: "text/plain" }));
+    await user.click(await screen.findByRole("button", { name: "Upload documents" }));
+    await user.upload(
+      screen.getByLabelText("Files to upload"),
+      new File(["support"], "support.txt", { type: "text/plain" }),
+    );
+    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Upload" }));
     expect(await screen.findByText("Supporting file")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Add version" }));
-    await user.upload(input, new File(["revised"], "support.txt", { type: "text/plain" }));
+    await user.upload(
+      screen.getByLabelText("Files to upload"),
+      new File(["revised"], "support.txt", { type: "text/plain" }),
+    );
+    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Upload" }));
     await waitFor(() =>
       expect(uploads).toEqual([
         `/api/v1/${module}s/12/documents`,
@@ -475,10 +537,9 @@ it.each(["contract", "matter"] as const)(
       ]),
     );
     await waitFor(() =>
-      expect(screen.getByRole("link", { name: "Download" })).toHaveAttribute(
-        "href",
-        "/api/v1/documents/paper/versions/version-2/download",
-      ),
+      expect(
+        screen.getByRole("link", { name: "Download Supporting file, version 2" }),
+      ).toHaveAttribute("href", "/api/v1/documents/paper/versions/version-2/download"),
     );
     expect(screen.queryByRole("button", { name: "New folder" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Make primary" })).not.toBeInTheDocument();

@@ -22,25 +22,25 @@
  *
  * ### Recorded normalization points (I5 deviations accepted)
  *
- * 1. I5's row draws four facts: the reference, the summary, the status
+ * 1. I5's row draws four facts: the reference, the title, the status
  *    pill, and the age. The row draws five. The request type joins
- *    them, beside the age under the summary. A requester who has
+ *    them, beside the age under the title. A requester who has
  *    submitted through three different doors cannot tell an NDA request
- *    from a contract review by the summary alone, and the front door is
+ *    from a contract review by the title alone, and the front door is
  *    what decides what Legal collected.
  * 2. I5 abbreviates the age ("5h ago", "Jul 28"). It renders through
  *    DES-014's `formatRelativeOrShort`, which spells the unit out
  *    ("5 hours ago"). That is the one date vocabulary every list in the
  *    product shares, and not a place to open a second one.
- * 3. I5 draws each row as a 44px strip with the summary on one line.
- *    The row is intrinsically tall and the summary truncates, per
- *    DES-012. A requester writes the summary, and a fixed height that
+ * 3. I5 draws each row as a 44px strip with the title on one line.
+ *    The row is intrinsically tall and the title truncates, per
+ *    DES-012. A requester writes the title, and a fixed height that
  *    fits the mock's copy is not a fact about anybody else's.
  * 4. I5 draws the reference as plain muted text and the age in its own
  *    column. The reference wears the neutral counter chip, so the eye
  *    finds "R-45" without reading the row, and the age sits with the
  *    type on the row's second line, which leaves the first line to the
- *    summary alone.
+ *    title alone.
  */
 
 import { RequestExpectation } from "./request-expectation";
@@ -119,7 +119,7 @@ export function MyRequests({
                   {requestReference(intl, row.number)}
                 </span>
                 <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <span className="truncate text-base font-medium text-primary">{row.summary}</span>
+                  <span className="truncate text-base font-medium text-primary">{row.title}</span>
                   <span className="flex min-w-0 items-center gap-1.5 text-sm text-muted">
                     <span className="truncate">{row.requestType.displayName}</span>
                     <span aria-hidden="true">·</span>

@@ -33,7 +33,7 @@ async function submit() {
     cookies: cast.requesterCookies,
     payload: {
       requestTypeId: typeId,
-      summary: "Estimate this review",
+      title: "Estimate this review",
       description: "Review the proposed NDA.",
       urgency: "medium",
     },
@@ -43,11 +43,11 @@ async function submit() {
     id: true,
     number: true,
     status: true,
-    summary: true,
+    title: true,
   }).parse(res.json().request);
   expect(request.id).not.toBe("");
   expect(request.number).toBeGreaterThan(0);
-  expect(request).toMatchObject({ status: "new", summary: "Estimate this review" });
+  expect(request).toMatchObject({ status: "new", title: "Estimate this review" });
   return request;
 }
 function estimate(number: number, expectedBy: unknown, cookies = cast.memberCookies) {

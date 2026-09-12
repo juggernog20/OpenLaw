@@ -503,7 +503,7 @@ export const StaffRequestSchema = z.object({
   /** INT-002's global reference; the screen renders it R-###. */
   number: z.number().int(),
   status: z.enum(REQUEST_STATUSES),
-  summary: z.string(),
+  title: z.string(),
   description: z.string().nullable(),
   /** DES-018's severity ramp, as the requester claimed it. */
   urgency: z.enum(SEVERITY_LEVELS),
@@ -548,7 +548,7 @@ export async function staffRequestRow(db: Executor, user: AuthenticatedUser, num
       id: requests.id,
       number: requests.number,
       status: requests.status,
-      summary: requests.summary,
+      title: requests.title,
       description: requests.description,
       urgency: requests.urgency,
       customFields: requests.customFields,
@@ -596,7 +596,7 @@ export function toStaffRequest(row: Awaited<ReturnType<typeof staffRequestRow>>)
     assignee: row.assignee,
     expectedBy: row.expectedBy,
     suggestedExpectedBy: row.suggestedExpectedBy,
-    summary: row.summary,
+    title: row.title,
     description: row.description,
     urgency: row.urgency,
     customFields: row.customFields,

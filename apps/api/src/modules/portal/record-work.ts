@@ -45,6 +45,8 @@ import { portalRecordScope } from "../../lib/portal-record-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { renderFamilyOf, RENDER_FAMILIES } from "../../lib/render-family.js";
 
+import { MAX_CONTRACT_CLASSIFICATION_LENGTH } from "@openlaw/shared";
+
 const ValueInput = z.strictObject({
   amount: z.int().nonnegative(),
   currency: z
@@ -60,12 +62,16 @@ const Value = z.object({
   cadence: z.enum(VALUE_CADENCES),
 });
 const BusinessValues = {
+  owningDepartment: z.string().nullable().optional(),
+  region: z.string().nullable().optional(),
   value: Value.nullable().optional(),
   effectiveDate: z.iso.date().nullable().optional(),
 };
 async function contractBusinessValues(db: Executor, id: string) {
   const [row] = await db.select().from(contracts).where(eq(contracts.id, id)).limit(1);
   return {
+    owningDepartment: row!.owningDepartment,
+    region: row!.region,
     effectiveDate: row!.effectiveDate,
     value:
       row!.valueAmount === null
@@ -84,7 +90,7 @@ const Reference = z.object({
 const References = z.object({ people: z.array(Reference), entities: z.array(Reference) });
 const OriginalRequest = z.object({
   number: z.number().int(),
-  summary: z.string(),
+  title: z.string(),
   description: z.string().nullable(),
   submittedAt: z.iso.datetime(),
   requester: z.string(),
@@ -263,7 +269,6 @@ export const portalRecordWorkRoutes: FastifyPluginAsyncZod = async (app) => {
                       module === "contract"
                         ? sql<boolean>`exists (select 1 from ${contracts} where ${contracts.id} = ${row.id} and ${contracts.primaryDocumentId} = ${documents.id})`
                         : sql<boolean>`false`,
-                    current: sql<boolean>`${documentVersions.versionNumber} = (select max(v.version_number) from document_versions v where v.document_id = ${documents.id})`,
                   })
                   .from(requestAttachments)
                   .leftJoin(
@@ -275,17 +280,13 @@ export const portalRecordWorkRoutes: FastifyPluginAsyncZod = async (app) => {
                   .orderBy(asc(requestAttachments.createdAt), asc(requestAttachments.id));
                 return {
                   number: original.number,
-                  summary: original.summary,
+                  title: original.title,
                   description: original.description,
                   urgency: original.urgency,
                   documents: paper.map((file) => ({
                     filename: file.filename,
                     reference:
-                      file.onRecord &&
-                      !file.archivedAt &&
-                      file.documentId &&
-                      file.versionId &&
-                      (!file.primary || file.current)
+                      file.onRecord && !file.archivedAt && file.documentId && file.versionId
                         ? {
                             documentId: file.documentId,
                             versionId: file.versionId,
@@ -317,6 +318,13 @@ export const portalRecordWorkRoutes: FastifyPluginAsyncZod = async (app) => {
           body: z.strictObject({
             ...BusinessValues,
             value: ValueInput.nullable().optional(),
+            owningDepartment: z
+              .string()
+              .trim()
+              .max(MAX_CONTRACT_CLASSIFICATION_LENGTH)
+              .nullable()
+              .optional(),
+            region: z.string().trim().max(MAX_CONTRACT_CLASSIFICATION_LENGTH).nullable().optional(),
             description: z.string().max(50_000).nullable().optional(),
             customFields: CustomFieldsInput.optional(),
           }),
@@ -336,7 +344,10 @@ export const portalRecordWorkRoutes: FastifyPluginAsyncZod = async (app) => {
           const row = await reached(tx, request.user, request.params.number, true);
           if (
             module === "matter" &&
-            (request.body.value !== undefined || request.body.effectiveDate !== undefined)
+            (request.body.value !== undefined ||
+              request.body.effectiveDate !== undefined ||
+              request.body.owningDepartment !== undefined ||
+              request.body.region !== undefined)
           )
             throw httpError(400, "These Fields belong to a Contract.");
           const attached = await selectAttachedFields(tx, attachments, row.typeId);
@@ -396,6 +407,14 @@ export const portalRecordWorkRoutes: FastifyPluginAsyncZod = async (app) => {
                 };
               patch.effectiveDate = request.body.effectiveDate;
               businessValues.effectiveDate = request.body.effectiveDate;
+            }
+            for (const key of ["owningDepartment", "region"] as const) {
+              if (request.body[key] === undefined) continue;
+              const next = request.body[key]?.trim() || null;
+              if (next !== businessValues[key])
+                changed[key] = { from: businessValues[key], to: next };
+              patch[key] = next;
+              businessValues[key] = next;
             }
             if (Object.keys(patch).length)
               await tx.update(contracts).set(patch).where(eq(contracts.id, row.id));

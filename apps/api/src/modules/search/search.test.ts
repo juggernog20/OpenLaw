@@ -202,7 +202,7 @@ beforeAll(async () => {
     .values({
       requestTypeId: requestType!.id,
       requesterId: memberId,
-      summary: "Harbor Privacy Request",
+      title: "Harbor Privacy Request",
       description: "Crossmodule intake description",
       urgency: "medium",
     })
@@ -266,7 +266,7 @@ async function seedArchivedRows(ids: {
   await harness.db.insert(requests).values({
     requestTypeId: ids.requestTypeId,
     requesterId: memberId,
-    summary: "Archivedneedle Request",
+    title: "Archivedneedle Request",
     urgency: "low",
     archivedAt,
   });

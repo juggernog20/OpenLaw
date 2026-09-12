@@ -133,7 +133,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
           "reachable converted record's module and permanent number. Triage " +
           "may override the configured type or Re-target to the other module. A body may name a contract type or a matter type, " +
           "never both. The record is born through its ordinary create callable " +
-          "with the title seeded from the Request summary, urgency defaulting " +
+          "with the title seeded from the Request title, urgency defaulting " +
           "priority unless overridden, the Request description, risk unset, the converting " +
           "person as Matter Manager or Contract Owner, one creator row, and no confidential " +
           "flag. Matching collected values carry server-side; values with no " +
@@ -154,7 +154,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
         // Strict: an unknown key is a client bug, not a silent strip.
         body: z
           .strictObject({
-            /** The record's title, seeded from the summary by the dialog
+            /** The record's title, seeded from the title by the dialog
              * and editable there. Its target-aware bound is checked after
              * the locked Request has resolved the conversion module. */
             title: z.string(),
@@ -233,7 +233,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
             // ones the row held when it was held. The target type rides
             // along through the live join, so an archived one arrives as
             // NULL — "conversion reads an archived target type as no type",
-            // said by the join rather than by a branch after it. The summary
+            // said by the join rather than by a branch after it. The title
             // is not read: it seeded the dialog's title box, and what the
             // record is born with is whatever is in that box at the press.
             const [row] = await tx
@@ -318,6 +318,12 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                     actorId: request.user.id,
                     title,
                     contractTypeId: target.typeId,
+                    owningDepartment:
+                      typeof row.customFields.owning_department === "string"
+                        ? row.customFields.owning_department
+                        : null,
+                    region:
+                      typeof row.customFields.region === "string" ? row.customFields.region : null,
                     description:
                       request.body.description === undefined
                         ? row.description
@@ -334,8 +340,8 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                 : await createMatter(tx, {
                     actorId: request.user.id,
                     businessOwnerId: row.requesterId,
-                    // The dialog seeds this from the summary. The held
-                    // summary remains available for the M22 audit trail;
+                    // The dialog seeds this from the title. The held
+                    // title remains available for the M22 audit trail;
                     // the editable title follows the existing conversion
                     // contract and the I8 matter modal.
                     title,

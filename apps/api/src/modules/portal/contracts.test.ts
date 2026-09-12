@@ -266,7 +266,7 @@ const documentRead = (
     url: `/api/v1/portal/contracts/${number}/documents/${documentId}/versions/${versionId}/${suffix}`,
   });
 
-it("gates every Document endpoint on current ownership, current primary Version, and named Confidential audience", async () => {
+it("gates primary Document versions on current membership and named Confidential audience", async () => {
   const contract = await create("Portal paper");
   await patch(contract.number, { businessOwnerId: person("first").id });
   await add(contract.number, "first");
@@ -297,10 +297,10 @@ it("gates every Document endpoint on current ownership, current primary Version,
     first.id,
   );
   const latest = (await read(contract.number)).json().contract.primaryDocument.version;
-  for (const suffix of suffixes)
+  for (const suffix of ["download", "preview"])
     expect(
       (await documentRead(contract.number, first.id, detail.version.id, suffix)).statusCode,
-    ).toBe(404);
+    ).toBe(200);
   expect((await documentRead(contract.number, first.id, latest.id, "preview")).statusCode).toBe(
     200,
   );

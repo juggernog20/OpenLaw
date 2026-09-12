@@ -123,7 +123,7 @@ const Rendition = z.object({
 });
 const PAGE_SIZE = 25;
 const ACCESS_SUMMARY =
-  "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. ";
+  "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads include its earlier Versions. ";
 const NO_DOCUMENT = "No primary Document Version exists at this address.";
 
 export const portalContractRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -183,7 +183,7 @@ export const portalContractRoutes: FastifyPluginAsyncZod = async (app) => {
     };
   }
 
-  function primaryVersions(user: AuthenticatedUser, number: number) {
+  function primaryVersions(user: AuthenticatedUser, number: number, versionId?: string) {
     return app.db
       .select({ documentId: documents.id, title: documents.title, version: documentVersions })
       .from(documentVersions)
@@ -195,6 +195,7 @@ export const portalContractRoutes: FastifyPluginAsyncZod = async (app) => {
       .where(
         and(
           eq(contracts.number, number),
+          versionId ? eq(documentVersions.id, versionId) : undefined,
           portalContractScope(app.db, user),
           isNull(documents.archivedAt),
           or(eq(documents.isConfidential, false), contractNamedAudienceScope(app.db, user)),
@@ -204,7 +205,7 @@ export const portalContractRoutes: FastifyPluginAsyncZod = async (app) => {
       .limit(1);
   }
   async function version(user: AuthenticatedUser, params: z.infer<typeof VersionParams>) {
-    const [current] = await primaryVersions(user, params.number);
+    const [current] = await primaryVersions(user, params.number, params.versionId);
     if (
       !current ||
       current.documentId !== params.documentId ||

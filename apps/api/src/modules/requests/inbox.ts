@@ -135,7 +135,7 @@ const InboxRowSchema = z.object({
   /** INT-002's global reference; the Inbox renders it R-###. */
   number: z.number().int(),
   status: z.enum(REQUEST_STATUSES),
-  summary: z.string(),
+  title: z.string(),
   /** DES-018's severity ramp, as the requester claimed it. */
   urgency: z.enum(SEVERITY_LEVELS),
   /** The target rides on the row because triage reads it before
@@ -298,7 +298,7 @@ export const requestInboxRoutes: FastifyPluginAsyncZod = async (app) => {
         id: requests.id,
         number: requests.number,
         status: requests.status,
-        summary: requests.summary,
+        title: requests.title,
         urgency: requests.urgency,
         createdAt: requests.createdAt,
         typeId: requestTypes.id,
@@ -330,7 +330,7 @@ type SortRequest = { key: InboxSortKey; dir: SortDirection };
 
 const SORTS: Record<InboxSortKey, SQL> = {
   number: sql`${requests.number}`,
-  summary: sql`lower(${requests.summary})`,
+  title: sql`lower(${requests.title})`,
   type: sql`lower(${requestTypes.displayName})`,
   requester: sql`lower(${users.displayName})`,
   urgency: urgencyRank,
@@ -398,7 +398,7 @@ function toRow(
     id: string;
     number: number;
     status: (typeof REQUEST_STATUSES)[number];
-    summary: string;
+    title: string;
     urgency: (typeof SEVERITY_LEVELS)[number];
     createdAt: Date;
     typeId: string;
@@ -419,7 +419,7 @@ function toRow(
     number: row.number,
     status: row.status,
     assignee: row.assignee,
-    summary: row.summary,
+    title: row.title,
     urgency: row.urgency,
     requestType: toStaffRequestType(row),
     requester: { id: row.requesterId, displayName: row.requesterDisplayName },

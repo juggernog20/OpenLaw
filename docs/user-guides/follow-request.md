@@ -9,7 +9,7 @@ Use your Request to follow Legal's response. Once Legal converts it, the same ad
 ## Open your Request
 
 1. On the Portal home, find the Request under **Your requests**.
-2. Open it and check the summary and R- reference.
+2. Open it and check the title and R- reference.
 3. Read its status, **Owner**, and **Expected back (estimate)**. The same owner and estimate appear under **Your requests**. **Not assigned yet** means no triage assignee is recorded; **Not set yet** means Legal has not confirmed a return estimate.
 4. Open **Comments** in the applet bar on the right for Legal's replies. Select **Show older** when you need older messages.
 5. Check **What you submitted** for the saved description, original attachments, urgency, and available additional answers. Select an attachment's filename to download it.

@@ -212,13 +212,9 @@ function statusFor(stage, taxonomy, random) {
 
 /** The custom values a Contract of this kind carries, filtered to the
  * Fields its Type actually collects. */
-function customFieldsFor(plan, fields, attached, random, people) {
+function customFieldsFor(plan, fields, attached, random) {
   const collector = customFields(fields, attached, "contract", plan.kind.typeSlug);
   const set = (name, value) => collector.set(name, value);
-  set(
-    "Owning department",
-    random.pick(["Sales", "Procurement", "Engineering", "People", "Finance", "Marketing"]),
-  );
   set("Security review", random.pick(["Not required", "Requested", "In progress", "Complete"]));
   set("Processes personal data", random.chance(0.45));
   set("Liability cap", plan.liabilityCap);
@@ -227,8 +223,6 @@ function customFieldsFor(plan, fields, attached, random, people) {
     random.sample(["United Kingdom", "European Union", "United States", "APAC"], random.int(1, 3)),
   );
   set("Deal desk reference", `DD-${random.int(1000, 9999)}`);
-  set("Region", random.pick(["EMEA", "Americas", "APAC"]));
-  if (random.chance(0.6)) set("Business sponsor", random.pick(people).id);
   if (plan.stage === "active" && random.chance(0.5)) {
     set("Signed copy filed on", daysFromToday(-random.int(1, 300)));
   }
@@ -302,7 +296,7 @@ export async function seedContracts(admin, context, log) {
       title: plan.title,
       contractTypeId: type.id,
       isConfidential: plan.isConfidential,
-      customFields: customFieldsFor(plan, fields, attached, random, staff),
+      customFields: customFieldsFor(plan, fields, attached, random),
     });
     const contract = made.contract;
     const at = `/api/v1/contracts/${contract.number}`;
@@ -323,6 +317,16 @@ export async function seedContracts(admin, context, log) {
     // fills the term in, and it only writes where nothing is set.
     await author.patch(at, {
       managerId: owner.id,
+      owningDepartment: random.pick([
+        "Sales",
+        "Procurement",
+        "Engineering",
+        "People",
+        "Finance",
+        "Marketing",
+      ]),
+      region: random.pick(["EMEA", "Americas", "APAC"]),
+      businessOwnerId: random.chance(0.6) ? random.pick(helpers.length ? helpers : staff).id : null,
       entityId: ourEntity.id,
       priority: plan.priority,
       risk: plan.risk,

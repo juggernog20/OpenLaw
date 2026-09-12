@@ -61,7 +61,7 @@ function detail(overrides: Partial<Record<string, unknown>> = {}) {
     id: "r1",
     number: 45,
     status: "new",
-    summary: "Orion Cloud MSA renewal — redline review",
+    title: "Orion Cloud MSA renewal — redline review",
     description: "They sent a redline of the liability cap.\nProcurement needs it by Friday.",
     urgency: "high",
     customFields: { counterparty: "Orion Cloud Ltd" },
@@ -780,7 +780,7 @@ describe("the trail from the queue", () => {
       id: "r1",
       number: 45,
       status: "new",
-      summary: "Orion Cloud MSA renewal — redline review",
+      title: "Orion Cloud MSA renewal — redline review",
       urgency: "high",
       requestType: {
         id: "rt-nda",
