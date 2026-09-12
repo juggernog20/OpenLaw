@@ -124,7 +124,7 @@ async function newContract(title: string): Promise<ContractRow> {
     method: "POST",
     url: `/api/v1/contracts/${contract.number}/team`,
     cookies: adminCookies,
-    payload: { userId: memberId, role: "member" },
+    payload: { userId: memberId },
   });
   expect(team.statusCode, team.body).toBe(201);
   return contract;

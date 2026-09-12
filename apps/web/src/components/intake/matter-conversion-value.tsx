@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-/** Matter value markers backed by Conversion draft provenance (INT-008). */
+/** Matter value markers backed by Conversion draft provenance (INT-008). The
+ * purple frame is the control's own (DES-070); this only adds the evidence. */
 import { useIntl } from "react-intl";
 import type { ReactNode } from "react";
 import { api } from "../../lib/api";
 import { problem } from "../../lib/problem";
-import { AiField } from "../ui/ai-field";
 import { ConversionEvidence } from "./conversion-evidence";
 export function MatterConversionValue({
   active,
@@ -21,7 +21,7 @@ export function MatterConversionValue({
 }>) {
   const intl = useIntl();
   return (
-    <AiField active={active} className="min-w-0">
+    <div className="min-w-0">
       {children}
       {active && (
         <ConversionEvidence
@@ -49,6 +49,6 @@ export function MatterConversionValue({
           }
         />
       )}
-    </AiField>
+    </div>
   );
 }

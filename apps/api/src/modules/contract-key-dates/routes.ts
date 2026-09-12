@@ -90,7 +90,7 @@ import { httpError, problemResponse } from "../../lib/problem.js";
  * the record they are working. The role alone opens nothing — the reach
  * predicate narrows it to the records they hold a `contract_team` row
  * on. */
-const requireKeyDateReader = requireRole("administrator", "legal_team_member", "contributor");
+const requireKeyDateReader = requireRole("administrator", "legal_team_member");
 
 /** Adding, moving, and removing a date are Member+ in M16, as putting
  * paper on a record is. A Contributor reads the surface but DD-015 gives

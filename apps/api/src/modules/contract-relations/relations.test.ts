@@ -103,7 +103,7 @@ beforeAll(async () => {
 
   const contributor = await provisionUser(harness.app.auth, CONTRIBUTOR);
   contributorId = contributor.id;
-  await harness.db.update(users).set({ role: "contributor" }).where(eq(users.id, contributor.id));
+  await harness.db.update(users).set({ role: "business_user" }).where(eq(users.id, contributor.id));
   contributorCookies = await signInCookies(harness.app, CONTRIBUTOR.email, CONTRIBUTOR.password);
 
   const res = await harness.app.inject({
@@ -367,7 +367,7 @@ describe("the reach filter sits in the read (CTR-018, DD-014)", () => {
     expect(refused.json().detail).toBe(absent.json().detail);
   });
 
-  it("lets a Contributor on the team read the graph, with their own reach deciding each relative", async () => {
+  it("keeps the relationship graph in the staff app even for Business Users on the team", async () => {
     const frame = await create({ title: "Contributor open frame" });
     const anchor = await create({
       title: "Contributor anchor order",
@@ -377,18 +377,18 @@ describe("the reach filter sits in the read (CTR-018, DD-014)", () => {
       method: "POST",
       url: `/api/v1/contracts/${anchor.number}/team`,
       cookies: memberCookies,
-      payload: { userId: contributorId, role: "contributor" },
+      payload: { userId: contributorId },
     });
     expect(joined.statusCode, joined.body).toBe(201);
 
     // On the record they hold a row on, the read answers…
-    const relations = await read(anchor.number, contributorCookies);
+    const relations = await readRaw(anchor.number, contributorCookies);
     // …but the parent is not theirs to see: Contributor reach is the
     // team row, not the record's openness, so even an open ancestor is
     // the placeholder (CTR-021).
-    expect(relations.parentChain).toEqual([{ restricted: true }]);
+    expect(relations.statusCode).toBe(403);
 
     // And off the team, the record itself never existed.
-    expect((await readRaw(frame.number, contributorCookies)).statusCode).toBe(404);
+    expect((await readRaw(frame.number, contributorCookies)).statusCode).toBe(403);
   });
 });

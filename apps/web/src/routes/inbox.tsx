@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** The staff triage queue, with shared quick filters and private saved views. */
-import { HelpLink } from "../components/documentation/help-link";
 import { useEffect, useRef, useState } from "react";
 import { Inbox } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
+import { INBOX_SORT_KEYS, type InboxSortKey } from "@openlaw/shared";
 import {
   redirect,
   useLoaderData,
@@ -58,6 +58,7 @@ function listQuery(layout: Layout) {
   return {
     includeTriaged: "true" as const,
     ...filterQuery(layout.filters, INBOX_FILTER_KEYS),
+    ...(layout.sort ? { sort: layout.sort.key as InboxSortKey, dir: layout.sort.dir } : {}),
     ...(layout.filters.receivedFrom || layout.filters.receivedTo
       ? { timeZone: resolveTimeZone() }
       : {}),
@@ -76,7 +77,7 @@ export async function inboxLoader(args?: LoaderFunctionArgs) {
     opensOn ? resolveLayout(CATALOGUE, opensOn.layout) : defaultInboxLayout(),
     args,
     INBOX_FILTER_KEYS,
-    [],
+    INBOX_SORT_KEYS,
   );
   const params = args && new URL(args.request.url).searchParams;
   if (params?.get("includeTriaged") === "true" && !params.has("status") && !params.has("filters"))
@@ -298,12 +299,7 @@ export function InboxPage() {
               />
             )
           }
-          actions={
-            <>
-              <HelpLink surface="staff" contextual />
-              {tableControls}
-            </>
-          }
+          actions={tableControls}
         />
       }
     >
@@ -350,12 +346,14 @@ export function InboxPage() {
             focusRowKey={appended?.from}
             foot={
               <>
-                <p className="text-xs text-muted">
-                  <FormattedMessage
-                    id="inbox.ordering"
-                    defaultMessage="Ordered by urgency, then age"
-                  />
-                </p>
+                {!layout.sort && (
+                  <p className="text-xs text-muted">
+                    <FormattedMessage
+                      id="inbox.ordering"
+                      defaultMessage="Ordered by urgency, then age"
+                    />
+                  </p>
+                )}
                 {pageError && (
                   <p role="alert" className="text-xs text-status-danger-fg">
                     {pageError}

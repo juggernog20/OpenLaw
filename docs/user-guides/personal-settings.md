@@ -1,6 +1,6 @@
 # Manage your profile and preferences
 
-Change your own profile, appearance, and sessions. These steps apply to Administrators, Legal Team Members, and Contributors in the app.
+Change your own profile, appearance, and sessions. These steps apply to Administrators and Legal Team Members in the app.
 
 ## Update your profile
 
@@ -24,7 +24,7 @@ The theme applies to your account. You can change it again at any time. Use [not
 
 ## Open your own Portal view
 
-Administrators and Legal Team Members have an **App view** card at the top of Profile. Contributors do not have this control.
+Administrators and Legal Team Members have an **App view** card at the top of Profile. Business Users do not have this control.
 
 1. In Profile, select **View as business user**.
 2. Check the **Viewing as business user** banner in the Portal.

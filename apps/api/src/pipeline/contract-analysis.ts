@@ -6,6 +6,7 @@
  * terminal provider faults from transient failures that the queue retries.
  */
 
+import { extractCompleteSources } from "../lib/ai/complete-sources.js";
 import {
   activityLog,
   and,
@@ -42,7 +43,7 @@ import type { AiResolver } from "../lib/ai/resolver.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../lib/activity.js";
 import { requestAnalysisContext } from "./conversion-analysis.js";
 import { checkedCitations, hash, withAttachmentReads } from "../lib/conversion-draft.js";
-import { ATTACHMENT_LIMITS, readConversionAttachments } from "../lib/conversion-attachments.js";
+import { readConversionAttachments } from "../lib/conversion-attachments.js";
 import type { StorageAdapter } from "../lib/storage/adapter.js";
 import type { DocEngine } from "../lib/doc-engine/engine.js";
 import type { ConversionAnalysisContext, ConversionSuggestion } from "@openlaw/shared";
@@ -831,8 +832,6 @@ async function handleRequestAnalysis(deps: ContractAnalysisDeps, run: ContractAn
       { storage: deps.storage, docEngine: deps.docEngine },
       context.attachments,
       run.id,
-      ATTACHMENT_LIMITS.totalCharacters -
-        context.sources.reduce((n, source) => n + source.text.length, 0),
     );
     withAttachmentReads(context, attachmentReads);
     const beforeCall = await requestAnalysisContext(deps.db, run);
@@ -843,13 +842,7 @@ async function handleRequestAnalysis(deps: ContractAnalysisDeps, run: ContractAn
       throw new AnalysisTargetError(
         "Request sources or Contract Fields changed before extraction.",
       );
-    let timer: NodeJS.Timeout | undefined;
-    const answers = await Promise.race([
-      provider.extract(context.sources, targets),
-      new Promise<never>((_, reject) => {
-        timer = setTimeout(() => reject(new AnalysisTargetError("Analysis timed out.")), 125_000);
-      }),
-    ]).finally(() => clearTimeout(timer));
+    const answers = await extractCompleteSources(provider, context.sources, targets);
     const suggestions: Record<string, ConversionSuggestion> = {};
     const checked: AiExtraction[] = [];
     const conflicted = new Set(
@@ -864,7 +857,11 @@ async function handleRequestAnalysis(deps: ContractAnalysisDeps, run: ContractAn
         continue;
       const valid = checkedCitations(answer, context.sources);
       if (!valid) continue;
-      suggestions[answer.slug] = { value: JSON.stringify(answer.value) ?? "", citations: valid };
+      suggestions[answer.slug] = {
+        value: JSON.stringify(answer.value) ?? "",
+        citations: valid,
+        justification: answer.justification,
+      };
       checked.push({ ...answer, evidence: valid.map((citation) => citation.quote).join("\n") });
     }
     const sourceContext: ConversionAnalysisContext = {

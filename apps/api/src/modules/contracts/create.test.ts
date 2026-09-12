@@ -76,7 +76,7 @@ beforeAll(async () => {
   await harness.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, member.id));
   memberId = member.id;
   const contributor = await provisionUser(harness.app.auth, CONTRIBUTOR);
-  await harness.db.update(users).set({ role: "contributor" }).where(eq(users.id, contributor.id));
+  await harness.db.update(users).set({ role: "business_user" }).where(eq(users.id, contributor.id));
   contributorId = contributor.id;
   adminCookies = await signInCookies(harness.app, ADMIN.email, ADMIN.password);
   memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);

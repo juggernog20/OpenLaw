@@ -72,26 +72,20 @@ export const STAFF = [
   {
     email: `ravi.menon@${ORG.domain}`,
     displayName: "Ravi Menon",
-    role: "contributor",
+    role: "business_user",
     title: "Procurement Lead",
   },
   {
     email: `ade.balogun@${ORG.domain}`,
     displayName: "Ade Balogun",
-    role: "contributor",
+    role: "business_user",
     title: "Sales Operations Manager",
   },
   {
     email: `clara.fontaine@${ORG.domain}`,
     displayName: "Clara Fontaine",
-    role: "contributor",
+    role: "business_user",
     title: "HR Business Partner",
-  },
-  {
-    email: "hannah.meyer@meyerroth.example",
-    displayName: "Hannah Meyer",
-    role: "contributor",
-    title: "External Counsel, Meyer & Roth",
   },
   {
     email: `gabriel.santos@${ORG.domain}`,

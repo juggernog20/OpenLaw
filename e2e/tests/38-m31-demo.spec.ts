@@ -294,7 +294,8 @@ test.describe.serial("M31 deployer journey", () => {
         const url = new URL(response.url());
         return url.pathname === "/api/events" && url.searchParams.has("entityId");
       });
-      await observer.goto(`/contracts/${contract.number}`);
+      // The AI analysis card lives on the Fields section (DES-075).
+      await observer.goto(`/contracts/${contract.number}/fields`);
       expect((await eventStream).status()).toBe(200);
       await expect(analysisCard(observer).getByText("Running…")).toBeVisible();
 
@@ -311,6 +312,12 @@ test.describe.serial("M31 deployer journey", () => {
       const recordRead = await refreshed;
       expect(recordRead.status(), await recordRead.text()).toBe(200);
 
+      // The extracted term and value sit on the Overview; the section
+      // strip is client-side routing, so it is not a reload.
+      await observer
+        .getByRole("navigation", { name: "Contract sections" })
+        .getByRole("link", { name: "Overview" })
+        .click();
       await expect(observer.getByLabel("Term type", { exact: true })).toHaveValue("auto_renew");
       await expect(observer.getByLabel("Amount", { exact: true })).toHaveValue("125000");
       await expect(observer.getByLabel("Currency", { exact: true })).toHaveValue("USD");
@@ -322,6 +329,10 @@ test.describe.serial("M31 deployer journey", () => {
       expect(observerReloads).toBe(0);
       expect(stub.extractionCount).toBe(1);
 
+      await observer
+        .getByRole("navigation", { name: "Contract sections" })
+        .getByRole("link", { name: "Fields" })
+        .click();
       const valueResult = analysisCard(observer)
         .getByRole("listitem")
         .filter({ hasText: "The annual Contract value is USD 125,000." });
@@ -335,6 +346,10 @@ test.describe.serial("M31 deployer journey", () => {
       const confirmed = await confirming;
       expect(confirmed.status(), await confirmed.text()).toBe(200);
       await expect(valueResult.getByText("Unverified", { exact: true })).toHaveCount(0);
+      await observer
+        .getByRole("navigation", { name: "Contract sections" })
+        .getByRole("link", { name: "Overview" })
+        .click();
       await expect(markerBeside(observer, "Value")).toHaveCount(0);
       await expect(markerBeside(observer, "Term type")).toBeVisible();
       await expect(markerBeside(observer, "Notice period (days)")).toBeVisible();

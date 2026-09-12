@@ -351,11 +351,11 @@ describe("attaching paper to a Request", () => {
     return converted.json().request.convertedContract as { number: number };
   }
 
-  it("refuses paper once the Request is converted and names the thread, not a record a Business User cannot open", async () => {
+  it("refuses new Request paper after conversion and points to the Portal Contract", async () => {
     // DD-014: a Business User reaches no Contract, so the refusal
     // answers `null` where the portal read would show no link either.
     const number = await submitted();
-    await convertedInto(number);
+    const convertedContract = await convertedInto(number);
     const before = await storedBlobCount();
 
     const refused = await attach(number);
@@ -365,7 +365,7 @@ describe("attaching paper to a Request", () => {
       type: REQUEST_DISPOSITIONED_PROBLEM_TYPE,
       outcome: "converted",
       request: { number },
-      convertedContract: null,
+      convertedContract,
     });
     expect(await listed(number)).toEqual([]);
     expect(await storedBlobCount()).toBe(before);

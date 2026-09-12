@@ -283,7 +283,7 @@ async function addToTeam(number: number, fixture: { email: string }): Promise<vo
     method: "POST",
     url: `/api/v1/contracts/${number}/team`,
     cookies: as(MEMBER),
-    payload: { userId: idOf(fixture), role: "member" },
+    payload: { userId: idOf(fixture) },
   });
   expect(res.statusCode, res.body).toBe(201);
 }
@@ -536,7 +536,10 @@ describe("the three windows onto one conversation (CMT-001)", () => {
       url: `/api/v1/comments?entityType=contract&entityId=${converted.contractId}`,
       cookies: as(REQUESTER),
     });
-    expect(direct.statusCode, direct.body).toBe(403);
+    expect(direct.statusCode, direct.body).toBe(200);
+    expect(direct.json().comments.map((row: { body: string }) => row.body)).toEqual(
+      thread.map((row) => row.body),
+    );
   });
 
   it("takes the requester's reply onto the record as Full Thread", async () => {
@@ -570,7 +573,7 @@ describe("the three windows onto one conversation (CMT-001)", () => {
     // changed neither answer.
     for (const [url, status] of [
       [`/api/v1/comments?entityType=request&entityId=${request.id}`, 404],
-      [`/api/v1/comments?entityType=contract&entityId=${converted.contractId}`, 403],
+      [`/api/v1/comments?entityType=contract&entityId=${converted.contractId}`, 404],
     ] as const) {
       const res = await harness.app.inject({ method: "GET", url, cookies: as(OUTSIDER) });
       expect(res.statusCode, res.body).toBe(status);
@@ -707,7 +710,6 @@ describe("the reply promise follows the thread (NOT-002 group 5)", () => {
     // as the Requester, so group 2 must not reach them as well.
     const request = await submit("Both sides of one comment", STAFF_REQUESTER);
     const converted = await convert(request);
-    await addToTeam(converted.contractNumber, STAFF_REQUESTER);
 
     const reply = await say(MEMBER, contractRef(converted), "Answering your own ask.");
     expect((await rowsAboutComment(STAFF_REQUESTER, reply)).map((row) => row.eventType)).toEqual([

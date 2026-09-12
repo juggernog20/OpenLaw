@@ -160,8 +160,8 @@ beforeAll(async () => {
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
     [OUTSIDER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
-    [STRANGER, "contributor"],
+    [CONTRIBUTOR, "business_user"],
+    [STRANGER, "business_user"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, user.id));
@@ -206,12 +206,12 @@ async function newContract(title: string): Promise<ContractRow> {
 }
 
 /** Puts somebody on a contract's team, requiring success. */
-async function putOnTeam(number: number, userId: string, role: string): Promise<void> {
+async function putOnTeam(number: number, userId: string): Promise<void> {
   const res = await harness.app.inject({
     method: "POST",
     url: `/api/v1/contracts/${number}/team`,
     cookies: adminCookies,
-    payload: { userId, role },
+    payload: { userId },
   });
   expect(res.statusCode, res.body).toBe(201);
 }
@@ -1075,9 +1075,9 @@ describe("correcting a version's kind", () => {
     expect(row!.kind).toBe("draft_ours");
   });
 
-  it("refuses a Contributor without hiding the version", async () => {
+  it("keeps Version correction staff-only", async () => {
     const contract = await newContract("Orion Cloud — Contributor correction");
-    await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
+    await putOnTeam(contract.number, idOf(CONTRIBUTOR));
     const document = await uploaded(adminCookies, contract.number);
     const version = currentOf(document);
 
@@ -1086,7 +1086,7 @@ describe("correcting a version's kind", () => {
     });
 
     expect(res.statusCode, res.body).toBe(403);
-    expect((await listDocuments(contributorCookies, contract.number)).statusCode).toBe(200);
+    expect((await listDocuments(contributorCookies, contract.number)).statusCode).toBe(403);
   });
 });
 
@@ -1305,24 +1305,24 @@ describe("downloading a version", () => {
 });
 
 describe("who reaches a contract's paper", () => {
-  it("lets a Contributor on the team list and download", async () => {
-    const contract = await newContract("Orion Cloud — the Contributor");
-    await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
-    const content = Buffer.from("what the Contributor was added to work on");
+  it("lets a Business User read current primary paper through its Portal endpoint", async () => {
+    const contract = await newContract("Portal primary paper");
+    await putOnTeam(contract.number, idOf(CONTRIBUTOR));
+    const content = Buffer.from("Current primary paper");
     const document = await uploaded(adminCookies, contract.number, { content });
-
-    const list = await listDocuments(contributorCookies, contract.number);
-    expect(list.statusCode, list.body).toBe(200);
-    expect((list.json().documents as DocumentRow[]).map((row) => row.id)).toEqual([document.id]);
-
-    const file = await download(contributorCookies, document.id, currentOf(document).id);
-    expect(file.statusCode).toBe(200);
+    expect((await listDocuments(contributorCookies, contract.number)).statusCode).toBe(403);
+    const file = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/portal/contracts/${contract.number}/documents/${document.id}/versions/${currentOf(document).id}/download`,
+      cookies: contributorCookies,
+    });
+    expect(file.statusCode, file.body).toBe(200);
     expect(file.rawPayload.equals(content)).toBe(true);
   });
 
   it("lets a Contributor upload supporting paper without taking an empty primary designation", async () => {
     const contract = await newContract("Orion Cloud — the Contributor's pen");
-    await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
+    await putOnTeam(contract.number, idOf(CONTRIBUTOR));
 
     const res = await upload(contributorCookies, contract.number);
 
@@ -1350,7 +1350,7 @@ describe("who reaches a contract's paper", () => {
 
   it("hides a confidential contract's paper from a Legal Team Member outside its team", async () => {
     const contract = await newContract("Project Nightingale");
-    await putOnTeam(contract.number, idOf(MEMBER), "member");
+    await putOnTeam(contract.number, idOf(MEMBER));
     const document = await uploaded(adminCookies, contract.number, {
       filename: "nightingale_draft.docx",
     });
@@ -1383,7 +1383,7 @@ describe("who reaches a contract's paper", () => {
 
   it("refuses a Contributor on the primary chain and on Document metadata", async () => {
     const contract = await newContract("Orion Cloud — the Contributor's revision");
-    await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
+    await putOnTeam(contract.number, idOf(CONTRIBUTOR));
     const document = await uploaded(adminCookies, contract.number);
 
     const version = await addVersion(contributorCookies, document.id);
@@ -1423,7 +1423,7 @@ describe("who reaches a contract's paper", () => {
 
   it("lets a Member on the team append and rename", async () => {
     const contract = await newContract("Project Nightingale — the included Member");
-    await putOnTeam(contract.number, idOf(MEMBER), "member");
+    await putOnTeam(contract.number, idOf(MEMBER));
     const document = await uploaded(adminCookies, contract.number);
     await markConfidential(contract.number);
 
@@ -1592,7 +1592,7 @@ describe("the primary document", () => {
 
   it("refuses a Contributor without hiding the record from them", async () => {
     const contract = await newContract("Orion Cloud — the Contributor's designation");
-    await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
+    await putOnTeam(contract.number, idOf(CONTRIBUTOR));
     await uploaded(adminCookies, contract.number, { filename: "one.pdf" });
     const second = await uploaded(adminCookies, contract.number, { filename: "two.pdf" });
 
@@ -1814,7 +1814,7 @@ describe("the executed pin", () => {
 
   it("refuses a Contributor without hiding the record from them", async () => {
     const contract = await newContract("Orion Cloud — the Contributor's pin");
-    await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
+    await putOnTeam(contract.number, idOf(CONTRIBUTOR));
     const document = await uploaded(adminCookies, contract.number);
 
     const res = await pinExecuted(contributorCookies, document.id, currentOf(document).id);
@@ -1955,8 +1955,8 @@ describe("archiving a document", () => {
 
   it("lets a Member on the team archive and restore, and refuses a Contributor", async () => {
     const contract = await newContract("Orion Cloud — who may archive");
-    await putOnTeam(contract.number, idOf(MEMBER), "member");
-    await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
+    await putOnTeam(contract.number, idOf(MEMBER));
+    await putOnTeam(contract.number, idOf(CONTRIBUTOR));
     const document = await uploaded(adminCookies, contract.number);
 
     // 403, not 404: a Contributor already reads the record, so hiding
@@ -2140,8 +2140,8 @@ describe("the Administrator's hard delete", () => {
 
   it("is refused for every role except Administrator", async () => {
     const contract = await newContract("Orion Cloud — not yours to destroy");
-    await putOnTeam(contract.number, idOf(MEMBER), "member");
-    await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
+    await putOnTeam(contract.number, idOf(MEMBER));
+    await putOnTeam(contract.number, idOf(CONTRIBUTOR));
     const document = await uploaded(adminCookies, contract.number, { filename: "personal.pdf" });
 
     // A Legal Team Member on the team archives all day and destroys

@@ -144,10 +144,15 @@ async function redeemMagicLink(person, log) {
  */
 export async function provisionEveryone(admin, log) {
   log("inviting the legal team");
-  const staffSessions = await pool(STAFF, 3, (person) => activateStaff(admin, person, log));
+  const staff = STAFF.filter((person) => person.role !== "business_user");
+  const business = [
+    ...STAFF.filter((person) => person.role === "business_user"),
+    ...BUSINESS_USERS,
+  ];
+  const staffSessions = await pool(staff, 3, (person) => activateStaff(admin, person, log));
 
   log("signing in the business");
-  const businessSessions = await pool(BUSINESS_USERS, 3, (person) => redeemMagicLink(person, log));
+  const businessSessions = await pool(business, 3, (person) => redeemMagicLink(person, log));
 
   const { body: listed } = await admin.get("/api/v1/users");
   const byEmail = new Map((listed.users ?? []).map((user) => [user.email.toLowerCase(), user]));
@@ -164,8 +169,8 @@ export async function provisionEveryone(admin, log) {
   };
 
   remember({ ...ADMIN, role: "administrator" }, admin);
-  STAFF.forEach((person, index) => remember(person, staffSessions[index]));
-  BUSINESS_USERS.forEach((person, index) =>
+  staff.forEach((person, index) => remember(person, staffSessions[index]));
+  business.forEach((person, index) =>
     remember({ ...person, role: "business_user" }, businessSessions[index]),
   );
 
@@ -181,11 +186,6 @@ export function memberPlus(people) {
   return [...people.values()].filter(
     (person) => person.role === "administrator" || person.role === "legal_team_member",
   );
-}
-
-/** The Contributors, who reach only the records they are added to. */
-export function contributors(people) {
-  return [...people.values()].filter((person) => person.role === "contributor");
 }
 
 /** The Business Users, who submit through the portal. */

@@ -28,12 +28,6 @@ const ADMIN = {
   displayName: "Blair Wentworth",
   role: "administrator",
 };
-const CONTRIBUTOR = {
-  id: "u3",
-  email: "contributor@example.com",
-  displayName: "Casey Contributor",
-  role: "contributor",
-};
 
 const TYPE_OPTIONS = [
   { id: "t-corp", slug: "corporation", displayName: "Corporation" },
@@ -733,12 +727,6 @@ describe("the /entities/:entityId record page", () => {
     expect(await screen.findByText(/This entity is archived/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Restore" })).toBeInTheDocument();
     expect(screen.getByLabelText("Registered agent")).toBeDisabled();
-  });
-
-  it("bounces a Contributor home", async () => {
-    stubApi({ signedIn: CONTRIBUTOR });
-    renderAt("/entities/e1");
-    expect(await screen.findByRole("heading", { level: 1, name: "Home" })).toBeInTheDocument();
   });
 
   it("sends an unauthenticated visitor to login", async () => {

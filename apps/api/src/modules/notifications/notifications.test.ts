@@ -304,7 +304,7 @@ async function addToTeam(number: number, userId: string): Promise<void> {
     method: "POST",
     url: `/api/v1/contracts/${number}/team`,
     cookies: as(MEMBER),
-    payload: { userId, role: "member" },
+    payload: { userId },
   });
   expect(res.statusCode, res.body).toBe(201);
 }

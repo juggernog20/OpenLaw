@@ -241,10 +241,15 @@ import { boundedQueueAsk } from "../../pipeline/jobs.js";
 import { needsDisplayRendition } from "../../pipeline/display-conversion.js";
 import { extractsText } from "../../pipeline/text-extraction.js";
 
-/** Supporting uploads are the one Document write Contributors receive.
- * Reach still comes from the owning record's live team predicate; the
- * route-level role floor alone grants nothing (DD-015). */
-const requireSupportingUploader = requireRole("administrator", "legal_team_member", "contributor");
+/** Supporting uploads and record paper reads are the Document surface a
+ * Business User receives (DD-023). Reach still comes from the owning
+ * record's live team predicate; the role floor alone grants nothing. */
+const requireSupportingUploader = requireRole(
+  "administrator",
+  "legal_team_member",
+  "business_user",
+);
+const requireRecordDocumentReader = requireSupportingUploader;
 
 /** Every Document administration action keeps the Member+ floor. */
 const requireMember = requireRole("administrator", "legal_team_member");
@@ -1003,7 +1008,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     documentId: string,
     lock = false,
   ): Promise<ReachedDocument | null> {
-    if (user.role === "contributor") {
+    if (user.role === "business_user") {
       const [knowledgeOwned] = await db
         .select({ id: documents.id })
         .from(documents)
@@ -2079,7 +2084,9 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
               versionId,
               title: file.filename,
               folderName: folder?.name ?? null,
-              ...(request.user.role === "contributor" ? { actorRole: "contributor" as const } : {}),
+              ...(request.user.role === "business_user"
+                ? { actorRole: "business_user" as const }
+                : {}),
             },
           });
 
@@ -2094,8 +2101,8 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           // record born confidential is too. The contract row is held, so
           // two first uploads at once cannot both read NULL here.
           const primaryDocumentId =
-            locked.primaryDocumentId ?? (request.user.role === "contributor" ? null : documentId);
-          if (locked.primaryDocumentId === null && request.user.role !== "contributor") {
+            locked.primaryDocumentId ?? (request.user.role === "business_user" ? null : documentId);
+          if (locked.primaryDocumentId === null && request.user.role !== "business_user") {
             await tx
               .update(contracts)
               .set({ primaryDocumentId: documentId })
@@ -2215,7 +2222,9 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
               versionId,
               title: file.filename,
               folderName: folder?.name ?? null,
-              ...(request.user.role === "contributor" ? { actorRole: "contributor" as const } : {}),
+              ...(request.user.role === "business_user"
+                ? { actorRole: "business_user" as const }
+                : {}),
             },
           });
           return documentWithChain(tx, documentId, null);
@@ -2424,13 +2433,13 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       const reached = await reachedDocument(app.db, request.user, documentId);
       assertOpenDocument(reached);
       if (
-        request.user.role === "contributor" &&
+        request.user.role === "business_user" &&
         reached.owner.kind === "contract" &&
         reached.primaryDocumentId === reached.id
       ) {
         throw httpError(
           403,
-          "Contributors cannot append a Version to the primary Contract Document.",
+          "Business Users cannot append a Version to the primary Contract Document.",
         );
       }
 
@@ -2456,13 +2465,13 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           const locked = await reachedDocument(tx, request.user, documentId, true);
           assertOpenDocument(locked);
           if (
-            request.user.role === "contributor" &&
+            request.user.role === "business_user" &&
             locked.owner.kind === "contract" &&
             locked.primaryDocumentId === locked.id
           ) {
             throw httpError(
               403,
-              "Contributors cannot append a Version to the primary Contract Document.",
+              "Business Users cannot append a Version to the primary Contract Document.",
             );
           }
 
@@ -2488,7 +2497,9 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
               title: locked.title,
               versionNumber,
               kind: file.kind,
-              ...(request.user.role === "contributor" ? { actorRole: "contributor" as const } : {}),
+              ...(request.user.role === "business_user"
+                ? { actorRole: "business_user" as const }
+                : {}),
             },
           });
           // The team hears that the paper moved (NOT-002 group 2). This is
@@ -3691,7 +3702,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     "/documents/:documentId/versions/:versionId/download",
     {
-      preHandler: requireDocumentReader,
+      preHandler: requireRecordDocumentReader,
       schema: {
         operationId: "downloadDocumentVersion",
         summary:
@@ -3739,7 +3750,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     "/documents/:documentId/versions/:versionId/preview",
     {
-      preHandler: requireDocumentReader,
+      preHandler: requireRecordDocumentReader,
       schema: {
         operationId: "previewDocumentVersion",
         summary:
@@ -3841,7 +3852,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     "/documents/:documentId/versions/:versionId/text",
     {
-      preHandler: requireDocumentReader,
+      preHandler: requireRecordDocumentReader,
       schema: {
         operationId: "readDocumentVersionText",
         summary:
@@ -3920,7 +3931,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     "/documents/:documentId/versions/:versionId/rendition",
     {
-      preHandler: requireDocumentReader,
+      preHandler: requireRecordDocumentReader,
       schema: {
         operationId: "readDocumentVersionRendition",
         summary:
@@ -3989,7 +4000,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     "/documents/:documentId/versions/:versionId/email",
     {
-      preHandler: requireDocumentReader,
+      preHandler: requireRecordDocumentReader,
       schema: {
         operationId: "readDocumentVersionEmail",
         summary:
@@ -4056,7 +4067,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     "/documents/:documentId/versions/:versionId/attachments/:attachmentIndex/download",
     {
-      preHandler: requireDocumentReader,
+      preHandler: requireRecordDocumentReader,
       schema: {
         operationId: "downloadEmailAttachment",
         summary:
@@ -4100,7 +4111,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     "/documents/:documentId/versions/:versionId/attachments/:attachmentIndex/preview",
     {
-      preHandler: requireDocumentReader,
+      preHandler: requireRecordDocumentReader,
       schema: {
         operationId: "previewEmailAttachment",
         summary:
@@ -4320,7 +4331,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     user: AuthenticatedUser,
     params: Readonly<{ documentId: string; versionId: string }>,
   ): Promise<ReachedVersion> {
-    if (user.role === "contributor") {
+    if (user.role === "business_user") {
       const [knowledgeOwned] = await app.db
         .select({ id: documentVersions.id })
         .from(documentVersions)
@@ -4354,6 +4365,16 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           eq(documentVersions.documentId, params.documentId),
           or(...DOCUMENT_OWNER_KINDS.map((owner) => ownerReachScope(owner, app.db, user))),
           documentAudienceScope(app.db, user),
+          user.role === "business_user"
+            ? and(
+                isNull(documents.archivedAt),
+                or(isNotNull(documents.contractId), isNotNull(documents.matterId)),
+                or(
+                  isNull(contracts.primaryDocumentId),
+                  sql`${contracts.primaryDocumentId} <> ${documents.id}`,
+                ),
+              )
+            : undefined,
         ),
       )
       .limit(1);
@@ -4435,8 +4456,11 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     // Refused with the malformed paths, and for their reason: a
     // Contributor's destination is known bad before the file part is
     // read, so no blob is written only to be taken away (DD-015).
-    if (destination && request.user.role === "contributor") {
-      throw httpError(403, "Contributors may upload supporting Documents at the record root only.");
+    if (destination && request.user.role === "business_user") {
+      throw httpError(
+        403,
+        "Business Users may upload supporting Documents at the record root only.",
+      );
     }
     const requestedKind = rawKind
       ? (HandSetKindSchema.safeParse(rawKind).data ?? refuseKind())

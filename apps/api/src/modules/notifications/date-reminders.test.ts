@@ -286,7 +286,7 @@ async function addToTeam(number: number, userId: string): Promise<void> {
     method: "POST",
     url: `/api/v1/contracts/${number}/team`,
     cookies: as(OWNER),
-    payload: { userId, role: "member" },
+    payload: { userId },
   });
   expect(res.statusCode, res.body).toBe(201);
 }
@@ -1064,7 +1064,7 @@ describe.each([
       method: "POST",
       url: `/api/v1/${kind}/${record.number}/team`,
       cookies: as(OWNER),
-      payload: { userId: idOf(OUTSIDER), role: "member" },
+      payload: { userId: idOf(OUTSIDER) },
     });
     expect(joined.statusCode, joined.body).toBe(201);
     const options = await harness.app.inject({
@@ -1102,7 +1102,7 @@ describe.each([
     expect(await bellFor(OUTSIDER, record)).toHaveLength(1);
     const removed = await harness.app.inject({
       method: "DELETE",
-      url: `/api/v1/${kind}/${record.number}/team/${idOf(OUTSIDER)}/member`,
+      url: `/api/v1/${kind}/${record.number}/team/${idOf(OUTSIDER)}`,
       cookies: as(OWNER),
     });
     expect(removed.statusCode, removed.body).toBe(200);
@@ -1154,7 +1154,7 @@ describe.each([
           method: "POST",
           url: `/api/v1/${kind}/${record.number}/team`,
           cookies: as(OWNER),
-          payload: { userId: idOf(OUTSIDER), role: "member" },
+          payload: { userId: idOf(OUTSIDER) },
         })
       ).statusCode,
     ).toBe(201);
@@ -1182,7 +1182,7 @@ describe.each([
       change === "remove"
         ? await harness.app.inject({
             method: "DELETE",
-            url: `/api/v1/${kind}/${record.number}/team/${idOf(OUTSIDER)}/member`,
+            url: `/api/v1/${kind}/${record.number}/team/${idOf(OUTSIDER)}`,
             cookies: as(OWNER),
           })
         : await harness.app.inject({

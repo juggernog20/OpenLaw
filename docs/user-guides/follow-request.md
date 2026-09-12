@@ -1,6 +1,6 @@
 # Follow a Request and reply to Legal
 
-Keep using your Request's R- reference to follow Legal's response and send further information, including after Legal converts the Request to a Contract or Matter.
+Use your Request to follow Legal's response. Once Legal converts it, the same address opens the Contract or Matter where the work continues.
 
 ## Before you start
 
@@ -14,16 +14,17 @@ Keep using your Request's R- reference to follow Legal's response and send furth
 4. Read **Conversation** for Legal's replies. Select **Show earlier replies** when you need older messages.
 5. Check **What you submitted** for the saved description, original attachments, urgency, and available additional answers. Select an attachment's filename to download it.
 
-| Status          | Meaning in the Portal                                                                          |
-| --------------- | ---------------------------------------------------------------------------------------------- |
-| **Open**        | Legal has received the Request and has not yet decided it.                                     |
-| **In progress** | Legal has converted it to a Contract or Matter. Continue following this Request.               |
-| **Resolved**    | Legal answered and closed the Request without conversion. Read the resolution in Conversation. |
-| **Declined**    | Legal declined the Request. Read the reason shown beneath the status.                          |
+| Status       | Meaning in the Portal                                                                          |
+| ------------ | ---------------------------------------------------------------------------------------------- |
+| **Open**     | Legal has received the Request and has not yet decided it.                                     |
+| **Resolved** | Legal answered and closed the Request without conversion. Read the resolution in Conversation. |
+| **Declined** | Legal declined the Request. Read the reason shown beneath the status.                          |
 
-**In progress** does not show the Contract's or Matter's detailed workflow. Keep using the Request reference for its conversation. If Legal converts it to a Contract, you become its initial Business Owner and can also use [Your Contracts](portal-sign-in.md#read-your-contracts), subject to current access. That read-only view is separate from the staff record and its internal conversations; conversion to a Matter does not add a Portal Matter view. Original Request attachments remain downloadable here; they are the files submitted with the Request, not later revisions Legal may upload to a resulting Document.
+A converted Request leaves **Your requests**. Its address redirects to the resulting Contract or Matter. Conversion adds you to that record's team and records you as Business Owner. Read the original ask under **Original request** and continue in the record's **Conversation**. Legal may add other Business Users to that same record later.
 
-The Request's **Owner** is its current triage assignee, separate from a resulting Contract's Business Owner or Legal Owner. Clearing triage assignment clears the requester-facing name. **Expected back (estimate)** is Legal's confirmed estimate, separate from the **Needed by** date you submitted. A request type's published turnaround suggests a date for Legal to confirm; it does not promise that date or silently replace a saved estimate. **Estimate passed** appears when an Open or In progress Request's saved estimate is in the past. Resolved and Declined Requests do not show that warning.
+If Legal removes your team row, the old Request link no longer opens the live record. If the destination is archived, the Request address shows your original ask and an archived notice. That stub has no conversation or Document access.
+
+The Request's **Owner** is its current triage assignee, separate from a resulting Contract's Business Owner or Legal Owner. Clearing triage assignment clears the requester-facing name. **Expected back (estimate)** is Legal's confirmed estimate, separate from the **Needed by** date you submitted. A request type's published turnaround suggests a date for Legal to confirm; it does not promise that date or silently replace a saved estimate. **Estimate passed** appears when an Open Request's saved estimate is in the past. Resolved and Declined Requests do not show that warning. Converted work uses its record page; resolved and declined Requests keep their own conversations.
 
 ## Reply and send further files
 
@@ -32,7 +33,7 @@ The Request's **Owner** is its current triage assignee, separate from a resultin
 3. Select **Send**. It stays unavailable until you have entered a message, so files cannot be sent on their own.
 4. Check that your reply and its attachments appear in the conversation. Select an attachment to download it.
 
-You can reply while the Request is Open and after conversion, resolution, or decline. The **Attach new files to a reply** link shown once the Request is In progress, Resolved, or Declined takes you to the same composer. A reply does not reopen a Resolved or Declined Request or change submitted answers; explain the correction or further help you need to Legal.
+You can reply while the Request is Open, Resolved or Declined. After conversion, reply on the record. The **Attach new files to a reply** link on a Resolved or Declined Request takes you to its composer. A reply does not reopen a Resolved or Declined Request or change submitted answers; explain the correction or further help you need to Legal.
 
 The Portal shows the conversation shared with the Requester. You do not choose an audience or see Legal Only and Working Team messages. See [Comments, attachments, and activity](comments-and-activity.md) for the shared attachment limits and conversation behavior.
 

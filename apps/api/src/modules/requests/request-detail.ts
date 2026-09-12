@@ -68,8 +68,10 @@
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { requestTypeFields } from "@openlaw/db";
+import { activityLog, and, asc, eq, requestTypeFields, users } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
+import { DocEngineError } from "../../lib/doc-engine/engine.js";
+import { conversionFormatOf, previewContentType } from "../../lib/render-family.js";
 import { AttachedCustomFieldSchema, selectAttachedFields } from "../../lib/custom-fields.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import {
@@ -115,6 +117,7 @@ export const requestDetailRoutes: FastifyPluginAsyncZod = async (app) => {
         response: {
           200: z.object({
             request: StaffRequestSchema,
+            conversion: z.object({ at: z.iso.datetime(), by: z.string().nullable() }).nullable(),
             /** The type's attached fields, in the order the form drew
              * them. A value whose field has since been detached or
              * archived is not among them and is therefore not drawn. */
@@ -132,9 +135,26 @@ export const requestDetailRoutes: FastifyPluginAsyncZod = async (app) => {
       const row = await staffRequestRow(app.db, request.user, request.params.number);
       const [attached, attachments] = await Promise.all([
         selectAttachedFields(app.db, requestTypeFields, row.typeId),
-        selectAttachments(app.db, row.id),
+        row.status === "converted" ? [] : selectAttachments(app.db, row.id),
       ]);
+      const [conversion] =
+        row.status === "converted"
+          ? await app.db
+              .select({ at: activityLog.createdAt, by: users.displayName })
+              .from(activityLog)
+              .leftJoin(users, eq(users.id, activityLog.actorId))
+              .where(
+                and(
+                  eq(activityLog.entityType, "request"),
+                  eq(activityLog.entityId, row.id),
+                  eq(activityLog.action, "request.converted"),
+                ),
+              )
+              .orderBy(asc(activityLog.createdAt), asc(activityLog.id))
+              .limit(1)
+          : [];
       return {
+        conversion: conversion ? { at: conversion.at.toISOString(), by: conversion.by } : null,
         request: toStaffRequest(row),
         fields: attached,
         customFieldRefs: await resolveStaffRefs(app.db, attached, row.customFields, request.user),
@@ -150,10 +170,10 @@ export const requestDetailRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "downloadRequestAttachment",
         summary:
-          "Stream one attachment on a Request back, as a download " +
+          "Stream one attachment on a Request back, as a download or preview with preview=true " +
           "(INT-006). The staff mount's own address, with the portal " +
           "download's answer: the bytes come through the API behind the " +
-          "session, there are no presigned URLs, and the type is always " +
+          "session, there are no presigned URLs, and the download type is always " +
           "`application/octet-stream` — a Request's attachment stores no " +
           "declared type, and a download never echoes one a client sent. " +
           "An attachment id belonging to another Request answers 404. " +
@@ -161,13 +181,43 @@ export const requestDetailRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["requests"],
         produces: ["application/octet-stream"],
         params: NumberParams.extend({ attachmentId: z.string() }),
+        querystring: z.object({ preview: z.enum(["true"]).optional() }),
         response: { 200: DownloadSchema, default: problemResponse },
       },
     },
     async (request, reply) => {
       const held = await staffRequestRow(app.db, request.user, request.params.number);
+      if (held.status === "converted") throw httpError(404, NO_ATTACHMENT);
       const row = await attachmentOn(app.db, held.id, request.params.attachmentId);
       if (!row) throw httpError(404, NO_ATTACHMENT);
+      if (request.query.preview === "true") {
+        const nativeType = previewContentType("application/octet-stream", row.filename);
+        const convertFrom = conversionFormatOf("application/octet-stream", row.filename);
+        if (!nativeType && !convertFrom)
+          throw httpError(415, "A preview is not available for this file type.");
+        const source = await app.storage.get(row.fileRef);
+        let preview = source;
+        if (convertFrom) {
+          try {
+            preview = await app.docEngine.convertToPdf(source, convertFrom);
+          } catch (error) {
+            source.destroy();
+            if (error instanceof DocEngineError)
+              throw httpError(
+                422,
+                "This attachment could not be previewed. Download the original file instead.",
+              );
+            throw error;
+          }
+        }
+        return reply
+          .header("content-type", nativeType ?? "application/pdf")
+          .header("content-disposition", "inline")
+          .header("x-content-type-options", "nosniff")
+          .header("content-security-policy", "default-src 'none'; sandbox")
+          .header("cache-control", "private, no-store")
+          .send(preview);
+      }
       return sendAttachment(reply, await app.storage.get(row.fileRef), row.filename);
     },
   );

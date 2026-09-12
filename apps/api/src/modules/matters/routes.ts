@@ -3,6 +3,8 @@
 /** The first matter surface: list, create, options, and record read. */
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
+import { recordPerson } from "../../lib/record-person.js";
+import { originalIntake, OriginalIntakeSchema } from "../requests/original-intake.js";
 import { nextDeadline, NextDeadlineSchema } from "../../lib/next-deadline.js";
 import {
   FilterChoices,
@@ -25,7 +27,6 @@ import {
   matterTeam,
   matterTypeFields,
   matterTypes,
-  MATTER_TEAM_ROLES,
   matterTemplateKeyDates,
   matterTemplateTasks,
   matterTemplates,
@@ -54,7 +55,7 @@ import { TimezoneSchema } from "../../lib/timezones.js";
 import { civilToday } from "../../lib/contract-term.js";
 import {
   applyCustomFields,
-  assertContributorCustomFieldWrite,
+  assertBusinessCustomFieldWrite,
   assertRequiredCustomFields,
   AttachedCustomFieldSchema,
   CustomFieldsInput,
@@ -64,7 +65,6 @@ import {
   type AttachedCustomField,
 } from "../../lib/custom-fields.js";
 import {
-  MATTER_CREATOR_ROLE,
   MATTER_MANAGER_REFUSAL,
   MATTER_MANAGER_ROLES,
   matterConfidentialityWrite,
@@ -79,7 +79,7 @@ import { ConversionProvenanceSchema } from "../../lib/conversion-draft.js";
 import { createMatter } from "./create.js";
 
 const requireMember = requireRole("administrator", "legal_team_member");
-const requireReader = requireRole("administrator", "legal_team_member", "contributor");
+const requireReader = requireRole("administrator", "legal_team_member");
 const SeveritySchema = z.enum(SEVERITY_LEVELS);
 const NumberParams = z.object({ number: z.coerce.number().int().positive() });
 const PAGE_SIZE = 50;
@@ -116,6 +116,8 @@ const MatterRowSchema = z.object({
   statusCategory: z.enum(["open", "closed"]),
   statusProgressionGroup: z.enum(MATTER_PROGRESSION_GROUPS),
   manager: PersonSchema.nullable(),
+  businessOwner: PersonSchema.nullable().optional(),
+  createdBy: z.string().nullable().optional(),
   priority: SeveritySchema,
   risk: SeveritySchema.nullable(),
   aiUnverified: ConversionProvenanceSchema.optional(),
@@ -135,12 +137,14 @@ const MatterEnvelope = z.object({ matter: MatterRowSchema });
  * id, and the hero must draw a name, so the read resolves them the way
  * the contract and Request reads do. */
 const MatterRecordEnvelope = MatterEnvelope.extend({
+  originalIntake: OriginalIntakeSchema.nullable().optional(),
+  creator: PersonSchema.nullable().optional(),
   fields: z.array(AttachedCustomFieldSchema),
   customFieldRefs: StaffRequestCustomFieldRefsSchema,
-  team: z.array(PersonSchema.extend({ role: z.enum(MATTER_TEAM_ROLES) })),
+  team: z.array(PersonSchema),
 });
 const MatterTeamEnvelope = z.object({
-  team: z.array(PersonSchema.extend({ role: z.enum(MATTER_TEAM_ROLES) })),
+  team: z.array(PersonSchema),
 });
 const LifecycleStatusSchema = z.strictObject({
   id: z.string(),
@@ -183,6 +187,7 @@ function toRow(
   const { row } = context;
   return {
     id: row.id,
+    createdBy: row.createdBy,
     number: row.number,
     title: row.title,
     description: row.description,
@@ -249,18 +254,16 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         displayName: users.displayName,
         image: users.image,
         archivedAt: users.archivedAt,
-        role: matterTeam.role,
       })
       .from(matterTeam)
       .innerJoin(users, eq(matterTeam.userId, users.id))
       .where(eq(matterTeam.matterId, matterId))
-      .orderBy(asc(sql`lower(${users.displayName})`), asc(matterTeam.role));
+      .orderBy(asc(sql`lower(${users.displayName})`), asc(users.id));
     return rows.map((row) => ({
       id: row.id,
       displayName: row.displayName,
       image: row.image,
       archived: row.archivedAt !== null,
-      role: row.role,
     }));
   };
 
@@ -484,8 +487,8 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         .from(matters)
         .innerJoin(matterStatuses, eq(matters.statusId, matterStatuses.id))
         .where(predicates);
-      const contributorFields =
-        request.user.role === "contributor"
+      const businessFields =
+        request.user.role === "business_user"
           ? new Map(
               await Promise.all(
                 [...new Set(page.map((context) => context.row.matterTypeId))].map(
@@ -503,10 +506,10 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         matters: page.map((context) =>
           toRow(
             context,
-            contributorFields
+            businessFields
               ? projectCustomFields(
                   request.user.role,
-                  contributorFields.get(context.row.matterTypeId) ?? [],
+                  businessFields.get(context.row.matterTypeId) ?? [],
                   context.row.customFields,
                 ).customFields
               : context.row.customFields,
@@ -674,7 +677,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         matterTypes: types.map((type, index) => {
           const visibleSlugs = new Set(
             attached[index]!.filter(
-              (field) => request.user.role !== "contributor" || field.fieldTag === "business",
+              (field) => request.user.role !== "business_user" || field.fieldTag === "business",
             ).map((field) => field.slug),
           );
           return {
@@ -738,7 +741,12 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
       );
       const projection = projectCustomFields(request.user.role, attached, context.row.customFields);
       return {
-        matter: toRow(context, projection.customFields),
+        matter: {
+          ...toRow(context, projection.customFields),
+          businessOwner: await recordPerson(app.db, context.row.businessOwnerId),
+        },
+        creator: await recordPerson(app.db, context.row.createdBy),
+        originalIntake: await originalIntake(app.db, request.user, "matter", context.row.id),
         fields: projection.fields,
         customFieldRefs: await resolveStaffRefs(
           app.db,
@@ -900,6 +908,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           description: z.string().trim().max(10_000).nullable().optional(),
           matterTypeId: z.string().optional(),
           managerId: z.string().nullable().optional(),
+          businessOwnerId: z.string().nullable().optional(),
           priority: SeveritySchema.optional(),
           risk: SeveritySchema.nullable().optional(),
           customFields: CustomFieldsInput.optional(),
@@ -922,8 +931,8 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
       const today = civilToday();
       const written = await app.db.transaction(async (tx) => {
         const current = await lockedMatter(tx, request.params.number, request.user);
-        let contributorAttached: AttachedCustomField[] | null = null;
-        if (request.user.role === "contributor") {
+        let businessAttached: AttachedCustomField[] | null = null;
+        if (request.user.role === "business_user") {
           const allowed = new Set(["description", "customFields"]);
           if (Object.keys(body).some((key) => !allowed.has(key))) {
             throw httpError(
@@ -932,12 +941,12 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
             );
           }
           if (body.customFields !== undefined) {
-            contributorAttached = await selectAttachedFields(
+            businessAttached = await selectAttachedFields(
               tx,
               matterTypeFields,
               current.row.matterTypeId,
             );
-            assertContributorCustomFieldWrite(contributorAttached, body.customFields);
+            assertBusinessCustomFieldWrite(businessAttached, body.customFields);
           }
         }
         if (body.isConfidential !== undefined) {
@@ -965,6 +974,15 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           }
         }
 
+        if (body.businessOwnerId !== undefined && body.businessOwnerId !== target.businessOwnerId) {
+          const next = body.businessOwnerId ? await lockedLiveUser(tx, body.businessOwnerId) : null;
+          const previous = await recordPerson(tx, target.businessOwnerId);
+          patch.businessOwnerId = next?.id ?? null;
+          changed.businessOwner = {
+            from: previous?.displayName ?? null,
+            to: next?.displayName ?? null,
+          };
+        }
         let manager = current.manager;
         if (body.managerId !== undefined && body.managerId !== target.managerId) {
           manager = body.managerId ? await lockedLiveUser(tx, body.managerId, true) : null;
@@ -1005,7 +1023,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         }
 
         const attached =
-          contributorAttached ??
+          businessAttached ??
           (await selectAttachedFields(
             tx,
             matterTypeFields,
@@ -1136,7 +1154,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
               number: row.number,
               title: row.title,
               changed,
-              ...(request.user.role === "contributor" ? { actorRole: request.user.role } : {}),
+              ...(request.user.role === "business_user" ? { actorRole: request.user.role } : {}),
             },
           });
         }
@@ -1194,7 +1212,10 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         updated.row.customFields,
       );
       return {
-        matter: toRow(updated, projection.customFields),
+        matter: {
+          ...toRow(updated, projection.customFields),
+          businessOwner: await recordPerson(app.db, updated.row.businessOwnerId),
+        },
         fields: projection.fields,
         customFieldRefs: await resolveStaffRefs(
           app.db,
@@ -1213,10 +1234,10 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireMember,
       schema: {
         operationId: "addMatterTeamMember",
-        summary: "Add one person and role to a matter team",
+        summary: "Add one person to a matter team",
         tags: ["matters"],
         params: NumberParams,
-        body: z.strictObject({ userId: z.string(), role: z.enum(MATTER_TEAM_ROLES) }),
+        body: z.strictObject({ userId: z.string() }),
         response: { 201: MatterTeamEnvelope, default: problemResponse },
       },
     },
@@ -1232,16 +1253,13 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           );
         }
         assertEditable(current);
-        if (request.body.role === MATTER_CREATOR_ROLE) {
-          throw httpError(400, "The creator is recorded when the matter is created.");
-        }
         const person = await lockedLiveUser(tx, request.body.userId);
         const inserted = await tx
           .insert(matterTeam)
-          .values({ matterId: current.row.id, userId: person.id, role: request.body.role })
+          .values({ matterId: current.row.id, userId: person.id })
           .onConflictDoNothing()
           .returning();
-        if (inserted.length === 0) throw httpError(409, "This person already holds that role.");
+        if (inserted.length === 0) throw httpError(409, "This person is already on the team.");
         await recordActivity(tx, {
           entityType: "matter",
           entityId: current.row.id,
@@ -1252,7 +1270,6 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
             number: current.row.number,
             title: current.row.title,
             member: person.displayName,
-            role: request.body.role,
           },
         });
         return selectTeam(tx, current.row.id);
@@ -1262,14 +1279,14 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
   );
 
   app.delete(
-    "/matters/:number/team/:userId/:role",
+    "/matters/:number/team/:userId",
     {
       preHandler: requireMember,
       schema: {
         operationId: "removeMatterTeamMember",
-        summary: "Remove one compound-key role from a matter team, except creator",
+        summary: "Remove one person from a matter team",
         tags: ["matters"],
-        params: NumberParams.extend({ userId: z.string(), role: z.enum(MATTER_TEAM_ROLES) }),
+        params: NumberParams.extend({ userId: z.string() }),
         response: { 200: MatterTeamEnvelope, default: problemResponse },
       },
     },
@@ -1285,20 +1302,16 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           );
         }
         assertEditable(current);
-        if (request.params.role === MATTER_CREATOR_ROLE) {
-          throw httpError(409, "The creator stays on the record — it is who made it.");
-        }
         const [removed] = await tx
           .delete(matterTeam)
           .where(
             and(
               eq(matterTeam.matterId, current.row.id),
               eq(matterTeam.userId, request.params.userId),
-              eq(matterTeam.role, request.params.role),
             ),
           )
           .returning();
-        if (!removed) throw httpError(404, "Nobody holds that role on this matter.");
+        if (!removed) throw httpError(404, "This person is not on the matter team.");
         const [person] = await tx
           .select({ displayName: users.displayName })
           .from(users)
@@ -1314,7 +1327,6 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
             number: current.row.number,
             title: current.row.title,
             member: person?.displayName ?? request.params.userId,
-            role: request.params.role,
           },
         });
         return selectTeam(tx, current.row.id);

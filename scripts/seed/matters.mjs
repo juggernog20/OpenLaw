@@ -15,7 +15,7 @@ import { pool } from "./client.mjs";
 import { ALL_COUNTERPARTIES } from "./data.mjs";
 import { EMPLOYEE_NAMES, MATTER_KEY_DATES, MATTER_KINDS, MATTER_TASKS } from "./catalog.mjs";
 import { customFields } from "./custom-fields.mjs";
-import { contributors, memberPlus } from "./people.mjs";
+import { businessUsers, memberPlus } from "./people.mjs";
 import { COMMENT_LINES, matterNote } from "./prose.mjs";
 import { postComment, uploadDocument } from "./uploads.mjs";
 import { daysFromToday } from "./time.mjs";
@@ -127,7 +127,7 @@ function customFieldsFor(plan, fields, attached, random) {
 export async function seedMatters(admin, context, log) {
   const { random, taxonomy, people, fields, attached, templates, plans } = context;
   const staff = memberPlus(people);
-  const helpers = contributors(people);
+  const helpers = businessUsers(people);
   const matters = [];
 
   await pool(plans, 4, async (plan, index) => {
@@ -173,16 +173,12 @@ export async function seedMatters(admin, context, log) {
       staff.filter((person) => person.id !== manager.id),
       random.int(1, 3),
     )) {
-      const role = random.weighted([
-        ["member", 4],
-        ["watcher", 2],
-      ]);
-      await author.post(`${at}/team`, { userId: member.id, role });
+      await author.post(`${at}/team`, { userId: member.id });
       team.push(member);
     }
     if (random.chance(0.2) && helpers.length > 0) {
       const helper = random.pick(helpers);
-      await author.post(`${at}/team`, { userId: helper.id, role: "contributor" });
+      await author.post(`${at}/team`, { userId: helper.id });
       team.push(helper);
     }
 
@@ -204,7 +200,9 @@ export async function seedMatters(admin, context, log) {
       for (const title of random.sample(MATTER_TASKS, random.int(1, 4))) {
         const { body } = await author.post(`${at}/tasks`, {
           title,
-          assigneeId: random.chance(0.7) ? random.pick(matter.team).id : null,
+          assigneeId: random.chance(0.7)
+            ? random.pick(matter.team.filter((person) => person.role !== "business_user")).id
+            : null,
           dueDate: random.chance(0.8) ? daysFromToday(random.int(-21, 45)) : null,
         });
         tasks += 1;
@@ -264,10 +262,10 @@ export async function seedMatters(admin, context, log) {
     }
 
     if (plan.hasComments) {
-      // Member+ only: a Contributor on the team cannot post to the
+      // Member+ only: a Business User on the team cannot post to the
       // legal-only tier, and most of what gets said here is legal-only.
       const speakers = random.sample(
-        matter.team.filter((person) => person.role !== "contributor"),
+        matter.team.filter((person) => person.role !== "business_user"),
         random.int(1, 3),
       );
       for (const speaker of speakers) {

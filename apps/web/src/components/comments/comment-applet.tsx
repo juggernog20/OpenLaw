@@ -145,6 +145,7 @@ const ROW_GLYPH_SIZE = 16;
 const MAX_MENTION_QUERY = 40;
 
 export interface CommentAppletOptions {
+  enabled?: boolean;
   /** The record the thread hangs off — its type and its id, never a
    * record-specific address. */
   entityType: CommentEntityType;
@@ -178,6 +179,7 @@ export interface CommentAppletOptions {
  * would be, so the badge can say nothing the thread would not.
  */
 export function useCommentApplet({
+  enabled = true,
   entityType,
   entityId,
   role,
@@ -230,6 +232,7 @@ export function useCommentApplet({
   }, []);
 
   const readUnread = useCallback(async () => {
+    if (!enabled) return;
     const issue = (unreadIssued.current += 1);
     const { data } = await api
       .GET("/api/v1/comments/unread", { params: { query: { entityType, entityId } } })
@@ -240,7 +243,7 @@ export function useCommentApplet({
     // old badge from a frame, because the frame says nothing about what
     // this viewer can read (CMT-009).
     setUnread(data.unread);
-  }, [entityType, entityId]);
+  }, [entityType, entityId, enabled]);
 
   useEffect(() => {
     void readUnread();

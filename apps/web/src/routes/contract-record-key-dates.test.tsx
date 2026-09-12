@@ -34,12 +34,6 @@ const MEMBER = {
   displayName: "Nadia Counsel",
   role: "legal_team_member",
 };
-const CONTRIBUTOR = {
-  id: "u3",
-  email: "contributor@example.com",
-  displayName: "Casey Contributor",
-  role: "contributor",
-};
 
 const PEOPLE = [
   {
@@ -467,16 +461,6 @@ describe("the record's Key dates section (CTR-009)", () => {
     expect(
       card.queryByRole("button", { name: /Actions for Current term expires/ }),
     ).not.toBeInTheDocument();
-  });
-
-  it("gives a read-only viewer the surface and no control on it", async () => {
-    stubApi({ signedIn: CONTRIBUTOR, extra: recordApi(UNION).handler });
-    renderAt("/contracts/42/key-dates");
-
-    const card = await section();
-    expect(card.getByText("Price review window opens")).toBeInTheDocument();
-    expect(card.queryByRole("button", { name: "Add date" })).not.toBeInTheDocument();
-    expect(card.queryByRole("button", { name: /^Actions for/ })).not.toBeInTheDocument();
   });
 
   it("freezes every control on an archived record", async () => {

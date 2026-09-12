@@ -160,7 +160,7 @@ beforeAll(async () => {
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
     [OUTSIDER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, user.id));
@@ -314,7 +314,7 @@ const addToTeam = (number: number, userId: string) =>
     method: "POST",
     url: `/api/v1/contracts/${number}/team`,
     cookies: as(MEMBER),
-    payload: { userId, role: "member" },
+    payload: { userId },
   });
 
 /** The fake this app resolved. Non-null from the first request that
@@ -394,12 +394,12 @@ describe("sending the primary document for signature", () => {
     expect(state.envelopes[0]!.signers).toEqual([...SIGNERS]);
   });
 
-  it("shows the envelope to a Contributor on the team, who cannot send", async () => {
+  it("refuses envelope reads and sends for a Business User on the team", async () => {
     const added = await addToTeam(contract.number, idOf(CONTRIBUTOR));
     expect(added.statusCode, added.body).toBe(201);
 
-    const state = await signingState(as(CONTRIBUTOR), contract.number);
-    expect(state.envelopes).toHaveLength(1);
+    const state = await listEnvelopes(as(CONTRIBUTOR), contract.number);
+    expect(state.statusCode).toBe(403);
 
     const refused = await send(as(CONTRIBUTOR), contract.number, paper.versions[0]!.id);
     expect(refused.statusCode).toBe(403);

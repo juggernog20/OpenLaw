@@ -83,7 +83,7 @@ beforeAll(async () => {
     .update(users)
     .set({ role: "legal_team_member" })
     .where(inArray(users.id, [memberId, secondMemberId, archivedMemberId]));
-  await harness.db.update(users).set({ role: "contributor" }).where(eq(users.id, contributorId));
+  await harness.db.update(users).set({ role: "business_user" }).where(eq(users.id, contributorId));
   await harness.db
     .update(users)
     .set({ archivedAt: new Date() })

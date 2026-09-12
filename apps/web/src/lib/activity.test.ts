@@ -75,6 +75,22 @@ const ENVELOPE_ENDING = {
  * sample here.
  */
 const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
+  "contract.portal_access_excluded": {
+    number: 42,
+    title: "Supply",
+    userId: "u2",
+    member: "Casey",
+    source: "business_owner",
+    affiliatedAt: "2026-09-11T00:00:00Z",
+  },
+  "matter.portal_access_excluded": {
+    number: 12,
+    title: "Advice",
+    userId: "u2",
+    member: "Casey",
+    source: "requester",
+    affiliatedAt: "2026-09-11T00:00:00Z",
+  },
   // Profile and user administration
   "user.briefing_sent": {
     approvalCount: 1,

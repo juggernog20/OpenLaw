@@ -40,7 +40,6 @@ export type SeverityLevel = ContractRow["priority"];
  * the one role this row records. The same person appears once per role
  * they hold (CTR-004's compound key). */
 export type ContractTeamMember = RecordResponse["team"][number];
-export type ContractTeamRole = ContractTeamMember["role"];
 
 /**
  * One party on the other side (CTR-011), as the record draws them: the
@@ -446,30 +445,4 @@ export function termPeriods(contract: {
     end: ends[index] ?? expiryDate,
     renewal: index,
   }));
-}
-
-/** CTR-004's role enum, in the order the roster and the picker read. */
-export const CONTRACT_TEAM_ROLES = exhaustiveList<ContractTeamRole>()([
-  "member",
-  "watcher",
-  "contributor",
-  "creator",
-] as const);
-
-/** What the add-member picker offers. `creator` is provenance: the
- * server writes that row at creation, and nothing adds it by hand. */
-export const ADDABLE_TEAM_ROLES: readonly ContractTeamRole[] = CONTRACT_TEAM_ROLES.filter(
-  (role) => role !== "creator",
-);
-
-export function teamRoleLabel(intl: IntlShape, role: ContractTeamRole): string {
-  return intl.formatMessage(
-    {
-      id: "contracts.teamRole",
-      defaultMessage:
-        "{role, select, member {Member} watcher {Watcher} creator {Creator} " +
-        "contributor {Contributor} other {Unknown}}",
-    },
-    { role },
-  );
 }

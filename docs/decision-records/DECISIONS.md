@@ -505,6 +505,8 @@ The fallback name on rename is **Counsel** (single-syllable, clean category fit,
 
 ## DD-013: Four-role permission model — Administrator, Legal Team Member, Contributor, Business User
 
+**2026-09-11 amendment:** DD-023 defines the current three account types and the Portal contribution grid. Contributor accounts become Business Users. Team membership grants their Portal access; staff record pages remain Member+. Historical rationale below describes the former model.
+
 - **Status:** Accepted
 - **Date:** 2026-05-03
 
@@ -514,14 +516,14 @@ Every UI mock and every authorization check must answer "who can see / do what?"
 
 ### Decision
 
-Four fixed roles. Custom RBAC is explicitly deferred (see Alternatives).
+~~Four fixed roles. Custom RBAC is explicitly deferred (see Alternatives).~~
 
-| Role                  | Audience                                                                                | Default access                                                                                                                                                                                                                                                                                            |
-| --------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Administrator**     | General Counsel, Legal Ops                                                              | Full access. Can configure modules, manage users, set up intake channels, change system settings, see all matters/contracts/entities including sensitive ones.                                                                                                                                            |
-| **Legal Team Member** | In-house counsels, paralegals                                                           | Full functional access to legal work — read/write across Matters, Contracts, Documents, Entities — _except_ (a) cannot change system settings, (b) cannot see information flagged as sensitive unless explicitly added to that matter. Mechanism for the sensitivity gate is defined in **DD-014** (TBD). |
-| **Contributor**       | Procurement, compliance, finance, others embedded in legal-adjacent work                | Enhanced access beyond Business User but less than Legal Team Member. Sees only matters/contracts they are explicitly added to. Within those, can read and contribute (comment, upload docs, edit specific fields) per **DD-015** (TBD). Cannot browse the system more broadly.                           |
-| **Business User**     | All other employees (sales, HR, engineering, marketing, etc.) submitting legal requests | Sees only requests they personally submitted, plus comments addressed to them. Cannot browse matters, contracts, documents, or other users' submissions. Activity is tracked for the audit log.                                                                                                           |
+| ~~Role~~                  | ~~Audience~~                                                                                | ~~Default access~~                                                                                                                                                                                                                                                                                            |
+| ------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ~~**Administrator**~~     | ~~General Counsel, Legal Ops~~                                                              | ~~Full access. Can configure modules, manage users, set up intake channels, change system settings, see all matters/contracts/entities including sensitive ones.~~                                                                                                                                            |
+| ~~**Legal Team Member**~~ | ~~In-house counsels, paralegals~~                                                           | ~~Full functional access to legal work — read/write across Matters, Contracts, Documents, Entities — _except_ (a) cannot change system settings, (b) cannot see information flagged as sensitive unless explicitly added to that matter. Mechanism for the sensitivity gate is defined in **DD-014** (TBD).~~ |
+| ~~**Contributor**~~       | ~~Procurement, compliance, finance, others embedded in legal-adjacent work~~                | ~~Enhanced access beyond Business User but less than Legal Team Member. Sees only matters/contracts they are explicitly added to. Within those, can read and contribute (comment, upload docs, edit specific fields) per **DD-015** (TBD). Cannot browse the system more broadly.~~                           |
+| ~~**Business User**~~     | ~~All other employees (sales, HR, engineering, marketing, etc.) submitting legal requests~~ | ~~Sees only requests they personally submitted, plus comments addressed to them. Cannot browse matters, contracts, documents, or other users' submissions. Activity is tracked for the audit log.~~                                                                                                           |
 
 ### Rationale
 
@@ -643,6 +645,8 @@ The predicate runs inside every Entity collection, record, picker, calendar, sea
 
 ## DD-015: Contributor permission grid — read, comment, upload, edit business fields
 
+**2026-09-11 amendment:** DD-023 defines the current three account types and the Portal contribution grid. Contributor accounts become Business Users. Team membership grants their Portal access; staff record pages remain Member+. Historical rationale below describes the former model.
+
 - **Status:** Accepted
 - **Date:** 2026-05-03
 
@@ -652,30 +656,30 @@ Per **DD-013**, the Contributor role exists for non-legal-team users (procuremen
 
 ### Decision
 
-Contributors are made-not-born and scoped per-entity:
+~~Contributors are made-not-born and scoped per-entity:~~
 
-- A user becomes a Contributor on a specific Matter or Contract when an Administrator or Legal Team Member adds them to the matter team.
-- Contributor membership grants no global access — it applies only to the entity they were added to.
-- A user can be a Contributor on multiple matters; each grant is independent.
+- ~~A user becomes a Contributor on a specific Matter or Contract when an Administrator or Legal Team Member adds them to the matter team.~~
+- ~~Contributor membership grants no global access — it applies only to the entity they were added to.~~
+- ~~A user can be a Contributor on multiple matters; each grant is independent.~~
 
-On matters/contracts they are added to, Contributors can:
+~~On matters/contracts they are added to, Contributors can:~~
 
-- **Read:** matter detail, attached documents, activity feed, comments not marked `internal` (see **DD-016**).
-- **Comment:** post comments at the `team` and `shared` visibility tiers (see **DD-016**); cannot post at the `internal` tier.
-- **Upload documents:** PDFs, Word docs, images, and other typical attachments. Cannot upload as a new version of a primary contract document (that is a Member-level redline action).
-- **Edit business fields only.** Each editable field on a matter/contract record carries a tag: `business` or `legal`.
-  - `business` (Contributor-editable): counterparty name, contract amount, payment terms, business effective dates, vendor contact info, internal cost center, business description.
-  - `legal` (Member-only): governing law, jurisdiction, indemnity caps, IP assignment, confidentiality terms, matter type, workflow status, assigned lawyer, the contract document body, parties on the contract.
+- ~~**Read:** matter detail, attached documents, activity feed, comments not marked `internal` (see **DD-016**).~~
+- ~~**Comment:** post comments at the `team` and `shared` visibility tiers (see **DD-016**); cannot post at the `internal` tier.~~
+- ~~**Upload documents:** PDFs, Word docs, images, and other typical attachments. Cannot upload as a new version of a primary contract document (that is a Member-level redline action).~~
+- ~~**Edit business fields only.** Each editable field on a matter/contract record carries a tag: `business` or `legal`.~~
+  - ~~`business` (Contributor-editable): counterparty name, contract amount, payment terms, business effective dates, vendor contact info, internal cost center, business description.~~
+  - ~~`legal` (Member-only): governing law, jurisdiction, indemnity caps, IP assignment, confidentiality terms, matter type, workflow status, assigned lawyer, the contract document body, parties on the contract.~~
 
-Contributors cannot:
+~~Contributors cannot:~~
 
-- Change workflow status (draft → review → approved → signed).
-- Mark a matter / contract / document as confidential or remove the flag.
-- Add or remove parties.
-- Create new top-level matters or contracts from scratch (must use the standard intake path as a Business User; a Member then promotes them to Contributor on the resulting matter).
-- See `internal`-tier comments.
+- ~~Change workflow status (draft → review → approved → signed).~~
+- ~~Mark a matter / contract / document as confidential or remove the flag.~~
+- ~~Add or remove parties.~~
+- ~~Create new top-level matters or contracts from scratch (must use the standard intake path as a Business User; a Member then promotes them to Contributor on the resulting matter).~~
+- ~~See `internal`-tier comments.~~
 
-All Contributor edits and uploads carry the user's name and role tag in the activity feed and document metadata.
+~~All Contributor edits and uploads carry the user's name and role tag in the activity feed and document metadata.~~
 
 ### Rationale
 
@@ -707,7 +711,7 @@ On a reached Matter or Contract, a Contributor reads the record and its permitte
 
 ## DD-016: Comment visibility — three audience tiers (Legal Only / Working Team / Full Thread)
 
-- **Status:** Accepted
+- **Status:** Amended by DD-023
 - **Date:** 2026-05-03
 
 ### Context
@@ -722,13 +726,13 @@ Without a tiered visibility model, every comment ends up either too public (leak
 
 ### Decision
 
-Three audience-tiered visibility levels on every comment, named after their actual audience:
+DD-023 retains the historical tiers. Legal Only and Working Team are staff-only. Full Thread on a Contract or Matter includes the Business Users currently on its team. A never-converted Request retains its Requester audience. The earlier audience table is superseded:
 
-| Tier | Label            | Audience                                                                           |
-| ---- | ---------------- | ---------------------------------------------------------------------------------- |
-| 1    | **Legal Only**   | Administrators + Legal Team Members                                                |
-| 2    | **Working Team** | Administrators + Legal Team Members + Contributors on the matter                   |
-| 3    | **Full Thread**  | Administrators + Legal Team Members + Contributors + the originating Business User |
+| Tier  | Label                | Audience                                                                               |
+| ----- | -------------------- | -------------------------------------------------------------------------------------- |
+| ~~1~~ | ~~**Legal Only**~~   | ~~Administrators + Legal Team Members~~                                                |
+| ~~2~~ | ~~**Working Team**~~ | ~~Administrators + Legal Team Members + Contributors on the matter~~                   |
+| ~~3~~ | ~~**Full Thread**~~  | ~~Administrators + Legal Team Members + Contributors + the originating Business User~~ |
 
 **Default selection rules:**
 
@@ -875,6 +879,8 @@ Matter business-Field edits, supporting-Document uploads and Versions, Key-date 
 
 ## DD-018: Work-model doctrine — dual workspaces with the deliverable rule
 
+**2026-09-11 amendment:** DD-023 replaces the converted Request shell with a redirect to the Contract or Matter. The archived-record exception shows only the original ask.
+
 - **Status:** Accepted
 - **Date:** 2026-08-05
 
@@ -892,7 +898,7 @@ Research verdicts: contract-as-workspace is unanimously validated in the CLM cat
 2. **Routing is bound at request-type configuration** (INT-002), never chosen at triage: the admin decides once whether "NDA request" targets a contract type or "Legal question" targets a matter type. Triage confirms; it does not classify.
 3. **Work that outgrows a contract spawns a linked matter** (MTR-007 link) — a contract never re-classifies into a matter or vice versa.
 4. **Umbrella matters** group multi-contract efforts (M&A deal linking its contracts) — the gap none of the researched CLM leaders closed.
-5. **Re-typing is lossless**: a mis-routed request re-converts to the other target; the request survives as the requester-facing portal shell either way (INT-001) — no JSM-"Move" orphaning.
+5. **Re-typing is lossless**: a mis-routed request re-converts to the other target; ~~the request survives as the requester-facing portal shell either way (INT-001)~~ — no JSM-"Move" orphaning.
 
 ### Rationale
 
@@ -1011,6 +1017,8 @@ and organization-authored Knowledge remain governed by their current decisions.
 
 ## DD-021: Business Users see the Contracts they are stakeholders on, in the portal
 
+**2026-09-11 amendment:** DD-023 replaces Business Owner and Stakeholder grants with one team row, removes Stakeholders, and adds Portal record work. The existing Contract summary, Unverified markers and current-primary Document reader remain. DES-076 defines the pages.
+
 - **Status:** Accepted; implemented in #808
 - **Date:** 2026-09-09
 - **Source:** [focus group, 2026-09-07](../reviews/focus-group-2026-09-07.md)
@@ -1021,13 +1029,13 @@ DD-013 gives a Business User the portal and only their own Requests. Four tester
 
 ### Decision
 
-A Business User can open, in the portal, the Contracts on which they are the Business Owner or a named stakeholder. The view is read-only: title, counterparty, stage, Business Owner, Legal Owner, term and renewal dates, notice deadline, value, and the current Version of the primary Document, read in the same document viewer the app uses, with download. Nothing else on the record crosses over: no comments below Full Thread, no Tasks, no Fields tagged legal, no History. DD-014 and CTR-018 confidentiality apply unchanged; a Confidential contract is reachable only if the person is on its team.
+~~A Business User can open, in the portal, the Contracts on which they are the Business Owner or a named stakeholder. The view is read-only: title, counterparty, stage, Business Owner, Legal Owner, term and renewal dates, notice deadline, value, and the current Version of the primary Document, read in the same document viewer the app uses, with download. Nothing else on the record crosses over: no comments below Full Thread, no Tasks, no Fields tagged legal, no History. DD-014 and CTR-018 confidentiality apply unchanged; a Confidential contract is reachable only if the person is on its team.~~
 
-The original decision described an existing business-sponsor Field. The 2026-09-10 clarification supersedes that mechanism: Business sponsor means the Requester, represented by a single nullable **Business Owner**, not a custom Field. Conversion seeds the Requester as Business Owner; migration backfills existing converted Contracts. Directly created Contracts start unassigned. Automatic conversion and backfill retain the original Requester even if their account was archived before triage; this historical assignment does not bypass the archived-account sign-in gate. New manual assignments require a live person. The existing accountable Owner (`manager_id`) is labelled **Legal Owner**.
+~~The original decision described an existing business-sponsor Field. The 2026-09-10 clarification supersedes that mechanism: Business sponsor means the Requester, represented by a single nullable **Business Owner**, not a custom Field. Conversion seeds the Requester as Business Owner; migration backfills existing converted Contracts. Directly created Contracts start unassigned. Automatic conversion and backfill retain the original Requester even if their account was archived before triage; this historical assignment does not bypass the archived-account sign-in gate. New manual assignments require a live person. The existing accountable Owner (`manager_id`) is labelled **Legal Owner**.~~
 
-Member+ who can reach the Contract may assign or clear a live Business Owner and maintain a separate list of named, live stakeholders. Contributors cannot change either access mechanism. Portal access is the current Business Owner OR an explicit stakeholder link; changing or clearing the owner removes only ownership-derived access, preserving separately maintained stakeholder links. Conversion does not create a duplicate link. For Confidential Contracts and Confidential primary Documents, this affiliation must also pass the existing named-team or Legal Owner gate. No role bypasses this Portal gate. Archived Contracts and Documents are omitted.
+~~Member+ who can reach the Contract may assign or clear a live Business Owner and maintain a separate list of named, live stakeholders. Contributors cannot change either access mechanism. Portal access is the current Business Owner OR an explicit stakeholder link; changing or clearing the owner removes only ownership-derived access, preserving separately maintained stakeholder links. Conversion does not create a duplicate link. For Confidential Contracts and Confidential primary Documents, this affiliation must also pass the existing named-team or Legal Owner gate. No role bypasses this Portal gate. Archived Contracts and Documents are omitted.~~
 
-Contract Overview pairs Business Owner and Legal Owner, followed by a full-width Our Entity row directly above Counterparties. Stakeholders are managed separately.
+~~Contract Overview pairs Business Owner and Legal Owner, followed by a full-width Our Entity row directly above Counterparties. ~~Stakeholders are managed separately.~~ _(Superseded by **DES-075** (2026-09-11): stakeholders are maintained in the Contract team applet, as a Stakeholder tag on the roster, not in a section of the Overview. The access rule above is unchanged.)_~~
 
 ### Rationale
 
@@ -1035,7 +1043,7 @@ The portal's job is to stop the inbox back-and-forth (PRODUCT.md principle 3). "
 
 ### Consequences
 
-Your Contracts is one flat paginated list; DD-019 views do not apply. The detail exposes title, primary counterparty, stage, both owner names, value, term type, effective and expiry dates, renewal period, notice deadline, and renewal-pending state. Existing CTR-008 Unverified markers remain visible with an explanation; internal evidence, run details, legal Fields, Tasks and History are excluded. No new Contract comment surface or stage-change notification is added. Existing Request threads are unchanged.
+~~Your Contracts is one flat paginated list; DD-019 views do not apply. The detail exposes title, primary counterparty, stage, both owner names, value, term type, effective and expiry dates, renewal period, notice deadline, and renewal-pending state. Existing CTR-008 Unverified markers remain visible with an explanation; internal evidence, run details, legal Fields, Tasks and History are excluded. No new Contract comment surface or stage-change notification is added. Existing Request threads are unchanged.~~
 
 The existing Document reader uses dedicated Portal endpoints. Every metadata, byte, rendition, email and attachment request checks affiliation and confidentiality again, and accepts only the current Version of the current primary Document. Staff Document endpoints retain their existing access rules. Reporting stays deferred; this is a read on records the person already has a stake in, not a dashboard.
 
@@ -1060,6 +1068,142 @@ Module identity first: is an Auto-Doc a Document owned by a Contract created on 
 ### Consequences
 
 Nothing is built until the decision record exists. FUTURE-FEATURES' "Contract templates" row points here.
+
+## DD-023: Three account types, one team roster, and Portal work on Contracts and Matters
+
+- **Status:** Accepted under Blair's 2026-09-11 instruction to implement; Confidential migration preserves the existing audience
+- **Date drafted:** 2026-09-11
+- **Source:** Blair's Contract record and Portal access discussion, handed off on 2026-09-11
+
+### Context
+
+The account role and the role on a team row answer different questions but use the same language. DD-013 gives an account one of four roles. CTR-004 and MTR-003 give a person one or more team tags: Member, Watcher, Contributor, or Creator. CTR-021 then makes any team row the access grant, regardless of its tag. A Business User tagged Watcher still cannot open the record through that grant. DD-021 instead grants a Contract Portal read through Business Owner assignment or a separate Stakeholder link.
+
+The result is two lists of people with different access effects. DES-075 puts both lists into the Contract team applet, but leaves the underlying distinction intact. Blair's decision is to remove that distinction: the account type says what a person can do, and the roster says which work they are on.
+
+The Portal also needs somewhere for that work to happen. DD-018 kept a converted Request alive as a Portal shell because Business Users could not open the resulting Contract or Matter. CMT-001 already moves the conversation to that record. Once Business Users can work on records directly, the shell has no continuing purpose.
+
+### Decision
+
+#### 1. Three account types
+
+| Account type      | Surface  | Record access and work                                                                                                     |
+| ----------------- | -------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Administrator     | Full app | Full legal work on records they can reach, plus system administration. DD-014's Confidential gate still applies.           |
+| Legal Team Member | Full app | Full legal work on open records and Confidential records they can reach. System administration remains Administrator-only. |
+| Business User     | Portal   | Their own Requests, and Portal read and write on each non-archived Contract or Matter carrying their team row.             |
+
+**Contributor is removed as an account type.** Existing Contributor accounts become Business Users and keep their record memberships. They lose the full-app surface and use the Portal for those records. An Administrator changes an account to Legal Team Member if that person should retain full legal work access. No account is automatically promoted to Legal Team Member.
+
+External counsel collaboration under MTR-006 is deferred to FUTURE-FEATURES. This change adds no replacement external-counsel account type or workflow.
+
+#### 2. One roster, with no team tags
+
+A Contract or Matter has at most one team row per person. Member, Watcher, Contributor, and Creator cease to be team tags. There is no role picker when adding a person. There is no separate Stakeholder concept, table, endpoint, or control.
+
+The roster lists names. Legal Owner, Business Owner, and Creator appear as statements of responsibility or origin, not removable permission tags. The existing Matter Manager term remains the Matter's legal accountability statement. Owner assignments change through their owner controls; the Creator statement is historical. Preserve the creator's identity before removing the old Creator tag.
+
+For a **Business User, the team row is the only record grant**. Business Owner assignment, being the original Requester, being named in a comment, and being on a related record do not independently grant access. Creating a Contract or Matter with a Business Owner also adds that person to its team. Reassigning Business Owner later changes the statement only; Legal adds the person to the team separately. Changing Business Owner does not remove an existing team row. Removing a Business User's row removes their Portal access on the next read, including through old Request addresses, comments, Documents, downloads, and notifications. Every write also checks current membership.
+
+Member+ who can reach an open record may add or remove people. On a Confidential record, roster changes retain CTR-023's actor restriction and the corresponding Matter rule. Being a Business User on the team never gives roster or owner-management rights.
+
+**DD-014's Confidential gate is unchanged, including its 2026-09-10 amendment.** Administrator status does not bypass the wall. The existing Legal Owner or Matter Manager access remains; other named participants need their team row. Business Owner is not an additional owner bypass. Confidential Document reads still require the owning record's access and the Document's own gate. Hidden records and content remain omitted before pagination, counts, and notifications are computed.
+
+#### 3. The Portal is the Business User's view of their legal work
+
+The three work objects in the Portal are **Requests, Contracts, and Matters**. The Request is the front door for asking Legal to do work. The Contract or Matter is where people work after conversion, and it can exist without any Request.
+
+Your Contracts extends DD-021's existing view. Your Matters is a new destination with the same team-based grant. A Business User added later can open a record directly without being given or creating a Request. Legacy records need no synthetic Requests. If several Requests point to one record, each address leads to that same record and its one conversation.
+
+Closing a Matter or Ending a Contract does not revoke its team's access or freeze permitted work. Archiving removes the record from the Portal and stops writes, as under the existing lifecycle rules.
+
+#### 4. The record is where Portal write happens
+
+DD-015's business contribution permissions move to Business Users on the record's team, through the Portal. The comment permission is **Full Thread (`shared`) only**.
+
+| Surface or action                     | Business User on the team                                                                                                                                                           |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Record summary                        | Read the business-facing Contract or Matter details. The Contract starts from DD-021's current summary.                                                                             |
+| Business Fields and description       | Edit business-tagged Fields, Contract value and effective date, and the live record's business description. Legal-tagged Fields stay outside the Portal.                            |
+| Supporting Documents                  | Upload supporting Documents and add Versions to supporting Document chains, subject to ordinary Document access.                                                                    |
+| Primary Contract Document             | Read and download the current Version under DD-021's reader rules. Uploading a primary Version, replacing it, or changing the primary designation stays Member+.                    |
+| Record comments and reply attachments | Read and post at Full Thread (`shared`), using the record's conversation and attachment machinery.                                                                                  |
+| Original request                      | Read the original submission. It is a historical snapshot and cannot be edited through the record.                                                                                  |
+| Legal actions                         | Status, Type, parties, legal Fields, owners, roster, confidentiality, primary Document, approvals, signature, lifecycle, Key dates, Tasks, and relationship mutations stay Member+. |
+
+Business Users continue to create Requests rather than top-level Contracts or Matters. Their writes and uploads retain their identity in the Activity feed and Audit log under DD-017.
+
+**Full Thread on a Contract or Matter means the Business Users currently on its team**, together with Member+ who can reach it. It is no longer a special entitlement of the original Requester. A later-added Business User can read that record's Full Thread history; a removed person loses it. A never-converted Request keeps its existing Requester audience.
+
+Portal notification settings expose Request updates, mentions, and activity on reachable records. Notifications and email delivery recheck current membership; old Request links follow the record redirect. Existing event types and channel defaults remain.
+
+Legal Only and Working Team content is not exposed through the Portal. Existing comment tiers and historical entries are preserved; migration does not republish Working Team comments as Full Thread. Former Contributors therefore lose access to Working Team content when their accounts become Business Users. Changing the remaining staff composer tiers or defaults is not decided here.
+
+The Portal design record will set the page layout and detailed read projection. DD-021's exclusions of legal Fields, internal AI evidence, run details, Tasks, and History continue for the Contract Portal page unless that review explicitly amends them. The Contract's existing Unverified markers remain visible.
+
+#### 5. A converted Request becomes a link to the record
+
+At conversion to either kind of record, the Requester becomes **Business Owner and a team member**. This is one conversion operation with the record creation and the existing movement of conversation and paper. Matters gain the Business Owner assignment needed to express the same responsibility. An archived Requester account can remain recorded historically; it does not regain sign-in access.
+
+In the **Portal**, the converted Request's address redirects to its Contract or Matter. Converted Requests leave **Your Requests**. New, resolved, and declined Requests remain there; resolved and declined Requests retain their own conversation. Old notification links to a converted Request follow the redirect and check current record access. They cannot act as a second route into a record after removal from its team.
+
+The original ask lives on the Contract or Matter in a read-only **Original request** block. Preserve who asked, when, the original description and submitted answers, and references to the submitted paper under the record's Document rules. Reuse the full-app Contract's original-intake snapshot and presentation where appropriate. A record created without a Request has no invented original ask. Where several Requests point to one record, retain each original submission separately.
+
+In the **full app**, the Inbox retains its triaged toggle. A converted Request detail contains only its envelope: original submission, who converted it, when, and the link to the record when the viewer can reach it. It has no live thread, Document work surface, or composer. Original attachment references are provenance; ongoing reading and work happen on the record. Resolved and declined Requests keep their threads.
+
+**Archived destination is the one exception to the Portal redirect.** If the converted record has been archived, its Request address shows the Requester a stub saying the record was archived and displaying their original ask. The stub has no conversation, composer, or access to archived Documents. It grants no record access. Removing a team row from a live record does not bring this stub or the old Request shell back. Restoring the record makes the address a redirect again, subject to current membership.
+
+#### 6. Migrate membership and preserve history
+
+The migration must:
+
+1. Convert Contributor accounts to Business Users and retain their existing Contract and Matter memberships. Authorization must use the new account type for existing sessions as well as new sign-ins.
+2. Collapse multiple team tags for one person into one team row. Preserve the record's Creator fact and membership before removing the tag columns and enum.
+3. Convert Stakeholder links into Contract team rows, deduplicating existing memberships, then remove `contract_stakeholders` and its three endpoints. Apply the Confidential audience rule below.
+4. Backfill a team row for each existing Business Owner who already has Portal access. Backfill Business Owner and Requester membership on existing converted Contracts and Matters so the Request can hand off to a reachable record. Apply the same Confidential migration decision below where this would introduce a new audience member.
+5. Preserve historical authors, assignments, submitted asks, Documents, comment tiers, and audit entries. Historical mentions of Contributor or a former team tag are facts about the past, not current grants.
+
+**Confidential migration preserves the existing audience.** An affiliation outside the named audience does not become a team row. The migration records each excluded affiliation in the record's legal Activity history before removing Stakeholder storage. An actor already allowed to manage that Confidential roster can add the person later. Business Owner and original Requester facts remain historical statements. The converted Request gives no continuing access around the record's gate.
+
+### Rationale
+
+Adding a person should have one explainable effect. Their account type determines the work they can do; one roster records their participation. Removing Watcher and the other team tags removes distinctions that no longer affect the grant. Moving the contribution grid to Business Users keeps the procurement and finance use cases without a fourth account type.
+
+Records outlive Requests. Some never had a Request, some gain people after conversion, and some can collect several original asks. Giving the record its own Portal address covers all of those cases. Conversion can then end the Request's active life while preserving its submission and old address.
+
+### Alternatives considered
+
+- **Keep a Request as the permanent Portal handle.** Rejected by Blair. It needs synthetic Requests for legacy records and later-added participants, and competing handles when several Requests concern one record.
+- **Keep Stakeholders beside tagged team membership.** Rejected. Putting both in one applet still leaves two grants whose effects depend on account type and confidentiality.
+- **Keep Contributor or Watcher for a narrower class of participant.** Rejected. Blair does not need a Watcher role, and the contribution grid belongs to Business Users on the team.
+- **Replace Contributor with an external-counsel role.** Deferred with external counsel collaboration. It does not belong in this change.
+
+### Consequences and sequence
+
+Blair accepted this model for implementation on 2026-09-11. Mark the conflicting text with strikethrough and a reference to DD-023, retaining it for history. Append numbered records to the relevant module files where new module behavior needs its own decision.
+
+| Record or document                 | Amendment required on acceptance                                                                                                                                            |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DD-013                             | Replace four account roles with the three account types and the Contributor migration.                                                                                      |
+| DD-015                             | Move business contribution to Business Users on record teams, with Full Thread as their comment tier.                                                                       |
+| DD-014                             | Remove obsolete team-tag and Contributor wording; retain the Confidential gate and the 2026-09-10 Administrator amendment.                                                  |
+| DD-016 and CMT-001                 | Replace the converted Requester's independent Full Thread grant with current record membership; preserve historical tiers.                                                  |
+| DD-018 rule 5                      | Replace the continuing Portal shell with the record redirect and original submission. Lossless re-targeting stands.                                                         |
+| DD-021                             | Replace Business Owner or Stakeholder access with team access and extend the Contract Portal write surface.                                                                 |
+| CTR-004, CTR-021, CTR-023; MTR-003 | Remove team tags and state the grant by account type. Preserve Confidential roster management restrictions. Add Matter Business Owner and conversion membership.            |
+| MTR-006; FUTURE-FEATURES           | Park external counsel collaboration with the already-deferred spend features.                                                                                               |
+| DES-047 and DES-075                | Replace the tagged roster, Stakeholder dialog option, and separate fetch. Keep Contract team, owner statements, removal focus handling, and the AI analysis card in Fields. |
+| DES-057 and DES-065                | Reduce the converted staff Request to its envelope; replace converted Portal Request paper and composer links with the record destination.                                  |
+| CONTEXT.md                         | Rewrite Contributor, Business User, Business Owner, Stakeholder, and Portal; record the retirement of Watcher and the team tags.                                            |
+| User guides and design files       | Update the accepted access model and Portal flows, refresh approved guide hashes when publishing, and redraw the obsolete Contract Overview in `designs/contracts.pen`.     |
+
+After product review, write one Portal design record covering Contract and Matter pages, their write surfaces, Original request, redirect behavior, and the archived stub. Then build in the agreed order:
+
+1. **Roster and migration.** Remove team tags, the Contributor account type, and Stakeholders. Replace their access predicates with the account-and-membership rule. Keep the Contract team title, owner statements, and AI analysis move to Fields from DES-075.
+2. **Contract Portal work.** Extend Your Contracts with the permitted write surfaces and move converted Contract Requests to the record address.
+3. **Matters in the Portal.** Add Your Matters, its record page, the matching access predicate, and converted Matter Request redirects.
+
+The sequence is a development order. Do not deploy an intermediate account migration that removes a former Contributor's working surface before the corresponding Portal surface is available.
 
 ## Index of decisions
 
@@ -1087,3 +1231,4 @@ Nothing is built until the decision record exists. FUTURE-FEATURES' "Contract te
 | DD-020 | Product documentation is public, versioned, and separate from Knowledge                   | Accepted                          |
 | DD-021 | Business Users see the Contracts they are stakeholders on, in the portal                  | Accepted; implemented in #808     |
 | DD-022 | Auto-Docs — a new destination that fills approved templates from a form                   | Accepted direction; grill pending |
+| DD-023 | Three account types, one team roster, and Portal work on Contracts and Matters            | Accepted                          |

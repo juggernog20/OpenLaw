@@ -11,6 +11,7 @@ export interface ConversionCitation {
 export interface ConversionSuggestion {
   value: string | number | boolean | string[];
   citations: ConversionCitation[];
+  justification?: string;
 }
 export interface ConversionProvenance {
   draftId: string;
@@ -34,4 +35,12 @@ export interface ConversionAttachmentRead {
   /** Server-side storage reference, translated to an authorized attachment URL when read. */
   previewRef?: string;
   byteSize?: number;
+}
+
+/** A copied intake answer remains human-provided, including harmless whitespace changes. */
+export function sameConversionValue(value: unknown, original: unknown): boolean {
+  if (original === undefined || original === null || original === "") return false;
+  const normalize = (input: unknown) =>
+    typeof input === "string" ? input.normalize("NFKC").trim().replace(/\s+/gu, " ") : input;
+  return JSON.stringify(normalize(value)) === JSON.stringify(normalize(original));
 }

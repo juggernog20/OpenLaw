@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** DD-021: read-only Contract facts and the current primary Document in the Portal. */
+/** DD-023: Contract facts and business work for the Portal team. */
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
+import { loadPortalWork } from "../lib/portal-records";
+import { PortalRecordWork } from "../components/portal/record-work";
 import { api } from "../lib/api";
 import { currentUser, useSignOut } from "../lib/session";
 import {
@@ -30,11 +32,15 @@ export async function portalContractLoader({ params }: LoaderFunctionArgs) {
   });
   if (result.response.status === 404) return { user, contract: null };
   if (!result.data) throw new Error("This Contract could not be read.");
-  return { user, contract: result.data.contract };
+  return {
+    user,
+    contract: result.data.contract,
+    recordWork: await loadPortalWork("contract", number),
+  };
 }
 
 export function PortalContractPage() {
-  const { user, contract } = useLoaderData<typeof portalContractLoader>();
+  const { user, contract, recordWork } = useLoaderData<typeof portalContractLoader>();
   const intl = useIntl();
   const signOut = useSignOut("/portal/enter");
   const [reading, setReading] = useState(false);
@@ -63,7 +69,13 @@ export function PortalContractPage() {
     );
   }
   return (
-    <PortalShell user={user} onSignOut={() => void signOut()}>
+    <PortalShell
+      user={user}
+      onSignOut={() => void signOut()}
+      recordScope={
+        recordWork ? { entityType: "contract", entityId: recordWork.work.id } : undefined
+      }
+    >
       <PageTitle title={title} />
       <Link to="/portal/contracts" className="text-base text-link">
         <FormattedMessage id="portal.contract.back" defaultMessage="Your Contracts" />
@@ -207,6 +219,14 @@ export function PortalContractPage() {
                   defaultMessage="No primary Document is available to you."
                 />
               </p>
+            )}
+            {recordWork && (
+              <PortalRecordWork
+                module="contract"
+                number={contract.number}
+                viewerId={user.id}
+                {...recordWork}
+              />
             )}
           </div>
           {reading && contract.primaryDocument && (

@@ -518,7 +518,7 @@ it("renews an active worker lease before a sweep can dispatch a competing extrac
   expect(ready!.state).toBe("ready");
 });
 
-it("omits Legal Field names and outcomes from a Contributor's Analysis response", async () => {
+it("omits Legal Field names and Analysis outcomes from Portal work", async () => {
   const slug = "private_strategy";
   const [field] = await harness.db
     .insert(fields)
@@ -551,22 +551,26 @@ it("omits Legal Field names and outcomes from a Contributor's Analysis response"
     .select()
     .from(users)
     .where(eq(users.email, "contributor@example.com"));
-  await harness.db
-    .insert(contractTeam)
-    .values({ contractId: contract.id, userId: viewer!.id, role: "contributor" });
-  const contributor = await get(cast.contributorCookies);
+  await harness.db.insert(contractTeam).values({ contractId: contract.id, userId: viewer!.id });
+  const portal = () =>
+    harness.app.inject({
+      method: "GET",
+      url: `/api/v1/portal/contracts/${contract.number}/work`,
+      cookies: cast.contributorCookies,
+    });
+  const contributor = await portal();
   expect(contributor.statusCode, contributor.body).toBe(200);
   expect(contributor.body).not.toContain(slug);
-  expect(contributor.json().contract.customFields).not.toHaveProperty(slug);
+  expect(contributor.json().work.customFields).not.toHaveProperty(slug);
   // Older summaries may retain classification lists without per-target results.
   await harness.db
     .update(contractAnalysisRuns)
     .set({ outcome: sql`${contractAnalysisRuns.outcome} - 'results'` })
     .where(eq(contractAnalysisRuns.id, runs[0]!.id));
-  const legacy = await get(cast.contributorCookies);
+  const legacy = await portal();
   expect(legacy.statusCode, legacy.body).toBe(200);
   expect(legacy.body).not.toContain(slug);
-  expect(legacy.json().analysis.latestRun.outcome.written).toContain("effective_date");
+  expect(legacy.json()).not.toHaveProperty("analysis");
 });
 
 it("keeps the core Value marker when a legacy custom Field named value is edited", async () => {

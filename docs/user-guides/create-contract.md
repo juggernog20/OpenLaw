@@ -21,7 +21,7 @@ On **Overview**, use the **Contract** card to choose **Owner** and **Our entity*
 
 Under **Counterparties**, search and select each party. If a name is new, inspect the offered create action before selecting it. The first linked Counterparty is primary; use **Make primary** to change that designation. Removing a Counterparty from this Contract removes its link, not the Counterparty record.
 
-Open **Team** and select **Add team member**. Choose **Person** and **Role**, then **Add**. Review every role shown for a person: removing one removable role leaves any others intact. Owner and Creator tags identify those responsibilities. [Roles and record access](roles-and-access.md) explains Confidential access and who may change its team.
+Open **Contract team** in the activity bar and select **Add team member**. Choose **Person**, then **Add**. The roster has one membership row per person. Legal Owner, Business Owner and Creator appear as separate statements. Removing membership does not erase those statements. A Business User on the team can work through the Portal. See [roles and record access](roles-and-access.md).
 
 ## Maintain the values
 
@@ -33,7 +33,7 @@ On **Overview**, changing **Contract type** may open **Change contract type** to
 
 Read the error next to the field or in the dialog. Blank required answers prevent creation or re-typing. Choose a live available reference when an old one is archived. Reload the record to check what was saved before retrying an uncertain result.
 
-An archived Contract must be restored before editing. If legal details are read-only, check your role and access. Contributor business-Field rights do not include creating a Contract or assigning its Owner.
+An archived Contract must be restored before editing. If legal details are read-only, check your role and access. Business User Portal rights do not include creating a Contract or assigning its Owner.
 
 ## Related guides
 

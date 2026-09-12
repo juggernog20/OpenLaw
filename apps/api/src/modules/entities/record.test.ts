@@ -46,7 +46,7 @@ beforeAll(async () => {
   expect(setup.statusCode, setup.body).toBe(201);
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
     [BUSINESS, "business_user"],
   ] as const) {
     const person = await provisionUser(harness.app.auth, fixture);

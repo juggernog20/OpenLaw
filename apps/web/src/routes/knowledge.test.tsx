@@ -13,7 +13,6 @@ const MEMBER = {
   role: "legal_team_member",
 };
 const ADMIN = { ...MEMBER, id: "admin-1", role: "administrator" };
-const CONTRIBUTOR = { ...MEMBER, id: "contributor-1", role: "contributor" };
 const TYPES = [
   { id: "type-playbook", slug: "playbook", displayName: "Playbook" },
   { id: "type-article", slug: "article", displayName: "Article" },
@@ -453,22 +452,13 @@ describe("the Knowledge library", () => {
     expect(deleted).toBe(1);
   });
 
-  it("shows the blank-library state and keeps Contributors out of the destination", async () => {
+  it("shows the blank-library state", async () => {
     stubApi({ signedIn: MEMBER, extra: libraryApi([]) });
     const blank = renderAt("/knowledge");
     expect(
       await screen.findByRole("heading", { name: "Build your Knowledge library" }),
     ).toBeInTheDocument();
     blank.view.unmount();
-
-    stubApi({ signedIn: CONTRIBUTOR });
-    const { router } = renderAt("/knowledge");
-    await waitFor(() => expect(router.state.location.pathname).toBe("/"));
-    expect(
-      within(await screen.findByRole("navigation", { name: "Primary" })).queryByRole("link", {
-        name: "Knowledge",
-      }),
-    ).not.toBeInTheDocument();
   });
 });
 

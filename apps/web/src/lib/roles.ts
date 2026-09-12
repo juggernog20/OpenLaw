@@ -13,16 +13,22 @@
  * member" from becoming "Legal Team Member" on one of them.
  */
 
-import { defineMessages, type IntlShape, type MessageDescriptor } from "react-intl";
+import { defineMessage, defineMessages, type IntlShape, type MessageDescriptor } from "react-intl";
 
-export type Role = "administrator" | "legal_team_member" | "contributor" | "business_user";
+export type Role = "administrator" | "legal_team_member" | "business_user";
+
+/** DD-023 removed the Contributor account type. Audit entries written
+ * before the migration still carry it, so the label stays readable. */
+const HISTORICAL_CONTRIBUTOR = defineMessage({
+  id: "role.contributorHistorical",
+  defaultMessage: "Contributor",
+});
 
 /** How each role reads. The ids predate this file, so the message
  * catalog did not change when the map moved here. */
 export const ROLE_MESSAGES: Readonly<Record<Role, MessageDescriptor>> = defineMessages({
   administrator: { id: "role.administrator", defaultMessage: "Administrator" },
   legal_team_member: { id: "role.legalTeamMember", defaultMessage: "Legal team member" },
-  contributor: { id: "role.contributor", defaultMessage: "Contributor" },
   business_user: { id: "role.businessUser", defaultMessage: "Business user" },
 });
 
@@ -38,7 +44,7 @@ export function roleLabel(intl: IntlShape, role: string): string {
   // The caller's string is whatever a payload holds, and a miss is the
   // case this function exists to answer.
   const catalog: Readonly<Partial<Record<string, MessageDescriptor>>> = ROLE_MESSAGES;
-  const message = catalog[role];
+  const message = role === "contributor" ? HISTORICAL_CONTRIBUTOR : catalog[role];
   return message ? intl.formatMessage(message) : role;
 }
 
@@ -50,19 +56,15 @@ export function isMemberPlus(role: Role): boolean {
   return MEMBER_PLUS_ROLES.includes(role);
 }
 
-/** The Contract read floor (CTR-021): Member+, plus a Contributor. The
- * role alone opens no Contract. A Contributor reaches exactly the
- * Contracts they hold a `contract_team` row on, which only the API
- * knows. This keeps the nav and the loaders from offering a door that
- * opens on nothing. The API's own answer is the real gate. */
-export const CONTRACT_READER_ROLES: readonly Role[] = [...MEMBER_PLUS_ROLES, "contributor"];
+/** The full-app Contract surface belongs to Member+. */
+export const CONTRACT_READER_ROLES: readonly Role[] = MEMBER_PLUS_ROLES;
 
 export function canReadContracts(role: Role): boolean {
   return CONTRACT_READER_ROLES.includes(role);
 }
 
-/** Matters share the record-reader floor: Member+, plus a scoped Contributor. */
-export const MATTER_READER_ROLES: readonly Role[] = [...MEMBER_PLUS_ROLES, "contributor"];
+/** Matters use the same full-app access floor. */
+export const MATTER_READER_ROLES: readonly Role[] = MEMBER_PLUS_ROLES;
 
 export function canReadMatters(role: Role): boolean {
   return MATTER_READER_ROLES.includes(role);

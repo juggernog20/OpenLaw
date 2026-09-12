@@ -35,7 +35,7 @@ import {
 import { escapeLikePattern } from "../../lib/like.js";
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 
-const requireReader = requireRole("administrator", "legal_team_member", "contributor");
+const requireReader = requireRole("administrator", "legal_team_member");
 const requireMember = requireRole("administrator", "legal_team_member");
 const NumberParams = z.object({ number: z.coerce.number().int().positive() });
 const RestrictedMatterSchema = z.object({ restricted: z.literal(true) });

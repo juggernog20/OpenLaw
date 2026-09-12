@@ -110,7 +110,7 @@ beforeAll(async () => {
 
   const contributor = await provisionUser(harness.app.auth, CONTRIBUTOR);
   contributorId = contributor.id;
-  await harness.db.update(users).set({ role: "contributor" }).where(eq(users.id, contributor.id));
+  await harness.db.update(users).set({ role: "business_user" }).where(eq(users.id, contributor.id));
   contributorCookies = await signInCookies(harness.app, CONTRIBUTOR.email, CONTRIBUTOR.password);
 
   const watcher = await provisionUser(harness.app.auth, WATCHER);
@@ -337,7 +337,7 @@ describe("key dates on a contract (CTR-009)", () => {
       method: "POST",
       url: `/api/v1/contracts/${contract.number}/team`,
       cookies: memberCookies,
-      payload: { userId: watcherId, role: "watcher" },
+      payload: { userId: watcherId },
     });
     expect(joined.statusCode, joined.body).toBe(201);
 
@@ -534,20 +534,18 @@ describe("the deadline union (CTR-009)", () => {
 });
 
 describe("who may read and write key dates (CTR-021, DD-015)", () => {
-  it("lets a Contributor on the team read the surface and write nothing on it", async () => {
+  it("refuses Business User Key date reads and writes even on their team", async () => {
     const contract = await newContract("Key dates contributor");
     const joined = await harness.app.inject({
       method: "POST",
       url: `/api/v1/contracts/${contract.number}/team`,
       cookies: memberCookies,
-      payload: { userId: contributorId, role: "contributor" },
+      payload: { userId: contributorId },
     });
     expect(joined.statusCode, joined.body).toBe(201);
     const id = await add(contract.number, { date: "2027-09-01", label: "Renewal talks open" });
 
-    expect((await list(contract.number, contributorCookies)).map((row) => row.label)).toEqual([
-      "Renewal talks open",
-    ]);
+    expect((await listRaw(contract.number, contributorCookies)).statusCode).toBe(403);
     // They can already see the record, so the refusal is a plain 403.
     expect(
       (await addRaw(contract.number, { date: "2027-09-02", label: "Mine" }, contributorCookies))

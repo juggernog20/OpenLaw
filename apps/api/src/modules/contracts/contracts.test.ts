@@ -71,7 +71,6 @@ let harness: TestHarness;
 let adminCookies: Record<string, string>;
 let memberCookies: Record<string, string>;
 let contributorCookies: Record<string, string>;
-let outsiderCookies: Record<string, string>;
 /** Fixture email → user id, for the owner and team routes. */
 const userIds = new Map<string, string>();
 const idOf = (fixture: { email: string }): string => {
@@ -91,8 +90,8 @@ beforeAll(async () => {
 
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
-    [OUTSIDER, "contributor"],
+    [CONTRIBUTOR, "business_user"],
+    [OUTSIDER, "business_user"],
     [BUSINESS, "business_user"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
@@ -108,7 +107,6 @@ beforeAll(async () => {
   adminCookies = await signInCookies(harness.app, ADMIN.email, ADMIN.password);
   memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
   contributorCookies = await signInCookies(harness.app, CONTRIBUTOR.email, CONTRIBUTOR.password);
-  outsiderCookies = await signInCookies(harness.app, OUTSIDER.email, OUTSIDER.password);
 });
 
 afterAll(async () => {
@@ -148,9 +146,7 @@ interface ContractRow {
   archivedAt: string | null;
 }
 
-interface TeamMember extends Person {
-  role: string;
-}
+type TeamMember = Person;
 
 /** One party on the other side, as the record read answers it. */
 interface RecordCounterparty {
@@ -284,15 +280,10 @@ const addTeamMember = (
 ) =>
   harness.app.inject({ method: "POST", url: `/api/v1/contracts/${number}/team`, cookies, payload });
 
-const removeTeamMember = (
-  cookies: Record<string, string>,
-  number: number,
-  userId: string,
-  role: string,
-) =>
+const removeTeamMember = (cookies: Record<string, string>, number: number, userId: string) =>
   harness.app.inject({
     method: "DELETE",
-    url: `/api/v1/contracts/${number}/team/${userId}/${role}`,
+    url: `/api/v1/contracts/${number}/team/${userId}`,
     cookies,
   });
 
@@ -429,11 +420,11 @@ const refusedWrites = (cookies: Record<string, string>) => [
     method: "POST",
     url: "/api/v1/contracts/99999/team",
     cookies,
-    payload: { userId: "any", role: "member" },
+    payload: { userId: "any" },
   }),
   harness.app.inject({
     method: "DELETE",
-    url: "/api/v1/contracts/99999/team/any/member",
+    url: "/api/v1/contracts/99999/team/any",
     cookies,
   }),
   harness.app.inject({
@@ -523,7 +514,7 @@ describe("the Member+ access floor on contract surfaces", () => {
     // PATCH first performs the same reach check as GET: an absent record
     // and an unreached one are both omitted before field policy runs.
     for (const res of attempts.slice(1, 5)) {
-      expect(res.statusCode, `${CONTRIBUTOR.email}: ${res.body}`).toBe(404);
+      expect(res.statusCode, `${CONTRIBUTOR.email}: ${res.body}`).toBe(403);
     }
     for (const res of [attempts[0], ...attempts.slice(5)]) {
       expect(res!.statusCode, `${CONTRIBUTOR.email}: ${res!.body}`).toBe(403);
@@ -546,149 +537,30 @@ describe("the Member+ access floor on contract surfaces", () => {
   });
 });
 
-describe("Contributor team access to the contract record (M9/1)", () => {
-  /** Puts someone on a contract's team, requiring success. */
-  const putOnTeam = async (number: number, userId: string, role = "contributor") => {
-    const res = await addTeamMember(adminCookies, number, { userId, role });
-    expect(res.statusCode, res.body).toBe(201);
-  };
-
-  it("opens a contract they hold a team row on", async () => {
-    const contract = await newContract("Contributor reads this one");
-    await putOnTeam(contract.number, idOf(CONTRIBUTOR));
-
-    const res = await getContract(contributorCookies, contract.number);
-    expect(res.statusCode, res.body).toBe(200);
-    const body = res.json();
-    expect(body.contract.title).toBe("Contributor reads this one");
-    // The whole record read, not a reduced one: the roster and the
-    // other side come back as they do for Member+.
-    expect(body.team.map((row: TeamMember) => row.id)).toContain(idOf(CONTRIBUTOR));
-    expect(body.counterparties).toEqual([]);
-  });
-
-  it("is answered 404 on a contract they hold no team row on, exactly as on one that does not exist", async () => {
-    const contract = await newContract("Contributor is not on this one");
-
-    const refused = await getContract(contributorCookies, contract.number);
-    const absent = await getContract(contributorCookies, 999_999);
-    expect(refused.statusCode, refused.body).toBe(404);
-    expect(refused.headers["content-type"]).toContain("application/problem+json");
-    // Same shape, same words: a contract they are not on must not read
-    // any differently from one nobody ever made. `instance` is left out
-    // of the comparison because it is the URL each request asked for.
-    const withoutInstance = (body: Record<string, unknown>) => ({ ...body, instance: undefined });
-    expect(withoutInstance(refused.json())).toEqual(withoutInstance(absent.json()));
-  });
-
-  it("takes the access from the team row itself, whatever role that row carries", async () => {
-    const contract = await newContract("Contributor watches this one");
-    await putOnTeam(contract.number, idOf(CONTRIBUTOR), "watcher");
-
-    const res = await getContract(contributorCookies, contract.number);
-    expect(res.statusCode, res.body).toBe(200);
-  });
-
-  it("lists exactly the contracts they are on, archived ones behind the same toggle", async () => {
-    const live = await newContract("Contributor list: live");
-    const archived = await newContract("Contributor list: archived");
-    const other = await newContract("Contributor list: not theirs");
-    await putOnTeam(live.number, idOf(CONTRIBUTOR));
-    await putOnTeam(archived.number, idOf(CONTRIBUTOR));
-    const gone = await archiveContract(adminCookies, archived.number);
-    expect(gone.statusCode, gone.body).toBe(200);
-
-    const numbers = (await listContracts(contributorCookies)).map((row) => row.number);
-    expect(numbers).toContain(live.number);
-    expect(numbers).not.toContain(archived.number);
-    expect(numbers).not.toContain(other.number);
-
-    const withArchived = (await listContracts(contributorCookies, true)).map((row) => row.number);
-    expect(withArchived).toContain(live.number);
-    expect(withArchived).toContain(archived.number);
-    expect(withArchived).not.toContain(other.number);
-
-    // Member+ still read the whole company's list — the narrowing is
-    // the Contributor's alone.
-    const memberNumbers = (await listContracts(memberCookies, true)).map((row) => row.number);
-    expect(memberNumbers).toEqual(expect.arrayContaining([live.number, other.number]));
-  });
-
-  it("answers a Contributor on no team with an empty list, not a refusal", async () => {
-    const res = await harness.app.inject({
-      method: "GET",
-      url: "/api/v1/contracts",
-      cookies: outsiderCookies,
-    });
-    expect(res.statusCode, res.body).toBe(200);
-    expect(res.json().contracts).toEqual([]);
-  });
-
-  it("accepts value but refuses every legal-managed write on a contract they are on", async () => {
-    const contract = await newContract("Contributor edits business details only");
-    await putOnTeam(contract.number, idOf(CONTRIBUTOR));
-
-    const value = await patchContract(contributorCookies, contract.number, {
-      value: { amount: 500, currency: "USD", cadence: "one_time" },
-    });
-    expect(value.statusCode, value.body).toBe(200);
-
-    const attempts = [
-      patchContract(contributorCookies, contract.number, { title: "Renamed by a Contributor" }),
-      patchContract(contributorCookies, contract.number, { statusId: "any" }),
-      patchContract(contributorCookies, contract.number, { managerId: idOf(CONTRIBUTOR) }),
-      patchContract(contributorCookies, contract.number, { customFields: { anything: "x" } }),
-      addTeamMember(contributorCookies, contract.number, {
-        userId: idOf(MEMBER),
-        role: "member",
-      }),
-      removeTeamMember(contributorCookies, contract.number, idOf(CONTRIBUTOR), "contributor"),
-      addCounterparty(contributorCookies, contract.number, { name: "Contributor Added Ltd" }),
-      archiveContract(contributorCookies, contract.number),
-      restoreContract(contributorCookies, contract.number),
-    ];
-    for (const res of await Promise.all(attempts)) {
-      expect(res.statusCode, res.body).toBe(403);
-      expect(res.headers["content-type"]).toContain("application/problem+json");
-    }
-
-    const after = await getContract(contributorCookies, contract.number);
-    expect(after.statusCode, after.body).toBe(200);
-    expect(after.json().contract).toMatchObject({
-      title: "Contributor edits business details only",
-      value: { amount: 500, currency: "USD", cadence: "one_time" },
-      archivedAt: null,
-    });
-    expect(after.json().team.map((row: TeamMember) => row.id)).toContain(idOf(CONTRIBUTOR));
-  });
-
-  it("stops reading a contract the moment their team row is taken off", async () => {
-    const contract = await newContract("Contributor loses this one");
-    await putOnTeam(contract.number, idOf(CONTRIBUTOR));
-    expect((await getContract(contributorCookies, contract.number)).statusCode).toBe(200);
-
-    const removed = await removeTeamMember(
-      adminCookies,
-      contract.number,
-      idOf(CONTRIBUTOR),
-      "contributor",
-    );
-    expect(removed.statusCode, removed.body).toBe(200);
-
-    const res = await getContract(contributorCookies, contract.number);
-    expect(res.statusCode, res.body).toBe(404);
-    const removedWrite = await patchContract(contributorCookies, contract.number, {
-      value: { amount: 100, currency: "USD", cadence: "one_time" },
-    });
-    const unknownWrite = await patchContract(contributorCookies, 999_999, {
-      value: { amount: 100, currency: "USD", cadence: "one_time" },
-    });
-    expect(removedWrite.statusCode, removedWrite.body).toBe(404);
-    const withoutInstance = (body: Record<string, unknown>) => ({ ...body, instance: undefined });
-    expect(withoutInstance(removedWrite.json())).toEqual(withoutInstance(unknownWrite.json()));
-    expect((await listContracts(contributorCookies)).map((row) => row.number)).not.toContain(
-      contract.number,
-    );
+describe("Business Users use the Portal (DD-023)", () => {
+  it("grants the Portal through a team row while keeping staff routes closed", async () => {
+    const contract = await newContract("Business team access");
+    const portal = () =>
+      harness.app.inject({
+        method: "GET",
+        url: `/api/v1/portal/contracts/${contract.number}`,
+        cookies: contributorCookies,
+      });
+    expect((await portal()).statusCode).toBe(404);
+    expect(
+      (await addTeamMember(adminCookies, contract.number, { userId: idOf(CONTRIBUTOR) }))
+        .statusCode,
+    ).toBe(201);
+    expect((await portal()).statusCode).toBe(200);
+    expect((await getContract(contributorCookies, contract.number)).statusCode).toBe(403);
+    expect(
+      (await patchContract(contributorCookies, contract.number, { title: "Legal rename" }))
+        .statusCode,
+    ).toBe(403);
+    expect(
+      (await removeTeamMember(adminCookies, contract.number, idOf(CONTRIBUTOR))).statusCode,
+    ).toBe(200);
+    expect((await portal()).statusCode).toBe(404);
   });
 });
 
@@ -1294,7 +1166,6 @@ describe("the contract team (CTR-004)", () => {
       expect.objectContaining({
         id: idOf(MEMBER),
         displayName: MEMBER.displayName,
-        role: "creator",
       }),
     ]);
   });
@@ -1303,51 +1174,36 @@ describe("the contract team (CTR-004)", () => {
     const contract = await newContract("Team round trip");
     const added = await addTeamMember(memberCookies, contract.number, {
       userId: idOf(MEMBER),
-      role: "watcher",
     });
     expect(added.statusCode, added.body).toBe(201);
-    expect(added.json().team.map((row: TeamMember) => [row.id, row.role])).toEqual([
-      [idOf(ADMIN), "creator"],
-      [idOf(MEMBER), "watcher"],
-    ]);
+    expect(added.json().team.map((row: TeamMember) => row.id)).toEqual([idOf(ADMIN), idOf(MEMBER)]);
 
-    const removed = await removeTeamMember(memberCookies, contract.number, idOf(MEMBER), "watcher");
+    const removed = await removeTeamMember(memberCookies, contract.number, idOf(MEMBER));
     expect(removed.statusCode, removed.body).toBe(200);
     expect(removed.json().team.map((row: TeamMember) => row.id)).toEqual([idOf(ADMIN)]);
   });
 
-  it("lets one person hold two roles, and keys removal to the role", async () => {
-    const contract = await newContract("Two roles");
-    for (const role of ["member", "watcher"]) {
-      const added = await addTeamMember(adminCookies, contract.number, {
-        userId: idOf(MEMBER),
-        role,
-      });
-      expect(added.statusCode, added.body).toBe(201);
-    }
+  it("keeps one membership per person and removes that grant", async () => {
+    const contract = await newContract("One roster");
     expect(
-      (await teamOf(contract.number))
-        .filter((row) => row.id === idOf(MEMBER))
-        .map((row) => row.role)
-        .sort(),
-    ).toEqual(["member", "watcher"]);
-
-    // Removal names the role, not just the person: dropping the watcher
-    // leaves the member row standing.
-    const removed = await removeTeamMember(adminCookies, contract.number, idOf(MEMBER), "watcher");
-    expect(removed.statusCode, removed.body).toBe(200);
+      (await addTeamMember(adminCookies, contract.number, { userId: idOf(MEMBER) })).statusCode,
+    ).toBe(201);
     expect(
-      (await teamOf(contract.number))
-        .filter((row) => row.id === idOf(MEMBER))
-        .map((row) => row.role),
-    ).toEqual(["member"]);
+      (await addTeamMember(adminCookies, contract.number, { userId: idOf(MEMBER) })).statusCode,
+    ).toBe(409);
+    expect((await teamOf(contract.number)).filter((row) => row.id === idOf(MEMBER))).toHaveLength(
+      1,
+    );
+    expect((await removeTeamMember(adminCookies, contract.number, idOf(MEMBER))).statusCode).toBe(
+      200,
+    );
+    expect((await teamOf(contract.number)).some((row) => row.id === idOf(MEMBER))).toBe(false);
   });
 
   it("admits a Contributor as a team member — external counsel are contributors", async () => {
     const contract = await newContract("External counsel");
     const added = await addTeamMember(adminCookies, contract.number, {
       userId: idOf(CONTRIBUTOR),
-      role: "contributor",
     });
     expect(added.statusCode, added.body).toBe(201);
     expect((await teamOf(contract.number)).some((row) => row.id === idOf(CONTRIBUTOR))).toBe(true);
@@ -1357,19 +1213,16 @@ describe("the contract team (CTR-004)", () => {
     const contract = await newContract("Team refusals");
     const first = await addTeamMember(adminCookies, contract.number, {
       userId: idOf(MEMBER),
-      role: "member",
     });
     expect(first.statusCode, first.body).toBe(201);
     // The compound key already holds this exact row.
     const repeat = await addTeamMember(adminCookies, contract.number, {
       userId: idOf(MEMBER),
-      role: "member",
     });
     expect(repeat.statusCode, repeat.body).toBe(409);
 
     const unknownUser = await addTeamMember(adminCookies, contract.number, {
       userId: "no-such-id",
-      role: "member",
     });
     expect(unknownUser.statusCode, unknownUser.body).toBe(400);
 
@@ -1382,56 +1235,56 @@ describe("the contract team (CTR-004)", () => {
     // Strict bodies: an unknown key is a client bug, not a silent strip.
     const stray = await addTeamMember(adminCookies, contract.number, {
       userId: idOf(MEMBER),
-      role: "member",
       isPrimary: true,
     });
     expect(stray.statusCode, stray.body).toBe(400);
   });
 
-  it("keeps the creator row: it cannot be added by hand or removed", async () => {
+  it("preserves Creator provenance after removing their membership", async () => {
     const contract = await newContract("Creator is provenance");
-    const byHand = await addTeamMember(adminCookies, contract.number, {
-      userId: idOf(MEMBER),
-      role: "creator",
-    });
-    expect(byHand.statusCode, byHand.body).toBe(400);
-
-    const removed = await removeTeamMember(adminCookies, contract.number, idOf(ADMIN), "creator");
-    expect(removed.statusCode, removed.body).toBe(409);
-    expect((await teamOf(contract.number)).map((row) => row.role)).toEqual(["creator"]);
+    expect(
+      (
+        await addTeamMember(adminCookies, contract.number, {
+          userId: idOf(MEMBER),
+          role: "creator",
+        })
+      ).statusCode,
+    ).toBe(400);
+    expect((await removeTeamMember(adminCookies, contract.number, idOf(ADMIN))).statusCode).toBe(
+      200,
+    );
+    const read = await getContract(adminCookies, contract.number);
+    expect(read.json().contract.createdBy).toBe(idOf(ADMIN));
+    expect(read.json().creator.id).toBe(idOf(ADMIN));
+    expect(read.json().team).toEqual([]);
   });
 
   it("404s an unknown contract and a role nobody holds", async () => {
     const contract = await newContract("Team 404s");
-    expect(
-      (await addTeamMember(adminCookies, 999_999, { userId: idOf(MEMBER), role: "member" }))
-        .statusCode,
-    ).toBe(404);
-    expect((await removeTeamMember(adminCookies, 999_999, idOf(MEMBER), "member")).statusCode).toBe(
+    expect((await addTeamMember(adminCookies, 999_999, { userId: idOf(MEMBER) })).statusCode).toBe(
       404,
     );
-    expect(
-      (await removeTeamMember(adminCookies, contract.number, idOf(MEMBER), "watcher")).statusCode,
-    ).toBe(404);
+    expect((await removeTeamMember(adminCookies, 999_999, idOf(MEMBER))).statusCode).toBe(404);
+    expect((await removeTeamMember(adminCookies, contract.number, idOf(MEMBER))).statusCode).toBe(
+      404,
+    );
   });
 
   it("freezes on an archived contract, like every other write", async () => {
     const contract = await newContract("Frozen team");
     const added = await addTeamMember(adminCookies, contract.number, {
       userId: idOf(MEMBER),
-      role: "member",
     });
     expect(added.statusCode, added.body).toBe(201);
     expect((await archiveContract(adminCookies, contract.number)).statusCode).toBe(200);
 
     const whileArchived = await addTeamMember(adminCookies, contract.number, {
       userId: idOf(MEMBER),
-      role: "watcher",
     });
     expect(whileArchived.statusCode, whileArchived.body).toBe(409);
-    expect(
-      (await removeTeamMember(adminCookies, contract.number, idOf(MEMBER), "member")).statusCode,
-    ).toBe(409);
+    expect((await removeTeamMember(adminCookies, contract.number, idOf(MEMBER))).statusCode).toBe(
+      409,
+    );
   });
 
   it("refuses a Contributor and a Business User on the team routes as 403", async () => {
@@ -1439,20 +1292,20 @@ describe("the contract team (CTR-004)", () => {
     for (const fixture of [CONTRIBUTOR, BUSINESS]) {
       const cookies = await signInCookies(harness.app, fixture.email, fixture.password);
       const attempts = [
-        addTeamMember(cookies, contract.number, { userId: idOf(MEMBER), role: "member" }),
-        removeTeamMember(cookies, contract.number, idOf(ADMIN), "creator"),
+        addTeamMember(cookies, contract.number, { userId: idOf(MEMBER) }),
+        removeTeamMember(cookies, contract.number, idOf(ADMIN)),
       ];
       for (const res of await Promise.all(attempts)) {
         expect(res.statusCode, `${fixture.email}: ${res.body}`).toBe(403);
       }
     }
-    expect((await teamOf(contract.number)).map((row) => row.role)).toEqual(["creator"]);
+    expect((await teamOf(contract.number)).map((row) => row.id)).toEqual([idOf(ADMIN)]);
   });
 
   it("writes its own activity row per change, naming the person and the role", async () => {
     const contract = await newContract("Team audit");
-    await addTeamMember(memberCookies, contract.number, { userId: idOf(MEMBER), role: "watcher" });
-    await removeTeamMember(memberCookies, contract.number, idOf(MEMBER), "watcher");
+    await addTeamMember(memberCookies, contract.number, { userId: idOf(MEMBER) });
+    await removeTeamMember(memberCookies, contract.number, idOf(MEMBER));
 
     const rows = await auditRowsFor(contract.id);
     expect(rows.map((row) => row.action)).toEqual([
@@ -1465,7 +1318,6 @@ describe("the contract team (CTR-004)", () => {
       expect(row.payload).toMatchObject({
         number: contract.number,
         member: MEMBER.displayName,
-        role: "watcher",
       });
     }
   });
@@ -1573,29 +1425,17 @@ describe("the signing entity (CTR-011)", () => {
     });
   });
 
-  it("renders Restricted Entity to a Contributor even when the signing Entity is not confidential", async () => {
-    // ENT-004: Contributors have no Entities module access, so the
-    // signing Entity is restricted for them whatever its flag says.
-    const contract = await newContract("Contributor sees a restricted signer");
-    const signer = await newEntity("Open Books Holdings Ltd");
-    expect(
-      (await patchContract(adminCookies, contract.number, { entityId: signer.id })).statusCode,
-    ).toBe(200);
-    const seated = await addTeamMember(adminCookies, contract.number, {
-      userId: idOf(CONTRIBUTOR),
-      role: "contributor",
+  it("keeps full staff signing Entity data out of the Business User surface", async () => {
+    const contract = await newContract("Business signing summary");
+    await addTeamMember(adminCookies, contract.number, { userId: idOf(CONTRIBUTOR) });
+    expect((await getContract(contributorCookies, contract.number)).statusCode).toBe(403);
+    const response = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/portal/contracts/${contract.number}`,
+      cookies: contributorCookies,
     });
-    expect(seated.statusCode, seated.body).toBe(201);
-
-    const read = await getContract(contributorCookies, contract.number);
-    expect(read.statusCode, read.body).toBe(200);
-    expect(read.body).not.toContain("Open Books Holdings Ltd");
-    expect(read.json().contract.entity).toEqual({ restricted: true });
-    expect((await getContract(memberCookies, contract.number)).json().contract.entity).toEqual({
-      restricted: false,
-      id: signer.id,
-      legalName: "Open Books Holdings Ltd",
-    });
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.json().contract).not.toHaveProperty("entity");
   });
 
   it("sorts a restricted signing Entity with the unrecorded ones, not by its hidden name", async () => {

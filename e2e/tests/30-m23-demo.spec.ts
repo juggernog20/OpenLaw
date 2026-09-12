@@ -20,15 +20,15 @@ const MATTER_TITLE = `E2E M23 acquisition ${RUN}`;
 const CHILD_TITLE = `E2E M23 diligence ${RUN}`;
 const CONTRACT_TITLE = `E2E M23 services agreement ${RUN}`;
 const FIELD_NAME = `Business context ${RUN}`;
-const FIELD_VALUE = "External counsel supplied the diligence context.";
+const FIELD_VALUE = "The business supplied the diligence context.";
 const KEY_DATE = `E2E M23 filing ${RUN}`;
 const TASK = `E2E M23 review disclosure ${RUN}`;
 const DOCUMENT = `e2e-m23-support-${RUN}.txt`;
 const POST_CLOSE_COMMENT = `E2E M23 post-close note ${RUN}`;
 const COUNSEL = {
-  email: `external-counsel-${RUN}@example.com`,
-  displayName: `External Counsel ${RUN}`,
-  role: "contributor",
+  email: `business-colleague-${RUN}@example.com`,
+  displayName: `Business colleague ${RUN}`,
+  role: "business_user",
   password: "correct-horse-battery",
 };
 
@@ -225,46 +225,41 @@ test.describe.serial("M23 deployer journey", () => {
       await teamPanel.getByRole("button", { name: "Add team member" }).click();
       const team = page.getByRole("dialog", { name: "Add team member" });
       await team.getByLabel("Person").selectOption({ label: COUNSEL.displayName });
-      await team.getByLabel("Role").selectOption("contributor");
-      await team.getByRole("button", { name: "Add to team" }).click();
+      await expect(team.getByLabel("Role")).toHaveCount(0);
+      await team.getByRole("button", { name: "Add" }).click();
       await expect(teamPanel.getByText(COUNSEL.displayName)).toBeVisible();
 
       const contributor = counsel.page;
-      await contributor.goto(`/matters/${matter.number}`);
+      await contributor.goto(`/portal/matters/${matter.number}`);
       const businessField = contributor.getByLabel(new RegExp(FIELD_NAME));
       await businessField.fill(FIELD_VALUE);
       const fieldSaved = contributor.waitForResponse(
         (response) =>
-          response.url().endsWith(`/api/v1/matters/${matter.number}`) &&
+          response.url().endsWith(`/api/v1/portal/matters/${matter.number}/work`) &&
           response.request().method() === "PATCH",
       );
       await businessField.press("Tab");
       expect((await fieldSaved).status()).toBe(200);
 
-      await contributor
-        .getByRole("navigation", { name: "Matter sections" })
-        .getByRole("link", { name: "Documents" })
-        .click();
-      await contributor.getByRole("button", { name: "Upload" }).click();
-      const upload = contributor.getByRole("dialog", { name: "Upload document" });
-      await upload.getByRole("button", { name: "File", exact: true }).setInputFiles({
-        name: DOCUMENT,
-        mimeType: "text/plain",
-        buffer: Buffer.from("Supporting diligence supplied by external counsel.\n"),
-      });
       const uploaded = contributor.waitForResponse(
         (response) =>
           response.url().endsWith(`/api/v1/matters/${matter.number}/documents`) &&
           response.request().method() === "POST",
       );
-      await upload.getByRole("button", { name: "Upload", exact: true }).click();
+      await contributor.getByLabel("Upload Document", { exact: true }).setInputFiles({
+        name: DOCUMENT,
+        mimeType: "text/plain",
+        buffer: Buffer.from("Supporting business diligence.\n"),
+      });
       expect((await uploaded).status()).toBe(201);
       await expect(contributor.getByText(DOCUMENT)).toBeVisible();
 
-      await contributor.goto(`/matters/${matter.number}`);
+      await contributor.goto(`/portal/matters/${matter.number}`);
       // Anchor on the rendered record first: the absence assertions
       // below would pass vacuously against a page that has not painted.
-      await expect(contributor.getByRole("region", { name: MATTER_TITLE })).toBeVisible();
+      await expect(
+        contributor.getByRole("heading", { level: 1, name: MATTER_TITLE }),
+      ).toBeVisible();
       await expect(contributor.getByRole("button", { name: "Close matter" })).toHaveCount(0);
       await expect(contributor.getByRole("button", { name: "New sub-Matter" })).toHaveCount(0);
       await expect(contributor.getByRole("button", { name: "Link Contract" })).toHaveCount(0);

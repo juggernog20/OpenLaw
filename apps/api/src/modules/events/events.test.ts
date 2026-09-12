@@ -204,7 +204,7 @@ beforeAll(async () => {
   await harness.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, member.id));
   memberId = member.id;
   const contributor = await provisionUser(harness.app.auth, CONTRIBUTOR);
-  await harness.db.update(users).set({ role: "contributor" }).where(eq(users.id, contributor.id));
+  await harness.db.update(users).set({ role: "business_user" }).where(eq(users.id, contributor.id));
   const requester = await provisionUser(harness.app.auth, REQUESTER);
   await harness.db.update(users).set({ role: "business_user" }).where(eq(users.id, requester.id));
 
@@ -251,7 +251,7 @@ beforeAll(async () => {
     method: "POST",
     url: `/api/v1/contracts/${secondRecord.number}/team`,
     cookies: adminCookies,
-    payload: { userId: contributor.id, role: "contributor" },
+    payload: { userId: contributor.id },
   });
   expect(team.statusCode, team.body).toBe(201);
 
@@ -457,7 +457,10 @@ describe("GET /api/events", () => {
     );
     await expectNoFrame(stream, liveFrame("record"));
 
-    const event = recordEvent(secondRecord.id, "working-team-entry");
+    const event = {
+      ...recordEvent(secondRecord.id, "shared-entry"),
+      visibility: "full_thread" as const,
+    };
     await harness.db.transaction((tx) => publishLiveEvent(tx, event));
     await expect(stream.next(liveFrame("record"))).resolves.toMatchObject({ data: event });
     await stream.close();

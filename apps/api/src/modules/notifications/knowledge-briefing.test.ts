@@ -105,7 +105,7 @@ beforeAll(async () => {
   memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
 
   const contributor = await provisionUser(harness.app.auth, CONTRIBUTOR);
-  await harness.db.update(users).set({ role: "contributor" }).where(eq(users.id, contributor.id));
+  await harness.db.update(users).set({ role: "business_user" }).where(eq(users.id, contributor.id));
 
   const [knowledgeType] = await harness.db
     .select({ id: knowledgeTypes.id })

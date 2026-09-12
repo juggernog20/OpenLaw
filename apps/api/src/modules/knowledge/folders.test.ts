@@ -40,7 +40,7 @@ beforeAll(async () => {
   const contributor = await provisionUser(harness.app.auth, CONTRIBUTOR);
   memberId = member.id;
   await harness.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, member.id));
-  await harness.db.update(users).set({ role: "contributor" }).where(eq(users.id, contributor.id));
+  await harness.db.update(users).set({ role: "business_user" }).where(eq(users.id, contributor.id));
   memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
   contributorCookies = await signInCookies(harness.app, CONTRIBUTOR.email, CONTRIBUTOR.password);
   const [type] = await harness.db.select({ id: knowledgeTypes.id }).from(knowledgeTypes).limit(1);

@@ -35,7 +35,7 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { eq, users } from "@openlaw/db";
+import { contracts, eq, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import { emlFixture, msgFixture, type EmailFixture } from "../../testing/fixtures/email.js";
 import {
@@ -160,7 +160,7 @@ beforeAll(async () => {
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
     [OUTSIDER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, user.id));
@@ -201,17 +201,17 @@ async function newContract(title: string): Promise<ContractRow> {
   });
   expect(res.statusCode, res.body).toBe(201);
   const contract = res.json().contract as ContractRow;
-  await putOnTeam(contract.number, idOf(MEMBER), "member");
-  await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
+  await putOnTeam(contract.number, idOf(MEMBER));
+  await putOnTeam(contract.number, idOf(CONTRIBUTOR));
   return contract;
 }
 
-async function putOnTeam(number: number, userId: string, role: string): Promise<void> {
+async function putOnTeam(number: number, userId: string): Promise<void> {
   const res = await harness.app.inject({
     method: "POST",
     url: `/api/v1/contracts/${number}/team`,
     cookies: adminCookies,
-    payload: { userId, role },
+    payload: { userId },
   });
   expect(res.statusCode, res.body).toBe(201);
 }
@@ -517,12 +517,16 @@ for (const container of CONTAINERS) {
       expect(download.rawPayload.toString()).toBe("PK spreadsheet");
     });
 
-    it("lets a Contributor on the team read what they may download", async () => {
+    it("lets a Business User on the team read supporting paper they may download", async () => {
       const { document, version } = await contractWithFile(
         `${container.label} — contributor reads`,
         emailFile(NEGOTIATION),
       );
 
+      await harness.db
+        .update(contracts)
+        .set({ primaryDocumentId: null })
+        .where(eq(contracts.primaryDocumentId, document.id));
       // Read access means reading, on every surface (DD-015, CTR-021).
       expect((await readEmail(contributorCookies, document.id, version.id)).statusCode).toBe(200);
       expect(

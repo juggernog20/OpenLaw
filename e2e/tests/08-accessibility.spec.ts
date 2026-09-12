@@ -593,7 +593,7 @@ test.describe("accessibility floor", () => {
     // (TECH-018) keeps nothing.
     const email = `axe-archived-${Date.now()}@example.com`;
     const invited = await page.request.post("/api/v1/auth/invites", {
-      data: { email, displayName: "Axe Archived", role: "contributor" },
+      data: { email, displayName: "Axe Archived", role: "legal_team_member" },
     });
     expect(invited.status()).toBe(201);
     const { user } = z.object({ user: z.object({ id: z.string() }) }).parse(await invited.json());

@@ -177,12 +177,7 @@
                         },
                         "role": {
                           "type": "string",
-                          "enum": [
-                            "administrator",
-                            "legal_team_member",
-                            "contributor",
-                            "business_user"
-                          ]
+                          "enum": ["administrator", "legal_team_member", "business_user"]
                         },
                         "theme": {
                           "type": "string",
@@ -287,12 +282,7 @@
                         },
                         "role": {
                           "type": "string",
-                          "enum": [
-                            "administrator",
-                            "legal_team_member",
-                            "contributor",
-                            "business_user"
-                          ]
+                          "enum": ["administrator", "legal_team_member", "business_user"]
                         },
                         "theme": {
                           "type": "string",
@@ -423,12 +413,7 @@
                         },
                         "role": {
                           "type": "string",
-                          "enum": [
-                            "administrator",
-                            "legal_team_member",
-                            "contributor",
-                            "business_user"
-                          ]
+                          "enum": ["administrator", "legal_team_member", "business_user"]
                         },
                         "theme": {
                           "type": "string",
@@ -541,7 +526,7 @@
                   },
                   "role": {
                     "type": "string",
-                    "enum": ["administrator", "legal_team_member", "contributor"]
+                    "enum": ["administrator", "legal_team_member"]
                   }
                 },
                 "required": ["email", "displayName", "role"]
@@ -571,12 +556,7 @@
                         },
                         "role": {
                           "type": "string",
-                          "enum": [
-                            "administrator",
-                            "legal_team_member",
-                            "contributor",
-                            "business_user"
-                          ]
+                          "enum": ["administrator", "legal_team_member", "business_user"]
                         },
                         "theme": {
                           "type": "string",
@@ -628,12 +608,7 @@
                         },
                         "role": {
                           "type": "string",
-                          "enum": [
-                            "administrator",
-                            "legal_team_member",
-                            "contributor",
-                            "business_user"
-                          ]
+                          "enum": ["administrator", "legal_team_member", "business_user"]
                         },
                         "theme": {
                           "type": "string",
@@ -714,12 +689,7 @@
                         },
                         "role": {
                           "type": "string",
-                          "enum": [
-                            "administrator",
-                            "legal_team_member",
-                            "contributor",
-                            "business_user"
-                          ]
+                          "enum": ["administrator", "legal_team_member", "business_user"]
                         },
                         "theme": {
                           "type": "string",
@@ -2213,12 +2183,7 @@
                           },
                           "role": {
                             "type": "string",
-                            "enum": [
-                              "administrator",
-                              "legal_team_member",
-                              "contributor",
-                              "business_user"
-                            ]
+                            "enum": ["administrator", "legal_team_member", "business_user"]
                           },
                           "status": {
                             "type": "string",
@@ -2282,7 +2247,7 @@
                 "properties": {
                   "role": {
                     "type": "string",
-                    "enum": ["administrator", "legal_team_member", "contributor", "business_user"]
+                    "enum": ["administrator", "legal_team_member", "business_user"]
                   }
                 },
                 "required": ["role"]
@@ -2322,12 +2287,7 @@
                         },
                         "role": {
                           "type": "string",
-                          "enum": [
-                            "administrator",
-                            "legal_team_member",
-                            "contributor",
-                            "business_user"
-                          ]
+                          "enum": ["administrator", "legal_team_member", "business_user"]
                         },
                         "status": {
                           "type": "string",
@@ -2406,12 +2366,7 @@
                         },
                         "role": {
                           "type": "string",
-                          "enum": [
-                            "administrator",
-                            "legal_team_member",
-                            "contributor",
-                            "business_user"
-                          ]
+                          "enum": ["administrator", "legal_team_member", "business_user"]
                         },
                         "status": {
                           "type": "string",
@@ -2490,12 +2445,7 @@
                         },
                         "role": {
                           "type": "string",
-                          "enum": [
-                            "administrator",
-                            "legal_team_member",
-                            "contributor",
-                            "business_user"
-                          ]
+                          "enum": ["administrator", "legal_team_member", "business_user"]
                         },
                         "status": {
                           "type": "string",
@@ -8531,6 +8481,35 @@
                               }
                             ]
                           },
+                          "businessOwner": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "displayName": {
+                                    "type": "string"
+                                  },
+                                  "image": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "archived": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": ["id", "displayName", "image", "archived"],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "createdBy": {
+                            "type": ["string", "null"]
+                          },
                           "priority": {
                             "type": "string",
                             "enum": ["low", "medium", "high", "critical"]
@@ -8913,6 +8892,35 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "businessOwner": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "type": ["string", "null"]
+                                },
+                                "archived": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": ["id", "displayName", "image", "archived"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdBy": {
+                          "type": ["string", "null"]
                         },
                         "priority": {
                           "type": "string",
@@ -9422,12 +9430,7 @@
                           },
                           "role": {
                             "type": "string",
-                            "enum": [
-                              "administrator",
-                              "legal_team_member",
-                              "contributor",
-                              "business_user"
-                            ]
+                            "enum": ["administrator", "legal_team_member", "business_user"]
                           }
                         },
                         "required": ["id", "displayName", "image", "archived", "role"],
@@ -9541,6 +9544,35 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "businessOwner": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "type": ["string", "null"]
+                                },
+                                "archived": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": ["id", "displayName", "image", "archived"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdBy": {
+                          "type": ["string", "null"]
                         },
                         "priority": {
                           "type": "string",
@@ -9711,6 +9743,54 @@
                       ],
                       "additionalProperties": false
                     },
+                    "originalIntake": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "number": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "description": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["number", "description"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "creator": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "image": {
+                              "type": ["string", "null"]
+                            },
+                            "archived": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": ["id", "displayName", "image", "archived"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "fields": {
                       "type": "array",
                       "items": {
@@ -9866,13 +9946,9 @@
                           },
                           "archived": {
                             "type": "boolean"
-                          },
-                          "role": {
-                            "type": "string",
-                            "enum": ["member", "watcher", "creator", "contributor"]
                           }
                         },
-                        "required": ["id", "displayName", "image", "archived", "role"],
+                        "required": ["id", "displayName", "image", "archived"],
                         "additionalProperties": false
                       }
                     }
@@ -9926,6 +10002,9 @@
                     "type": "string"
                   },
                   "managerId": {
+                    "type": ["string", "null"]
+                  },
+                  "businessOwnerId": {
                     "type": ["string", "null"]
                   },
                   "priority": {
@@ -10079,6 +10158,35 @@
                             }
                           ]
                         },
+                        "businessOwner": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "type": ["string", "null"]
+                                },
+                                "archived": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": ["id", "displayName", "image", "archived"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdBy": {
+                          "type": ["string", "null"]
+                        },
                         "priority": {
                           "type": "string",
                           "enum": ["low", "medium", "high", "critical"]
@@ -10248,6 +10356,54 @@
                       ],
                       "additionalProperties": false
                     },
+                    "originalIntake": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "number": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "description": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["number", "description"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "creator": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "image": {
+                              "type": ["string", "null"]
+                            },
+                            "archived": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": ["id", "displayName", "image", "archived"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "fields": {
                       "type": "array",
                       "items": {
@@ -10403,13 +10559,9 @@
                           },
                           "archived": {
                             "type": "boolean"
-                          },
-                          "role": {
-                            "type": "string",
-                            "enum": ["member", "watcher", "creator", "contributor"]
                           }
                         },
-                        "required": ["id", "displayName", "image", "archived", "role"],
+                        "required": ["id", "displayName", "image", "archived"],
                         "additionalProperties": false
                       }
                     }
@@ -10592,7 +10744,7 @@
     "/api/v1/matters/{number}/team": {
       "post": {
         "operationId": "addMatterTeamMember",
-        "summary": "Add one person and role to a matter team",
+        "summary": "Add one person to a matter team",
         "tags": ["matters"],
         "requestBody": {
           "required": true,
@@ -10603,13 +10755,9 @@
                 "properties": {
                   "userId": {
                     "type": "string"
-                  },
-                  "role": {
-                    "type": "string",
-                    "enum": ["member", "watcher", "creator", "contributor"]
                   }
                 },
-                "required": ["userId", "role"],
+                "required": ["userId"],
                 "additionalProperties": false
               }
             }
@@ -10651,13 +10799,9 @@
                           },
                           "archived": {
                             "type": "boolean"
-                          },
-                          "role": {
-                            "type": "string",
-                            "enum": ["member", "watcher", "creator", "contributor"]
                           }
                         },
-                        "required": ["id", "displayName", "image", "archived", "role"],
+                        "required": ["id", "displayName", "image", "archived"],
                         "additionalProperties": false
                       }
                     }
@@ -10681,10 +10825,10 @@
         }
       }
     },
-    "/api/v1/matters/{number}/team/{userId}/{role}": {
+    "/api/v1/matters/{number}/team/{userId}": {
       "delete": {
         "operationId": "removeMatterTeamMember",
-        "summary": "Remove one compound-key role from a matter team, except creator",
+        "summary": "Remove one person from a matter team",
         "tags": ["matters"],
         "parameters": [
           {
@@ -10703,15 +10847,6 @@
             },
             "in": "path",
             "name": "userId",
-            "required": true
-          },
-          {
-            "schema": {
-              "type": "string",
-              "enum": ["member", "watcher", "creator", "contributor"]
-            },
-            "in": "path",
-            "name": "role",
             "required": true
           }
         ],
@@ -10739,13 +10874,9 @@
                           },
                           "archived": {
                             "type": "boolean"
-                          },
-                          "role": {
-                            "type": "string",
-                            "enum": ["member", "watcher", "creator", "contributor"]
                           }
                         },
-                        "required": ["id", "displayName", "image", "archived", "role"],
+                        "required": ["id", "displayName", "image", "archived"],
                         "additionalProperties": false
                       }
                     }
@@ -10856,6 +10987,35 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "businessOwner": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "type": ["string", "null"]
+                                },
+                                "archived": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": ["id", "displayName", "image", "archived"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdBy": {
+                          "type": ["string", "null"]
                         },
                         "priority": {
                           "type": "string",
@@ -11133,6 +11293,35 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "businessOwner": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "type": ["string", "null"]
+                                },
+                                "archived": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": ["id", "displayName", "image", "archived"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdBy": {
+                          "type": ["string", "null"]
                         },
                         "priority": {
                           "type": "string",
@@ -18888,9 +19077,38 @@
     "/api/v1/portal/contracts": {
       "get": {
         "operationId": "listPortalContracts",
-        "summary": "DD-021: Administrator, Legal Team Member, Contributor or Business User must be the current Business Owner or an explicit stakeholder. Archived records are excluded; Confidential records require named team membership or Legal Owner. Document reads accept only the current Version of the primary Document. List eligible Contracts.",
+        "summary": "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. List eligible Contracts.",
         "tags": ["portal"],
         "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "in": "query",
+            "name": "q",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "in": "query",
+            "name": "typeId",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "in": "query",
+            "name": "ownerId",
+            "required": false
+          },
           {
             "schema": {
               "type": "integer",
@@ -18899,6 +19117,62 @@
             },
             "in": "query",
             "name": "cursor",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"]
+            },
+            "in": "query",
+            "name": "dir",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["draft", "review", "approval", "signature", "active", "ended"]
+            },
+            "in": "query",
+            "name": "stage",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "in": "query",
+            "name": "expiryFrom",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "in": "query",
+            "name": "expiryTo",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "number",
+                "title",
+                "counterparty",
+                "type",
+                "stage",
+                "owner",
+                "effectiveDate",
+                "expiryDate"
+              ]
+            },
+            "in": "query",
+            "name": "sort",
             "required": false
           }
         ],
@@ -18926,6 +19200,9 @@
                           "stage": {
                             "type": "string",
                             "enum": ["draft", "review", "approval", "signature", "active", "ended"]
+                          },
+                          "type": {
+                            "type": "string"
                           },
                           "counterparty": {
                             "type": ["string", "null"]
@@ -19087,6 +19364,7 @@
                           "number",
                           "title",
                           "stage",
+                          "type",
                           "counterparty",
                           "legalOwner",
                           "businessOwner",
@@ -19103,6 +19381,50 @@
                         "additionalProperties": false
                       }
                     },
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "filterOptions": {
+                      "type": "object",
+                      "properties": {
+                        "types": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "displayName": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id", "displayName"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "owners": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "displayName": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id", "displayName"],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": ["types", "owners"],
+                      "additionalProperties": false
+                    },
                     "nextCursor": {
                       "anyOf": [
                         {
@@ -19116,7 +19438,7 @@
                       ]
                     }
                   },
-                  "required": ["contracts", "nextCursor"],
+                  "required": ["contracts", "total", "filterOptions", "nextCursor"],
                   "additionalProperties": false
                 }
               }
@@ -19138,7 +19460,7 @@
     "/api/v1/portal/contracts/{number}": {
       "get": {
         "operationId": "readPortalContract",
-        "summary": "DD-021: Administrator, Legal Team Member, Contributor or Business User must be the current Business Owner or an explicit stakeholder. Archived records are excluded; Confidential records require named team membership or Legal Owner. Document reads accept only the current Version of the primary Document. Read selected Contract facts.",
+        "summary": "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. Read selected Contract facts.",
         "tags": ["portal"],
         "parameters": [
           {
@@ -19174,6 +19496,9 @@
                         "stage": {
                           "type": "string",
                           "enum": ["draft", "review", "approval", "signature", "active", "ended"]
+                        },
+                        "type": {
+                          "type": "string"
                         },
                         "counterparty": {
                           "type": ["string", "null"]
@@ -19411,6 +19736,7 @@
                         "number",
                         "title",
                         "stage",
+                        "type",
                         "counterparty",
                         "legalOwner",
                         "businessOwner",
@@ -19450,7 +19776,7 @@
     "/api/v1/portal/contracts/{number}/documents/{documentId}/versions/{versionId}/download": {
       "get": {
         "operationId": "downloadPortalContractVersion",
-        "summary": "DD-021: Administrator, Legal Team Member, Contributor or Business User must be the current Business Owner or an explicit stakeholder. Archived records are excluded; Confidential records require named team membership or Legal Owner. Document reads accept only the current Version of the primary Document. ",
+        "summary": "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. ",
         "tags": ["portal"],
         "parameters": [
           {
@@ -19510,7 +19836,7 @@
     "/api/v1/portal/contracts/{number}/documents/{documentId}/versions/{versionId}/preview": {
       "get": {
         "operationId": "previewPortalContractVersion",
-        "summary": "DD-021: Administrator, Legal Team Member, Contributor or Business User must be the current Business Owner or an explicit stakeholder. Archived records are excluded; Confidential records require named team membership or Legal Owner. Document reads accept only the current Version of the primary Document. ",
+        "summary": "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. ",
         "tags": ["portal"],
         "parameters": [
           {
@@ -19570,7 +19896,7 @@
     "/api/v1/portal/contracts/{number}/documents/{documentId}/versions/{versionId}/rendition": {
       "get": {
         "operationId": "readPortalContractRendition",
-        "summary": "DD-021: Administrator, Legal Team Member, Contributor or Business User must be the current Business Owner or an explicit stakeholder. Archived records are excluded; Confidential records require named team membership or Legal Owner. Document reads accept only the current Version of the primary Document. ",
+        "summary": "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. ",
         "tags": ["portal"],
         "parameters": [
           {
@@ -19656,7 +19982,7 @@
     "/api/v1/portal/contracts/{number}/documents/{documentId}/versions/{versionId}/email": {
       "get": {
         "operationId": "readPortalContractEmail",
-        "summary": "DD-021: Administrator, Legal Team Member, Contributor or Business User must be the current Business Owner or an explicit stakeholder. Archived records are excluded; Confidential records require named team membership or Legal Owner. Document reads accept only the current Version of the primary Document. ",
+        "summary": "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. ",
         "tags": ["portal"],
         "parameters": [
           {
@@ -19865,7 +20191,7 @@
     "/api/v1/portal/contracts/{number}/documents/{documentId}/versions/{versionId}/attachments/{attachmentIndex}/download": {
       "get": {
         "operationId": "downloadPortalContractEmailAttachment",
-        "summary": "DD-021: Administrator, Legal Team Member, Contributor or Business User must be the current Business Owner or an explicit stakeholder. Archived records are excluded; Confidential records require named team membership or Legal Owner. Document reads accept only the current Version of the primary Document. ",
+        "summary": "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. ",
         "tags": ["portal"],
         "parameters": [
           {
@@ -19935,7 +20261,7 @@
     "/api/v1/portal/contracts/{number}/documents/{documentId}/versions/{versionId}/attachments/{attachmentIndex}/preview": {
       "get": {
         "operationId": "previewPortalContractEmailAttachment",
-        "summary": "DD-021: Administrator, Legal Team Member, Contributor or Business User must be the current Business Owner or an explicit stakeholder. Archived records are excluded; Confidential records require named team membership or Legal Owner. Document reads accept only the current Version of the primary Document. ",
+        "summary": "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. ",
         "tags": ["portal"],
         "parameters": [
           {
@@ -20002,11 +20328,10 @@
         }
       }
     },
-    "/api/v1/contracts/{number}/stakeholders": {
+    "/api/v1/portal/contracts/{number}/work": {
       "get": {
-        "operationId": "listContractStakeholders",
-        "summary": "Administrator or Legal Team Member only; Contributor and Business User refused. Unreachable Contracts return 404. List explicit stakeholders, including on archived Contracts.",
-        "tags": ["contracts"],
+        "operationId": "readPortalContractWork",
+        "tags": ["portal"],
         "parameters": [
           {
             "schema": {
@@ -20027,30 +20352,442 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "stakeholders": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "string"
-                          },
-                          "displayName": {
-                            "type": "string"
-                          },
-                          "image": {
-                            "type": ["string", "null"]
-                          },
-                          "archived": {
-                            "type": "boolean"
+                    "work": {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "amount": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "currency": {
+                                  "type": "string"
+                                },
+                                "cadence": {
+                                  "type": "string",
+                                  "enum": ["one_time", "monthly", "annually"]
+                                }
+                              },
+                              "required": ["amount", "currency", "cadence"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "effectiveDate": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "id": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "fields": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "fieldId": {
+                                "type": "string"
+                              },
+                              "slug": {
+                                "type": "string"
+                              },
+                              "displayName": {
+                                "type": "string"
+                              },
+                              "description": {
+                                "type": ["string", "null"]
+                              },
+                              "fieldType": {
+                                "type": "string",
+                                "enum": [
+                                  "text",
+                                  "long_text",
+                                  "number",
+                                  "currency",
+                                  "date",
+                                  "boolean",
+                                  "single_select",
+                                  "multi_select",
+                                  "user",
+                                  "entity"
+                                ]
+                              },
+                              "fieldTag": {
+                                "type": "string",
+                                "enum": ["business", "legal"]
+                              },
+                              "options": {
+                                "anyOf": [
+                                  {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "displayOrder": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "isRequired": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "fieldId",
+                              "slug",
+                              "displayName",
+                              "description",
+                              "fieldType",
+                              "fieldTag",
+                              "options",
+                              "displayOrder",
+                              "isRequired"
+                            ],
+                            "additionalProperties": false
                           }
                         },
-                        "required": ["id", "displayName", "image", "archived"],
-                        "additionalProperties": false
-                      }
+                        "customFields": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "references": {
+                          "type": "object",
+                          "properties": {
+                            "people": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "archived": {
+                                    "type": "boolean"
+                                  },
+                                  "restricted": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": ["id", "label", "archived"],
+                                "additionalProperties": false
+                              }
+                            },
+                            "entities": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "archived": {
+                                    "type": "boolean"
+                                  },
+                                  "restricted": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": ["id", "label", "archived"],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": ["people", "entities"],
+                          "additionalProperties": false
+                        },
+                        "originalRequests": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "number": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "summary": {
+                                "type": "string"
+                              },
+                              "description": {
+                                "type": ["string", "null"]
+                              },
+                              "submittedAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              "requester": {
+                                "type": "string"
+                              },
+                              "urgency": {
+                                "type": "string",
+                                "enum": ["low", "medium", "high", "critical"]
+                              },
+                              "documents": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "filename": {
+                                      "type": "string"
+                                    },
+                                    "reference": {
+                                      "anyOf": [
+                                        {
+                                          "type": "object",
+                                          "properties": {
+                                            "documentId": {
+                                              "type": "string"
+                                            },
+                                            "versionId": {
+                                              "type": "string"
+                                            },
+                                            "primary": {
+                                              "type": "boolean"
+                                            }
+                                          },
+                                          "required": ["documentId", "versionId", "primary"],
+                                          "additionalProperties": false
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  "required": ["filename", "reference"],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "fields": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "fieldId": {
+                                      "type": "string"
+                                    },
+                                    "slug": {
+                                      "type": "string"
+                                    },
+                                    "displayName": {
+                                      "type": "string"
+                                    },
+                                    "description": {
+                                      "type": ["string", "null"]
+                                    },
+                                    "fieldType": {
+                                      "type": "string",
+                                      "enum": [
+                                        "text",
+                                        "long_text",
+                                        "number",
+                                        "currency",
+                                        "date",
+                                        "boolean",
+                                        "single_select",
+                                        "multi_select",
+                                        "user",
+                                        "entity"
+                                      ]
+                                    },
+                                    "fieldTag": {
+                                      "type": "string",
+                                      "enum": ["business", "legal"]
+                                    },
+                                    "options": {
+                                      "anyOf": [
+                                        {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
+                                    },
+                                    "displayOrder": {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    },
+                                    "isRequired": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "fieldId",
+                                    "slug",
+                                    "displayName",
+                                    "description",
+                                    "fieldType",
+                                    "fieldTag",
+                                    "options",
+                                    "displayOrder",
+                                    "isRequired"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "customFields": {
+                                "type": "object",
+                                "propertyNames": {
+                                  "type": "string"
+                                },
+                                "additionalProperties": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "number"
+                                    },
+                                    {
+                                      "type": "boolean"
+                                    },
+                                    {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  ]
+                                }
+                              },
+                              "references": {
+                                "type": "object",
+                                "properties": {
+                                  "people": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "label": {
+                                          "type": "string"
+                                        },
+                                        "archived": {
+                                          "type": "boolean"
+                                        },
+                                        "restricted": {
+                                          "type": "boolean"
+                                        }
+                                      },
+                                      "required": ["id", "label", "archived"],
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "entities": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "label": {
+                                          "type": "string"
+                                        },
+                                        "archived": {
+                                          "type": "boolean"
+                                        },
+                                        "restricted": {
+                                          "type": "boolean"
+                                        }
+                                      },
+                                      "required": ["id", "label", "archived"],
+                                      "additionalProperties": false
+                                    }
+                                  }
+                                },
+                                "required": ["people", "entities"],
+                                "additionalProperties": false
+                              }
+                            },
+                            "required": [
+                              "number",
+                              "summary",
+                              "description",
+                              "submittedAt",
+                              "requester",
+                              "urgency",
+                              "documents",
+                              "fields",
+                              "customFields",
+                              "references"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "description",
+                        "fields",
+                        "customFields",
+                        "references",
+                        "originalRequests"
+                      ],
+                      "additionalProperties": false
                     }
                   },
-                  "required": ["stakeholders"],
+                  "required": ["work"],
                   "additionalProperties": false
                 }
               }
@@ -20068,10 +20805,9 @@
           }
         }
       },
-      "post": {
-        "operationId": "addContractStakeholder",
-        "summary": "Administrator or Legal Team Member only; Contributor and Business User refused. Unreachable Contracts return 404. Add a live person; archived Contracts return 409.",
-        "tags": ["contracts"],
+      "patch": {
+        "operationId": "updatePortalContractWork",
+        "tags": ["portal"],
         "requestBody": {
           "required": true,
           "content": {
@@ -20079,12 +20815,88 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "userId": {
-                    "type": "string",
-                    "minLength": 1
+                  "value": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "amount": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "currency": {
+                            "type": "string"
+                          },
+                          "cadence": {
+                            "type": "string",
+                            "enum": ["one_time", "monthly", "annually"]
+                          }
+                        },
+                        "required": ["amount", "currency", "cadence"],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "effectiveDate": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "description": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 50000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "customFields": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "anyOf": [
+                        {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
                   }
                 },
-                "required": ["userId"],
                 "additionalProperties": false
               }
             }
@@ -20103,37 +20915,81 @@
           }
         ],
         "responses": {
-          "201": {
+          "200": {
             "description": "Default Response",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "stakeholders": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "string"
+                    "value": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "amount": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "currency": {
+                              "type": "string"
+                            },
+                            "cadence": {
+                              "type": "string",
+                              "enum": ["one_time", "monthly", "annually"]
+                            }
                           },
-                          "displayName": {
-                            "type": "string"
-                          },
-                          "image": {
-                            "type": ["string", "null"]
-                          },
-                          "archived": {
-                            "type": "boolean"
-                          }
+                          "required": ["amount", "currency", "cadence"],
+                          "additionalProperties": false
                         },
-                        "required": ["id", "displayName", "image", "archived"],
-                        "additionalProperties": false
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "effectiveDate": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "description": {
+                      "type": ["string", "null"]
+                    },
+                    "customFields": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        ]
                       }
                     }
                   },
-                  "required": ["stakeholders"],
+                  "required": ["description", "customFields"],
                   "additionalProperties": false
                 }
               }
@@ -20152,12 +21008,19 @@
         }
       }
     },
-    "/api/v1/contracts/{number}/stakeholders/{userId}": {
-      "delete": {
-        "operationId": "removeContractStakeholder",
-        "summary": "Administrator or Legal Team Member only; Contributor and Business User refused. Unreachable Contracts return 404. Remove an explicit stakeholder; archived Contracts return 409.",
-        "tags": ["contracts"],
+    "/api/v1/portal/contracts/{number}/supporting-documents": {
+      "get": {
+        "operationId": "listPortalContractSupportingDocuments",
+        "tags": ["portal"],
         "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "cursor",
+            "required": false
+          },
           {
             "schema": {
               "type": "integer",
@@ -20166,15 +21029,6 @@
             },
             "in": "path",
             "name": "number",
-            "required": true
-          },
-          {
-            "schema": {
-              "type": "string",
-              "minLength": 1
-            },
-            "in": "path",
-            "name": "userId",
             "required": true
           }
         ],
@@ -20186,7 +21040,7 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "stakeholders": {
+                    "documents": {
                       "type": "array",
                       "items": {
                         "type": "object",
@@ -20194,22 +21048,1255 @@
                           "id": {
                             "type": "string"
                           },
-                          "displayName": {
+                          "title": {
                             "type": "string"
                           },
-                          "image": {
-                            "type": ["string", "null"]
-                          },
-                          "archived": {
-                            "type": "boolean"
+                          "version": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "versionNumber": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "originalFilename": {
+                                "type": "string"
+                              },
+                              "mimeType": {
+                                "type": "string"
+                              },
+                              "byteSize": {
+                                "type": "number"
+                              },
+                              "renderFamily": {
+                                "type": "string",
+                                "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                              },
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "general",
+                                  "draft_ours",
+                                  "draft_theirs",
+                                  "redline_theirs",
+                                  "redline_ours",
+                                  "executed",
+                                  "amendment",
+                                  "generated_redline"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "versionNumber",
+                              "originalFilename",
+                              "mimeType",
+                              "byteSize",
+                              "renderFamily",
+                              "kind"
+                            ],
+                            "additionalProperties": false
                           }
                         },
-                        "required": ["id", "displayName", "image", "archived"],
+                        "required": ["id", "title", "version"],
                         "additionalProperties": false
+                      }
+                    },
+                    "nextCursor": {
+                      "type": ["string", "null"]
+                    }
+                  },
+                  "required": ["documents", "nextCursor"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/matters/{number}/work": {
+      "get": {
+        "operationId": "readPortalMatterWork",
+        "tags": ["portal"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "work": {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "amount": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "currency": {
+                                  "type": "string"
+                                },
+                                "cadence": {
+                                  "type": "string",
+                                  "enum": ["one_time", "monthly", "annually"]
+                                }
+                              },
+                              "required": ["amount", "currency", "cadence"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "effectiveDate": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "id": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "fields": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "fieldId": {
+                                "type": "string"
+                              },
+                              "slug": {
+                                "type": "string"
+                              },
+                              "displayName": {
+                                "type": "string"
+                              },
+                              "description": {
+                                "type": ["string", "null"]
+                              },
+                              "fieldType": {
+                                "type": "string",
+                                "enum": [
+                                  "text",
+                                  "long_text",
+                                  "number",
+                                  "currency",
+                                  "date",
+                                  "boolean",
+                                  "single_select",
+                                  "multi_select",
+                                  "user",
+                                  "entity"
+                                ]
+                              },
+                              "fieldTag": {
+                                "type": "string",
+                                "enum": ["business", "legal"]
+                              },
+                              "options": {
+                                "anyOf": [
+                                  {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "displayOrder": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "isRequired": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "fieldId",
+                              "slug",
+                              "displayName",
+                              "description",
+                              "fieldType",
+                              "fieldTag",
+                              "options",
+                              "displayOrder",
+                              "isRequired"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "customFields": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "references": {
+                          "type": "object",
+                          "properties": {
+                            "people": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "archived": {
+                                    "type": "boolean"
+                                  },
+                                  "restricted": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": ["id", "label", "archived"],
+                                "additionalProperties": false
+                              }
+                            },
+                            "entities": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "archived": {
+                                    "type": "boolean"
+                                  },
+                                  "restricted": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": ["id", "label", "archived"],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": ["people", "entities"],
+                          "additionalProperties": false
+                        },
+                        "originalRequests": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "number": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "summary": {
+                                "type": "string"
+                              },
+                              "description": {
+                                "type": ["string", "null"]
+                              },
+                              "submittedAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              "requester": {
+                                "type": "string"
+                              },
+                              "urgency": {
+                                "type": "string",
+                                "enum": ["low", "medium", "high", "critical"]
+                              },
+                              "documents": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "filename": {
+                                      "type": "string"
+                                    },
+                                    "reference": {
+                                      "anyOf": [
+                                        {
+                                          "type": "object",
+                                          "properties": {
+                                            "documentId": {
+                                              "type": "string"
+                                            },
+                                            "versionId": {
+                                              "type": "string"
+                                            },
+                                            "primary": {
+                                              "type": "boolean"
+                                            }
+                                          },
+                                          "required": ["documentId", "versionId", "primary"],
+                                          "additionalProperties": false
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  "required": ["filename", "reference"],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "fields": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "fieldId": {
+                                      "type": "string"
+                                    },
+                                    "slug": {
+                                      "type": "string"
+                                    },
+                                    "displayName": {
+                                      "type": "string"
+                                    },
+                                    "description": {
+                                      "type": ["string", "null"]
+                                    },
+                                    "fieldType": {
+                                      "type": "string",
+                                      "enum": [
+                                        "text",
+                                        "long_text",
+                                        "number",
+                                        "currency",
+                                        "date",
+                                        "boolean",
+                                        "single_select",
+                                        "multi_select",
+                                        "user",
+                                        "entity"
+                                      ]
+                                    },
+                                    "fieldTag": {
+                                      "type": "string",
+                                      "enum": ["business", "legal"]
+                                    },
+                                    "options": {
+                                      "anyOf": [
+                                        {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
+                                    },
+                                    "displayOrder": {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    },
+                                    "isRequired": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "fieldId",
+                                    "slug",
+                                    "displayName",
+                                    "description",
+                                    "fieldType",
+                                    "fieldTag",
+                                    "options",
+                                    "displayOrder",
+                                    "isRequired"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "customFields": {
+                                "type": "object",
+                                "propertyNames": {
+                                  "type": "string"
+                                },
+                                "additionalProperties": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "number"
+                                    },
+                                    {
+                                      "type": "boolean"
+                                    },
+                                    {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  ]
+                                }
+                              },
+                              "references": {
+                                "type": "object",
+                                "properties": {
+                                  "people": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "label": {
+                                          "type": "string"
+                                        },
+                                        "archived": {
+                                          "type": "boolean"
+                                        },
+                                        "restricted": {
+                                          "type": "boolean"
+                                        }
+                                      },
+                                      "required": ["id", "label", "archived"],
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "entities": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "label": {
+                                          "type": "string"
+                                        },
+                                        "archived": {
+                                          "type": "boolean"
+                                        },
+                                        "restricted": {
+                                          "type": "boolean"
+                                        }
+                                      },
+                                      "required": ["id", "label", "archived"],
+                                      "additionalProperties": false
+                                    }
+                                  }
+                                },
+                                "required": ["people", "entities"],
+                                "additionalProperties": false
+                              }
+                            },
+                            "required": [
+                              "number",
+                              "summary",
+                              "description",
+                              "submittedAt",
+                              "requester",
+                              "urgency",
+                              "documents",
+                              "fields",
+                              "customFields",
+                              "references"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "description",
+                        "fields",
+                        "customFields",
+                        "references",
+                        "originalRequests"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["work"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updatePortalMatterWork",
+        "tags": ["portal"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "amount": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "currency": {
+                            "type": "string"
+                          },
+                          "cadence": {
+                            "type": "string",
+                            "enum": ["one_time", "monthly", "annually"]
+                          }
+                        },
+                        "required": ["amount", "currency", "cadence"],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "effectiveDate": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "description": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 50000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "customFields": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "anyOf": [
+                        {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "amount": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "currency": {
+                              "type": "string"
+                            },
+                            "cadence": {
+                              "type": "string",
+                              "enum": ["one_time", "monthly", "annually"]
+                            }
+                          },
+                          "required": ["amount", "currency", "cadence"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "effectiveDate": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "description": {
+                      "type": ["string", "null"]
+                    },
+                    "customFields": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        ]
                       }
                     }
                   },
-                  "required": ["stakeholders"],
+                  "required": ["description", "customFields"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/matters/{number}/supporting-documents": {
+      "get": {
+        "operationId": "listPortalMatterSupportingDocuments",
+        "tags": ["portal"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "cursor",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documents": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "version": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "versionNumber": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "originalFilename": {
+                                "type": "string"
+                              },
+                              "mimeType": {
+                                "type": "string"
+                              },
+                              "byteSize": {
+                                "type": "number"
+                              },
+                              "renderFamily": {
+                                "type": "string",
+                                "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                              },
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "general",
+                                  "draft_ours",
+                                  "draft_theirs",
+                                  "redline_theirs",
+                                  "redline_ours",
+                                  "executed",
+                                  "amendment",
+                                  "generated_redline"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "versionNumber",
+                              "originalFilename",
+                              "mimeType",
+                              "byteSize",
+                              "renderFamily",
+                              "kind"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": ["id", "title", "version"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "nextCursor": {
+                      "type": ["string", "null"]
+                    }
+                  },
+                  "required": ["documents", "nextCursor"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/matters": {
+      "get": {
+        "operationId": "listPortalMatters",
+        "tags": ["portal"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "in": "query",
+            "name": "q",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "in": "query",
+            "name": "typeId",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "in": "query",
+            "name": "ownerId",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "query",
+            "name": "cursor",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"]
+            },
+            "in": "query",
+            "name": "dir",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "in": "query",
+            "name": "statusId",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["open", "closed"]
+            },
+            "in": "query",
+            "name": "category",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["number", "title", "type", "status", "owner"]
+            },
+            "in": "query",
+            "name": "sort",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "matters": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "number": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "category": {
+                            "type": "string",
+                            "enum": ["open", "closed"]
+                          },
+                          "manager": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "displayName": {
+                                    "type": "string"
+                                  },
+                                  "image": {
+                                    "type": ["string", "null"]
+                                  }
+                                },
+                                "required": ["id", "displayName", "image"],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "businessOwner": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "displayName": {
+                                    "type": "string"
+                                  },
+                                  "image": {
+                                    "type": ["string", "null"]
+                                  }
+                                },
+                                "required": ["id", "displayName", "image"],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "number",
+                          "title",
+                          "type",
+                          "status",
+                          "category",
+                          "manager",
+                          "businessOwner"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "filterOptions": {
+                      "type": "object",
+                      "properties": {
+                        "types": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "displayName": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id", "displayName"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "owners": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "displayName": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id", "displayName"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "statuses": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "displayName": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id", "displayName"],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": ["types", "owners", "statuses"],
+                      "additionalProperties": false
+                    },
+                    "nextCursor": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": ["matters", "total", "filterOptions", "nextCursor"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/matters/{number}": {
+      "get": {
+        "operationId": "readPortalMatter",
+        "tags": ["portal"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "matter": {
+                      "type": "object",
+                      "properties": {
+                        "number": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string"
+                        },
+                        "category": {
+                          "type": "string",
+                          "enum": ["open", "closed"]
+                        },
+                        "manager": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "type": ["string", "null"]
+                                }
+                              },
+                              "required": ["id", "displayName", "image"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "businessOwner": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "type": ["string", "null"]
+                                }
+                              },
+                              "required": ["id", "displayName", "image"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "number",
+                        "title",
+                        "type",
+                        "status",
+                        "category",
+                        "manager",
+                        "businessOwner"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["matter"],
                   "additionalProperties": false
                 }
               }
@@ -20391,7 +22478,7 @@
       },
       "get": {
         "operationId": "listInbox",
-        "summary": "The Inbox (INT-006, INT-007): the Requests whose fate is undecided, ordered by urgency rank — critical first — then age, oldest first, and paged by cursor. The answer is the `new` Requests by default; status choices or includeTriaged=true widen it to the converted, resolved, and declined ones with their outcomes. A converted row carries the contract or matter it became only when the caller reaches that record, and carries null otherwise (DD-014). Member+ only: a Contributor and a Business User are refused",
+        "summary": "The Inbox (INT-006, INT-007): the Requests whose fate is undecided, ordered by urgency rank — critical first — then age, oldest first, unless sort names a column, and paged by cursor. The answer is the `new` Requests by default; status choices or includeTriaged=true widen it to the converted, resolved, and declined ones with their outcomes. A converted row carries the contract or matter it became only when the caller reaches that record, and carries null otherwise (DD-014). Member+ only: a Contributor and a Business User are refused",
         "tags": ["requests"],
         "parameters": [
           {
@@ -20460,6 +22547,24 @@
             },
             "in": "query",
             "name": "timeZone",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["number", "summary", "type", "requester", "urgency", "createdAt", "status"]
+            },
+            "in": "query",
+            "name": "sort",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"]
+            },
+            "in": "query",
+            "name": "dir",
             "required": false
           },
           {
@@ -20962,6 +23067,32 @@
                       ],
                       "additionalProperties": false
                     },
+                    "redirectTo": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "module": {
+                              "type": "string",
+                              "enum": ["contract", "matter"]
+                            },
+                            "number": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": ["module", "number"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "recordArchived": {
+                      "type": "boolean"
+                    },
                     "fields": {
                       "type": "array",
                       "items": {
@@ -21093,7 +23224,14 @@
                       }
                     }
                   },
-                  "required": ["request", "fields", "customFieldRefs", "attachments"],
+                  "required": [
+                    "request",
+                    "redirectTo",
+                    "recordArchived",
+                    "fields",
+                    "customFieldRefs",
+                    "attachments"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -22376,6 +24514,28 @@
                       ],
                       "additionalProperties": false
                     },
+                    "conversion": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "at": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            "by": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["at", "by"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "fields": {
                       "type": "array",
                       "items": {
@@ -22535,7 +24695,7 @@
                       }
                     }
                   },
-                  "required": ["request", "fields", "customFieldRefs", "attachments"],
+                  "required": ["request", "conversion", "fields", "customFieldRefs", "attachments"],
                   "additionalProperties": false
                 }
               }
@@ -22557,9 +24717,18 @@
     "/api/v1/requests/{number}/attachments/{attachmentId}": {
       "get": {
         "operationId": "downloadRequestAttachment",
-        "summary": "Stream one attachment on a Request back, as a download (INT-006). The staff mount's own address, with the portal download's answer: the bytes come through the API behind the session, there are no presigned URLs, and the type is always `application/octet-stream` — a Request's attachment stores no declared type, and a download never echoes one a client sent. An attachment id belonging to another Request answers 404. Member+ only",
+        "summary": "Stream one attachment on a Request back, as a download or preview with preview=true (INT-006). The staff mount's own address, with the portal download's answer: the bytes come through the API behind the session, there are no presigned URLs, and the download type is always `application/octet-stream` — a Request's attachment stores no declared type, and a download never echoes one a client sent. An attachment id belonging to another Request answers 404. Member+ only",
         "tags": ["requests"],
         "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["true"]
+            },
+            "in": "query",
+            "name": "preview",
+            "required": false
+          },
           {
             "schema": {
               "type": "integer",
@@ -23552,6 +25721,11 @@
                           "type": "string",
                           "enum": ["pending", "ready", "failed"]
                         },
+                        "progressAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
                         "suggestions": {
                           "type": "object",
                           "propertyNames": {
@@ -23597,6 +25771,10 @@
                                   "required": ["sourceId", "revision", "quote"],
                                   "additionalProperties": false
                                 }
+                              },
+                              "justification": {
+                                "type": "string",
+                                "maxLength": 1000
                               }
                             },
                             "required": ["value", "citations"],
@@ -23648,6 +25826,10 @@
                                   "required": ["sourceId", "revision", "quote"],
                                   "additionalProperties": false
                                 }
+                              },
+                              "justification": {
+                                "type": "string",
+                                "maxLength": 1000
                               }
                             },
                             "required": ["value", "citations"],
@@ -23689,51 +25871,6 @@
                             "additionalProperties": false
                           }
                         },
-                        "limits": {
-                          "default": {
-                            "sources": 20,
-                            "bytes": 10485760,
-                            "totalBytes": 52428800,
-                            "characters": 30000,
-                            "totalCharacters": 180000,
-                            "sourceRuntimeMs": 15000,
-                            "runtimeMs": 45000
-                          },
-                          "type": "object",
-                          "properties": {
-                            "sources": {
-                              "type": "number"
-                            },
-                            "bytes": {
-                              "type": "number"
-                            },
-                            "totalBytes": {
-                              "type": "number"
-                            },
-                            "characters": {
-                              "type": "number"
-                            },
-                            "totalCharacters": {
-                              "type": "number"
-                            },
-                            "sourceRuntimeMs": {
-                              "type": "number"
-                            },
-                            "runtimeMs": {
-                              "type": "number"
-                            }
-                          },
-                          "required": [
-                            "sources",
-                            "bytes",
-                            "totalBytes",
-                            "characters",
-                            "totalCharacters",
-                            "sourceRuntimeMs",
-                            "runtimeMs"
-                          ],
-                          "additionalProperties": false
-                        },
                         "failure": {
                           "type": ["string", "null"]
                         }
@@ -23747,7 +25884,6 @@
                         "conflicts",
                         "warnings",
                         "attachmentReads",
-                        "limits",
                         "failure"
                       ],
                       "additionalProperties": false
@@ -23820,6 +25956,11 @@
                           "type": "string",
                           "enum": ["pending", "ready", "failed"]
                         },
+                        "progressAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
                         "suggestions": {
                           "type": "object",
                           "propertyNames": {
@@ -23865,6 +26006,10 @@
                                   "required": ["sourceId", "revision", "quote"],
                                   "additionalProperties": false
                                 }
+                              },
+                              "justification": {
+                                "type": "string",
+                                "maxLength": 1000
                               }
                             },
                             "required": ["value", "citations"],
@@ -23916,6 +26061,10 @@
                                   "required": ["sourceId", "revision", "quote"],
                                   "additionalProperties": false
                                 }
+                              },
+                              "justification": {
+                                "type": "string",
+                                "maxLength": 1000
                               }
                             },
                             "required": ["value", "citations"],
@@ -23957,51 +26106,6 @@
                             "additionalProperties": false
                           }
                         },
-                        "limits": {
-                          "default": {
-                            "sources": 20,
-                            "bytes": 10485760,
-                            "totalBytes": 52428800,
-                            "characters": 30000,
-                            "totalCharacters": 180000,
-                            "sourceRuntimeMs": 15000,
-                            "runtimeMs": 45000
-                          },
-                          "type": "object",
-                          "properties": {
-                            "sources": {
-                              "type": "number"
-                            },
-                            "bytes": {
-                              "type": "number"
-                            },
-                            "totalBytes": {
-                              "type": "number"
-                            },
-                            "characters": {
-                              "type": "number"
-                            },
-                            "totalCharacters": {
-                              "type": "number"
-                            },
-                            "sourceRuntimeMs": {
-                              "type": "number"
-                            },
-                            "runtimeMs": {
-                              "type": "number"
-                            }
-                          },
-                          "required": [
-                            "sources",
-                            "bytes",
-                            "totalBytes",
-                            "characters",
-                            "totalCharacters",
-                            "sourceRuntimeMs",
-                            "runtimeMs"
-                          ],
-                          "additionalProperties": false
-                        },
                         "failure": {
                           "type": ["string", "null"]
                         }
@@ -24015,7 +26119,6 @@
                         "conflicts",
                         "warnings",
                         "attachmentReads",
-                        "limits",
                         "failure"
                       ],
                       "additionalProperties": false
@@ -24081,6 +26184,10 @@
                   "properties": {
                     "available": {
                       "type": "boolean"
+                    },
+                    "justification": {
+                      "type": "string",
+                      "maxLength": 1000
                     },
                     "citations": {
                       "type": "array",
@@ -24194,6 +26301,10 @@
                     "available": {
                       "type": "boolean"
                     },
+                    "justification": {
+                      "type": "string",
+                      "maxLength": 1000
+                    },
                     "citations": {
                       "type": "array",
                       "items": {
@@ -24305,6 +26416,10 @@
                   "properties": {
                     "available": {
                       "type": "boolean"
+                    },
+                    "justification": {
+                      "type": "string",
+                      "maxLength": 1000
                     },
                     "citations": {
                       "type": "array",
@@ -26625,6 +28740,9 @@
                               }
                             ]
                           },
+                          "createdBy": {
+                            "type": ["string", "null"]
+                          },
                           "entity": {
                             "anyOf": [
                               {
@@ -27206,6 +29324,9 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "createdBy": {
+                          "type": ["string", "null"]
                         },
                         "entity": {
                           "anyOf": [
@@ -27887,12 +30008,7 @@
                           },
                           "role": {
                             "type": "string",
-                            "enum": [
-                              "administrator",
-                              "legal_team_member",
-                              "contributor",
-                              "business_user"
-                            ]
+                            "enum": ["administrator", "legal_team_member", "business_user"]
                           }
                         },
                         "required": ["id", "displayName", "image", "archived", "role"],
@@ -28047,6 +30163,9 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "createdBy": {
+                          "type": ["string", "null"]
                         },
                         "entity": {
                           "anyOf": [
@@ -28566,6 +30685,54 @@
                       "required": ["users", "entities"],
                       "additionalProperties": false
                     },
+                    "originalIntake": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "number": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "description": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["number", "description"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "creator": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "image": {
+                              "type": ["string", "null"]
+                            },
+                            "archived": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": ["id", "displayName", "image", "archived"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "team": {
                       "type": "array",
                       "items": {
@@ -28582,13 +30749,9 @@
                           },
                           "archived": {
                             "type": "boolean"
-                          },
-                          "role": {
-                            "type": "string",
-                            "enum": ["member", "watcher", "creator", "contributor"]
                           }
                         },
-                        "required": ["id", "displayName", "image", "archived", "role"],
+                        "required": ["id", "displayName", "image", "archived"],
                         "additionalProperties": false
                       }
                     },
@@ -28889,7 +31052,7 @@
         "operationId": "updateContract",
         "summary": "Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, the signing entity, priority, risk, the value, the CTR-006 term fields, the type, a custom field, or the status — any live status may follow any other (CTR-001). The value is one field in three parts: amount, currency, and cadence commit together and clear together. Re-typing re-checks the new type's hard-required fields before it commits (CTR-016/MTR-014), so the type and the values that satisfy it may be sent together. The term is five fields with one rule between them (CTR-006): an expiry on an evergreen contract and a renewal period on a contract that does not auto-renew are refused 400 with their own problem types, and a term-type change clears the fields the new type cannot hold, each clear narrated as the edit it is. The Confidential flag (DD-014) commits here too, but only for an Administrator, the contract's creator, or its Owner: anyone else who reaches the record is refused 403, and anyone who does not reach it is answered 404 like a contract that does not exist. A status change that moves the contract past the approval stage while approvals are pending or rejected meets CTR-012's soft gate: it is refused 409 with the unresolved approvals named, and the same commit with `overrideSoftGate` succeeds and is logged as an override. Never on an archived contract",
         "tags": ["contracts"],
-        "description": "Business Owner assignment is Member+ only: Administrator or Legal Team Member. The person must be live; null clears ownership without removing explicit stakeholders.",
+        "description": "Business Owner assignment is Member+ only: Administrator or Legal Team Member. The person must be live; null clears ownership without removing team membership.",
         "requestBody": {
           "required": true,
           "content": {
@@ -29166,6 +31329,9 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "createdBy": {
+                          "type": ["string", "null"]
                         },
                         "entity": {
                           "anyOf": [
@@ -29934,6 +32100,9 @@
                             }
                           ]
                         },
+                        "createdBy": {
+                          "type": ["string", "null"]
+                        },
                         "entity": {
                           "anyOf": [
                             {
@@ -30439,6 +32608,9 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "createdBy": {
+                          "type": ["string", "null"]
                         },
                         "entity": {
                           "anyOf": [
@@ -30970,6 +33142,9 @@
                             }
                           ]
                         },
+                        "createdBy": {
+                          "type": ["string", "null"]
+                        },
                         "entity": {
                           "anyOf": [
                             {
@@ -31476,7 +33651,7 @@
     "/api/v1/contracts/{number}/team": {
       "post": {
         "operationId": "addContractTeamMember",
-        "summary": "Put a person on the contract team under a role (CTR-004). The key is contract + person + role, so the same person may hold two roles; the `creator` role is the server's to write",
+        "summary": "Put a person on the contract team (DD-023). One membership per person; the account type says what the membership lets them do",
         "tags": ["contracts"],
         "requestBody": {
           "required": true,
@@ -31487,13 +33662,9 @@
                 "properties": {
                   "userId": {
                     "type": "string"
-                  },
-                  "role": {
-                    "type": "string",
-                    "enum": ["member", "watcher", "creator", "contributor"]
                   }
                 },
-                "required": ["userId", "role"],
+                "required": ["userId"],
                 "additionalProperties": false
               }
             }
@@ -31535,13 +33706,9 @@
                           },
                           "archived": {
                             "type": "boolean"
-                          },
-                          "role": {
-                            "type": "string",
-                            "enum": ["member", "watcher", "creator", "contributor"]
                           }
                         },
-                        "required": ["id", "displayName", "image", "archived", "role"],
+                        "required": ["id", "displayName", "image", "archived"],
                         "additionalProperties": false
                       }
                     }
@@ -31565,10 +33732,10 @@
         }
       }
     },
-    "/api/v1/contracts/{number}/team/{userId}/{role}": {
+    "/api/v1/contracts/{number}/team/{userId}": {
       "delete": {
         "operationId": "removeContractTeamMember",
-        "summary": "Take one role off the contract team (CTR-004). The role is part of the address, so dropping a watcher leaves that same person's member row standing; `creator` is provenance and stays",
+        "summary": "Take a person off the contract team (DD-023). A Business User loses Portal access to the record on the next read",
         "tags": ["contracts"],
         "parameters": [
           {
@@ -31587,15 +33754,6 @@
             },
             "in": "path",
             "name": "userId",
-            "required": true
-          },
-          {
-            "schema": {
-              "type": "string",
-              "enum": ["member", "watcher", "creator", "contributor"]
-            },
-            "in": "path",
-            "name": "role",
             "required": true
           }
         ],
@@ -31623,13 +33781,9 @@
                           },
                           "archived": {
                             "type": "boolean"
-                          },
-                          "role": {
-                            "type": "string",
-                            "enum": ["member", "watcher", "creator", "contributor"]
                           }
                         },
-                        "required": ["id", "displayName", "image", "archived", "role"],
+                        "required": ["id", "displayName", "image", "archived"],
                         "additionalProperties": false
                       }
                     }
@@ -31780,6 +33934,9 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "createdBy": {
+                          "type": ["string", "null"]
                         },
                         "entity": {
                           "anyOf": [
@@ -32317,6 +34474,9 @@
                             }
                           ]
                         },
+                        "createdBy": {
+                          "type": ["string", "null"]
+                        },
                         "entity": {
                           "anyOf": [
                             {
@@ -32853,6 +35013,9 @@
                             }
                           ]
                         },
+                        "createdBy": {
+                          "type": ["string", "null"]
+                        },
                         "entity": {
                           "anyOf": [
                             {
@@ -33381,6 +35544,9 @@
                             }
                           ]
                         },
+                        "createdBy": {
+                          "type": ["string", "null"]
+                        },
                         "entity": {
                           "anyOf": [
                             {
@@ -33887,6 +36053,9 @@
                             }
                           ]
                         },
+                        "createdBy": {
+                          "type": ["string", "null"]
+                        },
                         "entity": {
                           "anyOf": [
                             {
@@ -34328,6 +36497,10 @@
                   "properties": {
                     "available": {
                       "type": "boolean"
+                    },
+                    "justification": {
+                      "type": "string",
+                      "maxLength": 1000
                     },
                     "citations": {
                       "type": "array",
@@ -49874,6 +52047,15 @@
             },
             "in": "query",
             "name": "cursor",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["legal_only", "working_team", "full_thread"]
+            },
+            "in": "query",
+            "name": "visibility",
             "required": false
           }
         ],
@@ -66435,7 +68617,7 @@
     "/api/v1/me/notification-preferences": {
       "get": {
         "operationId": "getMyNotificationPreferences",
-        "summary": "What the signed-in person gets from each event group and email-only briefing section. It is the **effective** answer — their own saved rows over the group's defaults — because the table holds overrides rather than a grid, and a person who has never opened the pane has no rows at all. Every group is answered, whether or not anything in it has ever fired: an opinion can be held about a group before its first event exists. Which event groups a surface draws is the surface's business — the staff pane draws four and the portal pane draws `requester_events` alone. There is no user parameter — a preference is one person's, and the signed-in person is the whole scope",
+        "summary": "What the signed-in person gets from each event group and email-only briefing section. It is the **effective** answer — their own saved rows over the group's defaults — because the table holds overrides rather than a grid, and a person who has never opened the pane has no rows at all. Every group is answered, whether or not anything in it has ever fired: an opinion can be held about a group before its first event exists. Which event groups a surface draws is the surface's business — the staff pane draws four and the Portal pane draws Request updates, mentions, and record activity. There is no user parameter — a preference is one person's, and the signed-in person is the whole scope",
         "tags": ["notifications"],
         "responses": {
           "200": {
@@ -66659,7 +68841,7 @@
     "/api/v1/portal/notifications": {
       "get": {
         "operationId": "listPortalNotifications",
-        "summary": "The signed-in person's portal notifications, newest first (NOT-001, INT-001) — NOT-002's group 5, about their own Requests. The gate is a session and nothing else, the portal's own rule: Member+ staff submit Requests too, and on this surface they are a Requester like anybody else. There is no way to ask for anybody else's, and no way to reach a contract item from here — that is the staff notification centre, at `/notifications`. An item about a Request the reader is no longer the Requester of, or one that has since been archived, is silently omitted: no row, no gap, and no number that says something was left out. Paged from a server-fixed page size: pass the previous page's `nextCursor` to read further back. A cursor naming nothing in this person's bell answers an empty page rather than an error",
+        "summary": "Portal notifications for the signed-in person's Requests and current Contract or Matter team memberships. Legal content, archived work, and revoked memberships are omitted before pagination.",
         "tags": ["notifications"],
         "parameters": [
           {
@@ -66761,7 +68943,7 @@
     "/api/v1/portal/notifications/unread-count": {
       "get": {
         "operationId": "unreadPortalNotificationCount",
-        "summary": "How many unread portal notifications the signed-in person has (NOT-005) — the number behind the portal bell's badge. It is the whole count, not the capped one: '9+' is how the badge draws it, and the cap belongs to the surface. It is computed over exactly the items the list would answer with, through the same predicate, so an item about an archived Request leaves the count as silently as it leaves the list",
+        "summary": "Unread count over exactly the Portal notifications the current user may read.",
         "tags": ["notifications"],
         "responses": {
           "200": {
@@ -66799,7 +68981,7 @@
     "/api/v1/portal/notifications/read": {
       "post": {
         "operationId": "markPortalNotificationsRead",
-        "summary": "Mark the named portal items read — what opening one from the portal bell does (NOT-005, 2026-09-09 amendment). Drawing the panel writes nothing; the click on an item is the read, so the panel sends that one id. The body is a list of up to one page's worth, because a page is the most the panel ever holds. Ids that are not this person's, are already read, are about a Request they can no longer reach, or belong to their staff notification centre match nothing and are not refused — a refusal would answer whether an id exists. Answers the unread count that remains",
+        "summary": "Mark named reachable Portal notifications read. Unreachable or already-read ids match nothing. Returns the remaining unread count.",
         "tags": ["notifications"],
         "requestBody": {
           "required": true,
@@ -66861,7 +69043,7 @@
     "/api/v1/portal/notifications/read-all": {
       "post": {
         "operationId": "markAllPortalNotificationsRead",
-        "summary": "Mark every unread portal item read — the affordance that zeroes the portal badge (NOT-005). It covers exactly what the badge counts, so an item about an archived Request is left alone, and so is a staff item on the same person's notification centre: it is not on this surface at all. Answers the unread count that remains, which is zero unless something landed while the request was in flight",
+        "summary": "Mark every currently reachable Portal notification read and return the remaining unread count.",
         "tags": ["notifications"],
         "responses": {
           "200": {

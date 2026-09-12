@@ -21,12 +21,6 @@ const MEMBER = {
   displayName: "Nadia Counsel",
   role: "legal_team_member",
 };
-const CONTRIBUTOR = {
-  id: "u3",
-  email: "contributor@example.com",
-  displayName: "Casey Contributor",
-  role: "contributor",
-};
 
 const PEOPLE = [
   {
@@ -426,16 +420,6 @@ describe("the record's Tasks section (CTR-017)", () => {
     await waitFor(() => expect(api.writes).toHaveLength(1));
     expect(api.writes[0]).toMatchObject({ method: "DELETE", path: "/api/v1/tasks/t-1" });
     await waitFor(() => expect(screen.queryByText("Draft the NDA")).not.toBeInTheDocument());
-  });
-
-  it("gives a read-only viewer the checklist and no control on it", async () => {
-    stubApi({ signedIn: CONTRIBUTOR, extra: recordApi(CHECKLIST).handler });
-    renderAt("/contracts/42/tasks");
-
-    const card = await section();
-    expect(card.getByText("Draft the NDA")).toBeInTheDocument();
-    expect(card.queryByRole("button", { name: "Add task" })).not.toBeInTheDocument();
-    expect(card.queryByRole("button", { name: /^Actions for/ })).not.toBeInTheDocument();
   });
 
   it("freezes every control on an archived record", async () => {

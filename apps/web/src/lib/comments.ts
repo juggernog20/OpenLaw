@@ -57,6 +57,7 @@ export async function readCommentWindow(
   entityType: CommentEntityType,
   entityId: string,
   throughId?: string,
+  visibility?: CommentTier,
 ): Promise<ThreadResponse | undefined> {
   let cursor: string | undefined;
   let comments: Comment[] = [];
@@ -70,6 +71,7 @@ export async function readCommentWindow(
             entityType,
             entityId,
             ...(cursor ? { cursor } : {}),
+            ...(visibility ? { visibility } : {}),
           },
         },
       })
@@ -213,10 +215,6 @@ function commentIn(payload: unknown): Comment | undefined {
  * in, so widening the audience is a move to the right. */
 export const COMMENT_TIERS = ["legal_only", "working_team", "full_thread"] as const;
 
-/** What a Contributor may say, and hear (DD-016): the working group's
- * conversation and the requester's, never the lawyers'. */
-const CONTRIBUTOR_TIERS: readonly CommentTier[] = ["working_team", "full_thread"];
-
 /** A Business User is in one room and gets no chooser at all: everything
  * they say is Full Thread by definition (DD-016). The portal's request
  * thread (#381) is where that lands — it draws no tier picker, because a
@@ -241,14 +239,15 @@ const TIER_COPY: Record<CommentTier, { label: MessageDescriptor; audience: Messa
     label: defineMessage({ id: "comments.tier.workingTeam", defaultMessage: "Working team" }),
     audience: defineMessage({
       id: "comments.audience.workingTeam",
-      defaultMessage: "Visible to the legal team and Contributors on this record.",
+      defaultMessage: "Visible to the legal team on this record. Not shared with Business Users.",
     }),
   },
   full_thread: {
     label: defineMessage({ id: "comments.tier.fullThread", defaultMessage: "Full thread" }),
     audience: defineMessage({
       id: "comments.audience.fullThread",
-      defaultMessage: "Visible to everyone on this record, including the requester.",
+      defaultMessage:
+        "Visible to everyone on this record, including the Business Users on its team.",
     }),
   },
 };
@@ -278,41 +277,32 @@ export function tierAudience(
   if (entityType === "contract" && tier === "full_thread")
     return intl.formatMessage({
       id: "comments.contract.teamAudience",
-      defaultMessage: "Visible to the legal team, Contract team members, and the requester.",
+      defaultMessage: "Visible to Legal and all Contract team members.",
     });
   if (entityType === "contract" && tier === "working_team")
     return intl.formatMessage({
       id: "comments.contract.internalAudience",
-      defaultMessage:
-        "Visible to the legal team and Contract team members. Not shared with the requester.",
+      defaultMessage: "Visible to Legal. Not shared with Business Users.",
     });
   if (entityType === "matter" && tier === "full_thread")
     return intl.formatMessage({
       id: "comments.matter.teamAudience",
-      defaultMessage: "Visible to the legal team, Matter team members, and the requester.",
+      defaultMessage: "Visible to Legal and all Matter team members.",
     });
   if (entityType === "matter" && tier === "working_team")
     return intl.formatMessage({
       id: "comments.matter.internalAudience",
-      defaultMessage:
-        "Visible to the legal team and Matter team members. Not shared with the requester.",
+      defaultMessage: "Visible to Legal. Not shared with Business Users.",
     });
   return intl.formatMessage(TIER_COPY[tier].audience);
 }
 
-/**
- * The segments this viewer's composer offers — one per room they are in,
- * and no others. A Contributor gets two: the Legal Only segment is
- * absent, not disabled, the same convention the nav and the settings
- * rail follow. A Business User gets one. The API's own refusal is the
- * real gate; this keeps the composer from offering a room nobody would
- * let them into.
- */
+/** Staff choose the record audience. Business Users post Full Thread only. */
 export function composerTiers(role: Role, entityType?: CommentEntityType): readonly CommentTier[] {
   if (entityType === "matter" || entityType === "contract")
     return isMemberPlus(role) ? ["legal_only", "full_thread"] : ["full_thread"];
   if (isMemberPlus(role)) return COMMENT_TIERS;
-  return role === "contributor" ? CONTRIBUTOR_TIERS : REQUESTER_TIERS;
+  return REQUESTER_TIERS;
 }
 
 /**

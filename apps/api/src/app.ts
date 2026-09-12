@@ -86,7 +86,8 @@ import {
 } from "./modules/knowledge-types/routes.js";
 import { knowledgeRoutes } from "./modules/knowledge/routes.js";
 import { portalContractRoutes } from "./modules/portal/contracts.js";
-import { contractStakeholderRoutes } from "./modules/contract-stakeholders/routes.js";
+import { portalMatterRoutes } from "./modules/portal/matters.js";
+import { portalRecordWorkRoutes } from "./modules/portal/record-work.js";
 import { portalRoutes } from "./modules/portal/routes.js";
 import { conversionDraftRoutes } from "./modules/requests/conversion-draft.js";
 import { requestConvertRoutes } from "./modules/requests/convert.js";
@@ -495,7 +496,8 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(intakeLinksRoutes, { prefix: "/api/v1" });
   await app.register(portalRoutes, { prefix: "/api/v1" });
   await app.register(portalContractRoutes, { prefix: "/api/v1" });
-  await app.register(contractStakeholderRoutes, { prefix: "/api/v1" });
+  await app.register(portalRecordWorkRoutes, { prefix: "/api/v1" });
+  await app.register(portalMatterRoutes, { prefix: "/api/v1" });
   await app.register(requestsRoutes, { prefix: "/api/v1" });
   await app.register(requestEstimateRoutes, { prefix: "/api/v1" });
   await app.register(requestAssignmentRoutes, { prefix: "/api/v1" });

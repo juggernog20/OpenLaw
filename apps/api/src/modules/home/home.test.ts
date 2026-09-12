@@ -211,7 +211,7 @@ beforeAll(async () => {
     [REQUESTER, "legal_team_member"],
     [APPROVER, "legal_team_member"],
     [OTHER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
     [MANAGER_ONE, "legal_team_member"],
     [MANAGER_TWO, "legal_team_member"],
     [EMPTY_MANAGER, "legal_team_member"],
@@ -346,7 +346,7 @@ describe("GET /api/v1/home", () => {
           .statusCode,
       ).toBe(400);
     }
-    const empty = await harness.app.inject({ method: "GET", url, cookies: as(CONTRIBUTOR) });
+    const empty = await harness.app.inject({ method: "GET", url, cookies: as(OTHER) });
     expect(empty.statusCode, empty.body).toBe(200);
     expect(empty.json()).toEqual({ total: 0, rows: [], nextCursor: null });
   });
@@ -373,7 +373,7 @@ describe("GET /api/v1/home", () => {
         ).statusCode,
       ).toBe(400);
     }
-    const empty = await harness.app.inject({ method: "GET", url, cookies: as(CONTRIBUTOR) });
+    const empty = await harness.app.inject({ method: "GET", url, cookies: as(OTHER) });
     expect(empty.statusCode, empty.body).toBe(200);
     expect(empty.json()).toEqual({ total: 0, rows: [] });
   });
@@ -430,8 +430,11 @@ describe("GET /api/v1/home", () => {
     expect((await home(OTHER)).sections).toEqual([]);
   });
 
-  it("admits a Contributor without widening the Approvals projection", async () => {
-    expect((await home(CONTRIBUTOR)).sections).toEqual([]);
+  it("refuses Business Users on Home", async () => {
+    expect(
+      (await harness.app.inject({ method: "GET", url: "/api/v1/home", cookies: as(CONTRIBUTOR) }))
+        .statusCode,
+    ).toBe(403);
   });
 
   it("silently removes a Confidential Contract the approver no longer reaches", async () => {
@@ -440,7 +443,7 @@ describe("GET /api/v1/home", () => {
       method: "POST",
       url: `/api/v1/contracts/${String(contract.number)}/team`,
       cookies: as(REQUESTER),
-      payload: { userId: idOf(APPROVER), role: "member" },
+      payload: { userId: idOf(APPROVER) },
     });
     expect(team.statusCode, team.body).toBe(201);
     await ask(contract);
@@ -490,16 +493,14 @@ describe("GET /api/v1/home", () => {
           archivedAt: options.archived ? new Date("2026-08-01T09:00:00Z") : null,
         })
         .returning({ id: matters.id, number: matters.number });
-      await harness.db
-        .insert(matterTeam)
-        .values({ matterId: matter!.id, userId: idOf(REQUESTER), role: "creator" });
+      await harness.db.insert(matterTeam).values({ matterId: matter!.id, userId: idOf(REQUESTER) });
       return matter!;
     };
 
     const confidential = await newContract("Confidential financing");
     await harness.db
       .insert(contractTeam)
-      .values({ contractId: confidential.id, userId: idOf(APPROVER), role: "member" });
+      .values({ contractId: confidential.id, userId: idOf(APPROVER) });
     await harness.db
       .update(contracts)
       .set({ isConfidential: true })
@@ -732,10 +733,8 @@ describe("GET /api/v1/home", () => {
       await harness.db
         .insert(matterTeam)
         .values([
-          { matterId: matter!.id, userId: idOf(REQUESTER), role: "creator" },
-          ...(options.onTeam
-            ? [{ matterId: matter!.id, userId: idOf(APPROVER), role: "member" as const }]
-            : []),
+          { matterId: matter!.id, userId: idOf(REQUESTER) },
+          ...(options.onTeam ? [{ matterId: matter!.id, userId: idOf(APPROVER) }] : []),
         ]);
       return matter!;
     };
@@ -743,7 +742,7 @@ describe("GET /api/v1/home", () => {
     const contract = await newContract("Approaching renewal");
     await harness.db
       .insert(contractTeam)
-      .values({ contractId: contract.id, userId: idOf(APPROVER), role: "member" });
+      .values({ contractId: contract.id, userId: idOf(APPROVER) });
     await harness.db
       .update(contracts)
       .set({
@@ -787,7 +786,7 @@ describe("GET /api/v1/home", () => {
       .returning({ id: matters.id, number: matters.number });
     await harness.db
       .insert(matterTeam)
-      .values({ matterId: managerOnlyMatter!.id, userId: idOf(REQUESTER), role: "creator" });
+      .values({ matterId: managerOnlyMatter!.id, userId: idOf(REQUESTER) });
     await harness.db.insert(matterKeyDates).values({
       matterId: managerOnlyMatter!.id,
       date: plusDays(today, 5),
@@ -797,7 +796,7 @@ describe("GET /api/v1/home", () => {
     const outsideWindow = await newContract("Later Contract date");
     await harness.db
       .insert(contractTeam)
-      .values({ contractId: outsideWindow.id, userId: idOf(APPROVER), role: "member" });
+      .values({ contractId: outsideWindow.id, userId: idOf(APPROVER) });
     await harness.db.insert(contractKeyDates).values({
       contractId: outsideWindow.id,
       date: plusDays(today, 31),
@@ -805,9 +804,7 @@ describe("GET /api/v1/home", () => {
     });
 
     const ended = await newContract("Ended Contract date");
-    await harness.db
-      .insert(contractTeam)
-      .values({ contractId: ended.id, userId: idOf(APPROVER), role: "member" });
+    await harness.db.insert(contractTeam).values({ contractId: ended.id, userId: idOf(APPROVER) });
     await harness.db
       .update(contracts)
       .set({ expiryDate: plusDays(today, 1), endedAt: new Date() })
@@ -821,7 +818,7 @@ describe("GET /api/v1/home", () => {
     const legacyEnded = await newContract("Legacy ended Contract date");
     await harness.db
       .insert(contractTeam)
-      .values({ contractId: legacyEnded.id, userId: idOf(APPROVER), role: "member" });
+      .values({ contractId: legacyEnded.id, userId: idOf(APPROVER) });
     await harness.db
       .update(contracts)
       .set({
@@ -834,7 +831,7 @@ describe("GET /api/v1/home", () => {
     const archived = await newContract("Archived Contract date");
     await harness.db
       .insert(contractTeam)
-      .values({ contractId: archived.id, userId: idOf(APPROVER), role: "member" });
+      .values({ contractId: archived.id, userId: idOf(APPROVER) });
     await harness.db
       .update(contracts)
       .set({ expiryDate: plusDays(today, 1), archivedAt: new Date() })
@@ -853,9 +850,7 @@ describe("GET /api/v1/home", () => {
     }
 
     const walled = await newContract("Walled Contract date");
-    await harness.db
-      .insert(contractTeam)
-      .values({ contractId: walled.id, userId: idOf(APPROVER), role: "member" });
+    await harness.db.insert(contractTeam).values({ contractId: walled.id, userId: idOf(APPROVER) });
     await harness.db
       .update(contracts)
       .set({ isConfidential: true })
@@ -984,7 +979,10 @@ describe("GET /api/v1/home", () => {
         },
       ],
     });
-    expect(datesIn(await home(CONTRIBUTOR))).toBeUndefined();
+    expect(
+      (await harness.app.inject({ method: "GET", url: "/api/v1/home", cookies: as(CONTRIBUTOR) }))
+        .statusCode,
+    ).toBe(403);
   });
 
   it("shows reachable open obligations assigned to the viewer and the Administrator fallback", async () => {
@@ -1102,7 +1100,10 @@ describe("GET /api/v1/home", () => {
       total: 1,
       rows: [{ label: "Granted filing", isUnassigned: false }],
     });
-    expect(obligationsIn(await home(CONTRIBUTOR))).toBeUndefined();
+    expect(
+      (await harness.app.inject({ method: "GET", url: "/api/v1/home", cookies: as(CONTRIBUTOR) }))
+        .statusCode,
+    ).toBe(403);
     // …and because that assignee reaches it, the row stays off the
     // Administrator fallback. The confidential row also stays hidden without a grant.
     expect(obligationsIn(await home(ADMIN))).toMatchObject({
@@ -1179,7 +1180,10 @@ describe("GET /api/v1/home", () => {
         requester: { id: requesterId, displayName: REQUESTER.displayName },
       });
     }
-    expect(inboxIn(await home(CONTRIBUTOR))).toBeUndefined();
+    expect(
+      (await harness.app.inject({ method: "GET", url: "/api/v1/home", cookies: as(CONTRIBUTOR) }))
+        .statusCode,
+    ).toBe(403);
   });
 
   it("caps and orders two Managers' disjoint live Contract and Matter portfolios by next date", async () => {

@@ -10,7 +10,7 @@ The target is the primary Document's executed pin, or its current Document Versi
 
 ## Run Analysis and read its outcome
 
-Analysis can start automatically when the target's text becomes ready or a ready Document Version is marked as the executed copy. To request a run yourself, open **Overview**, find **AI analysis**, and select **Run analysis**. Wait while it says **Running…**. The card updates when the run finishes, while preserving typed drafts.
+Analysis can start automatically when the target's text becomes ready or a ready Document Version is marked as the executed copy. To request a run yourself, open **Fields**, find **AI analysis** below the Fields card, and select **Run analysis**. The Contract actions menu also offers **Run analysis** from any section. Wait while it says **Running…**. The card updates when the run finishes, while preserving typed drafts.
 
 Read the completion sentence's Version, model, and time. The results show the returned values, their evidence, and what happened to each value:
 
@@ -28,7 +28,7 @@ Each newly AI-written value has a subtle purple border, the neutral **Unverified
 
 Select **Confirm** beside the value you have checked. Confirmation keeps the value and clears that value's **Unverified** marker. Other markers remain. To correct a value, edit its normal control on **Overview** or **Fields** and wait for the save result; that edit clears the corresponding marker.
 
-Use **Confirm all** only after checking every marked value. It clears the remaining markers together. **History** records Analysis and confirmation activity. Contributors cannot run Analysis or confirm its values. An archived Contract must be restored before confirmation; an Ended Contract can still have its existing values reviewed and corrected.
+Use **Confirm all** only after checking every marked value. It clears the remaining markers together. **History** records Analysis and confirmation activity. Business Users cannot run Analysis or confirm its values. An archived Contract must be restored before confirmation; an Ended Contract can still have its existing values reviewed and corrected.
 
 Unverified values are already usable. An extracted expiry or notice period affects the Contract's derived deadlines before confirmation, and the recorded Value is already saved. Check [terms and renewals](terms-and-renewals.md) and the displayed dates promptly. Confirmation does not roll a term or change the Contract's Status.
 

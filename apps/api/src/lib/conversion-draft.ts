@@ -24,6 +24,8 @@ import {
 } from "@openlaw/db";
 import {
   MAX_COUNTERPARTY_NAME_LENGTH,
+  INTAKE_CARRY_SLUGS,
+  sameConversionValue,
   type ConversionSuggestion,
   type ConversionAttachmentRead,
 } from "@openlaw/shared";
@@ -33,12 +35,13 @@ import {
   CustomFieldValueSchema,
 } from "./custom-fields.js";
 import type { AiExtraction, AiExtractionTarget, AiSource } from "./ai/provider.js";
-import { ATTACHMENT_LIMITS, type AttachmentSource } from "./conversion-attachments.js";
+import { type AttachmentSource } from "./conversion-attachments.js";
 import { httpError } from "./problem.js";
 
 export const ConversionSuggestionSchema = z.object({
   value: CustomFieldValueSchema,
   citations: z.array(z.object({ sourceId: z.string(), revision: z.string(), quote: z.string() })),
+  justification: z.string().max(1000).optional(),
 });
 export const ConversionProvenanceSchema = z
   .record(
@@ -201,18 +204,8 @@ export async function conversionSources(db: Executor, requestId: string, lockSou
       });
     }
   }
-  let characters = 0;
   const sources = all
-    .filter((source) => {
-      if (source.restricted) return false;
-      if (characters + source.text.length > ATTACHMENT_LIMITS.totalCharacters) {
-        warnings.push("source_budget");
-        return false;
-      }
-      characters += source.text.length;
-      return true;
-    })
-    .slice(0, 200)
+    .filter((source) => !source.restricted)
     .map(({ id, revision, kind, label, text, author, createdAt }) => ({
       id,
       revision,
@@ -222,7 +215,6 @@ export async function conversionSources(db: Executor, requestId: string, lockSou
       author,
       createdAt,
     }));
-  if (all.filter((s) => !s.restricted).length > 200) warnings.push("source_budget");
   return { row, all, sources, attachments, warnings: [...new Set(warnings)] };
 }
 export async function conversionContext(
@@ -302,6 +294,7 @@ export async function conversionContext(
     types,
     targets,
     snapshot: hash([
+      "complete-sources-v2",
       targetModule,
       targetTypeId,
       source.all,
@@ -338,6 +331,24 @@ export function checkedCitations(answer: AiExtraction, sources: readonly AiSourc
       : [];
   });
   return checked.length === citations.length ? checked : null;
+}
+
+export function isCarriedConversionValue(
+  slug: string,
+  value: unknown,
+  row: Awaited<ReturnType<typeof conversionSources>>["row"],
+) {
+  const values: Record<string, unknown> = {
+    title: row.summary,
+    description: row.description,
+    priority: row.urgency,
+    counterparty: row.customFields[INTAKE_CARRY_SLUGS.counterpartyName],
+    needed_by: row.customFields[INTAKE_CARRY_SLUGS.neededBy],
+  };
+  return sameConversionValue(
+    value,
+    slug.startsWith("field:") ? row.customFields[slug.slice(6)] : values[slug],
+  );
 }
 
 export function checkedSuggestion(
@@ -383,7 +394,10 @@ export function checkedSuggestion(
         }
     }
   }
-  return value === null ? null : { value, citations: checked };
+  return value === null ||
+    (!answer.conflict && isCarriedConversionValue(answer.slug, value, context.row))
+    ? null
+    : { value, citations: checked, justification: answer.justification };
 }
 
 /** Metadata determines freshness; cached text enters only execution and authorized evidence reads. */

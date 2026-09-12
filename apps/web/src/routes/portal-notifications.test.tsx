@@ -332,14 +332,18 @@ describe("the portal notification settings (NOT-001)", () => {
     );
   });
 
-  it("draws group 5 alone, with its defaults as switch state", async () => {
+  it("draws Request updates, mentions, and record activity with their saved defaults", async () => {
     stubApi({ signedIn: REQUESTER, extra: capturePreferenceWrites([]) });
     renderAt("/portal/settings");
 
     expect(
-      await screen.findByRole("heading", { name: "How we tell you about your requests" }),
+      await screen.findByRole("heading", { name: "How we tell you about your work" }),
     ).toBeVisible();
     expect(screen.getByText("Request updates")).toBeVisible();
+    expect(screen.getByRole("switch", { name: "Mentions Email" })).toBeChecked();
+    expect(
+      screen.getByRole("switch", { name: "Activity on your records Email" }),
+    ).not.toBeChecked();
 
     // Group 5 is the one group whose email is on by default: a requester
     // does not live in the app (INT-003).
@@ -347,20 +351,15 @@ describe("the portal notification settings (NOT-001)", () => {
     expect(screen.getByRole("switch", { name: "Request updates Email" })).toBeChecked();
     // And exactly two switches, because the other four groups are about
     // records a Business User cannot open.
-    expect(screen.getAllByRole("switch")).toHaveLength(2);
+    expect(screen.getAllByRole("switch")).toHaveLength(6);
   });
 
-  it("draws none of the staff groups", async () => {
+  it("omits staff-only event groups", async () => {
     stubApi({ signedIn: REQUESTER, extra: capturePreferenceWrites([]) });
     renderAt("/portal/settings");
 
-    await screen.findByRole("heading", { name: "How we tell you about your requests" });
-    for (const label of [
-      "Assigned to you",
-      "Activity on your records",
-      "Dates approaching",
-      "New requests",
-    ]) {
+    await screen.findByRole("heading", { name: "How we tell you about your work" });
+    for (const label of ["Assigned to you", "Dates approaching", "New requests"]) {
       expect(screen.queryByText(label)).not.toBeInTheDocument();
     }
   });

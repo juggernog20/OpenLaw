@@ -173,6 +173,8 @@ M22 shipped the four seed statuses, the Statuses pane, and the record's status c
 
 ## MTR-003: Matter assignment — one Matter Manager, plus legal team members added as needed
 
+**2026-09-11 amendment:** The Matter Manager remains accountable. matter_team has one row per matter_id and user_id, with no role. matters.created_by preserves Creator; business_owner_id records Business Owner. Conversion seeds the Requester as Business Owner and team member. DD-023 defines Portal access.
+
 - **Status:** Accepted
 - **Date:** 2026-08-02
 
@@ -186,7 +188,7 @@ Every matter needs an ownership answer: single primary owner vs multiple assigne
 
 - **Matter Manager** is the product term for the single owner. Stored as `matters.manager_id` — a single nullable FK → `users.id`.
 - `manager_id` is **nullable**: null = unassigned, a real state — intake per **DD-010** creates work before anyone picks it up; the triage queue surfaces unassigned matters.
-- Other legal team members are added via `matter_team` with role `member`. The `assignee` role is **removed** from the `matter_team` enum (promoted to the column); `member` replaces it for supporting legal staff. `watcher` / `creator` / `contributor` are unchanged.
+- ~~Other legal team members are added via `matter_team` with role `member`. The `assignee` role is **removed** from the `matter_team` enum (promoted to the column); `member` replaces it for supporting legal staff. `watcher` / `creator` / `contributor` are unchanged.~~
 - "My matters" = `manager_id = me`; a separate "matters I'm on" view unions `matter_team` membership.
 - Changing the Matter Manager is Member+ and audit-logged per **DD-017**.
 - The Matter Manager and all `matter_team` rows count as team membership for **DD-014** confidential-matter access.
@@ -204,8 +206,8 @@ Every matter needs an ownership answer: single primary owner vs multiple assigne
 
 ### Consequences
 
-- `matters.manager_id` nullable FK added; `matter_team` role enum becomes `member | watcher | creator | contributor`. Schema updated in `SCHEMA.md`.
-- The same shape was adopted for Contracts by **CTR-004**: `contracts.manager_id` (UI label "Owner") + `contract_team` with the identical role enum.
+- ~~`matters.manager_id` nullable FK added; `matter_team` role enum becomes `member | watcher | creator | contributor`. Schema updated in `SCHEMA.md`.~~
+- ~~The same shape was adopted for Contracts by **CTR-004**: `contracts.manager_id` (UI label "Owner") + `contract_team` with the identical role enum.~~
 - UI: matter header shows the Matter Manager avatar/name; unassigned matters show an explicit "Unassigned" affordance, not an empty gap.
 - Intake handoff (per **DD-010**) sets the Matter Manager at triage, not at submission.
 
@@ -322,6 +324,8 @@ Four testers created a Matter or a Contract and found their own new record Unass
 
 ## MTR-006: External counsel — collaboration via Contributor role; fee tracking deferred
 
+**2026-09-11 amendment:** External counsel collaboration is deferred under DD-023 and recorded in FUTURE-FEATURES. Contributor accounts migrate to Business Users. The former collaboration path and its implementation addenda below are historical. Task completion remains Member+.
+
 - **Status:** Accepted
 - **Date:** 2026-08-02
 
@@ -331,10 +335,10 @@ Outside counsel touch matters in two distinct ways: participating in the work (d
 
 ### Decision
 
-**Collaboration yes, money no (for now).**
+~~**Collaboration yes, money no (for now).**~~
 
-- External counsel who need to participate join as ordinary users with the **Contributor** role per **DD-013** — scoped to matters they're added to (via `matter_team` per **MTR-003**), subject to **DD-016** comment tiers and **DD-014** confidentiality. No new roles, tables, or machinery.
-- All outside-spend functionality — budgets, accruals, invoice review, UTBMS/LEDES e-billing — is **out of scope for v1** and recorded in `FUTURE-FEATURES.md`.
+- ~~External counsel who need to participate join as ordinary users with the **Contributor** role per **DD-013** — scoped to matters they're added to (via `matter_team` per **MTR-003**), subject to **DD-016** comment tiers and **DD-014** confidentiality. No new roles, tables, or machinery.~~
+- ~~All outside-spend functionality — budgets, accruals, invoice review, UTBMS/LEDES e-billing — is **out of scope for v1** and recorded in `FUTURE-FEATURES.md`.~~
 
 ### Rationale
 

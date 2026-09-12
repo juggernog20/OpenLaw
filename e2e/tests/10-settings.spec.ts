@@ -227,7 +227,7 @@ test.describe.serial("the settings destination", () => {
     const dialog = page.getByRole("dialog", { name: "Invite user" });
     await dialog.getByLabel("Display name").fill("Pending Invitee");
     await dialog.getByLabel("Email").fill(email);
-    await dialog.getByRole("radio", { name: "Contributor" }).click();
+    await dialog.getByRole("radio", { name: "Legal team member" }).click();
     await dialog.getByRole("button", { name: "Send invite" }).click();
 
     /**
@@ -252,11 +252,11 @@ test.describe.serial("the settings destination", () => {
       // reload with its role because the list route serves it.
       const inviteRow = page.getByRole("row", { name: new RegExp(email) });
       await expect(inviteRow.getByText("Invited")).toBeVisible();
-      await expect(inviteRow.getByText("Contributor")).toBeVisible();
+      await expect(inviteRow.getByText("Legal team member")).toBeVisible();
       await waitForMailTo(page.request, email);
       await page.reload();
       await expect(inviteRow.getByText("Invited")).toBeVisible();
-      await expect(inviteRow.getByText("Contributor")).toBeVisible();
+      await expect(inviteRow.getByText("Legal team member")).toBeVisible();
 
       // Resend delivers a second set-password email.
       await inviteRow.getByRole("button", { name: `Resend the invite to ${email}` }).click();
@@ -299,7 +299,7 @@ test.describe.serial("the settings destination", () => {
       member = await onboardActivatedMember(page.request, browser, {
         email,
         displayName: "Riva Member",
-        role: "contributor",
+        role: "legal_team_member",
         password,
       });
       const memberPage = member.page;
@@ -311,10 +311,10 @@ test.describe.serial("the settings destination", () => {
       // The in-place role edit commits from the row and survives a
       // reload (the API's live-guard proof runs at the HTTP seam).
       await row.getByRole("button", { name: `change the role of ${email}` }).click();
-      await page.getByRole("menuitemradio", { name: "Legal team member" }).click();
+      await page.getByRole("menuitemradio", { name: "Administrator" }).click();
       await expect(row.getByText("Saved")).toBeVisible();
       await page.reload();
-      await expect(row.getByText("Legal team member")).toBeVisible();
+      await expect(row.getByText("Administrator")).toBeVisible();
 
       // Standalone revocation, the lost-laptop case: the member's live
       // session dies mid-flight and their next navigation lands on login.

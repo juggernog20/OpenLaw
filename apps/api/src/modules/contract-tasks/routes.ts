@@ -60,7 +60,7 @@ import { httpError, problemResponse } from "../../lib/problem.js";
 /** The contract read floor (CTR-021): a Contributor on the team reads the
  * checklist. The role alone opens nothing — the reach predicate narrows
  * it to the records they hold a `contract_team` row on. */
-const requireTaskReader = requireRole("administrator", "legal_team_member", "contributor");
+const requireTaskReader = requireRole("administrator", "legal_team_member");
 
 /** Adding, editing, toggling, reordering, and removing tasks are Member+.
  * A Contributor reads the checklist but DD-015 gives them no Task write. */

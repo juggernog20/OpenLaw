@@ -20,7 +20,7 @@ const CONTRIBUTOR = {
   id: "u-contributor",
   email: "contributor@example.com",
   displayName: "Casey Contributor",
-  role: "contributor",
+  role: "business_user",
 };
 const MATTER = {
   id: "matter-12",
@@ -74,8 +74,8 @@ function mountApi(
           fields: [],
           customFieldRefs: { users: [], entities: [] },
           team:
-            signedIn.role === "contributor"
-              ? [{ ...CONTRIBUTOR, image: null, archived: false, role: "contributor" }]
+            signedIn.role === "business_user"
+              ? [{ ...CONTRIBUTOR, image: null, archived: false, role: "business_user" }]
               : [],
         });
       }
@@ -119,7 +119,7 @@ describe("Matter relationship projections", () => {
   });
 
   it("navigates reachable parent, child, and related projections without leaking a restricted Matter", async () => {
-    mountApi(CONTRIBUTOR, {
+    mountApi(MEMBER, {
       parent: reachable(3, "Programme parent"),
       children: [reachable(13, "Local proceeding"), { restricted: true }],
       related: [reachable(22, "Regulatory response"), { restricted: true }],
@@ -139,7 +139,7 @@ describe("Matter relationship projections", () => {
     );
     expect(within(card).getAllByText("Restricted Matter")).toHaveLength(2);
     expect(card.textContent).not.toMatch(/secret|M-99/i);
-    expect(within(card).queryByRole("button")).not.toBeInTheDocument();
+    expect(within(card).getByRole("button", { name: "New sub-Matter" })).toBeVisible();
   });
 
   it("creates a sub-Matter with the current parent preselected", async () => {
@@ -284,7 +284,7 @@ describe("the Matter record's linked Contracts (M23/6)", () => {
 
   it("draws reachable and restricted Contracts without leaking the restricted reference", async () => {
     Object.defineProperty(window, "innerWidth", { configurable: true, value: 360 });
-    mountApi(CONTRIBUTOR, { parent: null, children: [], related: [] }, (call) => {
+    mountApi(MEMBER, { parent: null, children: [], related: [] }, (call) => {
       if (call.url.pathname === "/api/v1/matters/12/contracts" && call.method === "GET") {
         return json(200, { contracts: [linkedContract, { restricted: true }] });
       }
@@ -297,8 +297,8 @@ describe("the Matter record's linked Contracts (M23/6)", () => {
     ).toHaveAttribute("href", "/contracts/42");
     expect(screen.getByText("Restricted contract")).toBeVisible();
     expect(screen.queryByText(/C-99|Secret acquisition/)).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Link Contract" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "New contract" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Link Contract" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "New contract" })).toBeVisible();
   });
 
   it("creates a Contract with this Matter preselected and refreshes the linked list", async () => {

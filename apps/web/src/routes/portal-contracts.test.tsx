@@ -15,6 +15,7 @@ const CONTRACT = {
   number: 12,
   title: "Supply agreement",
   stage: "active",
+  type: "Supply",
   counterparty: "Supplier Ltd",
   legalOwner: { id: "lawyer", displayName: "Legal person", image: null },
   businessOwner: { id: BUSINESS.id, displayName: BUSINESS.displayName, image: null },
@@ -31,7 +32,7 @@ const CONTRACT = {
 };
 
 describe("Portal Contracts", () => {
-  it("shows a flat list and follows the next page", async () => {
+  it("shows a managed list and appends the next page", async () => {
     stubApi({
       signedIn: BUSINESS,
       extra: (call) => {
@@ -42,8 +43,15 @@ describe("Portal Contracts", () => {
               ? {
                   contracts: [{ ...CONTRACT, number: 11, title: "Older agreement" }],
                   nextCursor: null,
+                  total: 2,
+                  filterOptions: { types: [], owners: [] },
                 }
-              : { contracts: [CONTRACT], nextCursor: 12 },
+              : {
+                  contracts: [CONTRACT],
+                  nextCursor: 12,
+                  total: 2,
+                  filterOptions: { types: [], owners: [] },
+                },
           );
         return undefined;
       },
@@ -55,9 +63,9 @@ describe("Portal Contracts", () => {
       "/portal/contracts/12",
     );
     expect(screen.queryByRole("button", { name: /Save view/ })).not.toBeInTheDocument();
-    await userEvent.setup().click(screen.getByRole("link", { name: "Next page" }));
+    await userEvent.setup().click(screen.getByRole("button", { name: "Show more" }));
     expect(await screen.findByRole("link", { name: /Older agreement/ })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /Supply agreement/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Supply agreement/ })).toBeInTheDocument();
   });
 
   it("keeps term warnings visible and uses the existing reader with Portal document URLs", async () => {
@@ -88,7 +96,7 @@ describe("Portal Contracts", () => {
     expect(await screen.findByRole("heading", { name: "Supply agreement" })).toBeInTheDocument();
     expect(screen.getByText(/Legal has not yet verified/)).toBeInTheDocument();
     expect(screen.getAllByText("Unverified").length).toBeGreaterThan(0);
-    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Description" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "History" })).not.toBeInTheDocument();
     await userEvent.setup().click(screen.getByRole("button", { name: "Read Document" }));
     const panel = await screen.findByRole("complementary", { name: /Agreed terms/ });

@@ -297,7 +297,11 @@ export async function onboardActivatedMember(
   member: { email: string; displayName: string; role: string; password: string },
 ): Promise<OnboardedMember> {
   const invited = await request.post("/api/v1/auth/invites", {
-    data: { email: member.email, displayName: member.displayName, role: member.role },
+    data: {
+      email: member.email,
+      displayName: member.displayName,
+      role: member.role === "business_user" ? "legal_team_member" : member.role,
+    },
   });
   expect(invited.status()).toBe(201);
 
@@ -312,6 +316,13 @@ export async function onboardActivatedMember(
     await page.getByRole("button", { name: "Set password" }).click();
     await expect(page.getByText("Password set")).toBeVisible();
     await signInAs(page, member.email, member.password, member.displayName);
+    if (member.role === "business_user") {
+      const { user } = (await invited.json()) as { user: { id: string } };
+      const changed = await request.patch(`/api/v1/users/${user.id}/role`, {
+        data: { role: "business_user" },
+      });
+      expect(changed.status(), await changed.text()).toBe(200);
+    }
     return { context, page };
   } catch (error) {
     await context.close();

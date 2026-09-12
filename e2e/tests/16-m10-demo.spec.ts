@@ -329,7 +329,9 @@ test.describe.serial("M10 demo path", () => {
       const manageTeam = banner.getByRole("link", { name: "Manage team" });
       await expect(manageTeam).toHaveAttribute("href", "#contract-team");
       await manageTeam.click();
-      await expect(creatorPage.getByRole("complementary", { name: "Team" })).toBeInViewport();
+      await expect(
+        creatorPage.getByRole("complementary", { name: "Contract team" }),
+      ).toBeInViewport();
       // Chrome, not a notification: there is no way to close it
       // (DD-014, DES-028).
       await expect(banner.getByRole("button")).toHaveCount(0);

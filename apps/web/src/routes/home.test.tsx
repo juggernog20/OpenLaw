@@ -575,21 +575,6 @@ describe("Home", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
-  it("keeps assigned Task links read-only for a Contributor", async () => {
-    stubApi({
-      signedIn: { ...MEMBER, role: "contributor" },
-      extra: (call) =>
-        call.url.pathname === "/api/v1/home/tasks"
-          ? json(200, { total: 3, rows: tasksSection.rows, nextCursor: null })
-          : undefined,
-    });
-    renderAt("/home/tasks");
-    expect(
-      await screen.findByRole("link", { name: /Prepare financing signature pages/ }),
-    ).toHaveAttribute("href", "/contracts/42/tasks");
-    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
-  });
-
   it("retains loaded Tasks on a paging failure and allows retry", async () => {
     const user = userEvent.setup();
     let fail = true;
@@ -617,19 +602,6 @@ describe("Home", () => {
     expect(await screen.findByText("Confirm interview list")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Load more Tasks" })).not.toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-  });
-
-  it("shows an empty personal Tasks page for a Contributor with no open Tasks", async () => {
-    stubApi({
-      signedIn: { ...MEMBER, role: "contributor" },
-      extra: (call) =>
-        call.url.pathname === "/api/v1/home/tasks"
-          ? json(200, { total: 0, rows: [], nextCursor: null })
-          : undefined,
-    });
-    renderAt("/home/tasks");
-    expect(await screen.findByText("No open Tasks assigned to you.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Back to Home" })).toHaveAttribute("href", "/");
   });
 
   it("renders Dates with DES-042 names, DES-014 dates, record links, and CONFI", async () => {

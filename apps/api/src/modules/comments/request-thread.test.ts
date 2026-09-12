@@ -109,7 +109,7 @@ beforeAll(async () => {
     [REQUESTER, "business_user"],
     [OTHER_REQUESTER, "business_user"],
     [MEMBER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, user.id));
@@ -343,7 +343,7 @@ describe("everybody else", () => {
     expect(posted.statusCode, posted.body).toBe(404);
   });
 
-  it("keeps a Business User refused on a contract thread", async () => {
+  it("keeps a Business User without membership outside a contract thread", async () => {
     // The reader-role guard is the union across the arms, and the
     // request arm widened it to every role. The contract arm's own list
     // is what refuses, per request, in the same words — so widening the
@@ -353,7 +353,7 @@ describe("everybody else", () => {
       url: "/api/v1/comments?entityType=contract&entityId=whatever",
       cookies: requesterCookies,
     });
-    expect(thread.statusCode, thread.body).toBe(403);
+    expect(thread.statusCode, thread.body).toBe(404);
   });
 });
 

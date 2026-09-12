@@ -84,7 +84,7 @@ import { httpError, problemResponse } from "../../lib/problem.js";
  * `contract_team` row on. Business Users are refused on every contract
  * surface in M9.
  */
-const requireFeedReader = requireRole("administrator", "legal_team_member", "contributor");
+const requireFeedReader = requireRole("administrator", "legal_team_member");
 
 /**
  * How many entries one request answers. A server constant rather than a

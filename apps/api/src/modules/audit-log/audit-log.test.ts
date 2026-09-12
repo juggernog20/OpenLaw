@@ -110,9 +110,9 @@ beforeAll(async () => {
 
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
     [BUSINESS, "business_user"],
-    [SUBJECT, "contributor"],
+    [SUBJECT, "business_user"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, user.id));
@@ -212,7 +212,7 @@ async function anAfternoonOfWork(): Promise<void> {
     method: "POST",
     url: `/api/v1/contracts/${contract.number}/team`,
     cookies: adminCookies,
-    payload: { userId: userIds.get(CONTRIBUTOR.email), role: "contributor" },
+    payload: { userId: userIds.get(CONTRIBUTOR.email) },
   });
   expect(teamed.statusCode, teamed.body).toBe(201);
 
@@ -325,7 +325,7 @@ describe("what the audit log carries", () => {
     const roleChange = entries.find((entry) => entry.action === "user.role_changed");
     expect(roleChange?.actor?.displayName).toBe(ADMIN.displayName);
     expect(roleChange?.entityId).toBe(userIds.get(SUBJECT.email));
-    expect(roleChange?.payload).toMatchObject({ from: "contributor", to: "legal_team_member" });
+    expect(roleChange?.payload).toMatchObject({ from: "business_user", to: "legal_team_member" });
 
     const stamps = entries.map((entry) => Date.parse(entry.createdAt));
     expect(stamps).toEqual([...stamps].sort((a, b) => b - a));
@@ -675,18 +675,18 @@ describe("structured emission", () => {
       method: "PATCH",
       url: `/api/v1/users/${userIds.get(SUBJECT.email)}/role`,
       cookies: adminCookies,
-      payload: { role: "contributor" },
+      payload: { role: "business_user" },
     });
 
     // The request stands.
     expect(res.statusCode, res.body).toBe(200);
-    expect(res.json().user).toMatchObject({ role: "contributor" });
+    expect(res.json().user).toMatchObject({ role: "business_user" });
     // The mutation stands.
     const [subject] = await harness.db
       .select({ role: users.role })
       .from(users)
       .where(eq(users.id, userIds.get(SUBJECT.email)!));
-    expect(subject!.role).toBe("contributor");
+    expect(subject!.role).toBe("business_user");
     // And so does its in-app entry: the emitted copy failed, the
     // recorded one did not.
     const entries = await harness.db
@@ -694,6 +694,6 @@ describe("structured emission", () => {
       .from(activityLog)
       .where(eq(activityLog.action, "user.role_changed"))
       .orderBy(asc(activityLog.createdAt), asc(activityLog.id));
-    expect(entries.at(-1)!.payload).toMatchObject({ to: "contributor" });
+    expect(entries.at(-1)!.payload).toMatchObject({ to: "business_user" });
   });
 });

@@ -1175,7 +1175,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Add one person and role to a matter team */
+    /** Add one person to a matter team */
     post: operations["addMatterTeamMember"];
     delete?: never;
     options?: never;
@@ -1183,7 +1183,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/matters/{number}/team/{userId}/{role}": {
+  "/api/v1/matters/{number}/team/{userId}": {
     parameters: {
       query?: never;
       header?: never;
@@ -1193,7 +1193,7 @@ export interface paths {
     get?: never;
     put?: never;
     post?: never;
-    /** Remove one compound-key role from a matter team, except creator */
+    /** Remove one person from a matter team */
     delete: operations["removeMatterTeamMember"];
     options?: never;
     head?: never;
@@ -1840,7 +1840,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** DD-021: Administrator, Legal Team Member, Contributor or Business User must be the current Business Owner or an explicit stakeholder. Archived records are excluded; Confidential records require named team membership or Legal Owner. Document reads accept only the current Version of the primary Document. List eligible Contracts. */
+    /** DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. List eligible Contracts. */
     get: operations["listPortalContracts"];
     put?: never;
     post?: never;
@@ -1857,7 +1857,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** DD-021: Administrator, Legal Team Member, Contributor or Business User must be the current Business Owner or an explicit stakeholder. Archived records are excluded; Confidential records require named team membership or Legal Owner. Document reads accept only the current Version of the primary Document. Read selected Contract facts. */
+    /** DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. Read selected Contract facts. */
     get: operations["readPortalContract"];
     put?: never;
     post?: never;
@@ -1874,7 +1874,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** DD-021: Administrator, Legal Team Member, Contributor or Business User must be the current Business Owner or an explicit stakeholder. Archived records are excluded; Confidential records require named team membership or Legal Owner. Document reads accept only the current Version of the primary Document. */
+    /** DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. */
     get: operations["downloadPortalContractVersion"];
     put?: never;
     post?: never;
@@ -1891,7 +1891,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** DD-021: Administrator, Legal Team Member, Contributor or Business User must be the current Business Owner or an explicit stakeholder. Archived records are excluded; Confidential records require named team membership or Legal Owner. Document reads accept only the current Version of the primary Document. */
+    /** DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. */
     get: operations["previewPortalContractVersion"];
     put?: never;
     post?: never;
@@ -1908,7 +1908,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** DD-021: Administrator, Legal Team Member, Contributor or Business User must be the current Business Owner or an explicit stakeholder. Archived records are excluded; Confidential records require named team membership or Legal Owner. Document reads accept only the current Version of the primary Document. */
+    /** DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. */
     get: operations["readPortalContractRendition"];
     put?: never;
     post?: never;
@@ -1925,7 +1925,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** DD-021: Administrator, Legal Team Member, Contributor or Business User must be the current Business Owner or an explicit stakeholder. Archived records are excluded; Confidential records require named team membership or Legal Owner. Document reads accept only the current Version of the primary Document. */
+    /** DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. */
     get: operations["readPortalContractEmail"];
     put?: never;
     post?: never;
@@ -1942,7 +1942,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** DD-021: Administrator, Legal Team Member, Contributor or Business User must be the current Business Owner or an explicit stakeholder. Archived records are excluded; Confidential records require named team membership or Legal Owner. Document reads accept only the current Version of the primary Document. */
+    /** DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. */
     get: operations["downloadPortalContractEmailAttachment"];
     put?: never;
     post?: never;
@@ -1959,7 +1959,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** DD-021: Administrator, Legal Team Member, Contributor or Business User must be the current Business Owner or an explicit stakeholder. Archived records are excluded; Confidential records require named team membership or Legal Owner. Document reads accept only the current Version of the primary Document. */
+    /** DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. */
     get: operations["previewPortalContractEmailAttachment"];
     put?: never;
     post?: never;
@@ -1969,36 +1969,97 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/contracts/{number}/stakeholders": {
+  "/api/v1/portal/contracts/{number}/work": {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    /** Administrator or Legal Team Member only; Contributor and Business User refused. Unreachable Contracts return 404. List explicit stakeholders, including on archived Contracts. */
-    get: operations["listContractStakeholders"];
+    get: operations["readPortalContractWork"];
     put?: never;
-    /** Administrator or Legal Team Member only; Contributor and Business User refused. Unreachable Contracts return 404. Add a live person; archived Contracts return 409. */
-    post: operations["addContractStakeholder"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations["updatePortalContractWork"];
+    trace?: never;
+  };
+  "/api/v1/portal/contracts/{number}/supporting-documents": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listPortalContractSupportingDocuments"];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/v1/contracts/{number}/stakeholders/{userId}": {
+  "/api/v1/portal/matters/{number}/work": {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    get?: never;
+    get: operations["readPortalMatterWork"];
     put?: never;
     post?: never;
-    /** Administrator or Legal Team Member only; Contributor and Business User refused. Unreachable Contracts return 404. Remove an explicit stakeholder; archived Contracts return 409. */
-    delete: operations["removeContractStakeholder"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations["updatePortalMatterWork"];
+    trace?: never;
+  };
+  "/api/v1/portal/matters/{number}/supporting-documents": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listPortalMatterSupportingDocuments"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/matters": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listPortalMatters"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/matters/{number}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["readPortalMatter"];
+    put?: never;
+    post?: never;
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -2011,7 +2072,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The Inbox (INT-006, INT-007): the Requests whose fate is undecided, ordered by urgency rank — critical first — then age, oldest first, and paged by cursor. The answer is the `new` Requests by default; status choices or includeTriaged=true widen it to the converted, resolved, and declined ones with their outcomes. A converted row carries the contract or matter it became only when the caller reaches that record, and carries null otherwise (DD-014). Member+ only: a Contributor and a Business User are refused */
+    /** The Inbox (INT-006, INT-007): the Requests whose fate is undecided, ordered by urgency rank — critical first — then age, oldest first, unless sort names a column, and paged by cursor. The answer is the `new` Requests by default; status choices or includeTriaged=true widen it to the converted, resolved, and declined ones with their outcomes. A converted row carries the contract or matter it became only when the caller reaches that record, and carries null otherwise (DD-014). Member+ only: a Contributor and a Business User are refused */
     get: operations["listInbox"];
     put?: never;
     /** Submit a Request through a request type's portal form (INT-001). The Requester is the session; the type must be live; Summary, Description, and Urgency are required, as is every attached field the type marks required; values are accepted for exactly the fields the type attaches, and a user or entity field's value must name a live row */
@@ -2182,7 +2243,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Stream one attachment on a Request back, as a download (INT-006). The staff mount's own address, with the portal download's answer: the bytes come through the API behind the session, there are no presigned URLs, and the type is always `application/octet-stream` — a Request's attachment stores no declared type, and a download never echoes one a client sent. An attachment id belonging to another Request answers 404. Member+ only */
+    /** Stream one attachment on a Request back, as a download or preview with preview=true (INT-006). The staff mount's own address, with the portal download's answer: the bytes come through the API behind the session, there are no presigned URLs, and the download type is always `application/octet-stream` — a Request's attachment stores no declared type, and a download never echoes one a client sent. An attachment id belonging to another Request answers 404. Member+ only */
     get: operations["downloadRequestAttachment"];
     put?: never;
     post?: never;
@@ -2630,7 +2691,7 @@ export interface paths {
     head?: never;
     /**
      * Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, the signing entity, priority, risk, the value, the CTR-006 term fields, the type, a custom field, or the status — any live status may follow any other (CTR-001). The value is one field in three parts: amount, currency, and cadence commit together and clear together. Re-typing re-checks the new type's hard-required fields before it commits (CTR-016/MTR-014), so the type and the values that satisfy it may be sent together. The term is five fields with one rule between them (CTR-006): an expiry on an evergreen contract and a renewal period on a contract that does not auto-renew are refused 400 with their own problem types, and a term-type change clears the fields the new type cannot hold, each clear narrated as the edit it is. The Confidential flag (DD-014) commits here too, but only for an Administrator, the contract's creator, or its Owner: anyone else who reaches the record is refused 403, and anyone who does not reach it is answered 404 like a contract that does not exist. A status change that moves the contract past the approval stage while approvals are pending or rejected meets CTR-012's soft gate: it is refused 409 with the unresolved approvals named, and the same commit with `overrideSoftGate` succeeds and is logged as an override. Never on an archived contract
-     * @description Business Owner assignment is Member+ only: Administrator or Legal Team Member. The person must be live; null clears ownership without removing explicit stakeholders.
+     * @description Business Owner assignment is Member+ only: Administrator or Legal Team Member. The person must be live; null clears ownership without removing team membership.
      */
     patch: operations["updateContract"];
     trace?: never;
@@ -2695,7 +2756,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Put a person on the contract team under a role (CTR-004). The key is contract + person + role, so the same person may hold two roles; the `creator` role is the server's to write */
+    /** Put a person on the contract team (DD-023). One membership per person; the account type says what the membership lets them do */
     post: operations["addContractTeamMember"];
     delete?: never;
     options?: never;
@@ -2703,7 +2764,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/contracts/{number}/team/{userId}/{role}": {
+  "/api/v1/contracts/{number}/team/{userId}": {
     parameters: {
       query?: never;
       header?: never;
@@ -2713,7 +2774,7 @@ export interface paths {
     get?: never;
     put?: never;
     post?: never;
-    /** Take one role off the contract team (CTR-004). The role is part of the address, so dropping a watcher leaves that same person's member row standing; `creator` is provenance and stays */
+    /** Take a person off the contract team (DD-023). A Business User loses Portal access to the record on the next read */
     delete: operations["removeContractTeamMember"];
     options?: never;
     head?: never;
@@ -5111,7 +5172,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** What the signed-in person gets from each event group and email-only briefing section. It is the **effective** answer — their own saved rows over the group's defaults — because the table holds overrides rather than a grid, and a person who has never opened the pane has no rows at all. Every group is answered, whether or not anything in it has ever fired: an opinion can be held about a group before its first event exists. Which event groups a surface draws is the surface's business — the staff pane draws four and the portal pane draws `requester_events` alone. There is no user parameter — a preference is one person's, and the signed-in person is the whole scope */
+    /** What the signed-in person gets from each event group and email-only briefing section. It is the **effective** answer — their own saved rows over the group's defaults — because the table holds overrides rather than a grid, and a person who has never opened the pane has no rows at all. Every group is answered, whether or not anything in it has ever fired: an opinion can be held about a group before its first event exists. Which event groups a surface draws is the surface's business — the staff pane draws four and the Portal pane draws Request updates, mentions, and record activity. There is no user parameter — a preference is one person's, and the signed-in person is the whole scope */
     get: operations["getMyNotificationPreferences"];
     put?: never;
     post?: never;
@@ -5129,7 +5190,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The signed-in person's portal notifications, newest first (NOT-001, INT-001) — NOT-002's group 5, about their own Requests. The gate is a session and nothing else, the portal's own rule: Member+ staff submit Requests too, and on this surface they are a Requester like anybody else. There is no way to ask for anybody else's, and no way to reach a contract item from here — that is the staff notification centre, at `/notifications`. An item about a Request the reader is no longer the Requester of, or one that has since been archived, is silently omitted: no row, no gap, and no number that says something was left out. Paged from a server-fixed page size: pass the previous page's `nextCursor` to read further back. A cursor naming nothing in this person's bell answers an empty page rather than an error */
+    /** Portal notifications for the signed-in person's Requests and current Contract or Matter team memberships. Legal content, archived work, and revoked memberships are omitted before pagination. */
     get: operations["listPortalNotifications"];
     put?: never;
     post?: never;
@@ -5146,7 +5207,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** How many unread portal notifications the signed-in person has (NOT-005) — the number behind the portal bell's badge. It is the whole count, not the capped one: '9+' is how the badge draws it, and the cap belongs to the surface. It is computed over exactly the items the list would answer with, through the same predicate, so an item about an archived Request leaves the count as silently as it leaves the list */
+    /** Unread count over exactly the Portal notifications the current user may read. */
     get: operations["unreadPortalNotificationCount"];
     put?: never;
     post?: never;
@@ -5165,7 +5226,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Mark the named portal items read — what opening one from the portal bell does (NOT-005, 2026-09-09 amendment). Drawing the panel writes nothing; the click on an item is the read, so the panel sends that one id. The body is a list of up to one page's worth, because a page is the most the panel ever holds. Ids that are not this person's, are already read, are about a Request they can no longer reach, or belong to their staff notification centre match nothing and are not refused — a refusal would answer whether an id exists. Answers the unread count that remains */
+    /** Mark named reachable Portal notifications read. Unreachable or already-read ids match nothing. Returns the remaining unread count. */
     post: operations["markPortalNotificationsRead"];
     delete?: never;
     options?: never;
@@ -5182,7 +5243,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Mark every unread portal item read — the affordance that zeroes the portal badge (NOT-005). It covers exactly what the badge counts, so an item about an archived Request is left alone, and so is a staff item on the same person's notification centre: it is not on this surface at all. Answers the unread count that remains, which is zero unless something landed while the request was in flight */
+    /** Mark every currently reachable Portal notification read and return the remaining unread count. */
     post: operations["markAllPortalNotificationsRead"];
     delete?: never;
     options?: never;
@@ -5287,7 +5348,7 @@ export interface operations {
               email: string;
               displayName: string;
               /** @enum {string} */
-              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+              role: "administrator" | "legal_team_member" | "business_user";
               /** @enum {string} */
               theme: "light" | "warm" | "dark";
               image: string | null;
@@ -5341,7 +5402,7 @@ export interface operations {
               email: string;
               displayName: string;
               /** @enum {string} */
-              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+              role: "administrator" | "legal_team_member" | "business_user";
               /** @enum {string} */
               theme: "light" | "warm" | "dark";
               image: string | null;
@@ -5422,7 +5483,7 @@ export interface operations {
               email: string;
               displayName: string;
               /** @enum {string} */
-              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+              role: "administrator" | "legal_team_member" | "business_user";
               /** @enum {string} */
               theme: "light" | "warm" | "dark";
               image: string | null;
@@ -5491,7 +5552,7 @@ export interface operations {
           email: string;
           displayName: string;
           /** @enum {string} */
-          role: "administrator" | "legal_team_member" | "contributor";
+          role: "administrator" | "legal_team_member";
         };
       };
     };
@@ -5508,7 +5569,7 @@ export interface operations {
               email: string;
               displayName: string;
               /** @enum {string} */
-              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+              role: "administrator" | "legal_team_member" | "business_user";
               /** @enum {string} */
               theme: "light" | "warm" | "dark";
               image: string | null;
@@ -5529,7 +5590,7 @@ export interface operations {
               email: string;
               displayName: string;
               /** @enum {string} */
-              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+              role: "administrator" | "legal_team_member" | "business_user";
               /** @enum {string} */
               theme: "light" | "warm" | "dark";
               image: string | null;
@@ -5572,7 +5633,7 @@ export interface operations {
               email: string;
               displayName: string;
               /** @enum {string} */
-              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+              role: "administrator" | "legal_team_member" | "business_user";
               /** @enum {string} */
               theme: "light" | "warm" | "dark";
               image: string | null;
@@ -6441,7 +6502,7 @@ export interface operations {
               email: string;
               displayName: string;
               /** @enum {string} */
-              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+              role: "administrator" | "legal_team_member" | "business_user";
               /** @enum {string} */
               status: "active" | "invited" | "archived";
               lastActiveAt: string | null;
@@ -6473,7 +6534,7 @@ export interface operations {
       content: {
         "application/json": {
           /** @enum {string} */
-          role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+          role: "administrator" | "legal_team_member" | "business_user";
         };
       };
     };
@@ -6490,7 +6551,7 @@ export interface operations {
               email: string;
               displayName: string;
               /** @enum {string} */
-              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+              role: "administrator" | "legal_team_member" | "business_user";
               /** @enum {string} */
               status: "active" | "invited" | "archived";
               lastActiveAt: string | null;
@@ -6532,7 +6593,7 @@ export interface operations {
               email: string;
               displayName: string;
               /** @enum {string} */
-              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+              role: "administrator" | "legal_team_member" | "business_user";
               /** @enum {string} */
               status: "active" | "invited" | "archived";
               lastActiveAt: string | null;
@@ -6574,7 +6635,7 @@ export interface operations {
               email: string;
               displayName: string;
               /** @enum {string} */
-              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+              role: "administrator" | "legal_team_member" | "business_user";
               /** @enum {string} */
               status: "active" | "invited" | "archived";
               lastActiveAt: string | null;
@@ -9343,6 +9404,13 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              businessOwner?: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              createdBy?: string | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
@@ -9448,6 +9516,13 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              businessOwner?: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              createdBy?: string | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
@@ -9608,7 +9683,7 @@ export interface operations {
               image: string | null;
               archived: boolean;
               /** @enum {string} */
-              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+              role: "administrator" | "legal_team_member" | "business_user";
             }[];
           };
         };
@@ -9661,6 +9736,13 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              businessOwner?: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              createdBy?: string | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
@@ -9693,6 +9775,16 @@ export interface operations {
                 unverified?: boolean;
               } | null;
             };
+            originalIntake?: {
+              number: number;
+              description: string | null;
+            } | null;
+            creator?: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            } | null;
             fields: {
               fieldId: string;
               slug: string;
@@ -9742,8 +9834,6 @@ export interface operations {
               displayName: string;
               image: string | null;
               archived: boolean;
-              /** @enum {string} */
-              role: "member" | "watcher" | "creator" | "contributor";
             }[];
           };
         };
@@ -9775,6 +9865,7 @@ export interface operations {
           description?: string | null;
           matterTypeId?: string;
           managerId?: string | null;
+          businessOwnerId?: string | null;
           /** @enum {string} */
           priority?: "low" | "medium" | "high" | "critical";
           risk?: ("low" | "medium" | "high" | "critical") | null;
@@ -9816,6 +9907,13 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              businessOwner?: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              createdBy?: string | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
@@ -9848,6 +9946,16 @@ export interface operations {
                 unverified?: boolean;
               } | null;
             };
+            originalIntake?: {
+              number: number;
+              description: string | null;
+            } | null;
+            creator?: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            } | null;
             fields: {
               fieldId: string;
               slug: string;
@@ -9897,8 +10005,6 @@ export interface operations {
               displayName: string;
               image: string | null;
               archived: boolean;
-              /** @enum {string} */
-              role: "member" | "watcher" | "creator" | "contributor";
             }[];
           };
         };
@@ -10002,8 +10108,6 @@ export interface operations {
       content: {
         "application/json": {
           userId: string;
-          /** @enum {string} */
-          role: "member" | "watcher" | "creator" | "contributor";
         };
       };
     };
@@ -10020,8 +10124,6 @@ export interface operations {
               displayName: string;
               image: string | null;
               archived: boolean;
-              /** @enum {string} */
-              role: "member" | "watcher" | "creator" | "contributor";
             }[];
           };
         };
@@ -10044,7 +10146,6 @@ export interface operations {
       path: {
         number: number;
         userId: string;
-        role: "member" | "watcher" | "creator" | "contributor";
       };
       cookie?: never;
     };
@@ -10062,8 +10163,6 @@ export interface operations {
               displayName: string;
               image: string | null;
               archived: boolean;
-              /** @enum {string} */
-              role: "member" | "watcher" | "creator" | "contributor";
             }[];
           };
         };
@@ -10116,6 +10215,13 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              businessOwner?: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              createdBy?: string | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
@@ -10199,6 +10305,13 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              businessOwner?: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              createdBy?: string | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
@@ -13052,7 +13165,23 @@ export interface operations {
   listPortalContracts: {
     parameters: {
       query?: {
+        q?: string;
+        typeId?: string;
+        ownerId?: string;
         cursor?: number;
+        dir?: "asc" | "desc";
+        stage?: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+        expiryFrom?: string;
+        expiryTo?: string;
+        sort?:
+          | "number"
+          | "title"
+          | "counterparty"
+          | "type"
+          | "stage"
+          | "owner"
+          | "effectiveDate"
+          | "expiryDate";
       };
       header?: never;
       path?: never;
@@ -13072,6 +13201,7 @@ export interface operations {
               title: string;
               /** @enum {string} */
               stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              type: string;
               counterparty: string | null;
               legalOwner: {
                 id: string;
@@ -13107,6 +13237,17 @@ export interface operations {
                 | "renewalPeriodMonths"
               )[];
             }[];
+            total: number;
+            filterOptions: {
+              types: {
+                id: string;
+                displayName: string;
+              }[];
+              owners: {
+                id: string;
+                displayName: string;
+              }[];
+            };
             nextCursor: number | null;
           };
         };
@@ -13145,6 +13286,7 @@ export interface operations {
               title: string;
               /** @enum {string} */
               stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              type: string;
               counterparty: string | null;
               legalOwner: {
                 id: string;
@@ -13455,7 +13597,7 @@ export interface operations {
       };
     };
   };
-  listContractStakeholders: {
+  readPortalContractWork: {
     parameters: {
       query?: never;
       header?: never;
@@ -13473,12 +13615,115 @@ export interface operations {
         };
         content: {
           "application/json": {
-            stakeholders: {
+            work: {
+              value?: {
+                amount: number;
+                currency: string;
+                /** @enum {string} */
+                cadence: "one_time" | "monthly" | "annually";
+              } | null;
+              effectiveDate?: string | null;
               id: string;
-              displayName: string;
-              image: string | null;
-              archived: boolean;
-            }[];
+              description: string | null;
+              fields: {
+                fieldId: string;
+                slug: string;
+                displayName: string;
+                description: string | null;
+                /** @enum {string} */
+                fieldType:
+                  | "text"
+                  | "long_text"
+                  | "number"
+                  | "currency"
+                  | "date"
+                  | "boolean"
+                  | "single_select"
+                  | "multi_select"
+                  | "user"
+                  | "entity";
+                /** @enum {string} */
+                fieldTag: "business" | "legal";
+                options: string[] | null;
+                displayOrder: number;
+                isRequired: boolean;
+              }[];
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              references: {
+                people: {
+                  id: string;
+                  label: string;
+                  archived: boolean;
+                  restricted?: boolean;
+                }[];
+                entities: {
+                  id: string;
+                  label: string;
+                  archived: boolean;
+                  restricted?: boolean;
+                }[];
+              };
+              originalRequests: {
+                number: number;
+                summary: string;
+                description: string | null;
+                /** Format: date-time */
+                submittedAt: string;
+                requester: string;
+                /** @enum {string} */
+                urgency: "low" | "medium" | "high" | "critical";
+                documents: {
+                  filename: string;
+                  reference: {
+                    documentId: string;
+                    versionId: string;
+                    primary: boolean;
+                  } | null;
+                }[];
+                fields: {
+                  fieldId: string;
+                  slug: string;
+                  displayName: string;
+                  description: string | null;
+                  /** @enum {string} */
+                  fieldType:
+                    | "text"
+                    | "long_text"
+                    | "number"
+                    | "currency"
+                    | "date"
+                    | "boolean"
+                    | "single_select"
+                    | "multi_select"
+                    | "user"
+                    | "entity";
+                  /** @enum {string} */
+                  fieldTag: "business" | "legal";
+                  options: string[] | null;
+                  displayOrder: number;
+                  isRequired: boolean;
+                }[];
+                customFields: {
+                  [key: string]: string | number | boolean | string[];
+                };
+                references: {
+                  people: {
+                    id: string;
+                    label: string;
+                    archived: boolean;
+                    restricted?: boolean;
+                  }[];
+                  entities: {
+                    id: string;
+                    label: string;
+                    archived: boolean;
+                    restricted?: boolean;
+                  }[];
+                };
+              }[];
+            };
           };
         };
       };
@@ -13493,7 +13738,7 @@ export interface operations {
       };
     };
   };
-  addContractStakeholder: {
+  updatePortalContractWork: {
     parameters: {
       query?: never;
       header?: never;
@@ -13505,24 +13750,39 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": {
-          userId: string;
+          value?: {
+            amount: number;
+            currency: string;
+            /** @enum {string} */
+            cadence: "one_time" | "monthly" | "annually";
+          } | null;
+          effectiveDate?: string | null;
+          description?: string | null;
+          customFields?: {
+            [key: string]: (string | number | boolean | string[]) | null;
+          };
         };
       };
     };
     responses: {
       /** @description Default Response */
-      201: {
+      200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "application/json": {
-            stakeholders: {
-              id: string;
-              displayName: string;
-              image: string | null;
-              archived: boolean;
-            }[];
+            value?: {
+              amount: number;
+              currency: string;
+              /** @enum {string} */
+              cadence: "one_time" | "monthly" | "annually";
+            } | null;
+            effectiveDate?: string | null;
+            description: string | null;
+            customFields: {
+              [key: string]: string | number | boolean | string[];
+            };
           };
         };
       };
@@ -13537,13 +13797,14 @@ export interface operations {
       };
     };
   };
-  removeContractStakeholder: {
+  listPortalContractSupportingDocuments: {
     parameters: {
-      query?: never;
+      query?: {
+        cursor?: string;
+      };
       header?: never;
       path: {
         number: number;
-        userId: string;
       };
       cookie?: never;
     };
@@ -13556,12 +13817,411 @@ export interface operations {
         };
         content: {
           "application/json": {
-            stakeholders: {
+            documents: {
               id: string;
-              displayName: string;
-              image: string | null;
-              archived: boolean;
+              title: string;
+              version: {
+                id: string;
+                versionNumber: number;
+                originalFilename: string;
+                mimeType: string;
+                byteSize: number;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                /** @enum {string} */
+                kind:
+                  | "general"
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment"
+                  | "generated_redline";
+              };
             }[];
+            nextCursor: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  readPortalMatterWork: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            work: {
+              value?: {
+                amount: number;
+                currency: string;
+                /** @enum {string} */
+                cadence: "one_time" | "monthly" | "annually";
+              } | null;
+              effectiveDate?: string | null;
+              id: string;
+              description: string | null;
+              fields: {
+                fieldId: string;
+                slug: string;
+                displayName: string;
+                description: string | null;
+                /** @enum {string} */
+                fieldType:
+                  | "text"
+                  | "long_text"
+                  | "number"
+                  | "currency"
+                  | "date"
+                  | "boolean"
+                  | "single_select"
+                  | "multi_select"
+                  | "user"
+                  | "entity";
+                /** @enum {string} */
+                fieldTag: "business" | "legal";
+                options: string[] | null;
+                displayOrder: number;
+                isRequired: boolean;
+              }[];
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              references: {
+                people: {
+                  id: string;
+                  label: string;
+                  archived: boolean;
+                  restricted?: boolean;
+                }[];
+                entities: {
+                  id: string;
+                  label: string;
+                  archived: boolean;
+                  restricted?: boolean;
+                }[];
+              };
+              originalRequests: {
+                number: number;
+                summary: string;
+                description: string | null;
+                /** Format: date-time */
+                submittedAt: string;
+                requester: string;
+                /** @enum {string} */
+                urgency: "low" | "medium" | "high" | "critical";
+                documents: {
+                  filename: string;
+                  reference: {
+                    documentId: string;
+                    versionId: string;
+                    primary: boolean;
+                  } | null;
+                }[];
+                fields: {
+                  fieldId: string;
+                  slug: string;
+                  displayName: string;
+                  description: string | null;
+                  /** @enum {string} */
+                  fieldType:
+                    | "text"
+                    | "long_text"
+                    | "number"
+                    | "currency"
+                    | "date"
+                    | "boolean"
+                    | "single_select"
+                    | "multi_select"
+                    | "user"
+                    | "entity";
+                  /** @enum {string} */
+                  fieldTag: "business" | "legal";
+                  options: string[] | null;
+                  displayOrder: number;
+                  isRequired: boolean;
+                }[];
+                customFields: {
+                  [key: string]: string | number | boolean | string[];
+                };
+                references: {
+                  people: {
+                    id: string;
+                    label: string;
+                    archived: boolean;
+                    restricted?: boolean;
+                  }[];
+                  entities: {
+                    id: string;
+                    label: string;
+                    archived: boolean;
+                    restricted?: boolean;
+                  }[];
+                };
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updatePortalMatterWork: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          value?: {
+            amount: number;
+            currency: string;
+            /** @enum {string} */
+            cadence: "one_time" | "monthly" | "annually";
+          } | null;
+          effectiveDate?: string | null;
+          description?: string | null;
+          customFields?: {
+            [key: string]: (string | number | boolean | string[]) | null;
+          };
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            value?: {
+              amount: number;
+              currency: string;
+              /** @enum {string} */
+              cadence: "one_time" | "monthly" | "annually";
+            } | null;
+            effectiveDate?: string | null;
+            description: string | null;
+            customFields: {
+              [key: string]: string | number | boolean | string[];
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listPortalMatterSupportingDocuments: {
+    parameters: {
+      query?: {
+        cursor?: string;
+      };
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documents: {
+              id: string;
+              title: string;
+              version: {
+                id: string;
+                versionNumber: number;
+                originalFilename: string;
+                mimeType: string;
+                byteSize: number;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                /** @enum {string} */
+                kind:
+                  | "general"
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment"
+                  | "generated_redline";
+              };
+            }[];
+            nextCursor: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listPortalMatters: {
+    parameters: {
+      query?: {
+        q?: string;
+        typeId?: string;
+        ownerId?: string;
+        cursor?: number;
+        dir?: "asc" | "desc";
+        statusId?: string;
+        category?: "open" | "closed";
+        sort?: "number" | "title" | "type" | "status" | "owner";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matters: {
+              number: number;
+              title: string;
+              type: string;
+              status: string;
+              /** @enum {string} */
+              category: "open" | "closed";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              } | null;
+              businessOwner: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              } | null;
+            }[];
+            total: number;
+            filterOptions: {
+              types: {
+                id: string;
+                displayName: string;
+              }[];
+              owners: {
+                id: string;
+                displayName: string;
+              }[];
+              statuses: {
+                id: string;
+                displayName: string;
+              }[];
+            };
+            nextCursor: number | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  readPortalMatter: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matter: {
+              number: number;
+              title: string;
+              type: string;
+              status: string;
+              /** @enum {string} */
+              category: "open" | "closed";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              } | null;
+              businessOwner: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              } | null;
+            };
           };
         };
       };
@@ -13586,6 +14246,8 @@ export interface operations {
         receivedFrom?: string;
         receivedTo?: string;
         timeZone?: string;
+        sort?: "number" | "summary" | "type" | "requester" | "urgency" | "createdAt" | "status";
+        dir?: "asc" | "desc";
         includeTriaged?: "true" | "false";
         cursor?: string;
       };
@@ -13810,6 +14472,12 @@ export interface operations {
               };
               declinedReason: string | null;
             };
+            redirectTo: {
+              /** @enum {string} */
+              module: "contract" | "matter";
+              number: number;
+            } | null;
+            recordArchived: boolean;
             fields: {
               fieldId: string;
               slug: string;
@@ -14309,6 +14977,11 @@ export interface operations {
                   )
                 | null;
             };
+            conversion: {
+              /** Format: date-time */
+              at: string;
+              by: string | null;
+            } | null;
             fields: {
               fieldId: string;
               slug: string;
@@ -14374,7 +15047,9 @@ export interface operations {
   };
   downloadRequestAttachment: {
     parameters: {
-      query?: never;
+      query?: {
+        preview?: "true";
+      };
       header?: never;
       path: {
         number: number;
@@ -14744,6 +15419,8 @@ export interface operations {
               targetTypeId: string;
               /** @enum {string} */
               state: "pending" | "ready" | "failed";
+              /** Format: date-time */
+              progressAt?: string;
               suggestions: {
                 [key: string]: {
                   value: string | number | boolean | string[];
@@ -14752,6 +15429,7 @@ export interface operations {
                     revision: string;
                     quote: string;
                   }[];
+                  justification?: string;
                 };
               };
               conflicts: {
@@ -14762,6 +15440,7 @@ export interface operations {
                     revision: string;
                     quote: string;
                   }[];
+                  justification?: string;
                 };
               };
               warnings: string[];
@@ -14772,26 +15451,6 @@ export interface operations {
                 status: "readable" | "unreadable" | "unsupported" | "truncated" | "omitted";
                 reason?: string;
               }[];
-              /**
-               * @default {
-               *       "sources": 20,
-               *       "bytes": 10485760,
-               *       "totalBytes": 52428800,
-               *       "characters": 30000,
-               *       "totalCharacters": 180000,
-               *       "sourceRuntimeMs": 15000,
-               *       "runtimeMs": 45000
-               *     }
-               */
-              limits: {
-                sources: number;
-                bytes: number;
-                totalBytes: number;
-                characters: number;
-                totalCharacters: number;
-                sourceRuntimeMs: number;
-                runtimeMs: number;
-              };
               failure: string | null;
             };
           };
@@ -14834,6 +15493,8 @@ export interface operations {
               targetTypeId: string;
               /** @enum {string} */
               state: "pending" | "ready" | "failed";
+              /** Format: date-time */
+              progressAt?: string;
               suggestions: {
                 [key: string]: {
                   value: string | number | boolean | string[];
@@ -14842,6 +15503,7 @@ export interface operations {
                     revision: string;
                     quote: string;
                   }[];
+                  justification?: string;
                 };
               };
               conflicts: {
@@ -14852,6 +15514,7 @@ export interface operations {
                     revision: string;
                     quote: string;
                   }[];
+                  justification?: string;
                 };
               };
               warnings: string[];
@@ -14862,26 +15525,6 @@ export interface operations {
                 status: "readable" | "unreadable" | "unsupported" | "truncated" | "omitted";
                 reason?: string;
               }[];
-              /**
-               * @default {
-               *       "sources": 20,
-               *       "bytes": 10485760,
-               *       "totalBytes": 52428800,
-               *       "characters": 30000,
-               *       "totalCharacters": 180000,
-               *       "sourceRuntimeMs": 15000,
-               *       "runtimeMs": 45000
-               *     }
-               */
-              limits: {
-                sources: number;
-                bytes: number;
-                totalBytes: number;
-                characters: number;
-                totalCharacters: number;
-                sourceRuntimeMs: number;
-                runtimeMs: number;
-              };
               failure: string | null;
             };
           };
@@ -14919,6 +15562,7 @@ export interface operations {
         content: {
           "application/json": {
             available: boolean;
+            justification?: string;
             citations: {
               label: string;
               text: string;
@@ -14966,6 +15610,7 @@ export interface operations {
         content: {
           "application/json": {
             available: boolean;
+            justification?: string;
             citations: {
               label: string;
               text: string;
@@ -15013,6 +15658,7 @@ export interface operations {
         content: {
           "application/json": {
             available: boolean;
+            justification?: string;
             citations: {
               label: string;
               text: string;
@@ -15943,6 +16589,7 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              createdBy?: string | null;
               entity:
                 | (
                     | {
@@ -16088,6 +16735,7 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              createdBy?: string | null;
               entity:
                 | (
                     | {
@@ -16301,7 +16949,7 @@ export interface operations {
               image: string | null;
               archived: boolean;
               /** @enum {string} */
-              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+              role: "administrator" | "legal_team_member" | "business_user";
             }[];
             approverGroups: {
               id: string;
@@ -16362,6 +17010,7 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              createdBy?: string | null;
               entity:
                 | (
                     | {
@@ -16479,13 +17128,21 @@ export interface operations {
                   }
               )[];
             };
+            originalIntake?: {
+              number: number;
+              description: string | null;
+            } | null;
+            creator?: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            } | null;
             team: {
               id: string;
               displayName: string;
               image: string | null;
               archived: boolean;
-              /** @enum {string} */
-              role: "member" | "watcher" | "creator" | "contributor";
             }[];
             counterparties: {
               id: string;
@@ -16637,6 +17294,7 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              createdBy?: string | null;
               entity:
                 | (
                     | {
@@ -16863,6 +17521,7 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              createdBy?: string | null;
               entity:
                 | (
                     | {
@@ -16990,6 +17649,7 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              createdBy?: string | null;
               entity:
                 | (
                     | {
@@ -17126,6 +17786,7 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              createdBy?: string | null;
               entity:
                 | (
                     | {
@@ -17264,8 +17925,6 @@ export interface operations {
       content: {
         "application/json": {
           userId: string;
-          /** @enum {string} */
-          role: "member" | "watcher" | "creator" | "contributor";
         };
       };
     };
@@ -17282,8 +17941,6 @@ export interface operations {
               displayName: string;
               image: string | null;
               archived: boolean;
-              /** @enum {string} */
-              role: "member" | "watcher" | "creator" | "contributor";
             }[];
           };
         };
@@ -17306,7 +17963,6 @@ export interface operations {
       path: {
         number: number;
         userId: string;
-        role: "member" | "watcher" | "creator" | "contributor";
       };
       cookie?: never;
     };
@@ -17324,8 +17980,6 @@ export interface operations {
               displayName: string;
               image: string | null;
               archived: boolean;
-              /** @enum {string} */
-              role: "member" | "watcher" | "creator" | "contributor";
             }[];
           };
         };
@@ -17388,6 +18042,7 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              createdBy?: string | null;
               entity:
                 | (
                     | {
@@ -17522,6 +18177,7 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              createdBy?: string | null;
               entity:
                 | (
                     | {
@@ -17656,6 +18312,7 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              createdBy?: string | null;
               entity:
                 | (
                     | {
@@ -17789,6 +18446,7 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              createdBy?: string | null;
               entity:
                 | (
                     | {
@@ -17916,6 +18574,7 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              createdBy?: string | null;
               entity:
                 | (
                     | {
@@ -18024,6 +18683,7 @@ export interface operations {
         content: {
           "application/json": {
             available: boolean;
+            justification?: string;
             citations: {
               label: string;
               text: string;
@@ -23629,6 +24289,7 @@ export interface operations {
         entityType: "matter" | "contract" | "request" | "matter_task" | "contract_task";
         entityId: string;
         cursor?: string;
+        visibility?: "legal_only" | "working_team" | "full_thread";
       };
       header?: never;
       path?: never;

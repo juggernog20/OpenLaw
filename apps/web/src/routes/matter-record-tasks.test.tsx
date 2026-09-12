@@ -15,13 +15,6 @@ const MEMBER = {
   role: "legal_team_member",
   timezone: "UTC",
 };
-const CONTRIBUTOR = {
-  id: "contributor",
-  email: "contributor@example.com",
-  displayName: "Casey Contributor",
-  role: "contributor",
-  timezone: "UTC",
-};
 const TEAMMATE = {
   id: "teammate",
   displayName: "Taylor Teammate",
@@ -260,21 +253,6 @@ describe("the Matter record's Tasks section", () => {
       await card.findByRole("button", { name: "Change assignee for Draft response: Unassigned" }),
     ).toBeInTheDocument();
     expect(api.writes.at(-1)?.body).toEqual({ assigneeId: null });
-  });
-
-  it("gives a Contributor the assigned checklist and no mutation controls", async () => {
-    stubApi({
-      signedIn: CONTRIBUTOR,
-      extra: recordApi([task({ assigneeId: TEAMMATE.id, assigneeName: TEAMMATE.displayName })])
-        .handler,
-    });
-    renderAt("/matters/12/tasks");
-    const card = await section();
-    expect(card.getByText("Draft response")).toBeInTheDocument();
-    expect(card.getByText("Taylor Teammate")).toBeInTheDocument();
-    expect(card.queryByRole("button", { name: "Add Task" })).not.toBeInTheDocument();
-    expect(card.queryByRole("button", { name: /^Actions for/ })).not.toBeInTheDocument();
-    expect(card.getByRole("checkbox")).toBeDisabled();
   });
 });
 

@@ -22,12 +22,6 @@ const MEMBER = {
   displayName: "Nadia Counsel",
   role: "legal_team_member",
 };
-const CONTRIBUTOR = {
-  id: "u3",
-  email: "contributor@example.com",
-  displayName: "Casey Contributor",
-  role: "contributor",
-};
 const BUSINESS = {
   id: "u9",
   email: "business@example.com",
@@ -81,6 +75,66 @@ function inboxApi(open: Record<string, unknown>[], triaged: Record<string, unkno
 }
 
 describe("the Inbox destination", () => {
+  it("cycles column sorting through ascending, descending, and the default queue order", async () => {
+    const api = inboxApi([inboxRow()]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    const { router } = renderAt("/inbox");
+    const user = userEvent.setup();
+    await screen.findByRole("table");
+    for (const name of ["Ref", "Summary", "Type", "Requester", "Urgency", "Age", "Status"]) {
+      expect(
+        within(screen.getByRole("columnheader", { name })).getByRole("button", { name }),
+      ).toBeInTheDocument();
+    }
+    for (const dir of ["asc", "desc", null]) {
+      await act(async () => {
+        await user.click(screen.getByRole("button", { name: "Summary" }));
+        await vi.waitFor(() => {
+          expect(new URLSearchParams(router.state.location.search).get("dir")).toBe(dir);
+          expect(router.state.navigation.state).toBe("idle");
+        });
+      });
+      expect(api.asked.at(-1)?.searchParams.get("sort")).toBe(dir ? "summary" : null);
+      expect(api.asked.at(-1)?.searchParams.get("status")).toBe("new");
+      const header = screen.getByRole("columnheader", { name: "Summary" });
+      if (dir) {
+        expect(header).toHaveAttribute("aria-sort", dir === "asc" ? "ascending" : "descending");
+        expect(screen.queryByText("Ordered by urgency, then age")).not.toBeInTheDocument();
+      } else {
+        expect(header).not.toHaveAttribute("aria-sort");
+        expect(screen.getByText("Ordered by urgency, then age")).toBeInTheDocument();
+      }
+    }
+    await act(async () => {
+      await router.navigate(-1);
+    });
+    expect(screen.getByRole("columnheader", { name: "Summary" })).toHaveAttribute(
+      "aria-sort",
+      "descending",
+    );
+  });
+
+  it("keeps the previous sort and rows when a sort request fails", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname !== "/api/v1/requests") return undefined;
+        return call.url.searchParams.has("sort")
+          ? problem(500, "The Inbox could not be read.")
+          : json(200, { requests: [inboxRow()], nextCursor: null });
+      },
+    });
+    const { router } = renderAt("/inbox");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Summary" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The Inbox could not be read. Try again.",
+    );
+    expect(screen.getByRole("columnheader", { name: "Summary" })).not.toHaveAttribute("aria-sort");
+    expect(screen.getByRole("row", { name: /Injunction threat/ })).toBeInTheDocument();
+    expect(router.state.location.search).toBe("");
+  });
+
   it("shows a Legal Team Member the queue, each row opening the Request", async () => {
     stubApi({ signedIn: MEMBER, extra: inboxApi([inboxRow()]).handler });
     renderAt("/inbox");
@@ -297,7 +351,7 @@ describe("the Inbox destination", () => {
     expect(within(row).queryByRole("link", { name: /^C-/ })).not.toBeInTheDocument();
   });
 
-  it("appends the next page in place, carrying filters with the cursor", async () => {
+  it("appends the next page in place, carrying filters and sorting with the cursor", async () => {
     const FIRST = [inboxRow()];
     const SECOND = [inboxRow({ id: "r2", number: 45, summary: "Orion Cloud MSA renewal" })];
     const asked: URL[] = [];
@@ -311,7 +365,7 @@ describe("the Inbox destination", () => {
           : json(200, { requests: SECOND, nextCursor: null });
       },
     });
-    renderAt("/inbox");
+    renderAt("/inbox?filters=1&status=new&sort=createdAt&dir=desc");
     const user = userEvent.setup();
 
     await screen.findByRole("row", { name: /Injunction threat/ });
@@ -320,6 +374,9 @@ describe("the Inbox destination", () => {
     expect(await screen.findByRole("row", { name: /Orion Cloud MSA renewal/ })).toBeInTheDocument();
     expect(screen.getByRole("row", { name: /Injunction threat/ })).toBeInTheDocument();
     expect(asked.at(-1)?.searchParams.get("cursor")).toBe("r1");
+    expect(asked.at(-1)?.searchParams.get("sort")).toBe("createdAt");
+    expect(asked.at(-1)?.searchParams.get("dir")).toBe("desc");
+    expect(asked.at(-1)?.searchParams.get("status")).toBe("new");
     await waitFor(() =>
       expect(screen.queryByRole("button", { name: "Show more" })).not.toBeInTheDocument(),
     );
@@ -345,19 +402,6 @@ describe("who the Inbox is for (INT-006, DD-013)", () => {
     expect(links[1]).toHaveAttribute("aria-current", "page");
   });
 
-  it("draws no Inbox for a Contributor, and bounces them off the screen", async () => {
-    stubApi({ signedIn: CONTRIBUTOR });
-    const { router } = renderAt("/inbox");
-
-    await waitFor(() => expect(router.state.location.pathname).toBe("/"));
-    const nav = await screen.findByRole("navigation");
-    expect(
-      within(nav)
-        .getAllByRole("link")
-        .map((link) => link.textContent),
-    ).not.toContain("Inbox");
-  });
-
   it("never gives a Business User the destination at all", async () => {
     stubApi({ signedIn: BUSINESS });
     const { router } = renderAt("/inbox");
@@ -365,7 +409,7 @@ describe("who the Inbox is for (INT-006, DD-013)", () => {
     // Bounced home, and home for a Business User is the portal
     // (INT-001). The staff shell is somewhere they never arrive.
     await waitFor(() => expect(router.state.location.pathname).toBe("/portal"));
-    expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "Primary" })).not.toBeInTheDocument();
   });
 });
 
@@ -460,7 +504,7 @@ describe("Inbox filters and views", () => {
       },
     });
     const { router } = renderAt(
-      "/inbox?filters=1&status=new,resolved&urgency=critical,high&receivedFrom=2026-09-01&receivedTo=2026-09-30",
+      "/inbox?filters=1&status=new,resolved&urgency=critical,high&receivedFrom=2026-09-01&receivedTo=2026-09-30&sort=urgency&dir=desc",
     );
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: /^Default view/ }));
@@ -471,6 +515,7 @@ describe("Inbox filters and views", () => {
     await user.click(dialog.getByRole("button", { name: "Save" }));
     await screen.findByRole("button", { name: "September priorities" });
     expect(saved[0]?.config).toMatchObject({
+      sort: { key: "urgency", dir: "desc" },
       filters: {
         status: "new,resolved",
         urgency: "critical,high",
@@ -483,11 +528,14 @@ describe("Inbox filters and views", () => {
     });
     expect(asked.at(-1)?.searchParams.get("urgency")).toBe("critical,high");
     expect(asked.at(-1)?.searchParams.get("receivedTo")).toBe("2026-09-30");
+    expect(asked.at(-1)?.searchParams.get("sort")).toBe("urgency");
+    expect(asked.at(-1)?.searchParams.get("dir")).toBe("desc");
     await act(async () => {
       await router.navigate("/inbox?filters=1&view=all&status=declined");
     });
     expect(asked.at(-1)?.searchParams.get("status")).toBe("declined");
     expect(asked.at(-1)?.searchParams.has("urgency")).toBe(false);
+    expect(asked.at(-1)?.searchParams.has("sort")).toBe(false);
     expect(screen.getByRole("button", { name: /^Default view/ })).toBeInTheDocument();
   });
 });

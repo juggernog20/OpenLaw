@@ -66,7 +66,7 @@ beforeAll(async () => {
 
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
     [BUSINESS_USER, "business_user"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);

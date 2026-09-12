@@ -172,7 +172,7 @@ describe("the settings destination (#62)", () => {
     expect(within(rail).getByRole("link", { name: "Authentication" })).toBeVisible();
   });
 
-  it.each(["legal_team_member", "contributor"])(
+  it.each(["legal_team_member"])(
     "bounces a %s off /settings/general to their settings home",
     async (role) => {
       const reads: string[] = [];

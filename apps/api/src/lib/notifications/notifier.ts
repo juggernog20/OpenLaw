@@ -57,6 +57,9 @@
 
 import {
   commentMentions,
+  and,
+  inArray,
+  users,
   eq,
   notifications,
   type CommentVisibility,
@@ -857,6 +860,24 @@ async function fanOut(
               // and cannot be the one that forgets to ask for it.
               side: requestSideOf(eventType),
             });
+
+  if (entity.type === CONTRACT_ENTITY || entity.type === MATTER_ENTITY) {
+    const businessPeople = await tx
+      .select({ id: users.id })
+      .from(users)
+      .where(and(inArray(users.id, [...reachable]), eq(users.role, "business_user")));
+    for (const person of businessPeople) {
+      const sharedComment =
+        (eventType === "comment.posted" || eventType === "comment.mentioned") &&
+        narrowing.tier === "full_thread" &&
+        !byUser.get(person.id)?.payload.taskId;
+      if (
+        !sharedComment &&
+        !["contract.status_changed", "document.added", "document.version_added"].includes(eventType)
+      )
+        reachable.delete(person.id);
+    }
+  }
 
   // 3. The preferences, over the group's defaults (NOT-001/002).
   const recipients = [...byUser.keys()].filter((id) => reachable.has(id));

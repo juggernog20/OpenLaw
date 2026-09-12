@@ -3,6 +3,17 @@
   "status": "implemented",
   "bindings": [
     {
+      "routes": [
+        "/portal/contracts",
+        "/portal/contracts/:number",
+        "/portal/matters",
+        "/portal/matters/:number"
+      ],
+      "contexts": ["portal.records", "portal.entry"],
+      "surface": "portal",
+      "pilotEntry": false
+    },
+    {
       "routes": ["/", "/home/tasks"],
       "contexts": ["home", "home.obligations"],
       "surface": "staff",
@@ -171,7 +182,7 @@
         "/matters/:matterNumber/:tab?",
         "/entities/:entityId/:tab?"
       ],
-      "contexts": ["access", "contributor", "counterparties"],
+      "contexts": ["access", "counterparties"],
       "surface": "staff",
       "pilotEntry": false
     },

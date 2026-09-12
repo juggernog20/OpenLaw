@@ -1,6 +1,6 @@
 # Set up your account and sign in
 
-Use these steps for an Administrator, Legal Team Member, or Contributor account. Ask your Administrator for the OpenLaw address and an invitation. Business Users should follow [Sign in to the Business Portal](portal-sign-in.md).
+Use these steps for an Administrator or Legal Team Member account. Ask your Administrator for the OpenLaw address and an invitation. Business Users should follow [Sign in to the Business Portal](portal-sign-in.md).
 
 ## Accept a password invitation
 
@@ -19,7 +19,7 @@ If the passwords do not match, correct them and try again. If the link has expir
 
 If the page offers **Continue with single sign-on**, select it and complete your organization's identity-provider sign-in. Ask your Administrator about a failed sign-in or an account that has not been allowed access. If the page says **Single sign-on is not configured yet**, no identity provider is connected. Ask your Administrator which method to use.
 
-**Administrator sign-in** opens the password form when single sign-on is the main method. Only an Administrator can sign in with a password in that mode. A Legal Team Member or Contributor who tries it sees **Password sign-in is disabled while single sign-on is required.** and must use the single sign-on method instead.
+**Administrator sign-in** opens the password form when single sign-on is the main method. Only an Administrator can sign in with a password in that mode. A Legal Team Member who tries it sees **Password sign-in is disabled while single sign-on is required.** and must use the single sign-on method instead.
 
 If **Email me a sign-in link** is available, you can request a link with your work email. Follow the newest email within five minutes. It works once. This option depends on the organization's authentication settings and email delivery.
 

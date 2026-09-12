@@ -4,7 +4,7 @@ A Comparison shows changes between two Document Versions in one Document's chain
 
 ## Before you start
 
-Use an Administrator, Legal Team Member, or Contributor account that can read the Document. Have at least two ordinary Document Versions in the same chain. A Generated redline cannot itself be a Comparison operand. See [Document Versions](document-versions.md) to add a Version.
+Use an Administrator or Legal Team Member account that can read the Document. Have at least two ordinary Document Versions in the same chain. A Generated redline cannot itself be a Comparison operand. See [Document Versions](document-versions.md) to add a Version.
 
 Two supported Word files use Word comparison. A pair containing a PDF or another supported text-extractable format uses extracted text instead, without formatting. Download-only formats cannot supply that text. Processing may need to finish before the Comparison can be read; see [Document reading and processing](document-previews.md).
 
@@ -28,7 +28,7 @@ An Administrator or Legal Team Member can select **Export track changes** on a r
 
 The export appends a new Version with the **Generated redline** kind and records the two Versions used to make it. Open or download that Version and check its tracked changes. The original Versions and the Comparison remain available. Exporting the same pair again opens the existing Generated redline rather than appending another one.
 
-Contributors can read Comparisons but cannot export a Generated redline. A text Comparison cannot be exported as tracked changes; Legal Team Members and Administrators see **Export needs two Word files.** Archiving does not stop a person who can read the Document from comparing existing Versions, but it prevents writing a new Generated redline until the Document and owning record are restored.
+Comparisons and Generated redline exports remain staff actions. A text Comparison cannot be exported as tracked changes; Legal Team Members and Administrators see **Export needs two Word files.** Archiving does not stop a person who can read the Document from comparing existing Versions, but it prevents writing a new Generated redline until the Document and owning record are restored.
 
 ## If the Comparison fails
 

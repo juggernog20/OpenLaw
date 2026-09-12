@@ -22,6 +22,7 @@ import type { StaffRequest } from "../../lib/requests";
 const COLUMNS: ColumnDef<InboxRow>[] = [
   {
     key: "reference",
+    sortKey: "number",
     header: <FormattedMessage id="inbox.column.reference" defaultMessage="Ref" />,
     label: (intl) => intl.formatMessage({ id: "inbox.column.reference", defaultMessage: "Ref" }),
     defaultWidth: 88,
@@ -32,6 +33,7 @@ const COLUMNS: ColumnDef<InboxRow>[] = [
   },
   {
     key: "summary",
+    sortKey: "summary",
     header: <FormattedMessage id="inbox.column.summary" defaultMessage="Summary" />,
     label: (intl) => intl.formatMessage({ id: "inbox.column.summary", defaultMessage: "Summary" }),
     defaultWidth: 300,
@@ -48,6 +50,7 @@ const COLUMNS: ColumnDef<InboxRow>[] = [
   },
   {
     key: "type",
+    sortKey: "type",
     header: <FormattedMessage id="inbox.column.type" defaultMessage="Type" />,
     label: (intl) => intl.formatMessage({ id: "inbox.column.type", defaultMessage: "Type" }),
     defaultWidth: 176,
@@ -63,6 +66,7 @@ const COLUMNS: ColumnDef<InboxRow>[] = [
   },
   {
     key: "requester",
+    sortKey: "requester",
     header: <FormattedMessage id="inbox.column.requester" defaultMessage="Requester" />,
     label: (intl) =>
       intl.formatMessage({ id: "inbox.column.requester", defaultMessage: "Requester" }),
@@ -72,6 +76,7 @@ const COLUMNS: ColumnDef<InboxRow>[] = [
   },
   {
     key: "urgency",
+    sortKey: "urgency",
     header: <FormattedMessage id="inbox.column.urgency" defaultMessage="Urgency" />,
     label: (intl) => intl.formatMessage({ id: "inbox.column.urgency", defaultMessage: "Urgency" }),
     defaultWidth: 104,
@@ -87,6 +92,7 @@ const COLUMNS: ColumnDef<InboxRow>[] = [
   },
   {
     key: "age",
+    sortKey: "createdAt",
     header: <FormattedMessage id="inbox.column.age" defaultMessage="Age" />,
     label: (intl) => intl.formatMessage({ id: "inbox.column.age", defaultMessage: "Age" }),
     defaultWidth: 112,
@@ -99,6 +105,7 @@ const COLUMNS: ColumnDef<InboxRow>[] = [
   },
   {
     key: "outcome",
+    sortKey: "status",
     header: <FormattedMessage id="inbox.column.status" defaultMessage="Status" />,
     label: (intl) => intl.formatMessage({ id: "inbox.column.status", defaultMessage: "Status" }),
     defaultWidth: 112,

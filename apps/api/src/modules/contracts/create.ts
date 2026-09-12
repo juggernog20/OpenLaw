@@ -76,7 +76,7 @@ import {
   users,
 } from "@openlaw/db";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
-import { CREATOR_TEAM_ROLE, OWNER_REFUSAL, OWNER_ROLES } from "../../lib/contract-access.js";
+import { OWNER_REFUSAL, OWNER_ROLES } from "../../lib/contract-access.js";
 import { linkContracts, setContractParent } from "../../lib/contract-relations.js";
 import {
   applyCustomFields,
@@ -313,6 +313,7 @@ export async function createContract(
       contractTypeId: contractType.id,
       statusId: draft.id,
       managerId,
+      createdBy: actorId,
       businessOwnerId: input.businessOwnerId ?? null,
       customFields,
       isConfidential,
@@ -331,8 +332,13 @@ export async function createContract(
   await tx.insert(contractTeam).values({
     contractId: row!.id,
     userId: actorId,
-    role: CREATOR_TEAM_ROLE,
   });
+  if (input.businessOwnerId) {
+    await tx
+      .insert(contractTeam)
+      .values({ contractId: row!.id, userId: input.businessOwnerId })
+      .onConflictDoNothing();
+  }
   await recordActivity(tx, {
     entityType: "contract",
     entityId: row!.id,

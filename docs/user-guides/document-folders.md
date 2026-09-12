@@ -4,7 +4,7 @@ Use folders inside one Contract, Matter, or Entity to organize its Documents. Im
 
 ## Before you start
 
-Use a Legal Team Member or Administrator account with access to an unarchived owning record. Contributors can upload supporting paper at the record root, including multiple files, but cannot create folders, move Documents, or import a folder structure. Knowledge Folders organize Knowledge Items; they do not create Document folders inside an item.
+Use a Legal Team Member or Administrator account with access to an unarchived owning record. Business Users can upload supporting paper at the record root, including multiple files, but cannot create folders, move Documents, or import a folder structure. Knowledge Folders organize Knowledge Items; they do not create Document folders inside an item.
 
 ## Create and maintain folders
 

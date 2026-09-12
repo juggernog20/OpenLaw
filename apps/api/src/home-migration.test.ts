@@ -132,13 +132,13 @@ async function existingRows(db: Db): Promise<unknown> {
     select jsonb_build_object(
       'preference', (select to_jsonb(p.*) from notification_preferences p
         where user_id = 'home-existing-user' and event_group = 'assigned_to_you'),
-      'contract', (select to_jsonb(c.*) - 'search_vector' - 'ai_unverified' - 'business_owner_id' - 'analysis_human_fields'
+      'contract', (select to_jsonb(c.*) - 'search_vector' - 'ai_unverified' - 'business_owner_id' - 'analysis_human_fields' - 'created_by'
         from contracts c where id = 'home-existing-contract'),
       'contractTask', (select to_jsonb(t.*) - 'description' from contract_tasks t
         where id = 'home-existing-contract-task'),
       'approval', (select to_jsonb(a.*) from contract_approvals a
         where id = 'home-existing-approval'),
-      'matter', (select to_jsonb(m.*) - 'search_vector' - 'ai_unverified' from matters m
+      'matter', (select to_jsonb(m.*) - 'search_vector' - 'ai_unverified' - 'business_owner_id' from matters m
         where id = 'home-existing-matter'),
       'matterTask', (select to_jsonb(t.*) - 'description' from matter_tasks t
         where id = 'home-existing-matter-task')

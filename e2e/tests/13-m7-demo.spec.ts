@@ -183,10 +183,10 @@ test.describe.serial("M7 demo path", () => {
     await leaveInert();
   });
 
-  test("a Contributor has no Entities module at all (ENT-004)", async ({ page, browser }) => {
+  test("a Business User has no Entities module at all (ENT-004)", async ({ page, browser }) => {
     await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
 
-    const email = `e2e-m7-contributor-${Date.now()}@e2e.example`;
+    const email = `e2e-m7-business-${Date.now()}@e2e.example`;
     let member: OnboardedMember | undefined;
 
     const leaveInert = async () => {
@@ -197,35 +197,35 @@ test.describe.serial("M7 demo path", () => {
     try {
       member = await onboardActivatedMember(page.request, browser, {
         email,
-        displayName: "Casey Contributor",
-        role: "contributor",
+        displayName: "Casey Business",
+        role: "business_user",
         password: "their-own-e2e-password",
       });
-      const contributorPage = member.page;
+      const businessPage = member.page;
 
       // No Entities nav item. Absent, not disabled.
-      await contributorPage.goto("/");
-      const nav = contributorPage.getByRole("navigation", { name: "Primary" });
-      await expect(nav.getByRole("link", { name: "Home" })).toBeVisible();
+      await businessPage.goto("/");
+      const nav = businessPage.getByRole("navigation", { name: "Portal" });
+      await expect(nav.getByRole("link", { name: "Contracts" })).toBeVisible();
       await expect(nav.getByRole("link", { name: "Entities" })).toHaveCount(0);
 
       // The URL bounces them home.
-      await contributorPage.goto("/entities");
-      await expect(contributorPage).toHaveURL(/\/$/);
+      await businessPage.goto("/entities");
+      await expect(businessPage).toHaveURL(/\/portal$/);
 
       // The client bounce is convenience; the API's refusal is real,
       // on the list, the picker read, and the write. The write carries
       // a shape-valid body: validation answers before the role guard,
       // and the refusal under test is the guard's.
       const refusals = [
-        contributorPage.request.get("/api/v1/entities"),
-        contributorPage.request.get("/api/v1/entities/types"),
-        contributorPage.request.post("/api/v1/entities", {
+        businessPage.request.get("/api/v1/entities"),
+        businessPage.request.get("/api/v1/entities/types"),
+        businessPage.request.post("/api/v1/entities", {
           data: { legalName: "Sneaky Ltd", entityTypeId: "any" },
         }),
       ];
       for (const refused of await Promise.all(refusals)) {
-        expect(refused.status(), "the registry must refuse a Contributor").toBe(403);
+        expect(refused.status(), "the registry must refuse a Business User").toBe(403);
       }
     } catch (error) {
       await sweepOrSay("M7 demo", leaveInert);

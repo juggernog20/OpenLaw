@@ -110,7 +110,7 @@ export async function dispositionScaffold(harness: TestHarness): Promise<Disposi
     [REQUESTER, "business_user"],
     [MEMBER, "legal_team_member"],
     [OTHER_MEMBER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, user.id));

@@ -100,7 +100,7 @@ const ContractRecord = z.object({
     primaryCounterparty: z.object({ name: z.string() }).nullable(),
     customFields: z.record(z.string(), z.unknown()),
   }),
-  team: z.array(z.object({ displayName: z.string(), role: z.string() })),
+  team: z.array(z.object({ displayName: z.string() })),
   counterparties: z.array(z.object({ name: z.string(), isPrimary: z.boolean() })),
 });
 
@@ -137,7 +137,7 @@ function sectionTab(page: Page, name: string): Locator {
   return page.getByRole("navigation", { name: "Contract sections" }).getByRole("link", { name });
 }
 
-async function openApplet(page: Page, label: "Team"): Promise<Locator> {
+async function openApplet(page: Page, label: "Contract team"): Promise<Locator> {
   await page.getByRole("toolbar", { name: "Applets" }).getByRole("button", { name: label }).click();
   const panel = page.getByRole("complementary", { name: label });
   await expect(panel).toBeVisible();
@@ -438,7 +438,7 @@ test.describe.serial("M8 demo path", () => {
       // The DES-017 micro-state, beside the one field that has
       // committed so far — this is the whole page's only "Saved".
       await expect(page.getByText("Saved", { exact: true })).toHaveCount(1);
-      const team = await openApplet(page, "Team");
+      const team = await openApplet(page, "Contract team");
       await expect(team).toContainText(OWNER_NAME);
       await expect(team).toContainText("Owner");
       // Provenance, written at creation and never again (CTR-004).
@@ -448,8 +448,8 @@ test.describe.serial("M8 demo path", () => {
       // things at once is the compound edit DES-017 gives a dialog.
       await team.getByRole("button", { name: "Add team member" }).click();
       const teamDialog = page.getByRole("dialog");
-      await teamDialog.getByLabel("Person").selectOption({ label: ADMIN.displayName });
-      await teamDialog.getByLabel("Role").selectOption({ label: "Watcher" });
+      await teamDialog.getByLabel("Person").selectOption({ label: OWNER_NAME });
+      await expect(teamDialog.getByLabel("Role")).toHaveCount(0);
       const teamAdded = page.waitForResponse(
         (response) =>
           /\/api\/v1\/contracts\/\d+\/team$/.test(response.url()) &&
@@ -458,7 +458,7 @@ test.describe.serial("M8 demo path", () => {
       await teamDialog.getByRole("button", { name: "Add", exact: true }).click();
       expect((await teamAdded).ok()).toBe(true);
       await expect(teamDialog).toBeHidden();
-      await expect(team).toContainText("Watcher");
+      await expect(team).toContainText(OWNER_NAME);
 
       // Our side (CTR-011) — and the assertion M7 deferred to this
       // spec: an Entity registered in the M7 registry is offered by the
@@ -529,10 +529,9 @@ test.describe.serial("M8 demo path", () => {
       expect(record.contract.primaryCounterparty?.name).toBe(COUNTERPARTIES[0]);
       // The same person under two roles is membership, not a duplicate
       // (CTR-004's compound key).
-      expect(record.team.map((member) => `${member.displayName} ${member.role}`).sort()).toEqual([
-        `${ADMIN.displayName} creator`,
-        `${ADMIN.displayName} watcher`,
-      ]);
+      expect(record.team.map((member) => member.displayName).sort()).toEqual(
+        [ADMIN.displayName, OWNER_NAME].sort(),
+      );
     } catch (error) {
       // A cleanup that throws here would replace the failure that caused
       // it, and the failure is the one worth reading.
@@ -544,7 +543,7 @@ test.describe.serial("M8 demo path", () => {
     await leaveInert();
   });
 
-  test("a Contributor reads the contracts they are on, and nothing else (CTR-021)", async ({
+  test("a Business User opens only their team Contracts in the Portal", async ({
     page,
     browser,
   }) => {
@@ -564,7 +563,7 @@ test.describe.serial("M8 demo path", () => {
       member = await onboardActivatedMember(page.request, browser, {
         email,
         displayName: "Rowan Contributor",
-        role: "contributor",
+        role: "business_user",
         password: "their-own-e2e-password",
       });
       const contributorPage = member.page;
@@ -579,39 +578,39 @@ test.describe.serial("M8 demo path", () => {
       const theirs = await createBareContract(page.request, theirsTitle);
       const notTheirs = await createBareContract(page.request, notTheirsTitle);
       const joined = await page.request.post(`/api/v1/contracts/${theirs}/team`, {
-        data: { userId: contributorId, role: "contributor" },
+        data: { userId: contributorId },
       });
       expect(joined.status(), await joined.text()).toBe(201);
 
       // The Contracts destination is drawn for them now — they have
       // contracts to see. Entities stays Member+ (ENT-004).
       await contributorPage.goto("/");
-      const nav = contributorPage.getByRole("navigation", { name: "Primary" });
+      const nav = contributorPage.getByRole("navigation", { name: "Portal" });
       await expect(nav.getByRole("link", { name: "Contracts" })).toBeVisible();
       await expect(nav.getByRole("link", { name: "Entities" })).toHaveCount(0);
 
       // Their list is their work: the contract they are on is there,
       // the one they are not is not, and no create action is offered.
-      await contributorPage.goto("/contracts");
+      await contributorPage.goto("/portal/contracts");
       await expect(contributorPage.getByRole("link", { name: theirsTitle })).toBeVisible();
       await expect(contributorPage.getByRole("link", { name: notTheirsTitle })).toHaveCount(0);
       await expect(contributorPage.getByRole("button", { name: "Create contract" })).toHaveCount(0);
 
       // The record opens read-only: the inputs are inert and neither
       // archive nor restore is offered.
-      await contributorPage.goto(`/contracts/${theirs}`);
+      await contributorPage.goto(`/portal/contracts/${theirs}`);
       await expect(
         contributorPage.getByRole("heading", { level: 1, name: theirsTitle }),
       ).toBeVisible();
-      await expect(contributorPage.getByLabel("Title")).toBeDisabled();
+      await expect(contributorPage.getByLabel("Title")).toHaveCount(0);
       // The status has no control at all for this viewer (DES-053):
       // absent, rather than a trigger they may press and be refused.
       await expect(contributorPage.getByRole("button", { name: /move contract$/ })).toHaveCount(0);
       // The record menu keeps the row that changes nothing and drops
       // every row that would (DES-055 clause 2).
-      await contributorPage.getByRole("button", { name: "Contract actions" }).click();
-      await expect(contributorPage.getByRole("menuitem")).toHaveText(["Copy link"]);
-      await contributorPage.keyboard.press("Escape");
+      await expect(contributorPage.getByRole("button", { name: "Contract actions" })).toHaveCount(
+        0,
+      );
 
       // The client is convenience; the API is the gate. The read they
       // hold answers; the one they do not is 404, exactly as a contract
@@ -619,15 +618,18 @@ test.describe.serial("M8 demo path", () => {
       // are 403. The writes carry shape-valid bodies: validation
       // answers before the role guard, and the refusal under test is
       // the guard's.
-      const listed = await contributorPage.request.get("/api/v1/contracts");
+      const listed = await contributorPage.request.get("/api/v1/portal/contracts");
       expect(listed.ok()).toBe(true);
-      const numbers = ContractRows.parse(await listed.json()).contracts.map((row) => row.number);
+      const numbers = z
+        .object({ contracts: z.array(z.object({ number: z.number() })) })
+        .parse(await listed.json())
+        .contracts.map((row) => row.number);
       expect(numbers).toContain(theirs);
       expect(numbers).not.toContain(notTheirs);
 
-      const held = await contributorPage.request.get(`/api/v1/contracts/${theirs}`);
+      const held = await contributorPage.request.get(`/api/v1/portal/contracts/${theirs}`);
       expect(held.status(), await held.text()).toBe(200);
-      const withheld = await contributorPage.request.get(`/api/v1/contracts/${notTheirs}`);
+      const withheld = await contributorPage.request.get(`/api/v1/portal/contracts/${notTheirs}`);
       expect(withheld.status(), "a contract they are not on must read as absent").toBe(404);
 
       const refusals = [

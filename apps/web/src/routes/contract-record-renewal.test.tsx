@@ -57,13 +57,6 @@ const MEMBER = {
   // the same on a runner in Dubai as on one in UTC.
   timezone: "UTC",
 };
-const CONTRIBUTOR = {
-  id: "u3",
-  email: "contributor@example.com",
-  displayName: "Casey Contributor",
-  role: "contributor",
-  timezone: "UTC",
-};
 
 const PEOPLE = [
   {
@@ -238,18 +231,6 @@ describe("the renewal-pending banner (CTR-006, DES-043)", () => {
     // Confidentiality leads, because it governs who may read the page
     // at all; this one is about one date on it (DES-043 clause 4).
     expect(walled.compareDocumentPosition(pending) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  });
-
-  it("offers a read-only viewer the statement and no way in", async () => {
-    stubApi({ signedIn: CONTRIBUTOR, extra: recordApi().handler });
-    renderAt("/contracts/42");
-
-    const banner = await screen.findByRole("region", { name: "Renewal pending confirmation" });
-    // Absent, never disabled: an affordance nobody may use is worse
-    // than none (DES-035 clause 9).
-    expect(
-      within(banner).queryByRole("button", { name: "Review renewal" }),
-    ).not.toBeInTheDocument();
   });
 });
 
@@ -443,13 +424,6 @@ describe("the Renew control on the Approvals & signing card", () => {
         }),
       ).handler,
     });
-    renderAt("/contracts/42/approvals");
-
-    expect((await card()).queryByRole("button", { name: "Renew" })).not.toBeInTheDocument();
-  });
-
-  it("draws none for a viewer who may not write the record", async () => {
-    stubApi({ signedIn: CONTRIBUTOR, extra: recordApi().handler });
     renderAt("/contracts/42/approvals");
 
     expect((await card()).queryByRole("button", { name: "Renew" })).not.toBeInTheDocument();

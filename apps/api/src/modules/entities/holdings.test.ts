@@ -40,7 +40,7 @@ beforeAll(async () => {
 
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
   ] as const) {
     const person = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, person.id));

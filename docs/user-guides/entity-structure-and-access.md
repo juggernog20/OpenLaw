@@ -4,7 +4,7 @@ Maintain simple share-capital facts, inspect the ownership chart and linked work
 
 ## Before you start
 
-Legal Team Members and Administrators can maintain reachable, live Entities. Only an Administrator changes the Confidential flag or Grants. Contributors and Business Users do not have Entity access. A Holding, Officer user link, or linked Contract does not grant access to the Entity.
+Legal Team Members and Administrators can maintain reachable, live Entities. Only an Administrator changes the Confidential flag or Grants. Business Users do not have Entity access. A Holding, Officer user link, or linked Contract does not grant access to the Entity.
 
 ## Maintain share capital
 

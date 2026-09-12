@@ -157,7 +157,7 @@ describe("administration does not grant confidential access", () => {
       });
       expect(patch.statusCode, patch.body).toBe(404);
       const grantUrl = `${record.path}/${kind === "entity" ? "grants" : "team"}`;
-      const payload = kind === "entity" ? { userId: adminId } : { userId: adminId, role: "member" };
+      const payload = kind === "entity" ? { userId: adminId } : { userId: adminId };
       expect(
         (await harness.app.inject({ method: "POST", url: grantUrl, cookies: admin, payload }))
           .statusCode,
@@ -173,7 +173,7 @@ describe("administration does not grant confidential access", () => {
       expect((await get(`/api/v1/audit-log?q=${record.id}`)).body).toContain(title);
       const removed = await harness.app.inject({
         method: "DELETE",
-        url: `${grantUrl}/${adminId}${kind === "entity" ? "" : "/member"}`,
+        url: `${grantUrl}/${adminId}`,
         cookies: counsel,
       });
       expect(removed.statusCode, removed.body).toBe(kind === "entity" ? 204 : 200);

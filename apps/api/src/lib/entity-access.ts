@@ -42,7 +42,6 @@ export function entityReachScope(db: Executor, user: AuthenticatedUser): SQL | u
             .where(eq(entityGrants.userId, user.id)),
         ),
       );
-    case "contributor":
     case "business_user":
       return sql`false`;
     default: {

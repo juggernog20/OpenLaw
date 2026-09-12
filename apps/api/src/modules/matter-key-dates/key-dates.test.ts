@@ -70,7 +70,7 @@ beforeAll(async () => {
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
     [OUTSIDER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
   ] as const) {
     const person = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, person.id));
@@ -114,14 +114,12 @@ async function newMatter(
     await harness.db.insert(matterTeam).values({
       matterId: matter!.id,
       userId: contributorId,
-      role: "contributor",
     });
   }
   if (options.confidential) {
     await harness.db.insert(matterTeam).values({
       matterId: matter!.id,
       userId: memberId,
-      role: "creator",
     });
   }
   return matter!;
@@ -223,13 +221,21 @@ describe("Matter Key dates", () => {
     expect(entries[2]!.payload).toMatchObject({ label: "Second label", date: "2099-06-02" });
   });
 
-  it("lets a reached Contributor read but refuses every mutation without revealing other Matters", async () => {
+  it("refuses Business User Key date work and hides confidential Matters from outside staff", async () => {
     const reached = await newMatter("Reached by Contributor", { contributor: true });
     const hidden = await newMatter("Hidden from Contributor", { confidential: true });
     const reachedDate = await add(reached.number, "2099-07-01", "Visible date");
     const hiddenDate = await add(hidden.number, "2099-07-02", "Hidden date");
 
-    expect((await list(reached.number, contributorCookies))[0]!.label).toBe("Visible date");
+    expect(
+      (
+        await harness.app.inject({
+          method: "GET",
+          url: `/api/v1/matters/${reached.number}/key-dates`,
+          cookies: contributorCookies,
+        })
+      ).statusCode,
+    ).toBe(403);
     for (const request of [
       {
         method: "POST" as const,

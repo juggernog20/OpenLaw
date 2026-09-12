@@ -1,6 +1,6 @@
 # Search, filter, and save views
 
-Find records and words inside Documents that you can reach. Administrators, Legal Team Members, and Contributors can use **Search** in the app. Business Users use their own Portal Requests instead.
+Find records and words inside Documents that you can reach. Administrators and Legal Team Members can use **Search** in the app. Business Users find their Requests, Contracts and Matters through the Portal.
 
 ## Search across your work
 

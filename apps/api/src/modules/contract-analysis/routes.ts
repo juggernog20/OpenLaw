@@ -151,7 +151,7 @@ export const contractAnalysisRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     "/contracts/:number/analysis/:runId/evidence/:slug",
     {
-      preHandler: requireRole("administrator", "legal_team_member", "contributor"),
+      preHandler: requireRole("administrator", "legal_team_member"),
       schema: {
         operationId: "getRequestAnalysisEvidence",
         tags: ["contracts"],
@@ -241,7 +241,7 @@ export const contractAnalysisRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     "/contracts/:number/analysis/:runId",
     {
-      preHandler: requireRole("administrator", "legal_team_member", "contributor"),
+      preHandler: requireRole("administrator", "legal_team_member"),
       schema: {
         operationId: "getContractAnalysisRun",
         summary: "Read an analysis run and its evidence when its source Document is accessible",

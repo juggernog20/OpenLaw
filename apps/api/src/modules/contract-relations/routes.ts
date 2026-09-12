@@ -70,7 +70,7 @@ import { httpError, problemResponse, problemTypeResponse } from "../../lib/probl
 /** The contract read floor (CTR-021): a Contributor on the team reads the
  * relations panel. The role alone opens nothing — the reach predicate
  * narrows it to the records they hold a `contract_team` row on. */
-const requireRelationsReader = requireRole("administrator", "legal_team_member", "contributor");
+const requireRelationsReader = requireRole("administrator", "legal_team_member");
 
 /** Every write — link, unlink, set-parent, unparent — is Member+. */
 const requireMember = requireRole("administrator", "legal_team_member");

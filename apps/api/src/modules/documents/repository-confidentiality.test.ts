@@ -43,7 +43,7 @@ const PEOPLE = {
     email: "repository-contributor@example.com",
     displayName: "Repository Contributor",
     password: "correct-horse-battery",
-    role: "contributor",
+    role: "business_user",
   },
   business: {
     email: "repository-business@example.com",
@@ -177,12 +177,11 @@ beforeAll(async () => {
     peopleIds.get(PEOPLE.onTeam.email)!,
     peopleIds.get(PEOPLE.contributor.email)!,
   ]) {
-    const role = userId === peopleIds.get(PEOPLE.contributor.email) ? "contributor" : "member";
     await harness.db.insert(contractTeam).values([
-      { contractId: confidentialContract!.id, userId, role },
-      { contractId: publicContract!.id, userId, role },
+      { contractId: confidentialContract!.id, userId },
+      { contractId: publicContract!.id, userId },
     ]);
-    await harness.db.insert(matterTeam).values({ matterId: confidentialMatter!.id, userId, role });
+    await harness.db.insert(matterTeam).values({ matterId: confidentialMatter!.id, userId });
   }
 }, 180_000);
 
@@ -207,8 +206,8 @@ async function options(as: string) {
 }
 
 describe("the DD-014 gate in the Document repository", () => {
-  it("answers explicitly added Administrators, on-team Members, and Contributors from their reach", async () => {
-    for (const viewer of ["administrator", PEOPLE.onTeam.email, PEOPLE.contributor.email]) {
+  it("answers explicitly added Administrators, on-team Members,  from their reach", async () => {
+    for (const viewer of ["administrator", PEOPLE.onTeam.email]) {
       const response = await list(viewer);
       expect(response.statusCode, response.body).toBe(200);
       const rows = response.json().documents as { id: string }[];
@@ -264,8 +263,8 @@ describe("the DD-014 gate in the Document repository", () => {
     expect(response.json()).toMatchObject({ status: 403 });
   });
 
-  it("scopes every option to the same live Documents for all five viewers", async () => {
-    for (const viewer of ["administrator", PEOPLE.onTeam.email, PEOPLE.contributor.email]) {
+  it("scopes every option to the same live Documents for staff viewers and refuses Business Users", async () => {
+    for (const viewer of ["administrator", PEOPLE.onTeam.email]) {
       const response = await options(viewer);
       expect(response.statusCode, response.body).toBe(200);
       expect(response.json()).toEqual({

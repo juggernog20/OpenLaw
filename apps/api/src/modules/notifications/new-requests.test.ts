@@ -125,7 +125,7 @@ beforeAll(async () => {
     [REQUESTER, "business_user"],
     [TRIAGER, "legal_team_member"],
     [SUBSCRIBER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
     [DEPARTED, "legal_team_member"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
@@ -386,9 +386,20 @@ describe("the staff notification centre (NOT-001, M20/9)", () => {
     expect(heard.find((item) => item.entityId === request.id)?.eventType).toBe("request.submitted");
   });
 
-  it("refuses the Inbox's items to a Contributor's bell", async () => {
+  it("refuses the staff bell to Business Users", async () => {
     const request = await submit(REQUESTER, "Review the Wayne services agreement");
-    const items = await staffItems(CONTRIBUTOR);
-    expect(items.some((item) => item.entityId === request.id)).toBe(false);
+    const refused = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/notifications",
+      cookies: as(CONTRIBUTOR),
+    });
+    expect(refused.statusCode).toBe(403);
+    const portal = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/portal/notifications",
+      cookies: as(CONTRIBUTOR),
+    });
+    expect(portal.statusCode).toBe(200);
+    expect(portal.body).not.toContain(request.id);
   });
 });

@@ -155,7 +155,6 @@ beforeAll(async () => {
   await harness.db.insert(contractTeam).values({
     contractId: contract!.id,
     userId: memberId,
-    role: "member",
   });
 
   const seeded = await harness.db

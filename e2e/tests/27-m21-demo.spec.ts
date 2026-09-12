@@ -132,7 +132,7 @@ const ContractRecord = z.object({
     isConfidential: z.boolean(),
     customFields: z.record(z.string(), z.unknown()),
   }),
-  team: z.array(z.object({ displayName: z.string(), role: z.string() })),
+  team: z.array(z.object({ displayName: z.string() })),
 });
 
 const ContractRows = z.object({
@@ -145,7 +145,7 @@ const DocumentRows = z.object({
       id: z.string(),
       title: z.string(),
       versions: z.array(
-        z.object({ versionNumber: z.number().int(), originalFilename: z.string() }),
+        z.object({ id: z.string(), versionNumber: z.number().int(), originalFilename: z.string() }),
       ),
     }),
   ),
@@ -313,7 +313,7 @@ async function enterPortalByMagicLink(
 ): Promise<Page> {
   const page = await context.newPage();
   await page.goto("/portal/enter");
-  await expect(page.getByText("Legal request portal")).toBeVisible();
+  await expect(page.getByText("Legal portal")).toBeVisible();
   await page.getByLabel("Email").fill(REQUESTER);
   await page.getByRole("button", { name: "Send link" }).click();
   await expect(page.getByText("Check your email")).toBeVisible();
@@ -588,7 +588,7 @@ test.describe.serial("M21 demo path", () => {
       // The Request now states what became of it, and the reference is
       // one click from the ask (INT-007).
       const outcome = page.getByRole("region", { name: "Status", exact: true });
-      await expect(outcome.getByText("Converted")).toBeVisible();
+      await expect(outcome.getByText("Converted", { exact: true })).toBeVisible();
       const contractLink = outcome.getByRole("link", { name: /^C-\d+$/ });
       await expect(contractLink).toBeVisible();
       const became = /C-(\d+)/.exec((await contractLink.textContent()) ?? "");
@@ -599,6 +599,10 @@ test.describe.serial("M21 demo path", () => {
       await expect(page.getByRole("button", { name: "Convert to contract" })).toHaveCount(0);
       await expect(page.getByRole("button", { name: "Resolve" })).toHaveCount(0);
       await expect(page.getByRole("button", { name: "Decline" })).toHaveCount(0);
+      await expect(
+        outcome.getByText(new RegExp(`Converted by ${ADMIN.displayName}`)),
+      ).toBeVisible();
+      await expect(page.getByRole("button", { name: "Comments", exact: true })).toHaveCount(0);
 
       // ---- The record it became ----
 
@@ -625,9 +629,9 @@ test.describe.serial("M21 demo path", () => {
       expect(parsed.contract.customFields[FIELD_SLUG]).toBe(FIELD_ANSWER);
       // One row, and it is provenance rather than a team: the triager
       // who converted (CTR-004). Nothing was inherited from the Request.
-      expect(parsed.team.map((member) => `${member.displayName} ${member.role}`)).toEqual([
-        `${ADMIN.displayName} creator`,
-      ]);
+      expect(parsed.team.map((member) => member.displayName).sort()).toEqual(
+        [ADMIN.displayName, await requesterDisplayName(page.request)].sort(),
+      );
 
       // The same value, on the screen a person reads it from.
       await page.goto(`/contracts/${String(contractNumber)}/fields`);
@@ -646,11 +650,14 @@ test.describe.serial("M21 demo path", () => {
       expect(promoted[0]!.versions.map((version) => version.versionNumber)).toEqual([1]);
       expect(promoted[0]!.versions[0]!.originalFilename).toBe(ATTACHMENT);
 
-      // Promotion copies rather than moves: the Request's own download
-      // still answers, with the bytes the requester uploaded.
-      const stillThere = await page.request.get(attachmentHref!);
-      expect(stillThere.status(), await stillThere.text()).toBe(200);
-      expect(await stillThere.text()).toBe(ATTACHMENT_BODY);
+      // The old paper address is retired. Its promoted Version keeps the bytes.
+      expect((await page.request.get(attachmentHref!)).status()).toBe(404);
+      const paper = promoted[0]!;
+      const preserved = await page.request.get(
+        `/api/v1/documents/${paper.id}/versions/${paper.versions[0]!.id}/download`,
+      );
+      expect(preserved.status(), await preserved.text()).toBe(200);
+      expect(await preserved.text()).toBe(ATTACHMENT_BODY);
 
       // The thread moved, tier intact, and it is on the record now
       // (CMT-001's M21/11 addendum).
@@ -673,25 +680,14 @@ test.describe.serial("M21 demo path", () => {
       // ---- And the requester sees the update in their thread ----
 
       await portal.reload();
-      // One vocabulary, on the pill and in the banner (the INT-003 M21/6
-      // addendum): `converted` is a fact about Legal's machinery, and
-      // "In progress" is what it means to the person who asked.
-      await expect(portal.getByText("In progress", { exact: true })).toBeVisible();
-      await expect(portal.getByText("Legal is working on this. Follow it here.")).toBeVisible();
-      // Their window survives the conversion: the same address, the same
-      // card, and the conversation is the record's thread filtered to
-      // Full Thread (CMT-001, DD-018).
-      await expect(portal).toHaveURL(new RegExp(`/portal/requests/${String(number)}$`));
+      await expect(portal).toHaveURL(new RegExp(`/portal/contracts/${String(contractNumber)}$`));
       const movedThread = conversation(portal);
       await expect(movedThread.getByText(REQUESTER_REPLY)).toBeVisible();
       await expect(movedThread.getByText(STAFF_REPLY)).toBeVisible();
-      // Their own paper is still theirs to open, because promotion
-      // copied it.
       await expect(
-        portal
-          .getByRole("region", { name: "What you submitted" })
-          .getByRole("link", { name: ATTACHMENT }),
+        portal.getByRole("heading", { name: "Original request", exact: true }),
       ).toBeVisible();
+      await expect(portal.getByRole("link", { name: ATTACHMENT, exact: true })).toBeVisible();
 
       // The outcome reached them where they are: the status change as
       // email, in the same words the pill uses (INT-003, NOT-002 group
@@ -739,7 +735,7 @@ test.describe.serial("M21 demo path", () => {
       const shell = StaffRequest.parse(await staff.json());
       expect(shell.request.status).toBe("converted");
       expect(shell.request.convertedContract?.number).toBe(contractNumber);
-      expect(shell.attachments.map((file) => file.filename)).toEqual([ATTACHMENT]);
+      expect(shell.attachments).toEqual([]);
 
       // The Request's own thread address now answers the record's
       // conversation — the arm answering for a record it is not (the

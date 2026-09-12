@@ -154,8 +154,8 @@ beforeAll(async () => {
     [OUTSIDER, "legal_team_member"],
     [OWNER, "legal_team_member"],
     [TEAMMATE, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
-    [STRANGER, "contributor"],
+    [CONTRIBUTOR, "business_user"],
+    [STRANGER, "business_user"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, user.id));
@@ -263,12 +263,12 @@ async function setFlag(
 }
 
 /** Puts somebody on a contract's team, requiring success. */
-async function putOnTeam(number: number, userId: string, role: string): Promise<void> {
+async function putOnTeam(number: number, userId: string): Promise<void> {
   const res = await harness.app.inject({
     method: "POST",
     url: `/api/v1/contracts/${number}/team`,
     cookies: adminCookies,
-    payload: { userId, role },
+    payload: { userId },
   });
   expect(res.statusCode, res.body).toBe(201);
 }
@@ -357,15 +357,10 @@ const addTeamMember = (
 ) =>
   harness.app.inject({ method: "POST", url: `/api/v1/contracts/${number}/team`, cookies, payload });
 
-const removeTeamMember = (
-  cookies: Record<string, string>,
-  number: number,
-  userId: string,
-  role: string,
-) =>
+const removeTeamMember = (cookies: Record<string, string>, number: number, userId: string) =>
   harness.app.inject({
     method: "DELETE",
-    url: `/api/v1/contracts/${number}/team/${userId}/${role}`,
+    url: `/api/v1/contracts/${number}/team/${userId}`,
     cookies,
   });
 
@@ -471,7 +466,7 @@ describe("the record URL of a confidential contract (M10/1)", () => {
 describe("the side doors on a confidential contract (M10/1)", () => {
   it("answers a non-team Legal Team Member on comments, activity, unread, and mention candidates exactly as for a missing record", async () => {
     const walled = await newContract("Confi doors: the walled one");
-    await putOnTeam(walled.number, idOf(MEMBER), "member");
+    await putOnTeam(walled.number, idOf(MEMBER));
     await comment(memberCookies, walled.id, "The board paper is attached.", "working_team");
     await markConfidential(walled.id);
 
@@ -508,8 +503,8 @@ describe("the side doors on a confidential contract (M10/1)", () => {
 describe("the mention typeahead on a confidential contract (CMT-007, M10/1)", () => {
   it("offers only the named team, the Owner, and Administrators — through the same predicate", async () => {
     const walled = await newContract("Confi mentions: the walled one");
-    await putOnTeam(walled.number, idOf(MEMBER), "member");
-    await putOnTeam(walled.number, idOf(CONTRIBUTOR), "contributor");
+    await putOnTeam(walled.number, idOf(MEMBER));
+    await putOnTeam(walled.number, idOf(CONTRIBUTOR));
     await setOwner(walled.number, idOf(OWNER));
 
     // Open, the typeahead offers every Member+ in the company, which is
@@ -539,15 +534,12 @@ describe("the mention typeahead on a confidential contract (CMT-007, M10/1)", ()
       "working_team",
       "full_thread",
     ]);
-    expect(offered.find((row) => row.id === idOf(CONTRIBUTOR))?.tiers).toEqual([
-      "working_team",
-      "full_thread",
-    ]);
+    expect(offered.find((row) => row.id === idOf(CONTRIBUTOR))?.tiers).toEqual(["full_thread"]);
   });
 
   it("refuses a posted mention of somebody the record cannot reach", async () => {
     const walled = await newContract("Confi mentions: the refused one");
-    await putOnTeam(walled.number, idOf(MEMBER), "member");
+    await putOnTeam(walled.number, idOf(MEMBER));
     await markConfidential(walled.id);
 
     const res = await harness.app.inject({
@@ -579,8 +571,8 @@ describe("the mention typeahead on a confidential contract (CMT-007, M10/1)", ()
 describe("who still reaches a confidential contract (M10/1)", () => {
   it("leaves the named team, the Owner, and Administrators reading everything as before", async () => {
     const walled = await newContract("Confi reach: everyone named");
-    await putOnTeam(walled.number, idOf(MEMBER), "member");
-    await putOnTeam(walled.number, idOf(CONTRIBUTOR), "contributor");
+    await putOnTeam(walled.number, idOf(MEMBER));
+    await putOnTeam(walled.number, idOf(CONTRIBUTOR));
     await setOwner(walled.number, idOf(OWNER));
     await comment(memberCookies, walled.id, "Only the named team hears this.", "working_team");
     await markConfidential(walled.id);
@@ -589,7 +581,6 @@ describe("who still reaches a confidential contract (M10/1)", () => {
       ["the Administrator", adminCookies],
       ["a team Member", memberCookies],
       ["the Owner with no team row", ownerCookies],
-      ["a Contributor on the team", contributorCookies],
     ] as const) {
       const record = await getContract(cookies, walled.number);
       expect(record.statusCode, `${who}: ${record.body}`).toBe(200);
@@ -608,36 +599,30 @@ describe("who still reaches a confidential contract (M10/1)", () => {
     }
   });
 
-  it("keeps a Contributor's M9 access on the row they hold, and changes nothing for one with no row", async () => {
-    const walled = await newContract("Confi reach: the Contributor's own");
-    await putOnTeam(walled.number, idOf(CONTRIBUTOR), "contributor");
+  it("uses a Business User's team membership for Confidential Portal access", async () => {
+    const walled = await newContract("Confidential business work");
+    await putOnTeam(walled.number, idOf(CONTRIBUTOR));
     await markConfidential(walled.id);
-
-    // With a row, the flag is not felt at all — the record reads as it
-    // did in M9.
-    const held = await getContract(contributorCookies, walled.number);
-    expect(held.statusCode, held.body).toBe(200);
-    expect(held.json().contract.title).toBe("Confi reach: the Contributor's own");
-
-    // With no row, a confidential contract is exactly as invisible as
-    // every other contract already was: the flag widens nobody's access.
-    const open = await newContract("Confi reach: not the stranger's either");
-    for (const contract of [walled, open]) {
-      const res = await getContract(strangerCookies, contract.number);
-      expect(res.statusCode, res.body).toBe(404);
-    }
-    expect(await listContracts(strangerCookies)).toEqual([]);
+    const portal = (cookies: Record<string, string>) =>
+      harness.app.inject({
+        method: "GET",
+        url: `/api/v1/portal/contracts/${walled.number}`,
+        cookies,
+      });
+    expect((await portal(contributorCookies)).statusCode).toBe(200);
+    expect((await portal(strangerCookies)).statusCode).toBe(404);
+    expect((await getContract(contributorCookies, walled.number)).statusCode).toBe(403);
   });
 
   it("revokes reach on the next request when the viewer's last team row comes off", async () => {
     const walled = await newContract("Confi reach: the row that was taken back");
-    await putOnTeam(walled.number, idOf(MEMBER), "member");
+    await putOnTeam(walled.number, idOf(MEMBER));
     await markConfidential(walled.id);
     expect((await getContract(memberCookies, walled.number)).statusCode).toBe(200);
 
     const removed = await harness.app.inject({
       method: "DELETE",
-      url: `/api/v1/contracts/${walled.number}/team/${idOf(MEMBER)}/member`,
+      url: `/api/v1/contracts/${walled.number}/team/${idOf(MEMBER)}`,
       cookies: adminCookies,
     });
     expect(removed.statusCode, removed.body).toBe(200);
@@ -715,7 +700,7 @@ describe("the flag on the contract row (M10/2)", () => {
   });
 
   it("counts and offers filter choices only from reachable records", async () => {
-    for (const cookies of [outsiderCookies, contributorCookies]) {
+    for (const cookies of [outsiderCookies]) {
       const reached: {
         id: string;
         contractTypeId: string;
@@ -825,8 +810,8 @@ describe("who may set and clear the flag (M10/2, DD-014)", () => {
     const created = await createContract(memberCookies, { title });
     expect(created.statusCode, created.body).toBe(201);
     const contract = created.json().contract as ContractRow;
-    await putOnTeam(contract.number, idOf(TEAMMATE), "member");
-    await putOnTeam(contract.number, idOf(ADMIN), "member");
+    await putOnTeam(contract.number, idOf(TEAMMATE));
+    await putOnTeam(contract.number, idOf(ADMIN));
     await setOwner(contract.number, idOf(OWNER));
     return contract;
   }
@@ -900,7 +885,7 @@ describe("who may set and clear the flag (M10/2, DD-014)", () => {
 
   it("refuses a reached Contributor plainly and omits the record from an unreached one", async () => {
     const contract = await contractWithEveryone("Confi actors: below the Member+ floor");
-    await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
+    await putOnTeam(contract.number, idOf(CONTRIBUTOR));
 
     const reached = await patchContract(contributorCookies, contract.number, {
       isConfidential: true,
@@ -912,7 +897,7 @@ describe("who may set and clear the flag (M10/2, DD-014)", () => {
       isConfidential: true,
     });
     const unknown = await patchContract(strangerCookies, 999_999, { isConfidential: true });
-    expect(unreached.statusCode, unreached.body).toBe(404);
+    expect(unreached.statusCode, unreached.body).toBe(403);
     const withoutInstance = (body: Record<string, unknown>) => ({ ...body, instance: undefined });
     expect(withoutInstance(unreached.json())).toEqual(withoutInstance(unknown.json()));
   });
@@ -987,11 +972,8 @@ async function everyMutation(
     ["the per-field patch: nothing at all", (n) => patchContract(cookies, n, {})],
     ["the flag itself", (n) => patchContract(cookies, n, { isConfidential: false })],
     ["the status change", (n) => patchContract(cookies, n, { statusId })],
-    [
-      "a team add",
-      (n) => addTeamMember(cookies, n, { userId: fixture.teamMemberId, role: "watcher" }),
-    ],
-    ["a team remove", (n) => removeTeamMember(cookies, n, fixture.teamMemberId, "member")],
+    ["a team add", (n) => addTeamMember(cookies, n, { userId: fixture.teamMemberId })],
+    ["a team remove", (n) => removeTeamMember(cookies, n, fixture.teamMemberId)],
     ["a counterparty add", (n) => addCounterparty(cookies, n, { name: "Outside Added Ltd" })],
     ["a counterparty remove", (n) => removeCounterparty(cookies, n, primaryParty!.id)],
     ["a counterparty primary change", (n) => setPrimaryCounterparty(cookies, n, secondParty!.id)],
@@ -1003,7 +985,7 @@ async function everyMutation(
 describe("every mutation against a confidential contract (M10/3)", () => {
   it("answers a non-team Legal Team Member exactly as a missing record, on every route", async () => {
     const walled = await newContract("Confi writes: the walled one");
-    await putOnTeam(walled.number, idOf(MEMBER), "member");
+    await putOnTeam(walled.number, idOf(MEMBER));
     const first = await putCounterpartyOn(walled.number, "Confi Writes Primary Ltd");
     const second = await putCounterpartyOn(walled.number, "Confi Writes Second Ltd");
     await markConfidential(walled.id);
@@ -1065,13 +1047,13 @@ describe("every mutation against a confidential contract (M10/3)", () => {
 
   it("takes the mutation away the moment the viewer's last team row comes off", async () => {
     const walled = await newContract("Confi writes: the row that was taken back");
-    await putOnTeam(walled.number, idOf(MEMBER), "member");
+    await putOnTeam(walled.number, idOf(MEMBER));
     await markConfidential(walled.id);
 
     const allowed = await patchContract(memberCookies, walled.number, { title: "Renamed inside" });
     expect(allowed.statusCode, allowed.body).toBe(200);
 
-    const removed = await removeTeamMember(adminCookies, walled.number, idOf(MEMBER), "member");
+    const removed = await removeTeamMember(adminCookies, walled.number, idOf(MEMBER));
     expect(removed.statusCode, removed.body).toBe(200);
 
     // The predicate reads the rows live, and it reads them inside the
@@ -1094,7 +1076,7 @@ describe("who still mutates a confidential contract (M10/3)", () => {
     ] as const) {
       const walled = await newContract(`Confi writes: ${who} keeps working`, creatorCookies);
       await setOwner(walled.number, idOf(OWNER));
-      if (onTeam) await putOnTeam(walled.number, idOf(MEMBER), "member");
+      if (onTeam) await putOnTeam(walled.number, idOf(MEMBER));
       const first = await putCounterpartyOn(walled.number, `Confi Keeps Primary ${who} Ltd`);
       const second = await putCounterpartyOn(walled.number, `Confi Keeps Second ${who} Ltd`);
       await markConfidential(walled.id);
@@ -1153,13 +1135,12 @@ describe("who still mutates a confidential contract (M10/3)", () => {
   describe("the roster of a confidential contract (CTR-023)", () => {
     it("refuses a plain team Member the add and the remove, and refuses them plainly", async () => {
       const walled = await newContract("Confi roster: the team Member's own reach", adminCookies);
-      await putOnTeam(walled.number, idOf(MEMBER), "member");
-      await putOnTeam(walled.number, idOf(TEAMMATE), "watcher");
+      await putOnTeam(walled.number, idOf(MEMBER));
+      await putOnTeam(walled.number, idOf(TEAMMATE));
       await markConfidential(walled.id);
 
       const added = await addTeamMember(memberCookies, walled.number, {
         userId: idOf(OUTSIDER),
-        role: "watcher",
       });
       // 403 and not 404: they reach the record, so hiding it would hide
       // nothing and would make a real boundary read as a bug (CTR-022).
@@ -1167,21 +1148,14 @@ describe("who still mutates a confidential contract (M10/3)", () => {
       expect(added.headers["content-type"]).toContain("application/problem+json");
       expect(added.json().detail).toContain("confidential contract");
 
-      const dropped = await removeTeamMember(
-        memberCookies,
-        walled.number,
-        idOf(TEAMMATE),
-        "watcher",
-      );
+      const dropped = await removeTeamMember(memberCookies, walled.number, idOf(TEAMMATE));
       expect(dropped.statusCode, dropped.body).toBe(403);
 
       // Neither refusal is a half-write: the roster is as it was.
       const roster = await getContract(adminCookies, walled.number);
-      const held = (roster.json().team as { id: string; role: string }[]).map(
-        (row) => `${row.id}:${row.role}`,
-      );
-      expect(held).toContain(`${idOf(TEAMMATE)}:watcher`);
-      expect(held).not.toContain(`${idOf(OUTSIDER)}:watcher`);
+      const held = (roster.json().team as { id: string; role: string }[]).map((row) => row.id);
+      expect(held).toContain(idOf(TEAMMATE));
+      expect(held).not.toContain(idOf(OUTSIDER));
     });
 
     it("lets the Owner and the Administrator change it, because the audience is theirs", async () => {
@@ -1195,10 +1169,9 @@ describe("who still mutates a confidential contract (M10/3)", () => {
 
         const added = await addTeamMember(cookies, walled.number, {
           userId: idOf(TEAMMATE),
-          role: "watcher",
         });
         expect(added.statusCode, `${who}: ${added.body}`).toBe(201);
-        const dropped = await removeTeamMember(cookies, walled.number, idOf(TEAMMATE), "watcher");
+        const dropped = await removeTeamMember(cookies, walled.number, idOf(TEAMMATE));
         expect(dropped.statusCode, `${who}: ${dropped.body}`).toBe(200);
       }
     });
@@ -1213,29 +1186,26 @@ describe("who still mutates a confidential contract (M10/3)", () => {
 
       const added = await addTeamMember(memberCookies, walled.number, {
         userId: idOf(TEAMMATE),
-        role: "watcher",
       });
       expect(added.statusCode, added.body).toBe(201);
     });
 
     it("leaves an open contract's roster on CTR-004's generous rule", async () => {
       const open = await newContract("Open roster: any Member still edits it", adminCookies);
-      await putOnTeam(open.number, idOf(MEMBER), "member");
+      await putOnTeam(open.number, idOf(MEMBER));
 
       // The same person, the same act, on a record with no flag on it.
       const added = await addTeamMember(memberCookies, open.number, {
         userId: idOf(TEAMMATE),
-        role: "watcher",
       });
       expect(added.statusCode, added.body).toBe(201);
-      const dropped = await removeTeamMember(memberCookies, open.number, idOf(TEAMMATE), "watcher");
+      const dropped = await removeTeamMember(memberCookies, open.number, idOf(TEAMMATE));
       expect(dropped.statusCode, dropped.body).toBe(200);
 
       // And the gate arrives with the flag, on the very same record.
       await setFlag(adminCookies, open.number, true);
       const refused = await addTeamMember(memberCookies, open.number, {
         userId: idOf(TEAMMATE),
-        role: "watcher",
       });
       expect(refused.statusCode, refused.body).toBe(403);
     });
@@ -1243,7 +1213,7 @@ describe("who still mutates a confidential contract (M10/3)", () => {
 
   it("keeps a Contributor on the team refused at the Member+ floor, flag or no flag", async () => {
     const walled = await newContract("Confi writes: the Contributor's own");
-    await putOnTeam(walled.number, idOf(CONTRIBUTOR), "contributor");
+    await putOnTeam(walled.number, idOf(CONTRIBUTOR));
     await markConfidential(walled.id);
 
     // CTR-021 keeps every mutation Member+. A Contributor reaches the
@@ -1252,7 +1222,7 @@ describe("who still mutates a confidential contract (M10/3)", () => {
     const refused = await patchContract(contributorCookies, walled.number, { title: "Renamed" });
     expect(refused.statusCode, refused.body).toBe(403);
     expect(refused.headers["content-type"]).toContain("application/problem+json");
-    expect((await getContract(contributorCookies, walled.number)).statusCode).toBe(200);
+    expect((await getContract(contributorCookies, walled.number)).statusCode).toBe(403);
   });
 });
 
@@ -1261,7 +1231,7 @@ describe("what a set and a clear leave behind (M10/2, DD-017)", () => {
     const created = await createContract(adminCookies, { title: "Confi log: set then cleared" });
     expect(created.statusCode, created.body).toBe(201);
     const contract = created.json().contract as ContractRow;
-    await putOnTeam(contract.number, idOf(MEMBER), "member");
+    await putOnTeam(contract.number, idOf(MEMBER));
 
     await setFlag(adminCookies, contract.number, true);
     await setFlag(adminCookies, contract.number, false);

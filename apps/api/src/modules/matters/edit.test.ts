@@ -53,7 +53,7 @@ beforeAll(async () => {
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
     [OUTSIDER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
   ] as const) {
     const person = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, person.id));
@@ -235,8 +235,8 @@ describe("per-field matter PATCH", () => {
     expect(contributorChoices.statusCode, contributorChoices.body).toBe(403);
   });
 
-  it("projects only business Fields and values to a Contributor on the team", async () => {
-    const projectionTypeId = await newType("Contributor projection");
+  it("projects only business Fields and values to a Business User on the team", async () => {
+    const projectionTypeId = await newType("Business User projection");
     const businessSlug = await attachText(projectionTypeId, "Business context", "business");
     const legalSlug = await attachText(projectionTypeId, "Legal analysis", "legal");
     const matter = await create({
@@ -246,36 +246,38 @@ describe("per-field matter PATCH", () => {
         [legalSlug]: "Counsel only",
       },
     });
-    await harness.db
-      .insert(matterTeam)
-      .values({ matterId: matter.id, userId: contributorId, role: "contributor" });
+    await harness.db.insert(matterTeam).values({ matterId: matter.id, userId: contributorId });
 
     const response = await harness.app.inject({
       method: "GET",
-      url: `/api/v1/matters/${matter.number}`,
+      url: `/api/v1/portal/matters/${matter.number}/work`,
       cookies: contributorCookies,
     });
     expect(response.statusCode, response.body).toBe(200);
-    expect(response.json().fields).toEqual([
+    expect(response.json().work.fields).toEqual([
       expect.objectContaining({ slug: businessSlug, fieldTag: "business" }),
     ]);
-    expect(response.json().matter.customFields).toEqual({ [businessSlug]: "Finance" });
+    expect(response.json().work.customFields).toEqual({ [businessSlug]: "Finance" });
     const list = await harness.app.inject({
       method: "GET",
-      url: "/api/v1/matters",
+      url: "/api/v1/portal/matters",
       cookies: contributorCookies,
     });
     expect(list.statusCode, list.body).toBe(200);
     expect(
-      list.json().matters.find((row: { number: number }) => row.number === matter.number)
-        ?.customFields,
-    ).toEqual({ [businessSlug]: "Finance" });
+      list.json().matters.some((row: { number: number }) => row.number === matter.number),
+    ).toBe(true);
 
     for (const payload of [
       { description: "Business supplied context" },
       { customFields: { [businessSlug]: "Operations" } },
     ]) {
-      const accepted = await patchMatter(matter.number, payload, contributorCookies);
+      const accepted = await harness.app.inject({
+        method: "PATCH",
+        url: `/api/v1/portal/matters/${matter.number}/work`,
+        cookies: contributorCookies,
+        payload,
+      });
       expect(accepted.statusCode, accepted.body).toBe(200);
     }
     for (const payload of [
@@ -283,8 +285,13 @@ describe("per-field matter PATCH", () => {
       { title: "Mixed crafted rename", description: "Must not land" },
       { customFields: { [legalSlug]: "New analysis" } },
     ]) {
-      const refused = await patchMatter(matter.number, payload, contributorCookies);
-      expect(refused.statusCode, refused.body).toBe(403);
+      const refused = await harness.app.inject({
+        method: "PATCH",
+        url: `/api/v1/portal/matters/${matter.number}/work`,
+        cookies: contributorCookies,
+        payload,
+      });
+      expect([400, 403]).toContain(refused.statusCode);
     }
 
     const updates = await harness.db
@@ -295,23 +302,22 @@ describe("per-field matter PATCH", () => {
       (entry) => entry.action === "matter.updated" && entry.actorId === contributorId,
     );
     expect(contributorUpdates).toHaveLength(2);
-    expect(contributorUpdates.every((entry) => entry.payload.actorRole === "contributor")).toBe(
+    expect(contributorUpdates.every((entry) => entry.payload.actorRole === "business_user")).toBe(
       true,
     );
 
     await harness.db
       .delete(matterTeam)
       .where(and(eq(matterTeam.matterId, matter.id), eq(matterTeam.userId, contributorId)));
-    const removed = await patchMatter(
-      matter.number,
-      { description: "No longer reachable" },
-      contributorCookies,
-    );
-    const unknown = await patchMatter(
-      999_999,
-      { description: "No record here" },
-      contributorCookies,
-    );
+    const writeRemoved = (number: number) =>
+      harness.app.inject({
+        method: "PATCH",
+        url: `/api/v1/portal/matters/${number}/work`,
+        cookies: contributorCookies,
+        payload: { description: "No longer reachable" },
+      });
+    const removed = await writeRemoved(matter.number);
+    const unknown = await writeRemoved(999_999);
     expect(removed.statusCode, removed.body).toBe(404);
     const withoutInstance = (body: Record<string, unknown>) => ({ ...body, instance: undefined });
     expect(withoutInstance(removed.json())).toEqual(withoutInstance(unknown.json()));
@@ -338,9 +344,7 @@ describe("per-field matter PATCH", () => {
       priority: "critical",
       risk: "high",
     });
-    await harness.db
-      .insert(matterTeam)
-      .values({ matterId: matter.id, userId: contributorId, role: "contributor" });
+    await harness.db.insert(matterTeam).values({ matterId: matter.id, userId: contributorId });
     const refused = await patchMatter(matter.number, { title: "No" }, contributorCookies);
     expect(refused.statusCode, refused.body).toBe(403);
   });
@@ -411,17 +415,17 @@ describe("matter team, confidentiality, and recovery", () => {
       method: "POST",
       url: `/api/v1/matters/${matter.number}/team`,
       cookies: adminCookies,
-      payload: { userId: outsiderId, role: "watcher" },
+      payload: { userId: outsiderId },
     });
     expect(add.statusCode, add.body).toBe(201);
     expect(add.json().team).toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: outsiderId, role: "watcher" })]),
+      expect.arrayContaining([expect.objectContaining({ id: outsiderId })]),
     );
     const duplicate = await harness.app.inject({
       method: "POST",
       url: `/api/v1/matters/${matter.number}/team`,
       cookies: adminCookies,
-      payload: { userId: outsiderId, role: "watcher" },
+      payload: { userId: outsiderId },
     });
     expect(duplicate.statusCode, duplicate.body).toBe(409);
     expect((await patchMatter(matter.number, { isConfidential: true })).statusCode).toBe(200);
@@ -436,7 +440,7 @@ describe("matter team, confidentiality, and recovery", () => {
     ).toBe(200);
     const remove = await harness.app.inject({
       method: "DELETE",
-      url: `/api/v1/matters/${matter.number}/team/${outsiderId}/watcher`,
+      url: `/api/v1/matters/${matter.number}/team/${outsiderId}`,
       cookies: adminCookies,
     });
     expect(remove.statusCode, remove.body).toBe(200);
@@ -451,10 +455,21 @@ describe("matter team, confidentiality, and recovery", () => {
     ).toBe(404);
     const creatorRemoval = await harness.app.inject({
       method: "DELETE",
-      url: `/api/v1/matters/${matter.number}/team/${adminId}/creator`,
+      url: `/api/v1/matters/${matter.number}/team/${adminId}`,
       cookies: adminCookies,
     });
-    expect(creatorRemoval.statusCode, creatorRemoval.body).toBe(409);
+    expect(creatorRemoval.statusCode, creatorRemoval.body).toBe(200);
+    const preserved = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/matters/${matter.number}`,
+      cookies: adminCookies,
+    });
+    expect(preserved.statusCode).toBe(404);
+    const [historical] = await harness.db
+      .select({ createdBy: matters.createdBy })
+      .from(matters)
+      .where(eq(matters.id, matter.id));
+    expect(historical?.createdBy).toBe(adminId);
   });
 
   it("archives out of the default list, restores, and narrates every mutation class", async () => {
@@ -474,12 +489,12 @@ describe("matter team, confidentiality, and recovery", () => {
       method: "POST",
       url: `/api/v1/matters/${matter.number}/team`,
       cookies: adminCookies,
-      payload: { userId: memberId, role: "member" },
+      payload: { userId: memberId },
     });
     expect(add.statusCode, add.body).toBe(201);
     const remove = await harness.app.inject({
       method: "DELETE",
-      url: `/api/v1/matters/${matter.number}/team/${memberId}/member`,
+      url: `/api/v1/matters/${matter.number}/team/${memberId}`,
       cookies: adminCookies,
     });
     expect(remove.statusCode, remove.body).toBe(200);

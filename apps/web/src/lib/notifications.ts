@@ -500,7 +500,11 @@ function recordName(intl: IntlShape, item: BellItem): string {
  * Which of the two is the arm's to say: the event knows who it was
  * written for, and the reader's role does not come into it.
  */
-function hrefFor(item: BellItem, arm: Arm | undefined): string | null {
+function hrefFor(item: BellItem, arm: Arm | undefined, surface: "staff" | "portal"): string | null {
+  if (surface === "portal" && (item.entityType === "contract" || item.entityType === "matter")) {
+    const number = wholeNumber(item.payload, `${item.entityType}Number`);
+    return number === null ? null : `/portal/${item.entityType}s/${number}`;
+  }
   if (item.eventType === "briefing.ready") return "/";
   if (item.entityType === "entity") {
     return arm?.section
@@ -557,10 +561,14 @@ function newStatus(intl: IntlShape, item: BellItem): string | null {
  * One item, narrated. Reads every payload key defensively; never throws;
  * a slug with no arm falls through to {@link UNKNOWN}.
  */
-export function narrateNotification(intl: IntlShape, item: BellItem): NarratedNotification {
+export function narrateNotification(
+  intl: IntlShape,
+  item: BellItem,
+  surface: "staff" | "portal" = "staff",
+): NarratedNotification {
   const arm = armFor(item.eventType);
   const record = recordName(intl, item);
-  const href = hrefFor(item, arm);
+  const href = hrefFor(item, arm, surface);
   if (!arm) {
     return {
       icon: Activity,

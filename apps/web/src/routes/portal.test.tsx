@@ -36,7 +36,7 @@ const MEMBER = {
 };
 
 const PORTAL_HOME = "What do you need from Legal?";
-const PORTAL_DOOR = "Legal request portal";
+const PORTAL_DOOR = "Legal portal";
 
 interface HomeType {
   id: string;
@@ -227,8 +227,11 @@ describe("view as business user", () => {
       expect(screen.getByRole("heading", { name: "Your requests" })).toBeVisible();
       expect(screen.getByRole("link", { name: /Contract review/ })).toBeVisible();
       expect(screen.getByText("Viewing as business user")).toBeVisible();
-      expect(screen.getByText(/Submissions and replies are real/)).toBeVisible();
-      expect(screen.queryByRole("link", { name: "Matters" })).not.toBeInTheDocument();
+      expect(screen.getByText(/Submissions, edits, and replies are real/)).toBeVisible();
+      expect(screen.getByRole("link", { name: "Matters" })).toHaveAttribute(
+        "href",
+        "/portal/matters",
+      );
 
       await user.click(screen.getByRole("link", { name: "Return to legal view" }));
       expect(await screen.findByRole("heading", { name: "View Business Portal" })).toBeVisible();
@@ -256,26 +259,14 @@ describe("view as business user", () => {
     expect(await screen.findByRole("heading", { name: "View Business Portal" })).toBeVisible();
   });
 
-  it("does not offer the switch to a Contributor", async () => {
-    stubApi({ signedIn: { ...MEMBER, role: "contributor" } });
-    renderAt("/settings/profile");
+  it.each(["business_user"])("shows no legal return control to a %s", async (role) => {
+    stubApi({ signedIn: { ...REQUESTER, role } });
+    renderAt("/portal");
 
-    await screen.findByLabelText("Full name");
-    expect(screen.queryByRole("link", { name: "View Business Portal" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "View as business user" })).not.toBeInTheDocument();
+    await screen.findByRole("heading", { name: PORTAL_HOME });
+    expect(screen.queryByText("Viewing as business user")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Return to legal view" })).not.toBeInTheDocument();
   });
-
-  it.each(["business_user", "contributor"])(
-    "shows no legal return control to a %s",
-    async (role) => {
-      stubApi({ signedIn: { ...REQUESTER, role } });
-      renderAt("/portal");
-
-      await screen.findByRole("heading", { name: PORTAL_HOME });
-      expect(screen.queryByText("Viewing as business user")).not.toBeInTheDocument();
-      expect(screen.queryByRole("link", { name: "Return to legal view" })).not.toBeInTheDocument();
-    },
-  );
 });
 
 describe("the portal chrome", () => {
@@ -297,8 +288,11 @@ describe("the portal chrome", () => {
     renderAt("/portal");
     await screen.findByRole("heading", { name: PORTAL_HOME });
 
-    expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Contracts" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "Primary" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Contracts" })).toHaveAttribute(
+      "href",
+      "/portal/contracts",
+    );
     expect(screen.queryByRole("link", { name: "Entities" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Settings" })).not.toBeInTheDocument();
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();

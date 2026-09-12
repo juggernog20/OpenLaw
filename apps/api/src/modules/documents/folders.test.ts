@@ -132,8 +132,8 @@ beforeAll(async () => {
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
     [OUTSIDER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
-    [STRANGER, "contributor"],
+    [CONTRIBUTOR, "business_user"],
+    [STRANGER, "business_user"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, user.id));
@@ -177,12 +177,12 @@ async function newContract(title: string): Promise<ContractRow> {
 }
 
 /** Puts somebody on a contract's team, requiring success. */
-async function putOnTeam(number: number, userId: string, role: string): Promise<void> {
+async function putOnTeam(number: number, userId: string): Promise<void> {
   const res = await harness.app.inject({
     method: "POST",
     url: `/api/v1/contracts/${number}/team`,
     cookies: adminCookies,
-    payload: { userId, role },
+    payload: { userId },
   });
   expect(res.statusCode, res.body).toBe(201);
 }
@@ -794,19 +794,17 @@ describe("narrating folder work (DD-017)", () => {
 });
 
 describe("who may reach a contract's folders", () => {
-  it("lets a Contributor on the team read the tree", async () => {
+  it("keeps folders in the staff app for a Business User on the team", async () => {
     const contract = await newContract("Orion Cloud — the Contributor's tree");
-    await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
+    await putOnTeam(contract.number, idOf(CONTRIBUTOR));
     await made(contract.number, "Executed");
 
-    expect((await folders(contributorCookies, contract.number)).map((row) => row.name)).toEqual([
-      "Executed",
-    ]);
+    expect((await listFolders(contributorCookies, contract.number)).statusCode).toBe(403);
   });
 
   it("refuses a Contributor's folder writes without hiding the record from them", async () => {
     const contract = await newContract("Orion Cloud — the Contributor's pen");
-    await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
+    await putOnTeam(contract.number, idOf(CONTRIBUTOR));
     const folder = await made(contract.number, "Executed");
 
     // 403, not 404: they can already see the record, so a
@@ -834,7 +832,7 @@ describe("who may reach a contract's folders", () => {
 
   it("answers every folder route for a walled record exactly as for one that was never created", async () => {
     const contract = await newContract("Project Nightingale — the tree");
-    await putOnTeam(contract.number, idOf(MEMBER), "member");
+    await putOnTeam(contract.number, idOf(MEMBER));
     const folder = await made(contract.number, "Board papers");
     await markConfidential(contract.number);
 

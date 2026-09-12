@@ -30,7 +30,7 @@ const CONTRIBUTOR = {
   id: "u3",
   email: "contributor@example.com",
   displayName: "Casey Contributor",
-  role: "contributor",
+  role: "business_user",
 };
 const BUSINESS = {
   id: "u9",
@@ -208,11 +208,11 @@ describe("who may open a Request (INT-006)", () => {
     ).toBeInTheDocument();
   });
 
-  it("sends a Contributor and a Business User home without asking the API", async () => {
+  it("sends Business Users to the Portal without asking the staff API", async () => {
     // Home for a Business User is the portal, which is where their own
     // window on a Request is (the INT-001 M20/2 addendum).
     for (const [person, home] of [
-      [CONTRIBUTOR, "/"],
+      [CONTRIBUTOR, "/portal"],
       [BUSINESS, "/portal"],
     ] as const) {
       const request = detailApi(detail());
@@ -253,22 +253,13 @@ describe("the envelope (I2)", () => {
     // DD-018: triage confirms the routing the Administrator bound.
     expect(within(hero).getByText("Contract · NDA")).toBeInTheDocument();
     expect(within(hero).getByText("High")).toBeInTheDocument();
+    // INT-003's estimate stays on an undecided Request.
+    expect(screen.getByLabelText("Expected back (estimate)")).toBeInTheDocument();
     // The age, which is what triage weighs. The assertion is the stamp
     // alone: what the element *reads* is relative to the wall clock at
     // run time (DES-014), so pinning the words would be a test that
     // fails on a date rather than on a defect.
     expect(hero.querySelector("time")).toHaveAttribute("datetime", "2026-08-20T09:14:00.000Z");
-  });
-
-  it("names the requester's address, so triage can answer out of band", async () => {
-    stubApi({ signedIn: MEMBER, extra: pageApi(detailApi(detail())) });
-    renderAt("/inbox/45");
-
-    const card = await screen.findByRole("region", { name: "Requester" });
-    expect(within(card).getByRole("link", { name: "tom.iwu@acme.com" })).toHaveAttribute(
-      "href",
-      "mailto:tom.iwu@acme.com",
-    );
   });
 
   it("draws the Description with the requester's own line breaks", async () => {
@@ -277,7 +268,6 @@ describe("the envelope (I2)", () => {
 
     const card = await screen.findByRole("region", { name: "Description" });
     expect(card.textContent).toContain("They sent a redline of the liability cap.");
-    expect(within(card).getByText("From the portal form")).toBeInTheDocument();
   });
 
   it("draws no Description card when the Request carries none", async () => {
@@ -314,6 +304,9 @@ describe("the envelope (I2)", () => {
       "href",
       "/contracts/12",
     );
+    // DD-023: a converted Request is an envelope, so the estimate
+    // control and the thread are not drawn.
+    expect(screen.queryByLabelText("Expected back (estimate)")).not.toBeInTheDocument();
   });
 
   it("carries a decline's recorded reason itself (INT-006)", async () => {
@@ -551,7 +544,7 @@ describe("the values, labelled by the form that collected them", () => {
 });
 
 describe("the paper (INT-002)", () => {
-  it("lists each file as the link that downloads it, through the staff mount", async () => {
+  it("offers a viewer button and a separate download for each attachment", async () => {
     stubApi({
       signedIn: MEMBER,
       extra: pageApi(
@@ -577,12 +570,50 @@ describe("the paper (INT-002)", () => {
 
     const card = await screen.findByRole("region", { name: "Attachments" });
     const links = within(card).getAllByRole("link");
-    expect(links.map((link) => link.textContent)).toEqual([
-      "orion-msa-redline-v3.docx",
-      "orion-pricing-schedule.pdf",
-    ]);
+    expect(
+      within(card)
+        .getAllByRole("button")
+        .map((button) => button.textContent),
+    ).toEqual(["orion-msa-redline-v3.docx", "orion-pricing-schedule.pdf"]);
     expect(links[0]).toHaveAttribute("href", "/api/v1/requests/45/attachments/a1");
     expect(links[0]).toHaveAttribute("download");
+  });
+
+  it("opens the attachment viewer through the request route and keeps download available on failure", async () => {
+    const previews: string[] = [];
+    const handler = pageApi(
+      detailApi(
+        detail({
+          attachments: [
+            { id: "a1", filename: "agreement.docx", createdAt: "2026-08-20T09:15:00.000Z" },
+          ],
+        }),
+      ),
+    );
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.searchParams.get("preview") === "true") {
+          previews.push(call.url.pathname);
+          return new Response(null, { status: 422 });
+        }
+        return handler(call);
+      },
+    });
+    renderAt("/inbox/45");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "agreement.docx" }));
+    const viewer = await screen.findByRole("dialog", { name: "agreement.docx" });
+    expect(
+      await within(viewer).findByText("Preview unavailable. You can download the original file."),
+    ).toBeVisible();
+    expect(previews).toEqual(["/api/v1/requests/45/attachments/a1"]);
+    expect(within(viewer).getByRole("link", { name: "Download" })).toHaveAttribute(
+      "href",
+      "/api/v1/requests/45/attachments/a1",
+    );
+    await user.click(within(viewer).getByRole("button", { name: "Close attachment preview" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("says plainly when no paper travelled with the ask", async () => {

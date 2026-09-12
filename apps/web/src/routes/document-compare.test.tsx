@@ -350,17 +350,6 @@ describe("the Document comparison screen", () => {
     expect(screen.queryByRole("button", { name: "Export track changes" })).not.toBeInTheDocument();
   });
 
-  it("keeps the text-mode export sentence from a Contributor, who has no export", async () => {
-    const api = comparisonApi(comparison({ mode: "text" }));
-    stubApi({ signedIn: { ...MEMBER, role: "contributor" as const }, extra: api.handler });
-    renderAt("/documents/doc-1/compare?from=v2&to=v4");
-    expect(
-      await screen.findByText(/built from extracted text, so formatting is not shown/i),
-    ).toBeInTheDocument();
-    expect(screen.queryByText("Export needs two Word files.")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Export track changes" })).not.toBeInTheDocument();
-  });
-
   it("exports track changes and offers the generated round in its Document panel", async () => {
     const calls: StubCall[] = [];
     const exported = version("redline-6", 6, "generated_redline");
@@ -430,12 +419,8 @@ describe("the Document comparison screen", () => {
     );
   });
 
-  it("hides export from a Contributor, pending work, and an archived Document", async () => {
+  it("hides export for pending work and an archived Document", async () => {
     const cases = [
-      {
-        user: { ...MEMBER, role: "contributor" as const },
-        value: comparison(),
-      },
       {
         user: MEMBER,
         value: comparison({ state: "pending", changeModel: null, changeCount: null }),

@@ -44,7 +44,7 @@ const PEOPLE = {
     email: "search-contributor@example.com",
     displayName: "Search Contributor",
     password: "correct-horse-battery",
-    role: "contributor",
+    role: "business_user",
   },
   business: {
     email: "search-business@example.com",
@@ -197,17 +197,14 @@ beforeAll(async () => {
     await harness.db.insert(contractTeam).values({
       contractId: confidentialContractId,
       userId,
-      role: userId === ids.get(PEOPLE.contributor.email) ? "contributor" : "member",
     });
     await harness.db.insert(contractTeam).values({
       contractId: publicContractId,
       userId,
-      role: userId === ids.get(PEOPLE.contributor.email) ? "contributor" : "member",
     });
     await harness.db.insert(matterTeam).values({
       matterId: confidentialMatterId,
       userId,
-      role: userId === ids.get(PEOPLE.contributor.email) ? "contributor" : "member",
     });
   }
 }, 180_000);

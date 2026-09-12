@@ -77,7 +77,7 @@ beforeAll(async () => {
     [MEMBER, "legal_team_member"],
     [TEAMMATE, "legal_team_member"],
     [OUTSIDER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
   ] as const) {
     const person = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, person.id));
@@ -120,13 +120,9 @@ async function newMatter(
       createdBy: memberId,
     })
     .returning({ id: matters.id, number: matters.number });
-  await harness.db
-    .insert(matterTeam)
-    .values({ matterId: matter!.id, userId: memberId, role: "creator" });
+  await harness.db.insert(matterTeam).values({ matterId: matter!.id, userId: memberId });
   if (options.contributor) {
-    await harness.db
-      .insert(matterTeam)
-      .values({ matterId: matter!.id, userId: contributorId, role: "contributor" });
+    await harness.db.insert(matterTeam).values({ matterId: matter!.id, userId: contributorId });
   }
   return matter!;
 }
@@ -175,9 +171,7 @@ describe("Matter Tasks", () => {
     expect(empty.statusCode, empty.body).toBe(200);
     expect(empty.json()).toEqual({ tasks: [], doneCount: 0, totalCount: 0 });
 
-    await harness.db
-      .insert(matterTeam)
-      .values({ matterId: matter.id, userId: teammateId, role: "member" });
+    await harness.db.insert(matterTeam).values({ matterId: matter.id, userId: teammateId });
     await add(matter.number, { title: "Second", assigneeId: teammateId, dueDate: "2030-01-02" });
     await add(matter.number, { title: "First by id tie" });
     const rows = await list(matter.number);
@@ -245,9 +239,7 @@ describe("Matter Tasks", () => {
 
   it("accepts only an active Matter Manager or active user already on the Matter team", async () => {
     const matter = await newMatter("Assignee invariant");
-    await harness.db
-      .insert(matterTeam)
-      .values({ matterId: matter.id, userId: teammateId, role: "member" });
+    await harness.db.insert(matterTeam).values({ matterId: matter.id, userId: teammateId });
     expect(
       (await addRaw(matter.number, { title: "Manager", assigneeId: memberId })).statusCode,
     ).toBe(201);
@@ -264,7 +256,7 @@ describe("Matter Tasks", () => {
 
     const removed = await harness.app.inject({
       method: "DELETE",
-      url: `/api/v1/matters/${matter.number}/team/${teammateId}/member`,
+      url: `/api/v1/matters/${matter.number}/team/${teammateId}`,
       cookies: memberCookies,
     });
     expect(removed.statusCode, removed.body).toBe(200);
@@ -277,9 +269,7 @@ describe("Matter Tasks", () => {
 
   it("raises one direct assignment notification for a new reachable assignee and excludes the actor", async () => {
     const matter = await newMatter("Direct assignment");
-    await harness.db
-      .insert(matterTeam)
-      .values({ matterId: matter.id, userId: teammateId, role: "member" });
+    await harness.db.insert(matterTeam).values({ matterId: matter.id, userId: teammateId });
     const task = await add(matter.number, { title: "Draft response", assigneeId: teammateId });
     const first = await harness.db
       .select()
@@ -304,16 +294,14 @@ describe("Matter Tasks", () => {
         .from(notifications)
         .where(and(eq(notifications.userId, teammateId), eq(notifications.entityId, matter.id))),
     ).toHaveLength(1);
-    await harness.db
-      .insert(matterTeam)
-      .values({ matterId: matter.id, userId: contributorId, role: "contributor" });
-    expect((await editRaw(task.id, { assigneeId: contributorId })).statusCode).toBe(200);
+    await harness.db.insert(matterTeam).values({ matterId: matter.id, userId: contributorId });
+    expect((await editRaw(task.id, { assigneeId: contributorId })).statusCode).toBe(400);
     expect(
       await harness.db
         .select()
         .from(notifications)
         .where(and(eq(notifications.userId, contributorId), eq(notifications.entityId, matter.id))),
-    ).toHaveLength(1);
+    ).toHaveLength(0);
     const self = await add(matter.number, { title: "Take it myself", assigneeId: memberId });
     expect(self.assigneeId).toBe(memberId);
     expect(
@@ -350,14 +338,12 @@ describe("Matter Tasks", () => {
     });
   });
 
-  it("lets a reached Contributor read but refuses every mutation, with hidden and unknown Matters alike", async () => {
+  it("refuses Business User Task reads and mutations on their team", async () => {
     const reached = await newMatter("Contributor checklist", { contributor: true });
     const hidden = await newMatter("Hidden checklist", { confidential: true });
     const visibleTask = await add(reached.number, { title: "Visible" });
     const hiddenTask = await add(hidden.number, { title: "Hidden" });
-    expect((await list(reached.number, contributorCookies)).map((row) => row.title)).toEqual([
-      "Visible",
-    ]);
+    expect((await listRaw(reached.number, contributorCookies)).statusCode).toBe(403);
     for (const response of [
       await addRaw(reached.number, { title: "No" }, contributorCookies),
       await editRaw(visibleTask.id, { title: "No" }, contributorCookies),
@@ -402,12 +388,13 @@ describe("Matter Tasks", () => {
 
 describe("explicit team expansion during assignment", () => {
   it("requires an explicit add, persists membership and assignment, and retries without duplicate activity", async () => {
+    const { id: assigneeId, cookies: assigneeCookies } = await newStaffAssignee();
     const record = await newMatter("Task team expansion");
-    const refused = await addRaw(record.number, { title: "Draft", assigneeId: contributorId });
+    const refused = await addRaw(record.number, { title: "Draft", assigneeId: assigneeId });
     expect(refused.statusCode, refused.body).toBe(400);
     const created = await addRaw(record.number, {
       title: "Draft",
-      assigneeId: contributorId,
+      assigneeId: assigneeId,
       addToTeam: true,
     });
     expect(created.statusCode, created.body).toBe(201);
@@ -416,22 +403,22 @@ describe("explicit team expansion during assignment", () => {
       method: "PATCH",
       url: `/api/v1/matter-tasks/${taskId}`,
       cookies: memberCookies,
-      payload: { assigneeId: contributorId, addToTeam: true },
+      payload: { assigneeId: assigneeId, addToTeam: true },
     });
     expect(retry.statusCode, retry.body).toBe(200);
     const members = await harness.db
       .select()
       .from(matterTeam)
-      .where(and(eq(matterTeam.matterId, record.id), eq(matterTeam.userId, contributorId)));
+      .where(and(eq(matterTeam.matterId, record.id), eq(matterTeam.userId, assigneeId)));
     expect(members).toHaveLength(1);
-    expect(members[0]?.role).toBe("contributor");
-    expect((await list(record.number))[0]?.assigneeId).toBe(contributorId);
+    expect(members[0]?.userId).toBe(assigneeId);
+    expect((await list(record.number))[0]?.assigneeId).toBe(assigneeId);
     const activity = await harness.db
       .select()
       .from(activityLog)
       .where(and(eq(activityLog.entityId, record.id), eq(activityLog.action, "matter.team_added")));
     expect(activity).toHaveLength(1);
-    expect((await listRaw(record.number, contributorCookies)).statusCode).toBe(200);
+    expect((await listRaw(record.number, assigneeCookies)).statusCode).toBe(200);
   });
 
   it("adds a new team member while reassigning an existing task", async () => {
@@ -450,22 +437,21 @@ describe("explicit team expansion during assignment", () => {
       .select()
       .from(matterTeam)
       .where(and(eq(matterTeam.matterId, record.id), eq(matterTeam.userId, outsiderId)));
-    expect(member?.role).toBe("member");
+    expect(member?.userId).toBe(outsiderId);
   });
 
   it("does not let an ordinary team member expand a confidential audience", async () => {
+    const { id: assigneeId } = await newStaffAssignee();
     const record = await newMatter("Confidential task team");
     await harness.db.update(matters).set({ isConfidential: true }).where(eq(matters.id, record.id));
-    await harness.db
-      .insert(matterTeam)
-      .values({ matterId: record.id, userId: outsiderId, role: "member" });
+    await harness.db.insert(matterTeam).values({ matterId: record.id, userId: outsiderId });
     const created = await addRaw(record.number, { title: "Draft", assigneeId: memberId });
     const taskId = created.json().tasks[0].id;
     const response = await harness.app.inject({
       method: "PATCH",
       url: `/api/v1/matter-tasks/${taskId}`,
       cookies: outsiderCookies,
-      payload: { assigneeId: contributorId, addToTeam: true },
+      payload: { assigneeId: assigneeId, addToTeam: true },
     });
     expect(response.statusCode, response.body).toBe(403);
     expect((await list(record.number))[0]?.assigneeId).toBe(memberId);
@@ -473,7 +459,7 @@ describe("explicit team expansion during assignment", () => {
       await harness.db
         .select()
         .from(matterTeam)
-        .where(and(eq(matterTeam.matterId, record.id), eq(matterTeam.userId, contributorId))),
+        .where(and(eq(matterTeam.matterId, record.id), eq(matterTeam.userId, assigneeId))),
     ).toHaveLength(0);
     const existing = await harness.app.inject({
       method: "PATCH",
@@ -486,12 +472,13 @@ describe("explicit team expansion during assignment", () => {
       method: "PATCH",
       url: `/api/v1/matter-tasks/${taskId}`,
       cookies: memberCookies,
-      payload: { assigneeId: contributorId, addToTeam: true },
+      payload: { assigneeId: assigneeId, addToTeam: true },
     });
     expect(owner.statusCode, owner.body).toBe(200);
   });
 
   it("rolls back membership if assignment notification fails", async () => {
+    const { id: assigneeId } = await newStaffAssignee();
     const record = await newMatter("Atomic team assignment");
     const spy = vi
       .spyOn(harness.app.notifier, "matterTaskAssigned")
@@ -499,7 +486,7 @@ describe("explicit team expansion during assignment", () => {
     try {
       const response = await addRaw(record.number, {
         title: "Draft",
-        assigneeId: contributorId,
+        assigneeId: assigneeId,
         addToTeam: true,
       });
       expect(response.statusCode).toBe(500);
@@ -508,7 +495,7 @@ describe("explicit team expansion during assignment", () => {
         await harness.db
           .select()
           .from(matterTeam)
-          .where(and(eq(matterTeam.matterId, record.id), eq(matterTeam.userId, contributorId))),
+          .where(and(eq(matterTeam.matterId, record.id), eq(matterTeam.userId, assigneeId))),
       ).toHaveLength(0);
       expect(
         await harness.db
@@ -553,3 +540,18 @@ it("orders Tasks by due date, moves edited dates, and leaves undated Tasks last"
     later.id,
   ]);
 });
+
+async function newStaffAssignee() {
+  const fixture = {
+    email: `assignee-${crypto.randomUUID()}@example.com`,
+    displayName: "New Legal colleague",
+    password: "correct-horse-battery",
+  };
+  const person = await provisionUser(harness.app.auth, fixture);
+  await harness.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, person.id));
+  return {
+    id: person.id,
+    displayName: fixture.displayName,
+    cookies: await signInCookies(harness.app, fixture.email, fixture.password),
+  };
+}

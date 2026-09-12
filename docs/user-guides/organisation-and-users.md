@@ -13,7 +13,7 @@ Keep your organization details current and give each person the access they need
 ## Invite a colleague
 
 1. Open **Settings → Users**, then **Invite user**.
-2. Enter **Display name** and **Email**. Choose **Legal team member**, **Contributor**, or **Administrator** under **Role**. See [roles and access](roles-and-access.md) before granting administration rights.
+2. Enter **Display name** and **Email**. Choose **Legal team member** or **Administrator** under **Role**. See [roles and access](roles-and-access.md) before granting administration rights.
 3. Select **Send invite** and check the new **Invited** row. The recipient follows the email link to set a password for built-in sign-in. With OIDC configured, an invited colleague can sign in through the identity provider using the matching email address.
 4. Have the colleague sign in and check their access. The row becomes **Active** after activation/sign-in.
 

@@ -158,7 +158,7 @@ beforeAll(async () => {
     [TEAMMATE, "legal_team_member"],
     [OWNER, "legal_team_member"],
     [OUTSIDER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, user.id));
@@ -204,12 +204,12 @@ async function newContract(title: string): Promise<ContractRow> {
 }
 
 /** Puts somebody on a contract's team, requiring success. */
-async function putOnTeam(number: number, userId: string, role: string): Promise<void> {
+async function putOnTeam(number: number, userId: string): Promise<void> {
   const res = await harness.app.inject({
     method: "POST",
     url: `/api/v1/contracts/${number}/team`,
     cookies: adminCookies,
-    payload: { userId, role },
+    payload: { userId },
   });
   expect(res.statusCode, res.body).toBe(201);
 }
@@ -482,9 +482,9 @@ async function recordWithAWalledFile(title: string): Promise<{
   open: DocumentRow;
 }> {
   const contract = await newContract(title);
-  await putOnTeam(contract.number, idOf(UPLOADER), "member");
-  await putOnTeam(contract.number, idOf(TEAMMATE), "member");
-  await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
+  await putOnTeam(contract.number, idOf(UPLOADER));
+  await putOnTeam(contract.number, idOf(TEAMMATE));
+  await putOnTeam(contract.number, idOf(CONTRIBUTOR));
   await setOwner(contract.number, idOf(OWNER));
   const open = await uploaded(uploaderCookies, contract.number, "open-schedule.txt");
   const walled = await uploaded(uploaderCookies, contract.number, "board-memo.txt");
@@ -537,7 +537,7 @@ describe("marking one document confidential (M11/6, DD-014)", () => {
 describe("who may set and clear one document's flag (M11/6, CTR-022)", () => {
   it("lets the Administrator, the uploader, and the contract's Owner each set it and clear it", async () => {
     const contract = await newContract("Doc confi actors: the three who may");
-    await putOnTeam(contract.number, idOf(UPLOADER), "member");
+    await putOnTeam(contract.number, idOf(UPLOADER));
     await setOwner(contract.number, idOf(OWNER));
     const document = await uploaded(uploaderCookies, contract.number, "actors.txt");
 
@@ -575,7 +575,7 @@ describe("who may set and clear one document's flag (M11/6, CTR-022)", () => {
     expect(theirs.find((row) => row.id === walled.id)?.isConfidential).toBe(true);
   });
 
-  it("keeps a Contributor refused at the Member+ floor, flag or no flag", async () => {
+  it("keeps Confidentiality changes in Legal for Business Users on the team", async () => {
     const { walled, contract } = await recordWithAWalledFile("Doc confi actors: below the floor");
 
     // The metadata patch is Member+ (DD-015), so a Contributor is
@@ -585,9 +585,13 @@ describe("who may set and clear one document's flag (M11/6, CTR-022)", () => {
     const refused = await patchDocument(contributorCookies, walled.id, { isConfidential: false });
     expect(refused.statusCode, refused.body).toBe(403);
     expect(refused.body).not.toContain("board-memo.txt");
-    expect((await paper(contributorCookies, contract.number)).map((row) => row.id)).toContain(
-      walled.id,
-    );
+    const portal = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/portal/contracts/${contract.number}/supporting-documents`,
+      cookies: contributorCookies,
+    });
+    expect(portal.statusCode, portal.body).toBe(200);
+    expect(portal.json().documents.map((row: { id: string }) => row.id)).toContain(walled.id);
   });
 
   it("answers a viewer outside the document's audience with the missing-document 404, body for body", async () => {
@@ -638,7 +642,6 @@ describe("who still reaches a confidential document (M11/6, DD-014)", () => {
       ["the Administrator", adminCookies],
       ["the uploader", uploaderCookies],
       ["a team Member", teammateCookies],
-      ["a Contributor on the team", contributorCookies],
       ["the Owner with no team row", ownerCookies],
     ] as const) {
       const theirs = await paper(cookies, contract.number);
@@ -689,7 +692,7 @@ describe("who still reaches a confidential document (M11/6, DD-014)", () => {
 
   it("takes the file away the moment the viewer's last team row comes off", async () => {
     const contract = await newContract("Doc confi audience: the row that was taken back");
-    await putOnTeam(contract.number, idOf(TEAMMATE), "member");
+    await putOnTeam(contract.number, idOf(TEAMMATE));
     const walled = await uploaded(adminCookies, contract.number, "revoked.txt");
     await setFlag(adminCookies, walled.id, true);
 
@@ -699,7 +702,7 @@ describe("who still reaches a confidential document (M11/6, DD-014)", () => {
 
     const removed = await harness.app.inject({
       method: "DELETE",
-      url: `/api/v1/contracts/${contract.number}/team/${idOf(TEAMMATE)}/member`,
+      url: `/api/v1/contracts/${contract.number}/team/${idOf(TEAMMATE)}`,
       cookies: adminCookies,
     });
     expect(removed.statusCode, removed.body).toBe(200);
@@ -827,7 +830,7 @@ describe("the two gates compose (M11/6, DOC-008)", () => {
     expect(withoutInstance(walledList.json())).toEqual(withoutInstance(absentList.json()));
   });
 
-  it("keeps a Contributor's grant to the team row, so the flag widens nothing", async () => {
+  it("refuses the staff document list to Business Users regardless of the flag", async () => {
     const contract = await newContract("Doc confi compose: the Contributor's own");
     const walled = await uploaded(adminCookies, contract.number, "not-theirs.txt");
     await setFlag(adminCookies, walled.id, false);
@@ -836,7 +839,7 @@ describe("the two gates compose (M11/6, DOC-008)", () => {
     // too, flag or no flag.
     const refused = await listDocuments(contributorCookies, contract.number);
     const absent = await listDocuments(contributorCookies, NEVER_CREATED_NUMBER);
-    expect(refused.statusCode, refused.body).toBe(404);
+    expect(refused.statusCode, refused.body).toBe(403);
     expect(withoutInstance(refused.json())).toEqual(withoutInstance(absent.json()));
   });
 });
@@ -844,7 +847,7 @@ describe("the two gates compose (M11/6, DOC-008)", () => {
 describe("what a set and a clear leave behind (M11/6, DD-017)", () => {
   it("writes its own action for each, in the record's feed and in the audit log", async () => {
     const contract = await newContract("Doc confi log: set then cleared");
-    await putOnTeam(contract.number, idOf(UPLOADER), "member");
+    await putOnTeam(contract.number, idOf(UPLOADER));
     const document = await uploaded(uploaderCookies, contract.number, "logged.txt");
 
     await setFlag(uploaderCookies, document.id, true);
@@ -891,7 +894,7 @@ describe("what a set and a clear leave behind (M11/6, DD-017)", () => {
 describe("the feed omits the entries that name a confidential document (M11/6, DD-017)", () => {
   it("leaves an outside viewer the record's other narrative and nothing about the walled file", async () => {
     const contract = await newContract("Doc confi feed: two documents, one walled");
-    await putOnTeam(contract.number, idOf(UPLOADER), "member");
+    await putOnTeam(contract.number, idOf(UPLOADER));
     const open = await uploaded(uploaderCookies, contract.number, "open-annex.txt");
     const walled = await uploaded(uploaderCookies, contract.number, "sealed-memo.txt");
     // A round on each, so the walled one has more than one entry to
@@ -924,7 +927,7 @@ describe("the feed omits the entries that name a confidential document (M11/6, D
 
   it("keeps them hidden after the Administrator erases the document (DOC-010)", async () => {
     const contract = await newContract("Doc confi feed: erased and still sealed");
-    await putOnTeam(contract.number, idOf(UPLOADER), "member");
+    await putOnTeam(contract.number, idOf(UPLOADER));
     const walled = await uploaded(uploaderCookies, contract.number, "erased-memo.txt");
     await setFlag(uploaderCookies, walled.id, true);
 
@@ -961,7 +964,7 @@ describe("the feed omits the entries that name a confidential document (M11/6, D
 
   it("omits a pin move whose old primary is the walled file — the entry names both documents", async () => {
     const contract = await newContract("Doc confi feed: the instrument moved off a walled file");
-    await putOnTeam(contract.number, idOf(UPLOADER), "member");
+    await putOnTeam(contract.number, idOf(UPLOADER));
     // The first upload takes the primary designation (CTR-014), so the
     // walled file is the instrument the move below leaves.
     const walled = await uploaded(uploaderCookies, contract.number, "sealed-instrument.txt");

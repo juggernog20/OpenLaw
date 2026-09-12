@@ -128,11 +128,13 @@ it("prepares actual current messages, binds quotes and provenance, and preserves
   });
   answers.title = {
     value: "Response preparation",
+    justification: "The requester asks for a response by a specified date.",
     sourceId: `request:${row.id}:description`,
     evidence: "Respond by October 1",
   };
   answers.needed_by = {
     value: "2026-10-02",
+    justification: "The later message explicitly corrects the response deadline.",
     sourceId: `message:${message!.id}`,
     evidence: "respond by October 2, 2026",
   };
@@ -159,6 +161,9 @@ it("prepares actual current messages, binds quotes and provenance, and preserves
   });
   expect(read.json().draft.state).toBe("ready");
   expect(read.json().draft.suggestions.title.value).toBe("Response preparation");
+  expect(read.json().draft.suggestions.title.justification).toBe(
+    "The requester asks for a response by a specified date.",
+  );
   expect(read.json().draft.suggestions.description).toBeUndefined();
   expect(read.json().draft.warnings).toContain("restricted_sources");
   const sent = provider.extractions.at(-1)!;
@@ -201,6 +206,9 @@ it("prepares actual current messages, binds quotes and provenance, and preserves
       cookies: cast.memberCookies,
     });
   expect((await evidence()).json().available).toBe(true);
+  expect((await evidence()).json().justification).toBe(
+    "The later message explicitly corrects the response deadline.",
+  );
   await harness.db
     .update(comments)
     .set({ body: "Removed the date", editedAt: new Date() })
@@ -1232,4 +1240,35 @@ it("rejects Contract claims from another module or Type, and late results after 
     .from(conversionDrafts)
     .where(eq(conversionDrafts.id, pending.json().draft.id));
   expect(late).toMatchObject({ state: "failed", suggestions: {} });
+});
+
+it("does not turn unchanged Request answers into AI-generated suggestions", async () => {
+  const row = await ask();
+  answers.title = {
+    value: row.summary,
+    sourceId: `request:${row.id}:summary`,
+    evidence: row.summary,
+  };
+  answers.priority = {
+    value: row.urgency,
+    sourceId: `request:${row.id}:urgency`,
+    evidence: row.urgency,
+  };
+  const made = await prepare(row.number);
+  await handleConversionDraft(
+    {
+      db: harness.db,
+      storage: harness.storage,
+      docEngine: harness.docEngine,
+      resolveAiProvider: harness.resolveAiProvider,
+    },
+    made.json().draft.id,
+  );
+  const read = await harness.app.inject({
+    url: `/api/v1/requests/${row.number}/conversion-drafts/${made.json().draft.id}`,
+    cookies: cast.memberCookies,
+  });
+  expect(read.json().draft.state).toBe("ready");
+  expect(read.json().draft.suggestions).not.toHaveProperty("title");
+  expect(read.json().draft.suggestions).not.toHaveProperty("priority");
 });

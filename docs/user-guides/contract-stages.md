@@ -25,4 +25,4 @@ Ended Contracts stay editable. Archiving is a separate action that makes the rec
 
 ## If the Status does not change
 
-Read the error near the Stage control and check the current Status after reloading. A competing change can require a fresh review. Contributors and readers of archived Contracts do not get the editing control. Restore an archived Contract or ask a permitted Legal Team Member to make the change.
+Read the error near the Stage control and check the current Status after reloading. A competing change can require a fresh review. Business Users and readers of archived Contracts do not get the editing control. Restore an archived Contract or ask a permitted Legal Team Member to make the change.

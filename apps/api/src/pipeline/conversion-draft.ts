@@ -8,9 +8,10 @@ import {
   preparationEnabled,
   withAttachmentReads,
 } from "../lib/conversion-draft.js";
-import { ATTACHMENT_LIMITS, readConversionAttachments } from "../lib/conversion-attachments.js";
+import { readConversionAttachments } from "../lib/conversion-attachments.js";
 import type { StorageAdapter } from "../lib/storage/adapter.js";
 import type { DocEngine } from "../lib/doc-engine/engine.js";
+import { extractCompleteSources } from "../lib/ai/complete-sources.js";
 import type { AiResolver } from "../lib/ai/resolver.js";
 import type { PipelineLogger } from "./logger.js";
 import type { JobQueue } from "./jobs.js";
@@ -80,13 +81,7 @@ export async function handleConversionDraft(
       throw new Error("changed");
     const attachmentReads = draft.attachmentReads.length
       ? draft.attachmentReads
-      : await readConversionAttachments(
-          deps,
-          context.attachments,
-          draft.id,
-          ATTACHMENT_LIMITS.totalCharacters -
-            context.sources.reduce((n, source) => n + source.text.length, 0),
-        );
+      : await readConversionAttachments(deps, context.attachments, draft.id);
     await deps.db
       .update(conversionDrafts)
       .set({ attachmentReads })
@@ -107,16 +102,7 @@ export async function handleConversionDraft(
     stage = "provider";
     const provider = await deps.resolveAiProvider();
     if (!provider) throw new Error("disabled");
-    let timer: NodeJS.Timeout | undefined;
-    const answers = await Promise.race([
-      provider.extract(context.sources, context.targets),
-      new Promise<never>((_, reject) => {
-        timer = setTimeout(() => {
-          stage = "timeout";
-          reject(new Error("timeout"));
-        }, 125_000);
-      }),
-    ]).finally(() => clearTimeout(timer));
+    const answers = await extractCompleteSources(provider, context.sources, context.targets);
     const suggestions: Record<string, ConversionSuggestion> = {};
     const conflicts: Record<string, ConversionSuggestion> = {};
     for (const answer of answers) {

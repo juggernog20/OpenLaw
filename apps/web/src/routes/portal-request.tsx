@@ -17,20 +17,9 @@
  * and the composer posts Full Thread and offers no other. What it draws
  * and why is in `components/portal/request-thread.tsx`.
  *
- * **A converted Request opens like any other** (INT-001, DD-018), and
- * the page keeps the Request reference and conversation. Eligible
- * Business Owners and stakeholders can separately open Your Contracts
- * (DD-021); staff Contract and Matter pages remain unavailable. The
- * banner explains that Legal is working on the Request.
- *
- * **The thread on a converted Request is the record's thread** (CMT-001,
- * #422), and nothing here had to learn that. The conversation moved onto
- * the contract at the conversion and the `request` audience arm follows
- * the back-link, so this page goes on asking for the Request's own
- * thread and goes on being answered — filtered to Full Thread, because
- * that is the one room a Requester is in. Which record the rows now hang
- * off is the API's business; what this page owes the Requester is that
- * their window never went dark.
+ * A converted Request redirects to its Contract or Matter (DD-023).
+ * An archived destination leaves a read-only stub with the original ask.
+ * Conversation and paper live on the record, with current roster access.
  *
  * **A declined Request carries its reason** (INT-006): "no" always
  * arrives with a why, so the banner is the reason rather than a line
@@ -110,6 +99,9 @@ export async function portalRequestLoader({ params }: LoaderFunctionArgs) {
   // the rule the form's loader already applies to a stale form link.
   if (res.response.status === 404) return redirect("/portal");
   if (!res.data) throw new Error("The request could not be read.");
+  if (res.data.redirectTo)
+    return redirect(`/portal/${res.data.redirectTo.module}s/${res.data.redirectTo.number}`);
+  if (res.data.recordArchived) return { user, ...res.data, thread: null };
   // The thread is keyed by the Request's own id (CMT-010), which only
   // the detail read answers — so it is asked second rather than beside
   // it. A read that fails answers `null` rather than taking the page
@@ -128,7 +120,7 @@ export async function portalRequestLoader({ params }: LoaderFunctionArgs) {
 }
 
 export function PortalRequestPage() {
-  const { user, request, fields, customFieldRefs, attachments, thread } =
+  const { user, request, fields, customFieldRefs, attachments, thread, recordArchived } =
     useLoaderData<typeof portalRequestLoader>();
   const intl = useIntl();
   const reference = requestReference(intl, request.number);
@@ -179,9 +171,18 @@ export function PortalRequestPage() {
       <HelpLink surface="portal" contextual />
       <div className="grid gap-section-gap @3xl/page:grid-cols-portal-split">
         <div className="flex min-w-0 flex-col gap-4">
-          <RequestExpectation request={request} />
-          <StatusBanner status={request.status} declinedReason={request.declinedReason} />
-          {/* I7 puts the conversation between the banner and the card,
+          {recordArchived ? (
+            <p className="text-base text-muted">
+              <FormattedMessage
+                id="portal.request.archivedRecord"
+                defaultMessage="The record created from this Request was archived. Your original request is shown below."
+              />
+            </p>
+          ) : (
+            <>
+              <RequestExpectation request={request} />
+              <StatusBanner status={request.status} declinedReason={request.declinedReason} />
+              {/* I7 puts the conversation between the banner and the card,
               which is where a requester looks first: what has been said
               since they asked matters more than what they typed when
               they did. Keyed by the Request, because the card seeds its
@@ -189,12 +190,14 @@ export function PortalRequestPage() {
               to another re-renders this route in place, and without the
               key the card would keep the previous Request's
               conversation. */}
-          <RequestThread
-            key={request.id}
-            requestId={request.id}
-            viewerId={user.id}
-            thread={thread}
-          />
+              <RequestThread
+                key={request.id}
+                requestId={request.id}
+                viewerId={user.id}
+                thread={thread}
+              />
+            </>
+          )}
         </div>
         <aside className="min-w-0 @3xl/page:self-start">
           <section

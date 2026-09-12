@@ -37,7 +37,7 @@ Application user. Single role per user (no multi-role membership in v1). better-
 | `id`                       | UUID        | PK                                                                                                                 |
 | `email`                    | text        | unique, not null                                                                                                   |
 | `display_name`             | text        | not null                                                                                                           |
-| `role`                     | text (enum) | `administrator` \| `legal_team_member` \| `contributor` \| `business_user` per **DD-013**                          |
+| `role`                     | text (enum) | `administrator` \| `legal_team_member` \| `business_user` per **DD-023**                                           |
 | `email_verified`           | boolean     | not null, default `false` per **TECH-008**; proven inbox control (set-password activation, magic-link redemption)  |
 | `image`                    | text        | nullable; better-auth core writes IdP profile pictures here — **deliberate deviation**, demanded by its core model |
 | `two_factor_enabled`       | boolean     | nullable; twoFactor-plugin column, flipped by TOTP enrolment/disable (see `two_factors`)                           |
@@ -310,6 +310,8 @@ SQL view that UNIONs `entities` and `counterparties` with a type discriminator a
 
 ### `matters`
 
+DD-023 adds nullable `business_owner_id` FK to `users.id`. Conversion sets the Requester as Business Owner and seeds their matter_team row. Owner changes are statements and do not change membership.
+
 Source: **DD-007**, **DD-014**, **MTR-001**, **MTR-002**
 
 Work container for any legal effort. Holds Documents and Contracts; references Entities as subjects.
@@ -405,7 +407,7 @@ Custom-field catalog (Jira model), shared across modules with a scope. A field i
 | `module_scope`             | text (enum) | `matter` \| `contract` \| `entity` (**ENT-001**) \| `global` per **CTR-016**; global attaches across modules. Promotion to `global` allowed; narrowing blocked while cross-module attachments exist |
 | `field_type`               | text (enum) | `text` \| `long_text` \| `number` \| `date` \| `boolean` \| `single_select` \| `multi_select` \| `user` \| `entity` (**CTR-016** adds `entity`) — **immutable**                                     |
 | `options`                  | jsonb       | nullable; option list for select types                                                                                                                                                              |
-| `field_tag`                | text (enum) | `business` \| `legal` per **DD-015**; drives Contributor projection and write permission                                                                                                            |
+| `field_tag`                | text (enum) | `business` \| `legal` per **DD-015**; drives Business User Portal projection and write permission                                                                                                   |
 | `ai_prompt`                | text        | nullable per **CTR-008/CTR-016**; extraction prompt for this catalog Field when it is attached to a Contract Type. Core target prompts do not live here                                             |
 | `archived_at`              | timestamptz | nullable; archived fields hidden everywhere, stored values retained                                                                                                                                 |
 | `created_at`, `updated_at` | timestamptz |                                                                                                                                                                                                     |
@@ -573,16 +575,15 @@ The `open` and `closed` seed rows are system-protected (no hard-delete, no archi
 
 Source: **DD-014**, **DD-015**, **MTR-003**
 
-Membership association linking users to matters with a role tag. Drives confidentiality team-membership semantics and Contributor scoping. The single Matter Manager lives on `matters.manager_id` per **MTR-003**, not in this table.
+One membership per person and Matter, with no role tag. Drives Confidential access and Business User Portal scope under DD-023. The single Matter Manager lives on `matters.manager_id` per **MTR-003**, not in this table.
 
-| Column       | Type        | Notes                                                                                                                                                |
-| ------------ | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `matter_id`  | UUID        | FK → `matters.id`, not null                                                                                                                          |
-| `user_id`    | UUID        | FK → `users.id`, not null                                                                                                                            |
-| `role`       | text (enum) | `member` \| `watcher` \| `creator` \| `contributor` per **MTR-003** (`assignee` promoted to `matters.manager_id`; `member` = supporting legal staff) |
-| `created_at` | timestamptz |                                                                                                                                                      |
+| Column       | Type        | Notes                       |
+| ------------ | ----------- | --------------------------- |
+| `matter_id`  | UUID        | FK → `matters.id`, not null |
+| `user_id`    | UUID        | FK → `users.id`, not null   |
+| `created_at` | timestamptz |                             |
 
-Compound primary key on (`matter_id`, `user_id`, `role`) — a user may be both `member` and `creator` on the same matter. Same model is reused for `contract_team` (done — **CTR-004**). No `document_team` exists — document access is always inherited from the owning record per **DOC-008**.
+Compound primary key on (`matter_id`, `user_id`). Creator is preserved in matters.created_by. Same model is reused for `contract_team` (done — **CTR-004**). No `document_team` exists — document access is always inherited from the owning record per **DOC-008**.
 
 ---
 
@@ -601,7 +602,8 @@ Columns:
 - `contract_type_id` FK → `contract_types.id`, not null per **CTR-002**
 - `status_id` FK → `contract_statuses.id`, not null per **CTR-001**; the contract's **stage** is derived from the status, never stored on the contract
 - `manager_id` FK → `users.id`, nullable (null = unassigned/triage), the existing **CTR-004** Owner responsibility, labelled **Legal Owner** on Contract Overview and the Portal after **DD-021** (#808)
-- `business_owner_id` FK → `users.id`, nullable; one Business Owner, seeded/backfilled from a converted Request's Requester. Supplies Portal Contract access independently of explicit stakeholders; changing or clearing it removes that source of access. Manual assignments require an active person. Existing conversions from archived Requesters retain their historical ownership without granting sign-in access (**DD-021**, #808)
+- `created_by` FK → `users.id`, nullable; preserves Contract Creator independently of membership under DD-023.
+- `business_owner_id` FK → `users.id`, nullable; one Business Owner, seeded/backfilled from a converted Request's Requester. Records responsibility only. Portal access requires a contract_team row; changing or clearing Business Owner does not change membership. Manual assignments require an active person. Existing conversions from archived Requesters retain their historical ownership without granting sign-in access (**DD-021**, #808)
 - `priority` — text enum `low|medium|high|critical` (levels renamed per **DES-018**), not null, default `medium` per **CTR-005**
 - `risk` — text enum `low|medium|high|critical`, nullable (null = not yet assessed) per **CTR-005**
 - `term_type` — text enum `fixed|auto_renew|evergreen`, not null per **CTR-006**, default `fixed`; renewal engine and calendar branch on this. Landed in M16/1
@@ -636,7 +638,9 @@ Term shape per **CTR-006**. The five columns landed in M16/1, migration `0046_co
 
 ---
 
-### `contract_stakeholders`
+### Retired `contract_stakeholders`
+
+Removed by DD-023. Migration 0109 converts eligible affiliations to team rows, retains the existing Confidential audience and logs excluded affiliations at Legal Only. The former schema below is historical.
 
 Source: **DD-021**, #808. Explicit people who can read a Contract's narrow Portal view, independently of its Business Owner.
 
@@ -872,14 +876,13 @@ Indexed on (`contract_id`, `date`) — the shape every deadline surface reads. C
 
 Source: **CTR-004** (mirrors `matter_team`, MTR-003/DD-015)
 
-| Column        | Type        | Notes                                                                                                          |
-| ------------- | ----------- | -------------------------------------------------------------------------------------------------------------- |
-| `contract_id` | UUID        | FK → `contracts.id`, not null                                                                                  |
-| `user_id`     | UUID        | FK → `users.id`, not null                                                                                      |
-| `role`        | text (enum) | `member` \| `watcher` \| `creator` \| `contributor` per **CTR-004** (owner promoted to `contracts.manager_id`) |
-| `created_at`  | timestamptz |                                                                                                                |
+| Column        | Type        | Notes                         |
+| ------------- | ----------- | ----------------------------- |
+| `contract_id` | UUID        | FK → `contracts.id`, not null |
+| `user_id`     | UUID        | FK → `users.id`, not null     |
+| `created_at`  | timestamptz |                               |
 
-Compound primary key on (`contract_id`, `user_id`, `role`).
+Compound primary key on (`contract_id`, `user_id`). Creator is preserved in contracts.created_by.
 
 ---
 
@@ -954,7 +957,7 @@ Logical document record. No workflow. **Every document has exactly one owning re
 
 Indexes include one owner-list index per owning record, including `documents_knowledge_item_idx` on `(knowledge_item_id, created_at, id)`, plus `documents_folder_idx` on `(folder_id, created_at, id)` — the record's paper and one folder's paper, newest first, with `id` as the keyset tie-break the listings walk (CTR-024, #391). `documents_executed_version_idx` on `(executed_version_id)` exists for the referencing side of the executed pin rather than for a read: DOC-010's hard delete of a version makes Postgres check every document for one pointing at it.
 
-Exactly-one-owner rule (**DOC-008**): the database CHECK is `num_nonnulls(matter_id, contract_id, entity_id, knowledge_item_id) = 1`. The owner set is complete. Repository destination is Member+; Contributors/Business Users reach documents only through records they're on (portal-readable knowledge items render their docs read-only per KNW-004).
+Exactly-one-owner rule (**DOC-008**): the database CHECK is `num_nonnulls(matter_id, contract_id, entity_id, knowledge_item_id) = 1`. The owner set is complete. Repository destination is Member+; Business Users reach documents only through records they're on (portal-readable knowledge items render their docs read-only per KNW-004).
 
 ---
 

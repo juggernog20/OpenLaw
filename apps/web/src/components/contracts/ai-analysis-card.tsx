@@ -32,9 +32,12 @@ export function UnverifiedMarker() {
 export function ConfirmUnverified({
   onConfirm,
   label,
+  variant = "link",
 }: Readonly<{
   onConfirm: () => Promise<string | undefined>;
   label?: ReactNode;
+  /** The field row keeps the link; a panel foot takes the bordered control. */
+  variant?: "link" | "secondary";
 }>) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
@@ -49,7 +52,13 @@ export function ConfirmUnverified({
 
   return (
     <span className="flex shrink-0 items-center gap-2">
-      <Button type="button" variant="link" size="sm" disabled={busy} onClick={() => void confirm()}>
+      <Button
+        type="button"
+        variant={variant}
+        size="sm"
+        disabled={busy}
+        onClick={() => void confirm()}
+      >
         {label ?? <FormattedMessage id="contracts.analysis.confirm" defaultMessage="Confirm" />}
       </Button>
       {error && (

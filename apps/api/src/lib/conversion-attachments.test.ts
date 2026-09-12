@@ -31,17 +31,18 @@ it("omits unsupported formats and rejects malformed files without inventing text
     SourceUnreadableError,
   );
 });
-it("bounds extracted text independently for each source", async () => {
+it("reads the end of a document beyond the former individual and total text limits", async () => {
   const large = {
     ...engine,
-    extractPdfText: async () => "a".repeat(ATTACHMENT_LIMITS.characters + 10),
+    extractPdfText: async () => "a".repeat(200_000) + "The final schedule governs notices.",
   };
   const read = await extractAttachment(large, "large.pdf", Buffer.from("%PDF-1.4"));
-  expect(read.status).toBe("truncated");
-  expect(read.text).toHaveLength(ATTACHMENT_LIMITS.characters);
+  expect(read.status).toBe("readable");
+  expect(read.text).toHaveLength(200_000 + "The final schedule governs notices.".length);
+  expect(read.text.endsWith("The final schedule governs notices.")).toBe(true);
 });
 
-it("keeps useful sources after failures and enforces the source budget", async () => {
+it("keeps useful sources after failures and reads attachments beyond the former count limit", async () => {
   const sources = Array.from({ length: 22 }, (_, i) => ({
     id: `attachment:${i}`,
     revision: `revision-${i}`,
@@ -67,11 +68,11 @@ it("keeps useful sources after failures and enforces the source budget", async (
     },
     sources,
     "draft",
-    180_000,
   );
   expect(reads[0]!.status).toBe("unreadable");
   expect(reads[1]!.status).toBe("readable");
-  expect(reads.slice(20).map((r) => r.reason)).toEqual(["source_limit", "source_limit"]);
+  expect(reads).toHaveLength(22);
+  expect(reads.slice(1).every((read) => read.status === "readable")).toBe(true);
 });
 
 it("ends a hung source read at its runtime bound and continues with readable paper", async () => {
@@ -101,7 +102,6 @@ it("ends a hung source read at its runtime bound and continues with readable pap
         versionId: null,
       })),
       "draft",
-      180_000,
     );
     await vi.advanceTimersByTimeAsync(ATTACHMENT_LIMITS.sourceRuntimeMs);
     expect((await pending).map((r) => [r.status, r.reason])).toEqual([
@@ -140,7 +140,6 @@ it("reports an oversized original without losing the next readable attachment", 
       versionId: null,
     })),
     "draft",
-    180_000,
   );
   expect(reads[0]).toMatchObject({ status: "omitted", reason: "byte_limit", text: "" });
   expect(reads[1]!.status).toBe("readable");
@@ -160,7 +159,6 @@ it("stores a Word rendition by generated key and skips restricted paper without 
       versionId: null,
     })),
     "draft",
-    ATTACHMENT_LIMITS.totalCharacters,
   );
   expect(reads[0]).toMatchObject({
     status: "readable",
@@ -207,7 +205,6 @@ it("deletes a rendition whose storage write finishes after the source deadline",
         },
       ],
       "draft",
-      ATTACHMENT_LIMITS.totalCharacters,
     );
     await vi.advanceTimersByTimeAsync(0);
     expect(put).toHaveBeenCalledOnce();
@@ -230,7 +227,7 @@ it("does not charge late bytes from a timed-out stream against following attachm
   const late = new Readable({ read() {} });
   vi.spyOn(late, Symbol.asyncIterator).mockImplementation(async function* () {
     await held;
-    yield Buffer.alloc(ATTACHMENT_LIMITS.totalBytes + 1);
+    yield Buffer.alloc(ATTACHMENT_LIMITS.bytes + 1);
     return undefined;
   });
   try {
@@ -258,7 +255,6 @@ it("does not charge late bytes from a timed-out stream against following attachm
         versionId: null,
       })),
       "draft",
-      ATTACHMENT_LIMITS.totalCharacters,
     );
     await vi.advanceTimersByTimeAsync(ATTACHMENT_LIMITS.sourceRuntimeMs);
     expect((await pending).map((read) => read.status)).toEqual(["omitted", "readable", "readable"]);

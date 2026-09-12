@@ -4,12 +4,12 @@ Review a Request, assign triage responsibility, and either convert it into work 
 
 ## Before you start
 
-Sign in as a Legal Team Member or Administrator. Business Users [follow their own Requests in the Portal](follow-request.md); Contributors cannot triage the Inbox. Use an undecided Request for assignment, conversion, or resolution.
+Sign in as a Legal Team Member or Administrator. Business Users [follow their own Requests in the Portal](follow-request.md); Business Users cannot triage the Inbox. Use an undecided Request for assignment, conversion, or resolution.
 
 ## Review and assign a Request
 
 1. Open **Inbox**. The built-in view starts with **Status: New**, ordered by urgency and then age. Check your filters if a saved view opens instead.
-2. Open the Request and read **Description**, **Form responses**, **Attachments**, and **Converts to**. Check the Requester and Urgency. Select an attachment's filename to download it.
+2. Open the Request and read **Description**, **Form responses**, **Attachments**, and **Converts to**. Check the Requester and Urgency. Select an attachment's filename to open the document viewer. PDFs and images display directly; Word and PowerPoint files are prepared for reading. Use **Download** to save the original file, including when a preview is unavailable.
 3. Select **Assign** on the list row or Request page.
 4. In **Search people**, find an active Legal Team Member or Administrator. Choose the person under **Triage assignee**, then select **Save assignment**.
 5. Check the saved assignee. Select their avatar or assignment control to reassign, or choose **Unassigned** and save to clear it. **Cancel** leaves the saved assignment unchanged.
@@ -23,7 +23,7 @@ On the Request page, find **Expected back (estimate)**. Choose a date, or select
 
 The estimate stays separate from the Requester's **Needed by** date. If Needed by is earlier than the suggestion, consider it when choosing a date; the app does not silently move the estimate earlier. Changing the request type's turnaround later does not overwrite an estimate already saved on a Request.
 
-The Requester sees the confirmed date on the Request and under **Your requests**. An Open or In progress Request whose estimate is past shows **Estimate passed**. Legal can change the estimate while a Request is undecided or converted. Resolution or decline makes the estimate read-only and removes the passed-estimate warning. If saving fails, retry the date and confirm the saved result before relying on it. Press Escape in the date control to return to the saved date.
+The Requester sees the confirmed date on the Request and under **Your requests**. An Open Request whose estimate is past shows **Estimate passed**. Legal can change the estimate while a Request is undecided. A converted Request shows only its envelope, and later deadlines belong to the resulting record's tasks. Resolution or decline makes the estimate read-only and removes the passed-estimate warning. If saving fails, retry the date and confirm the saved result before relying on it. Press Escape in the date control to return to the saved date.
 
 ## Convert to a Contract or Matter
 

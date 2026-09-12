@@ -262,7 +262,7 @@ const STEPS = [
 ] as const;
 type Step = (typeof STEPS)[number];
 
-const INVITE_ROLES = ["legal_team_member", "contributor", "administrator"] as const;
+const INVITE_ROLES = ["legal_team_member", "administrator"] as const;
 type InviteRole = (typeof INVITE_ROLES)[number];
 
 /** The GET/PATCH /org/general payload, as the client sees it. */

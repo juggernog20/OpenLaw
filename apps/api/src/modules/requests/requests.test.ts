@@ -693,26 +693,19 @@ describe("the request detail", () => {
     expect(trespass.json().detail).toBe(nobodys.json().detail);
   });
 
-  it("keeps answering a converted Request, and keeps it on the list", async () => {
-    // Conversion is M21's to write; what M20 owes is that it takes
-    // nothing away (INT-001, DD-018). Status is set directly here
-    // because no route writes it yet.
-    const created = await submit(completeBody({ summary: "Became a contract" }));
+  it("does not expose a converted Request whose destination is missing", async () => {
+    const created = await submit(completeBody({ summary: "Converted without a destination" }));
     expect(created.statusCode, created.body).toBe(201);
     const { id, number } = created.json().request;
     await harness.db.update(requests).set({ status: "converted" }).where(eq(requests.id, id));
-
-    const res = await readDetail(number);
-    expect(res.statusCode, res.body).toBe(200);
-    expect(res.json().request.status).toBe("converted");
-
+    expect((await readDetail(number)).statusCode).toBe(404);
     const list = await harness.app.inject({
       method: "GET",
       url: "/api/v1/portal/requests",
       cookies: requesterCookies,
     });
     expect(list.statusCode, list.body).toBe(200);
-    expect((list.json().requests as MyRequestRow[]).map((row) => row.number)).toContain(number);
+    expect((list.json().requests as MyRequestRow[]).map((row) => row.number)).not.toContain(number);
   });
 
   it("carries the decline reason on a declined Request (INT-006)", async () => {

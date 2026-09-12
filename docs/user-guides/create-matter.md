@@ -32,10 +32,10 @@ Later template edits do not change this Matter. Manage the copied Tasks, dates, 
 
 ## Set responsibility and maintain the record
 
-On **Overview**, edit the normal controls for the title, type, **Matter Manager**, Priority, Risk, Description, and **Custom fields**. Wait for each save result. Changing type can require a **Change matter type** dialog to fill the new type's required Fields; use **Change type** to confirm. A required value cannot be cleared. Values for Fields no longer attached to the type are retained but no longer shown there.
+On **Overview**, edit the normal controls for the title, type, **Matter Manager**, **Business Owner**, Priority, Risk, Description, and **Custom fields**. Wait for each save result. Changing type can require a **Change matter type** dialog to fill the new type's required Fields; use **Change type** to confirm. A required value cannot be cleared. Values for Fields no longer attached to the type are retained but no longer shown there.
 
-On Overview, find **Matter team** and use **Add team member**, choose the person and their role, then **Add to team**. The roster groups each person's roles. Removing one removable role leaves their other roles intact; Creator and Matter Manager are shown as responsibility labels. Changing the Manager is separate from adding or removing team roles.
+Open **Matter team** in the activity bar. Select **Add team member**, choose **Person**, then **Add**. The roster has one membership row per person, with Matter Manager, Business Owner and Creator as separate statements. Change owners through their Overview controls. Owner assignments do not grant Portal access; membership does.
 
-On a Confidential Matter, the Administrator, Matter Manager, or Creator controls the audience. Being able to read or edit other Matter details does not necessarily let you change that audience. See [roles and access](roles-and-access.md) and [Contributor work](contributor-guide.md) before adding someone.
+On a Confidential Matter, the Administrator, Matter Manager, or Creator controls the audience. Being able to read or edit other Matter details does not necessarily let you change that audience. See [roles and access](roles-and-access.md) and [Portal record work](contributor-guide.md) before adding someone.
 
 An Entity reference Field does not grant access to that Entity. Counterparties on a linked Contract remain part of that Contract; linking it does not copy its Fields, team, or Documents onto the Matter. Use [Matter relationships](matter-work.md) to connect the records. Open **History** to inspect recorded changes.

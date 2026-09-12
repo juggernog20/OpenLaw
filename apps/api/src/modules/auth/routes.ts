@@ -48,7 +48,7 @@ const UserEnvelope = z.object({ user: UserSchema });
  * users module reads this to tell a pending invite from a Business User
  * (both lack account rows; only one was invited).
  */
-export const INVITABLE_ROLES = ["administrator", "legal_team_member", "contributor"] as const;
+export const INVITABLE_ROLES = ["administrator", "legal_team_member"] as const;
 
 /**
  * A bare DNS name — dot-separated labels, no scheme, port, path, or `@`.

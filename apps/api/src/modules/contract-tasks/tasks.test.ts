@@ -101,7 +101,7 @@ beforeAll(async () => {
 
   const contributor = await provisionUser(harness.app.auth, CONTRIBUTOR);
   contributorId = contributor.id;
-  await harness.db.update(users).set({ role: "contributor" }).where(eq(users.id, contributor.id));
+  await harness.db.update(users).set({ role: "business_user" }).where(eq(users.id, contributor.id));
   contributorCookies = await signInCookies(harness.app, CONTRIBUTOR.email, CONTRIBUTOR.password);
 
   const res = await harness.app.inject({
@@ -241,14 +241,17 @@ describe("tasks on a contract (CTR-017)", () => {
   });
 
   it("delegates independently of the Owner and moves the task between personal task lists", async () => {
+    const {
+      id: assigneeId,
+      cookies: assigneeCookies,
+      displayName: assigneeName,
+    } = await newStaffAssignee();
     const contract = await newContract("Independent task assignment");
     await harness.db
       .update(contracts)
       .set({ managerId: memberId })
       .where(eq(contracts.id, contract.id));
-    await harness.db
-      .insert(contractTeam)
-      .values({ contractId: contract.id, userId: contributorId, role: "contributor" });
+    await harness.db.insert(contractTeam).values({ contractId: contract.id, userId: assigneeId });
     const id = await add(contract.number, { title: "Junior drafts", assigneeId: memberId });
     const homeIds = async (cookies: Record<string, string>) => {
       const response = await harness.app.inject({
@@ -260,22 +263,22 @@ describe("tasks on a contract (CTR-017)", () => {
       return response.json().rows.map((row: { id: string }) => row.id);
     };
     expect(await homeIds(memberCookies)).toContain(id);
-    expect(await homeIds(contributorCookies)).not.toContain(id);
-    await edit(id, { assigneeId: contributorId });
+    expect(await homeIds(assigneeCookies)).not.toContain(id);
+    await edit(id, { assigneeId: assigneeId });
     const [stored] = await harness.db.select().from(contractTasks).where(eq(contractTasks.id, id));
     const [owner] = await harness.db
       .select({ managerId: contracts.managerId })
       .from(contracts)
       .where(eq(contracts.id, contract.id));
-    expect(stored?.assigneeId).toBe(contributorId);
+    expect(stored?.assigneeId).toBe(assigneeId);
     expect(owner?.managerId).toBe(memberId);
     expect((await list(contract.number))[0]).toMatchObject({
-      assigneeId: contributorId,
-      assigneeName: CONTRIBUTOR.displayName,
+      assigneeId: assigneeId,
+      assigneeName: assigneeName,
       assigneeImage: null,
     });
     expect(await homeIds(memberCookies)).not.toContain(id);
-    expect(await homeIds(contributorCookies)).toContain(id);
+    expect(await homeIds(assigneeCookies)).toContain(id);
   });
 
   it("adds a task with assignee and due date", async () => {
@@ -432,20 +435,18 @@ describe("task due dates never join the deadline union (CTR-017)", () => {
 });
 
 describe("who may read and write tasks (CTR-021, DD-015)", () => {
-  it("lets a Contributor on the team read the checklist and write nothing on it", async () => {
+  it("refuses Business User Task reads and mutations on their team", async () => {
     const contract = await newContract("Tasks contributor");
     const joined = await harness.app.inject({
       method: "POST",
       url: `/api/v1/contracts/${contract.number}/team`,
       cookies: memberCookies,
-      payload: { userId: contributorId, role: "contributor" },
+      payload: { userId: contributorId },
     });
     expect(joined.statusCode, joined.body).toBe(201);
     const id = await add(contract.number, { title: "Draft the brief" });
 
-    expect((await list(contract.number, contributorCookies)).map((row) => row.title)).toEqual([
-      "Draft the brief",
-    ]);
+    expect((await listRaw(contract.number, contributorCookies)).statusCode).toBe(403);
     expect((await addRaw(contract.number, { title: "Mine" }, contributorCookies)).statusCode).toBe(
       403,
     );
@@ -512,12 +513,13 @@ describe("tasks on a confidential contract (DD-014)", () => {
 
 describe("explicit team expansion during assignment", () => {
   it("requires an explicit add, persists membership and assignment, and retries without duplicate activity", async () => {
+    const { id: assigneeId, cookies: assigneeCookies } = await newStaffAssignee();
     const record = await newContract("Task team expansion");
-    const refused = await addRaw(record.number, { title: "Draft", assigneeId: contributorId });
+    const refused = await addRaw(record.number, { title: "Draft", assigneeId: assigneeId });
     expect(refused.statusCode, refused.body).toBe(400);
     const created = await addRaw(record.number, {
       title: "Draft",
-      assigneeId: contributorId,
+      assigneeId: assigneeId,
       addToTeam: true,
     });
     expect(created.statusCode, created.body).toBe(201);
@@ -526,16 +528,16 @@ describe("explicit team expansion during assignment", () => {
       method: "PATCH",
       url: `/api/v1/tasks/${taskId}`,
       cookies: memberCookies,
-      payload: { assigneeId: contributorId, addToTeam: true },
+      payload: { assigneeId: assigneeId, addToTeam: true },
     });
     expect(retry.statusCode, retry.body).toBe(200);
     const members = await harness.db
       .select()
       .from(contractTeam)
-      .where(and(eq(contractTeam.contractId, record.id), eq(contractTeam.userId, contributorId)));
+      .where(and(eq(contractTeam.contractId, record.id), eq(contractTeam.userId, assigneeId)));
     expect(members).toHaveLength(1);
-    expect(members[0]?.role).toBe("contributor");
-    expect((await list(record.number))[0]?.assigneeId).toBe(contributorId);
+    expect(members[0]?.userId).toBe(assigneeId);
+    expect((await list(record.number))[0]?.assigneeId).toBe(assigneeId);
     const activity = await harness.db
       .select()
       .from(activityLog)
@@ -543,7 +545,7 @@ describe("explicit team expansion during assignment", () => {
         and(eq(activityLog.entityId, record.id), eq(activityLog.action, "contract.team_added")),
       );
     expect(activity).toHaveLength(1);
-    expect((await listRaw(record.number, contributorCookies)).statusCode).toBe(200);
+    expect((await listRaw(record.number, assigneeCookies)).statusCode).toBe(200);
   });
 
   it("adds a new team member while reassigning an existing task", async () => {
@@ -562,25 +564,24 @@ describe("explicit team expansion during assignment", () => {
       .select()
       .from(contractTeam)
       .where(and(eq(contractTeam.contractId, record.id), eq(contractTeam.userId, outsiderId)));
-    expect(member?.role).toBe("member");
+    expect(member?.userId).toBe(outsiderId);
   });
 
   it("does not let an ordinary team member expand a confidential audience", async () => {
+    const { id: assigneeId } = await newStaffAssignee();
     const record = await newContract("Confidential task team");
     await harness.db
       .update(contracts)
       .set({ isConfidential: true })
       .where(eq(contracts.id, record.id));
-    await harness.db
-      .insert(contractTeam)
-      .values({ contractId: record.id, userId: outsiderId, role: "member" });
+    await harness.db.insert(contractTeam).values({ contractId: record.id, userId: outsiderId });
     const created = await addRaw(record.number, { title: "Draft", assigneeId: memberId });
     const taskId = created.json().tasks[0].id;
     const response = await harness.app.inject({
       method: "PATCH",
       url: `/api/v1/tasks/${taskId}`,
       cookies: outsiderCookies,
-      payload: { assigneeId: contributorId, addToTeam: true },
+      payload: { assigneeId: assigneeId, addToTeam: true },
     });
     expect(response.statusCode, response.body).toBe(403);
     expect((await list(record.number))[0]?.assigneeId).toBe(memberId);
@@ -588,7 +589,7 @@ describe("explicit team expansion during assignment", () => {
       await harness.db
         .select()
         .from(contractTeam)
-        .where(and(eq(contractTeam.contractId, record.id), eq(contractTeam.userId, contributorId))),
+        .where(and(eq(contractTeam.contractId, record.id), eq(contractTeam.userId, assigneeId))),
     ).toHaveLength(0);
     const existing = await harness.app.inject({
       method: "PATCH",
@@ -601,12 +602,13 @@ describe("explicit team expansion during assignment", () => {
       method: "PATCH",
       url: `/api/v1/tasks/${taskId}`,
       cookies: memberCookies,
-      payload: { assigneeId: contributorId, addToTeam: true },
+      payload: { assigneeId: assigneeId, addToTeam: true },
     });
     expect(owner.statusCode, owner.body).toBe(200);
   });
 
   it("rolls back membership if assignment notification fails", async () => {
+    const { id: assigneeId } = await newStaffAssignee();
     const record = await newContract("Atomic team assignment");
     const spy = vi
       .spyOn(harness.app.notifier, "taskAssigned")
@@ -614,7 +616,7 @@ describe("explicit team expansion during assignment", () => {
     try {
       const response = await addRaw(record.number, {
         title: "Draft",
-        assigneeId: contributorId,
+        assigneeId: assigneeId,
         addToTeam: true,
       });
       expect(response.statusCode).toBe(500);
@@ -623,9 +625,7 @@ describe("explicit team expansion during assignment", () => {
         await harness.db
           .select()
           .from(contractTeam)
-          .where(
-            and(eq(contractTeam.contractId, record.id), eq(contractTeam.userId, contributorId)),
-          ),
+          .where(and(eq(contractTeam.contractId, record.id), eq(contractTeam.userId, assigneeId))),
       ).toHaveLength(0);
       expect(
         await harness.db
@@ -640,3 +640,18 @@ describe("explicit team expansion during assignment", () => {
     }
   });
 });
+
+async function newStaffAssignee() {
+  const fixture = {
+    email: `assignee-${crypto.randomUUID()}@example.com`,
+    displayName: "New Legal colleague",
+    password: "correct-horse-battery",
+  };
+  const person = await provisionUser(harness.app.auth, fixture);
+  await harness.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, person.id));
+  return {
+    id: person.id,
+    displayName: fixture.displayName,
+    cookies: await signInCookies(harness.app, fixture.email, fixture.password),
+  };
+}

@@ -10,6 +10,13 @@ import {
   alias,
   and,
   contracts,
+  contractTypes,
+  count,
+  ilike,
+  gte,
+  lte,
+  sql,
+  type SQL,
   contractCounterparties,
   counterparties,
   contractStatuses,
@@ -23,10 +30,18 @@ import {
   documentVersionRenditions,
   eq,
   isNull,
-  lt,
   or,
   users,
 } from "@openlaw/db";
+import { PORTAL_CONTRACT_SORT_KEYS } from "@openlaw/shared";
+import {
+  PortalListQuery,
+  ListFilterOptions,
+  choices,
+  searchPattern,
+  afterCursor,
+  listOrder,
+} from "./list-query.js";
 import { requireAuth, type AuthenticatedUser } from "../../auth/guards.js";
 import { portalContractScope } from "../../lib/portal-contract-access.js";
 import { contractNamedAudienceScope, NO_CONTRACT } from "../../lib/contract-access.js";
@@ -73,6 +88,7 @@ const ContractSchema = z.object({
   number: z.number().int(),
   title: z.string(),
   stage: z.enum(CONTRACT_STAGES),
+  type: z.string(),
   counterparty: z.string().nullable(),
   legalOwner: Person.nullable(),
   businessOwner: Person.nullable(),
@@ -107,15 +123,17 @@ const Rendition = z.object({
 });
 const PAGE_SIZE = 25;
 const ACCESS_SUMMARY =
-  "DD-021: Administrator, Legal Team Member, Contributor or Business User must be the current Business Owner or an explicit stakeholder. Archived records are excluded; Confidential records require named team membership or Legal Owner. Document reads accept only the current Version of the primary Document. ";
+  "DD-023: the Portal requires current team membership. Archived records are excluded. Primary Document reads accept only its current Version. ";
 const NO_DOCUMENT = "No primary Document Version exists at this address.";
 
 export const portalContractRoutes: FastifyPluginAsyncZod = async (app) => {
   const businessOwner = alias(users, "portal_business_owner");
-  const select = () =>
+  const select = (sortExpr: SQL = sql`${contracts.number}`) =>
     app.db
       .select({
         row: contracts,
+        type: contractTypes.displayName,
+        sortValue: sortExpr.as("portal_contract_sort_value"),
         stage: contractStatuses.stage,
         counterparty: counterparties.name,
         legalOwner: { id: users.id, displayName: users.displayName, image: users.image },
@@ -126,6 +144,7 @@ export const portalContractRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       })
       .from(contracts)
+      .innerJoin(contractTypes, eq(contracts.contractTypeId, contractTypes.id))
       .innerJoin(contractStatuses, eq(contracts.statusId, contractStatuses.id))
       .leftJoin(users, eq(contracts.managerId, users.id))
       .leftJoin(businessOwner, eq(contracts.businessOwnerId, businessOwner.id))
@@ -138,10 +157,11 @@ export const portalContractRoutes: FastifyPluginAsyncZod = async (app) => {
       )
       .leftJoin(counterparties, eq(contractCounterparties.counterpartyId, counterparties.id));
   type Selected = Awaited<ReturnType<typeof select>>[number];
-  function project({ row, stage, counterparty, legalOwner, businessOwner }: Selected) {
+  function project({ row, type, stage, counterparty, legalOwner, businessOwner }: Selected) {
     return {
       number: row.number,
       title: row.title,
+      type,
       stage,
       counterparty,
       legalOwner,
@@ -217,10 +237,22 @@ export const portalContractRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "listPortalContracts",
         summary: ACCESS_SUMMARY + "List eligible Contracts.",
         tags: ["portal"],
-        querystring: z.object({ cursor: z.coerce.number().int().positive().optional() }),
+        querystring: PortalListQuery.extend({
+          stage: z.enum(CONTRACT_STAGES).optional(),
+          expiryFrom: z.iso.date().optional(),
+          expiryTo: z.iso.date().optional(),
+          sort: z.enum(PORTAL_CONTRACT_SORT_KEYS).optional(),
+        }).refine(
+          (query) => !query.expiryFrom || !query.expiryTo || query.expiryFrom <= query.expiryTo,
+          {
+            message: "The expiry range must end on or after its start.",
+          },
+        ),
         response: {
           200: z.object({
             contracts: z.array(ContractSchema),
+            total: z.number().int().nonnegative(),
+            filterOptions: ListFilterOptions,
             nextCursor: z.number().int().positive().nullable(),
           }),
           default: problemResponse,
@@ -229,19 +261,79 @@ export const portalContractRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request, reply) => {
       privateRead(reply);
-      const rows = await select()
-        .where(
-          and(
-            portalContractScope(app.db, request.user),
-            request.query.cursor ? lt(contracts.number, request.query.cursor) : undefined,
-          ),
-        )
-        .orderBy(desc(contracts.number))
+      const query = request.query;
+      const scope = portalContractScope(app.db, request.user);
+      const pattern = query.q ? searchPattern(query.q) : undefined;
+      const reference = query.q?.replace(/^C-?/i, "");
+      const match = and(
+        scope,
+        pattern
+          ? or(
+              ilike(contracts.title, pattern),
+              ilike(counterparties.name, pattern),
+              /^\d+$/.test(reference ?? "")
+                ? sql`${contracts.number}::text = ${reference}`
+                : undefined,
+            )
+          : undefined,
+        query.stage ? eq(contractStatuses.stage, query.stage) : undefined,
+        query.typeId ? eq(contracts.contractTypeId, query.typeId) : undefined,
+        query.ownerId ? eq(contracts.managerId, query.ownerId) : undefined,
+        query.expiryFrom ? gte(contracts.expiryDate, query.expiryFrom) : undefined,
+        query.expiryTo ? lte(contracts.expiryDate, query.expiryTo) : undefined,
+      );
+      const sorts = {
+        number: sql`${contracts.number}`,
+        title: sql`lower(${contracts.title})`,
+        counterparty: sql`lower(${counterparties.name})`,
+        type: sql`lower(${contractTypes.displayName})`,
+        stage: sql`array_position(array[${sql.join(
+          CONTRACT_STAGES.map((stage) => sql`${stage}`),
+          sql`, `,
+        )}]::text[], ${contractStatuses.stage})`,
+        owner: sql`lower(${users.displayName})`,
+        effectiveDate: sql`${contracts.effectiveDate}`,
+        expiryDate: sql`${contracts.expiryDate}`,
+      };
+      const expr = sorts[query.sort ?? "number"];
+      const dir = query.sort ? (query.dir ?? "asc") : "desc";
+      const matching = select(expr).where(match).as("portal_contract_matches");
+      const [[total], options] = await Promise.all([
+        app.db.select({ value: count() }).from(matching),
+        app.db
+          .selectDistinct({
+            typeId: contractTypes.id,
+            typeName: contractTypes.displayName,
+            ownerId: users.id,
+            ownerName: users.displayName,
+          })
+          .from(contracts)
+          .innerJoin(contractTypes, eq(contracts.contractTypeId, contractTypes.id))
+          .leftJoin(users, eq(contracts.managerId, users.id))
+          .where(scope),
+      ]);
+      const filterOptions = {
+        types: choices(options.map((row) => ({ id: row.typeId, displayName: row.typeName }))),
+        owners: choices(options.map((row) => ({ id: row.ownerId, displayName: row.ownerName }))),
+      };
+      let boundary: SQL | undefined;
+      if (query.cursor) {
+        const [cursor] = await select(expr)
+          .where(and(match, eq(contracts.number, query.cursor)))
+          .limit(1);
+        if (!cursor) return { contracts: [], nextCursor: null, total: total!.value, filterOptions };
+        boundary = afterCursor(expr, sql`${contracts.number}`, query.cursor, cursor.sortValue, dir);
+      }
+      const rows = await select(expr)
+        .where(and(match, boundary))
+        .orderBy(...listOrder(expr, sql`${contracts.number}`, dir))
         .limit(PAGE_SIZE + 1);
       const page = rows.slice(0, PAGE_SIZE);
       return {
         contracts: page.map(project),
         nextCursor: rows.length > PAGE_SIZE ? page.at(-1)!.row.number : null,
+        total: total!.value,
+        filterOptions,
       };
     },
   );

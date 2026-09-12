@@ -42,7 +42,7 @@ export const homeRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     "/home/dates",
     {
-      preHandler: requireRole("administrator", "legal_team_member", "contributor"),
+      preHandler: requireRole("administrator", "legal_team_member"),
       schema: {
         operationId: "listPersonalDates",
         summary:
@@ -68,7 +68,7 @@ export const homeRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     "/home/tasks",
     {
-      preHandler: requireRole("administrator", "legal_team_member", "contributor"),
+      preHandler: requireRole("administrator", "legal_team_member"),
       schema: {
         operationId: "listAssignedTasks",
         summary:
@@ -92,7 +92,7 @@ export const homeRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     "/home",
     {
-      preHandler: requireRole("administrator", "legal_team_member", "contributor"),
+      preHandler: requireRole("administrator", "legal_team_member"),
       schema: {
         operationId: "getHome",
         summary:

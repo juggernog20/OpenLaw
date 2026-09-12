@@ -129,11 +129,11 @@ it("projects only the triage owner's name and the confirmed estimate on both req
     payload: { assigneeId: null },
   });
   expect((await detail(request.number, true)).owner).toBeNull();
-  for (const status of ["converted", "resolved", "declined"] as const) {
+  for (const status of ["resolved", "declined"] as const) {
     await harness.db.update(requests).set({ status }).where(eq(requests.id, request.id));
     expect(await detail(request.number, true)).toMatchObject({
       expectedBy: "2000-01-01",
-      estimatePassed: status === "converted",
+      estimatePassed: false,
     });
   }
 });
@@ -239,3 +239,41 @@ it("audits a changed estimate once, preserves it through conversion, and refuses
     expect((await detail(request.number)).expectedBy).toBe("2026-10-16");
   }
 });
+
+it.each(["contract", "matter"] as const)(
+  "moves a converted %s out of Your Requests and redirects its address",
+  async (module) => {
+    const request = await submit();
+    let matterTypeId: string | undefined;
+    if (module === "matter") {
+      const type = await harness.app.inject({
+        method: "POST",
+        url: "/api/v1/matter-types",
+        cookies: cast.adminCookies,
+        payload: { displayName: "Portal matter" },
+      });
+      expect(type.statusCode, type.body).toBe(201);
+      matterTypeId = type.json().matterType.id;
+    }
+    const converted = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/requests/${request.number}/convert`,
+      cookies: cast.memberCookies,
+      payload: { title: "Plan the work", ...(matterTypeId ? { matterTypeId } : {}) },
+    });
+    expect(converted.statusCode, converted.body).toBe(200);
+    const response = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/portal/requests/${request.number}`,
+      cookies: cast.requesterCookies,
+    });
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.json().redirectTo.module).toBe(module);
+    const list = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/portal/requests",
+      cookies: cast.requesterCookies,
+    });
+    expect(list.json().requests.some((row: { id: string }) => row.id === request.id)).toBe(false);
+  },
+);

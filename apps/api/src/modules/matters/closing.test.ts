@@ -50,7 +50,7 @@ beforeAll(async () => {
   expect(setup.statusCode, setup.body).toBe(201);
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
+    [CONTRIBUTOR, "business_user"],
   ] as const) {
     const person = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, person.id));
@@ -165,9 +165,7 @@ describe("Matter Closing", () => {
         .every((child: object) => Object.keys(child).join(",") === "restricted"),
     ).toBe(true);
 
-    await harness.db
-      .insert(matterTeam)
-      .values({ matterId: parent.id, userId: contributorId, role: "contributor" });
+    await harness.db.insert(matterTeam).values({ matterId: parent.id, userId: contributorId });
     const refused = await harness.app.inject({
       method: "GET",
       url: `/api/v1/matters/${parent.number}/lifecycle`,

@@ -34,12 +34,6 @@ const MEMBER = {
   displayName: "Nadia Counsel",
   role: "legal_team_member",
 };
-const CONTRIBUTOR = {
-  id: "u3",
-  email: "contributor@example.com",
-  displayName: "Casey Contributor",
-  role: "contributor",
-};
 
 const PEOPLE = [
   {
@@ -362,19 +356,5 @@ describe("the term on the contract record", () => {
     expect(api.patches).toEqual([]);
     expect(await screen.findByText("Enter this as a number.")).toBeInTheDocument();
     expect(notice).toHaveValue(1.5);
-  });
-
-  it("lets a Contributor edit only the business effective-date input", async () => {
-    stubApi({
-      signedIn: CONTRIBUTOR,
-      extra: recordApi(contractRow({ termType: "auto_renew", renewalPeriodMonths: 12 })).handler,
-    });
-    renderAt("/contracts/42");
-
-    expect(await screen.findByLabelText("Term type")).toBeDisabled();
-    expect(screen.getByLabelText("Effective date")).toBeEnabled();
-    expect(screen.getByLabelText("Expiry date")).toBeDisabled();
-    expect(screen.getByLabelText("Renewal period (months)")).toBeDisabled();
-    expect(screen.getByLabelText("Notice period (days)")).toBeDisabled();
   });
 });

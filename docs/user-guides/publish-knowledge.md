@@ -13,7 +13,7 @@ Sign in as a Legal Team Member or Administrator and open the [Knowledge Item](cr
 | Published, Everyone, not archived | Legal Team Members and Administrators                                                | Signed-in Portal readers can read guidance and download current Document Versions |
 | Archived                          | Legal Team Members and Administrators can open a saved staff link to read or restore | Unavailable                                                                       |
 
-**Everyone** still requires a Portal session; it does not create an anonymous public page. Contributors have no staff Knowledge authoring access. Organization Knowledge and OpenLaw product **Help** have separate content and search.
+**Everyone** still requires a Portal session; it does not create an anonymous public page. Business Users have no staff Knowledge authoring access. Organization Knowledge and OpenLaw product **Help** have separate content and search.
 
 ## Publish and check the Portal
 

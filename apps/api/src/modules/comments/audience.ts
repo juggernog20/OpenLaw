@@ -198,13 +198,12 @@ interface CommentEntityArm {
  */
 const contractArm: CommentEntityArm = {
   /**
-   * The contract read floor (CTR-021), which is the comment floor too: a
-   * Contributor takes part in the conversation on a contract they are
-   * on. The role alone opens no thread — `resolve` narrows it to the
-   * records they hold a `contract_team` row on. Business Users are
-   * refused on every contract surface.
+   * The contract reach floor (DD-023), which is the comment floor too: a
+   * Business User takes part in the conversation on a contract they are
+   * on, at Full Thread. The role alone opens no thread; `resolve` narrows
+   * it to the records they hold a `contract_team` row on.
    */
-  readerRoles: ["administrator", "legal_team_member", "contributor"],
+  readerRoles: ["administrator", "legal_team_member", "business_user"],
 
   async resolve(db, user, entityId) {
     const audience = await contractAudience(db, user, entityId);
@@ -272,7 +271,7 @@ const contractArm: CommentEntityArm = {
 
 /** The matter arm uses M22's reach predicate in both directions. */
 const matterArm: CommentEntityArm = {
-  readerRoles: ["administrator", "legal_team_member", "contributor"],
+  readerRoles: ["administrator", "legal_team_member", "business_user"],
 
   async resolve(db, user, entityId) {
     const audience = await matterAudience(db, user, entityId);
@@ -424,19 +423,7 @@ const requestArm: CommentEntityArm = {
       // and a thread that outran them would be the leak DD-014 exists to
       // close. The `entityId` it answers with is re-read from
       // the record table, which is that arm's promise and this one's too.
-      const onRecord = staff ? await target.arm.resolve(db, user, target.id) : null;
-      if (onRecord) return onRecord;
-      // And being the Requester never takes a room away (the M20/7
-      // rule): a Member+ who raised the Request and cannot reach the
-      // record it became still hears the room Full Thread names. The id
-      // is the Request's own column rather than anything a client sent.
-      return requester
-        ? {
-            entityType: target.entityType,
-            entityId: target.id,
-            tiers: REQUESTER_TIERS,
-          }
-        : null;
+      return await target.arm.resolve(db, user, target.id);
     }
 
     // Staff first, so a Member+ who raised the Request themselves is
