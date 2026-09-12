@@ -336,7 +336,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Owning department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} turnaroundDays {Turnaround (calendar days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Owning department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -6243,7 +6243,7 @@
     "defaultMessage": "The theme could not be saved. Please choose it again to retry."
   },
   "portal.turnaround": {
-    "defaultMessage": "Estimated turnaround: {days, plural, one {# calendar day} other {# calendar days}}"
+    "defaultMessage": "Estimated turnaround: {days, plural, one {# business day} other {# business days}}"
   },
   "record.team.add": {
     "defaultMessage": "Add team member"
@@ -8637,7 +8637,7 @@
     "defaultMessage": "Urgency"
   },
   "settings.requestTypeEditor.basicUrgencyType": {
-    "defaultMessage": "Low · medium · high · critical"
+    "defaultMessage": "Single select"
   },
   "settings.requestTypeEditor.basicsCaption": {
     "defaultMessage": "Basics are always on the form"
@@ -8666,9 +8666,6 @@
   "settings.requestTypeEditor.globalCaption": {
     "defaultMessage": "{type} · global"
   },
-  "settings.requestTypeEditor.help": {
-    "defaultMessage": "Drag to reorder. Which fields you can attach follows the target; detaching a field keeps its catalog definition. A user or entity field can be on the form but can't be required — the portal offers a requester no rows to pick."
-  },
   "settings.requestTypeEditor.moved": {
     "defaultMessage": "{name} moved to position {position} of {total}."
   },
@@ -8690,44 +8687,14 @@
   "settings.requestTypeEditor.slugNote": {
     "defaultMessage": "Slug is immutable — it keys the portal form, reporting, and the API."
   },
-  "settings.requestTypeEditor.target": {
-    "defaultMessage": "Target"
-  },
-  "settings.requestTypeEditor.targetArchivedFlag": {
-    "defaultMessage": "{name} is archived. Requests of this type convert with no type until you pick a live one."
-  },
-  "settings.requestTypeEditor.targetArchivedOption": {
-    "defaultMessage": "{name} (archived)"
-  },
-  "settings.requestTypeEditor.targetContractGroup": {
-    "defaultMessage": "Contract"
-  },
-  "settings.requestTypeEditor.targetContractModule": {
-    "defaultMessage": "Contract"
-  },
-  "settings.requestTypeEditor.targetError": {
-    "defaultMessage": "The target could not be saved."
-  },
-  "settings.requestTypeEditor.targetHelp": {
-    "defaultMessage": "{state, select, matter {Converting a request of this type creates a matter; the reviewer picks the matter type at conversion.} matterType {Converting a request of this type creates a matter of the {name} type.} contract {Converting a request of this type creates a contract; the reviewer picks the contract type at conversion.} contractType {Converting a request of this type creates a contract of the {name} type.} other {Converting a request of this type creates no record. It is answered in the thread and resolved there.}}"
-  },
-  "settings.requestTypeEditor.targetMatterGroup": {
-    "defaultMessage": "Matter"
-  },
-  "settings.requestTypeEditor.targetMatterModule": {
-    "defaultMessage": "Matter"
-  },
-  "settings.requestTypeEditor.targetNone": {
-    "defaultMessage": "No target"
-  },
   "settings.requestTypeEditor.turnaround": {
-    "defaultMessage": "Turnaround (calendar days)"
+    "defaultMessage": "Target turnaround (business days)"
   },
   "settings.requestTypeEditor.turnaroundHint": {
-    "defaultMessage": "Suggests an expected return date from submission for Legal to confirm. Blank means no suggestion; saved Request estimates stay unchanged."
+    "defaultMessage": "Counts Monday–Friday from submission in the organization’s timezone, without excluding public holidays, for Legal to confirm. Blank means no suggestion; saved Request estimates stay unchanged."
   },
   "settings.requestTypeEditor.turnaroundInvalid": {
-    "defaultMessage": "Enter a whole number from 0 to 36,500 calendar days, or leave it blank."
+    "defaultMessage": "Enter a whole number from 0 to 36,500 business days, or leave it blank."
   },
   "settings.requestTypes.add": {
     "defaultMessage": "Add request type"

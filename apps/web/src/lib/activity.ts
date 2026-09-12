@@ -362,7 +362,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "displayName {Name} display_name {Display name} name {Name} " +
         "role {Role} email {Email} " +
         "stage {Stage} moduleScope {Scope} isRequired {Required} " +
-        "targetModule {Target} targetType {Target type} turnaroundDays {Turnaround (calendar days)} " +
+        "targetModule {Target} targetType {Target type} turnaroundDays {Target turnaround (business days)} " +
         "theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} " +
         "defaultLocale {Default language} defaultTimezone {Default timezone} " +
         "authMode {Sign-in method} allowedEmailDomains {Allowed email domains} " +

@@ -119,7 +119,7 @@ export function PortalHomePage() {
                       <span className="text-sm text-muted">
                         <FormattedMessage
                           id="portal.turnaround"
-                          defaultMessage="Estimated turnaround: {days, plural, one {# calendar day} other {# calendar days}}"
+                          defaultMessage="Estimated turnaround: {days, plural, one {# business day} other {# business days}}"
                           values={{ days: type.turnaroundDays }}
                         />
                       </span>
