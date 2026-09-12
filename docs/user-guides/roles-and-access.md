@@ -22,11 +22,11 @@ Confidential Entities use a separate rule. An Administrator gives a named Legal 
 
 ## Manage Portal Contract access
 
-Open **Contract team** or **Matter team** in the record's activity bar. Select **Add team member**, choose **Person**, and select **Add**. There is one membership row per person and no role picker. A Business User on that roster can open the record in the Portal. The same action puts a Legal Team Member inside a Confidential record's named audience.
+Open **Contract team** or **Matter team** in the record's activity bar. Select **Add team member**, choose **Person**, and select **Add**. Each person appears once, with their responsibilities together and no role picker. Adding a Business User gives them access to the record in the Portal. The same action puts a Legal Team Member inside a Confidential record's named audience.
 
 Use the person's remove control to remove membership. That ends a Business User's record access on the next read, including old links, replies, Documents and notifications. Removing a Legal Team Member from an open record does not end their ordinary account access.
 
-Legal Owner, Matter Manager, Business Owner and Creator are statements above the membership list. Use the owner controls on Overview to change responsibility. Changing Business Owner does not add or remove a team row. Creator records who created the work and remains after their membership is removed.
+Legal Owner, Matter Manager, Business Owner and Creator are statements on the person's row in both the main app and Portal. Use the owner controls on Overview to change responsibility. Changing Business Owner does not add or remove a team membership. Removing membership leaves the person's owner and Creator statements visible. Those statements alone do not grant Portal access.
 
 At conversion, the Requester becomes Business Owner and a team member on the new Contract or Matter. Their old Request address leads to that record. A Business User added later needs no Request.
 
@@ -38,7 +38,7 @@ Every related record has its own audience. A link, mention or owner statement do
 
 Business Users read and post **Full thread** comments on their records. They do not see **Legal only** or **Working team**. A later-added team member can read the Full Thread history. Removing membership ends that access. Legal must choose Full Thread for a message intended for the business.
 
-The Portal excludes legal Fields, Tasks, Key dates, History, Approvals and signing controls. Legal retains responsibility for those actions.
+The History applet shows shared comments and business record changes. It excludes Legal Only and Working Team activity. The Portal excludes legal Fields, Tasks, Key dates, Approvals and signing controls. Legal retains responsibility for those actions.
 
 ## When a record is unavailable
 

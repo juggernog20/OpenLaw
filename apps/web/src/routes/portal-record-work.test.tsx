@@ -126,6 +126,7 @@ describe.each(["contract", "matter"] as const)("Portal %s work", (module) => {
     let historyReads = 0;
     let denied = false;
     const person = { id: "owner", displayName: "Legal colleague", image: null, archived: false };
+    const businessOwner = { ...person, id: USER.id, displayName: USER.displayName };
     stubApi({
       signedIn: USER,
       extra: (call) => {
@@ -138,9 +139,9 @@ describe.each(["contract", "matter"] as const)("Portal %s work", (module) => {
         if (call.url.pathname === `/api/v1/portal/${module}s/12/team`) {
           teamReads++;
           return json(200, {
-            team: [{ ...person, id: USER.id, displayName: USER.displayName }],
+            team: [person, businessOwner],
             manager: person,
-            businessOwner: null,
+            businessOwner,
             creator: person,
           });
         }
@@ -183,7 +184,14 @@ describe.each(["contract", "matter"] as const)("Portal %s work", (module) => {
       name: module === "contract" ? "Contract team" : "Matter team",
     });
     expect(await within(roster).findByText(USER.displayName)).toBeInTheDocument();
-    expect(within(roster).getByText("Creator")).toBeInTheDocument();
+    const rows = within(roster).getAllByRole("listitem");
+    expect(rows).toHaveLength(2);
+    expect(within(rows[0]!).getByText(person.displayName)).toBeInTheDocument();
+    expect(
+      within(rows[0]!).getByText(module === "contract" ? "Legal Owner" : "Matter Manager"),
+    ).toBeInTheDocument();
+    expect(within(rows[0]!).getByText("Creator")).toBeInTheDocument();
+    expect(within(rows[1]!).getByText("Business Owner")).toBeInTheDocument();
     expect(within(roster).queryByRole("button", { name: /Add|Remove/ })).not.toBeInTheDocument();
     expect(teamReads).toBe(1);
     await user.click(chat);

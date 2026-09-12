@@ -3180,7 +3180,7 @@ Visual references: [Linear's property and status filter menus](https://mobbin.co
 
 ## DES-047: The Team roster is an activity-bar applet (amends DES-016, DES-032, DES-028)
 
-**2026-09-11 amendment:** DES-076 keeps the Contract team applet and its fragment. The roster shows responsibility and Creator statements, then one membership row per person. It has no tags.
+**2026-09-11 amendment:** DES-076 keeps the Contract team applet and its fragment. ~~The roster shows responsibility and Creator statements, then one membership row per person.~~ DES-080 combines each person's statements and membership into one row. It has no tags.
 
 - **Status:** Accepted
 - **Date:** 2026-08-17
@@ -4663,7 +4663,7 @@ A converted Request address redirects to its record and disappears from Your Req
 
 Portal notification settings offer Request updates, Mentions, and Activity on your records. The latter two reuse the existing event groups with Portal audience copy. Staff-only groups and Briefing controls stay outside the Portal.
 
-The full-app Contract team and Matter team applets show owner and Creator statements, then one membership row per person. Add team member selects only a person. Remove acts on that person's membership. Statements carry no remove control. Membership removal preserves Creator provenance. The existing Confidential lock and focus-after-removal rule apply to the person control.
+~~The full-app Contract team and Matter team applets show owner and Creator statements, then one membership row per person.~~ DES-080 combines each person's statements and membership into one row on both surfaces. Add team member selects only a person. Remove acts on that person's membership. Statements carry no remove control. Membership removal preserves Creator provenance. The existing Confidential lock and focus-after-removal rule apply to the person control.
 
 ### Consequences
 
@@ -4735,6 +4735,17 @@ A Portal read advances a separate Full Thread read marker. It cannot clear unsee
 ### Consequences
 
 This amends DES-076's inline Conversation and History exclusion and DD-023's inherited History exclusion. The account types, team grant, confidential gate and write grid are unchanged. The Portal no longer maintains a second conversation component. Sharing the composer also preserves drafts when staff switch applets.
+
+## DES-080: One Team roster row per person
+
+- **Status:** Accepted under Blair's 2026-09-12 instruction to stop repeating the same person in the Portal roster and align the applets
+- **Date:** 2026-09-12
+
+The shared Contract team and Matter team roster shows each person once in both the Portal and full app. Legal Owner or Matter Manager, Business Owner, Creator and team membership are combined by user ID. All distinct responsibility statements appear together beside one avatar and name. Two people who share a display name remain separate people. The first occurrence determines row order.
+
+The full app keeps one membership removal control when the person has a removable team membership. It removes only that membership. Owner and Creator statements remain, and the existing focus-after-removal rule still applies. Responsibility alone supplies no removal control or Portal access. The Portal roster remains read-only.
+
+This amends DES-047, DES-075, DES-076 and DES-079's separate statement and membership rows. It changes presentation only; the team grant and Confidential gate are unchanged.
 
 ## Index of decisions
 
@@ -4819,6 +4830,7 @@ This amends DES-076's inline Conversation and History exclusion and DD-023's inh
 | DES-077 | Portal record lists use the managed table (supersedes DES-076's flat-list presentation)                                                                              | Accepted                                                                                                   |
 | DES-078 | Portal destinations share a persistent navigation bar                                                                                                                | Accepted                                                                                                   |
 | DES-079 | Portal records use the shared applets                                                                                                                                | Accepted                                                                                                   |
+| DES-080 | One Team roster row per person                                                                                                                                       | Accepted                                                                                                   |
 
 ### DES-016 addendum (2026-09-11, #827) — Request source reading above Convert
 

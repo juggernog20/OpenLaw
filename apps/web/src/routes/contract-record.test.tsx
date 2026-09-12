@@ -2407,9 +2407,9 @@ describe("the /contracts/:number record page", () => {
     const user = userEvent.setup();
 
     const team = await openTeam(user);
-    expect(within(team).getAllByText("Ada Admin")).toHaveLength(2);
+    expect(within(team).getByText("Ada Admin")).toBeInTheDocument();
     expect(within(team).getByText("Creator")).toBeInTheDocument();
-    // Provenance is not membership: the creator has no remove control.
+    // The control removes membership, leaving the Creator statement.
     expect(
       within(team).getByRole("button", { name: "Take Ada Admin off the contract team" }),
     ).toBeInTheDocument();
@@ -2445,15 +2445,17 @@ describe("the /contracts/:number record page", () => {
     renderAt("/contracts/42");
     const user = userEvent.setup();
     const team = await openTeam(user);
+    const creator = within(team).getByText("Nadia Counsel");
     await user.click(
       within(team).getByRole("button", { name: "Take Nadia Counsel off the contract team" }),
     );
     await waitFor(() => expect(api.teamCalls).toEqual(["remove u2"]));
     expect(within(team).getByText("Creator")).toBeInTheDocument();
-    expect(within(team).getByText("Nadia Counsel")).toBeInTheDocument();
+    expect(within(team).getByText("Nadia Counsel")).toBe(creator);
     expect(
       within(team).queryByRole("button", { name: "Take Nadia Counsel off the contract team" }),
     ).not.toBeInTheDocument();
+    expect(within(team).getByRole("button", { name: "Add team member" })).toHaveFocus();
   });
 
   it("shows the API's refusal when a team change is turned down", async () => {
@@ -3215,7 +3217,7 @@ describe("the contract record's section tabs (DES-032)", () => {
     // The roster lives in the activity bar beside all sections, so the
     // DES-028 banner's "Manage team" fragment resolves from any of them.
     const team = await openTeam(user);
-    expect(within(team).getAllByText("Ada Admin")).toHaveLength(2);
+    expect(within(team).getByText("Ada Admin")).toBeInTheDocument();
   });
 
   it("lands a section the record does not have on the Overview", async () => {
