@@ -275,6 +275,20 @@ async function seed() {
   await post("/api/v1/auth/setup", ADMIN, { accept: [201] });
   await post("/api/v1/onboarding/complete");
   const adminUser = (await get("/api/v1/me")).user;
+  // DD-023 removed Contributor invites and team tags. Read the baseline's
+  // public schema so this seed works on either side of that migration.
+  const baselineApi = await get("/api/openapi.json");
+  const bodyProperties = (path) =>
+    baselineApi.paths[path].post.requestBody.content["application/json"].schema.properties;
+  const businessInviteRole = bodyProperties("/api/v1/auth/invites").role.enum.includes(
+    "contributor",
+  )
+    ? "contributor"
+    : "legal_team_member";
+  const teamRole = (module) =>
+    Object.hasOwn(bodyProperties(`/api/v1/${module}/{number}/team`), "role")
+      ? { role: "member" }
+      : {};
 
   // Org identity, so `org_settings` carries more than its seeded defaults.
   await patch("/api/v1/org/general", {
@@ -289,7 +303,7 @@ async function seed() {
   const invited = [];
   for (const [email, displayName, role] of [
     ["legal@example.com", "Lena Legal", "legal_team_member"],
-    ["contrib@example.com", "Cody Contributor", "contributor"],
+    ["contrib@example.com", "Cody Contributor", businessInviteRole],
     ["admin2@example.com", "Ada Admin", "administrator"],
   ]) {
     const created = await post("/api/v1/auth/invites", { email, displayName, role });
@@ -467,7 +481,7 @@ async function seed() {
   // A team member and a comment, so those tables carry rows too.
   await post(`/api/v1/contracts/${approvalHost.number}/team`, {
     userId: invited[0].id,
-    role: "member",
+    ...teamRole("contracts"),
   });
   const commentBody = "Seeded before the upgrade.";
   const approvalHostId = (await get(`/api/v1/contracts/${approvalHost.number}`)).contract.id;
@@ -499,7 +513,7 @@ async function seed() {
   ).matter;
   await post(`/api/v1/matters/${matter.number}/team`, {
     userId: invited[0].id,
-    role: "member",
+    ...teamRole("matters"),
   });
   const matterCommentBody = "Matter activity seeded before the M23 upgrade.";
   await post("/api/v1/comments", {

@@ -38,7 +38,7 @@ Another Business User's Request link does not grant you access to that Request. 
 
 Select **Contracts** in the Portal navigation bar. The page is titled **Your Contracts**. The list contains non-archived Contracts whose teams include you. Open a row and check its C- reference, title, Counterparty, Stage, owners, terms, dates and Value. **Unverified** means Legal has not confirmed that value. Check it with Legal before relying on it.
 
-Under **Primary Document**, select **Read Document** or **Download** for the current Version. If no primary Document is available, the page says so. Use **Your Contracts** to return to the list and **Next page** for more records.
+Under **Primary Document**, select **Read Document** or **Download** for the current Version. If no primary Document is available, the page says so. Use **Your Contracts** to return to the list and **Show more** for more records.
 
 ## Open your Matters
 
