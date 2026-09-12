@@ -51,6 +51,7 @@
   /* Text */
   --text-primary: #2d2a24;
   --text-muted: #6f6759;
+  --text-placeholder: #6f6759;
   --text-subtle: #928b78;
   --text-on-inverted: #2d2a24; /* dark text on cream-deep header */
   --text-on-accent: #1f2328;
@@ -118,6 +119,7 @@
    * sits on the paper tone, and the brand mark keeps its dark chip. */
   --chrome-header-border: #d8d0c0;
   --chrome-search-bg: #fbfaf7;
+  --chrome-search-placeholder: #6f6759;
   --chrome-brand-chip: #3a332a;
   --chrome-brand-fg: #f4f1eb;
   --chrome-nav-bg: #f4f1eb;

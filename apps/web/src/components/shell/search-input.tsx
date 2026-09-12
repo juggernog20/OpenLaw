@@ -188,7 +188,7 @@ export function SearchInput() {
             close();
           }
         }}
-        className="h-7.5 w-full rounded-button border border-border-on-inverted bg-(--chrome-search-bg) pe-10 ps-3 text-base text-on-inverted placeholder:text-subtle"
+        className="h-7.5 w-full rounded-button border border-border-on-inverted bg-(--chrome-search-bg) pe-10 ps-3 text-base text-on-inverted [--text-placeholder:var(--chrome-search-placeholder)]"
       />
       <kbd
         aria-hidden="true"

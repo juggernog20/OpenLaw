@@ -8,10 +8,8 @@
  *     large-text cutoff).
  *   - 3:1 for graphical objects and non-body roles. Those are the
  *     file-type icon squares, the DES-034 stage glyph and the DES-041
- *     timeline fills, and `--text-subtle`, whose only roles are
- *     placeholder and disabled text (DES-005). Disabled text is exempt
- *     under WCAG 1.4.3; we hold placeholders to the 3:1 non-text floor
- *     instead of exempting them. `--text-subtle` is never body copy.
+ *     timeline fills, and `--text-subtle` for disabled text and keyboard
+ *     hints. Placeholders use the body-text threshold (DES-082).
  *
  * Failures are fixed by adjusting the failing token in
  * styles/themes/<theme>.css — never by relaxing the check (DES-011).
@@ -48,7 +46,7 @@ const STATUS_FAMILIES = [
 const PAIRS = [];
 
 // Content text on the four content surfaces.
-for (const text of ["text-primary", "text-muted"]) {
+for (const text of ["text-primary", "text-muted", "text-placeholder"]) {
   for (const surface of SURFACES) PAIRS.push([text, surface, BODY]);
 }
 // The evidence sparkle remains readable beside a field in every theme.
@@ -61,7 +59,7 @@ for (const surface of ["bg-canvas", "bg-raised", "bg-section-header"]) {
 for (const surface of ["bg-canvas", "bg-raised"]) {
   PAIRS.push(["text-danger", surface, BODY]);
 }
-// Placeholder / disabled — 3:1 floor, see file header.
+// Disabled text and keyboard hints retain the existing 3:1 floor.
 for (const surface of ["bg-canvas", "bg-raised", "bg-control", "chrome-search-bg"]) {
   PAIRS.push(["text-subtle", surface, UI]);
 }
@@ -70,6 +68,7 @@ PAIRS.push(
   ["text-on-inverted", "bg-inverted", BODY],
   ["text-on-inverted", "chrome-nav-bg", BODY],
   ["text-on-inverted", "chrome-search-bg", BODY],
+  ["chrome-search-placeholder", "chrome-search-bg", BODY],
   ["chrome-nav-muted", "chrome-nav-bg", BODY],
   ["chrome-brand-fg", "chrome-brand-chip", BODY],
   ["text-on-cta", "cta-primary", BODY],
@@ -204,7 +203,7 @@ for (const theme of THEMES) {
 if (failures.length > 0) {
   console.error(
     `contrast: ${failures.length} of ${checked} pairs fail WCAG 2.2 AA ` +
-      `(DES-011 thresholds: ${BODY}:1 body text, ${UI}:1 graphical/placeholder)`,
+      `(DES-011 / DES-082 thresholds: ${BODY}:1 text and placeholders, ${UI}:1 graphical)`,
   );
   for (const f of failures) {
     console.error(

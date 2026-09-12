@@ -42,6 +42,7 @@
   /* Text */
   --text-primary: #e6edf3;
   --text-muted: #8b949e;
+  --text-placeholder: #8b949e;
   --text-subtle: #6e7681;
   --text-on-inverted: #f0f6fc;
   --text-on-accent: #1f2328;
@@ -105,6 +106,7 @@
    * one step lighter than the header. */
   --chrome-header-border: #21262d;
   --chrome-search-bg: #0d1117;
+  --chrome-search-placeholder: #8b949e;
   --chrome-brand-chip: transparent;
   --chrome-brand-fg: #f0f6fc;
   --chrome-nav-bg: #0d1117;

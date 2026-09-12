@@ -261,7 +261,7 @@ The reference implementation is `styles/themes/light.css`, `styles/themes/warm.c
 
 - `--text-primary` — body, h1–h3.
 - `--text-muted` — secondary copy, descriptions, timestamps.
-- `--text-subtle` — placeholder, disabled.
+- `--text-subtle` — ~~placeholder, disabled~~ disabled and keyboard hints. Placeholders use `--text-placeholder` under DES-082.
 - `--text-on-inverted` — text rendered on `--bg-inverted`.
 - `--text-on-accent` — text rendered on `--accent` fill.
 - `--text-on-cta` — text rendered on `--cta-primary` fill.
@@ -4760,6 +4760,31 @@ The section accepts file drops and provides a click upload control. Both open on
 
 Search matches Document names and Version filenames on the server, with scoped pagination. The Portal offers no primary/executed designation changes, folder administration or deletion. DD-024 sets the write boundary. This amends DES-076 and DES-079's separate primary and supporting Document surfaces.
 
+## DES-082: One theme colour for placeholders
+
+- **Status:** Accepted
+- **Date:** 2026-09-12
+
+### Context
+
+Inputs used an explicit muted placeholder while text areas inherited a translucent browser default. The Request Title and Description prompts therefore appeared in different colours.
+
+### Decision
+
+All input and text-area placeholders use `--text-placeholder` at full opacity through the shared base stylesheet. Each theme defines this token with its muted text colour. Components do not set their own placeholder colours.
+
+The header search uses `--chrome-search-placeholder` through the same placeholder token. This supplies a lighter foreground on Light's dark header; Warm and Dark retain their normal placeholder colour. Both token roles meet the existing 4.5:1 text contrast threshold against their supported surfaces.
+
+### Rationale
+
+A shared default keeps forms, searches, pickers and comment composers consistent, including controls added later. A theme-owned header value preserves readability on its different background.
+
+### Consequences
+
+DES-005's former placeholder use of `--text-subtle` is superseded. The contrast check covers both placeholder tokens in all three themes. Browser-default transparency and component-specific placeholder utilities are removed.
+
+---
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                     |
@@ -4845,6 +4870,7 @@ Search matches Document names and Version filenames on the server, with scoped p
 | DES-079 | Portal records use the shared applets                                                                                                                                | Accepted                                                                                                   |
 | DES-080 | One Team roster row per person                                                                                                                                       | Accepted                                                                                                   |
 | DES-081 | One Documents section for Portal Contracts and Matters                                                                                                               | Accepted                                                                                                   |
+| DES-082 | One theme colour for placeholders                                                                                                                                    | Accepted                                                                                                   |
 
 ### DES-016 addendum (2026-09-11, #827) — Request source reading above Convert
 

@@ -53,6 +53,7 @@
    * ------------------------------------------------------------------ */
   --color-primary: var(--text-primary);
   --color-muted: var(--text-muted);
+  --color-placeholder: var(--text-placeholder);
   --color-subtle: var(--text-subtle);
   --color-on-inverted: var(--text-on-inverted);
   --color-on-accent: var(--text-on-accent);
@@ -282,6 +283,12 @@
   body {
     font-size: var(--text-md); /* 14px base per DES-006 */
     line-height: var(--text-md--line-height);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--text-placeholder);
+    opacity: 1;
   }
 
   h1 {
