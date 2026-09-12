@@ -29,7 +29,7 @@ import { S3_DRIVER, createS3Storage } from "./s3.js";
  * Pinned, like every other image the suites run. A floating tag makes a
  * green run today and an unexplained red one tomorrow.
  */
-const MINIO_IMAGE = "minio/minio:RELEASE.2025-09-07T16-13-09Z";
+const MINIO_IMAGE = "quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z";
 
 /**
  * Pulling and booting a container is slower than making a directory, and
