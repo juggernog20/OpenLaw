@@ -3,14 +3,7 @@
 /** ADO-007: the same cover-note nodes feed the paired text and HTML email. */
 import { parseKnowledgeMarkdown, type MarkdownInline } from "@openlaw/shared";
 import type { MailMessage } from "../mailer.js";
-import { origin } from "./email.js";
-const escapeHtml = (value: string) =>
-  value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+import { escapeHtml, origin } from "./email.js";
 function htmlInline(parts: MarkdownInline[], baseUrl: string): string {
   return parts
     .map((part) => {
