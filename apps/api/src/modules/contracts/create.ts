@@ -33,8 +33,7 @@
  *   wrote plus the two display names it had to read anyway.
  *
  * What a contract is **not** born with is as much the decision as what
- * it is. No Owner unless the caller names one, no team beyond the
- * creator's provenance row, no status but the draft seed, and no
+ * it is. No Owner unless the caller names one, the creator and Business Owner team rows plus the Type's default people, no status but the draft seed, and no
  * Confidential flag unless the caller asks for one. CTR-015's
  * no-inheritance stance, applied at birth, and the same rule the M16
  * successor obeys: a routed renewal never copies its predecessor's
@@ -52,6 +51,8 @@
  * ordinary create still starts on the column's own `medium` default.
  */
 
+import { addContractTeamMember } from "../../lib/contract-team.js";
+import type { Notifier, NotifyingTransaction } from "../../lib/notifications/notifier.js";
 import { lockedDepartment } from "../departments/references.js";
 
 import {
@@ -62,6 +63,7 @@ import {
   contractStatuses,
   contractTeam,
   contractTypeFields,
+  contractTypeDefaultPeople,
   contractTypes,
   counterparties,
   desc,
@@ -74,7 +76,6 @@ import {
   type CustomFieldValue,
   type Matter,
   type SeverityLevel,
-  type Transaction,
   users,
 } from "@openlaw/db";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
@@ -215,7 +216,8 @@ function businessFactsOf(predecessor: Contract) {
 }
 
 export async function createContract(
-  tx: Transaction,
+  tx: NotifyingTransaction,
+  notifier: Notifier,
   input: CreateContractInput,
 ): Promise<CreatedContract> {
   const { actorId, title, contractTypeId, renewal, matter } = input;
@@ -364,6 +366,26 @@ export async function createContract(
       customFields: Object.keys(customFields).sort((a, b) => a.localeCompare(b)),
     },
   });
+  const [actor] = await tx
+    .select({ id: users.id, displayName: users.displayName })
+    .from(users)
+    .where(eq(users.id, actorId));
+  if (!actor) throw httpError(400, "The creator must be a person.");
+  const defaults = await tx
+    .select({ id: contractTypeDefaultPeople.userId })
+    .from(contractTypeDefaultPeople)
+    .where(eq(contractTypeDefaultPeople.contractTypeId, contractTypeId))
+    .orderBy(asc(contractTypeDefaultPeople.displayOrder), asc(contractTypeDefaultPeople.userId));
+  for (const { id } of defaults) {
+    const [person] = await tx
+      .select({ id: users.id, displayName: users.displayName, archivedAt: users.archivedAt })
+      .from(users)
+      .where(eq(users.id, id))
+      .for("update");
+    if (person && !person.archivedAt)
+      await addContractTeamMember(tx, notifier, row!, actor, person);
+  }
+
   // A record born walled off gets its own entry beside the creation one.
   // DD-014 wants every set of the flag accountable by actor and
   // timestamp, and an Administrator reading the audit log should find it

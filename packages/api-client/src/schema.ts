@@ -799,6 +799,58 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/contract-types/{id}/people": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Administrator reads ordered default people, including archived users. */
+    get: operations["listContractTypeDefaultPeople"];
+    put?: never;
+    /** Administrator adds a live default person. Returns 409 for an archived Contract Type or a duplicate person. */
+    post: operations["addContractTypeDefaultPerson"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contract-types/{id}/people/{userId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Administrator removes a default person. Returns 409 for an archived Contract Type. */
+    delete: operations["removeContractTypeDefaultPerson"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contract-types/{id}/people/order": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Administrator reorders every default person. Returns 409 for an archived Contract Type. */
+    put: operations["reorderContractTypeDefaultPeople"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contract-types/{id}/fields": {
     parameters: {
       query?: never;
@@ -8368,6 +8420,179 @@ export interface operations {
               archivedAt: string | null;
               inUseCount: number;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listContractTypeDefaultPeople: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            people: {
+              id: string;
+              displayName: string;
+              /** @enum {string} */
+              role: "administrator" | "legal_team_member" | "business_user";
+              archived: boolean;
+              displayOrder: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  addContractTypeDefaultPerson: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          userId: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            people: {
+              id: string;
+              displayName: string;
+              /** @enum {string} */
+              role: "administrator" | "legal_team_member" | "business_user";
+              archived: boolean;
+              displayOrder: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  removeContractTypeDefaultPerson: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            people: {
+              id: string;
+              displayName: string;
+              /** @enum {string} */
+              role: "administrator" | "legal_team_member" | "business_user";
+              archived: boolean;
+              displayOrder: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  reorderContractTypeDefaultPeople: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          userIds: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            people: {
+              id: string;
+              displayName: string;
+              /** @enum {string} */
+              role: "administrator" | "legal_team_member" | "business_user";
+              archived: boolean;
+              displayOrder: number;
+            }[];
           };
         };
       };

@@ -114,6 +114,8 @@ export const NOTIFICATION_EVENT_TYPES = [
   // Group 1 — assigned to you.
   /** A contract was handed to somebody as its Owner (CTR-004, MTR-003). */
   "contract.owner_assigned",
+  /** CTR-026 notifies the added Contract team member in the membership transaction. */
+  "contract.team_added",
   /** A task on a contract was assigned (CTR-017, MTR-005). */
   "contract.task_assigned",
   /** A Task on a Matter was assigned (MTR-005). */

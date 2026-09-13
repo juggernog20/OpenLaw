@@ -17,22 +17,27 @@ import { api } from "../lib/api";
 import { problem } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import { ContractsSettingsTabs } from "../components/contracts-settings-tabs";
+import { ContractTypePeople } from "../components/contract-type-people";
 import { TypeEditorScreen, type TypeEditorApi } from "../components/type-editor-screen";
 
 export async function settingsContractTypeEditorLoader({ params }: LoaderFunctionArgs) {
   const user = await requireUser();
   if (user.role !== "administrator") return redirect("/settings/profile");
   const id = params.typeId!;
-  const [typeRes, attachedRes, catalogRes] = await Promise.all([
+  const [typeRes, attachedRes, catalogRes, peopleRes, usersRes] = await Promise.all([
     api.GET("/api/v1/contract-types/{id}", { params: { path: { id } } }),
     api.GET("/api/v1/contract-types/{id}/fields", { params: { path: { id } } }),
     api.GET("/api/v1/fields", {}),
+    api.GET("/api/v1/contract-types/{id}/people", { params: { path: { id } } }),
+    api.GET("/api/v1/users"),
   ]);
-  if (!typeRes.data || !attachedRes.data || !catalogRes.data) {
+  if (!typeRes.data || !attachedRes.data || !catalogRes.data || !peopleRes.data || !usersRes.data) {
     throw new Error("The contract type could not be read.");
   }
   return {
     contractType: typeRes.data.contractType,
+    people: peopleRes.data.people,
+    users: usersRes.data.users,
     attachedFields: attachedRes.data.attachedFields,
     catalog: catalogRes.data.fields.filter(
       (field) => !CONTRACT_OVERVIEW_FIELD_SLUGS.includes(field.slug),
@@ -149,15 +154,24 @@ const EDITOR_API: TypeEditorApi = {
 };
 
 export function SettingsContractTypeEditorPage() {
-  const { contractType, attachedFields, catalog } =
+  const { contractType, attachedFields, catalog, people, users } =
     useLoaderData<typeof settingsContractTypeEditorLoader>();
   return (
     <TypeEditorScreen
+      key={contractType.id}
       initialType={contractType}
       tabs={<ContractsSettingsTabs />}
       backPath="/settings/contracts/types"
       api={EDITOR_API}
       messages={MESSAGES}
+      extraCards={
+        <ContractTypePeople
+          typeId={contractType.id}
+          initialPeople={people}
+          users={users}
+          archived={contractType.archivedAt !== null}
+        />
+      }
       attachments={{
         initialAttached: attachedFields,
         catalog,

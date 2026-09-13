@@ -184,9 +184,11 @@ async function bell(fixture: { email: string }): Promise<BellItem[]> {
   return (res.json() as { notifications: BellItem[] }).notifications;
 }
 
-/** The items on one person's bell about one record. */
+/** These cases test assignments and mentions. Team additions are covered by default-people.test.ts. */
 const bellFor = async (fixture: { email: string }, contract: ContractRow): Promise<BellItem[]> =>
-  (await bell(fixture)).filter((row) => row.entityId === contract.id);
+  (await bell(fixture)).filter(
+    (row) => row.entityId === contract.id && row.eventType !== "contract.team_added",
+  );
 
 /**
  * Every notification row one person holds, newest first.
@@ -229,12 +231,16 @@ async function settles(what: string, ready: () => Promise<boolean>): Promise<voi
 async function mailAbout(fixture: { email: string }, contract: ContractRow) {
   await settles(`the email to ${fixture.email} about ${contract.title}`, () =>
     Promise.resolve(
-      harness.mailer.messagesTo(fixture.email).some((m) => m.text.includes(contract.title)),
+      harness.mailer
+        .messagesTo(fixture.email)
+        .some(
+          (m) => m.text.includes(contract.title) && !m.subject.startsWith("You were added to "),
+        ),
     ),
   );
   const message = harness.mailer
     .messagesTo(fixture.email)
-    .find((m) => m.text.includes(contract.title));
+    .find((m) => m.text.includes(contract.title) && !m.subject.startsWith("You were added to "));
   expect(message).toBeDefined();
   return message!;
 }
@@ -615,8 +621,11 @@ describe("being asked again after a rejection (CTR-012)", () => {
     // message would be a prompt nobody received.
     await settles("both approval emails", () =>
       Promise.resolve(
-        harness.mailer.messagesTo(TARGET.email).filter((m) => m.text.includes(contract.title))
-          .length >= 2,
+        harness.mailer
+          .messagesTo(TARGET.email)
+          .filter(
+            (m) => m.text.includes(contract.title) && !m.subject.startsWith("You were added to "),
+          ).length >= 2,
       ),
     );
   });

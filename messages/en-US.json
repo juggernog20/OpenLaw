@@ -5711,6 +5711,9 @@
   "notifications.contract.taskAssigned": {
     "defaultMessage": "{hasActor, select, yes {{actor} assigned you a task on {contract}} other {You were assigned a task on {contract}}}"
   },
+  "notifications.contract.teamAdded": {
+    "defaultMessage": "{hasActor, select, yes {{actor} added you to the Contract team for {contract}} other {You were added to the Contract team for {contract}}}"
+  },
   "notifications.contractNumber": {
     "defaultMessage": "contract {number}"
   },
@@ -6329,6 +6332,12 @@
   "portal.request.unassigned": {
     "defaultMessage": "Not assigned yet"
   },
+  "portal.settings.assignments": {
+    "defaultMessage": "Assigned to you"
+  },
+  "portal.settings.assignments.detail": {
+    "defaultMessage": "Contract team additions and comments that mention you on your Contracts and Matters."
+  },
   "portal.settings.heading": {
     "defaultMessage": "How we tell you about your work"
   },
@@ -6337,12 +6346,6 @@
   },
   "portal.settings.link": {
     "defaultMessage": "Notification settings"
-  },
-  "portal.settings.mentions": {
-    "defaultMessage": "Mentions"
-  },
-  "portal.settings.mentions.detail": {
-    "defaultMessage": "Comments that mention you on your Contracts and Matters."
   },
   "portal.settings.records.detail": {
     "defaultMessage": "Shared comments and supporting Documents on your Contracts and Matters, and Contract status changes."
@@ -7357,6 +7360,45 @@
   },
   "settings.contractTypeEditor.slugNote": {
     "defaultMessage": "Slug is immutable — it keys templates, approval rules, and the API."
+  },
+  "settings.contractTypePeople.add": {
+    "defaultMessage": "Add person"
+  },
+  "settings.contractTypePeople.archived": {
+    "defaultMessage": "(Archived)"
+  },
+  "settings.contractTypePeople.choose": {
+    "defaultMessage": "Choose a person"
+  },
+  "settings.contractTypePeople.down": {
+    "defaultMessage": "Move {name} down"
+  },
+  "settings.contractTypePeople.empty": {
+    "defaultMessage": "No default people."
+  },
+  "settings.contractTypePeople.failed": {
+    "defaultMessage": "Could not save default people. Please try again."
+  },
+  "settings.contractTypePeople.help": {
+    "defaultMessage": "These people join every new Contract of this Contract Type and receive a notification. Changes apply to future Contracts. Archived people are skipped."
+  },
+  "settings.contractTypePeople.list": {
+    "defaultMessage": "Default people"
+  },
+  "settings.contractTypePeople.person": {
+    "defaultMessage": "Default person"
+  },
+  "settings.contractTypePeople.remove": {
+    "defaultMessage": "Remove {name}"
+  },
+  "settings.contractTypePeople.reordered": {
+    "defaultMessage": "Default people reordered."
+  },
+  "settings.contractTypePeople.title": {
+    "defaultMessage": "People"
+  },
+  "settings.contractTypePeople.up": {
+    "defaultMessage": "Move {name} up"
   },
   "settings.contractTypes.add": {
     "defaultMessage": "Add type"
@@ -8541,7 +8583,7 @@
     "defaultMessage": "Assigned to you"
   },
   "settings.notifications.group.assigned.detail": {
-    "defaultMessage": "Assignments, tasks, mentions, and approval requests addressed to you."
+    "defaultMessage": "Assignments, Contract team additions, tasks, mentions, and approval requests addressed to you."
   },
   "settings.notifications.group.dates": {
     "defaultMessage": "Dates approaching"

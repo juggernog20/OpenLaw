@@ -332,7 +332,7 @@ describe("the portal notification settings (NOT-001)", () => {
     );
   });
 
-  it("draws Request updates, mentions, and record activity with their saved defaults", async () => {
+  it("draws Request updates, assignments, and record activity with their saved defaults", async () => {
     stubApi({ signedIn: REQUESTER, extra: capturePreferenceWrites([]) });
     renderAt("/portal/settings");
 
@@ -340,17 +340,15 @@ describe("the portal notification settings (NOT-001)", () => {
       await screen.findByRole("heading", { name: "How we tell you about your work" }),
     ).toBeVisible();
     expect(screen.getByText("Request updates")).toBeVisible();
-    expect(screen.getByRole("switch", { name: "Mentions Email" })).toBeChecked();
+    expect(screen.getByRole("switch", { name: "Assigned to you Email" })).toBeChecked();
     expect(
       screen.getByRole("switch", { name: "Activity on your records Email" }),
     ).not.toBeChecked();
 
-    // Group 5 is the one group whose email is on by default: a requester
-    // does not live in the app (INT-003).
+    // Request receipts and direct assignments both default to email.
     expect(screen.getByRole("switch", { name: "Request updates In-app" })).toBeChecked();
     expect(screen.getByRole("switch", { name: "Request updates Email" })).toBeChecked();
-    // And exactly two switches, because the other four groups are about
-    // records a Business User cannot open.
+    // Each of the three Portal groups has two channel switches.
     expect(screen.getAllByRole("switch")).toHaveLength(6);
   });
 
@@ -359,7 +357,7 @@ describe("the portal notification settings (NOT-001)", () => {
     renderAt("/portal/settings");
 
     await screen.findByRole("heading", { name: "How we tell you about your work" });
-    for (const label of ["Assigned to you", "Dates approaching", "New requests"]) {
+    for (const label of ["Dates approaching", "New requests"]) {
       expect(screen.queryByText(label)).not.toBeInTheDocument();
     }
   });

@@ -316,7 +316,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
             const customFields = { ...carried, ...(answers ?? {}) };
             const born =
               target.module === "contract"
-                ? await createContract(tx, {
+                ? await createContract(tx, app.notifier, {
                     actorId: request.user.id,
                     title,
                     contractTypeId: target.typeId,

@@ -391,6 +391,18 @@ function contractMail(
           "You can approve or reject it, with a note, on the record.",
         ].join("\n"),
       };
+    case "contract.team_added":
+      return {
+        to,
+        subject: `You were added to ${contractTitle}`,
+        text: [
+          `Hello ${notification.recipientName},`,
+          "",
+          `${who} added you to the team on ${contractTitle}.`,
+          "",
+          link,
+        ].join("\n"),
+      };
     case "contract.owner_assigned":
       return {
         to,

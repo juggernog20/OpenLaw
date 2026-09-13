@@ -637,6 +637,7 @@ export function TypeEditorScreen({
   api,
   messages,
   identityExtra,
+  extraCards,
   attachments,
   showSlug = true,
 }: Readonly<{
@@ -655,6 +656,7 @@ export function TypeEditorScreen({
    * request-type editor, the only mount that passes one.
    */
   identityExtra?: ReactNode;
+  extraCards?: ReactNode;
   /** The right card; omit for a mount that has no attachment surface. */
   attachments?: TypeEditorAttachments;
 }>) {
@@ -796,6 +798,7 @@ export function TypeEditorScreen({
           </SettingsCard>
 
           {attachments && <AttachedFieldsCard typeId={saved.id} {...attachments} />}
+          {extraCards}
         </div>
       </div>
     </>

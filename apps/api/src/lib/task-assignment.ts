@@ -2,11 +2,13 @@
 
 /** MTR-005 and CTR-017 add Task assignees to teams. Membership, assignment, activity and notification commit together. */
 
-import { and, eq, contractTeam, matterTeam, users, type Transaction } from "@openlaw/db";
+import { and, eq, contractTeam, matterTeam, users } from "@openlaw/db";
 import type { AuthenticatedUser } from "../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "./activity.js";
 import { confidentialityWrite } from "./contract-access.js";
 import { matterConfidentialityWrite } from "./matter-access.js";
+import { addContractTeamMember } from "./contract-team.js";
+import type { Notifier, NotifyingTransaction } from "./notifications/notifier.js";
 import { httpError } from "./problem.js";
 
 type TaskRecord = {
@@ -19,7 +21,8 @@ type TaskRecord = {
 
 /** Caller holds the record lock; membership, assignment, and notification commit together. */
 export async function prepareTaskAssignee(
-  tx: Transaction,
+  tx: NotifyingTransaction,
+  notifier: Notifier,
   kind: "contract" | "matter",
   record: TaskRecord,
   actor: AuthenticatedUser,
@@ -53,7 +56,8 @@ export async function prepareTaskAssignee(
       throw httpError(403, "You cannot add people to this confidential record's team.");
   }
   if (kind === "contract") {
-    await tx.insert(contractTeam).values({ contractId: record.id, userId: assigneeId });
+    await addContractTeamMember(tx, notifier, record, actor, person);
+    return;
   } else {
     await tx.insert(matterTeam).values({ matterId: record.id, userId: assigneeId });
   }
@@ -61,7 +65,7 @@ export async function prepareTaskAssignee(
     entityType: kind,
     entityId: record.id,
     actorId: actor.id,
-    action: kind === "contract" ? "contract.team_added" : "matter.team_added",
+    action: "matter.team_added",
     visibility: RECORD_ACTIVITY_TIER,
     payload: { number: record.number, title: record.title, member: person.displayName },
   });

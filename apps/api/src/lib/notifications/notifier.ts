@@ -77,6 +77,7 @@ import { publishLiveEvents } from "../live-events.js";
 import {
   contractRecordAudience,
   CONTRACT_ENTITY,
+  PORTAL_SHARED_EVENTS,
   ENTITY_ENTITY,
   entityReachedBy,
   inboxAudience,
@@ -156,6 +157,11 @@ export interface OwnerAssignedEvent {
   /** The new Owner — the whole audience of this event. Clearing the
    * Owner hands the record to nobody, so the route raises nothing. */
   ownerId: string;
+}
+
+/** CTR-026 addresses the person added to the Contract team. */
+export interface ContractTeamAddedEvent extends Omit<OwnerAssignedEvent, "ownerId"> {
+  userId: string;
 }
 
 /** What one task assignment tells its assignee (CTR-017). */
@@ -521,6 +527,8 @@ export interface Notifier {
    * previous one.
    */
   requestAssigned(tx: NotifyingTransaction, event: RequestAssignedEvent): Promise<void>;
+  /** CTR-026 group 1 tells the added person. Adding yourself is silent. */
+  contractTeamAdded(tx: NotifyingTransaction, event: ContractTeamAddedEvent): Promise<void>;
   ownerAssigned(tx: NotifyingTransaction, event: OwnerAssignedEvent): Promise<void>;
 
   /**
@@ -871,11 +879,7 @@ async function fanOut(
         (eventType === "comment.posted" || eventType === "comment.mentioned") &&
         narrowing.tier === "full_thread" &&
         !byUser.get(person.id)?.payload.taskId;
-      if (
-        !sharedComment &&
-        !["contract.status_changed", "document.added", "document.version_added"].includes(eventType)
-      )
-        reachable.delete(person.id);
+      if (!sharedComment && !PORTAL_SHARED_EVENTS.includes(eventType)) reachable.delete(person.id);
     }
   }
 
@@ -1420,6 +1424,29 @@ export function createNotifier(deps: NotifierDeps): Notifier {
             payload: {
               requestNumber: audience.requestNumber,
               requestTitle: audience.title,
+              actorId: event.actorId,
+              actorName: event.actorName,
+            },
+          },
+        ],
+      );
+    },
+
+    async contractTeamAdded(
+      tx: NotifyingTransaction,
+      event: ContractTeamAddedEvent,
+    ): Promise<void> {
+      await fanOut(
+        tx,
+        "contract.team_added",
+        { type: CONTRACT_ENTITY, id: event.contractId },
+        event.actorId,
+        [
+          {
+            userId: event.userId,
+            payload: {
+              contractNumber: event.contractNumber,
+              contractTitle: event.contractTitle,
               actorId: event.actorId,
               actorName: event.actorName,
             },
