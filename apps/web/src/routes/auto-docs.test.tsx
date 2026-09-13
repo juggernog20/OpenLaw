@@ -92,6 +92,7 @@ it("lists Auto-Docs and creates a draft from name and description", async () => 
   stubApi({
     signedIn: member,
     extra: (call) => {
+      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
       if (call.url.pathname === "/api/v1/auto-docs/options")
         return json(200, { catalogFields: [], contractTypes: [] });
       if (call.url.pathname === "/api/v1/auto-docs") {
@@ -123,6 +124,7 @@ it("edits fields, preserves the orphan cue, and shows saved form versions and up
   stubApi({
     signedIn: member,
     extra: (call) => {
+      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
       if (call.url.pathname === "/api/v1/auto-docs/options")
         return json(200, { catalogFields: [], contractTypes: [] });
       if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, current);
@@ -208,6 +210,7 @@ it("drops blank option lines and names the rule when a save cannot be sent", asy
   stubApi({
     signedIn: member,
     extra: (call) => {
+      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
       if (call.url.pathname === "/api/v1/auto-docs/options")
         return json(200, { catalogFields: [], contractTypes: [] });
       if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, current);
@@ -263,6 +266,7 @@ it("reserves the destination and app routes for Member+", async () => {
   stubApi({
     signedIn: { ...member, role: "business_user" },
     extra: (call) => {
+      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
       if (call.url.pathname === "/api/v1/auto-docs/options")
         return json(200, { catalogFields: [], contractTypes: [] });
       calls.push(call.url.pathname);

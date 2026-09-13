@@ -76,7 +76,7 @@ const AutoDocRow = z.object({
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });
-const FieldRow = z.object({
+export const AutoDocFieldRow = z.object({
   slug: z.string(),
   label: z.string(),
   help: z.string().nullable(),
@@ -91,7 +91,7 @@ const FieldRow = z.object({
 const FormVersion = z.object({
   id: z.string(),
   versionNumber: z.number().int(),
-  definition: z.object({ fields: z.array(FieldRow), clauseRules: z.array(ClauseRuleInput) }),
+  definition: z.object({ fields: z.array(AutoDocFieldRow), clauseRules: z.array(ClauseRuleInput) }),
   createdBy: z.string(),
   createdAt: z.iso.datetime(),
 });

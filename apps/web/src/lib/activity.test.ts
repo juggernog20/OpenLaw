@@ -402,6 +402,16 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     documentVersionId: "file1",
     formVersionId: "form1",
   },
+  "auto_doc.generated": {
+    name: "Supplier NDA",
+    generationId: "generation1",
+    documentVersionId: "file1",
+    formVersionId: "form2",
+    documentVersionNumber: 1,
+    formVersionNumber: 2,
+    personId: "member",
+    personName: "Legal",
+  },
   "auto_doc.unpublished": {
     name: "Supplier NDA",
     documentVersionId: "file1",

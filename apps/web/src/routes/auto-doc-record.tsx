@@ -10,6 +10,7 @@ import {
   autoDocUploadAnswer,
   type AutoDocOptions,
   type AutoDocClauseRule,
+  type AutoDocGeneration,
 } from "../lib/auto-docs";
 import { api } from "../lib/api";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
@@ -28,6 +29,7 @@ type Answer =
   paths["/api/v1/auto-docs/{id}"]["get"]["responses"][200]["content"]["application/json"];
 type Field = NonNullable<Answer["formVersion"]>["definition"]["fields"][number];
 import { ClausesEditor, FieldMap } from "../components/auto-docs/clauses-editor";
+import { AutoDocGenerations } from "../components/auto-docs/generations";
 import {
   PublicationCard,
   AutoDocSettings,
@@ -39,13 +41,15 @@ const FIELD_TYPES = autoDocFieldTypes.options;
 export async function autoDocRecordLoader({ params, request }: LoaderFunctionArgs) {
   const user = await requireUser();
   if (!isMemberPlus(user.role)) return redirect("/portal");
-  const [result, options] = await Promise.all([
+  const [result, options, generations] = await Promise.all([
     api.GET("/api/v1/auto-docs/{id}", { params: { path: { id: params.id! } } }),
     api.GET("/api/v1/auto-docs/options"),
+    api.GET("/api/v1/auto-docs/{id}/generations", { params: { path: { id: params.id! } } }),
   ]);
   if (result.response.status === 404) return { user, notFound: true as const };
   if (!result.data) throw new Error("The Auto-Doc could not be read.");
   if (!options.data) throw new Error("The Auto-Doc editor options could not be read.");
+  if (!generations.data) throw new Error("The Auto-Doc Generations could not be read.");
   const query = new URL(request.url).searchParams;
   const versionId = query.get("version");
   let landing: { document: ContractDocument; versionId: string } | null = null;
@@ -57,7 +61,14 @@ export async function autoDocRecordLoader({ params, request }: LoaderFunctionArg
     if (document?.versions.some((version) => version.id === versionId))
       landing = { document, versionId };
   }
-  return { user, record: result.data, options: options.data, landing, find: query.get("find") };
+  return {
+    user,
+    record: result.data,
+    options: options.data,
+    generations: generations.data.generations,
+    landing,
+    find: query.get("find"),
+  };
 }
 
 export function AutoDocRecordPage() {
@@ -85,6 +96,7 @@ export function AutoDocRecordPage() {
     <AutoDocRecord
       initial={loaded.record}
       options={loaded.options}
+      generations={loaded.generations}
       user={loaded.user}
       landing={loaded.landing}
       find={loaded.find}
@@ -95,12 +107,14 @@ export function AutoDocRecordPage() {
 function AutoDocRecord({
   initial,
   options,
+  generations,
   user,
   landing,
   find,
 }: {
   initial: Answer;
   options: AutoDocOptions;
+  generations: AutoDocGeneration[];
   landing: { document: ContractDocument; versionId: string } | null;
   find: string | null;
   user: Awaited<ReturnType<typeof requireUser>>;
@@ -346,6 +360,14 @@ function AutoDocRecord({
               <p className="mt-2 text-muted">{saved.autoDoc.description}</p>
             )}
           </header>
+          {saved.autoDoc.state === "published" && (
+            <Link
+              className="inline-block text-link hover:underline"
+              to={`/auto-docs/${saved.autoDoc.id}/generate`}
+            >
+              <FormattedMessage id="autoDocs.generate" defaultMessage="Generate" />
+            </Link>
+          )}
           {error && (
             <p role="alert" className="text-sm text-status-danger-fg">
               {error}
@@ -396,6 +418,17 @@ function AutoDocRecord({
                 id="autoDocs.templateHelp"
                 defaultMessage="Use double braces for Placeholders, such as {example}. Each upload adds a file version."
                 values={{ example: "{{counterparty_name}}" }}
+              />
+            </p>
+            <p className="text-sm text-muted">
+              <FormattedMessage
+                id="autoDocs.directiveHelp"
+                defaultMessage="Format values in Word with {upper}, {date}, or {currency}."
+                values={{
+                  upper: "{{name|upper}}",
+                  date: "{{date|date:DD/MM/YYYY}}",
+                  currency: "{{amount|currency:USD}}",
+                }}
               />
             </p>
             {dirty && (
@@ -648,6 +681,7 @@ function AutoDocRecord({
             </form>
           </section>
           <AutoDocSettings record={saved} options={options} onSaved={setSaved} />
+          <AutoDocGenerations generations={generations} />
           <AutoDocVersionDiff
             key={`diff-${saved.formVersion?.id}-${saved.template?.versions[0]?.id}`}
             record={saved}

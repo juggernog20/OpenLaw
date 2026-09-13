@@ -1336,7 +1336,7 @@ update the approval record when a guide changes or completes verification.
 
 ## TECH-028: The Auto-Doc fill engine runs in the API process; the sidecar renders the PDF
 
-- **Status:** Accepted as a default pick, routed from the Auto-Docs grill; confirm at spec
+- **Status:** Accepted, confirmed by the M35/7 spec and implementation
 - **Date:** 2026-09-13
 
 ### Context
@@ -1351,6 +1351,14 @@ Nothing in the codebase writes a `.docx`. TECH-010's sidecar converts Office to 
 - **Formatting directives** are implemented in the value resolver: date format, currency, upper case. Nothing else.
 - **PDF** is the existing `/convert` operation on the filled `.docx`, through the `DocEngine` seam, as a derivation.
 - **Bounds:** the template is under the shared upload ceiling; the fill has a timeout; a failed fill marks the Generation `failed` (ADO-007) and never leaves a partial file.
+
+### Built in M35/7
+
+The injected `AutoDocFillEngine` has a deterministic fake for route tests. The real driver uses docxtemplater 3.69 and pizzip 3.2 in an API worker thread, with a ten-second deadline that terminates the worker and a 256 MiB heap limit. Packages above 32 MiB expanded are refused before rendering to leave room for XML and token allocation. Storage receives only the completed package. The renderer uses the scanner's Word part list, including endnotes, and translates its tokens into Boolean sections before rendering. It leaves unrelated XML parts alone.
+
+The fixed syntax is `{{name|upper}}`, `{{date|date:YYYY-MM-DD}}`, `{{date|date:DD/MM/YYYY}}`, `{{date|date:MMMM D, YYYY}}`, and `{{amount|currency:USD}}`. Currency directives accept supported three-letter codes. Auto-Doc currency answers are numeric amounts, as Clause conditions require; the directive chooses the printed currency. This differs from a catalog currency Field, which stores a code. Date formatting uses UTC calendar dates and currency formatting uses English separators. The author chooses the directive in Word.
+
+Fixture tests cover split runs, kept and omitted Blocks, directives, document structure, malformed files, and timeout. The configuration uses the library's documented [custom parser and delimiter options](https://docxtemplater.com/docs/configuration/) and [Boolean sections](https://docxtemplater.com/docs/tag-types/).
 
 ### Alternatives considered
 
@@ -1394,4 +1402,4 @@ One runtime dependency pair in `apps/api`. A `FakeFillEngine` beside `FakeDocEng
 | TECH-025 | A record applet's third web mount becomes configuration                       | Accepted                  |
 | TECH-026 | Compile one Markdown source set for bundled Help and standalone documentation | Accepted                  |
 | TECH-027 | Publish approved development guides before verification                       | Accepted, amends TECH-026 |
-| TECH-028 | The Auto-Doc fill engine runs in the API process; the sidecar renders PDF     | Accepted, default pick    |
+| TECH-028 | The Auto-Doc fill engine runs in the API process; the sidecar renders PDF     | Accepted                  |

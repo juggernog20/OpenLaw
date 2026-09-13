@@ -129,6 +129,8 @@ Member+ can Publish a new pair, Unpublish, Archive, and Restore through separate
 - **Alternatives considered** — Email only: a lost email needs a Request to Legal. A plain-text email: rejected by Blair; the layer already exists.
 - **Consequences** — `auto_doc_generations.state`, `docx_file_ref`, `pdf_file_ref`, `email_sent_at`, `email_failure`. The rendition pipeline gains a Generation input beside Document Versions.
 
+**M35/7 built addendum (#850):** Member+ opens the live form and submits its pair ids with typed answers. A changed pair or non-published Auto-Doc returns a named refusal, with answers kept in the form. Migration 0122 adds Generations and deferred checks that both versions belong to the same Auto-Doc, including after reparenting. The pending row and `auto_doc.generated` entry commit before the bounded Word fill. A complete output is stored under `auto-doc-generations/<id>/original.docx`, then the Generation becomes ready. Fill failures keep their reason and no output. The confirmation and the Auto-Doc's Generations list show the person, pair, time, state, and available download. PDF, formats, email, and retry remain M35/8.
+
 ## ADO-008 — Acknowledgement before use, by Business Users, at a configurable frequency
 
 - **Status** — Accepted

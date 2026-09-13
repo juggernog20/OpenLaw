@@ -6,6 +6,7 @@ import {
   check,
   foreignKey,
   integer,
+  index,
   jsonb,
   pgTable,
   text,
@@ -17,7 +18,7 @@ import {
 import { users } from "./auth.js";
 import { contractTypes } from "./contract-types.js";
 import { documents, documentVersions } from "./documents.js";
-import { FIELD_TYPES, type FieldType } from "./fields.js";
+import { FIELD_TYPES, type FieldType, type CustomFieldValue } from "./fields.js";
 import { uuidPk } from "./helpers.js";
 
 export const AUTO_DOC_STATES = ["draft", "published", "archived"] as const;
@@ -166,3 +167,63 @@ export const autoDocTemplateScans = pgTable(
     }).onDelete("cascade"),
   ],
 );
+
+export const AUTO_DOC_GENERATION_STATES = ["pending", "ready", "failed"] as const;
+export const autoDocGenerations = pgTable(
+  "auto_doc_generations",
+  {
+    id: uuidPk(),
+    autoDocId: text("auto_doc_id")
+      .notNull()
+      .references(() => autoDocs.id),
+    documentVersionId: text("document_version_id").notNull(),
+    formVersionId: text("form_version_id").notNull(),
+    generatedBy: text("generated_by")
+      .notNull()
+      .references(() => users.id),
+    answers: jsonb("answers").$type<Record<string, CustomFieldValue>>().notNull(),
+    state: text("state", { enum: AUTO_DOC_GENERATION_STATES }).notNull().default("pending"),
+    /** Null until a complete Word output has been stored. */
+    docxFileRef: text("docx_file_ref"),
+    /** Null unless the Generation failed. */
+    failure: jsonb("failure").$type<{ code: string; detail: string }>(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    foreignKey({
+      name: "auto_doc_generations_file_fk",
+      columns: [table.documentVersionId],
+      foreignColumns: [documentVersions.id],
+    }),
+    foreignKey({
+      name: "auto_doc_generations_form_fk",
+      columns: [table.formVersionId],
+      foreignColumns: [autoDocFormVersions.id],
+    }),
+    index("auto_doc_generations_auto_doc_idx").on(table.autoDocId, table.createdAt),
+    index("auto_doc_generations_person_idx").on(table.generatedBy, table.createdAt),
+    index("auto_doc_generations_file_version_idx").on(table.documentVersionId),
+    index("auto_doc_generations_form_version_idx").on(table.formVersionId),
+    check(
+      "auto_doc_generations_state_check",
+      sql`${table.state} in ('pending', 'ready', 'failed')`,
+    ),
+    check(
+      "auto_doc_generations_ready_check",
+      sql`${table.state} <> 'ready' or ${table.docxFileRef} is not null`,
+    ),
+    check(
+      "auto_doc_generations_failure_check",
+      sql`((${table.state} = 'failed') = (${table.failure} is not null)) and
+        (${table.failure} is null or (
+          jsonb_typeof(${table.failure}) = 'object' and
+          jsonb_typeof(${table.failure}->'code') = 'string' and
+          jsonb_typeof(${table.failure}->'detail') = 'string' and
+          nullif(btrim(${table.failure}->>'code'), '') is not null and
+          nullif(btrim(${table.failure}->>'detail'), '') is not null
+        ))`,
+    ),
+  ],
+);
+export type AutoDocGeneration = typeof autoDocGenerations.$inferSelect;

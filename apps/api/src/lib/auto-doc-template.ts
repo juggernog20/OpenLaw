@@ -12,6 +12,7 @@ export interface TemplateToken {
   name: string;
   start: number;
   end: number;
+  directive?: string;
 }
 export interface TemplateDetection {
   placeholders: string[];
@@ -22,6 +23,32 @@ export class TemplateDetectionError extends Error {
     super(`${reason}: ${JSON.stringify(offending.trimEnd().slice(0, 300))}`);
     this.name = "TemplateDetectionError";
   }
+}
+
+export function parseAutoDocPlaceholder(content: string): { name: string; directive?: string } {
+  const [name = "", directive, ...extra] = content.split("|").map((part) => part.trim());
+  if (!AUTO_DOC_SLUG.test(name))
+    throw new TemplateDetectionError(
+      "Use a valid slug for the Placeholder or Block name",
+      `{{${content}}}`,
+    );
+  if (
+    extra.length ||
+    (directive !== undefined &&
+      !/^(?:upper|date:(?:YYYY-MM-DD|DD\/MM\/YYYY|MMMM D, YYYY)|currency:[A-Z]{3})$/.test(
+        directive,
+      ))
+  )
+    throw new TemplateDetectionError(
+      "Use upper, a supported date format, or currency with a three-letter code",
+      `{{${content}}}`,
+    );
+  if (directive?.startsWith("currency:")) {
+    const code = directive.slice(9);
+    if (!Intl.supportedValuesOf("currency").includes(code))
+      throw new TemplateDetectionError("Use a supported currency code", `{{${content}}}`);
+  }
+  return { name, ...(directive === undefined ? {} : { directive }) };
 }
 
 export function scanTemplateText(text: string): TemplateDetection & { tokens: TemplateToken[] } {
@@ -52,7 +79,8 @@ export function scanTemplateText(text: string): TemplateDetection & { tokens: Te
       tokens.push({ kind: "block_close", name: block.name, start, end });
     } else {
       const isBlock = content.startsWith("#block ");
-      const name = isBlock ? content.slice(7).trim() : content;
+      const parsed = isBlock ? { name: content.slice(7).trim() } : parseAutoDocPlaceholder(content);
+      const { name } = parsed;
       if (!AUTO_DOC_SLUG.test(name))
         throw new TemplateDetectionError(
           "Use a valid slug for the Placeholder or Block name",
@@ -62,7 +90,7 @@ export function scanTemplateText(text: string): TemplateDetection & { tokens: Te
         open.push({ name, text: quoted });
         if (!blocks.includes(name)) blocks.push(name);
       } else placeholders.push(name);
-      tokens.push({ kind: isBlock ? "block_open" : "placeholder", name, start, end });
+      tokens.push({ kind: isBlock ? "block_open" : "placeholder", ...parsed, start, end });
     }
     offset = end;
   }

@@ -8,6 +8,10 @@ export type AutoDocAnswer =
   paths["/api/v1/auto-docs/{id}"]["get"]["responses"][200]["content"]["application/json"];
 export type AutoDocOptions =
   paths["/api/v1/auto-docs/options"]["get"]["responses"][200]["content"]["application/json"];
+export type AutoDocGenerationForm =
+  paths["/api/v1/auto-docs/{id}/generate"]["get"]["responses"][200]["content"]["application/json"];
+export type AutoDocGeneration =
+  paths["/api/v1/auto-docs/{id}/generations/{generationId}"]["get"]["responses"][200]["content"]["application/json"]["generation"];
 export type AutoDocField = NonNullable<
   AutoDocAnswer["formVersion"]
 >["definition"]["fields"][number];
