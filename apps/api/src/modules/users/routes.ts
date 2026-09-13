@@ -24,6 +24,7 @@ import {
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
+import { departmentName, lockedDepartment } from "../departments/references.js";
 import { INVITABLE_ROLES } from "../auth/routes.js";
 
 /** Derived per read, never stored: the row's state on the Users pane. */
@@ -37,6 +38,7 @@ const UserRowSchema = z.object({
   status: z.enum(USER_STATUSES),
   /** NULL = has never signed in, which for staff means a pending invite. */
   lastActiveAt: z.iso.datetime().nullable(),
+  departmentId: z.string().nullable(),
 });
 
 const UserRowEnvelope = z.object({ user: UserRowSchema });
@@ -49,6 +51,7 @@ const userRowColumns = {
   role: users.role,
   archivedAt: users.archivedAt,
   lastActiveAt: users.lastActiveAt,
+  departmentId: users.departmentId,
 } as const;
 
 interface UserRecord {
@@ -58,6 +61,7 @@ interface UserRecord {
   role: (typeof USER_ROLES)[number];
   archivedAt: Date | null;
   lastActiveAt: Date | null;
+  departmentId: string | null;
 }
 
 /**
@@ -82,6 +86,7 @@ function toUserRow(row: UserRecord, activated: boolean) {
     role: row.role,
     status: statusOf(row, activated),
     lastActiveAt: row.lastActiveAt?.toISOString() ?? null,
+    departmentId: row.departmentId,
   };
 }
 
@@ -141,6 +146,56 @@ export const usersRoutes: FastifyPluginAsyncZod = async (app) => {
         ),
       );
       return { users: rows.map((row) => toUserRow(row, activatedIds.has(row.id))) };
+    },
+  );
+
+  app.patch(
+    "/users/:userId/department",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "setUserDepartment",
+        summary: "Set or clear a person's Department",
+        tags: ["users"],
+        params: z.object({ userId: z.string() }),
+        body: z.strictObject({ departmentId: z.string().min(1).nullable() }),
+        response: { 200: UserRowEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const row = await app.db.transaction(async (tx) => {
+        const [target] = await tx
+          .select(userRowColumns)
+          .from(users)
+          .where(eq(users.id, request.params.userId))
+          .for("update");
+        if (!target) throw httpError(404, "No user exists with this id.");
+        const { departmentId } = request.body;
+        if (departmentId === target.departmentId) return target;
+        const next = departmentId ? await lockedDepartment(tx, departmentId) : null;
+        const before = await departmentName(tx, target.departmentId);
+        const [updated] = await tx
+          .update(users)
+          .set({ departmentId, updatedAt: new Date() })
+          .where(eq(users.id, target.id))
+          .returning(userRowColumns);
+        await recordActivity(tx, {
+          entityType: "user",
+          entityId: target.id,
+          actorId: request.user.id,
+          action: "user.department_set",
+          visibility: "admin_only",
+          payload: {
+            email: target.email,
+            from: before,
+            to: next?.displayName ?? null,
+            fromId: target.departmentId,
+            toId: departmentId,
+          },
+        });
+        return updated!;
+      });
+      return { user: toUserRow(row, await activated(row.id)) };
     },
   );
 

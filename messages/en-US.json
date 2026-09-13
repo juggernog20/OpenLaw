@@ -644,6 +644,9 @@
   "activity.user.briefingSent": {
     "defaultMessage": "The morning round sent a daily briefing"
   },
+  "activity.user.departmentSet": {
+    "defaultMessage": "{actor} changed the Department of {email} from {from} to {to}"
+  },
   "activity.user.displayNameChanged": {
     "defaultMessage": "{actor} changed their display name"
   },
@@ -2440,6 +2443,12 @@
   },
   "decline.title": {
     "defaultMessage": "Decline {reference}"
+  },
+  "departments.archived": {
+    "defaultMessage": "{name} (archived)"
+  },
+  "departments.none": {
+    "defaultMessage": "No Department"
   },
   "description.source.ai": {
     "defaultMessage": "AI generated"
@@ -7346,6 +7355,66 @@
   "settings.currencies.title": {
     "defaultMessage": "Currencies in use"
   },
+  "settings.departments.add": {
+    "defaultMessage": "Add Department"
+  },
+  "settings.departments.addName": {
+    "defaultMessage": "New Department name"
+  },
+  "settings.departments.archive": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.departments.archiveError": {
+    "defaultMessage": "The Department could not be archived."
+  },
+  "settings.departments.archiveSubmit": {
+    "defaultMessage": "Archive Department"
+  },
+  "settings.departments.archiveTitle": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.departments.archiveWarning": {
+    "defaultMessage": "Archive {name}? Existing user and Contract references keep this Department. It leaves every picker."
+  },
+  "settings.departments.auditNote": {
+    "defaultMessage": "The change applies immediately and is recorded in the audit log."
+  },
+  "settings.departments.count": {
+    "defaultMessage": "{count, plural, one {# Department} other {# Departments}}"
+  },
+  "settings.departments.help": {
+    "defaultMessage": "Drag to reorder. Archiving a Department removes it from pickers and keeps existing references."
+  },
+  "settings.departments.inUse": {
+    "defaultMessage": "{count, plural, one {# reference} other {# references}}"
+  },
+  "settings.departments.moved": {
+    "defaultMessage": "{name} moved to position {position} of {total}."
+  },
+  "settings.departments.noCandidates": {
+    "defaultMessage": "Departments keep existing references when archived."
+  },
+  "settings.departments.pageTitle": {
+    "defaultMessage": "Departments"
+  },
+  "settings.departments.reassignLabel": {
+    "defaultMessage": "Reassign {count, plural, =0 {references} one {# reference} other {# references}} to"
+  },
+  "settings.departments.reassignNone": {
+    "defaultMessage": "No reassignment"
+  },
+  "settings.departments.renameLabel": {
+    "defaultMessage": "Rename {name}"
+  },
+  "settings.departments.reorder": {
+    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
+  },
+  "settings.departments.restore": {
+    "defaultMessage": "Restore {name}"
+  },
+  "settings.departments.title": {
+    "defaultMessage": "Departments"
+  },
   "settings.eSignature.chip.connected": {
     "defaultMessage": "Connected"
   },
@@ -8789,6 +8858,9 @@
   "settings.section.contracts": {
     "defaultMessage": "Contracts"
   },
+  "settings.section.departments": {
+    "defaultMessage": "Departments"
+  },
   "settings.section.entities": {
     "defaultMessage": "Entities"
   },
@@ -8864,6 +8936,9 @@
   "settings.users.colActions": {
     "defaultMessage": "Actions"
   },
+  "settings.users.colDepartment": {
+    "defaultMessage": "Department"
+  },
   "settings.users.colLastActive": {
     "defaultMessage": "Last active"
   },
@@ -8878,6 +8953,9 @@
   },
   "settings.users.count": {
     "defaultMessage": "{count, plural, one {# user} other {# users}}"
+  },
+  "settings.users.department": {
+    "defaultMessage": "Department of {email}"
   },
   "settings.users.invite": {
     "defaultMessage": "Invite user"

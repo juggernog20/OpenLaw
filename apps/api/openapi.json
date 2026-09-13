@@ -2200,6 +2200,9 @@
                                 "type": "null"
                               }
                             ]
+                          },
+                          "departmentId": {
+                            "type": ["string", "null"]
                           }
                         },
                         "required": [
@@ -2208,13 +2211,129 @@
                           "displayName",
                           "role",
                           "status",
-                          "lastActiveAt"
+                          "lastActiveAt",
+                          "departmentId"
                         ],
                         "additionalProperties": false
                       }
                     }
                   },
                   "required": ["users"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{userId}/department": {
+      "patch": {
+        "operationId": "setUserDepartment",
+        "summary": "Set or clear a person's Department",
+        "tags": ["users"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "departmentId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": ["departmentId"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "userId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": ["administrator", "legal_team_member", "business_user"]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": ["active", "invited", "archived"]
+                        },
+                        "lastActiveAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "departmentId": {
+                          "type": ["string", "null"]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "email",
+                        "displayName",
+                        "role",
+                        "status",
+                        "lastActiveAt",
+                        "departmentId"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["user"],
                   "additionalProperties": false
                 }
               }
@@ -2304,9 +2423,20 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "departmentId": {
+                          "type": ["string", "null"]
                         }
                       },
-                      "required": ["id", "email", "displayName", "role", "status", "lastActiveAt"],
+                      "required": [
+                        "id",
+                        "email",
+                        "displayName",
+                        "role",
+                        "status",
+                        "lastActiveAt",
+                        "departmentId"
+                      ],
                       "additionalProperties": false
                     }
                   },
@@ -2383,9 +2513,20 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "departmentId": {
+                          "type": ["string", "null"]
                         }
                       },
-                      "required": ["id", "email", "displayName", "role", "status", "lastActiveAt"],
+                      "required": [
+                        "id",
+                        "email",
+                        "displayName",
+                        "role",
+                        "status",
+                        "lastActiveAt",
+                        "departmentId"
+                      ],
                       "additionalProperties": false
                     }
                   },
@@ -2462,9 +2603,20 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "departmentId": {
+                          "type": ["string", "null"]
                         }
                       },
-                      "required": ["id", "email", "displayName", "role", "status", "lastActiveAt"],
+                      "required": [
+                        "id",
+                        "email",
+                        "displayName",
+                        "role",
+                        "status",
+                        "lastActiveAt",
+                        "departmentId"
+                      ],
                       "additionalProperties": false
                     }
                   },
@@ -6911,6 +7063,822 @@
                     }
                   },
                   "required": ["matterType"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/departments": {
+      "get": {
+        "operationId": "listDepartments",
+        "summary": "The Department taxonomy in display order (SET-010); archived rows only with includeArchived=true",
+        "tags": ["departments"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
+            "in": "query",
+            "name": "includeArchived",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "departments": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": ["string", "null"]
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "isSystemDefault": {
+                            "type": "boolean"
+                          },
+                          "archivedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "inUseCount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "slug",
+                          "displayName",
+                          "description",
+                          "displayOrder",
+                          "isSystemDefault",
+                          "archivedAt",
+                          "inUseCount"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["departments"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createDepartment",
+        "summary": "Add a Department: the slug is derived here, once, and is immutable after creation; the row appends to the display order",
+        "tags": ["departments"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "displayName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  }
+                },
+                "required": ["displayName"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "department": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "displayOrder",
+                        "isSystemDefault",
+                        "archivedAt",
+                        "inUseCount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["department"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/departments/{id}": {
+      "get": {
+        "operationId": "getDepartment",
+        "summary": "One Department — the read behind the type editor",
+        "tags": ["departments"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "department": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "displayOrder",
+                        "isSystemDefault",
+                        "archivedAt",
+                        "inUseCount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["department"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateDepartment",
+        "summary": "Rename a Department's display name (DES-017 in-place rename) or edit its description; the slug never changes",
+        "tags": ["departments"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "displayName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "description": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 500
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "department": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "displayOrder",
+                        "isSystemDefault",
+                        "archivedAt",
+                        "inUseCount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["department"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteDepartment",
+        "summary": "Hard-delete a Department (SET-010); a type still used by references refuses",
+        "tags": ["departments"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response"
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/departments/order": {
+      "put": {
+        "operationId": "reorderDepartments",
+        "summary": "Apply a full permutation of the live rows (SET-003 immediate apply); display orders renumber from 1, archived rows keep theirs",
+        "tags": ["departments"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ids": {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": ["ids"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "departments": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": ["string", "null"]
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "isSystemDefault": {
+                            "type": "boolean"
+                          },
+                          "archivedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "inUseCount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "slug",
+                          "displayName",
+                          "description",
+                          "displayOrder",
+                          "isSystemDefault",
+                          "archivedAt",
+                          "inUseCount"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["departments"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/departments/{id}/archive": {
+      "post": {
+        "operationId": "archiveDepartment",
+        "summary": "Archive a Department; it leaves pickers and retains every reference",
+        "tags": ["departments"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reassignToId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "department": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "displayOrder",
+                        "isSystemDefault",
+                        "archivedAt",
+                        "inUseCount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["department"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/departments/{id}/restore": {
+      "post": {
+        "operationId": "restoreDepartment",
+        "summary": "Restore an archived Department (SET-003's recovery story) to the end of the display order",
+        "tags": ["departments"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "department": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "displayOrder",
+                        "isSystemDefault",
+                        "archivedAt",
+                        "inUseCount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["department"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/departments/options": {
+      "get": {
+        "operationId": "departmentOptions",
+        "summary": "Live Departments for staff pickers",
+        "tags": ["departments"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "departments": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "displayName"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["departments"],
                   "additionalProperties": false
                 }
               }
@@ -28796,6 +29764,9 @@
                           "owningDepartment": {
                             "type": ["string", "null"]
                           },
+                          "owningDepartmentId": {
+                            "type": ["string", "null"]
+                          },
                           "region": {
                             "type": ["string", "null"]
                           },
@@ -28976,6 +29947,7 @@
                           "renewalPendingConfirmation",
                           "proposedRenewalExpiry",
                           "owningDepartment",
+                          "owningDepartmentId",
                           "region",
                           "description",
                           "nextDeadline",
@@ -29021,6 +29993,7 @@
         "operationId": "createContract",
         "summary": "Create a contract from a title, a live type, and any custom fields that type hard-requires (CTR-016/MTR-014 — creation is refused while one is empty); the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward — except the Confidential flag (DD-014), which may be set here so a sensitive record is never visible to the wrong audience, even briefly, and the Owner (CTR-004), which the create dialog seeds with the acting person and which must be a live Administrator or Legal Team Member; omitted or null is unassigned, a real state. `renewalOf` routes a renewal into a new record (CTR-007's third and fourth vehicles, M16/5): the successor is born carrying its predecessor's business facts — our entity, the value, the term shape, and the counterparties — and linked to it, as a child by contracts.parent_id or as a standalone successor by a CTR-015 `renews` row. The team, the status, and the Confidential flag are **never** copied: CTR-015's no-inheritance stance, applied at birth. The title and the type are the body's, so whatever the person edited before pressing Create is what the record is born with. Appends the link's own activity action beside contract.created",
         "tags": ["contracts"],
+        "description": "M35 pre-release breaking change: send nullable owningDepartmentId instead of the former owningDepartment text input. A non-null id must name a live Department. Responses retain owningDepartment as the display name alongside owningDepartmentId.",
         "requestBody": {
           "required": true,
           "content": {
@@ -29033,11 +30006,11 @@
                     "minLength": 1,
                     "maxLength": 200
                   },
-                  "owningDepartment": {
+                  "owningDepartmentId": {
                     "anyOf": [
                       {
                         "type": "string",
-                        "maxLength": 200
+                        "minLength": 1
                       },
                       {
                         "type": "null"
@@ -29411,6 +30384,9 @@
                         "owningDepartment": {
                           "type": ["string", "null"]
                         },
+                        "owningDepartmentId": {
+                          "type": ["string", "null"]
+                        },
                         "region": {
                           "type": ["string", "null"]
                         },
@@ -29591,6 +30567,7 @@
                         "renewalPendingConfirmation",
                         "proposedRenewalExpiry",
                         "owningDepartment",
+                        "owningDepartmentId",
                         "region",
                         "description",
                         "nextDeadline",
@@ -29772,6 +30749,22 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "departments": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "displayName"],
+                        "additionalProperties": false
+                      }
+                    },
                     "contractTypes": {
                       "type": "array",
                       "items": {
@@ -29935,7 +30928,13 @@
                       }
                     }
                   },
-                  "required": ["contractTypes", "contractStatuses", "users", "approverGroups"],
+                  "required": [
+                    "departments",
+                    "contractTypes",
+                    "contractStatuses",
+                    "users",
+                    "approverGroups"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -30258,6 +31257,9 @@
                         "owningDepartment": {
                           "type": ["string", "null"]
                         },
+                        "owningDepartmentId": {
+                          "type": ["string", "null"]
+                        },
                         "region": {
                           "type": ["string", "null"]
                         },
@@ -30438,6 +31440,7 @@
                         "renewalPendingConfirmation",
                         "proposedRenewalExpiry",
                         "owningDepartment",
+                        "owningDepartmentId",
                         "region",
                         "description",
                         "nextDeadline",
@@ -30957,7 +31960,7 @@
         "operationId": "updateContract",
         "summary": "Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, the signing entity, priority, risk, the value, the CTR-006 term fields, the type, a custom field, or the status — any live status may follow any other (CTR-001). The value is one field in three parts: amount, currency, and cadence commit together and clear together. Re-typing re-checks the new type's hard-required fields before it commits (CTR-016/MTR-014), so the type and the values that satisfy it may be sent together. The term is five fields with one rule between them (CTR-006): an expiry on an evergreen contract and a renewal period on a contract that does not auto-renew are refused 400 with their own problem types, and a term-type change clears the fields the new type cannot hold, each clear narrated as the edit it is. The Confidential flag (DD-014) commits here too, but only for an Administrator, the contract's creator, or its Owner: anyone else who reaches the record is refused 403, and anyone who does not reach it is answered 404 like a contract that does not exist. A status change that moves the contract past the approval stage while approvals are pending or rejected meets CTR-012's soft gate: it is refused 409 with the unresolved approvals named, and the same commit with `overrideSoftGate` succeeds and is logged as an override. Never on an archived contract",
         "tags": ["contracts"],
-        "description": "Business Owner assignment is Member+ only: Administrator or Legal Team Member. The person must be live; null clears ownership without removing team membership.",
+        "description": "Business Owner assignment is Member+ only: Administrator or Legal Team Member. The person must be live; null clears ownership without removing team membership. M35 pre-release breaking change: send nullable owningDepartmentId instead of the former owningDepartment text input. A non-null id must name a live Department. Responses retain owningDepartment as the display name alongside owningDepartmentId.",
         "requestBody": {
           "required": true,
           "content": {
@@ -30981,11 +31984,11 @@
                       }
                     ]
                   },
-                  "owningDepartment": {
+                  "owningDepartmentId": {
                     "anyOf": [
                       {
                         "type": "string",
-                        "maxLength": 200
+                        "minLength": 1
                       },
                       {
                         "type": "null"
@@ -31454,6 +32457,9 @@
                         "owningDepartment": {
                           "type": ["string", "null"]
                         },
+                        "owningDepartmentId": {
+                          "type": ["string", "null"]
+                        },
                         "region": {
                           "type": ["string", "null"]
                         },
@@ -31634,6 +32640,7 @@
                         "renewalPendingConfirmation",
                         "proposedRenewalExpiry",
                         "owningDepartment",
+                        "owningDepartmentId",
                         "region",
                         "description",
                         "nextDeadline",
@@ -32232,6 +33239,9 @@
                         "owningDepartment": {
                           "type": ["string", "null"]
                         },
+                        "owningDepartmentId": {
+                          "type": ["string", "null"]
+                        },
                         "region": {
                           "type": ["string", "null"]
                         },
@@ -32412,6 +33422,7 @@
                         "renewalPendingConfirmation",
                         "proposedRenewalExpiry",
                         "owningDepartment",
+                        "owningDepartmentId",
                         "region",
                         "description",
                         "nextDeadline",
@@ -32749,6 +33760,9 @@
                         "owningDepartment": {
                           "type": ["string", "null"]
                         },
+                        "owningDepartmentId": {
+                          "type": ["string", "null"]
+                        },
                         "region": {
                           "type": ["string", "null"]
                         },
@@ -32929,6 +33943,7 @@
                         "renewalPendingConfirmation",
                         "proposedRenewalExpiry",
                         "owningDepartment",
+                        "owningDepartmentId",
                         "region",
                         "description",
                         "nextDeadline",
@@ -33290,6 +34305,9 @@
                         "owningDepartment": {
                           "type": ["string", "null"]
                         },
+                        "owningDepartmentId": {
+                          "type": ["string", "null"]
+                        },
                         "region": {
                           "type": ["string", "null"]
                         },
@@ -33470,6 +34488,7 @@
                         "renewalPendingConfirmation",
                         "proposedRenewalExpiry",
                         "owningDepartment",
+                        "owningDepartmentId",
                         "region",
                         "description",
                         "nextDeadline",
@@ -34091,6 +35110,9 @@
                         "owningDepartment": {
                           "type": ["string", "null"]
                         },
+                        "owningDepartmentId": {
+                          "type": ["string", "null"]
+                        },
                         "region": {
                           "type": ["string", "null"]
                         },
@@ -34271,6 +35293,7 @@
                         "renewalPendingConfirmation",
                         "proposedRenewalExpiry",
                         "owningDepartment",
+                        "owningDepartmentId",
                         "region",
                         "description",
                         "nextDeadline",
@@ -34638,6 +35661,9 @@
                         "owningDepartment": {
                           "type": ["string", "null"]
                         },
+                        "owningDepartmentId": {
+                          "type": ["string", "null"]
+                        },
                         "region": {
                           "type": ["string", "null"]
                         },
@@ -34818,6 +35844,7 @@
                         "renewalPendingConfirmation",
                         "proposedRenewalExpiry",
                         "owningDepartment",
+                        "owningDepartmentId",
                         "region",
                         "description",
                         "nextDeadline",
@@ -35185,6 +36212,9 @@
                         "owningDepartment": {
                           "type": ["string", "null"]
                         },
+                        "owningDepartmentId": {
+                          "type": ["string", "null"]
+                        },
                         "region": {
                           "type": ["string", "null"]
                         },
@@ -35365,6 +36395,7 @@
                         "renewalPendingConfirmation",
                         "proposedRenewalExpiry",
                         "owningDepartment",
+                        "owningDepartmentId",
                         "region",
                         "description",
                         "nextDeadline",
@@ -35724,6 +36755,9 @@
                         "owningDepartment": {
                           "type": ["string", "null"]
                         },
+                        "owningDepartmentId": {
+                          "type": ["string", "null"]
+                        },
                         "region": {
                           "type": ["string", "null"]
                         },
@@ -35904,6 +36938,7 @@
                         "renewalPendingConfirmation",
                         "proposedRenewalExpiry",
                         "owningDepartment",
+                        "owningDepartmentId",
                         "region",
                         "description",
                         "nextDeadline",
@@ -36241,6 +37276,9 @@
                         "owningDepartment": {
                           "type": ["string", "null"]
                         },
+                        "owningDepartmentId": {
+                          "type": ["string", "null"]
+                        },
                         "region": {
                           "type": ["string", "null"]
                         },
@@ -36421,6 +37459,7 @@
                         "renewalPendingConfirmation",
                         "proposedRenewalExpiry",
                         "owningDepartment",
+                        "owningDepartmentId",
                         "region",
                         "description",
                         "nextDeadline",

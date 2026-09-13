@@ -132,6 +132,7 @@ import {
 } from "./routes/settings-request-type-editor";
 import { SettingsIntakeLinksPage, settingsIntakeLinksLoader } from "./routes/settings-intake-links";
 import { SettingsGeneralPage, settingsGeneralLoader } from "./routes/settings-general";
+import { SettingsDepartmentsPage, settingsDepartmentsLoader } from "./routes/settings-departments";
 import { SettingsUsersPage, settingsUsersLoader } from "./routes/settings-users";
 import {
   SettingsAuthenticationPage,
@@ -390,6 +391,11 @@ export const routes: RouteObject[] = [
       // role gate stands behind them.
       { path: "general", loader: settingsGeneralLoader, element: <SettingsGeneralPage /> },
       { path: "users", loader: settingsUsersLoader, element: <SettingsUsersPage /> },
+      {
+        path: "departments",
+        loader: settingsDepartmentsLoader,
+        element: <SettingsDepartmentsPage />,
+      },
       {
         path: "authentication",
         loader: settingsAuthenticationLoader,

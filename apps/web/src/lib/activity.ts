@@ -2375,6 +2375,18 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     values: (intl, payload) => ({ email: named(intl, payload, "email") }),
   },
+  "user.department_set": {
+    icon: UserCog,
+    message: defineMessage({
+      id: "activity.user.departmentSet",
+      defaultMessage: "{actor} changed the Department of {email} from {from} to {to}",
+    }),
+    values: (intl, payload) => ({
+      email: named(intl, payload, "email"),
+      from: text(payload, "from") ?? notSet(intl),
+      to: text(payload, "to") ?? notSet(intl),
+    }),
+  },
   "user.role_changed": {
     icon: UserCog,
     message: defineMessage({
@@ -2687,6 +2699,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   ...taxonomyArms("matter_type", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("entity_type", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("officer_role", Tag, TAXONOMY_VERBS),
+  ...taxonomyArms("department", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("request_type", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("knowledge_type", Tag, TAXONOMY_VERBS),
   // A status has a stage rather than a description, so it never writes

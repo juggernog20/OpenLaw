@@ -382,6 +382,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/users/{userId}/department": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Set or clear a person's Department */
+    patch: operations["setUserDepartment"];
+    trace?: never;
+  };
   "/api/v1/users/{userId}/role": {
     parameters: {
       query?: never;
@@ -917,6 +934,111 @@ export interface paths {
     put?: never;
     /** Restore an archived matter type (SET-003's recovery story) to the end of the display order */
     post: operations["restoreMatterType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/departments": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The Department taxonomy in display order (SET-010); archived rows only with includeArchived=true */
+    get: operations["listDepartments"];
+    put?: never;
+    /** Add a Department: the slug is derived here, once, and is immutable after creation; the row appends to the display order */
+    post: operations["createDepartment"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/departments/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One Department — the read behind the type editor */
+    get: operations["getDepartment"];
+    put?: never;
+    post?: never;
+    /** Hard-delete a Department (SET-010); a type still used by references refuses */
+    delete: operations["deleteDepartment"];
+    options?: never;
+    head?: never;
+    /** Rename a Department's display name (DES-017 in-place rename) or edit its description; the slug never changes */
+    patch: operations["updateDepartment"];
+    trace?: never;
+  };
+  "/api/v1/departments/order": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Apply a full permutation of the live rows (SET-003 immediate apply); display orders renumber from 1, archived rows keep theirs */
+    put: operations["reorderDepartments"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/departments/{id}/archive": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Archive a Department; it leaves pickers and retains every reference */
+    post: operations["archiveDepartment"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/departments/{id}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Restore an archived Department (SET-003's recovery story) to the end of the display order */
+    post: operations["restoreDepartment"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/departments/options": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Live Departments for staff pickers */
+    get: operations["departmentOptions"];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -2666,7 +2788,10 @@ export interface paths {
     /** The contract list: number, title, type, and status; newest reference first unless sort names a column, and unknown-valued rows always last (DD-019). Archived contracts only with includeArchived=true; ended contracts only with includeEnded=true (CTR-019). Member+ read every contract that is not confidential; a Contributor reads exactly the contracts they hold a contract_team row on, archived and ended ones behind the same flags. A confidential contract is listed only for its named team, or its Owner — silently absent for everyone else, so no count can reveal it */
     get: operations["listContracts"];
     put?: never;
-    /** Create a contract from a title, a live type, and any custom fields that type hard-requires (CTR-016/MTR-014 — creation is refused while one is empty); the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward — except the Confidential flag (DD-014), which may be set here so a sensitive record is never visible to the wrong audience, even briefly, and the Owner (CTR-004), which the create dialog seeds with the acting person and which must be a live Administrator or Legal Team Member; omitted or null is unassigned, a real state. `renewalOf` routes a renewal into a new record (CTR-007's third and fourth vehicles, M16/5): the successor is born carrying its predecessor's business facts — our entity, the value, the term shape, and the counterparties — and linked to it, as a child by contracts.parent_id or as a standalone successor by a CTR-015 `renews` row. The team, the status, and the Confidential flag are **never** copied: CTR-015's no-inheritance stance, applied at birth. The title and the type are the body's, so whatever the person edited before pressing Create is what the record is born with. Appends the link's own activity action beside contract.created */
+    /**
+     * Create a contract from a title, a live type, and any custom fields that type hard-requires (CTR-016/MTR-014 — creation is refused while one is empty); the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward — except the Confidential flag (DD-014), which may be set here so a sensitive record is never visible to the wrong audience, even briefly, and the Owner (CTR-004), which the create dialog seeds with the acting person and which must be a live Administrator or Legal Team Member; omitted or null is unassigned, a real state. `renewalOf` routes a renewal into a new record (CTR-007's third and fourth vehicles, M16/5): the successor is born carrying its predecessor's business facts — our entity, the value, the term shape, and the counterparties — and linked to it, as a child by contracts.parent_id or as a standalone successor by a CTR-015 `renews` row. The team, the status, and the Confidential flag are **never** copied: CTR-015's no-inheritance stance, applied at birth. The title and the type are the body's, so whatever the person edited before pressing Create is what the record is born with. Appends the link's own activity action beside contract.created
+     * @description M35 pre-release breaking change: send nullable owningDepartmentId instead of the former owningDepartment text input. A non-null id must name a live Department. Responses retain owningDepartment as the display name alongside owningDepartmentId.
+     */
     post: operations["createContract"];
     delete?: never;
     options?: never;
@@ -2723,7 +2848,7 @@ export interface paths {
     head?: never;
     /**
      * Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, the signing entity, priority, risk, the value, the CTR-006 term fields, the type, a custom field, or the status — any live status may follow any other (CTR-001). The value is one field in three parts: amount, currency, and cadence commit together and clear together. Re-typing re-checks the new type's hard-required fields before it commits (CTR-016/MTR-014), so the type and the values that satisfy it may be sent together. The term is five fields with one rule between them (CTR-006): an expiry on an evergreen contract and a renewal period on a contract that does not auto-renew are refused 400 with their own problem types, and a term-type change clears the fields the new type cannot hold, each clear narrated as the edit it is. The Confidential flag (DD-014) commits here too, but only for an Administrator, the contract's creator, or its Owner: anyone else who reaches the record is refused 403, and anyone who does not reach it is answered 404 like a contract that does not exist. A status change that moves the contract past the approval stage while approvals are pending or rejected meets CTR-012's soft gate: it is refused 409 with the unresolved approvals named, and the same commit with `overrideSoftGate` succeeds and is logged as an override. Never on an archived contract
-     * @description Business Owner assignment is Member+ only: Administrator or Legal Team Member. The person must be live; null clears ownership without removing team membership.
+     * @description Business Owner assignment is Member+ only: Administrator or Legal Team Member. The person must be live; null clears ownership without removing team membership. M35 pre-release breaking change: send nullable owningDepartmentId instead of the former owningDepartment text input. A non-null id must name a live Department. Responses retain owningDepartment as the display name alongside owningDepartmentId.
      */
     patch: operations["updateContract"];
     trace?: never;
@@ -6538,7 +6663,57 @@ export interface operations {
               /** @enum {string} */
               status: "active" | "invited" | "archived";
               lastActiveAt: string | null;
+              departmentId: string | null;
             }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  setUserDepartment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          departmentId: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            user: {
+              id: string;
+              email: string;
+              displayName: string;
+              /** @enum {string} */
+              role: "administrator" | "legal_team_member" | "business_user";
+              /** @enum {string} */
+              status: "active" | "invited" | "archived";
+              lastActiveAt: string | null;
+              departmentId: string | null;
+            };
           };
         };
       };
@@ -6587,6 +6762,7 @@ export interface operations {
               /** @enum {string} */
               status: "active" | "invited" | "archived";
               lastActiveAt: string | null;
+              departmentId: string | null;
             };
           };
         };
@@ -6629,6 +6805,7 @@ export interface operations {
               /** @enum {string} */
               status: "active" | "invited" | "archived";
               lastActiveAt: string | null;
+              departmentId: string | null;
             };
           };
         };
@@ -6671,6 +6848,7 @@ export interface operations {
               /** @enum {string} */
               status: "active" | "invited" | "archived";
               lastActiveAt: string | null;
+              departmentId: string | null;
             };
           };
         };
@@ -8729,6 +8907,384 @@ export interface operations {
               archivedAt: string | null;
               inUseCount: number;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listDepartments: {
+    parameters: {
+      query?: {
+        includeArchived?: "true" | "false";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            departments: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createDepartment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          displayName: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            department: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getDepartment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            department: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteDepartment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateDepartment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          displayName?: string;
+          description?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            department: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  reorderDepartments: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          ids: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            departments: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  archiveDepartment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          reassignToId?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            department: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  restoreDepartment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            department: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  departmentOptions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            departments: {
+              id: string;
+              displayName: string;
+            }[];
           };
         };
       };
@@ -16732,6 +17288,7 @@ export interface operations {
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
               owningDepartment: string | null;
+              owningDepartmentId: string | null;
               region: string | null;
               description: string | null;
               nextDeadline: {
@@ -16796,7 +17353,7 @@ export interface operations {
       content: {
         "application/json": {
           title: string;
-          owningDepartment?: string | null;
+          owningDepartmentId?: string | null;
           region?: string | null;
           contractTypeId: string;
           customFields?: {
@@ -16882,6 +17439,7 @@ export interface operations {
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
               owningDepartment: string | null;
+              owningDepartmentId: string | null;
               region: string | null;
               description: string | null;
               nextDeadline: {
@@ -17018,6 +17576,10 @@ export interface operations {
         };
         content: {
           "application/json": {
+            departments: {
+              id: string;
+              displayName: string;
+            }[];
             contractTypes: {
               id: string;
               slug: string;
@@ -17159,6 +17721,7 @@ export interface operations {
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
               owningDepartment: string | null;
+              owningDepartmentId: string | null;
               region: string | null;
               description: string | null;
               nextDeadline: {
@@ -17348,7 +17911,7 @@ export interface operations {
         "application/json": {
           title?: string;
           description?: string | null;
-          owningDepartment?: string | null;
+          owningDepartmentId?: string | null;
           region?: string | null;
           managerId?: string | null;
           businessOwnerId?: string | null;
@@ -17447,6 +18010,7 @@ export interface operations {
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
               owningDepartment: string | null;
+              owningDepartmentId: string | null;
               region: string | null;
               description: string | null;
               nextDeadline: {
@@ -17676,6 +18240,7 @@ export interface operations {
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
               owningDepartment: string | null;
+              owningDepartmentId: string | null;
               region: string | null;
               description: string | null;
               nextDeadline: {
@@ -17806,6 +18371,7 @@ export interface operations {
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
               owningDepartment: string | null;
+              owningDepartmentId: string | null;
               region: string | null;
               description: string | null;
               nextDeadline: {
@@ -17945,6 +18511,7 @@ export interface operations {
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
               owningDepartment: string | null;
+              owningDepartmentId: string | null;
               region: string | null;
               description: string | null;
               nextDeadline: {
@@ -18203,6 +18770,7 @@ export interface operations {
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
               owningDepartment: string | null;
+              owningDepartmentId: string | null;
               region: string | null;
               description: string | null;
               nextDeadline: {
@@ -18340,6 +18908,7 @@ export interface operations {
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
               owningDepartment: string | null;
+              owningDepartmentId: string | null;
               region: string | null;
               description: string | null;
               nextDeadline: {
@@ -18477,6 +19046,7 @@ export interface operations {
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
               owningDepartment: string | null;
+              owningDepartmentId: string | null;
               region: string | null;
               description: string | null;
               nextDeadline: {
@@ -18613,6 +19183,7 @@ export interface operations {
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
               owningDepartment: string | null;
+              owningDepartmentId: string | null;
               region: string | null;
               description: string | null;
               nextDeadline: {
@@ -18743,6 +19314,7 @@ export interface operations {
               renewalPendingConfirmation: boolean;
               proposedRenewalExpiry: string | null;
               owningDepartment: string | null;
+              owningDepartmentId: string | null;
               region: string | null;
               description: string | null;
               nextDeadline: {

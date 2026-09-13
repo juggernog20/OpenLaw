@@ -8,6 +8,7 @@ import {
   matterTeam,
   sql,
   contracts,
+  departments,
   documents,
   eq,
   matters,
@@ -33,6 +34,12 @@ let matterTypeId: string;
 
 beforeAll(async () => {
   harness = await startHarness();
+  await harness.db.insert(departments).values({
+    id: "dept-procurement",
+    slug: "procurement",
+    displayName: "Procurement",
+    displayOrder: 1,
+  });
   await harness.app.inject({ method: "POST", url: "/api/v1/auth/setup", payload: TEST_ADMIN });
   admin = await signInCookies(harness.app, TEST_ADMIN.email, TEST_ADMIN.password);
   const fixture = {
@@ -230,7 +237,7 @@ describe.each(["contract", "matter"] as const)("DD-023 Portal %s work", (module)
         customFields: { [slugs[0]!]: 42, [slugs[1]!]: 998 },
         ...(module === "contract"
           ? {
-              owningDepartment: "Procurement",
+              owningDepartmentId: "dept-procurement",
               region: "EMEA",
               effectiveDate: "2026-09-01",
               value: { amount: 10000, currency: "USD", cadence: "one_time" },
@@ -286,7 +293,7 @@ describe.each(["contract", "matter"] as const)("DD-023 Portal %s work", (module)
       cookies: admin,
       payload: {
         description: "Updated by Legal",
-        ...(module === "contract" ? { owningDepartment: null, region: "Americas" } : {}),
+        ...(module === "contract" ? { owningDepartmentId: null, region: "Americas" } : {}),
       },
     });
     const updated = await harness.app.inject({ method: "GET", url: path, cookies: business });

@@ -71,6 +71,8 @@
  * anywhere leaves the conversation exactly where the requester left it.
  */
 
+import { departmentByName } from "../departments/references.js";
+
 import { reserveConversionAnalysis } from "../../pipeline/conversion-analysis.js";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
@@ -318,10 +320,10 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                     actorId: request.user.id,
                     title,
                     contractTypeId: target.typeId,
-                    owningDepartment:
-                      typeof row.customFields.owning_department === "string"
-                        ? row.customFields.owning_department
-                        : null,
+                    owningDepartmentId: await departmentByName(
+                      tx,
+                      row.customFields.owning_department,
+                    ),
                     region:
                       typeof row.customFields.region === "string" ? row.customFields.region : null,
                     description:

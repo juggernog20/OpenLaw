@@ -8,6 +8,7 @@ import {
   and,
   asc,
   contracts,
+  departments,
   contractTypeFields,
   documents,
   documentVersions,
@@ -47,15 +48,24 @@ const BusinessValues = {
   effectiveDate: z.iso.date().nullable().optional(),
 };
 async function contractBusinessValues(db: Executor, id: string) {
-  const [row] = await db.select().from(contracts).where(eq(contracts.id, id)).limit(1);
+  const [row] = await db
+    .select({ contract: contracts, owningDepartment: departments.displayName })
+    .from(contracts)
+    .leftJoin(departments, eq(contracts.owningDepartmentId, departments.id))
+    .where(eq(contracts.id, id))
+    .limit(1);
   return {
     owningDepartment: row!.owningDepartment,
-    region: row!.region,
-    effectiveDate: row!.effectiveDate,
+    region: row!.contract.region,
+    effectiveDate: row!.contract.effectiveDate,
     value:
-      row!.valueAmount === null
+      row!.contract.valueAmount === null
         ? null
-        : { amount: row!.valueAmount, currency: row!.valueCurrency!, cadence: row!.valueCadence! },
+        : {
+            amount: row!.contract.valueAmount,
+            currency: row!.contract.valueCurrency!,
+            cadence: row!.contract.valueCadence!,
+          },
   };
 }
 

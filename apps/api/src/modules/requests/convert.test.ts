@@ -20,6 +20,8 @@
  * refusal names the record the winner made.
  */
 
+import { departments } from "@openlaw/db";
+
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   and,
@@ -1043,6 +1045,10 @@ describe("what the form collected beside the Fields (INT-002, focus group 2026-0
 });
 
 it("carries legacy Request classification into built-in Contract attributes", async () => {
+  const [department] = await harness.db
+    .insert(departments)
+    .values({ slug: "finance", displayName: "Finance", displayOrder: 1 })
+    .returning();
   const request = await submit("Classification before conversion");
   await harness.db
     .update(requests)
@@ -1051,8 +1057,39 @@ it("carries legacy Request classification into built-in Contract attributes", as
   const res = await convert(request.number, { title: "Classified contract" });
   expect(res.statusCode, res.body).toBe(200);
   const contract = await contractNumbered(res.json().request.convertedContract.number as number);
-  expect(contract).toMatchObject({ owningDepartment: "Finance", region: "EMEA", customFields: {} });
+  expect(contract).toMatchObject({
+    owningDepartmentId: department!.id,
+    region: "EMEA",
+    customFields: {},
+  });
   expect(await stored(request.id)).toMatchObject({
     customFields: { owning_department: "Finance", region: "EMEA" },
   });
 });
+
+it.each(["", "  ", "Unlisted department", "Archived department"])(
+  "converts without a Department match and preserves the Request answer %j",
+  async (answer) => {
+    if (answer === "Archived department") {
+      await harness.db.insert(departments).values({
+        slug: "archived-conversion",
+        displayName: answer,
+        displayOrder: 2,
+        archivedAt: new Date(),
+      });
+    }
+    const request = await submit("Legacy Department answer");
+    await harness.db
+      .update(requests)
+      .set({ customFields: { owning_department: answer } })
+      .where(eq(requests.id, request.id));
+    const res = await convert(request.number, { title: "Contract from legacy answer" });
+    expect(res.statusCode, res.body).toBe(200);
+    const contract = await contractNumbered(res.json().request.convertedContract.number as number);
+    expect(contract.owningDepartmentId).toBeNull();
+    expect(contract.customFields).not.toHaveProperty("owning_department");
+    expect(await stored(request.id)).toMatchObject({
+      customFields: { owning_department: answer },
+    });
+  },
+);

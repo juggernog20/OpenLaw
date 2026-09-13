@@ -229,6 +229,10 @@ const EVERY_FIELD = [
 }));
 
 const OPTIONS = {
+  departments: [
+    { id: "dept-sales", displayName: "Sales" },
+    { id: "dept-procurement", displayName: "Procurement" },
+  ],
   contractTypes: [
     { id: "t-nda", slug: "nda", displayName: "NDA", fields: [OUR_POSITION] },
     { id: "t-msa", slug: "msa", displayName: "MSA", fields: [PAYMENT_TERMS] },
@@ -390,6 +394,7 @@ function contractRow(overrides: Partial<Record<string, unknown>> = {}) {
     renewalPendingConfirmation: false,
     proposedRenewalExpiry: null,
     owningDepartment: null,
+    owningDepartmentId: null,
     region: null,
     description: "Three-year platform engagement.",
     customFields: {},
@@ -11131,23 +11136,25 @@ it("toggles the current and requester descriptions without replacing the saved c
 });
 
 it("keeps built-in classification on Overview and out of Fields", async () => {
-  const api = recordApi(contractRow({ owningDepartment: "Sales", region: "EMEA" }));
+  const api = recordApi(
+    contractRow({ owningDepartment: "Sales", owningDepartmentId: "dept-sales", region: "EMEA" }),
+  );
   stubApi({ signedIn: MEMBER, extra: api.handler });
   renderAt("/contracts/42");
   const user = userEvent.setup();
-  const department = await screen.findByRole("textbox", { name: "Owning department" });
-  expect(department).toHaveValue("Sales");
+  const department = await screen.findByRole("combobox", { name: "Owning department" });
+  expect(department).toHaveValue("dept-sales");
   expect(screen.getByRole("textbox", { name: "Region" })).toHaveValue("EMEA");
-  await user.clear(department);
-  await user.type(department, "Procurement");
-  await user.tab();
-  await waitFor(() => expect(api.patches).toContainEqual({ owningDepartment: "Procurement" }));
+  await user.selectOptions(department, "dept-procurement");
+  await waitFor(() =>
+    expect(api.patches).toContainEqual({ owningDepartmentId: "dept-procurement" }),
+  );
   await user.click(screen.getByRole("link", { name: "Fields" }));
   await screen.findByRole("region", { name: "Fields" });
-  expect(screen.queryByRole("textbox", { name: "Owning department" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("combobox", { name: "Owning department" })).not.toBeInTheDocument();
   expect(screen.queryByRole("textbox", { name: "Region" })).not.toBeInTheDocument();
   await user.click(screen.getByRole("link", { name: "Overview" }));
-  expect(await screen.findByRole("textbox", { name: "Owning department" })).toHaveValue(
-    "Procurement",
+  expect(await screen.findByRole("combobox", { name: "Owning department" })).toHaveValue(
+    "dept-procurement",
   );
 });

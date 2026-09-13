@@ -115,6 +115,13 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "user.other_sessions_revoked": {},
   "user.two_factor_enrolled": {},
   "user.two_factor_disabled": {},
+  "user.department_set": {
+    email: "casey@example.com",
+    from: null,
+    to: "Sales",
+    fromId: null,
+    toId: "d1",
+  },
   "user.role_changed": {
     email: "sam@example.com",
     from: "contributor",
@@ -156,6 +163,13 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "knowledge_type.archived": TAXONOMY_ARCHIVE,
   "knowledge_type.restored": TAXONOMY_NAMED,
   "knowledge_type.deleted": TAXONOMY_NAMED,
+  "department.created": TAXONOMY_NAMED,
+  "department.renamed": TAXONOMY_RENAME,
+  "department.updated": TAXONOMY_UPDATE,
+  "department.reordered": { order: ["sales", "finance"] },
+  "department.archived": TAXONOMY_ARCHIVE,
+  "department.restored": TAXONOMY_NAMED,
+  "department.deleted": TAXONOMY_NAMED,
   "officer_role.created": TAXONOMY_NAMED,
   "officer_role.renamed": TAXONOMY_RENAME,
   "officer_role.updated": TAXONOMY_UPDATE,
@@ -1260,6 +1274,17 @@ describe("the sentences a reader gets", () => {
     expect(narrate("contract_type_field.attached", TYPE_FIELD_ATTACH).sentence).toBe(
       "Nadia Counsel attached the field governing-law to the contract type nda",
     );
+  });
+
+  it("reads an empty Department as Not set in the user assignment audit", () => {
+    expect(
+      narrate("user.department_set", { email: "sam@example.com", from: null, to: "Sales" })
+        .sentence,
+    ).toBe("Nadia Counsel changed the Department of sam@example.com from Not set to Sales");
+    expect(
+      narrate("user.department_set", { email: "sam@example.com", from: "Sales", to: null })
+        .sentence,
+    ).toBe("Nadia Counsel changed the Department of sam@example.com from Sales to Not set");
   });
 
   it("reads a role change in the words the Users pane uses", () => {

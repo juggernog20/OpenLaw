@@ -281,6 +281,23 @@ export async function seedContracts(admin, context, log) {
   const helpers = businessUsers(people);
   const entityRows = [...entities.values()].filter((row) => row.definition.status === "active");
   const contracts = [];
+  const departmentIds = [];
+  const { body: departmentList } = await admin.get("/api/v1/departments");
+  for (const displayName of [
+    "Sales",
+    "Procurement",
+    "Engineering",
+    "People",
+    "Finance",
+    "Marketing",
+  ]) {
+    let department = departmentList.departments.find((row) => row.displayName === displayName);
+    if (!department) {
+      const { body } = await admin.post("/api/v1/departments", { displayName });
+      department = body.department;
+    }
+    departmentIds.push(department.id);
+  }
 
   await pool(plans, 4, async (plan, index) => {
     const owner = random.pick(staff);
@@ -317,14 +334,7 @@ export async function seedContracts(admin, context, log) {
     // fills the term in, and it only writes where nothing is set.
     await author.patch(at, {
       managerId: owner.id,
-      owningDepartment: random.pick([
-        "Sales",
-        "Procurement",
-        "Engineering",
-        "People",
-        "Finance",
-        "Marketing",
-      ]),
+      owningDepartmentId: random.pick(departmentIds),
       region: random.pick(["EMEA", "Americas", "APAC"]),
       businessOwnerId: random.chance(0.6) ? random.pick(helpers.length ? helpers : staff).id : null,
       entityId: ourEntity.id,

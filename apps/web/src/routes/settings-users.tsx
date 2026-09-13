@@ -22,6 +22,7 @@ import { problem as readProblem } from "../lib/problem";
 import { ROLE_MESSAGES } from "../lib/roles";
 import { requireUser } from "../lib/session";
 import { cn } from "../lib/utils";
+import { DepartmentPicker } from "../components/department-picker";
 import { PageTitle } from "../components/page-title";
 import { SettingsCard } from "../components/settings-card";
 import { StatusNote, type FieldStatus } from "../components/status-note";
@@ -42,9 +43,12 @@ import { Switch } from "../components/ui/switch";
 export async function settingsUsersLoader() {
   const user = await requireUser();
   if (user.role !== "administrator") return redirect("/settings/profile");
-  const { data } = await api.GET("/api/v1/users");
-  if (!data) throw new Error("The user list could not be read.");
-  return { users: data.users, selfId: user.id };
+  const [{ data }, { data: departmentData }] = await Promise.all([
+    api.GET("/api/v1/users"),
+    api.GET("/api/v1/departments", { params: { query: { includeArchived: "true" } } }),
+  ]);
+  if (!data || !departmentData) throw new Error("The user list and Departments could not be read.");
+  return { users: data.users, selfId: user.id, departments: departmentData.departments };
 }
 
 /** One row of GET /users, as the client sees it. */
@@ -55,6 +59,7 @@ interface UserRow {
   role: "administrator" | "legal_team_member" | "business_user";
   status: "active" | "invited" | "archived";
   lastActiveAt: string | null;
+  departmentId: string | null;
 }
 
 const INVITE_ROLES = ["legal_team_member", "administrator"] as const;
@@ -146,7 +151,7 @@ function InviteDialog({
       });
       const { data } = result;
       if (data) {
-        onInvited({ ...data.user, status: "invited", lastActiveAt: null });
+        onInvited({ ...data.user, status: "invited", lastActiveAt: null, departmentId: null });
         setRole("legal_team_member");
         onOpenChange(false);
       } else {
@@ -235,7 +240,7 @@ function InviteDialog({
 }
 
 export function SettingsUsersPage() {
-  const { users, selfId } = useLoaderData<typeof settingsUsersLoader>();
+  const { users, selfId, departments } = useLoaderData<typeof settingsUsersLoader>();
   const intl = useIntl();
 
   const [rows, setRows] = useState<UserRow[]>(users);
@@ -285,6 +290,20 @@ export function SettingsUsersPage() {
       return;
     }
     setRows((current) => current.filter((user) => user.id !== row.id));
+  }
+
+  async function changeDepartment(row: UserRow, departmentId: string | null) {
+    noteRow(row.id, "saving");
+    const result = await api
+      .PATCH("/api/v1/users/{userId}/department", {
+        params: { path: { userId: row.id } },
+        body: { departmentId },
+      })
+      .catch(() => undefined);
+    if (result?.data) {
+      replaceRow(result.data.user);
+      noteRow(row.id, "saved");
+    } else noteRow(row.id, "error", (await readProblem(result)).detail);
   }
 
   async function changeRole(row: UserRow, role: UserRow["role"]) {
@@ -431,6 +450,9 @@ export function SettingsUsersPage() {
                 <th scope="col" className="h-9 w-50 px-3 font-semibold">
                   <FormattedMessage id="settings.users.colRole" defaultMessage="Role" />
                 </th>
+                <th scope="col" className="h-9 w-50 px-3 font-semibold">
+                  <FormattedMessage id="settings.users.colDepartment" defaultMessage="Department" />
+                </th>
                 <th scope="col" className="h-9 w-25 px-3 font-semibold">
                   <FormattedMessage id="settings.users.colStatus" defaultMessage="Status" />
                 </th>
@@ -509,6 +531,22 @@ export function SettingsUsersPage() {
                         <RoleLabel role={row.role} />
                       </span>
                     )}
+                  </td>
+                  <td className="px-3">
+                    <DepartmentPicker
+                      value={row.departmentId}
+                      label={intl.formatMessage(
+                        {
+                          id: "settings.users.department",
+                          defaultMessage: "Department of {email}",
+                        },
+                        { email: row.email },
+                      )}
+                      currentName={departments.find((d) => d.id === row.departmentId)?.displayName}
+                      options={departments.filter((d) => !d.archivedAt)}
+                      disabled={row.status === "archived" || rowStatus[row.id] === "saving"}
+                      onChange={(departmentId) => void changeDepartment(row, departmentId)}
+                    />
                   </td>
                   <td className="px-3">
                     <StatusPill status={row.status} />
