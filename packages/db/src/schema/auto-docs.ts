@@ -21,6 +21,14 @@ import { documents, documentVersions } from "./documents.js";
 import { FIELD_TYPES, type FieldType, type CustomFieldValue } from "./fields.js";
 import { uuidPk } from "./helpers.js";
 
+export const AUTO_DOC_FORMATS = ["docx", "pdf", "both"] as const;
+export const AUTO_DOC_EMAIL_STATES = [
+  "not_requested",
+  "pending",
+  "sent",
+  "failed",
+  "unconfigured",
+] as const;
 export const AUTO_DOC_STATES = ["draft", "published", "archived"] as const;
 export const AUTO_DOC_AUDIENCES = ["legal_only", "selected", "everyone"] as const;
 export const AUTO_DOC_RULE_OPERATORS = ["equals", "is_one_of", "is_set", "is_not"] as const;
@@ -69,6 +77,9 @@ export const autoDocs = pgTable(
     id: uuidPk(),
     name: text("name").notNull(),
     description: text("description"),
+    formats: text("formats", { enum: AUTO_DOC_FORMATS }).notNull().default("both"),
+    /** Null omits the optional email cover note. */
+    coverNote: text("cover_note"),
     state: text("state", { enum: AUTO_DOC_STATES }).notNull().default("draft"),
     audience: text("audience", { enum: AUTO_DOC_AUDIENCES }).notNull().default("legal_only"),
     /** Null means this Auto-Doc has no target Contract Type. */
@@ -102,6 +113,7 @@ export const autoDocs = pgTable(
       columns: [table.publishedFormVersionId],
       foreignColumns: [autoDocFormVersions.id],
     }),
+    check("auto_docs_formats_check", sql`${table.formats} in ('docx', 'pdf', 'both')`),
     check("auto_docs_state_check", sql`${table.state} in ('draft', 'published', 'archived')`),
     check(
       "auto_docs_audience_check",
@@ -189,6 +201,20 @@ export const autoDocGenerations = pgTable(
       .notNull()
       .references(() => users.id),
     answers: jsonb("answers").$type<Record<string, CustomFieldValue>>().notNull(),
+    formats: text("formats", { enum: AUTO_DOC_FORMATS }).notNull().default("docx"),
+    /** Saved at submission; null means this Generation has no cover note. */
+    coverNote: text("cover_note"),
+    displayValues: jsonb("display_values").$type<Record<string, string>>().notNull().default({}),
+    attempt: integer("attempt").notNull().default(1),
+    /** Null until conversion completes, or when PDF was not requested. */
+    pdfFileRef: text("pdf_file_ref"),
+    emailState: text("email_state", { enum: AUTO_DOC_EMAIL_STATES })
+      .notNull()
+      .default("not_requested"),
+    /** Null unless the send was recorded as successful. */
+    emailSentAt: timestamp("email_sent_at", { withTimezone: true }),
+    /** Null unless email failed or SMTP was unconfigured. */
+    emailFailure: jsonb("email_failure").$type<{ code: string; detail: string }>(),
     state: text("state", { enum: AUTO_DOC_GENERATION_STATES }).notNull().default("pending"),
     /** Null until a complete Word output has been stored. */
     docxFileRef: text("docx_file_ref"),
@@ -208,6 +234,32 @@ export const autoDocGenerations = pgTable(
       columns: [table.formVersionId],
       foreignColumns: [autoDocFormVersions.id],
     }),
+    index("auto_doc_generations_delivery_idx").on(table.state, table.emailState),
+    check("auto_doc_generations_formats_check", sql`${table.formats} in ('docx', 'pdf', 'both')`),
+    check("auto_doc_generations_attempt_check", sql`${table.attempt} > 0`),
+    check(
+      "auto_doc_generations_email_state_check",
+      sql`${table.emailState} in ('not_requested', 'pending', 'sent', 'failed', 'unconfigured')`,
+    ),
+    check(
+      "auto_doc_generations_email_sent_check",
+      sql`(${table.emailState} = 'sent') = (${table.emailSentAt} is not null)`,
+    ),
+    check(
+      "auto_doc_generations_email_ready_check",
+      sql`${table.emailState} not in ('sent', 'unconfigured') or ${table.state} = 'ready'`,
+    ),
+    check(
+      "auto_doc_generations_email_failure_check",
+      sql`((${table.emailState} in ('failed', 'unconfigured')) = (${table.emailFailure} is not null)) and
+        (${table.emailFailure} is null or (
+          jsonb_typeof(${table.emailFailure}) = 'object' and
+          jsonb_typeof(${table.emailFailure}->'code') = 'string' and
+          jsonb_typeof(${table.emailFailure}->'detail') = 'string' and
+          nullif(btrim(${table.emailFailure}->>'code'), '') is not null and
+          nullif(btrim(${table.emailFailure}->>'detail'), '') is not null
+        ))`,
+    ),
     index("auto_doc_generations_auto_doc_idx").on(table.autoDocId, table.createdAt),
     index("auto_doc_generations_person_idx").on(table.generatedBy, table.createdAt),
     index("auto_doc_generations_file_version_idx").on(table.documentVersionId),
@@ -218,7 +270,7 @@ export const autoDocGenerations = pgTable(
     ),
     check(
       "auto_doc_generations_ready_check",
-      sql`${table.state} <> 'ready' or ${table.docxFileRef} is not null`,
+      sql`${table.state} <> 'ready' or (${table.docxFileRef} is not null and (${table.formats} = 'docx' or ${table.pdfFileRef} is not null))`,
     ),
     check(
       "auto_doc_generations_failure_check",

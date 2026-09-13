@@ -28,6 +28,8 @@
 
 /** Every queue the pipeline runs, by its pg-boss name. */
 export const JOB_QUEUES = {
+  /** A Generation owns its PDF derivation and the email of its requested formats. */
+  generationDelivery: "auto-doc.generation-delivery",
   /**
    * One version's text extraction (DOC-005). OCR is a branch inside it
    * and not a queue of its own: whether a scan needs reading as pictures
@@ -156,6 +158,12 @@ export interface ExecutedCopyFetchJob {
   envelopeId: string;
 }
 
+/** The attempt prevents an old delivery job from changing a Member's retry. */
+export interface GenerationDeliveryJob {
+  generationId: string;
+  attempt: number;
+}
+
 /**
  * What the notification-email queue carries: the notification row, and
  * nothing else.
@@ -186,6 +194,8 @@ export interface ContractAnalysisJob {
  * only ever sees this type and never learns that pg-boss is behind it.
  */
 export interface JobQueue {
+  /** Converts the stored Word output when PDF is requested, then emails the allowed formats. */
+  requestGenerationDelivery(generationId: string, attempt: number): Promise<void>;
   /** Acknowledges enqueueing, not completion. A refused ask is recovered from the pending row by the conversion sweep. */
   requestConversionDraft(draftId: string): Promise<void>;
   /**
@@ -301,6 +311,7 @@ export function createUnconfiguredJobQueue(): JobQueue {
       new Error("No job queue is configured in this process; nothing can be enqueued."),
     );
   return {
+    requestGenerationDelivery: refuse,
     requestTextExtraction: refuse,
     requestDisplayConversion: refuse,
     requestDocumentComparison: refuse,

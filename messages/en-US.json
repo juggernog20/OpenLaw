@@ -110,6 +110,9 @@
   "activity.autoDoc.generated": {
     "defaultMessage": "{actor} generated {name} from file version {fileVersion} and form version {formVersion}"
   },
+  "activity.autoDoc.generationRetried": {
+    "defaultMessage": "{actor} retried a Generation of {name}"
+  },
   "activity.autoDoc.published": {
     "defaultMessage": "{actor} published {name}"
   },
@@ -1208,6 +1211,12 @@
   "autoDocs.contractAttributes": {
     "defaultMessage": "Contract attributes"
   },
+  "autoDocs.coverNote": {
+    "defaultMessage": "Cover note"
+  },
+  "autoDocs.coverNoteHelp": {
+    "defaultMessage": "Optional Markdown included in the email with the generated files."
+  },
   "autoDocs.create": {
     "defaultMessage": "Create Auto-Doc"
   },
@@ -1229,8 +1238,20 @@
   "autoDocs.download": {
     "defaultMessage": "Download"
   },
+  "autoDocs.downloadPdf": {
+    "defaultMessage": "Download PDF"
+  },
   "autoDocs.downloadWord": {
     "defaultMessage": "Download Word"
+  },
+  "autoDocs.emailNotSent": {
+    "defaultMessage": "Email not sent"
+  },
+  "autoDocs.emailPending": {
+    "defaultMessage": "Email pending"
+  },
+  "autoDocs.emailSent": {
+    "defaultMessage": "Email sent"
   },
   "autoDocs.empty": {
     "defaultMessage": "Create an Auto-Doc to start with a Word template."
@@ -1300,6 +1321,12 @@
   },
   "autoDocs.formVersions": {
     "defaultMessage": "Form versions"
+  },
+  "autoDocs.formatName": {
+    "defaultMessage": "{format, select, docx {Word} pdf {PDF} other {Word and PDF}}"
+  },
+  "autoDocs.formats": {
+    "defaultMessage": "Formats"
   },
   "autoDocs.generate": {
     "defaultMessage": "Generate"
@@ -1429,6 +1456,12 @@
   },
   "autoDocs.restore": {
     "defaultMessage": "Restore"
+  },
+  "autoDocs.retry": {
+    "defaultMessage": "Retry"
+  },
+  "autoDocs.retryFailed": {
+    "defaultMessage": "Could not retry this Generation. Try again."
   },
   "autoDocs.reviewCurrentForm": {
     "defaultMessage": "Review current form"

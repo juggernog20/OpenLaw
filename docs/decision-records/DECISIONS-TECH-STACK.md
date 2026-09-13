@@ -512,6 +512,10 @@ API providers only: forces a SaaS mail account on regulated self-hosters.
 
 The SET-004 wizard surface this decision named (deferred at M2, where env vars carried SMTP alone) shipped: the wizard's email step saves a relay URL + from-address to the `org_settings` singleton, mirroring the `SMTP_URL`/`SMTP_FROM` shape — one mental model, two carriers. The mailer is resolved at send time, env-else-database (the TECH-014 read-on-every-decision pattern), so a save applies to the very next send with no restart. **Precedence: environment wins.** A set `SMTP_URL` pins the instance — database values are ignored entirely and saves are refused. This is a safety property, not a convenience: the dev/E2E overlay pins Mailpit via env, and a database-saved real relay must never beat it, or test mail leaks to real inboxes. The relay URL is write-only through the API (it embeds the credential) and stored plaintext for v1 — at-rest encryption is a flagged follow-up shared with the TECH-008 SSO client secret. _(2026-08-16, #259: **superseded by TECH-022** — `org_settings.smtp_url` is now sealed at rest with the rest of them. Nothing else about the resolution changes: the environment still wins, and a save still applies to the next send.)_
 
+### M35/8 delivery addendum, #851
+
+The mail message accepts buffered attachments with a filename and MIME type. Generation mail uses paired HTML and text, the organization name and OpenLaw branding, the recipient's name, and the Auto-Doc name. Both bodies consume the shared KNW-001 Markdown parser. HTML escapes text and attributes and emits only the fixed tags; relative cover-note links resolve against the application URL. Mailer resolution still happens at send time.
+
 ## TECH-012: AI providers — three protocol adapters, provider presets, custom option
 
 - **Status:** Accepted
@@ -1359,6 +1363,10 @@ The injected `AutoDocFillEngine` has a deterministic fake for route tests. The r
 Detection records each slug and directive pair, so a fresh Placeholder that carries `date:` arrives as a date field and one that carries `currency:` arrives as a currency field. Publication refuses a pair whose form field cannot print its directive, which keeps the mismatch out of the fill. The fixed syntax is `{{name|upper}}`, `{{date|date:YYYY-MM-DD}}`, `{{date|date:DD/MM/YYYY}}`, `{{date|date:MMMM D, YYYY}}`, and `{{amount|currency:USD}}`. Currency directives accept supported three-letter codes. Auto-Doc currency answers are numeric amounts, as Clause conditions require; the directive chooses the printed currency. This differs from a catalog currency Field, which stores a code. Date formatting uses UTC calendar dates and currency formatting uses English separators. The author chooses the directive in Word.
 
 Fixture tests cover split runs, kept and omitted Blocks, directives, document structure, malformed files, and timeout. The configuration uses the library's documented [custom parser and delimiter options](https://docxtemplater.com/docs/configuration/) and [Boolean sections](https://docxtemplater.com/docs/tag-types/).
+
+### Built in M35/8
+
+The pipeline accepts Generation id and attempt as a separate derivation input. The existing sidecar conversion writes a fresh PDF key. The worker marks it ready only for the current pending attempt, then sends the allowed formats. The queue uses the existing conversion deadline and retry policy. Permanent source errors and SMTP 5xx replies stop retries; temporary errors retry before a controlled failure is saved. Boot and scheduled sweeps recover rows whose queue ask did not arrive. Database updates compare the attempt so an old job cannot overwrite a Member's retry.
 
 ### Alternatives considered
 

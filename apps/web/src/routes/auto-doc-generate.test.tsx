@@ -73,6 +73,11 @@ const generation: Generation = {
   answers: { counterparty_name: "Acme", amount: 1234.56, agreed: false },
   state: "ready",
   hasDocx: true,
+  hasPdf: false,
+  formats: "docx",
+  emailState: "sent",
+  emailSentAt: "2026-09-14T00:00:00Z",
+  emailFailure: null,
   failure: null,
   createdAt: "2026-09-14T00:00:00Z",
   updatedAt: "2026-09-14T00:00:00Z",
@@ -249,4 +254,42 @@ it("requires a date pick before submitting a required date answer", async () => 
   await pickDate(user, "Signing date", "2026-09-14");
   await user.click(screen.getByRole("button", { name: "Generate" }));
   await waitFor(() => expect(posted).toEqual({ ...form.pair, answers: { amount: "2026-09-14" } }));
+});
+
+it("offers Word during PDF conversion, then adds PDF and the email outcome", async () => {
+  let reads = 0;
+  stubApi({
+    signedIn: member,
+    extra: (call) => {
+      if (call.url.pathname.endsWith("/generations/generation1")) {
+        reads++;
+        return json(200, {
+          generation: {
+            ...generation,
+            formats: "both",
+            state: reads === 1 ? "pending" : "ready",
+            hasPdf: reads > 1,
+            emailState: reads === 1 ? "pending" : "unconfigured",
+            emailSentAt: null,
+            emailFailure:
+              reads === 1
+                ? null
+                : {
+                    code: "unconfigured",
+                    detail:
+                      "Email was not sent because SMTP is not configured. The downloads are ready.",
+                  },
+          },
+        });
+      }
+      return undefined;
+    },
+  });
+  renderAt("/auto-docs/nda/generations/generation1");
+  await screen.findByRole("link", { name: "Download Word" });
+  expect(screen.queryByRole("link", { name: "Download PDF" })).not.toBeInTheDocument();
+  expect(
+    await screen.findByRole("link", { name: "Download PDF" }, { timeout: 5000 }),
+  ).toHaveAttribute("href", "/api/v1/auto-docs/nda/generations/generation1/pdf");
+  expect(screen.getByText(/SMTP is not configured/)).toBeVisible();
 });

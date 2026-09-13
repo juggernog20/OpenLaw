@@ -1022,6 +1022,16 @@ export interface paths {
                 /** @enum {string} */
                 state: "pending" | "ready" | "failed";
                 hasDocx: boolean;
+                hasPdf: boolean;
+                /** @enum {string} */
+                formats: "docx" | "pdf" | "both";
+                /** @enum {string} */
+                emailState: "not_requested" | "pending" | "sent" | "failed" | "unconfigured";
+                emailSentAt: string | null;
+                emailFailure: {
+                  code: string;
+                  detail: string;
+                } | null;
                 failure: {
                   code: string;
                   detail: string;
@@ -1094,6 +1104,107 @@ export interface paths {
                 /** @enum {string} */
                 state: "pending" | "ready" | "failed";
                 hasDocx: boolean;
+                hasPdf: boolean;
+                /** @enum {string} */
+                formats: "docx" | "pdf" | "both";
+                /** @enum {string} */
+                emailState: "not_requested" | "pending" | "sent" | "failed" | "unconfigured";
+                emailSentAt: string | null;
+                emailFailure: {
+                  code: string;
+                  detail: string;
+                } | null;
+                failure: {
+                  code: string;
+                  detail: string;
+                } | null;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+              };
+            };
+          };
+        };
+        /** @description Problem details (RFC 9457) */
+        default: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/problem+json": components["schemas"]["Problem"];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auto-docs/{id}/generations/{generationId}/retry": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Retry a failed Generation with its original pair and answers, Member+ */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+          generationId: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          "application/json": Record<string, never>;
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              generation: {
+                id: string;
+                autoDocId: string;
+                autoDocName: string;
+                documentVersionId: string;
+                formVersionId: string;
+                documentVersionNumber: number;
+                formVersionNumber: number;
+                generatedBy: string;
+                person: {
+                  id: string;
+                  displayName: string;
+                };
+                answers: {
+                  [key: string]: string | number | boolean | string[];
+                };
+                /** @enum {string} */
+                state: "pending" | "ready" | "failed";
+                hasDocx: boolean;
+                hasPdf: boolean;
+                /** @enum {string} */
+                formats: "docx" | "pdf" | "both";
+                /** @enum {string} */
+                emailState: "not_requested" | "pending" | "sent" | "failed" | "unconfigured";
+                emailSentAt: string | null;
+                emailFailure: {
+                  code: string;
+                  detail: string;
+                } | null;
                 failure: {
                   code: string;
                   detail: string;
@@ -1169,6 +1280,16 @@ export interface paths {
                 /** @enum {string} */
                 state: "pending" | "ready" | "failed";
                 hasDocx: boolean;
+                hasPdf: boolean;
+                /** @enum {string} */
+                formats: "docx" | "pdf" | "both";
+                /** @enum {string} */
+                emailState: "not_requested" | "pending" | "sent" | "failed" | "unconfigured";
+                emailSentAt: string | null;
+                emailFailure: {
+                  code: string;
+                  detail: string;
+                } | null;
                 failure: {
                   code: string;
                   detail: string;
@@ -1207,7 +1328,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Download a Generation's Word output, Member+ */
+    /** Download a Generation's docx output, Member+ */
     get: {
       parameters: {
         query?: never;
@@ -1226,7 +1347,55 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            "application/json": string;
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document": string;
+          };
+        };
+        /** @description Problem details (RFC 9457) */
+        default: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/problem+json": components["schemas"]["Problem"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auto-docs/{id}/generations/{generationId}/pdf": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Download a Generation's pdf output, Member+ */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+          generationId: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/pdf": string;
           };
         };
         /** @description Problem details (RFC 9457) */
@@ -8706,6 +8875,9 @@ export interface operations {
               name: string;
               description: string | null;
               /** @enum {string} */
+              formats: "docx" | "pdf" | "both";
+              coverNote: string | null;
+              /** @enum {string} */
               state: "draft" | "published" | "archived";
               templateDocumentId: string | null;
               /** @enum {string} */
@@ -8867,6 +9039,9 @@ export interface operations {
           description?: string | null;
           /** @enum {string} */
           audience?: "legal_only" | "selected" | "everyone";
+          /** @enum {string} */
+          formats?: "docx" | "pdf" | "both";
+          coverNote?: string | null;
           targetContractTypeId?: string | null;
         };
       };
@@ -8883,6 +9058,9 @@ export interface operations {
               id: string;
               name: string;
               description: string | null;
+              /** @enum {string} */
+              formats: "docx" | "pdf" | "both";
+              coverNote: string | null;
               /** @enum {string} */
               state: "draft" | "published" | "archived";
               templateDocumentId: string | null;
@@ -9109,6 +9287,9 @@ export interface operations {
               name: string;
               description: string | null;
               /** @enum {string} */
+              formats: "docx" | "pdf" | "both";
+              coverNote: string | null;
+              /** @enum {string} */
               state: "draft" | "published" | "archived";
               templateDocumentId: string | null;
               /** @enum {string} */
@@ -9280,6 +9461,9 @@ export interface operations {
               id: string;
               name: string;
               description: string | null;
+              /** @enum {string} */
+              formats: "docx" | "pdf" | "both";
+              coverNote: string | null;
               /** @enum {string} */
               state: "draft" | "published" | "archived";
               templateDocumentId: string | null;
@@ -9453,6 +9637,9 @@ export interface operations {
               name: string;
               description: string | null;
               /** @enum {string} */
+              formats: "docx" | "pdf" | "both";
+              coverNote: string | null;
+              /** @enum {string} */
               state: "draft" | "published" | "archived";
               templateDocumentId: string | null;
               /** @enum {string} */
@@ -9625,6 +9812,9 @@ export interface operations {
               name: string;
               description: string | null;
               /** @enum {string} */
+              formats: "docx" | "pdf" | "both";
+              coverNote: string | null;
+              /** @enum {string} */
               state: "draft" | "published" | "archived";
               templateDocumentId: string | null;
               /** @enum {string} */
@@ -9796,6 +9986,9 @@ export interface operations {
               name: string;
               description: string | null;
               /** @enum {string} */
+              formats: "docx" | "pdf" | "both";
+              coverNote: string | null;
+              /** @enum {string} */
               state: "draft" | "published" | "archived";
               templateDocumentId: string | null;
               /** @enum {string} */
@@ -9851,6 +10044,9 @@ export interface operations {
               id: string;
               name: string;
               description: string | null;
+              /** @enum {string} */
+              formats: "docx" | "pdf" | "both";
+              coverNote: string | null;
               /** @enum {string} */
               state: "draft" | "published" | "archived";
               templateDocumentId: string | null;
@@ -9909,6 +10105,9 @@ export interface operations {
               id: string;
               name: string;
               description: string | null;
+              /** @enum {string} */
+              formats: "docx" | "pdf" | "both";
+              coverNote: string | null;
               /** @enum {string} */
               state: "draft" | "published" | "archived";
               templateDocumentId: string | null;
@@ -10127,6 +10326,9 @@ export interface operations {
               id: string;
               name: string;
               description: string | null;
+              /** @enum {string} */
+              formats: "docx" | "pdf" | "both";
+              coverNote: string | null;
               /** @enum {string} */
               state: "draft" | "published" | "archived";
               templateDocumentId: string | null;

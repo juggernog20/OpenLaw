@@ -7,6 +7,7 @@ import { uuidv7 } from "uuidv7";
 import {
   AUTO_DOC_FIELD_TYPES,
   AUTO_DOC_AUDIENCES,
+  AUTO_DOC_FORMATS,
   AUTO_DOC_CONTRACT_ATTRIBUTES,
   contractTypes,
   fields as catalogFields,
@@ -65,6 +66,8 @@ const AutoDocRow = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string().nullable(),
+  formats: z.enum(AUTO_DOC_FORMATS),
+  coverNote: z.string().nullable(),
   state: z.enum(AUTO_DOC_STATES),
   templateDocumentId: z.string().nullable(),
   audience: z.enum(AUTO_DOC_AUDIENCES),
@@ -267,6 +270,8 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
           name: z.string().trim().min(1).max(200).optional(),
           description: z.string().trim().max(4000).nullable().optional(),
           audience: z.enum(AUTO_DOC_AUDIENCES).optional(),
+          formats: z.enum(AUTO_DOC_FORMATS).optional(),
+          coverNote: z.string().trim().max(10_000).nullable().optional(),
           targetContractTypeId: z.string().min(1).nullable().optional(),
         }),
         response: { 200: RecordEnvelope, default: problemResponse },
@@ -279,6 +284,9 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
         // same way, so the two routes cannot leave "" beside null.
         const patch = {
           ...request.body,
+          ...(request.body.coverNote === undefined
+            ? {}
+            : { coverNote: request.body.coverNote || null }),
           ...(request.body.description === undefined
             ? {}
             : { description: request.body.description || null }),
@@ -297,7 +305,14 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
           if (!type) throw httpError(400, "Choose a live Contract Type as the target.");
         }
         const changed: ChangedFields = {};
-        for (const key of ["name", "description", "audience", "targetContractTypeId"] as const) {
+        for (const key of [
+          "name",
+          "description",
+          "audience",
+          "targetContractTypeId",
+          "formats",
+          "coverNote",
+        ] as const) {
           const value = patch[key];
           if (value !== undefined && value !== row[key])
             changed[key] = { from: row[key], to: value };

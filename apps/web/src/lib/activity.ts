@@ -2916,6 +2916,14 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     values: (intl, payload) => ({ name: knowledgeItemNamed(intl, payload) }),
     changes: (intl, payload, context) => directChange(intl, payload, "knowledgeType", context),
   },
+  "auto_doc.generation_retried": {
+    icon: FileText,
+    message: defineMessage({
+      id: "activity.autoDoc.generationRetried",
+      defaultMessage: "{actor} retried a Generation of {name}",
+    }),
+    values: (intl, payload) => ({ name: text(payload, "name") ?? thingName(intl, payload) }),
+  },
   "auto_doc.updated": {
     icon: PencilLine,
     message: defineMessage({

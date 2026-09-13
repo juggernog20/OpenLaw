@@ -17,7 +17,21 @@ const MailpitSearch = z.object({
   messages: z.array(z.object({ ID: z.string(), Subject: z.string() })),
 });
 
-const MailpitMessage = z.object({ Subject: z.string(), Text: z.string() });
+const MailpitMessage = z.object({
+  Subject: z.string(),
+  Text: z.string(),
+  HTML: z.string().default(""),
+  Attachments: z
+    .array(
+      z.object({
+        FileName: z.string(),
+        ContentType: z.string(),
+        PartID: z.string(),
+        Size: z.number(),
+      }),
+    )
+    .default([]),
+});
 
 async function searchMailTo(
   request: APIRequestContext,
@@ -51,11 +65,16 @@ export async function mailCountTo(request: APIRequestContext, address: string): 
  * (M18's demo waits for an approval request and for a morning briefing
  * on addresses whose set-password mail arrived minutes earlier).
  */
-export async function waitForMailTo(
+export async function waitForMailDetails(
   request: APIRequestContext,
   address: string,
   subject?: RegExp,
-): Promise<{ subject: string; text: string }> {
+): Promise<{
+  subject: string;
+  text: string;
+  html: string;
+  attachments: { filename: string; contentType: string; size: number; url: string }[];
+}> {
   let newestId: string | undefined;
   await expect
     .poll(
@@ -80,7 +99,27 @@ export async function waitForMailTo(
   const detail = await request.get(`${MAILPIT_URL}/api/v1/message/${newestId}`);
   expect(detail.ok()).toBe(true);
   const message = MailpitMessage.parse(await detail.json());
-  return { subject: message.Subject, text: message.Text };
+  return {
+    subject: message.Subject,
+    text: message.Text,
+    html: message.HTML,
+    attachments: message.Attachments.map((part) => ({
+      filename: part.FileName,
+      contentType: part.ContentType,
+      size: part.Size,
+      url: `${MAILPIT_URL}/api/v1/message/${newestId}/part/${part.PartID}`,
+    })),
+  };
+}
+
+/** The subject and text contract used by invitation and notification journeys. */
+export async function waitForMailTo(
+  request: APIRequestContext,
+  address: string,
+  subject?: RegExp,
+): Promise<{ subject: string; text: string }> {
+  const mail = await waitForMailDetails(request, address, subject);
+  return { subject: mail.subject, text: mail.text };
 }
 
 /**

@@ -47,6 +47,8 @@ function record(): RecordAnswer {
       state: "draft",
       audience: "legal_only",
       targetContractTypeId: null,
+      formats: "both",
+      coverNote: null,
       templateDocumentId: "template",
       publishedDocumentVersionId: null,
       publishedFormVersionId: null,
@@ -219,7 +221,7 @@ it("renders all Publish gaps, pins the chosen pair, and offers the lifecycle con
   }
 });
 
-it("saves audience and target Type settings and applies all list filters", async () => {
+it("saves audience, target Type, formats, and cover note, then applies list filters", async () => {
   const user = userEvent.setup();
   let current = record();
   const edits: unknown[] = [];
@@ -249,9 +251,19 @@ it("saves audience and target Type settings and applies all list filters", async
   const settings = screen.getByRole("region", { name: "Settings" });
   await user.selectOptions(within(settings).getByLabelText("Audience"), "everyone");
   await user.selectOptions(within(settings).getByLabelText("Target Contract Type"), "type");
+  await user.selectOptions(within(settings).getByLabelText("Formats"), "pdf");
+  await user.type(within(settings).getByLabelText("Cover note"), "Please **review** this.");
+  expect(within(settings).getByText("review")).toBeVisible();
   await user.click(within(settings).getByRole("button", { name: "Save settings" }));
   await screen.findByText("Settings saved.");
-  expect(edits).toEqual([{ audience: "everyone", targetContractTypeId: "type" }]);
+  expect(edits).toEqual([
+    {
+      audience: "everyone",
+      targetContractTypeId: "type",
+      formats: "pdf",
+      coverNote: "Please **review** this.",
+    },
+  ]);
   await user.click(screen.getAllByRole("link", { name: "Auto-Docs" }).at(-1)!);
   await screen.findByRole("button", { name: "Apply filters" });
   await user.type(screen.getByRole("searchbox", { name: "Search Auto-Docs" }), "NDA");
@@ -390,10 +402,17 @@ it("holds the selected forms steady while their comparison is loading", async ()
   expect(from).toHaveValue("form2");
 });
 
-it("shows each Generation's person, pair, time, output, and failure on the Auto-Doc", async () => {
+it("shows Generation history and retries a failed fill", async () => {
+  const user = userEvent.setup();
+  let retried = false;
   const base = {
     autoDocId: "nda",
     autoDocName: "Publish NDA",
+    formats: "docx",
+    hasPdf: false,
+    emailState: "not_requested",
+    emailSentAt: null,
+    emailFailure: null,
     documentVersionId: "file1",
     formVersionId: "form2",
     documentVersionNumber: 1,
@@ -409,6 +428,12 @@ it("shows each Generation's person, pair, time, output, and failure on the Auto-
     extra: (call) => {
       if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
       if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, record());
+      if (call.url.pathname.endsWith("/failed/retry") && call.method === "POST") {
+        retried = true;
+        return json(200, {
+          generation: { ...base, id: "failed", state: "ready", hasDocx: true, failure: null },
+        });
+      }
       if (call.url.pathname.endsWith("/generations"))
         return json(200, {
           generations: [
@@ -416,9 +441,11 @@ it("shows each Generation's person, pair, time, output, and failure on the Auto-
             {
               ...base,
               id: "failed",
-              state: "failed",
-              hasDocx: false,
-              failure: { code: "fill_failed", detail: "The Word fill timed out. Try again." },
+              state: retried ? "ready" : "failed",
+              hasDocx: retried,
+              failure: retried
+                ? null
+                : { code: "fill_failed", detail: "The Word fill timed out. Try again." },
             },
           ],
         });
@@ -438,4 +465,9 @@ it("shows each Generation's person, pair, time, output, and failure on the Auto-
     "/api/v1/auto-docs/nda/generations/ready/docx",
   );
   expect(within(list).getByText("The Word fill timed out. Try again.")).toBeVisible();
+  await user.click(within(list).getByRole("button", { name: "Retry" }));
+  await waitFor(() =>
+    expect(within(list).getAllByRole("link", { name: "Download Word" })).toHaveLength(2),
+  );
+  expect(within(list).queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
 });

@@ -5182,6 +5182,21 @@
                     "type": "string",
                     "enum": ["legal_only", "selected", "everyone"]
                   },
+                  "formats": {
+                    "type": "string",
+                    "enum": ["docx", "pdf", "both"]
+                  },
+                  "coverNote": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 10000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "targetContractTypeId": {
                     "anyOf": [
                       {
@@ -5227,6 +5242,13 @@
                           "type": "string"
                         },
                         "description": {
+                          "type": ["string", "null"]
+                        },
+                        "formats": {
+                          "type": "string",
+                          "enum": ["docx", "pdf", "both"]
+                        },
+                        "coverNote": {
                           "type": ["string", "null"]
                         },
                         "state": {
@@ -5288,6 +5310,8 @@
                         "id",
                         "name",
                         "description",
+                        "formats",
+                        "coverNote",
                         "state",
                         "templateDocumentId",
                         "audience",
@@ -5823,6 +5847,13 @@
                         "description": {
                           "type": ["string", "null"]
                         },
+                        "formats": {
+                          "type": "string",
+                          "enum": ["docx", "pdf", "both"]
+                        },
+                        "coverNote": {
+                          "type": ["string", "null"]
+                        },
                         "state": {
                           "type": "string",
                           "enum": ["draft", "published", "archived"]
@@ -5882,6 +5913,8 @@
                         "id",
                         "name",
                         "description",
+                        "formats",
+                        "coverNote",
                         "state",
                         "templateDocumentId",
                         "audience",
@@ -6534,6 +6567,13 @@
                         "description": {
                           "type": ["string", "null"]
                         },
+                        "formats": {
+                          "type": "string",
+                          "enum": ["docx", "pdf", "both"]
+                        },
+                        "coverNote": {
+                          "type": ["string", "null"]
+                        },
                         "state": {
                           "type": "string",
                           "enum": ["draft", "published", "archived"]
@@ -6593,6 +6633,8 @@
                         "id",
                         "name",
                         "description",
+                        "formats",
+                        "coverNote",
                         "state",
                         "templateDocumentId",
                         "audience",
@@ -7142,6 +7184,13 @@
                         "description": {
                           "type": ["string", "null"]
                         },
+                        "formats": {
+                          "type": "string",
+                          "enum": ["docx", "pdf", "both"]
+                        },
+                        "coverNote": {
+                          "type": ["string", "null"]
+                        },
                         "state": {
                           "type": "string",
                           "enum": ["draft", "published", "archived"]
@@ -7201,6 +7250,8 @@
                         "id",
                         "name",
                         "description",
+                        "formats",
+                        "coverNote",
                         "state",
                         "templateDocumentId",
                         "audience",
@@ -7750,6 +7801,13 @@
                         "description": {
                           "type": ["string", "null"]
                         },
+                        "formats": {
+                          "type": "string",
+                          "enum": ["docx", "pdf", "both"]
+                        },
+                        "coverNote": {
+                          "type": ["string", "null"]
+                        },
                         "state": {
                           "type": "string",
                           "enum": ["draft", "published", "archived"]
@@ -7809,6 +7867,8 @@
                         "id",
                         "name",
                         "description",
+                        "formats",
+                        "coverNote",
                         "state",
                         "templateDocumentId",
                         "audience",
@@ -8358,6 +8418,13 @@
                         "description": {
                           "type": ["string", "null"]
                         },
+                        "formats": {
+                          "type": "string",
+                          "enum": ["docx", "pdf", "both"]
+                        },
+                        "coverNote": {
+                          "type": ["string", "null"]
+                        },
                         "state": {
                           "type": "string",
                           "enum": ["draft", "published", "archived"]
@@ -8417,6 +8484,8 @@
                         "id",
                         "name",
                         "description",
+                        "formats",
+                        "coverNote",
                         "state",
                         "templateDocumentId",
                         "audience",
@@ -8984,6 +9053,13 @@
                           "description": {
                             "type": ["string", "null"]
                           },
+                          "formats": {
+                            "type": "string",
+                            "enum": ["docx", "pdf", "both"]
+                          },
+                          "coverNote": {
+                            "type": ["string", "null"]
+                          },
                           "state": {
                             "type": "string",
                             "enum": ["draft", "published", "archived"]
@@ -9043,6 +9119,8 @@
                           "id",
                           "name",
                           "description",
+                          "formats",
+                          "coverNote",
                           "state",
                           "templateDocumentId",
                           "audience",
@@ -9130,6 +9208,13 @@
                         "description": {
                           "type": ["string", "null"]
                         },
+                        "formats": {
+                          "type": "string",
+                          "enum": ["docx", "pdf", "both"]
+                        },
+                        "coverNote": {
+                          "type": ["string", "null"]
+                        },
                         "state": {
                           "type": "string",
                           "enum": ["draft", "published", "archived"]
@@ -9189,6 +9274,8 @@
                         "id",
                         "name",
                         "description",
+                        "formats",
+                        "coverNote",
                         "state",
                         "templateDocumentId",
                         "audience",
@@ -9274,6 +9361,13 @@
                         "description": {
                           "type": ["string", "null"]
                         },
+                        "formats": {
+                          "type": "string",
+                          "enum": ["docx", "pdf", "both"]
+                        },
+                        "coverNote": {
+                          "type": ["string", "null"]
+                        },
                         "state": {
                           "type": "string",
                           "enum": ["draft", "published", "archived"]
@@ -9333,6 +9427,8 @@
                         "id",
                         "name",
                         "description",
+                        "formats",
+                        "coverNote",
                         "state",
                         "templateDocumentId",
                         "audience",
@@ -10047,6 +10143,13 @@
                         "description": {
                           "type": ["string", "null"]
                         },
+                        "formats": {
+                          "type": "string",
+                          "enum": ["docx", "pdf", "both"]
+                        },
+                        "coverNote": {
+                          "type": ["string", "null"]
+                        },
                         "state": {
                           "type": "string",
                           "enum": ["draft", "published", "archived"]
@@ -10106,6 +10209,8 @@
                         "id",
                         "name",
                         "description",
+                        "formats",
+                        "coverNote",
                         "state",
                         "templateDocumentId",
                         "audience",
@@ -10949,6 +11054,49 @@
                         "hasDocx": {
                           "type": "boolean"
                         },
+                        "hasPdf": {
+                          "type": "boolean"
+                        },
+                        "formats": {
+                          "type": "string",
+                          "enum": ["docx", "pdf", "both"]
+                        },
+                        "emailState": {
+                          "type": "string",
+                          "enum": ["not_requested", "pending", "sent", "failed", "unconfigured"]
+                        },
+                        "emailSentAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "emailFailure": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "code": {
+                                  "type": "string"
+                                },
+                                "detail": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["code", "detail"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "failure": {
                           "anyOf": [
                             {
@@ -10993,6 +11141,11 @@
                         "answers",
                         "state",
                         "hasDocx",
+                        "hasPdf",
+                        "formats",
+                        "emailState",
+                        "emailSentAt",
+                        "emailFailure",
                         "failure",
                         "createdAt",
                         "updatedAt"
@@ -11121,6 +11274,49 @@
                           "hasDocx": {
                             "type": "boolean"
                           },
+                          "hasPdf": {
+                            "type": "boolean"
+                          },
+                          "formats": {
+                            "type": "string",
+                            "enum": ["docx", "pdf", "both"]
+                          },
+                          "emailState": {
+                            "type": "string",
+                            "enum": ["not_requested", "pending", "sent", "failed", "unconfigured"]
+                          },
+                          "emailSentAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "emailFailure": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "code": {
+                                    "type": "string"
+                                  },
+                                  "detail": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["code", "detail"],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "failure": {
                             "anyOf": [
                               {
@@ -11165,6 +11361,11 @@
                           "answers",
                           "state",
                           "hasDocx",
+                          "hasPdf",
+                          "formats",
+                          "emailState",
+                          "emailSentAt",
+                          "emailFailure",
                           "failure",
                           "createdAt",
                           "updatedAt"
@@ -11174,6 +11375,246 @@
                     }
                   },
                   "required": ["generations"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auto-docs/{id}/generations/{generationId}/retry": {
+      "post": {
+        "summary": "Retry a failed Generation with its original pair and answers, Member+",
+        "tags": ["Auto-Docs"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "generationId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "generation": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "autoDocId": {
+                          "type": "string"
+                        },
+                        "autoDocName": {
+                          "type": "string"
+                        },
+                        "documentVersionId": {
+                          "type": "string"
+                        },
+                        "formVersionId": {
+                          "type": "string"
+                        },
+                        "documentVersionNumber": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "formVersionNumber": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "generatedBy": {
+                          "type": "string"
+                        },
+                        "person": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["id", "displayName"],
+                          "additionalProperties": false
+                        },
+                        "answers": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-z0-9_]{0,119}$"
+                          },
+                          "additionalProperties": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 10000
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "maxItems": 1000,
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "maxLength": 200
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "state": {
+                          "type": "string",
+                          "enum": ["pending", "ready", "failed"]
+                        },
+                        "hasDocx": {
+                          "type": "boolean"
+                        },
+                        "hasPdf": {
+                          "type": "boolean"
+                        },
+                        "formats": {
+                          "type": "string",
+                          "enum": ["docx", "pdf", "both"]
+                        },
+                        "emailState": {
+                          "type": "string",
+                          "enum": ["not_requested", "pending", "sent", "failed", "unconfigured"]
+                        },
+                        "emailSentAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "emailFailure": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "code": {
+                                  "type": "string"
+                                },
+                                "detail": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["code", "detail"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "failure": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "code": {
+                                  "type": "string"
+                                },
+                                "detail": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["code", "detail"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "autoDocId",
+                        "autoDocName",
+                        "documentVersionId",
+                        "formVersionId",
+                        "documentVersionNumber",
+                        "formVersionNumber",
+                        "generatedBy",
+                        "person",
+                        "answers",
+                        "state",
+                        "hasDocx",
+                        "hasPdf",
+                        "formats",
+                        "emailState",
+                        "emailSentAt",
+                        "emailFailure",
+                        "failure",
+                        "createdAt",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["generation"],
                   "additionalProperties": false
                 }
               }
@@ -11302,6 +11743,49 @@
                         "hasDocx": {
                           "type": "boolean"
                         },
+                        "hasPdf": {
+                          "type": "boolean"
+                        },
+                        "formats": {
+                          "type": "string",
+                          "enum": ["docx", "pdf", "both"]
+                        },
+                        "emailState": {
+                          "type": "string",
+                          "enum": ["not_requested", "pending", "sent", "failed", "unconfigured"]
+                        },
+                        "emailSentAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "emailFailure": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "code": {
+                                  "type": "string"
+                                },
+                                "detail": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["code", "detail"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "failure": {
                           "anyOf": [
                             {
@@ -11346,6 +11830,11 @@
                         "answers",
                         "state",
                         "hasDocx",
+                        "hasPdf",
+                        "formats",
+                        "emailState",
+                        "emailSentAt",
+                        "emailFailure",
                         "failure",
                         "createdAt",
                         "updatedAt"
@@ -11374,7 +11863,7 @@
     },
     "/api/v1/auto-docs/{id}/generations/{generationId}/docx": {
       "get": {
-        "summary": "Download a Generation's Word output, Member+",
+        "summary": "Download a Generation's docx output, Member+",
         "tags": ["Auto-Docs"],
         "parameters": [
           {
@@ -11398,7 +11887,54 @@
           "200": {
             "description": "Default Response",
             "content": {
-              "application/json": {
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auto-docs/{id}/generations/{generationId}/pdf": {
+      "get": {
+        "summary": "Download a Generation's pdf output, Member+",
+        "tags": ["Auto-Docs"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "generationId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/pdf": {
                 "schema": {
                   "type": "string",
                   "format": "binary"
