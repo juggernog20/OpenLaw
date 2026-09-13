@@ -392,3 +392,31 @@ it("keeps concurrent first uploads on one Document chain", async () => {
     expect(downloaded.rawPayload.subarray(0, 2).toString()).toBe("PK");
   }
 });
+
+it("carries detected Blocks and Placeholders through the stored scan", async () => {
+  const created = await h.app.inject({
+    method: "POST",
+    url: "/api/v1/auto-docs",
+    cookies: member,
+    payload: { name: "Blocks template" },
+  });
+  const id = created.json().autoDoc.id;
+  expect((await upload("blocks", `/api/v1/auto-docs/${id}/template`)).statusCode).toBe(201);
+  const response = await h.app.inject({
+    method: "GET",
+    url: `/api/v1/auto-docs/${id}`,
+    cookies: member,
+  });
+  expect(response.statusCode, response.body).toBe(200);
+  const current = response.json();
+  expect(current.detection).toEqual({
+    placeholders: ["seat", "address"],
+    blocks: ["arbitration", "notice"],
+  });
+  // A Block is not a form field: only the Placeholders become rows.
+  expect(current.formVersion.definition.fields.map((f: { slug: string }) => f.slug)).toEqual([
+    "seat",
+    "address",
+  ]);
+  expect(current.orphanedFields).toEqual([]);
+});

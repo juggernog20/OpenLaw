@@ -4,7 +4,9 @@
 import type { Node as XmlNode } from "@xmldom/xmldom";
 import { xmlPart, zipEntries } from "./docx-package.js";
 
-export const AUTO_DOC_SLUG = /^[a-z][a-z0-9_]*$/;
+/** Bounded at 120 characters, the length the form editor saves, so detection
+ * never mints a field name the editor cannot write back. */
+export const AUTO_DOC_SLUG = /^[a-z][a-z0-9_]{0,119}$/;
 export interface TemplateToken {
   kind: "placeholder" | "block_open" | "block_close";
   name: string;
