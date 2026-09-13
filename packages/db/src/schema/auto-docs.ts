@@ -157,7 +157,14 @@ export const autoDocTemplateScans = pgTable(
   "auto_doc_template_scans",
   {
     documentVersionId: text("document_version_id").primaryKey(),
-    detection: jsonb("detection").$type<{ placeholders: string[]; blocks: string[] }>().notNull(),
+    detection: jsonb("detection")
+      .$type<{
+        placeholders: string[];
+        blocks: string[];
+        /** Absent in scans saved before directives were detected. */
+        directives?: { slug: string; directive: string }[];
+      }>()
+      .notNull(),
   },
   (table) => [
     foreignKey({

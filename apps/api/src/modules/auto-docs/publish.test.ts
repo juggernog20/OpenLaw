@@ -478,3 +478,35 @@ it("checks rule values after a field is retyped and accepts numeric and Boolean 
     if (status === 409) expect(published.json().detail).toContain("number values");
   }
 });
+
+it("types a directive's detected field and refuses a pair whose field cannot print the format", async () => {
+  const initial = await create("Directive NDA", "directives");
+  const id = initial.autoDoc.id;
+  expect(
+    initial.formVersion.definition.fields.map((detected: { slug: string; fieldType: string }) => [
+      detected.slug,
+      detected.fieldType,
+    ]),
+  ).toEqual([
+    ["counterparty_name", "text"],
+    ["signing_date", "date"],
+    ["amount", "currency"],
+  ]);
+  expect((await call(id, "publish", pair(initial))).statusCode).toBe(200);
+  expect((await call(id, "unpublish", {})).statusCode).toBe(200);
+  const retyped = await call(id, "form-versions", {
+    fields: [field("counterparty_name"), field("signing_date"), field("amount")],
+  });
+  expect(retyped.statusCode, retyped.body).toBe(201);
+  const refused = await call(id, "publish", {
+    ...pair(initial),
+    formVersionId: retyped.json().formVersion.id,
+  });
+  expect(refused.statusCode, refused.body).toBe(409);
+  expect(refused.json().detail).toContain(
+    'Set "signing_date" to a date field for Placeholder "{{signing_date|date:DD/MM/YYYY}}"',
+  );
+  expect(refused.json().detail).toContain(
+    'Set "amount" to a currency or number field for Placeholder "{{amount|currency:USD}}"',
+  );
+});

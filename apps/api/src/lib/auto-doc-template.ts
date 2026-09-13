@@ -14,9 +14,15 @@ export interface TemplateToken {
   end: number;
   directive?: string;
 }
+export interface TemplateDirective {
+  slug: string;
+  directive: string;
+}
 export interface TemplateDetection {
   placeholders: string[];
   blocks: string[];
+  /** Absent in scans saved before directives were detected. */
+  directives?: TemplateDirective[];
 }
 export class TemplateDetectionError extends Error {
   constructor(reason: string, offending: string) {
@@ -24,6 +30,8 @@ export class TemplateDetectionError extends Error {
     this.name = "TemplateDetectionError";
   }
 }
+
+const SUPPORTED_CURRENCIES = new Set(Intl.supportedValuesOf("currency"));
 
 export function parseAutoDocPlaceholder(content: string): { name: string; directive?: string } {
   const [name = "", directive, ...extra] = content.split("|").map((part) => part.trim());
@@ -45,7 +53,7 @@ export function parseAutoDocPlaceholder(content: string): { name: string; direct
     );
   if (directive?.startsWith("currency:")) {
     const code = directive.slice(9);
-    if (!Intl.supportedValuesOf("currency").includes(code))
+    if (!SUPPORTED_CURRENCIES.has(code))
       throw new TemplateDetectionError("Use a supported currency code", `{{${content}}}`);
   }
   return { name, ...(directive === undefined ? {} : { directive }) };
@@ -159,10 +167,18 @@ export function templateTextParts(bytes: Buffer): { name: string; text: string }
 export function detectAutoDocTemplate(bytes: Buffer): TemplateDetection {
   const placeholders: string[] = [];
   const blocks: string[] = [];
+  const directives: TemplateDirective[] = [];
   for (const part of templateTextParts(bytes)) {
     const found = scanTemplateText(part.text);
     placeholders.push(...found.placeholders);
     for (const block of found.blocks) if (!blocks.includes(block)) blocks.push(block);
+    for (const token of found.tokens)
+      if (
+        token.kind === "placeholder" &&
+        token.directive !== undefined &&
+        !directives.some((held) => held.slug === token.name && held.directive === token.directive)
+      )
+        directives.push({ slug: token.name, directive: token.directive });
   }
-  return { placeholders, blocks };
+  return { placeholders, blocks, directives };
 }

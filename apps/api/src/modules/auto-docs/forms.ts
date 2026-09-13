@@ -131,6 +131,20 @@ export async function validateMaps(db: Executor, definition: AutoDocFormDefiniti
   if (gaps.length) throw httpError(400, gaps.join(" "));
 }
 
+/**
+ * The form field types a format directive can print, matching the fill's
+ * value resolver, with the type a fresh detection mints first. `upper`
+ * prints any answer, so it asks for nothing.
+ */
+function directiveNeeds(
+  directive: string,
+): { types: AutoDocFormField["fieldType"][]; named: string } | null {
+  if (directive.startsWith("date:")) return { types: ["date"], named: "a date" };
+  if (directive.startsWith("currency:"))
+    return { types: ["currency", "number"], named: "a currency or number" };
+  return null;
+}
+
 export function publicationGaps(
   definition: AutoDocFormDefinition,
   detection: TemplateDetection,
@@ -163,6 +177,15 @@ export function publicationGaps(
       if (values.some((value) => typeof value !== expected))
         gaps.push(`Clause rule "${rule.blockName}" needs ${expected} values for "${field.label}".`);
     }
+  }
+  // Scans saved before directives were detected hold none, so they add no gap.
+  for (const { slug, directive } of detection.directives ?? []) {
+    const needs = directiveNeeds(directive);
+    const field = fields.get(slug);
+    if (!needs || !field || needs.types.includes(field.fieldType)) continue;
+    gaps.push(
+      `Set "${field.label}" to ${needs.named} field for Placeholder "{{${slug}|${directive}}}".`,
+    );
   }
   return gaps;
 }
@@ -212,6 +235,16 @@ export function detectedFields(
     placeholder: field.placeholder || present.has(field.slug),
   }));
   const known = new Set(result.map((field) => field.slug));
+  // A new Placeholder that carries a format directive arrives as the field
+  // type that directive prints. Two directives that disagree stay text and
+  // publication names the gap.
+  const minted = new Map<string, AutoDocFormField["fieldType"]>();
+  for (const { slug, directive } of detection.directives ?? []) {
+    const wanted = directiveNeeds(directive)?.types[0];
+    if (!wanted) continue;
+    const held = minted.get(slug);
+    minted.set(slug, held === undefined || held === wanted ? wanted : "text");
+  }
   for (const slug of present)
     if (!known.has(slug)) {
       const label = slug.replaceAll("_", " ");
@@ -219,7 +252,7 @@ export function detectedFields(
         slug,
         label: label.charAt(0).toUpperCase() + label.slice(1),
         help: null,
-        fieldType: "text",
+        fieldType: minted.get(slug) ?? "text",
         options: null,
         required: false,
         displayOrder: result.length,

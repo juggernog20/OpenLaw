@@ -1318,7 +1318,7 @@ Source: **ADO-001–010**, grilled 2026-09-13. M35/5 (#848, migration 0120) buil
 
 **Built in M35/6:** `audience`, `target_contract_type_id`, both published version ids, and `published_at` are stored. CHECKs tie the pair and publication timestamp to `published` and the archival timestamp to `archived`. Deferred constraints check the pair on Auto-Doc writes and on changes to Document or version ownership. Form fields hold optional `catalogFieldId` and `contractAttribute`; the API and a JSON-path CHECK refuse both on one field. `definition.clauseRules` holds each Block's condition. Older snapshots omit the new map and rule properties and read as no map or rule, without rewriting history.
 
-`auto_doc_template_scans`: `document_version_id` primary key/FK → `document_versions.id` (cascade on delete); `detection` jsonb with Placeholders in document order and unique Block names. Detection is metadata on each immutable file Version. Both template upload routes validate before writing a Version and append a reconciled form snapshot under the Auto-Doc row lock.
+`auto_doc_template_scans`: `document_version_id` primary key/FK → `document_versions.id` (cascade on delete); `detection` jsonb with Placeholders in document order, unique Block names, and the unique slug and format directive pairs the file carries. Scans saved before M35/7 hold no directives. Detection is metadata on each immutable file Version. Both template upload routes validate before writing a Version and append a reconciled form snapshot under the Auto-Doc row lock.
 
 `auto_doc_assignment_rules`: `id`; `auto_doc_id`; `display_order`; `field_slug`; `operator`; `value` jsonb; `legal_owner_id` FK → `users.id`. Settings, not form definition: edited in place, audited.
 
