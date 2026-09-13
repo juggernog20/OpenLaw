@@ -1,3 +1,5 @@
+-- SPDX-License-Identifier: AGPL-3.0-only
+
 -- Read-only data checks for the audit's principal cleanup candidates.
 -- Run on the intended deployment before authoring/applying a removal migration.
 -- Counts reveal no contact values, comment text, credentials, or identities.
