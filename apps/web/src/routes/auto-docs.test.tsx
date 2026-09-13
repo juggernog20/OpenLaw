@@ -177,6 +177,59 @@ it("edits fields, preserves the orphan cue, and shows saved form versions and up
   expect(screen.getByText("Form version 2")).toBeVisible();
 });
 
+it("drops blank option lines and names the rule when a save cannot be sent", async () => {
+  const user = userEvent.setup();
+  const saves: Array<{ fields: typeof initialFields }> = [];
+  let current = record();
+  stubApi({
+    signedIn: member,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, current);
+      if (call.url.pathname.endsWith("/form-versions")) {
+        const body = call.body as { fields: typeof initialFields };
+        saves.push(body);
+        const next = { ...current.formVersion, id: "form2", versionNumber: 2, definition: body };
+        current = { ...current, formVersion: next, formVersions: [next, ...current.formVersions] };
+        return json(201, current);
+      }
+      return undefined;
+    },
+  });
+  renderAt("/auto-docs/nda");
+  await screen.findByRole("heading", { name: "Supplier NDA" });
+
+  // Two fields left on the same slug never reach the seam.
+  const date = screen.getByRole("group", { name: "signing_date" });
+  await user.clear(within(date).getByLabelText("Slug"));
+  await user.type(within(date).getByLabelText("Slug"), "counterparty_name");
+  await user.click(screen.getByRole("button", { name: "Save form" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Each form field needs a distinct slug.",
+  );
+  expect(saves).toHaveLength(0);
+
+  await user.clear(within(date).getByLabelText("Slug"));
+  await user.type(within(date).getByLabelText("Slug"), "review_path");
+  await user.selectOptions(within(date).getByLabelText("Type"), "single_select");
+  const options = within(date).getByLabelText("Options, one per line");
+  await user.type(options, "Standard{enter}Standard");
+  await user.click(screen.getByRole("button", { name: "Save form" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Give each select field distinct, non-empty options.",
+  );
+  expect(saves).toHaveLength(0);
+
+  // A trailing newline is typing, not an empty option.
+  await user.clear(options);
+  await user.type(options, "Standard{enter}Legal{enter}");
+  await user.click(screen.getByRole("button", { name: "Save form" }));
+  await waitFor(() => expect(saves).toHaveLength(1));
+  expect(saves[0]?.fields.find((f) => f.slug === "review_path")?.options).toEqual([
+    "Standard",
+    "Legal",
+  ]);
+});
+
 it("reserves the destination and app routes for Member+", async () => {
   expect(destinationsFor("legal_team_member").map((d) => d.id)).toContain("auto-docs");
   expect(destinationsFor("business_user").map((d) => d.id)).not.toContain("auto-docs");

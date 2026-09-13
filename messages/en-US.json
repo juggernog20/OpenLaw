@@ -1208,6 +1208,9 @@
   "autoDocs.openVersion": {
     "defaultMessage": "Open version {number}"
   },
+  "autoDocs.optionsRefused": {
+    "defaultMessage": "Give each select field distinct, non-empty options."
+  },
   "autoDocs.orphanCount": {
     "defaultMessage": "{count, plural, one {# orphaned field} other {# orphaned fields}}"
   },
@@ -1225,6 +1228,9 @@
   },
   "autoDocs.saveForm": {
     "defaultMessage": "Save form"
+  },
+  "autoDocs.slugsRefused": {
+    "defaultMessage": "Each form field needs a distinct slug."
   },
   "autoDocs.state": {
     "defaultMessage": "{state, select, draft {Draft} published {Published} other {Archived}}"

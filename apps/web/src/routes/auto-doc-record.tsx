@@ -140,6 +140,14 @@ function AutoDocRecord({
   const orphaned = fields.filter(
     (field) => field.placeholder && !saved.detection.placeholders.includes(field.slug),
   );
+  /** The options textarea is one option per line, so a blank line is typing, not an option. */
+  function optionsOf(field: (typeof fields)[number]) {
+    if (field.fieldType !== "single_select" && field.fieldType !== "multi_select") return null;
+    return field.optionText
+      .split("\n")
+      .map((option) => option.trim())
+      .filter((option) => option.length > 0);
+  }
   function update(key: string, patch: Partial<(typeof fields)[number]>) {
     setFields((rows) => rows.map((row) => (row.key === key ? { ...row, ...patch } : row)));
   }
@@ -155,6 +163,27 @@ function AutoDocRecord({
     setFields(drafts(record));
   }
   async function save() {
+    // The seam refuses a duplicate slug and an empty or repeated option, but it
+    // answers with a problem detail that names no field. Say the rule here.
+    const refusal = fields.some((field) => {
+      const options = optionsOf(field);
+      return options !== null && (options.length === 0 || new Set(options).size !== options.length);
+    })
+      ? intl.formatMessage({
+          id: "autoDocs.optionsRefused",
+          defaultMessage: "Give each select field distinct, non-empty options.",
+        })
+      : new Set(fields.map((field) => field.slug)).size !== fields.length
+        ? intl.formatMessage({
+            id: "autoDocs.slugsRefused",
+            defaultMessage: "Each form field needs a distinct slug.",
+          })
+        : undefined;
+    if (refusal) {
+      setNotice(undefined);
+      setError(refusal);
+      return;
+    }
     setBusy(true);
     setError(undefined);
     setNotice(undefined);
@@ -168,10 +197,7 @@ function AutoDocRecord({
             help: field.help || null,
             fieldType: field.fieldType,
             required: field.required,
-            options:
-              field.fieldType === "single_select" || field.fieldType === "multi_select"
-                ? field.optionText.split("\n").map((option) => option.trim())
-                : null,
+            options: optionsOf(field),
           })),
         },
       })
