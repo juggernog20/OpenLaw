@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** ADO-007: the Auto-Doc keeps every Generation, including a failed fill. */
-import { FormattedMessage } from "react-intl";
-import { Link } from "react-router";
+import { useEffect, useState } from "react";
+import { FormattedMessage, useIntl } from "react-intl";
+import { Link, useRevalidator } from "react-router";
 import { formatFullDate, formatLongDateTime } from "../../lib/format";
+import { api } from "../../lib/api";
+import { Button } from "../ui/button";
 import type { AutoDocGeneration } from "../../lib/auto-docs";
 
 export function GenerationState({ state }: { state: AutoDocGeneration["state"] }) {
@@ -27,17 +30,89 @@ export function GenerationPair({ generation }: { generation: AutoDocGeneration }
     />
   );
 }
+export function generationWaiting(generation: AutoDocGeneration): boolean {
+  return (
+    generation.state === "pending" ||
+    (generation.state === "ready" && generation.emailState === "pending")
+  );
+}
 export function GenerationDownload({ generation }: { generation: AutoDocGeneration }) {
-  return generation.hasDocx ? (
-    <a
-      className="text-link hover:underline"
-      href={`/api/v1/auto-docs/${generation.autoDocId}/generations/${generation.id}/docx`}
-    >
-      <FormattedMessage id="autoDocs.downloadWord" defaultMessage="Download Word" />
-    </a>
-  ) : null;
+  return (
+    <div className="flex flex-wrap gap-4">
+      {generation.hasDocx && generation.formats !== "pdf" && (
+        <a
+          className="text-link hover:underline"
+          href={`/api/v1/auto-docs/${generation.autoDocId}/generations/${generation.id}/docx`}
+        >
+          <FormattedMessage id="autoDocs.downloadWord" defaultMessage="Download Word" />
+        </a>
+      )}
+      {generation.hasPdf && generation.formats !== "docx" && (
+        <a
+          className="text-link hover:underline"
+          href={`/api/v1/auto-docs/${generation.autoDocId}/generations/${generation.id}/pdf`}
+        >
+          <FormattedMessage id="autoDocs.downloadPdf" defaultMessage="Download PDF" />
+        </a>
+      )}
+    </div>
+  );
+}
+export function GenerationEmail({ generation }: { generation: AutoDocGeneration }) {
+  if (generation.emailState === "unconfigured")
+    return <p className="text-sm text-muted">{generation.emailFailure?.detail}</p>;
+  if (generation.emailState === "sent" && generation.emailSentAt)
+    return (
+      <p className="text-sm text-muted">
+        <FormattedMessage id="autoDocs.emailSent" defaultMessage="Email sent" /> ·{" "}
+        <time dateTime={generation.emailSentAt} title={formatLongDateTime(generation.emailSentAt)}>
+          {formatFullDate(generation.emailSentAt)}
+        </time>
+      </p>
+    );
+  if (generation.emailState === "not_requested") return null;
+  return (
+    <p className="text-sm text-muted">
+      {generation.emailState === "failed" || generation.state === "failed" ? (
+        <FormattedMessage id="autoDocs.emailNotSent" defaultMessage="Email not sent" />
+      ) : (
+        <FormattedMessage id="autoDocs.emailPending" defaultMessage="Email pending" />
+      )}
+    </p>
+  );
 }
 export function AutoDocGenerations({ generations }: { generations: AutoDocGeneration[] }) {
+  const intl = useIntl();
+  const { revalidate } = useRevalidator();
+  const [retrying, setRetrying] = useState<string | null>(null);
+  const [error, setError] = useState<string>();
+  const waiting = generations.some(generationWaiting);
+  useEffect(() => {
+    if (!waiting) return;
+    const timer = setInterval(() => void revalidate(), 1500);
+    return () => clearInterval(timer);
+  }, [waiting, revalidate]);
+  async function retry(generation: AutoDocGeneration) {
+    setRetrying(generation.id);
+    setError(undefined);
+    const result = await api
+      .POST("/api/v1/auto-docs/{id}/generations/{generationId}/retry", {
+        params: { path: { id: generation.autoDocId, generationId: generation.id } },
+        body: {},
+      })
+      .catch(() => undefined);
+    if (result?.data) await revalidate();
+    else
+      setError(
+        result?.error?.detail ??
+          intl.formatMessage({
+            id: "autoDocs.retryFailed",
+            defaultMessage: "Could not retry this Generation. Try again.",
+          }),
+      );
+    setRetrying(null);
+  }
+
   return (
     <section
       aria-labelledby="auto-doc-generations-title"
@@ -46,6 +121,11 @@ export function AutoDocGenerations({ generations }: { generations: AutoDocGenera
       <h2 id="auto-doc-generations-title" className="text-lg font-semibold">
         <FormattedMessage id="autoDocs.generations" defaultMessage="Generations" />
       </h2>
+      {error && (
+        <p role="alert" className="text-sm text-status-danger-fg">
+          {error}
+        </p>
+      )}
       {generations.length === 0 ? (
         <p className="text-sm text-muted">
           <FormattedMessage id="autoDocs.noGenerations" defaultMessage="No Generations yet." />
@@ -75,6 +155,16 @@ export function AutoDocGenerations({ generations }: { generations: AutoDocGenera
                 <p className="text-status-danger-fg">{generation.failure.detail}</p>
               )}
               <GenerationDownload generation={generation} />
+              <GenerationEmail generation={generation} />
+              {generation.state === "failed" && (
+                <Button
+                  variant="secondary"
+                  disabled={retrying !== null}
+                  onClick={() => void retry(generation)}
+                >
+                  <FormattedMessage id="autoDocs.retry" defaultMessage="Retry" />
+                </Button>
+              )}
             </li>
           ))}
         </ul>

@@ -393,6 +393,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     from: "Playbook",
     to: "Article",
   },
+  "auto_doc.generation_retried": { name: "NDA", generationId: "generation" },
   "auto_doc.updated": {
     name: "Supplier NDA",
     changed: { audience: { from: "legal_only", to: "everyone" } },

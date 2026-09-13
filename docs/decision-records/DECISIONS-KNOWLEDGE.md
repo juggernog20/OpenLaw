@@ -37,6 +37,8 @@ The shipped record is file-first. Dropping one or several files on the Knowledge
 
 The optional `body` stores Markdown source. The editor gives source and preview modes. Rendering uses a fixed React-element allowlist for headings, lists, links, emphasis, and code; it accepts no raw HTML and uses no HTML injection. The body remains guidance beside the files, and the record and portal both read the primary file before the body.
 
+**M35/8 addendum, #851:** The allowlist parser now lives in `@openlaw/shared`. Knowledge still renders its nodes as owned React elements. Auto-Doc cover notes use those same nodes for escaped HTML and plain-text email. The accepted Markdown and link protocols are unchanged.
+
 ## KNW-002 — Publishing: Member+ authors, draft/published, edit-in-place
 
 - **Status** — Accepted

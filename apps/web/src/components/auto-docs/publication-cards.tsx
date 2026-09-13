@@ -5,7 +5,8 @@ import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Link } from "react-router";
 import { api } from "../../lib/api";
-import { CONTROL_CLASS } from "../../lib/form-controls";
+import { KnowledgeMarkdown } from "../knowledge/markdown";
+import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
 import { documentComparisonPath } from "../../lib/documents";
 import type { AutoDocAnswer, AutoDocOptions } from "../../lib/auto-docs";
 import { Button } from "../ui/button";
@@ -207,6 +208,8 @@ export function AutoDocSettings({
   const intl = useIntl();
   const [audience, setAudience] = useState(record.autoDoc.audience);
   const [target, setTarget] = useState(record.autoDoc.targetContractTypeId ?? "");
+  const [formats, setFormats] = useState(record.autoDoc.formats);
+  const [coverNote, setCoverNote] = useState(record.autoDoc.coverNote ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
   const [notice, setNotice] = useState(false);
@@ -225,7 +228,12 @@ export function AutoDocSettings({
           void api
             .PATCH("/api/v1/auto-docs/{id}", {
               params: { path: { id: record.autoDoc.id } },
-              body: { audience, targetContractTypeId: target || null },
+              body: {
+                audience,
+                targetContractTypeId: target || null,
+                formats,
+                coverNote: coverNote || null,
+              },
             })
             .catch(() => undefined)
             .then((result) => {
@@ -301,6 +309,53 @@ export function AutoDocSettings({
               ))}
             </select>
           </label>
+          <label className="block space-y-1">
+            <span>
+              <FormattedMessage id="autoDocs.formats" defaultMessage="Formats" />
+            </span>
+            <select
+              className={CONTROL_CLASS}
+              value={formats}
+              onChange={(event) => {
+                const value = event.target.value;
+                if (value === "docx" || value === "pdf" || value === "both") setFormats(value);
+              }}
+            >
+              {(["docx", "pdf", "both"] as const).map((format) => (
+                <option key={format} value={format}>
+                  {intl.formatMessage(
+                    {
+                      id: "autoDocs.formatName",
+                      defaultMessage:
+                        "{format, select, docx {Word} pdf {PDF} other {Word and PDF}}",
+                    },
+                    { format },
+                  )}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="space-y-3 @lg/page:col-span-2">
+            <label className="block space-y-1">
+              <span>
+                <FormattedMessage id="autoDocs.coverNote" defaultMessage="Cover note" />
+              </span>
+              <textarea
+                className={TEXTAREA_CLASS}
+                value={coverNote}
+                onChange={(event) => setCoverNote(event.target.value)}
+                maxLength={10_000}
+                aria-describedby="auto-doc-cover-note-help"
+              />
+            </label>
+            <p id="auto-doc-cover-note-help" className="text-sm text-muted">
+              <FormattedMessage
+                id="autoDocs.coverNoteHelp"
+                defaultMessage="Optional Markdown included in the email with the generated files."
+              />
+            </p>
+            {coverNote.trim() && <KnowledgeMarkdown source={coverNote} />}
+          </div>
         </fieldset>
         {error && (
           <p role="alert" className="text-sm text-status-danger-fg">

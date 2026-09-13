@@ -18,6 +18,8 @@ import { AppShell } from "../components/shell/app-shell";
 import { PageTitle } from "../components/page-title";
 import {
   GenerationDownload,
+  GenerationEmail,
+  generationWaiting,
   GenerationPair,
   GenerationState,
 } from "../components/auto-docs/generations";
@@ -40,11 +42,12 @@ export function AutoDocGenerationPage() {
   const intl = useIntl();
   const signOut = useSignOut("/auth/login");
   const { revalidate } = useRevalidator();
+  const waiting = generation ? generationWaiting(generation) : false;
   useEffect(() => {
-    if (generation?.state !== "pending") return;
+    if (!waiting) return;
     const timer = setInterval(() => void revalidate(), 1500);
     return () => clearInterval(timer);
-  }, [generation?.state, revalidate]);
+  }, [waiting, revalidate]);
   const title = intl.formatMessage({ id: "autoDocs.generation", defaultMessage: "Generation" });
   return (
     <AppShell user={user} onSignOut={() => void signOut()}>
@@ -83,6 +86,7 @@ export function AutoDocGenerationPage() {
               </p>
             )}
             <GenerationDownload generation={generation} />
+            <GenerationEmail generation={generation} />
           </section>
         )}
       </div>

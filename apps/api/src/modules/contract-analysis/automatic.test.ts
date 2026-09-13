@@ -425,6 +425,7 @@ describe("automatic Contract analysis", () => {
     const paper = await storedPaper(contract.id, ["First"]);
     const queued: { contractId: string; runId: string }[] = [];
     const jobs: JobQueue = {
+      requestGenerationDelivery: async () => {},
       requestConversionDraft: async () => {},
       requestTextExtraction: async () => {},
       requestDisplayConversion: async () => {},
@@ -484,6 +485,7 @@ describe("automatic Contract analysis", () => {
       {
         db: harness.db,
         jobs: {
+          requestGenerationDelivery: async () => {},
           requestConversionDraft: async () => {},
           requestTextExtraction: async () => {},
           requestDisplayConversion: async () => {},
@@ -539,6 +541,7 @@ describe("automatic Contract analysis", () => {
     const paper = await storedPaper(contract.id, ["First retry target"]);
     const queued: string[] = [];
     const jobs: JobQueue = {
+      requestGenerationDelivery: async () => {},
       requestConversionDraft: async () => {},
       requestTextExtraction: async () => {},
       requestDisplayConversion: async () => {},

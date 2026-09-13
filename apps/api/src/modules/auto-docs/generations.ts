@@ -5,6 +5,8 @@ import { Readable } from "node:stream";
 import { buffer } from "node:stream/consumers";
 import {
   AUTO_DOC_GENERATION_STATES,
+  AUTO_DOC_FORMATS,
+  AUTO_DOC_EMAIL_STATES,
   autoDocGenerations,
   autoDocFormVersions,
   autoDocs,
@@ -30,6 +32,10 @@ import { entityReachScope } from "../../lib/entity-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { attachmentDisposition, withStoredBlob } from "../../lib/uploads.js";
 import { validateGenerationAnswers } from "./answers.js";
+import { boundedQueueAsk } from "../../pipeline/jobs.js";
+import type { AppDeps } from "../../app.js";
+import type { FastifyBaseLogger } from "fastify";
+import type { AutoDocGeneration, AutoDocFormDefinition } from "@openlaw/db";
 import { AutoDocFieldRow } from "./routes.js";
 
 const requireMember = requireRole("administrator", "legal_team_member");
@@ -62,6 +68,11 @@ const GenerationRow = z.object({
   answers: Answers,
   state: z.enum(AUTO_DOC_GENERATION_STATES),
   hasDocx: z.boolean(),
+  hasPdf: z.boolean(),
+  formats: z.enum(AUTO_DOC_FORMATS),
+  emailState: z.enum(AUTO_DOC_EMAIL_STATES),
+  emailSentAt: z.iso.datetime().nullable(),
+  emailFailure: z.object({ code: z.string(), detail: z.string() }).nullable(),
   failure: z.object({ code: z.string(), detail: z.string() }).nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
@@ -115,7 +126,7 @@ function generationQuery(db: Executor) {
     .innerJoin(autoDocFormVersions, eq(autoDocFormVersions.id, autoDocGenerations.formVersionId));
 }
 function toGeneration(row: Awaited<ReturnType<typeof generationQuery>>[number]) {
-  const { docxFileRef, ...generation } = row.generation;
+  const { docxFileRef, pdfFileRef, ...generation } = row.generation;
   return {
     ...generation,
     autoDocName: row.autoDocName,
@@ -123,6 +134,8 @@ function toGeneration(row: Awaited<ReturnType<typeof generationQuery>>[number]) 
     documentVersionNumber: row.documentVersionNumber,
     formVersionNumber: row.formVersionNumber,
     hasDocx: docxFileRef !== null,
+    hasPdf: pdfFileRef !== null,
+    emailSentAt: generation.emailSentAt?.toISOString() ?? null,
     createdAt: generation.createdAt.toISOString(),
     updatedAt: generation.updatedAt.toISOString(),
   };
@@ -133,6 +146,64 @@ async function readGeneration(db: Executor, id: string, generationId: string) {
   );
   if (!row) throw httpError(404, "No Generation exists with this id on this Auto-Doc.");
   return row;
+}
+
+async function fillGeneration(
+  app: Pick<AppDeps, "db" | "storage" | "fillEngine" | "jobs">,
+  log: FastifyBaseLogger,
+  generation: AutoDocGeneration,
+  definition: AutoDocFormDefinition,
+  sourceRef: string,
+) {
+  const current = and(
+    eq(autoDocGenerations.id, generation.id),
+    eq(autoDocGenerations.attempt, generation.attempt),
+    eq(autoDocGenerations.state, "pending"),
+  );
+  try {
+    const template = await buffer(await app.storage.get(sourceRef));
+    const output = await app.fillEngine.fill({
+      template,
+      definition,
+      answers: generation.answers,
+      displayValues: generation.displayValues,
+    });
+    const fileRef = await app.storage.put(
+      generationDocxKey(generation.id),
+      Readable.from([output]),
+    );
+    await withStoredBlob(app.storage, log, fileRef, async () => {
+      const written = await app.db
+        .update(autoDocGenerations)
+        .set({
+          state: generation.formats === "docx" ? "ready" : "pending",
+          docxFileRef: fileRef,
+          updatedAt: new Date(),
+        })
+        .where(current)
+        .returning({ id: autoDocGenerations.id });
+      if (!written.length) throw new AutoDocFillError("This fill attempt has been replaced.");
+    });
+  } catch (error) {
+    log.warn({ err: error, generationId: generation.id }, "Auto-Doc fill failed");
+    const detail =
+      error instanceof AutoDocFillError
+        ? error.message
+        : "The Word document could not be generated. Try again.";
+    await app.db
+      .update(autoDocGenerations)
+      .set({ state: "failed", failure: { code: "fill_failed", detail }, updatedAt: new Date() })
+      .where(current);
+    return;
+  }
+  try {
+    await boundedQueueAsk(app.jobs.requestGenerationDelivery(generation.id, generation.attempt));
+  } catch (error) {
+    log.warn(
+      { err: error, generationId: generation.id },
+      "Generation delivery remains owed; the sweep will ask again",
+    );
+  }
 }
 
 export const autoDocGenerationRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -212,6 +283,10 @@ export const autoDocGenerationRoutes: FastifyPluginAsyncZod = async (app) => {
             ...live.pair,
             generatedBy: request.user.id,
             answers,
+            displayValues,
+            formats: live.autoDoc.formats,
+            coverNote: live.autoDoc.coverNote,
+            emailState: "pending",
           })
           .returning();
         await recordActivity(tx, {
@@ -232,43 +307,138 @@ export const autoDocGenerationRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return { ...live, generation: generation!, displayValues };
       });
-      try {
-        const template = await buffer(await app.storage.get(accepted.file.fileRef));
-        const output = await app.fillEngine.fill({
-          template,
-          definition: accepted.form.definition,
-          answers: accepted.generation.answers,
-          displayValues: accepted.displayValues,
-        });
-        const fileRef = await app.storage.put(
-          generationDocxKey(accepted.generation.id),
-          Readable.from([output]),
-        );
-        await withStoredBlob(app.storage, request.log, fileRef, async () => {
-          await app.db
-            .update(autoDocGenerations)
-            .set({ state: "ready", docxFileRef: fileRef, updatedAt: new Date() })
-            .where(eq(autoDocGenerations.id, accepted.generation.id));
-        });
-      } catch (error) {
-        request.log.warn(
-          { err: error, generationId: accepted.generation.id },
-          "Auto-Doc fill failed",
-        );
-        const detail =
-          error instanceof AutoDocFillError
-            ? error.message
-            : "The Word document could not be generated. Try again.";
-        await app.db
-          .update(autoDocGenerations)
-          .set({ state: "failed", failure: { code: "fill_failed", detail }, updatedAt: new Date() })
-          .where(eq(autoDocGenerations.id, accepted.generation.id));
-      }
+      await fillGeneration(
+        app,
+        request.log,
+        accepted.generation,
+        accepted.form.definition,
+        accepted.file.fileRef,
+      );
       return reply.code(201).send({
         generation: toGeneration(
           await readGeneration(app.db, request.params.id, accepted.generation.id),
         ),
       });
+    },
+  );
+
+  app.post(
+    "/auto-docs/:id/generations/:generationId/retry",
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ["Auto-Docs"],
+        summary: "Retry a failed Generation with its original pair and answers, Member+",
+        params: GenerationParams,
+        body: z.strictObject({}),
+        response: { 200: Envelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const accepted = await app.db.transaction(async (tx) => {
+        const [old] = await tx
+          .select()
+          .from(autoDocGenerations)
+          .where(
+            and(
+              eq(autoDocGenerations.id, request.params.generationId),
+              eq(autoDocGenerations.autoDocId, request.params.id),
+            ),
+          )
+          .for("update");
+        if (!old) throw httpError(404, "No Generation exists with this id on this Auto-Doc.");
+        if (old.state !== "failed")
+          throw httpError(409, "Only a failed Generation can be retried.");
+        const [file] = await tx
+          .select()
+          .from(documentVersions)
+          .where(eq(documentVersions.id, old.documentVersionId))
+          .for("share");
+        const [form] = await tx
+          .select()
+          .from(autoDocFormVersions)
+          .where(eq(autoDocFormVersions.id, old.formVersionId))
+          .for("share");
+        if (!file || !form)
+          throw httpError(409, "This Generation's original pair is no longer available.");
+        const displayValues = { ...old.displayValues };
+        for (const field of form.definition.fields) {
+          if (
+            field.fieldType !== "entity" ||
+            Object.hasOwn(displayValues, field.slug) ||
+            !Object.hasOwn(old.answers, field.slug)
+          )
+            continue;
+          const value = old.answers[field.slug];
+          if (typeof value !== "string") continue;
+          const [entity] = await tx
+            .select({ name: entities.legalName })
+            .from(entities)
+            .where(eq(entities.id, value));
+          if (!entity)
+            throw httpError(409, `The Entity used for "${field.label}" is no longer available.`);
+          displayValues[field.slug] = entity.name;
+        }
+        const [generation] = await tx
+          .update(autoDocGenerations)
+          .set({
+            state: "pending",
+            failure: null,
+            docxFileRef: null,
+            pdfFileRef: null,
+            emailState: "pending",
+            emailFailure: null,
+            emailSentAt: null,
+            displayValues,
+            attempt: old.attempt + 1,
+            updatedAt: new Date(),
+          })
+          .where(eq(autoDocGenerations.id, old.id))
+          .returning();
+        const [autoDoc] = await tx
+          .select({ name: autoDocs.name })
+          .from(autoDocs)
+          .where(eq(autoDocs.id, old.autoDocId));
+        await recordActivity(tx, {
+          entityType: "auto_doc",
+          entityId: old.autoDocId,
+          actorId: request.user.id,
+          action: "auto_doc.generation_retried",
+          visibility: "legal_only",
+          payload: { name: autoDoc!.name, generationId: old.id },
+        });
+        return {
+          generation: generation!,
+          file,
+          form,
+          superseded: [old.docxFileRef, old.pdfFileRef],
+        };
+      });
+      // The retry mints fresh keys (DOC-012), so the output of the
+      // attempt it replaced is referenced by nothing from here on. The
+      // removal is best effort, for the display rendition's reason. An
+      // orphan is harmless, and failing to tidy one up must not refuse a
+      // retry the row has already recorded.
+      for (const fileRef of accepted.superseded)
+        if (fileRef)
+          await app.storage.delete(fileRef).catch((error: unknown) => {
+            request.log.warn(
+              { err: error, fileRef },
+              "could not remove the output of a replaced Generation attempt",
+            );
+          });
+      await fillGeneration(
+        app,
+        request.log,
+        accepted.generation,
+        accepted.form.definition,
+        accepted.file.fileRef,
+      );
+      return {
+        generation: toGeneration(
+          await readGeneration(app.db, request.params.id, accepted.generation.id),
+        ),
+      };
     },
   );
 
@@ -320,37 +490,51 @@ export const autoDocGenerationRoutes: FastifyPluginAsyncZod = async (app) => {
     }),
   );
 
-  app.get(
-    "/auto-docs/:id/generations/:generationId/docx",
-    {
-      preHandler: requireMember,
-      schema: {
-        tags: ["Auto-Docs"],
-        summary: "Download a Generation's Word output, Member+",
-        params: GenerationParams,
-        response: {
-          200: z.any().meta({ type: "string", format: "binary" }),
-          default: problemResponse,
+  for (const format of ["docx", "pdf"] as const)
+    app.get(
+      `/auto-docs/:id/generations/:generationId/${format}`,
+      {
+        preHandler: requireMember,
+        schema: {
+          tags: ["Auto-Docs"],
+          summary: `Download a Generation's ${format} output, Member+`,
+          produces: [
+            format === "docx"
+              ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              : "application/pdf",
+          ],
+          params: GenerationParams,
+          response: {
+            200: z.any().meta({ type: "string", format: "binary" }),
+            default: problemResponse,
+          },
         },
       },
-    },
-    async (request, reply) => {
-      const row = await readGeneration(app.db, request.params.id, request.params.generationId);
-      if (!row.generation.docxFileRef)
-        throw httpError(
-          409,
-          row.generation.failure?.detail ?? "The Word document is not ready yet.",
-        );
-      const body = await app.storage.get(row.generation.docxFileRef);
-      return reply
-        .header(
-          "content-type",
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        )
-        .header("content-disposition", attachmentDisposition(`${row.autoDocName}.docx`))
-        .header("x-content-type-options", "nosniff")
-        .header("cache-control", "private, no-store")
-        .send(body);
-    },
-  );
+      async (request, reply) => {
+        const row = await readGeneration(app.db, request.params.id, request.params.generationId);
+        if (row.generation.formats !== "both" && row.generation.formats !== format)
+          throw httpError(
+            403,
+            `This Generation does not allow ${format === "docx" ? "Word" : "PDF"} downloads.`,
+          );
+        const fileRef = format === "docx" ? row.generation.docxFileRef : row.generation.pdfFileRef;
+        if (!fileRef)
+          throw httpError(
+            409,
+            row.generation.failure?.detail ??
+              `The ${format === "docx" ? "Word document" : "PDF"} is not ready yet.`,
+          );
+        return reply
+          .header(
+            "content-type",
+            format === "docx"
+              ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              : "application/pdf",
+          )
+          .header("content-disposition", attachmentDisposition(`${row.autoDocName}.${format}`))
+          .header("x-content-type-options", "nosniff")
+          .header("cache-control", "private, no-store")
+          .send(await app.storage.get(fileRef));
+      },
+    );
 };

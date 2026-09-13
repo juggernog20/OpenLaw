@@ -1260,6 +1260,7 @@ type AutoDocPayloads = {
   };
   "auto_doc.created": { name: string };
   "auto_doc.updated": { name: string; changed: ChangedFields };
+  "auto_doc.generation_retried": { name: string; generationId: string };
   "auto_doc.published": { name: string; documentVersionId: string; formVersionId: string };
   "auto_doc.unpublished": {
     name: string;

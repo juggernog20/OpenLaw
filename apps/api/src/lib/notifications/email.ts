@@ -95,6 +95,19 @@ export function origin(baseUrl: string): string {
   return baseUrl.slice(0, end);
 }
 
+/** Text on its way into an HTML part, with the five characters that
+ * would otherwise end the text and start markup. Every template that
+ * writes HTML escapes through this one function, so a part added later
+ * cannot quietly use a weaker rule. */
+export function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 /** The deep link one notification points at: the record itself. */
 export function recordLink(baseUrl: string, contractNumber: number): string {
   return `${origin(baseUrl)}/contracts/${contractNumber}`;

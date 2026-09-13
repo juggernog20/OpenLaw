@@ -32,6 +32,7 @@ import { sweepConversionAnalysis } from "./conversion-analysis.js";
 import { handleConversionDraft, sweepConversionDrafts } from "./conversion-draft.js";
 import { handleContractAnalysis } from "./contract-analysis.js";
 import type { DerivationDeps } from "./derivations.js";
+import { handleGenerationDelivery, sweepGenerationDeliveries } from "./generation-delivery.js";
 import { handleDisplayConversion } from "./display-conversion.js";
 import { handleDocumentComparison } from "./document-comparison.js";
 import { createNotifier } from "../lib/notifications/notifier.js";
@@ -39,6 +40,7 @@ import { handleExecutedCopyFetch } from "./executed-copy.js";
 import { handleNotificationEmail } from "./notification-email.js";
 import {
   JOB_QUEUES,
+  type GenerationDeliveryJob,
   type ContractAnalysisJob,
   type ConversionDraftJob,
   type DisplayConversionJob,
@@ -382,6 +384,12 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
    * one this call returns.
    */
   const queue: JobQueue = {
+    async requestGenerationDelivery(generationId, attempt) {
+      const job: GenerationDeliveryJob = { generationId, attempt };
+      await boss.send(JOB_QUEUES.generationDelivery, job, {
+        singletonKey: `${generationId}:${attempt}`,
+      });
+    },
     async requestTextExtraction(versionId: string): Promise<void> {
       const job: TextExtractionJob = { versionId };
       // The version is the key the `short` policy collapses on, so
@@ -460,6 +468,15 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
     await boss.updateQueue(JOB_QUEUES.textExtraction, {
       notify: true,
       ...TEXT_EXTRACTION_QUEUE_OPTIONS,
+    });
+    await boss.createQueue(JOB_QUEUES.generationDelivery, {
+      policy: "short",
+      notify: true,
+      ...DISPLAY_CONVERSION_QUEUE_OPTIONS,
+    });
+    await boss.updateQueue(JOB_QUEUES.generationDelivery, {
+      notify: true,
+      ...DISPLAY_CONVERSION_QUEUE_OPTIONS,
     });
     await boss.createQueue(JOB_QUEUES.displayConversion, {
       policy: "short",
@@ -629,6 +646,19 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
         },
       );
       await boss.work(
+        JOB_QUEUES.generationDelivery,
+        oneAtATime,
+        async (jobs: JobWithMetadata<GenerationDeliveryJob>[]) => {
+          for (const job of jobs)
+            await handleGenerationDelivery(handlers, {
+              ...job.data,
+              retryCount: job.retryCount,
+              retryLimit: job.retryLimit,
+            });
+        },
+      );
+      await sweepGenerationDeliveries(handlers, queue, sweeping.signal);
+      await boss.work(
         JOB_QUEUES.displayConversion,
         oneAtATime,
         async (jobs: JobWithMetadata<DisplayConversionJob>[]) => {
@@ -753,6 +783,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
         const summary = await runBackfillSweep({ db: handlers.db, log }, queue, {
           signal: sweeping.signal,
         });
+        await sweepGenerationDeliveries(handlers, queue, sweeping.signal);
         log.info({ ...summary }, "the scheduled backfill sweep finished");
       });
       // The reconciliation sweep gets its own worker for the backfill
@@ -812,6 +843,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
         {
           queues: [
             JOB_QUEUES.textExtraction,
+            JOB_QUEUES.generationDelivery,
             JOB_QUEUES.displayConversion,
             JOB_QUEUES.documentComparison,
             JOB_QUEUES.executedCopyFetch,

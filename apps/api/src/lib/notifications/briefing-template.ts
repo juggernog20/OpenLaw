@@ -30,7 +30,7 @@ import type { MailMessage } from "../mailer.js";
 import type { ApprovalsHomeSection } from "../../modules/home/sections/approvals.js";
 import type { InboxHomeSection } from "../../modules/home/sections/inbox.js";
 import type { TasksHomeSection } from "../../modules/home/sections/tasks.js";
-import { matterLink, origin, recordLink } from "./email.js";
+import { escapeHtml, matterLink, origin, recordLink } from "./email.js";
 
 interface DigestRowBase {
   /** Which tracked date this is (NOT-002 group 3). */
@@ -198,15 +198,6 @@ function sortedKnowledge(input: readonly KnowledgeBriefingItem[]): KnowledgeBrie
     (left, right) =>
       left.publishedAt.getTime() - right.publishedAt.getTime() || left.id.localeCompare(right.id),
   );
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
 }
 
 function dateSections(rows: readonly DigestRow[]) {

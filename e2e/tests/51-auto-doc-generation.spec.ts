@@ -78,7 +78,7 @@ test("Legal keeps answers through Unpublish, then generates and downloads the ap
   ).toBe(200);
   await page.getByRole("button", { name: "Generate", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Generation", exact: true })).toBeVisible();
-  await expect(page.getByRole("status")).toContainText("Ready");
+  await expect(page.getByRole("status")).toContainText("Ready", { timeout: 60_000 });
   const download = page.getByRole("link", { name: "Download Word", exact: true });
   const file = await page.request.get((await download.getAttribute("href"))!);
   expect(file.status()).toBe(200);

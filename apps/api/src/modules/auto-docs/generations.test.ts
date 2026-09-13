@@ -89,6 +89,13 @@ async function prepare(
     payload: { name: "Generation NDA" },
   });
   const id: string = created.json().autoDoc.id;
+  const settings = await h.app.inject({
+    method: "PATCH",
+    url: `/api/v1/auto-docs/${id}`,
+    cookies: member,
+    payload: { formats: "docx" },
+  });
+  expect(settings.statusCode, settings.body).toBe(200);
   const bytes = await readFile(
     new URL("../../testing/fixtures/auto-docs/plain.docx", import.meta.url),
   );
@@ -289,10 +296,14 @@ it("keeps app Generation routes Member+ and refuses a Generation under another A
     "generations",
     `generations/${generationId}`,
     `generations/${generationId}/docx`,
+    `generations/${generationId}/pdf`,
   ])
     expect((await call(id, suffix, undefined, business)).statusCode).toBe(403);
   expect((await call(id, "generations", { ...pair, answers: {} }, business)).statusCode).toBe(403);
+  expect((await call(id, `generations/${generationId}/retry`, {}, business)).statusCode).toBe(403);
   const other = await prepare();
+  expect((await call(other.id, `generations/${generationId}/retry`, {})).statusCode).toBe(404);
+  expect((await call(other.id, `generations/${generationId}/pdf`)).statusCode).toBe(404);
   expect((await call(other.id, `generations/${generationId}`)).statusCode).toBe(404);
   expect((await call(other.id, `generations/${generationId}/docx`)).statusCode).toBe(404);
 });

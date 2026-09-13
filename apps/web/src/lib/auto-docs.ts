@@ -82,6 +82,8 @@ export const autoDocUploadAnswer = z.object({
     id: z.string(),
     name: z.string(),
     description: z.string().nullable(),
+    formats: z.enum(["docx", "pdf", "both"]),
+    coverNote: z.string().nullable(),
     state: autoDocStates,
     templateDocumentId: z.string().nullable(),
     audience: autoDocAudiences,

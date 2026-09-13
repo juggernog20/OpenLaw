@@ -131,6 +131,12 @@ Member+ can Publish a new pair, Unpublish, Archive, and Restore through separate
 
 **M35/7 built addendum (#850):** Member+ opens the live form and submits its pair ids with typed answers. A changed pair or non-published Auto-Doc returns a named refusal, with answers kept in the form. Migration 0122 adds Generations and deferred checks that both versions belong to the same Auto-Doc, including after reparenting. The pending row and `auto_doc.generated` entry commit before the bounded Word fill. A complete output is stored under `auto-doc-generations/<id>/<fresh id>.docx`, DOC-012's never-overwrite key, then the Generation becomes ready. Fill failures keep their reason and no output. The confirmation and the Auto-Doc's Generations list show the person, pair, time, state, and available download. PDF, formats, email, and retry remain M35/8.
 
+**M35/8 built addendum (#851):** Formats and the Markdown cover note are audited Auto-Doc settings. Each new Generation copies them, the answers, and the Entity names printed in the file. Later settings edits do not change that Generation's downloads or retry. Member+ can retry a failed Generation from its list. Retry keeps the saved pair and answers, increments the attempt, and writes new output keys. A ready Generation cannot be retried.
+
+The Word download appears after fill when its saved formats allow Word. The delivery worker produces the PDF through `DocEngine.convertToPdf`, then sends the requested attachments through the resolved mailer. Email state is `pending`, `sent`, `failed`, or `unconfigured`, with a sent time or controlled failure detail. Unconfigured SMTP leaves the Generation ready and displays the not-sent reason. A terminal or exhausted PDF or email failure makes it failed and retryable. Duplicate jobs lock the Generation before email and skip a recorded outcome. As with other SMTP delivery, an acceptance by the relay followed by a database failure can cause a duplicate on recovery.
+
+Migration 0123 preserves older Word-only Generations with `formats = docx` and `email_state = not_requested`. It adds checks for the requested ready files and the email outcome. New submissions explicitly request email and copy today's formats, whose Auto-Doc default is both. The boot and scheduled recovery sweeps requeue saved work. A pending fill with no Word output after five minutes becomes failed so Legal can retry an interrupted request.
+
 ## ADO-008 — Acknowledgement before use, by Business Users, at a configurable frequency
 
 - **Status** — Accepted
