@@ -206,6 +206,9 @@ describe("the Matter record's Tasks section", () => {
     const card = await section();
     await user.click(card.getByRole("checkbox", { name: "Complete Task: Draft response" }));
     expect(await card.findByText("1 of 2 done")).toBeInTheDocument();
+    expect(card.queryByText("Draft response")).not.toBeInTheDocument();
+    await user.click(card.getByRole("switch", { name: "Show completed" }));
+    expect(card.getByRole("checkbox", { name: "Reopen Task: Draft response" })).toBeChecked();
 
     await user.click(card.getByRole("button", { name: "Actions for Draft response" }));
     expect(screen.queryByRole("menuitem", { name: "Move up" })).not.toBeInTheDocument();
@@ -221,6 +224,13 @@ describe("the Matter record's Tasks section", () => {
     await user.click(await screen.findByRole("menuitem", { name: "Remove Task" }));
     await waitFor(() => expect(card.queryByText("File response")).not.toBeInTheDocument());
     expect(api.writes.map((write) => write.method)).toEqual(["POST", "PATCH", "DELETE"]);
+    await user.click(card.getByRole("switch", { name: "Hide completed" }));
+    expect(card.getByText("No open Tasks.")).toBeInTheDocument();
+    await user.click(card.getByRole("switch", { name: "Show completed" }));
+    await user.click(card.getByRole("checkbox", { name: "Reopen Task: Draft final response" }));
+    await user.click(card.getByRole("switch", { name: "Hide completed" }));
+    expect(card.getByText("Draft final response")).toBeInTheDocument();
+    expect(card.getByText("0 of 1 done")).toBeInTheDocument();
   });
 
   it("changes and clears a task assignee without changing the Matter Manager", async () => {

@@ -23171,21 +23171,6 @@
                               }
                             ]
                           },
-                          "expectedBy": {
-                            "anyOf": [
-                              {
-                                "type": "string",
-                                "format": "date",
-                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "estimatePassed": {
-                            "type": "boolean"
-                          },
                           "id": {
                             "type": "string"
                           },
@@ -23223,8 +23208,6 @@
                         },
                         "required": [
                           "owner",
-                          "expectedBy",
-                          "estimatePassed",
                           "id",
                           "number",
                           "status",
@@ -23300,21 +23283,6 @@
                             }
                           ]
                         },
-                        "expectedBy": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "format": "date",
-                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "estimatePassed": {
-                          "type": "boolean"
-                        },
                         "id": {
                           "type": "string"
                         },
@@ -23387,8 +23355,6 @@
                       },
                       "required": [
                         "owner",
-                        "expectedBy",
-                        "estimatePassed",
                         "id",
                         "number",
                         "status",
@@ -23842,318 +23808,6 @@
         }
       }
     },
-    "/api/v1/requests/{number}/expected-by": {
-      "patch": {
-        "operationId": "setRequestEstimate",
-        "summary": "Set or clear Legal's return estimate on an open or in-progress Request",
-        "tags": ["requests"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "expectedBy": {
-                    "anyOf": [
-                      {
-                        "type": "string",
-                        "format": "date",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  }
-                },
-                "required": ["expectedBy"],
-                "additionalProperties": false
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "schema": {
-              "type": "integer",
-              "exclusiveMinimum": 0,
-              "maximum": 9007199254740991
-            },
-            "in": "path",
-            "name": "number",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "request": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "string"
-                        },
-                        "number": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "status": {
-                          "type": "string",
-                          "enum": ["new", "converted", "resolved", "declined"]
-                        },
-                        "title": {
-                          "type": "string"
-                        },
-                        "description": {
-                          "type": ["string", "null"]
-                        },
-                        "urgency": {
-                          "type": "string",
-                          "enum": ["low", "medium", "high", "critical"]
-                        },
-                        "customFields": {
-                          "type": "object",
-                          "propertyNames": {
-                            "type": "string"
-                          },
-                          "additionalProperties": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "number"
-                              },
-                              {
-                                "type": "boolean"
-                              },
-                              {
-                                "type": "array",
-                                "items": {
-                                  "type": "string"
-                                }
-                              }
-                            ]
-                          }
-                        },
-                        "declinedReason": {
-                          "type": ["string", "null"]
-                        },
-                        "createdAt": {
-                          "type": "string"
-                        },
-                        "requestType": {
-                          "type": "object",
-                          "properties": {
-                            "id": {
-                              "type": "string"
-                            },
-                            "displayName": {
-                              "type": "string"
-                            },
-                            "targetModule": {
-                              "anyOf": [
-                                {
-                                  "type": "string",
-                                  "enum": ["matter", "contract"]
-                                },
-                                {
-                                  "type": "null"
-                                }
-                              ]
-                            },
-                            "targetTypeId": {
-                              "type": ["string", "null"]
-                            },
-                            "targetTypeName": {
-                              "type": ["string", "null"]
-                            }
-                          },
-                          "required": [
-                            "id",
-                            "displayName",
-                            "targetModule",
-                            "targetTypeId",
-                            "targetTypeName"
-                          ],
-                          "additionalProperties": false
-                        },
-                        "requester": {
-                          "type": "object",
-                          "properties": {
-                            "id": {
-                              "type": "string"
-                            },
-                            "displayName": {
-                              "type": "string"
-                            },
-                            "email": {
-                              "type": "string"
-                            },
-                            "image": {
-                              "type": ["string", "null"]
-                            }
-                          },
-                          "required": ["id", "displayName", "email", "image"],
-                          "additionalProperties": false
-                        },
-                        "assignee": {
-                          "anyOf": [
-                            {
-                              "type": "object",
-                              "properties": {
-                                "id": {
-                                  "type": "string"
-                                },
-                                "displayName": {
-                                  "type": "string"
-                                },
-                                "image": {
-                                  "type": ["string", "null"]
-                                }
-                              },
-                              "required": ["id", "displayName", "image"],
-                              "additionalProperties": false
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "expectedBy": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "format": "date",
-                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "suggestedExpectedBy": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "format": "date",
-                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "convertedContract": {
-                          "anyOf": [
-                            {
-                              "type": "object",
-                              "properties": {
-                                "number": {
-                                  "type": "integer",
-                                  "minimum": -9007199254740991,
-                                  "maximum": 9007199254740991
-                                }
-                              },
-                              "required": ["number"],
-                              "additionalProperties": false
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "convertedRecord": {
-                          "anyOf": [
-                            {
-                              "oneOf": [
-                                {
-                                  "type": "object",
-                                  "properties": {
-                                    "module": {
-                                      "type": "string",
-                                      "enum": ["contract"]
-                                    },
-                                    "number": {
-                                      "type": "integer",
-                                      "minimum": -9007199254740991,
-                                      "maximum": 9007199254740991
-                                    }
-                                  },
-                                  "required": ["module", "number"],
-                                  "additionalProperties": false
-                                },
-                                {
-                                  "type": "object",
-                                  "properties": {
-                                    "module": {
-                                      "type": "string",
-                                      "enum": ["matter"]
-                                    },
-                                    "number": {
-                                      "type": "integer",
-                                      "minimum": -9007199254740991,
-                                      "maximum": 9007199254740991
-                                    }
-                                  },
-                                  "required": ["module", "number"],
-                                  "additionalProperties": false
-                                }
-                              ]
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        }
-                      },
-                      "required": [
-                        "id",
-                        "number",
-                        "status",
-                        "title",
-                        "description",
-                        "urgency",
-                        "customFields",
-                        "declinedReason",
-                        "createdAt",
-                        "requestType",
-                        "requester",
-                        "assignee",
-                        "expectedBy",
-                        "suggestedExpectedBy",
-                        "convertedContract",
-                        "convertedRecord"
-                      ],
-                      "additionalProperties": false
-                    }
-                  },
-                  "required": ["request"],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Problem details (RFC 9457)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/requests/assignees": {
       "get": {
         "operationId": "requestAssigneeOptions",
@@ -24391,30 +24045,6 @@
                             }
                           ]
                         },
-                        "expectedBy": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "format": "date",
-                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "suggestedExpectedBy": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "format": "date",
-                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
                         "convertedContract": {
                           "anyOf": [
                             {
@@ -24491,8 +24121,6 @@
                         "requestType",
                         "requester",
                         "assignee",
-                        "expectedBy",
-                        "suggestedExpectedBy",
                         "convertedContract",
                         "convertedRecord"
                       ],
@@ -24742,30 +24370,6 @@
                             }
                           ]
                         },
-                        "expectedBy": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "format": "date",
-                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "suggestedExpectedBy": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "format": "date",
-                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
                         "convertedContract": {
                           "anyOf": [
                             {
@@ -24842,8 +24446,6 @@
                         "requestType",
                         "requester",
                         "assignee",
-                        "expectedBy",
-                        "suggestedExpectedBy",
                         "convertedContract",
                         "convertedRecord"
                       ],
@@ -25285,30 +24887,6 @@
                             }
                           ]
                         },
-                        "expectedBy": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "format": "date",
-                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "suggestedExpectedBy": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "format": "date",
-                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
                         "convertedContract": {
                           "anyOf": [
                             {
@@ -25385,8 +24963,6 @@
                         "requestType",
                         "requester",
                         "assignee",
-                        "expectedBy",
-                        "suggestedExpectedBy",
                         "convertedContract",
                         "convertedRecord"
                       ],
@@ -25709,30 +25285,6 @@
                             }
                           ]
                         },
-                        "expectedBy": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "format": "date",
-                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "suggestedExpectedBy": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "format": "date",
-                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
                         "convertedContract": {
                           "anyOf": [
                             {
@@ -25809,8 +25361,6 @@
                         "requestType",
                         "requester",
                         "assignee",
-                        "expectedBy",
-                        "suggestedExpectedBy",
                         "convertedContract",
                         "convertedRecord"
                       ],
@@ -27260,30 +26810,6 @@
                             }
                           ]
                         },
-                        "expectedBy": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "format": "date",
-                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "suggestedExpectedBy": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "format": "date",
-                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
                         "convertedContract": {
                           "anyOf": [
                             {
@@ -27360,8 +26886,6 @@
                         "requestType",
                         "requester",
                         "assignee",
-                        "expectedBy",
-                        "suggestedExpectedBy",
                         "convertedContract",
                         "convertedRecord"
                       ],
@@ -66330,7 +65854,7 @@
     "/api/v1/home/tasks": {
       "get": {
         "operationId": "listAssignedTasks",
-        "summary": "Open Tasks assigned to the signed-in user, across reachable active Contracts and Matters",
+        "summary": "Tasks assigned to the signed-in user across reachable active Contracts and Matters; completed Tasks are hidden by default",
         "parameters": [
           {
             "schema": {
@@ -66349,6 +65873,15 @@
             },
             "in": "query",
             "name": "cursor",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
+            "in": "query",
+            "name": "includeCompleted",
             "required": false
           }
         ],
@@ -66388,6 +65921,9 @@
                               }
                             ]
                           },
+                          "isDone": {
+                            "type": "boolean"
+                          },
                           "isOverdue": {
                             "type": "boolean"
                           },
@@ -66417,7 +65953,7 @@
                             "additionalProperties": false
                           }
                         },
-                        "required": ["id", "title", "dueDate", "isOverdue", "record"],
+                        "required": ["id", "title", "dueDate", "isDone", "isOverdue", "record"],
                         "additionalProperties": false
                       }
                     },
@@ -66595,6 +66131,9 @@
                                         }
                                       ]
                                     },
+                                    "isDone": {
+                                      "type": "boolean"
+                                    },
                                     "isOverdue": {
                                       "type": "boolean"
                                     },
@@ -66630,7 +66169,14 @@
                                       "additionalProperties": false
                                     }
                                   },
-                                  "required": ["id", "title", "dueDate", "isOverdue", "record"],
+                                  "required": [
+                                    "id",
+                                    "title",
+                                    "dueDate",
+                                    "isDone",
+                                    "isOverdue",
+                                    "record"
+                                  ],
                                   "additionalProperties": false
                                 }
                               }

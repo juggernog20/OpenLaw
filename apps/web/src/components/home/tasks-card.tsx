@@ -1,14 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** Open Contract and Matter Tasks assigned to the signed-in viewer. */
+/** Contract and Matter Tasks assigned to the signed-in viewer (DES-069). */
 import { ListChecks } from "lucide-react";
+import type { ReactNode } from "react";
 import { Link } from "react-router";
-import { FormattedMessage, useIntl } from "react-intl";
+import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import type { TasksHomeSection } from "../../lib/home";
-import { formatDeadline, formatFullDate } from "../../lib/format";
+import { formatDeadline, formatFullDate, formatShortDate } from "../../lib/format";
 import { ConfidentialMarker } from "../confidential-marker";
 import { HomeSectionCard } from "./section-card";
 import { Checkbox } from "../ui/checkbox";
+
+const taskActions = defineMessages({
+  reopen: { id: "home.tasks.reopen", defaultMessage: "Reopen Task: {title}" },
+  complete: { id: "home.tasks.complete", defaultMessage: "Complete Task: {title}" },
+});
 
 function taskHref(row: TasksHomeSection["rows"][number]): string {
   const destination = row.record.kind === "contract" ? "contracts" : "matters";
@@ -18,6 +24,8 @@ function taskHref(row: TasksHomeSection["rows"][number]): string {
 export function HomeTasksCard({
   section,
   showViewAll = true,
+  headerAction,
+  emptyMessage,
   onComplete,
   busy = false,
   checkedTaskKey,
@@ -26,6 +34,8 @@ export function HomeTasksCard({
 }: Readonly<{
   section: TasksHomeSection;
   showViewAll?: boolean;
+  headerAction?: ReactNode;
+  emptyMessage?: ReactNode;
   onComplete?: (row: TasksHomeSection["rows"][number]) => void;
   busy?: boolean;
   checkedTaskKey?: string;
@@ -39,7 +49,11 @@ export function HomeTasksCard({
       title={<FormattedMessage id="home.tasks.title" defaultMessage="Tasks assigned to you" />}
       total={section.total}
       viewAllTo={showViewAll ? "/home/tasks" : undefined}
+      headerAction={headerAction}
     >
+      {section.rows.length === 0 && emptyMessage ? (
+        <li className="px-4 py-3 text-base text-muted">{emptyMessage}</li>
+      ) : null}
       {section.rows.map((row) => (
         <li
           key={`${row.record.kind}:${row.id}`}
@@ -57,11 +71,11 @@ export function HomeTasksCard({
               {onComplete ? (
                 <Checkbox
                   className="ms-4 me-1 data-[state=checked]:disabled:opacity-100"
-                  checked={checkedTaskKey === `${row.record.kind}:${row.id}`}
+                  checked={row.isDone || checkedTaskKey === `${row.record.kind}:${row.id}`}
                   disabled={busy}
                   onCheckedChange={() => onComplete(row)}
                   aria-label={intl.formatMessage(
-                    { id: "home.tasks.complete", defaultMessage: "Complete Task: {title}" },
+                    row.isDone ? taskActions.reopen : taskActions.complete,
                     { title: row.title },
                   )}
                 />
@@ -77,7 +91,11 @@ export function HomeTasksCard({
                   </span>
                   <span className="min-w-0">
                     <span className="flex min-w-0 items-center gap-2">
-                      <span className="truncate text-md font-medium">{row.title}</span>
+                      <span
+                        className={`truncate text-md font-medium ${row.isDone ? "text-muted line-through" : ""}`}
+                      >
+                        {row.title}
+                      </span>
                       {row.record.isConfidential ? <ConfidentialMarker /> : null}
                     </span>
                     <span className="block truncate text-xs text-muted">
@@ -104,7 +122,7 @@ export function HomeTasksCard({
                         <FormattedMessage id="home.tasks.overdue" defaultMessage="Overdue" />{" "}
                       </span>
                     ) : null}
-                    {formatDeadline(row.dueDate)}
+                    {row.isDone ? formatShortDate(row.dueDate) : formatDeadline(row.dueDate)}
                   </time>
                 ) : (
                   <span className="shrink-0 text-xs text-muted">

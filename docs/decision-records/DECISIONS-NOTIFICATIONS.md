@@ -528,6 +528,37 @@ A successful send appends `user.briefing_sent` with `approvalCount`, `taskCount`
 
 ---
 
+## NOT-009 — Being added to a team is an event, and a Generation reaches the Legal Owner or the Inbox
+
+- **Status:** Accepted
+- **Date:** 2026-09-13
+
+### Context
+
+Team adds were Activity actions only; the catalog had no event for them. The Auto-Docs grill created two reasons to notify: CTR-026 adds default people to every new Contract of a Type, and ADO-005 creates Contracts nobody has opened yet.
+
+### Decision
+
+Three catalog events, no new group:
+
+- **`contract.team_added`**, group `assigned_to_you`. Fired for every team add, defaulted or manual, to the person added. Member+ receive it in the app; a Business User receives it in the Portal bell and by email, which is how Procurement learns an NDA exists.
+- **`contract.generated`**, group `assigned_to_you`. Fired to the Legal Owner an Assignment rule chose (ADO-006), naming the Auto-Doc, the Generation, and who generated it.
+- **`contract.generated_unassigned`**, group `new_requests`. Fired to every Member+ when a Generation creates a Contract no rule matched, so the Inbox's Unassigned contracts tab has the same reach as a new Request. Claiming it writes `contract.owner_assigned` as today.
+
+The Business User who generated the document gets the document itself (ADO-007), not a notification.
+
+### Rationale and alternatives considered
+
+- `contract.team_added` uses `assigned_to_you` because joining a team gives the named person work to follow. It reaches that person, not the whole team. A separate preference group would add a second control for the same assignment intent; reusing the group means team additions cannot be muted independently of other assignments.
+- `contract.generated` uses `assigned_to_you` because the chosen Legal Owner is accountable for the new Contract. Broadcasting a matched Generation to all Legal staff would notify people with no pickup action. The existing group keeps the recipient and channel preferences consistent, at the cost of no separate generated-Contract preference.
+- `contract.generated_unassigned` uses `new_requests` because every Member+ may pick up the unowned work from Inbox. Restricting it to a guessed owner would leave unmatched work unseen; a separate group would split the same Inbox-monitoring preference. The cost is that subscribers receive unassigned generated Contracts alongside Requests.
+
+ADO-007 delivers the generated files to the Business User on screen and by email. An additional generation notification would duplicate that delivery without adding an action. This does not suppress a separate team-add event when one applies.
+
+### Consequences
+
+Three keys in `catalog.ts`; Activity's `contract.team_added` stays the narration. Portal notification settings show the `assigned_to_you` group for Business Users, which they already can.
+
 ## Index of decisions
 
 | #       | Decision                                                           | Status                                                                                                                                                                                                                                                                                                                          |
@@ -540,3 +571,4 @@ A successful send appends `user.briefing_sent` with `approvalCount`, `taskCount`
 | NOT-006 | The morning digest's anatomy and its delivery rules                | Accepted; the M29 close records the built six-section anatomy amendment                                                                                                                                                                                                                                                         |
 | NOT-007 | Email delivery is at-least-once; duplicate accepted over drop      | Accepted                                                                                                                                                                                                                                                                                                                        |
 | NOT-008 | The daily briefing: cross-module morning email replaces the digest | Accepted; Knowledge built in M28/6 and the six-section briefing completed in M29/7                                                                                                                                                                                                                                              |
+| NOT-009 | Team adds and Generations are events                               | Accepted                                                                                                                                                                                                                                                                                                                        |

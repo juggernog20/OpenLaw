@@ -13,6 +13,7 @@ This repo is **single-context**: one glossary, one shared vocabulary across `app
   | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------ | ---------- |
   | `DECISIONS.md`                                                                                                                                               | System-wide              | `DD-xxx`   |
   | `DECISIONS-CONTRACTS.md`, `-MATTERS.md`, `-DOCUMENTS.md`, `-ENTITIES.md`, `-INTAKE.md`, `-KNOWLEDGE.md`, `-COMMENTS.md`, `-NOTIFICATIONS.md`, `-SETTINGS.md` | Per product module       | `DD-xxx`   |
+  | `DECISIONS-AUTO-DOCS.md`                                                                                                                                     | Auto-Docs                | `ADO-xxx`  |
   | `DECISIONS-DESIGN.md`                                                                                                                                        | Frontend design system   | `DES-xxx`  |
   | `DECISIONS-TECH-STACK.md`                                                                                                                                    | Stack and infrastructure | `TECH-xxx` |
 

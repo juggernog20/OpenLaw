@@ -34,7 +34,6 @@
  * it would let a decline answer a shape the detail never draws.
  */
 
-import { requestCalendar } from "./calendar.js";
 import type { FastifyReply } from "fastify";
 import { z } from "zod";
 import {
@@ -516,8 +515,6 @@ export const StaffRequestSchema = z.object({
   requestType: StaffRequestTypeSchema,
   requester: StaffRequesterSchema,
   assignee: RequestAssigneeSchema.nullable(),
-  expectedBy: z.iso.date().nullable(),
-  suggestedExpectedBy: z.iso.date().nullable(),
   /** The record a conversion made, when this viewer reaches it, and
    * `null` in every other case — never converted, converted into a
    * record they may not see, or converted into another module. */
@@ -562,8 +559,6 @@ export async function staffRequestRow(db: Executor, user: AuthenticatedUser, num
       targetMatterTypeId: matterTypes.id,
       targetMatterTypeName: matterTypes.displayName,
       assignee: requestAssigneeSelection,
-      expectedBy: requests.expectedBy,
-      turnaroundDays: requestTypes.turnaroundDays,
       requesterId: users.id,
       requesterDisplayName: users.displayName,
       requesterEmail: users.email,
@@ -579,10 +574,8 @@ export async function staffRequestRow(db: Executor, user: AuthenticatedUser, num
     .limit(1);
   if (!row) throw httpError(404, NO_REQUEST);
   const records = await selectConvertedRecords(db, user, [row.id]);
-  const calendar = await requestCalendar(db);
   return {
     ...row,
-    suggestedExpectedBy: calendar.suggestedDate(row.createdAt, row.turnaroundDays),
     convertedRecord: records.get(row.id) ?? null,
   };
 }
@@ -594,8 +587,6 @@ export function toStaffRequest(row: Awaited<ReturnType<typeof staffRequestRow>>)
     number: row.number,
     status: row.status,
     assignee: row.assignee,
-    expectedBy: row.expectedBy,
-    suggestedExpectedBy: row.suggestedExpectedBy,
     title: row.title,
     description: row.description,
     urgency: row.urgency,

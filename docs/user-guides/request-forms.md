@@ -23,7 +23,7 @@ The **Display name** can change. Rename or reorder request types from the list. 
 
 In the request type editor, set **Target turnaround (business days)** to a whole number from 0 to 36,500, or leave it blank when no estimate is published. Leave the control or press Enter to save, then check the saved indication. Zero means the submission date. Business days are Monday–Friday in the organization's timezone; weekends are skipped and public holidays are not excluded.
 
-The Portal's request-type card shows this duration as an estimate. On an individual Request, it suggests an **Expected back (estimate)** date from submission in the organization's timezone. A Legal Team Member or Administrator must confirm that suggestion or choose another date. The published turnaround does not overwrite a saved Request estimate or replace the Requester's Needed by date. See [Confirm a return estimate](triage-requests.md#confirm-a-return-estimate).
+Check the Portal's request-type card for this duration as general guidance before submission. Share updates through the Request conversation and track work deadlines on the resulting Contract or Matter.
 
 ## Choose the form fields
 

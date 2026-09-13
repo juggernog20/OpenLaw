@@ -80,7 +80,6 @@
  * on the contract land in the same thread.
  */
 
-import { RequestEstimate } from "../components/inbox/request-estimate";
 import { formatShortDate } from "../lib/format";
 import { useState } from "react";
 import {
@@ -385,17 +384,6 @@ export function InboxRequestPage() {
       <RecordApplets applets={request.status === "converted" ? [] : [chatApplet]}>
         <div className="flex h-full flex-col gap-4 overflow-y-auto px-page-x py-page-y">
           <Hero request={request} />
-          {/* INT-003's confirmed estimate. A converted Request is an
-              envelope only (DD-023), so the control is not drawn there. */}
-          {request.status !== "converted" && (
-            <RequestEstimate
-              key={request.id}
-              request={request}
-              onSaved={() => {
-                void revalidator.revalidate();
-              }}
-            />
-          )}
           {/* The record box rather than the page: opening the thread
               takes a column out of this row, so the two columns have to
               reflow against what is left of it (DES-012, DES-016). */}

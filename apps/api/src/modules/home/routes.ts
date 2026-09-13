@@ -72,10 +72,11 @@ export const homeRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "listAssignedTasks",
         summary:
-          "Open Tasks assigned to the signed-in user, across reachable active Contracts and Matters",
+          "Tasks assigned to the signed-in user across reachable active Contracts and Matters; completed Tasks are hidden by default",
         querystring: z.object({
           limit: z.coerce.number().int().min(1).max(100).default(50),
           cursor: AssignedTasksCursorSchema.optional(),
+          includeCompleted: z.enum(["true", "false"]).optional(),
         }),
         response: {
           200: AssignedTasksPageSchema,
@@ -86,7 +87,11 @@ export const homeRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
     },
-    async (request) => readAssignedTasks(app.db, request.user, request.query),
+    async (request) =>
+      readAssignedTasks(app.db, request.user, {
+        ...request.query,
+        includeCompleted: request.query.includeCompleted === "true",
+      }),
   );
 
   app.get(

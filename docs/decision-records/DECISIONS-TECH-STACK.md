@@ -1334,6 +1334,35 @@ Retain the prior edition declaration in
 `docs/documentation/batches/app-publication/previous-edition.json`. Maintenance must
 update the approval record when a guide changes or completes verification.
 
+## TECH-028: The Auto-Doc fill engine runs in the API process; the sidecar renders the PDF
+
+- **Status:** Accepted as a default pick, routed from the Auto-Docs grill; confirm at spec
+- **Date:** 2026-09-13
+
+### Context
+
+Nothing in the codebase writes a `.docx`. TECH-010's sidecar converts Office to PDF and compares two Word files; its `package.json` has no runtime dependencies. ADO-002 fixes what the engine must do: substitute double-brace Placeholders, include or omit named Blocks, apply a small set of formatting directives, keep every bit of the author's formatting, and survive a Placeholder that Word has split across runs.
+
+### Decision
+
+- **Fill in the API process**, the way TECH-010's 2026-08-15 addendum put MSG and EML parsing in-process: a `.docx` is a zip of XML, and filling it needs no LibreOffice.
+- **Default library: `docxtemplater` (MIT core) over `pizzip`**, with delimiters set to `{{` and `}}`. Blocks map to its section tags; conditions are resolved in OpenLaw's own parser from the Clause rules, never as expressions inside the file. Its paid modules are not used. Its parser merges runs, which is the run-splitting requirement; the build carries a fixture with a spell-check-split Placeholder to prove it.
+- **Detection is one shared pure scan** over the merged document text, used by upload (report Placeholders and Blocks) and by fill (resolve them), so the two can never disagree about what the file holds.
+- **Formatting directives** are implemented in the value resolver: date format, currency, upper case. Nothing else.
+- **PDF** is the existing `/convert` operation on the filled `.docx`, through the `DocEngine` seam, as a derivation.
+- **Bounds:** the template is under the shared upload ceiling; the fill has a timeout; a failed fill marks the Generation `failed` (ADO-007) and never leaves a partial file.
+
+### Alternatives considered
+
+- **`docx-templates`** (MIT): drives conditionals with JavaScript expressions inside the file, which ADO-002 rejected on purpose.
+- **Carbone**: its Community licence is non-commercial, which an AGPL product cannot ship.
+- **LibreOffice mail merge through the UNO bridge in the sidecar**: heavy, and conditional Blocks would need a second mechanism.
+- **Word merge fields through the sidecar**: the syntax ADO-002 declined.
+
+### Consequences
+
+One runtime dependency pair in `apps/api`. A `FakeFillEngine` beside `FakeDocEngine` for tests. The sidecar is unchanged.
+
 ## Index of decisions
 
 | #        | Decision                                                                      | Status                    |
@@ -1365,3 +1394,4 @@ update the approval record when a guide changes or completes verification.
 | TECH-025 | A record applet's third web mount becomes configuration                       | Accepted                  |
 | TECH-026 | Compile one Markdown source set for bundled Help and standalone documentation | Accepted                  |
 | TECH-027 | Publish approved development guides before verification                       | Accepted, amends TECH-026 |
+| TECH-028 | The Auto-Doc fill engine runs in the API process; the sidecar renders PDF     | Accepted, default pick    |

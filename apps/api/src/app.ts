@@ -95,7 +95,6 @@ import { conversionDraftRoutes } from "./modules/requests/conversion-draft.js";
 import { requestConvertRoutes } from "./modules/requests/convert.js";
 import { requestDeclineRoutes } from "./modules/requests/decline.js";
 import { requestDetailRoutes } from "./modules/requests/request-detail.js";
-import { requestEstimateRoutes } from "./modules/requests/estimates.js";
 import { requestAssignmentRoutes } from "./modules/requests/assignment.js";
 import { requestInboxRoutes } from "./modules/requests/inbox.js";
 import { requestResolveRoutes } from "./modules/requests/resolve.js";
@@ -503,7 +502,6 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(portalAppletRoutes, { prefix: "/api/v1" });
   await app.register(portalMatterRoutes, { prefix: "/api/v1" });
   await app.register(requestsRoutes, { prefix: "/api/v1" });
-  await app.register(requestEstimateRoutes, { prefix: "/api/v1" });
   await app.register(requestAssignmentRoutes, { prefix: "/api/v1" });
   await app.register(requestInboxRoutes, { prefix: "/api/v1" });
   await app.register(requestDetailRoutes, { prefix: "/api/v1" });

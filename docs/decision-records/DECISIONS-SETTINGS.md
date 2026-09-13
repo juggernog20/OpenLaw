@@ -206,6 +206,26 @@ model uses the existing connector save and Activity path.
 - **Consequences:** Operators choose and test their update path. Both modes send selected Documents to DocuSign. Webhook requires gateway and subscription maintenance.
 - **Source:** User request, issue #789. Extends SET-007 and CTR-013.
 
+## SET-010: Departments are an Administrator-managed list, carried on users and on Contracts
+
+- **Status:** Accepted
+- **Date:** 2026-09-13
+- **Decision:** A `departments` list, MTR-001 taxonomy machinery (slug, display name, display order, archive), managed under Settings → Organization → Departments. `users.department_id` is a nullable FK; an Administrator sets it on the user in Settings → Users, and a Business User sets their own once in the Portal first run (SET-011). A user with no Department is reached only by Auto-Docs that name them or say `everyone` (ADO-009). CTR-025's Owning department becomes a pick from this same list. Archiving a Department keeps every reference and hides it from pickers; the Auto-Doc audience read ignores archived Departments. Setting or changing a user's Department is an audit row, `user.department_set`.
+- **Rationale:** One list, two uses. A department is how a legal team groups the business people it serves, and "add the whole of Procurement" is the ask that created it.
+- **Alternatives:** Free text on the user: cannot be an allowlist term. Two lists, one for users and one for Contracts: two spellings of Finance.
+- **Consequences:** `departments`, `users.department_id`, `contracts.owning_department_id` in SCHEMA.md. A self-set Department is a self-granted Auto-Doc reach for that Department; Blair accepted this for a 2-to-10-person team's own colleagues on 2026-09-13, given the Administrator-curated list, the Administrator override, and the audit row.
+- **Source:** Auto-Docs grill, 2026-09-13 (ADO-009).
+
+## SET-011: the Business User first run in the Portal
+
+- **Status:** Accepted; **mandatory before M34 Release** (FUTURE-FEATURES row)
+- **Date:** 2026-09-13
+- **Decision:** A Business User's first sign-in lands on a Portal wizard, "We need to learn a little about you", before the Portal home. Steps: **Department** (required when the Departments list is non-empty, otherwise skipped), display name and photo, theme, notification preferences, and a short tour of Requests, Contracts, Matters, and Auto-Docs. Every step except Department is skippable, SET-004's own shape. Finishing stamps `users.portal_onboarding_completed_at`; the wizard never opens again. A Business User who signed in before this shipped meets it once. Staff keep Settings → Profile and never see it.
+- **Rationale:** Business Users are created at first magic-link sign-in with nothing but an email address. Department drives Auto-Doc reach (ADO-009), so it must be asked at the door; the rest is the existing per-user settings gathered in one place.
+- **Alternatives:** Administrator sets every Business User's Department by hand: unworkable past a dozen people. Blocking every step: SET-004 chose skippable and nothing here argues otherwise.
+- **Consequences:** One Portal route and one `users` column. The existing `theme`, `image`, `display_name`, and notification preferences are reused. This is a Portal design record's to lay out (DES).
+- **Source:** Blair, Auto-Docs grill, 2026-09-13.
+
 ## Index of decisions
 
 | #       | Decision                                                                   | Status                                                                             |
@@ -219,3 +239,5 @@ model uses the existing connector save and Activity path.
 | SET-007 | E-signature lives in Organization → Integrations, not in Contracts         | Accepted; the AI-pane sentence superseded by SET-008                               |
 | SET-008 | AI analysis is an Organization section of its own, not an Integrations tab | Accepted                                                                           |
 | SET-009 | Select the Signing connector update mode                                   | Accepted                                                                           |
+| SET-010 | Departments are an Administrator-managed list, on users and Contracts      | Accepted                                                                           |
+| SET-011 | The Business User first run in the Portal                                  | Accepted; mandatory before M34                                                     |

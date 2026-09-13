@@ -935,9 +935,9 @@ The `draft`, `active`, and `expired` seed rows are system-protected (no hard-del
 
 ### `documents`
 
-Source: **DD-007**, **DD-014**, **DOC-001**, **DOC-007**, **DOC-008**
+Source: **DD-007**, **DD-014**, **DOC-001**, **DOC-007**, **DOC-008**, **ADO-001**
 
-Logical document record. No workflow. **Every document has exactly one owning record** (matter, contract, entity, or knowledge item) per **DOC-008** — no standalone documents (revises DD-007's stand-alone clause). Access is always inherited from the owner (its team + DD-014 confidentiality); there is no `document_team`. Files live in the version chain (`document_versions`), never on this record.
+Logical document record. No workflow. **Every document has exactly one owning record** (Matter, Contract, Entity, Knowledge Item, or Auto-Doc) per **DOC-008** and **ADO-001** — no standalone documents (revises DD-007's stand-alone clause). Access follows the owning record's access rules; there is no `document_team`. Files live in the version chain (`document_versions`), never on this record. The Auto-Doc owner arm is planned for M35 and is not built yet.
 
 | Column                     | Type        | Notes                                                                                                                                                                                                                                                                                                                                                                            |
 | -------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -948,6 +948,7 @@ Logical document record. No workflow. **Every document has exactly one owning re
 | `contract_id`              | UUID        | FK → `contracts.id`, nullable                                                                                                                                                                                                                                                                                                                                                    |
 | `entity_id`                | UUID        | FK → `entities.id`, nullable per **ENT-005**/**DOC-008**                                                                                                                                                                                                                                                                                                                         |
 | `knowledge_item_id`        | UUID        | FK → `knowledge_items.id`, nullable per **KNW-001**/**DOC-008**                                                                                                                                                                                                                                                                                                                  |
+| `auto_doc_id`              | UUID        | FK → `auto_docs.id`, nullable; planned fifth owner arm per **ADO-001**, unique when non-null so an Auto-Doc owns one template Document                                                                                                                                                                                                                                           |
 | `folder_id`                | UUID        | FK → `document_folders.id`, nullable per **DOC-006**; the folder must belong to the same owning record as the document                                                                                                                                                                                                                                                           |
 | `executed_version_id`      | UUID        | FK → `document_versions.id`, nullable per **DOC-001**, `ON DELETE SET NULL` — the CTR-014 executed pin; default target for previews/exports/AI analysis. Set and cleared explicitly, never inferred from a version's `kind`. The same-document invariant is enforced at write time rather than by a composite FK, which could not carry the plain `SET NULL` hard deletion needs |
 | `is_confidential`          | boolean     | per **DD-014** (meaningful via the owning record's access; never cascades per CTR-018)                                                                                                                                                                                                                                                                                           |
@@ -956,9 +957,9 @@ Logical document record. No workflow. **Every document has exactly one owning re
 | `archived_at`              | timestamptz | soft delete per **DOC-010** — off the record's lists and out of its counts, recoverable, and it destroys nothing. Hard deletion is the Administrator's separate path and leaves no row to hold a time                                                                                                                                                                            |
 | `search_vector`            | tsvector    | stored generated English FTS: title weight A and description weight B (**DOC-009**, M25/2). Version filenames and owning-record context remain query-time joins                                                                                                                                                                                                                  |
 
-Indexes include one owner-list index per owning record, including `documents_knowledge_item_idx` on `(knowledge_item_id, created_at, id)`, plus `documents_folder_idx` on `(folder_id, created_at, id)` — the record's paper and one folder's paper, newest first, with `id` as the keyset tie-break the listings walk (CTR-024, #391). `documents_executed_version_idx` on `(executed_version_id)` exists for the referencing side of the executed pin rather than for a read: DOC-010's hard delete of a version makes Postgres check every document for one pointing at it.
+Indexes include one owner-list index per owning record. M35 adds the partial unique `documents_auto_doc_idx` on `(auto_doc_id)` where non-null; the same index serves its single-template lookup. Existing list indexes include `documents_knowledge_item_idx` on `(knowledge_item_id, created_at, id)`, plus `documents_folder_idx` on `(folder_id, created_at, id)` — the record's paper and one folder's paper, newest first, with `id` as the keyset tie-break the listings walk (CTR-024, #391). `documents_executed_version_idx` on `(executed_version_id)` exists for the referencing side of the executed pin rather than for a read: DOC-010's hard delete of a version makes Postgres check every document for one pointing at it.
 
-Exactly-one-owner rule (**DOC-008**): the database CHECK is `num_nonnulls(matter_id, contract_id, entity_id, knowledge_item_id) = 1`. The owner set is complete. Repository destination is Member+; Business Users reach documents only through records they're on (portal-readable knowledge items render their docs read-only per KNW-004).
+Exactly-one-owner rule (**DOC-008**, **ADO-001**): M35 extends the database CHECK to `num_nonnulls(matter_id, contract_id, entity_id, knowledge_item_id, auto_doc_id) = 1`. The Auto-Doc arm owns its template Document; Generation output is separate per ADO-005. Repository destination is Member+; Business Users reach Documents through permitted Portal records and published Knowledge Items (KNW-004), and generate their own Auto-Doc outputs through the ADO-009 audience gate.
 
 ---
 
@@ -1154,7 +1155,6 @@ Structured request envelope, created only via portal forms. Not a work container
 | `id`                       | UUID        | PK                                                                                                                                                                                                                |
 | `number`                   | integer     | `GENERATED ALWAYS AS IDENTITY` (`requests_number_seq`), displayed **R-42** per **INT-002**                                                                                                                        |
 | `request_type_id`          | UUID        | FK → `request_types.id`, not null                                                                                                                                                                                 |
-| `expected_by`              | date        | nullable confirmed estimate, independent of Needed by; Member+ writes while Open/In progress (**INT-003**, #806)                                                                                                  |
 | `requester_id`             | UUID        | FK → `users.id`, not null (magic-link identity)                                                                                                                                                                   |
 | `status`                   | text (enum) | `new` \| `converted` \| `resolved` \| `declined` per **INT-001** as revised by **INT-007** — fixed, code branches; not null, default `new` (every Request is born open; M21's disposition writes the other three) |
 | `title`                    | text        | not null                                                                                                                                                                                                          |
@@ -1301,6 +1301,58 @@ One person's saved way of reading one list. **Private to that person** — there
 Unique on (`user_id`, `surface`, `lower(name)`) — two views of one list may not share a name for one person, compared without case, the same reading the menu's sort takes and the same rule folder siblings follow (DES-033). Names are per person, so two people may both have a "My contracts". Unique on (`user_id`, `surface`) **partial where `is_default`** — at most one default per person per surface, as a database rule rather than a thing the writer is trusted to remember; partial because the non-default rows are the many.
 
 How many views one person may hold on one surface is bounded in the API (`MAX_LIST_VIEWS_PER_SURFACE`), not here — which is why the list route answers whole rather than paging (CTR-024's 2026-08-21 addendum).
+
+---
+
+### `auto_docs` and its tables
+
+Source: **ADO-001–010**, grilled 2026-09-13. Nothing built yet; this is the intended shape.
+
+`auto_docs`: `id`; not-null `name`; nullable `description`; `state` with CHECK `draft | published | archived` (default `draft`); `audience` with CHECK `legal_only | selected | everyone` (default `legal_only`); nullable `target_contract_type_id` FK → `contract_types.id` `ON DELETE SET NULL`; nullable `title_pattern`; nullable `fixed_entity_id` FK → `entities.id`; nullable `template_document_id` FK → `documents.id` (the one owned template Document); nullable `published_document_version_id` FK → `document_versions.id` and `published_form_version_id` FK → `auto_doc_form_versions.id`, both set or both null (the **live pair**); `formats` with CHECK `docx | pdf | both` (default `both`); nullable Markdown `cover_note`; nullable `acknowledgement_text` (null = the org default from `org_settings.auto_doc_acknowledgement_text`); `acknowledgement_frequency` with CHECK `none | every_use | once_per_auto_doc | once` (default `once_per_auto_doc`); nullable `default_legal_owner_id` FK → `users.id`; `created_by`, `updated_by`; timestamps; nullable `published_at`, `archived_at`.
+
+`documents.auto_doc_id`: the fifth DOC-008 owner arm; the exactly-one-owner CHECK widens to five. A unique constraint on non-null `auto_doc_id` permits at most one template Document per Auto-Doc. An Auto-Doc owns exactly one Document, its template, once uploaded; the chain is DOC-001's.
+
+`auto_doc_form_versions`: `id`; `auto_doc_id`; `version_number` (1..n per Auto-Doc, unique); `definition` jsonb, an immutable snapshot of the form fields (slug, label, help, `field_type` from the catalog's nine, options, required, display order, `catalog_field_id`, `contract_attribute`) and the Clause rules (block name, field slug, operator `equals | is_one_of | is_set | is_not`, value); `created_by`; `created_at`. The editor writes a new row on save; nothing is edited in place.
+
+`auto_doc_assignment_rules`: `id`; `auto_doc_id`; `display_order`; `field_slug`; `operator`; `value` jsonb; `legal_owner_id` FK → `users.id`. Settings, not form definition: edited in place, audited.
+
+`auto_doc_audience_users` (`auto_doc_id`, `user_id`) and `auto_doc_audience_departments` (`auto_doc_id`, `department_id`): the `selected` allowlist. Rows are ignored unless `audience = 'selected'`.
+
+`auto_doc_generations`: `id`; `auto_doc_id`; `document_version_id` and `form_version_id` (the pair cited); `generated_by` FK → `users.id`; `answers` jsonb keyed by form-field slug; `state` with CHECK `pending | ready | failed`; nullable `docx_file_ref`, `pdf_file_ref` (DOC-012 keys minted from the Generation id); nullable `email_sent_at`, `email_failure`; nullable `created_contract_id` FK → `contracts.id` `ON DELETE SET NULL`; `failure` jsonb; timestamps. The output is never a Document; `contracts.created_by_generation_id` (nullable FK, `ON DELETE SET NULL`) is the reverse pointer and what the Inbox's Unassigned contracts tab reads with `manager_id IS NULL`.
+
+**Version ownership is a database invariant.** The independent version FKs establish existence but do not establish common ownership. Deferred constraint triggers check at transaction commit that `auto_docs.template_document_id` names its own `documents.auto_doc_id` row; that its published Document Version belongs to that template and its published Form Version has the same `auto_doc_id`; and that each Generation's Document Version and Form Version belong to its `auto_doc_id`. The existing live-pair CHECK still requires both published ids to be set together or both null. The triggers cover writes to these references and changes to the referenced Document or version ownership, so reparenting cannot invalidate an existing publication or Generation. Draft Auto-Docs may have no uploaded template yet.
+
+`auto_doc_filings`: `id`; `generation_id`; exactly one of `matter_id`, `contract_id`; `document_id` FK → `documents.id` (the Document the Filing created); `filed_by`; `created_at`.
+
+`auto_doc_acknowledgements`: `id`; `auto_doc_id` nullable (null for a `once` org-wide acknowledgement); `user_id`; `text_hash` (SHA-256 of the text shown, so a text edit invalidates); `acknowledged_at`. The Activity entry `auto_doc.acknowledged` carries the full text.
+
+`document_versions.source = 'generated'` CHECK widens to admit `kind = 'draft_ours'` when the Version was written by a Generation or a Filing.
+
+`activity_log.entity_type` gains `auto_doc`. Verbs: `auto_doc.created`, `.published`, `.unpublished`, `.archived`, `.restored`, `.generated`, `.filed`, `.acknowledged`, `.form_saved`, `.template_uploaded`.
+
+---
+
+### `departments`
+
+Source: **SET-010**, **CTR-025** (amended 2026-09-13)
+
+MTR-001 taxonomy machinery: `id`, `slug`, `display_name`, `display_order`, `archived_at`, timestamps. Administrator-managed under Settings → Organization → Departments. `users.department_id` nullable FK; `contracts.owning_department_id` nullable FK replaces the free-text `owning_department` (migration creates one row per distinct existing value and links). `users.portal_onboarding_completed_at` (SET-011) is the first-run stamp.
+
+---
+
+### `contract_type_default_people`
+
+Source: **CTR-026**
+
+(`contract_type_id`, `user_id`, `created_at`), compound PK. Copied to `contract_team` on every creation of a Contract of that Type, deduplicated; archived users skipped. No role column: DD-023.
+
+---
+
+### `entities.portal_listed`
+
+Source: **ENT-010**, **DD-027**
+
+Boolean, not null, default false. Never true on a Confidential Entity (application-refused). The Portal Entity read returns `id`, `name` for live, non-Confidential, Portal-listed Entities only.
 
 ---
 

@@ -36,6 +36,7 @@ import { useRecord } from "../record-context";
 import { FormattedMessage, useIntl } from "react-intl";
 import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 import { TaskDialog } from "../tasks/task-dialog";
+import { CompletedTasksToggle } from "../tasks/completed-toggle";
 import { useSearchParams } from "react-router";
 import {
   addContractTask,
@@ -81,6 +82,8 @@ export function TasksCard({
   const { record, frozen } = useRecord();
   const contractNumber = record.number;
   const intl = useIntl();
+  const [showCompleted, setShowCompleted] = useState(false);
+  const visibleTasks = showCompleted ? tasks : tasks.filter((task) => !task.isDone);
   const [status, setStatus] = useState<FieldStatus>("idle");
   const [detail, setDetail] = useState<string | null>(null);
   const [manualEditing, setEditing] = useState<Editing | null>(null);
@@ -136,7 +139,7 @@ export function TasksCard({
       aria-labelledby="contract-tasks-heading"
       className="w-full overflow-hidden rounded-card border border-border-default bg-raised"
     >
-      <header className="flex h-section-header items-center justify-between gap-2 rounded-t-card border-b border-border-default bg-section-header px-4">
+      <header className="flex min-h-section-header flex-wrap items-center justify-between gap-2 rounded-t-card border-b border-border-default bg-section-header px-4 py-2">
         <div className="flex min-w-0 items-center gap-2">
           <h2 id="contract-tasks-heading" className="text-base font-semibold">
             <FormattedMessage id="tasks.section" defaultMessage="Tasks" />
@@ -164,23 +167,30 @@ export function TasksCard({
             </span>
           )}
         </div>
-        {!frozen && (
-          <div className="flex shrink-0 items-center gap-2">
-            <StatusNote status={status} detail={detail} />
-            <Button variant="secondary" disabled={busy} onClick={() => setEditing({ row: null })}>
-              <Plus size={16} aria-hidden="true" />
-              <FormattedMessage id="tasks.add" defaultMessage="Add task" />
-            </Button>
-          </div>
-        )}
+        <div className="flex flex-wrap items-center gap-3">
+          <CompletedTasksToggle showCompleted={showCompleted} onChange={setShowCompleted} />
+          {!frozen && (
+            <div className="flex shrink-0 items-center gap-2">
+              <StatusNote status={status} detail={detail} />
+              <Button variant="secondary" disabled={busy} onClick={() => setEditing({ row: null })}>
+                <Plus size={16} aria-hidden="true" />
+                <FormattedMessage id="tasks.add" defaultMessage="Add task" />
+              </Button>
+            </div>
+          )}
+        </div>
       </header>
       {tasks.length === 0 ? (
         <p className="px-4 py-3 text-base text-muted">
           <FormattedMessage id="tasks.empty" defaultMessage="No tasks on this contract yet." />
         </p>
+      ) : visibleTasks.length === 0 ? (
+        <p className="px-4 py-3 text-base text-muted">
+          <FormattedMessage id="tasks.emptyOpen" defaultMessage="No open Tasks." />
+        </p>
       ) : (
         <ul className="divide-y divide-border-muted" role="list">
-          {tasks.map((task) => (
+          {visibleTasks.map((task) => (
             <TaskRow
               key={task.id}
               task={task}

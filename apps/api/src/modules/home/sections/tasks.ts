@@ -26,6 +26,7 @@ export const TaskHomeRowSchema = z.object({
   id: z.string(),
   title: z.string(),
   dueDate: z.iso.date().nullable(),
+  isDone: z.boolean(),
   isOverdue: z.boolean(),
   record: z.object({
     kind: z.enum(["contract", "matter"]),
@@ -65,6 +66,7 @@ interface TaskDbRow extends Record<string, unknown> {
   id: string;
   title: string;
   due_date: string | null;
+  is_done: boolean;
   is_overdue: boolean;
   record_kind: "contract" | "matter";
   record_id: string;
@@ -99,7 +101,17 @@ export async function readTasksHomeSection(
 export async function readAssignedTasks(
   db: Executor,
   user: AuthenticatedUser,
-  { limit, cursor, dueThrough }: { limit: number; cursor?: string; dueThrough?: string },
+  {
+    limit,
+    cursor,
+    dueThrough,
+    includeCompleted = false,
+  }: {
+    limit: number;
+    cursor?: string;
+    dueThrough?: string;
+    includeCompleted?: boolean;
+  },
 ): Promise<z.infer<typeof AssignedTasksPageSchema>> {
   const today = dueThrough ? sql`${dueThrough}::date` : sql`current_date`;
   const [cursorDate, cursorKind, cursorId] = cursor?.split(":") ?? [];
@@ -115,7 +127,8 @@ export async function readAssignedTasks(
         ${contractTasks.id} as id,
         ${contractTasks.title} as title,
         ${contractTasks.dueDate} as due_date,
-        (${contractTasks.dueDate} < ${today}) as is_overdue,
+        ${contractTasks.isDone} as is_done,
+        (not ${contractTasks.isDone} and ${contractTasks.dueDate} < ${today}) as is_overdue,
         'contract'::text as record_kind,
         ${contracts.id} as record_id,
         ${contracts.number} as record_number,
@@ -126,7 +139,7 @@ export async function readAssignedTasks(
       inner join ${contractStatuses} on ${contractStatuses.id} = ${contracts.statusId}
       where ${and(
         eq(contractTasks.assigneeId, user.id),
-        eq(contractTasks.isDone, false),
+        includeCompleted ? undefined : eq(contractTasks.isDone, false),
         dueThrough ? lte(contractTasks.dueDate, dueThrough) : undefined,
         isNull(contracts.archivedAt),
         ne(contractStatuses.stage, "ended"),
@@ -139,7 +152,8 @@ export async function readAssignedTasks(
         ${matterTasks.id} as id,
         ${matterTasks.title} as title,
         ${matterTasks.dueDate} as due_date,
-        (${matterTasks.dueDate} < ${today}) as is_overdue,
+        ${matterTasks.isDone} as is_done,
+        (not ${matterTasks.isDone} and ${matterTasks.dueDate} < ${today}) as is_overdue,
         'matter'::text as record_kind,
         ${matters.id} as record_id,
         ${matters.number} as record_number,
@@ -150,7 +164,7 @@ export async function readAssignedTasks(
       inner join ${matterStatuses} on ${matterStatuses.id} = ${matters.statusId}
       where ${and(
         eq(matterTasks.assigneeId, user.id),
-        eq(matterTasks.isDone, false),
+        includeCompleted ? undefined : eq(matterTasks.isDone, false),
         dueThrough ? lte(matterTasks.dueDate, dueThrough) : undefined,
         isNull(matters.archivedAt),
         eq(matterStatuses.category, "open"),
@@ -161,6 +175,7 @@ export async function readAssignedTasks(
       id,
       title,
       due_date,
+      is_done,
       coalesce(is_overdue, false) as is_overdue,
       record_kind,
       record_id,
@@ -191,6 +206,7 @@ export async function readAssignedTasks(
       id: row.id,
       title: row.title,
       dueDate: row.due_date,
+      isDone: row.is_done,
       isOverdue: row.is_overdue,
       record: {
         kind: row.record_kind,

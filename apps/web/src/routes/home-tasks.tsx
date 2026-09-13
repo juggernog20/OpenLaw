@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** DES-069 lists assigned Tasks. Local rows retain completed Tasks until refresh so the reader can undo. */
+/** Assigned Tasks, with optional completed rows and Undo for the latest completion (DES-069). */
 
 import { useState } from "react";
 import { Link, redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Undo2 } from "lucide-react";
 import { api } from "../lib/api";
+import { civilToday } from "../lib/format";
 import { requireUser, useSignOut } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
 import { PageSubBar } from "../components/shell/page-subbar";
 import { PageTitle } from "../components/page-title";
 import { HomeTasksCard } from "../components/home/tasks-card";
+import { CompletedTasksToggle } from "../components/tasks/completed-toggle";
 import { Button } from "../components/ui/button";
 import { toggleContractTask } from "../lib/tasks";
 import { toggleMatterTask } from "../lib/matter-tasks";
@@ -39,16 +41,39 @@ export function HomeTasksPage() {
   const intl = useIntl();
   const signOut = useSignOut("/auth/login");
   const [page, setPage] = useState(tasks);
+  const [showCompleted, setShowCompleted] = useState(false);
+  const [filterFailed, setFilterFailed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
   const [completing, setCompleting] = useState(false);
-  const [completionError, setCompletionError] = useState<"complete" | "undo" | null>(null);
+  const [completionError, setCompletionError] = useState<"complete" | "undo" | "reopen" | null>(
+    null,
+  );
   const [completedTask, setCompletedTask] = useState<AssignedTask | null>(null);
   const [restoredTitle, setRestoredTitle] = useState<string | null>(null);
   const [pendingKey, setPendingKey] = useState<string>();
   const [undoing, setUndoing] = useState(false);
   const [departure, setDeparture] = useState<AssignedTask | null>(null);
   const busy = loading || completing || undoing || departure !== null;
+
+  async function changeCompletedVisibility(includeCompleted: boolean) {
+    if (busy) return;
+    setLoading(true);
+    setFilterFailed(false);
+    try {
+      const { data } = await api.GET("/api/v1/home/tasks", {
+        params: { query: { includeCompleted: includeCompleted ? "true" : "false" } },
+      });
+      if (!data) throw new Error("Tasks could not be read.");
+      setPage(data);
+      setShowCompleted(includeCompleted);
+      setFailed(false);
+    } catch {
+      setFilterFailed(true);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   function finishDeparture(row: AssignedTask) {
     if (!departure || taskKey(row) !== taskKey(departure)) return;
@@ -70,14 +95,35 @@ export function HomeTasksPage() {
       const result = await (row.record.kind === "contract"
         ? toggleContractTask(row.id)
         : toggleMatterTask(row.id));
-      if (!result.ok || !result.tasks.find((task) => task.id === row.id)?.isDone) {
-        setCompletionError("complete");
+      const updated = result.ok ? result.tasks.find((task) => task.id === row.id) : undefined;
+      if (!updated || updated.isDone === Boolean(row.isDone)) {
+        setCompletionError(row.isDone ? "reopen" : "complete");
         return;
       }
-      setCompletedTask(row);
-      setDeparture(row);
+      if (updated.isDone) {
+        setCompletedTask(row);
+        if (!showCompleted) setDeparture(row);
+      } else {
+        if (completedTask && taskKey(completedTask) === taskKey(row)) setCompletedTask(null);
+        setRestoredTitle(row.title);
+      }
+      if (showCompleted) {
+        setPage((previous) => ({
+          ...previous,
+          rows: previous.rows.map((task) =>
+            taskKey(task) === taskKey(row)
+              ? {
+                  ...task,
+                  isDone: updated.isDone,
+                  isOverdue:
+                    !updated.isDone && Boolean(task.dueDate && task.dueDate < civilToday()),
+                }
+              : task,
+          ),
+        }));
+      }
     } catch {
-      setCompletionError("complete");
+      setCompletionError(row.isDone ? "reopen" : "complete");
     } finally {
       setCompleting(false);
       setPendingKey(undefined);
@@ -100,10 +146,15 @@ export function HomeTasksPage() {
       }
       setDeparture(null);
       setPage((previous) => {
-        if (previous.rows.some((task) => taskKey(task) === taskKey(row))) return previous;
+        if (previous.rows.some((task) => taskKey(task) === taskKey(row))) {
+          return {
+            ...previous,
+            rows: previous.rows.map((task) => (taskKey(task) === taskKey(row) ? row : task)),
+          };
+        }
         return {
           ...previous,
-          total: previous.total + 1,
+          total: previous.total + (showCompleted ? 0 : 1),
           rows: [...previous.rows, row].sort(compareTasks),
         };
       });
@@ -122,7 +173,9 @@ export function HomeTasksPage() {
     setFailed(false);
     try {
       const { data } = await api.GET("/api/v1/home/tasks", {
-        params: { query: { cursor: page.nextCursor } },
+        params: {
+          query: { cursor: page.nextCursor, includeCompleted: showCompleted ? "true" : "false" },
+        },
       });
       if (!data) throw new Error("Tasks could not be read.");
       setPage((previous) => {
@@ -156,6 +209,14 @@ export function HomeTasksPage() {
             <FormattedMessage id="home.tasks.back" defaultMessage="Back to Home" />
           </Link>
         </Button>
+        {filterFailed ? (
+          <p role="alert" className="text-status-severe-fg">
+            <FormattedMessage
+              id="tasks.completed.failed"
+              defaultMessage="Tasks could not be loaded. Try changing the completed filter again."
+            />
+          </p>
+        ) : null}
         <div className="flex min-h-8 items-center gap-2">
           <p role="status" className="text-muted empty:hidden">
             {completedTask ? (
@@ -186,7 +247,12 @@ export function HomeTasksPage() {
         </div>
         {completionError ? (
           <p role="alert" className="text-status-severe-fg">
-            {completionError === "undo" ? (
+            {completionError === "reopen" ? (
+              <FormattedMessage
+                id="home.tasks.reopenFailed"
+                defaultMessage="The Task could not be reopened. Please try again."
+              />
+            ) : completionError === "undo" ? (
               <FormattedMessage
                 id="home.tasks.undoFailed"
                 defaultMessage="The Task could not be reopened. Please try Undo again."
@@ -199,24 +265,36 @@ export function HomeTasksPage() {
             )}
           </p>
         ) : null}
-        {page.rows.length === 0 && !page.nextCursor ? (
-          <p className="text-muted">
-            <FormattedMessage
-              id="home.tasks.empty"
-              defaultMessage="No open Tasks assigned to you."
+        <HomeTasksCard
+          section={{ type: "tasks", total: page.total, rows: page.rows }}
+          showViewAll={false}
+          headerAction={
+            <CompletedTasksToggle
+              showCompleted={showCompleted}
+              disabled={busy}
+              onChange={(value) => void changeCompletedVisibility(value)}
             />
-          </p>
-        ) : (
-          <HomeTasksCard
-            section={{ type: "tasks", total: page.total, rows: page.rows }}
-            showViewAll={false}
-            onComplete={user.role === "business_user" ? undefined : (row) => void completeTask(row)}
-            busy={busy}
-            checkedTaskKey={pendingKey ?? (departure ? taskKey(departure) : undefined)}
-            exitingTaskKey={departure ? taskKey(departure) : undefined}
-            onExit={finishDeparture}
-          />
-        )}
+          }
+          emptyMessage={
+            !page.nextCursor &&
+            (showCompleted ? (
+              <FormattedMessage
+                id="home.tasks.emptyAll"
+                defaultMessage="No Tasks assigned to you."
+              />
+            ) : (
+              <FormattedMessage
+                id="home.tasks.empty"
+                defaultMessage="No open Tasks assigned to you."
+              />
+            ))
+          }
+          onComplete={user.role === "business_user" ? undefined : (row) => void completeTask(row)}
+          busy={busy}
+          checkedTaskKey={pendingKey ?? (departure ? taskKey(departure) : undefined)}
+          exitingTaskKey={departure ? taskKey(departure) : undefined}
+          onExit={finishDeparture}
+        />
         {failed ? (
           <p role="alert" className="text-status-severe-fg">
             <FormattedMessage
