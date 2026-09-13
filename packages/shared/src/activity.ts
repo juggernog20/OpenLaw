@@ -474,6 +474,7 @@ type TaskPayloads = {
 type EntityPayloads = {
   "entity.created": { legalName: string; entityType: string; status: string };
   "entity.updated": { legalName: string; changed: ChangedFields };
+  "entity.portal_listed_set": { legalName: string; from: boolean; to: boolean };
   "entity.status_changed": { legalName: string; from: string; to: string };
   "entity.type_reassigned": { legalName: string; from: string; to: string };
   "entity.archived": { legalName: string };

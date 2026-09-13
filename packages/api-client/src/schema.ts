@@ -1758,7 +1758,7 @@ export interface paths {
     /** One request type's attached fields in per-type order — the type editor's Attached fields card */
     get: operations["listRequestTypeFields"];
     put?: never;
-    /** Attach a catalog field to a request type: the scopes this type's target allows (INT-002), appended to the per-type order, optional from the start unless isRequired says otherwise; a user or entity field can be on a request form but can never be required there, because the portal offers a requester no rows to pick (INT-002) */
+    /** Attach a catalog field to a request type: the scopes this type's target allows (INT-002), appended to the per-type order, optional from the start unless isRequired says otherwise; a user Field cannot be required on a request form because the Portal has no person picker (INT-002) */
     post: operations["attachRequestTypeField"];
     delete?: never;
     options?: never;
@@ -1780,7 +1780,7 @@ export interface paths {
     delete: operations["detachRequestTypeField"];
     options?: never;
     head?: never;
-    /** Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; a user or entity field can be on a request form but can never be required there, because the portal offers a requester no rows to pick (INT-002); hard enforcement arrives with the record milestone (M20) */
+    /** Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; a user Field cannot be required on a request form because the Portal has no person picker (INT-002); hard enforcement arrives with the record milestone (M20) */
     patch: operations["setRequestTypeFieldRequired"];
     trace?: never;
   };
@@ -1997,6 +1997,23 @@ export interface paths {
     get?: never;
     put?: never;
     post: operations["completePortalOnboarding"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/entities": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Names for Portal Entity pickers: live, non-Confidential, Portal-listed Entities only (ENT-010) */
+    get: operations["listPortalEntities"];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -2294,7 +2311,7 @@ export interface paths {
     /** The Inbox (INT-006, INT-007): the Requests whose fate is undecided, ordered by urgency rank — critical first — then age, oldest first, unless sort names a column, and paged by cursor. The answer is the `new` Requests by default; status choices or includeTriaged=true widen it to the converted, resolved, and declined ones with their outcomes. A converted row carries the contract or matter it became only when the caller reaches that record, and carries null otherwise (DD-014). Member+ only: a Contributor and a Business User are refused */
     get: operations["listInbox"];
     put?: never;
-    /** Submit a Request through a request type's portal form (INT-001). The Requester is the session; the type must be live; Title, Description, and Urgency are required, as is every attached field the type marks required; values are accepted for exactly the fields the type attaches, and a user or entity field's value must name a live row */
+    /** Submit a Request through a request type's portal form (INT-001). The Requester is the session; the type must be live; Title, Description, and Urgency are required, as is every attached field the type marks required; values are accepted for exactly the fields the type attaches, and a user Field must name a live person and an Entity Field must name a Portal-listed Entity */
     post: operations["submitRequest"];
     delete?: never;
     options?: never;
@@ -13891,6 +13908,40 @@ export interface operations {
           "application/json": {
             /** Format: date-time */
             completedAt: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listPortalEntities: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            entities: {
+              id: string;
+              name: string;
+            }[];
           };
         };
       };
@@ -28244,6 +28295,7 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               isConfidential: boolean;
+              portalListed: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -28323,6 +28375,7 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               isConfidential: boolean;
+              portalListed: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -28494,6 +28547,7 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               isConfidential: boolean;
+              portalListed: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -28588,6 +28642,7 @@ export interface operations {
             [key: string]: (string | number | boolean | string[]) | null;
           };
           isConfidential?: boolean;
+          portalListed?: boolean;
         };
       };
     };
@@ -28621,6 +28676,7 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               isConfidential: boolean;
+              portalListed: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -28724,6 +28780,7 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               isConfidential: boolean;
+              portalListed: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -28783,6 +28840,7 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               isConfidential: boolean;
+              portalListed: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;

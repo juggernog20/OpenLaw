@@ -405,6 +405,35 @@ describe("what the requester submitted", () => {
     expect(within(card).queryByText("u4")).not.toBeInTheDocument();
   });
 
+  /**
+   * ENT-010: the API stops naming an Entity once it is Confidential, so
+   * the row a requester already submitted has no name left to print. A
+   * bare id would be the one value on the card nobody can read.
+   */
+  it("says an Entity is withheld rather than printing its id", async () => {
+    stubApi({
+      signedIn: REQUESTER,
+      extra: detailRead(
+        detail({
+          customFields: { contracting_entity: "e7" },
+          fields: [
+            field({
+              slug: "contracting_entity",
+              displayName: "Contracting entity",
+              fieldType: "entity",
+            }),
+          ],
+          customFieldRefs: { users: [], entities: [] },
+        }),
+      ),
+    });
+    renderAt("/portal/requests/45");
+
+    const card = await screen.findByRole("region", { name: "What you submitted" });
+    expect(within(card).getByText("Restricted Entity")).toBeInTheDocument();
+    expect(within(card).queryByText("e7")).not.toBeInTheDocument();
+  });
+
   it("lists the paper, each name the link that downloads it", async () => {
     stubApi({
       signedIn: REQUESTER,

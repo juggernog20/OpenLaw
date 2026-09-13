@@ -64,39 +64,14 @@ export function formFieldScopeRule(targetModule: TargetModule | null): TypeField
 export const requestTypeScopeRule = (type: RequestType): TypeFieldScopeRule =>
   formFieldScopeRule(type.targetModule as TargetModule | null);
 
-/**
- * The two field types a request form may collect but may never require
- * (INT-002's M20/11 addendum, [#400]).
- *
- * The portal draws a `user` and an `entity` control as an empty picker
- * on purpose: a requester reads neither the staff directory nor the
- * Entity registry, and a picker that offered either would be a leak
- * (DD-013, DD-016). Optional, that control collects nothing and the
- * form submits. Required, it is a question nobody who can reach the
- * form is able to answer, so every submission of that type is refused
- * forever and the requester has no move that clears the refusal.
- *
- * So the flag is refused where an Administrator can read the refusal
- * rather than where a requester meets it. The field still attaches —
- * an optional one is useful and harmless — and the rule is only on
- * making it required. It is the request-type mount's rule alone:
- * staff pick a user or an entity from a list that has rows, so nothing
- * here touches a contract type or a matter type.
- *
- * **The rule can relax without moving.** If Entities ever become
- * visible to their own people, `entity` leaves this list and `user`
- * stays.
- */
+/** INT-002 keeps the staff directory out of Portal forms. ENT-010 now supplies Entity choices. */
 export const requestFormRequiredRule: TypeFieldRequiredRule = {
-  fieldTypes: ["user", "entity"],
+  fieldTypes: ["user"],
   refusal: (displayName) =>
     `${displayName} can be on the form, but it cannot be required. ` +
-    "A requester picks no person and no entity in the portal, so a " +
-    "required one is a question nobody can answer.",
+    "A requester cannot pick a person in the Portal.",
   summary:
-    "a user or entity field can be on a request form but can never be " +
-    "required there, because the portal offers a requester no rows to " +
-    "pick (INT-002)",
+    "a user Field cannot be required on a request form because the Portal has no person picker (INT-002)",
 };
 
 /**

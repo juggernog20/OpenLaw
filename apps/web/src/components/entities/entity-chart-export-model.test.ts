@@ -34,6 +34,7 @@ function record(id: string, legalName = id): ExportRecord {
       parValueCurrency: "USD",
       customFields: {},
       isConfidential: false,
+      portalListed: false,
       archivedAt: null,
       createdAt: "2020-01-01T00:00:00Z",
       updatedAt: "2020-01-01T00:00:00Z",

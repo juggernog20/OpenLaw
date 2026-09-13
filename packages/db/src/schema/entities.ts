@@ -67,6 +67,8 @@ export const entities = pgTable(
       .default({}),
     /** ENT-004's opt-in wall. Existing Entities stay open on upgrade. */
     isConfidential: boolean("is_confidential").notNull().default(false),
+    /** ENT-010: Portal pickers also exclude archived and Confidential Entities. */
+    portalListed: boolean("portal_listed").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()

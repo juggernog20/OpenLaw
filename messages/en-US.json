@@ -263,6 +263,9 @@
   "activity.entity.created": {
     "defaultMessage": "{actor} registered {name}"
   },
+  "activity.entity.portalListedSet": {
+    "defaultMessage": "{listed, select, true {{actor} made {name} Portal-listed} other {{actor} removed {name} from Portal pickers}}"
+  },
   "activity.entity.restored": {
     "defaultMessage": "{actor} restored {name}"
   },
@@ -4013,6 +4016,27 @@
   "entities.ownership.updateError": {
     "defaultMessage": "The Holding could not be updated."
   },
+  "entities.portalListed": {
+    "defaultMessage": "Portal-listed"
+  },
+  "entities.portalListed.adminOnly": {
+    "defaultMessage": "Only an Administrator can change Portal-listed."
+  },
+  "entities.portalListed.archived": {
+    "defaultMessage": "Archived Entities stay out of Portal pickers."
+  },
+  "entities.portalListed.confidential": {
+    "defaultMessage": "Confidential Entities stay out of Portal pickers."
+  },
+  "entities.portalListed.help": {
+    "defaultMessage": "Business Users can pick this Entity by name on Portal forms."
+  },
+  "entities.portalListed.no": {
+    "defaultMessage": "No"
+  },
+  "entities.portalListed.yes": {
+    "defaultMessage": "Yes"
+  },
   "entities.record.archive": {
     "defaultMessage": "Archive"
   },
@@ -4150,6 +4174,9 @@
   },
   "entities.record.officers.user": {
     "defaultMessage": "Linked user"
+  },
+  "entities.record.portal.title": {
+    "defaultMessage": "Portal"
   },
   "entities.record.registrations.add": {
     "defaultMessage": "Add registration"
@@ -8811,7 +8838,7 @@
     "defaultMessage": "{name} required"
   },
   "settings.requestTypeEditor.requiredLocked": {
-    "defaultMessage": "{name} can be on the form, but it can't be required. A requester picks no person and no entity in the portal."
+    "defaultMessage": "{name} can be on the form, but it can't be required. A requester cannot pick a person in the Portal."
   },
   "settings.requestTypeEditor.slug": {
     "defaultMessage": "Slug"

@@ -2857,6 +2857,18 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     values: (intl, payload) => ({ name: thingName(intl, payload) }),
   },
+  "entity.portal_listed_set": {
+    icon: Building2,
+    message: defineMessage({
+      id: "activity.entity.portalListedSet",
+      defaultMessage:
+        "{listed, select, true {{actor} made {name} Portal-listed} other {{actor} removed {name} from Portal pickers}}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      listed: payload.to === true ? "true" : "false",
+    }),
+  },
   "entity.updated": {
     icon: PencilLine,
     message: defineMessage({

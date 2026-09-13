@@ -499,16 +499,8 @@ describe("the per-attachment required flag", () => {
   });
 });
 
-/**
- * INT-002's M20/11 addendum (#400). The portal draws a `user` and an
- * `entity` control as an empty picker on purpose (DD-013, DD-016), so a
- * required one is a question nobody who can reach the form can answer.
- * The field still attaches; only the flag is refused, and it is refused
- * where an Administrator reads it rather than where a requester meets
- * it. The rule is this mount's alone — a contract type takes the same
- * field required, because staff pick from a list that has rows.
- */
-describe("a user or entity field can be on a request form but never required", () => {
+/** ENT-010 supplies Entity choices; INT-002 still keeps person Fields optional. */
+describe("a user Field stays optional while an Entity Field may be required", () => {
   it("refuses the flag by name, and leaves the attachment optional", async () => {
     const type = await addType("Required reference probe");
     const owner = await createField("Reference probe owner", "global", "user");
@@ -521,14 +513,14 @@ describe("a user or entity field can be on a request form but never required", (
     expect((await listAttached(type.id))[0]!.isRequired).toBe(false);
   });
 
-  it("refuses an entity field the same way", async () => {
+  it("allows an Entity Field to be required", async () => {
     const type = await addType("Required entity probe");
     const signer = await createField("Entity probe signer", "global", "entity");
     expect((await attach(type.id, { fieldId: signer })).statusCode).toBe(201);
 
     const res = await setRequired(type.id, signer, true);
-    expect(res.statusCode, res.body).toBe(400);
-    expect(res.json().detail).toContain("Entity probe signer");
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().attachedField.isRequired).toBe(true);
   });
 
   it("refuses an attach that arrives with the flag already set", async () => {

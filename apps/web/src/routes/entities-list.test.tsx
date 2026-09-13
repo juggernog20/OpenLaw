@@ -36,6 +36,7 @@ function entity(id = "entity-1", overrides: Record<string, unknown> = {}) {
     parValue: null,
     customFields: {},
     isConfidential: false,
+    portalListed: true,
     archivedAt: null,
     createdAt: "2026-08-01T00:00:00.000Z",
     updatedAt: "2026-08-01T00:00:00.000Z",
@@ -204,9 +205,11 @@ describe("the Entity registry managed list", () => {
       "Jurisdiction",
       "Registration no.",
       "Status",
+      "Portal-listed",
       "Next obligation",
     ]);
     expect(within(table).getByText("Annual return")).toBeVisible();
+    expect(within(table).getByText("Yes")).toBeVisible();
 
     await user.selectOptions(screen.getByRole("combobox", { name: "Type" }), "t-llc");
     await expectQuery(api.queries, "type", "t-llc");

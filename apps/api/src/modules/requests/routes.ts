@@ -110,7 +110,6 @@ import {
   matters,
   ne,
   desc,
-  entities,
   eq,
   isNull,
   REQUEST_STATUSES,
@@ -126,6 +125,7 @@ import {
 } from "@openlaw/db";
 import { REQUEST_DISPOSITIONED_PROBLEM_TYPE, REQUEST_OUTCOMES } from "@openlaw/shared";
 import { portalRecordScope } from "../../lib/portal-record-access.js";
+import { assertPortalEntity } from "../../lib/portal-entities.js";
 import { requireAuth } from "../../auth/guards.js";
 import {
   asUploadRefusal,
@@ -227,7 +227,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
           "live; Title, Description, and Urgency are required, as is " +
           "every attached field the type marks required; values are " +
           "accepted for exactly the fields the type attaches, and a " +
-          "user or entity field's value must name a live row",
+          "user Field must name a live person and an Entity Field must name a Portal-listed Entity",
         tags: ["requests"],
         body: z.strictObject({
           requestTypeId: z.string(),
@@ -271,12 +271,8 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         const attached = await selectAttachedFields(tx, requestTypeFields, requestType.id);
         const customFields = collectValues(attached, body.customFields ?? {});
 
-        // The two field types that name a row hold an id, and the id
-        // must name a live one — the contract record's rule, applied
-        // here for the same reason: a value nothing can resolve is a
-        // name no surface could ever render. The portal's pickers
-        // offer a requester no rows at all, so any id arriving here
-        // was sent against the API rather than picked from a list.
+        // Lock referenced rows until submission commits, so a concurrent
+        // archive or change to Portal-listed cannot admit a stale choice.
         for (const field of attached) {
           const value = customFields[field.slug];
           if (value === undefined) continue;
@@ -917,15 +913,7 @@ function collectValues(
   return values;
 }
 
-/**
- * The two field types that name a row: `user` and `entity` store an
- * id, so the write checks the id is a live one — the contract
- * record's `lockedReference` rule, restated here because
- * `coerceCustomFieldValue` leaves that question to the record module.
- * Locked, so a concurrent archive cannot slip between the check and
- * the insert. Archived is refused for the reason it is refused there:
- * nothing new gets pointed at someone who has left.
- */
+/** Portal Entity choices must remain listed; person references must remain live. */
 async function assertLiveReference(
   tx: Transaction,
   field: AttachedCustomField,
@@ -944,15 +932,7 @@ async function assertLiveReference(
     }
     return;
   }
-  const [entity] = await tx
-    .select({ id: entities.id, archivedAt: entities.archivedAt })
-    .from(entities)
-    .where(eq(entities.id, id))
-    .limit(1)
-    .for("update");
-  if (!entity || entity.archivedAt) {
-    throw httpError(400, `${field.displayName}: pick a live entity.`);
-  }
+  await assertPortalEntity(tx, id, field.displayName);
 }
 
 /** The required rule for basics and attachments alike: one refusal that

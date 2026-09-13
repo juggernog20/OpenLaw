@@ -14,12 +14,8 @@
  * rule when it refuses a re-point that would strand fields, which is
  * why neither file owns it.
  *
- * The required rule is this mount's own. A `user` or `entity` field
- * may be attached to a request type but may never be marked required
- * on its form: the portal offers a requester no rows for either, so a
- * required one could never be answered. The refusal names the field,
- * and it reaches the Administrator who set the flag rather than the
- * requester who would meet it (the INT-002 M20/11 addendum).
+ * Only the user Field type cannot be required. Entity Fields use the
+ * Portal-listed Entity picker (ENT-010).
  *
  * The four basics (Title, Description, Attachments, Urgency) are not
  * attachments. INT-002 fixes them on every form, so they have no rows
@@ -40,9 +36,6 @@ export const requestTypeFieldsRoutes = typeFieldRoutes<RequestType>({
   noun: "request type",
   scopeRule: requestTypeScopeRule,
   scopeSummary: "the scopes this type's target allows (INT-002)",
-  // The one rule that is this mount's alone: a `user` or `entity` field
-  // may sit on a request form, but may never be required on one (#400).
-  // The other two mounts pass nothing. Their pickers have rows.
   requiredRule: requestFormRequiredRule,
   actionPrefix: "request_type_field",
   // The portal enforces the flag when a requester submits (M20); there

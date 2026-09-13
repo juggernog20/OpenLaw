@@ -92,6 +92,7 @@ import { portalRecordWorkRoutes } from "./modules/portal/record-work.js";
 import { portalDocumentRoutes } from "./modules/portal/documents.js";
 import { portalAppletRoutes } from "./modules/portal/applets.js";
 import { portalOnboardingRoutes } from "./modules/portal/onboarding.js";
+import { portalEntityRoutes } from "./modules/portal/entities.js";
 import { portalRoutes } from "./modules/portal/routes.js";
 import { conversionDraftRoutes } from "./modules/requests/conversion-draft.js";
 import { requestConvertRoutes } from "./modules/requests/convert.js";
@@ -500,6 +501,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(intakeLinksRoutes, { prefix: "/api/v1" });
   await app.register(portalRoutes, { prefix: "/api/v1" });
   await app.register(portalOnboardingRoutes, { prefix: "/api/v1" });
+  await app.register(portalEntityRoutes, { prefix: "/api/v1" });
   await app.register(portalContractRoutes, { prefix: "/api/v1" });
   await app.register(portalRecordWorkRoutes, { prefix: "/api/v1" });
   await app.register(portalDocumentRoutes, { prefix: "/api/v1" });

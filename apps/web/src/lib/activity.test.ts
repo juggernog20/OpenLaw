@@ -381,6 +381,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
 
   // Entity registry
   "entity.created": { legalName: "Helix Labs GmbH", entityType: "GmbH", status: "active" },
+  "entity.portal_listed_set": { legalName: "Helix Labs GmbH", from: false, to: true },
   "entity.updated": {
     legalName: "Helix Labs GmbH",
     changed: { jurisdiction: { from: "DE", to: "AT" } },

@@ -53,6 +53,7 @@ function entityRow(overrides: Partial<Record<string, unknown>> = {}) {
     parValueCurrency: null,
     customFields: {},
     isConfidential: false,
+    portalListed: false,
     archivedAt: null,
     createdAt: "2026-08-01T00:00:00.000Z",
     updatedAt: "2026-08-01T00:00:00.000Z",
@@ -773,5 +774,38 @@ describe("the /entities/:entityId record page", () => {
     expect(screen.getByLabelText("Entity type")).toHaveValue("t-llc");
     expect(screen.getByLabelText("Formation jurisdiction")).toHaveValue("Ireland");
     expect(screen.getByLabelText("Registration no.")).toHaveValue("551204");
+  });
+});
+
+describe("Portal-listed", () => {
+  it("lets an Administrator set and clear the flag on the record", async () => {
+    const api = recordApi(entityRow());
+    stubApi({ signedIn: ADMIN, extra: api.handler });
+    renderAt("/entities/e1");
+    const user = userEvent.setup();
+    const control = await screen.findByRole("switch", { name: "Portal-listed" });
+    expect(control).not.toBeChecked();
+    await user.click(control);
+    await waitFor(() => expect(control).toBeChecked());
+    await user.click(control);
+    await waitFor(() => expect(control).not.toBeChecked());
+    expect(api.patches).toEqual([{ portalListed: true }, { portalListed: false }]);
+  });
+
+  it.each([
+    [MEMBER, {}, "Only an Administrator can change Portal-listed."],
+    [ADMIN, { isConfidential: true }, "Confidential Entities stay out of Portal pickers."],
+    [
+      ADMIN,
+      { archivedAt: "2026-09-13T00:00:00.000Z" },
+      "Archived Entities stay out of Portal pickers.",
+    ],
+  ])("keeps an unavailable Portal-listed control disabled", async (signedIn, overrides, reason) => {
+    const api = recordApi(entityRow(overrides));
+    stubApi({ signedIn, extra: api.handler });
+    renderAt("/entities/e1");
+    expect(await screen.findByRole("switch", { name: "Portal-listed" })).toBeDisabled();
+    if (reason) expect(screen.getByText(reason)).toBeInTheDocument();
+    expect(api.patches).toEqual([]);
   });
 });
