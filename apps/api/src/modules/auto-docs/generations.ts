@@ -20,6 +20,7 @@ import {
   type Transaction,
 } from "@openlaw/db";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
+import { uuidv7 } from "uuidv7";
 import { z } from "zod";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
@@ -32,6 +33,12 @@ import { validateGenerationAnswers } from "./answers.js";
 import { AutoDocFieldRow } from "./routes.js";
 
 const requireMember = requireRole("administrator", "legal_team_member");
+/** DOC-012: the Generation id groups its blobs; the fresh tail keeps a
+ * written key from ever being written again, so a later retry mints a new
+ * one rather than colliding with what a failed attempt left behind. */
+function generationDocxKey(generationId: string): string {
+  return `auto-doc-generations/${generationId}/${uuidv7()}.docx`;
+}
 const Params = z.object({ id: z.string() });
 const GenerationParams = Params.extend({ generationId: z.string() });
 const Pair = z.object({ documentVersionId: z.string().min(1), formVersionId: z.string().min(1) });
@@ -234,7 +241,7 @@ export const autoDocGenerationRoutes: FastifyPluginAsyncZod = async (app) => {
           displayValues: accepted.displayValues,
         });
         const fileRef = await app.storage.put(
-          `auto-doc-generations/${accepted.generation.id}/original.docx`,
+          generationDocxKey(accepted.generation.id),
           Readable.from([output]),
         );
         await withStoredBlob(app.storage, request.log, fileRef, async () => {

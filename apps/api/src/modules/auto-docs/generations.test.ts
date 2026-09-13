@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** ADO-004 and ADO-007: Generations cite the submitted pair and keep their own output. */
-import { readFile } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import {
   autoDocGenerations,
@@ -57,6 +58,11 @@ const field = (slug: string, extra: Record<string, unknown> = {}) => ({
   fieldType: "text",
   ...extra,
 });
+/** DOC-012 mints a fresh key for each attempt, so a cleaned-up fill is
+ * proved by an empty Generation directory rather than by one named key. */
+async function storedBlobs(generationId: string) {
+  return readdir(join(h.storageRoot, "auto-doc-generations", generationId)).catch(() => []);
+}
 async function call(
   id: string,
   suffix: string,
@@ -263,9 +269,7 @@ it("records a failed fill with its reason and no output file", async () => {
       .from(autoDocGenerations)
       .where(eq(autoDocGenerations.id, generation.id));
     expect(stored!.docxFileRef).toBeNull();
-    await expect(
-      h.storage.get(`local:auto-doc-generations/${generation.id}/original.docx`),
-    ).rejects.toThrow();
+    expect(await storedBlobs(generation.id)).toEqual([]);
     expect((await call(id, `generations/${generation.id}/docx`)).statusCode).toBe(409);
     expect((await call(id, "generations")).json().generations[0]).toMatchObject({
       state: "failed",
@@ -385,9 +389,7 @@ it("removes a completed blob when recording its ready state fails", async () => 
     expect(made.statusCode, made.body).toBe(201);
     const generation = made.json().generation;
     expect(generation).toMatchObject({ state: "failed", hasDocx: false });
-    await expect(
-      h.storage.get(`local:auto-doc-generations/${generation.id}/original.docx`),
-    ).rejects.toThrow();
+    expect(await storedBlobs(generation.id)).toEqual([]);
   } finally {
     await h.db.execute(sql`drop trigger refuse_generation_ready on auto_doc_generations`);
     await h.db.execute(sql`drop function refuse_generation_ready()`);
