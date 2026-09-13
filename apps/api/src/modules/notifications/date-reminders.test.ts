@@ -326,7 +326,9 @@ async function bell(fixture: { email: string }): Promise<BellItem[]> {
 
 /** The items on one person's bell about one record, oldest first. */
 async function bellFor(fixture: { email: string }, contract: ContractRow): Promise<BellItem[]> {
-  const items = (await bell(fixture)).filter((row) => row.entityId === contract.id);
+  const items = (await bell(fixture)).filter(
+    (row) => row.entityId === contract.id && row.eventType !== "contract.team_added",
+  );
   return items.reverse();
 }
 
@@ -466,7 +468,11 @@ describe("a notice deadline at a seeded offset", () => {
     // They reach the record (CTR-021) and are on nobody's team, so it is
     // not about them. Read from the table, because an empty bell would
     // also be what a walled-off record looks like.
-    expect((await rowsFor(OUTSIDER)).filter((row) => row.entityId === contract.id)).toEqual([]);
+    expect(
+      (await rowsFor(OUTSIDER)).filter(
+        (row) => row.entityId === contract.id && row.eventType !== "contract.team_added",
+      ),
+    ).toEqual([]);
   });
 });
 
@@ -693,7 +699,11 @@ describe("the timezone gate", () => {
     expect(digestsTo(EAST)).toHaveLength(1);
 
     // Not "an empty bell": no row exists for the Owner yet at all.
-    expect((await rowsFor(OWNER)).filter((row) => row.entityId === contract.id)).toEqual([]);
+    expect(
+      (await rowsFor(OWNER)).filter(
+        (row) => row.entityId === contract.id && row.eventType !== "contract.team_added",
+      ),
+    ).toEqual([]);
     expect(digestsTo(OWNER)).toHaveLength(before);
   });
 
@@ -791,8 +801,16 @@ describe("a confidential record's dates", () => {
     // A Legal Team Member outside a confidential record's team does not
     // reach it (DD-014), so no row was ever written — and the title
     // never left the building in their briefing either.
-    expect((await rowsFor(OUTSIDER)).filter((row) => row.entityId === contract.id)).toEqual([]);
-    expect(digestsTo(OUTSIDER).some((m) => m.text.includes(contract.title))).toBe(false);
+    expect(
+      (await rowsFor(OUTSIDER)).filter(
+        (row) => row.entityId === contract.id && row.eventType !== "contract.team_added",
+      ),
+    ).toEqual([]);
+    expect(
+      digestsTo(OUTSIDER).some(
+        (m) => m.text.includes(contract.title) && !m.subject.startsWith("You were added to "),
+      ),
+    ).toBe(false);
   });
 });
 
@@ -814,11 +832,17 @@ describe("an immediate email whose wake-up was lost", () => {
     });
     expect(handed.statusCode, handed.body).toBe(200);
     await settles("the hand-over email", () =>
-      harness.mailer.messagesTo(OUTSIDER.email).some((m) => m.text.includes(contract.title)),
+      harness.mailer
+        .messagesTo(OUTSIDER.email)
+        .some(
+          (m) => m.text.includes(contract.title) && !m.subject.startsWith("You were added to "),
+        ),
     );
     const delivered = harness.mailer
       .messagesTo(OUTSIDER.email)
-      .filter((m) => m.text.includes(contract.title)).length;
+      .filter(
+        (m) => m.text.includes(contract.title) && !m.subject.startsWith("You were added to "),
+      ).length;
 
     // Staged, in the two columns no endpoint exposes: the row still owes
     // an email, nothing was ever recorded against it, and it is old
@@ -864,8 +888,11 @@ describe("an immediate email whose wake-up was lost", () => {
     await settles(
       "the re-asked hand-over email",
       () =>
-        harness.mailer.messagesTo(OUTSIDER.email).filter((m) => m.text.includes(contract.title))
-          .length > delivered,
+        harness.mailer
+          .messagesTo(OUTSIDER.email)
+          .filter(
+            (m) => m.text.includes(contract.title) && !m.subject.startsWith("You were added to "),
+          ).length > delivered,
     );
     // The mark lands after the message, so settle on the column rather
     // than reading it the moment the mailer has the mail.

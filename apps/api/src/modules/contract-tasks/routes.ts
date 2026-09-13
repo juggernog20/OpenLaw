@@ -270,6 +270,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
 
         await prepareTaskAssignee(
           tx,
+          app.notifier,
           "contract",
           contract,
           request.user,
@@ -370,6 +371,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
           request.body.assigneeId === undefined ? task.assigneeId : request.body.assigneeId;
         await prepareTaskAssignee(
           tx,
+          app.notifier,
           "contract",
           task.contract,
           request.user,

@@ -1344,7 +1344,7 @@ MTR-001 taxonomy machinery: `id`, `slug`, `display_name`, `display_order`, `arch
 
 Source: **CTR-026**
 
-(`contract_type_id`, `user_id`, `created_at`), compound PK. Copied to `contract_team` on every creation of a Contract of that Type, deduplicated; archived users skipped. No role column: DD-023.
+(`contract_type_id`, `user_id`, `display_order`, `created_at`), compound PK on the first two columns. `display_order` stores the People card order. Copied to `contract_team` on every creation of a Contract of that Type, deduplicated; archived users skipped. No role column: DD-023.
 
 ---
 

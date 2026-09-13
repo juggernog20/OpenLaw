@@ -138,7 +138,9 @@ const createOverHttp = (payload: Record<string, unknown>) =>
   });
 
 const createInCallerTransaction = (input: Omit<CreateContractInput, "actorId">) =>
-  harness.db.transaction((tx) => createContract(tx, { actorId: memberId, ...input }));
+  harness.app.notifier.notifying((tx) =>
+    createContract(tx, harness.app.notifier, { actorId: memberId, ...input }),
+  );
 
 async function refusalOf(call: Promise<unknown>): Promise<HttpError> {
   const outcome = await call.then(
@@ -175,13 +177,13 @@ async function expectMatchingRefusal(payload: {
 
 describe("the contract create inside a caller's transaction", () => {
   it("commits with the transaction that opened it, numbering each contract from the CTR-003 sequence", async () => {
-    const born = await harness.db.transaction(async (tx) => {
-      const first = await createContract(tx, {
+    const born = await harness.app.notifier.notifying(async (tx) => {
+      const first = await createContract(tx, harness.app.notifier, {
         actorId: memberId,
         title: "Door commit one",
         contractTypeId: plainTypeId,
       });
-      const second = await createContract(tx, {
+      const second = await createContract(tx, harness.app.notifier, {
         actorId: memberId,
         title: "Door commit two",
         contractTypeId: plainTypeId,
@@ -227,8 +229,12 @@ describe("the contract create inside a caller's transaction", () => {
   it("rolls back with the transaction that opened it, leaving no record behind", async () => {
     const title = "Door rollback";
     await expect(
-      harness.db.transaction(async (tx) => {
-        await createContract(tx, { actorId: memberId, title, contractTypeId: plainTypeId });
+      harness.app.notifier.notifying(async (tx) => {
+        await createContract(tx, harness.app.notifier, {
+          actorId: memberId,
+          title,
+          contractTypeId: plainTypeId,
+        });
         throw new Error("the caller failed after the create");
       }),
     ).rejects.toThrow("the caller failed after the create");

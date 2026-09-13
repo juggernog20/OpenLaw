@@ -184,6 +184,7 @@ import {
 import { departmentOptions, departmentName, lockedDepartment } from "../departments/references.js";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
+import { addContractTeamMember } from "../../lib/contract-team.js";
 import {
   confidentialityWrite,
   contractTeamScope,
@@ -2117,7 +2118,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request, reply) => {
       const { title, contractTypeId, renewalOf, matterNumber } = request.body;
-      const created = await app.db.transaction(async (tx) => {
+      const created = await app.notifier.notifying(async (tx) => {
         // The predecessor first, and under its own row lock, so the
         // facts copied onto the successor are the ones the record held
         // at the moment the renewal was routed. Reach is asked here as
@@ -2139,7 +2140,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         if (matter?.archivedAt) {
           throw httpError(409, "This matter is archived. Restore it before linking to it.");
         }
-        const born = await createContract(tx, {
+        const born = await createContract(tx, app.notifier, {
           actorId: request.user.id,
           title,
           contractTypeId,
@@ -3091,7 +3092,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request, reply) => {
       const { userId } = request.body;
-      const team = await app.db.transaction(async (tx) => {
+      const team = await app.notifier.notifying(async (tx) => {
         const current = await lockedContract(tx, request.params.number, request.user);
         // On a walled record this add is an audience decision (CTR-023),
         // so it is asked before the archived refusal, the same order the
@@ -3101,24 +3102,14 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         // Anyone live may join: a Business User's row is their Portal grant.
         const person = await lockedUser(tx, userId, USER_ROLES, "That is not a person we can add.");
 
-        const inserted = await tx
-          .insert(contractTeam)
-          .values({ contractId: current.row.id, userId: person.id })
-          .onConflictDoNothing()
-          .returning();
-        if (inserted.length === 0) throw httpError(409, "This person is already on the team.");
-        await recordActivity(tx, {
-          entityType: "contract",
-          entityId: current.row.id,
-          actorId: request.user.id,
-          action: "contract.team_added",
-          visibility: RECORD_ACTIVITY_TIER,
-          payload: {
-            number: current.row.number,
-            title: current.row.title,
-            member: person.displayName,
-          },
-        });
+        const inserted = await addContractTeamMember(
+          tx,
+          app.notifier,
+          current.row,
+          request.user,
+          person,
+        );
+        if (!inserted) throw httpError(409, "This person is already on the team.");
         return selectTeam(tx, current.row.id);
       });
       return reply.status(201).send({ team });

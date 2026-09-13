@@ -71,7 +71,8 @@ export const GROUP_COPY: Record<
     }),
     detail: defineMessage({
       id: "settings.notifications.group.assigned.detail",
-      defaultMessage: "Assignments, tasks, mentions, and approval requests addressed to you.",
+      defaultMessage:
+        "Assignments, Contract team additions, tasks, mentions, and approval requests addressed to you.",
     }),
   },
   activity_on_your_records: {

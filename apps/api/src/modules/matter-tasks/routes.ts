@@ -172,6 +172,7 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         const assigneeId = request.body.assigneeId ?? null;
         await prepareTaskAssignee(
           tx,
+          app.notifier,
           "matter",
           matter,
           request.user,
@@ -238,6 +239,7 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
           request.body.assigneeId === undefined ? task.assigneeId : request.body.assigneeId;
         await prepareTaskAssignee(
           tx,
+          app.notifier,
           "matter",
           task.matter,
           request.user,

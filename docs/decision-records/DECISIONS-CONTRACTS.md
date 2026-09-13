@@ -558,3 +558,18 @@ schema. Responses retain `owningDepartment` as the current display name and add
 - **Rationale** — The Type already decides Fields and approvals; it is the natural place to decide who is on every NDA. One row, one meaning, is DD-023's rule and needs no new role.
 - **Alternatives considered** — Default people on the Auto-Doc only: Procurement wants every NDA, not only the generated ones. A per-entry role or placement: DD-023 removed the tags a placement would need.
 - **Consequences** — `contract_type_default_people` in SCHEMA.md. The Type editor gains a People card. `createContract` applies the list after the creator and Business Owner rows. Matter Types get nothing here; the Matter equivalent waits for an ask.
+
+### CTR-026 built, M35/4
+
+Contract Types now store ordered default people. The Administrator's People card
+adds, removes, and reorders them. Archived users stay visible in the list and are
+skipped during creation. The list is copied after the creator and Business Owner
+memberships, with duplicates ignored. Direct creation, Request conversion, and
+renewal vehicles use the same creation function. A later list edit leaves existing
+Contract teams unchanged.
+
+Each default or manual Contract team addition records `contract.team_added` and
+uses the notification catalog's `assigned_to_you` group. The notification and
+membership share a transaction. Business Users receive the Portal link; Member+
+receive the app link. Portal team additions and Task assignee additions use the
+same write. The existing actor exclusion and channel preferences still apply.

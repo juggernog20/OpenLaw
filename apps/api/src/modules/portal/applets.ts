@@ -23,6 +23,7 @@ import {
 } from "@openlaw/db";
 import { requireAuth } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
+import { addContractTeamMember } from "../../lib/contract-team.js";
 import { selectAttachedFields } from "../../lib/custom-fields.js";
 import { portalRecordScope } from "../../lib/portal-record-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
@@ -144,7 +145,7 @@ export const portalAppletRoutes: FastifyPluginAsyncZod = async (app) => {
       },
       async (request, reply) => {
         reply.header("cache-control", "private, no-store");
-        const members = await app.db.transaction(async (tx) => {
+        const members = await app.notifier.notifying(async (tx) => {
           const [record] = await tx
             .select({
               id: table.id,
@@ -173,27 +174,25 @@ export const portalAppletRoutes: FastifyPluginAsyncZod = async (app) => {
             .limit(1)
             .for("update");
           if (!person || person.archived) throw httpError(400, "That is not a person we can add.");
-          const inserted =
-            module === "contract"
-              ? await tx
-                  .insert(contractTeam)
-                  .values({ contractId: record.id, userId: person.id })
-                  .onConflictDoNothing()
-                  .returning()
-              : await tx
-                  .insert(matterTeam)
-                  .values({ matterId: record.id, userId: person.id })
-                  .onConflictDoNothing()
-                  .returning();
-          if (!inserted.length) throw httpError(409, "This person is already on the team.");
-          await recordActivity(tx, {
-            entityType: module,
-            entityId: record.id,
-            actorId: request.user.id,
-            action: `${module}.team_added`,
-            visibility: RECORD_ACTIVITY_TIER,
-            payload: { number: record.number, title: record.title, member: person.displayName },
-          });
+          if (module === "contract") {
+            if (!(await addContractTeamMember(tx, app.notifier, record, request.user, person)))
+              throw httpError(409, "This person is already on the team.");
+          } else {
+            const inserted = await tx
+              .insert(matterTeam)
+              .values({ matterId: record.id, userId: person.id })
+              .onConflictDoNothing()
+              .returning();
+            if (!inserted.length) throw httpError(409, "This person is already on the team.");
+            await recordActivity(tx, {
+              entityType: "matter",
+              entityId: record.id,
+              actorId: request.user.id,
+              action: "matter.team_added",
+              visibility: RECORD_ACTIVITY_TIER,
+              payload: { number: record.number, title: record.title, member: person.displayName },
+            });
+          }
           return tx
             .select(PersonColumns)
             .from(team)

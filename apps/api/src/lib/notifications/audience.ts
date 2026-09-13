@@ -67,6 +67,7 @@ import {
   users,
   type CommentVisibility,
   type Executor,
+  type NotificationEventType,
   type SQL,
   type UserRole,
 } from "@openlaw/db";
@@ -676,14 +677,18 @@ function requestDestinationScope(
   );
 }
 
+/** Shared record events delivered to Business Users through the Portal. */
+export const PORTAL_SHARED_EVENTS: readonly NotificationEventType[] = [
+  "contract.team_added",
+  "contract.status_changed",
+  "document.added",
+  "document.version_added",
+];
+
 /** Portal news names only work and shared conversation the current team can open. */
 function portalScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
   const sharedNews = or(
-    inArray(notifications.eventType, [
-      "contract.status_changed",
-      "document.added",
-      "document.version_added",
-    ]),
+    inArray(notifications.eventType, PORTAL_SHARED_EVENTS),
     and(
       inArray(notifications.eventType, ["comment.posted", "comment.mentioned"]),
       inArray(

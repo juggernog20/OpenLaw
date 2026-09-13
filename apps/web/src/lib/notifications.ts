@@ -180,6 +180,14 @@ const ARMS: Readonly<Record<string, Arm>> = {
         "other {You were asked to approve {contract}}}",
     }),
   },
+  "contract.team_added": {
+    icon: UserPlus,
+    message: defineMessage({
+      id: "notifications.contract.teamAdded",
+      defaultMessage:
+        "{hasActor, select, yes {{actor} added you to the Contract team for {contract}} other {You were added to the Contract team for {contract}}}",
+    }),
+  },
   "contract.owner_assigned": {
     icon: UserPlus,
     message: defineMessage({

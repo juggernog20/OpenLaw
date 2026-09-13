@@ -305,7 +305,9 @@ async function settles(what: string, ready: () => Promise<boolean>): Promise<voi
 
 /** The mail one person has been sent about one record. */
 const mailAbout = (fixture: { email: string }, contract: ContractRow) =>
-  harness.mailer.messagesTo(fixture.email).filter((m) => m.text.includes(contract.title));
+  harness.mailer
+    .messagesTo(fixture.email)
+    .filter((m) => m.text.includes(contract.title) && !m.subject.startsWith("You were added to "));
 
 /** Waits for the queue to deliver the message this event owed. */
 async function mailArrives(fixture: { email: string }, contract: ContractRow) {

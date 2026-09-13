@@ -14,10 +14,11 @@ export const PORTAL_GROUPS: readonly EventGroup[] = [
 export const PORTAL_COPY: typeof GROUP_COPY = {
   ...GROUP_COPY,
   assigned_to_you: {
-    label: defineMessage({ id: "portal.settings.mentions", defaultMessage: "Mentions" }),
+    label: defineMessage({ id: "portal.settings.assignments", defaultMessage: "Assigned to you" }),
     detail: defineMessage({
-      id: "portal.settings.mentions.detail",
-      defaultMessage: "Comments that mention you on your Contracts and Matters.",
+      id: "portal.settings.assignments.detail",
+      defaultMessage:
+        "Contract team additions and comments that mention you on your Contracts and Matters.",
     }),
   },
   activity_on_your_records: {

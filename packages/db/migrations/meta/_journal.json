@@ -834,6 +834,13 @@
       "when": 1789309407991,
       "tag": "0118_portal_listed_entities",
       "breakpoints": true
+    },
+    {
+      "idx": 119,
+      "version": "7",
+      "when": 1789312749211,
+      "tag": "0119_contract_type_default_people",
+      "breakpoints": true
     }
   ]
 }
