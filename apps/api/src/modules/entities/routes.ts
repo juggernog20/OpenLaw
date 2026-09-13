@@ -3,8 +3,8 @@
 /**
  * The Entities registry routes (ENT-001/ENT-004, #98): list and create
  * for the registry core, plus the type-picker read and the archive
- * cleanup seam. Everything here is Member+ — Administrators and Legal
- * Team Members equally, read and write — the first Member+ surface in
+ * cleanup seam. The registry is Member+; Portal-listed changes require
+ * an Administrator (ENT-010). This was the first Member+ surface in
  * the codebase; Contributors, Business Users, and unauthenticated
  * requests get nothing (ENT-004). The list is the seam the M8
  * signing-entity picker consumes: ordered by legal name, archived rows
@@ -99,6 +99,7 @@ const EntityRowSchema = z.object({
   parValueCurrency: z.string().nullable(),
   customFields: CustomFieldsSchema,
   isConfidential: z.boolean(),
+  portalListed: z.boolean(),
   archivedAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
@@ -168,6 +169,7 @@ function toRow(row: Entity, entityTypeName: string) {
     parValueCurrency: row.parValueCurrency,
     customFields: row.customFields ?? {},
     isConfidential: row.isConfidential,
+    portalListed: row.portalListed,
     archivedAt: row.archivedAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -668,6 +670,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
           parValueCurrency: CurrencySchema.nullable().optional(),
           customFields: CustomFieldsInput.optional(),
           isConfidential: z.boolean().optional(),
+          portalListed: z.boolean().optional(),
         }),
         response: {
           200: EntityRecordEnvelope,
@@ -692,6 +695,15 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         let typeName = currentType!.displayName;
 
         const patch: Partial<Entity> = {};
+        if (body.portalListed !== undefined) {
+          if (request.user.role !== "administrator") {
+            throw httpError(403, "Only an Administrator can change Portal-listed.");
+          }
+          if (body.portalListed && (body.isConfidential ?? target.isConfidential)) {
+            throw httpError(400, "A Confidential Entity cannot be Portal-listed.");
+          }
+          if (body.portalListed !== target.portalListed) patch.portalListed = body.portalListed;
+        }
         /** The DD-017 changed map — old and new values per corrected
          * field, feeding the M9 viewer's narration. */
         const changed: Record<string, { from: unknown; to: unknown }> = {};
@@ -839,6 +851,16 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
           .where(eq(entities.id, target.id))
           .returning();
         const legalNameNow = updated!.legalName;
+        if (patch.portalListed !== undefined) {
+          await recordActivity(tx, {
+            entityType: "entity",
+            entityId: target.id,
+            actorId: request.user.id,
+            action: "entity.portal_listed_set",
+            visibility: "legal_only",
+            payload: { legalName: legalNameNow, from: target.portalListed, to: patch.portalListed },
+          });
+        }
         if (Object.keys(changed).length > 0) {
           await recordActivity(tx, {
             entityType: "entity",

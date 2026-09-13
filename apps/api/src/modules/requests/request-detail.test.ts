@@ -220,7 +220,15 @@ async function createEntity(legalName: string): Promise<string> {
     payload: { legalName, entityTypeId: types.json().entityTypes[0].id },
   });
   expect(created.statusCode, created.body).toBe(201);
-  return created.json().entity.id as string;
+  const id = created.json().entity.id as string;
+  const listed = await harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/entities/${id}`,
+    cookies: adminCookies,
+    payload: { portalListed: true },
+  });
+  expect(listed.statusCode, listed.body).toBe(200);
+  return id;
 }
 
 describe("who may open a Request (INT-006, DD-013)", () => {
@@ -477,7 +485,7 @@ describe("the values, labelled through the type's live fields (INT-002)", () => 
     expect(withheld.statusCode, withheld.body).toBe(200);
     expect(withheld.body).not.toContain("Sealed Vehicle Ltd");
     expect(withheld.json().customFieldRefs.entities).toEqual([{ restricted: true, id: entityId }]);
-    // The Administrator reaches every Entity, so the same row is named.
+    // The creating Administrator holds a grant, so the same row is named.
     expect((await readDetail(number, adminCookies)).json().customFieldRefs.entities).toEqual([
       { restricted: false, id: entityId, legalName: "Sealed Vehicle Ltd", archived: false },
     ]);

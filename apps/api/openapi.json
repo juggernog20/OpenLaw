@@ -18665,7 +18665,7 @@
       },
       "post": {
         "operationId": "attachRequestTypeField",
-        "summary": "Attach a catalog field to a request type: the scopes this type's target allows (INT-002), appended to the per-type order, optional from the start unless isRequired says otherwise; a user or entity field can be on a request form but can never be required there, because the portal offers a requester no rows to pick (INT-002)",
+        "summary": "Attach a catalog field to a request type: the scopes this type's target allows (INT-002), appended to the per-type order, optional from the start unless isRequired says otherwise; a user Field cannot be required on a request form because the Portal has no person picker (INT-002)",
         "tags": ["request-types"],
         "requestBody": {
           "required": true,
@@ -18778,7 +18778,7 @@
     "/api/v1/request-types/{id}/fields/{fieldId}": {
       "patch": {
         "operationId": "setRequestTypeFieldRequired",
-        "summary": "Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; a user or entity field can be on a request form but can never be required there, because the portal offers a requester no rows to pick (INT-002); hard enforcement arrives with the record milestone (M20)",
+        "summary": "Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; a user Field cannot be required on a request form because the Portal has no person picker (INT-002); hard enforcement arrives with the record milestone (M20)",
         "tags": ["request-types"],
         "requestBody": {
           "required": true,
@@ -20194,6 +20194,55 @@
                     }
                   },
                   "required": ["completedAt"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/entities": {
+      "get": {
+        "operationId": "listPortalEntities",
+        "summary": "Names for Portal Entity pickers: live, non-Confidential, Portal-listed Entities only (ENT-010)",
+        "tags": ["portal"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "entities": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "name"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["entities"],
                   "additionalProperties": false
                 }
               }
@@ -23791,7 +23840,7 @@
     "/api/v1/requests": {
       "post": {
         "operationId": "submitRequest",
-        "summary": "Submit a Request through a request type's portal form (INT-001). The Requester is the session; the type must be live; Title, Description, and Urgency are required, as is every attached field the type marks required; values are accepted for exactly the fields the type attaches, and a user or entity field's value must name a live row",
+        "summary": "Submit a Request through a request type's portal form (INT-001). The Requester is the session; the type must be live; Title, Description, and Urgency are required, as is every attached field the type marks required; values are accepted for exactly the fields the type attaches, and a user Field must name a live person and an Entity Field must name a Portal-listed Entity",
         "tags": ["requests"],
         "requestBody": {
           "required": true,
@@ -60983,6 +61032,9 @@
                           "isConfidential": {
                             "type": "boolean"
                           },
+                          "portalListed": {
+                            "type": "boolean"
+                          },
                           "archivedAt": {
                             "anyOf": [
                               {
@@ -61046,6 +61098,7 @@
                           "parValueCurrency",
                           "customFields",
                           "isConfidential",
+                          "portalListed",
                           "archivedAt",
                           "createdAt",
                           "updatedAt",
@@ -61251,6 +61304,9 @@
                         "isConfidential": {
                           "type": "boolean"
                         },
+                        "portalListed": {
+                          "type": "boolean"
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -61292,6 +61348,7 @@
                         "parValueCurrency",
                         "customFields",
                         "isConfidential",
+                        "portalListed",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -61638,6 +61695,9 @@
                         "isConfidential": {
                           "type": "boolean"
                         },
+                        "portalListed": {
+                          "type": "boolean"
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -61679,6 +61739,7 @@
                         "parValueCurrency",
                         "customFields",
                         "isConfidential",
+                        "portalListed",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -62006,6 +62067,9 @@
                   },
                   "isConfidential": {
                     "type": "boolean"
+                  },
+                  "portalListed": {
+                    "type": "boolean"
                   }
                 },
                 "additionalProperties": false
@@ -62147,6 +62211,9 @@
                         "isConfidential": {
                           "type": "boolean"
                         },
+                        "portalListed": {
+                          "type": "boolean"
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -62188,6 +62255,7 @@
                         "parValueCurrency",
                         "customFields",
                         "isConfidential",
+                        "portalListed",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -62489,6 +62557,9 @@
                         "isConfidential": {
                           "type": "boolean"
                         },
+                        "portalListed": {
+                          "type": "boolean"
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -62530,6 +62601,7 @@
                         "parValueCurrency",
                         "customFields",
                         "isConfidential",
+                        "portalListed",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -62692,6 +62764,9 @@
                         "isConfidential": {
                           "type": "boolean"
                         },
+                        "portalListed": {
+                          "type": "boolean"
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -62733,6 +62808,7 @@
                         "parValueCurrency",
                         "customFields",
                         "isConfidential",
+                        "portalListed",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"

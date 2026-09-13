@@ -95,7 +95,8 @@ import { CONTROL_CLASS } from "../lib/form-controls";
 import { problem as readProblem } from "../lib/problem";
 import { attachToRequest, MAX_REQUEST_ATTACHMENTS, requestReference } from "../lib/requests";
 import { currentUserFor, useSignOut } from "../lib/session";
-import { CustomFieldControl } from "../components/custom-field-control";
+import { readPortalEntityOptions } from "../lib/portal-entities";
+import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
 import { AutoResizeTextarea } from "../components/auto-resize-textarea";
 import { PageTitle } from "../components/page-title";
 import { PortalBackLink } from "../components/portal/back-link";
@@ -127,7 +128,10 @@ export async function portalRequestFormLoader({ params, request }: LoaderFunctio
   // requester sent quietly to the picker would never learn it.
   if (res.response.status === 404) return redirect("/portal");
   if (!res.data) throw new Error("The request form could not be read.");
-  return { user, ...res.data };
+  const entities = res.data.fields.some((field) => field.fieldType === "entity")
+    ? await readPortalEntityOptions()
+    : [];
+  return { user, ...res.data, entities };
 }
 
 const TITLE = defineMessage({
@@ -151,7 +155,7 @@ interface Submitted {
 }
 
 export function PortalRequestFormPage() {
-  const { user, requestType, fields, intakeLinks } =
+  const { user, requestType, fields, intakeLinks, entities } =
     useLoaderData<typeof portalRequestFormLoader>();
   const intl = useIntl();
 
@@ -428,6 +432,7 @@ export function PortalRequestFormPage() {
                       <AttachedField
                         key={field.slug}
                         field={field}
+                        entities={entities}
                         draft={drafts[field.slug] ?? emptyDraft(field)}
                         unanswered={unanswered.has(field.slug)}
                         onDraft={(next) => {
@@ -668,17 +673,16 @@ const REMOVE_ATTACHMENT = defineMessage({
   defaultMessage: "Remove {filename}",
 });
 
-/** One attached catalog field, drawn with the control its type asks
- * for. The `user` and `entity` types offer no rows here: a requester
- * reads neither the staff directory nor the Entity registry, so those
- * two draw an empty picker rather than a leak. */
+/** Entity Fields use ENT-010's list; person Fields still have no Portal choices. */
 function AttachedField({
   field,
+  entities,
   draft,
   unanswered,
   onDraft,
 }: Readonly<{
   field: FormField;
+  entities: readonly FieldReference[];
   draft: CustomFieldDraft;
   unanswered: boolean;
   onDraft: (draft: CustomFieldDraft) => void;
@@ -696,6 +700,7 @@ function AttachedField({
       <CustomFieldControl
         id={controlId}
         field={field}
+        entities={entities}
         draft={draft}
         required={field.isRequired}
         invalid={unanswered}

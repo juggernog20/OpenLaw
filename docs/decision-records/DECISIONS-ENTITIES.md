@@ -171,6 +171,12 @@ The Entity-type taxonomy mount counts every referencing Entity, including archiv
 - **Alternatives considered** — Per-Field subsets repeat the same visibility choice on every form and can drift as Entities change. Listing the whole non-Confidential registry exposes irrelevant holding companies; DD-027 instead chooses one explicit list of operating Entities.
 - **Consequences** — One column, one Portal read, one settings column. Glossary: **Portal-listed Entity**. The activity verb `entity.portal_listed_set`.
 
+### Built addendum (2026-09-13, M35/3, #846)
+
+The Entity Overview commits Portal-listed through `PATCH /entities/:id`. Only an Administrator may set or clear it, including a write that repeats its current value. A change records `entity.portal_listed_set` in the same transaction. The registry list includes a Portal-listed column. Archived and Confidential Entities retain the stored flag but stay out of `GET /portal/entities`, which returns only id and name in name order.
+
+The request form uses that read through the shared Field control. Entity Fields may be required; person Fields remain optional. The submission locks each selected Entity and checks the same Portal predicate before committing. The predicate and picker loader are shared for Auto-Doc forms. Existing Request references stop naming an Entity if it later becomes Confidential.
+
 ## Index of decisions
 
 | #       | Decision                                                                               | Status   |

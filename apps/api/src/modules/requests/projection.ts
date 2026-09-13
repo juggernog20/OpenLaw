@@ -353,7 +353,7 @@ export async function resolveRefs(
   attached: readonly AttachedCustomField[],
   values: Readonly<Record<string, CustomFieldValue>>,
 ) {
-  const refs = await selectResolvedRefs(db, attached, values);
+  const refs = await selectResolvedRefs(db, attached, values, eq(entities.isConfidential, false));
   return {
     users: refs.users.map(({ id, displayName }) => ({ id, displayName })),
     entities: refs.entities.map(({ id, legalName }) => ({ id, legalName })),

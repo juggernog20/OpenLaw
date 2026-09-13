@@ -1352,7 +1352,7 @@ Source: **CTR-026**
 
 Source: **ENT-010**, **DD-027**
 
-Boolean, not null, default false. Never true on a Confidential Entity (application-refused). The Portal Entity read returns `id`, `name` for live, non-Confidential, Portal-listed Entities only.
+Boolean, not null, default false. Setting true on a Confidential Entity is refused. A later Confidential mark may retain the flag, but the Entity stays out of every Portal picker. The Portal Entity read returns `id`, `name` for live, non-Confidential, Portal-listed Entities only.
 
 ---
 
