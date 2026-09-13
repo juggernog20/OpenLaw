@@ -55,14 +55,16 @@ export async function prepareTaskAssignee(
     if (verdict !== "allowed")
       throw httpError(403, "You cannot add people to this confidential record's team.");
   }
+  // A Contract team row narrates and notifies through one write
+  // (CTR-026); a Matter has no team event of its own yet, so it still
+  // writes its own activity entry.
   if (kind === "contract") {
     await addContractTeamMember(tx, notifier, record, actor, person);
     return;
-  } else {
-    await tx.insert(matterTeam).values({ matterId: record.id, userId: assigneeId });
   }
+  await tx.insert(matterTeam).values({ matterId: record.id, userId: assigneeId });
   await recordActivity(tx, {
-    entityType: kind,
+    entityType: "matter",
     entityId: record.id,
     actorId: actor.id,
     action: "matter.team_added",

@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import { addContractTeamMember } from "../../lib/contract-team.js";
-
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
@@ -25,6 +23,7 @@ import {
 } from "@openlaw/db";
 import { requireAuth } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
+import { addContractTeamMember } from "../../lib/contract-team.js";
 import { selectAttachedFields } from "../../lib/custom-fields.js";
 import { portalRecordScope } from "../../lib/portal-record-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";

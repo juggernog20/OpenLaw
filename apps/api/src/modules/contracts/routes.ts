@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import { addContractTeamMember } from "../../lib/contract-team.js";
-
 /**
  * The contract record routes (M8): list, create, the record read, the
  * DES-017 per-field update, archive, restore, and the contract team,
@@ -186,6 +184,7 @@ import {
 import { departmentOptions, departmentName, lockedDepartment } from "../departments/references.js";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
+import { addContractTeamMember } from "../../lib/contract-team.js";
 import {
   confidentialityWrite,
   contractTeamScope,
