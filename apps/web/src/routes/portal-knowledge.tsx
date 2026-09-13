@@ -6,15 +6,15 @@ import { BookOpen, Download, FileText } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { api } from "../lib/api";
-import { currentUser, useSignOut } from "../lib/session";
+import { currentUserFor, useSignOut } from "../lib/session";
 import { KnowledgeMarkdown } from "../components/knowledge/markdown";
 import { PageTitle } from "../components/page-title";
 import { PortalBackLink } from "../components/portal/back-link";
 import { PortalShell } from "../components/portal/portal-shell";
 import { Button } from "../components/ui/button";
 
-export async function portalKnowledgeLoader({ params }: LoaderFunctionArgs) {
-  const user = await currentUser();
+export async function portalKnowledgeLoader({ params, request }: LoaderFunctionArgs) {
+  const user = await currentUserFor(request);
   if (!user) return redirect("/portal/enter");
   const response = await api.GET("/api/v1/portal/knowledge/{id}", {
     params: { path: { id: params.id! } },

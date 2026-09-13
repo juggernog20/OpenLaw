@@ -24,7 +24,7 @@ import {
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
-import { departmentName, lockedDepartment } from "../departments/references.js";
+import { setUserDepartment } from "./department.js";
 import { INVITABLE_ROLES } from "../auth/routes.js";
 
 /** Derived per read, never stored: the row's state on the Users pane. */
@@ -171,29 +171,8 @@ export const usersRoutes: FastifyPluginAsyncZod = async (app) => {
           .for("update");
         if (!target) throw httpError(404, "No user exists with this id.");
         const { departmentId } = request.body;
-        if (departmentId === target.departmentId) return target;
-        const next = departmentId ? await lockedDepartment(tx, departmentId) : null;
-        const before = await departmentName(tx, target.departmentId);
-        const [updated] = await tx
-          .update(users)
-          .set({ departmentId, updatedAt: new Date() })
-          .where(eq(users.id, target.id))
-          .returning(userRowColumns);
-        await recordActivity(tx, {
-          entityType: "user",
-          entityId: target.id,
-          actorId: request.user.id,
-          action: "user.department_set",
-          visibility: "admin_only",
-          payload: {
-            email: target.email,
-            from: before,
-            to: next?.displayName ?? null,
-            fromId: target.departmentId,
-            toId: departmentId,
-          },
-        });
-        return updated!;
+        await setUserDepartment(tx, target, departmentId, request.user.id);
+        return { ...target, departmentId };
       });
       return { user: toUserRow(row, await activated(row.id)) };
     },

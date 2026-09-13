@@ -122,7 +122,13 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         summary: "The signed-in user, with their live role and session",
         tags: ["auth"],
         response: {
-          200: z.object({ user: UserSchema, session: SessionSchema }),
+          200: z.object({
+            user: UserSchema.extend({
+              departmentId: z.string().nullable(),
+              portalOnboardingCompletedAt: z.iso.datetime().nullable(),
+            }),
+            session: SessionSchema,
+          }),
           default: problemResponse,
         },
       },
@@ -132,12 +138,21 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       // a data: URI can reach ~1.4 MB. /me is the one route that returns
       // it, so it loads the column itself.
       const [row] = await app.db
-        .select({ image: users.image })
+        .select({
+          image: users.image,
+          departmentId: users.departmentId,
+          portalOnboardingCompletedAt: users.portalOnboardingCompletedAt,
+        })
         .from(users)
         .where(eq(users.id, request.user.id))
         .limit(1);
       return {
-        user: { ...request.user, image: row?.image ?? null },
+        user: {
+          ...request.user,
+          image: row?.image ?? null,
+          departmentId: row?.departmentId ?? null,
+          portalOnboardingCompletedAt: row?.portalOnboardingCompletedAt?.toISOString() ?? null,
+        },
         session: {
           id: request.session.id,
           expiresAt: request.session.expiresAt.toISOString(),

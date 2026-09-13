@@ -17,7 +17,13 @@ import {
   type Page,
 } from "@playwright/test";
 import { z } from "zod";
-import { ADMIN, ensureAdminExists, ensureMemberInert, signInAs } from "./helpers.js";
+import {
+  ADMIN,
+  completePortalFirstRun,
+  ensureAdminExists,
+  ensureMemberInert,
+  signInAs,
+} from "./helpers.js";
 import { extractLink, waitForMailTo } from "./mailpit.js";
 
 test.setTimeout(180_000);
@@ -58,6 +64,8 @@ async function enterPortal(context: BrowserContext, api: APIRequestContext): Pro
   await expect(page.getByText("Check your email")).toBeVisible();
   const mail = await waitForMailTo(api, REQUESTER, /^Sign in to OpenLaw$/);
   await page.goto(extractLink(mail.text, "/api/auth/magic-link/verify"));
+  await expect(page).toHaveURL(/\/portal\/onboarding$/);
+  await completePortalFirstRun(page);
   await expect(page).toHaveURL(/\/portal$/);
   return page;
 }

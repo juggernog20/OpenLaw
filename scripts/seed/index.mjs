@@ -49,6 +49,7 @@ import { clearMailbox, mailpitIsUp } from "./mailpit.mjs";
 import { ADMIN, ORG } from "./data.mjs";
 import {
   archiveLeavers,
+  completeFirstRun,
   establishAdministrator,
   openThePortal,
   provisionEveryone,
@@ -168,15 +169,19 @@ async function preflight(log, { wait }) {
 }
 
 /**
- * Marks some of the noise read, and gives a few people a theme.
+ * Marks some of the noise read, gives a few people a theme, and puts the
+ * Business Users through the Portal first run.
  *
  * Everything the seed did raised notifications, and an instance where
- * every single one is unread is not one anybody's inbox looks like.
+ * every single one is unread is not one anybody's inbox looks like. The
+ * first run waits until here because it asks for a Department, and the
+ * Departments are created with the Contracts.
  */
 async function settlePeople(people, random, log) {
   let read = 0;
   await pool([...people.values()], 4, async (person) => {
     if (!person.session) return;
+    if (person.role === "business_user") await completeFirstRun(person.session, random);
     const { body } = await person.session.get("/api/v1/notifications?limit=50");
     const rows = body.notifications ?? [];
     // Most people have read most of it and are behind on the rest.

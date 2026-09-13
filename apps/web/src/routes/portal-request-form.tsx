@@ -94,7 +94,7 @@ import {
 import { CONTROL_CLASS } from "../lib/form-controls";
 import { problem as readProblem } from "../lib/problem";
 import { attachToRequest, MAX_REQUEST_ATTACHMENTS, requestReference } from "../lib/requests";
-import { currentUser, useSignOut } from "../lib/session";
+import { currentUserFor, useSignOut } from "../lib/session";
 import { CustomFieldControl } from "../components/custom-field-control";
 import { AutoResizeTextarea } from "../components/auto-resize-textarea";
 import { PageTitle } from "../components/page-title";
@@ -113,8 +113,8 @@ type FormResponse =
  * `AttachedCustomFieldSchema` the API answers everywhere. */
 type FormField = FormResponse["fields"][number];
 
-export async function portalRequestFormLoader({ params }: LoaderFunctionArgs) {
-  const user = await currentUser();
+export async function portalRequestFormLoader({ params, request }: LoaderFunctionArgs) {
+  const user = await currentUserFor(request);
   if (!user) return redirect("/portal/enter");
   const res = await api.GET("/api/v1/portal/request-types/{slug}", {
     params: { path: { slug: params.slug! } },

@@ -3,8 +3,9 @@
 /** DD-020 preserves the authenticated shells and a public way to read Help. */
 import { useEffect, useRef } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import { Link, Navigate, useLoaderData, useLocation, useRouteError } from "react-router";
+import { Link, Navigate, redirect, useLoaderData, useLocation, useRouteError } from "react-router";
 import { currentUser, useSignOut } from "../lib/session";
+import { portalOnboardingRequired } from "../lib/portal-onboarding";
 import { AppShell } from "../components/shell/app-shell";
 import { PortalShell } from "../components/portal/portal-shell";
 import { DocumentationReader } from "../components/documentation/documentation-reader";
@@ -20,13 +21,16 @@ export class HelpSessionError extends Error {
 }
 
 export async function helpLoader() {
+  let user;
   try {
-    return { user: await currentUser() };
+    user = await currentUser();
   } catch (cause) {
     // The boundary offers the public reader only for this failure. Any
     // other error keeps the shared error page and its Reload action.
     throw new HelpSessionError(cause);
   }
+  if (portalOnboardingRequired(user)) throw redirect("/portal/onboarding");
+  return { user };
 }
 
 function useHelpLocation() {

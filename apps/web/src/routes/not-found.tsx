@@ -14,9 +14,9 @@
  */
 
 import type { ReactNode } from "react";
-import { Link, redirect, useLoaderData } from "react-router";
+import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
-import { currentUser, requireUser, useSignOut, type SessionUser } from "../lib/session";
+import { currentUserFor, requireUser, useSignOut, type SessionUser } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
 import { PageSubBar } from "../components/shell/page-subbar";
 import { PortalShell } from "../components/portal/portal-shell";
@@ -105,8 +105,8 @@ export function SettingsNotFoundPane() {
 }
 
 /** The /portal splat. Signed-out visitors go to the portal door, as every portal loader sends them. */
-export async function portalNotFoundLoader() {
-  const user = await currentUser();
+export async function portalNotFoundLoader({ request }: LoaderFunctionArgs) {
+  const user = await currentUserFor(request);
   if (!user) return redirect("/portal/enter");
   return { user };
 }

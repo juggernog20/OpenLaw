@@ -35,6 +35,24 @@ export async function needsSetup(): Promise<boolean> {
 export type SessionUser = NonNullable<Awaited<ReturnType<typeof currentUser>>>;
 
 /**
+ * One `/me` per navigation. A guarded portal route asks twice, once in
+ * the gate and once in the page loader it wraps, and the answer carries
+ * the avatar data: URI, which runs to about 1.4 MB. Both calls share the
+ * loader's Request, so the promise is keyed on it. The next navigation
+ * brings a Request of its own.
+ */
+const perRequest = new WeakMap<Request, Promise<SessionUser | null>>();
+
+export function currentUserFor(request: Request): Promise<SessionUser | null> {
+  let asked = perRequest.get(request);
+  if (!asked) {
+    asked = currentUser();
+    perRequest.set(request, asked);
+  }
+  return asked;
+}
+
+/**
  * Loader guard. Returns the signed-in user, or throws a redirect to
  * setup (no user exists yet) or login. react-router turns the thrown
  * Response into the navigation, so the loader stops on this line.

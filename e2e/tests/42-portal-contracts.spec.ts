@@ -2,7 +2,13 @@
 
 import { expect, test, type APIRequestContext } from "@playwright/test";
 import { z } from "zod";
-import { ADMIN, ensureAdminExists, ensureMemberInert, signInAs } from "./helpers.js";
+import {
+  ADMIN,
+  completePortalFirstRun,
+  ensureAdminExists,
+  ensureMemberInert,
+  signInAs,
+} from "./helpers.js";
 import { extractLink, waitForMailTo } from "./mailpit.js";
 
 /**
@@ -53,6 +59,8 @@ test("Business Owner is a statement, and team membership grants revocable Portal
     await expect(portal.getByText("Check your email")).toBeVisible();
     const mail = await waitForMailTo(page.request, ownerEmail, /^Sign in to OpenLaw$/);
     await portal.goto(extractLink(mail.text, "/api/auth/magic-link/verify"));
+    await expect(portal).toHaveURL(/\/portal\/onboarding$/);
+    await completePortalFirstRun(portal);
     await expect(portal).toHaveURL(/\/portal$/);
     const me = await portal.request.get("/api/v1/me");
     expect(me.status()).toBe(200);

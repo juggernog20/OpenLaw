@@ -49,7 +49,14 @@ import {
   type Page,
 } from "@playwright/test";
 import { z } from "zod";
-import { ADMIN, ensureAdminExists, ensureMemberInert, signInAs, sweepOrSay } from "./helpers.js";
+import {
+  ADMIN,
+  completePortalFirstRun,
+  ensureAdminExists,
+  ensureMemberInert,
+  signInAs,
+  sweepOrSay,
+} from "./helpers.js";
 import { extractLink, waitForMailTo } from "./mailpit.js";
 
 /**
@@ -203,7 +210,9 @@ async function enterPortalByMagicLink(
   await page.goto(extractLink(mail.text, "/api/auth/magic-link/verify"));
   // The callback is "/" and the root loader lands a Business User in the
   // portal: landing is by role, not by callback URL (the INT-001 M20/2
-  // addendum).
+  // addendum). SET-011 stops them at the first run on the way in.
+  await expect(page).toHaveURL(/\/portal\/onboarding$/);
+  await completePortalFirstRun(page);
   await expect(page).toHaveURL(/\/portal$/);
   return page;
 }

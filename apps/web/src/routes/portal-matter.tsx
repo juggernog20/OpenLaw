@@ -3,15 +3,15 @@
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
-import { currentUser, useSignOut } from "../lib/session";
+import { currentUserFor, useSignOut } from "../lib/session";
 import { matterReference } from "../lib/matters";
 import { loadPortalWork } from "../lib/portal-records";
 import { PortalRecordShell } from "../components/portal/record-shell";
 import { PortalRecordWork } from "../components/portal/record-work";
 import { PageTitle } from "../components/page-title";
 
-export async function portalMatterLoader({ params }: LoaderFunctionArgs) {
-  const user = await currentUser();
+export async function portalMatterLoader({ params, request }: LoaderFunctionArgs) {
+  const user = await currentUserFor(request);
   if (!user) return redirect("/portal/enter");
   const number = Number(params.number);
   if (!Number.isSafeInteger(number) || number < 1) return { user, matter: null };

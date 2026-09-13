@@ -226,6 +226,12 @@ model uses the existing connector save and Activity path.
 - **Consequences:** One Portal route and one `users` column. The existing `theme`, `image`, `display_name`, and notification preferences are reused. This is a Portal design record's to lay out (DES).
 - **Source:** Blair, Auto-Docs grill, 2026-09-13.
 
+### SET-011 implementation, 2026-09-13
+
+Every Portal route checks the current user's completion state before its page loader runs, including deep links and unknown Portal addresses. An unfinished Business User goes to the wizard. Finishing validates Department against the current list and stamps the user once, then opens the Portal home. If the list changed during the wizard, a named refusal returns the person to Department with fresh choices. Reloading an unfinished wizard reads the saved settings. Completed users go home from the wizard URL; staff go to Settings → Profile and retain ordinary Portal access.
+
+- **Consequences:** SET-011's completion stamp is independent of the instance setup wizard. Existing Business Users start with no stamp and complete this first run once. Department changes remain audited under SET-010; later Department changes belong to an Administrator.
+
 ## Index of decisions
 
 | #       | Decision                                                                   | Status                                                                             |

@@ -35,6 +35,10 @@ export const users = pgTable(
     email: text("email").notNull(),
     displayName: text("display_name").notNull(),
     departmentId: text("department_id").references(() => departments.id),
+    // NULL means the Business User has not completed the Portal first run (SET-011).
+    portalOnboardingCompletedAt: timestamp("portal_onboarding_completed_at", {
+      withTimezone: true,
+    }),
     role: text("role", { enum: USER_ROLES }).notNull().default("business_user"),
     // UI theme preference (#44): follows the user across browsers.
     theme: text("theme", { enum: THEMES }).notNull().default("light"),
