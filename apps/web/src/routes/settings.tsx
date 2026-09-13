@@ -38,6 +38,7 @@ import {
   LibraryBig,
   PanelsTopLeft,
   Landmark,
+  Network,
   Palette,
   Plug,
   ScrollText,
@@ -151,7 +152,7 @@ const ORGANIZATION_GROUP: SettingsGroup = {
     {
       id: "departments",
       path: "/settings/departments",
-      icon: Building2,
+      icon: Network,
       label: defineMessage({ id: "settings.section.departments", defaultMessage: "Departments" }),
     },
     {

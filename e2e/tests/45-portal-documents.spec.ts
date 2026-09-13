@@ -38,6 +38,20 @@ test("Portal Documents keep one current row, read earlier versions and accept re
     password: "correct-horse-battery",
   });
   const userId = (await (await portal.request.get("/api/v1/me")).json()).user.id;
+  // SET-010 made Owning department a pick from the Departments list, so the
+  // two names this test reads back in the Portal have to exist as rows first.
+  async function departmentId(displayName: string) {
+    const listed = await (await page.request.get("/api/v1/departments")).json();
+    const found = listed.departments.find(
+      (row: { displayName: string }) => row.displayName === displayName,
+    );
+    if (found) return found.id as string;
+    const made = await page.request.post("/api/v1/departments", { data: { displayName } });
+    expect(made.status(), await made.text()).toBe(201);
+    return (await made.json()).department.id as string;
+  }
+  const sales = await departmentId("Sales");
+  const procurement = await departmentId("Procurement");
   const records: { module: "contract" | "matter"; number: number }[] = [];
   try {
     for (const module of ["contract", "matter"] as const) {
@@ -50,7 +64,7 @@ test("Portal Documents keep one current row, read earlier versions and accept re
         data: {
           title: `Portal document ${module}`,
           [`${module}TypeId`]: type.id,
-          ...(module === "contract" ? { owningDepartment: "Sales", region: "EMEA" } : {}),
+          ...(module === "contract" ? { owningDepartmentId: sales, region: "EMEA" } : {}),
         },
       });
       expect(created.status(), await created.text()).toBe(201);
@@ -79,7 +93,7 @@ test("Portal Documents keep one current row, read earlier versions and accept re
         await expect(overview.getByRole("textbox", { name: "Owning department" })).toHaveCount(0);
         await expect(overview.getByRole("textbox", { name: "Region" })).toHaveCount(0);
         const updated = await page.request.patch(`/api/v1/contracts/${record.number}`, {
-          data: { owningDepartment: "Procurement", region: "Americas" },
+          data: { owningDepartmentId: procurement, region: "Americas" },
         });
         expect(updated.status(), await updated.text()).toBe(200);
         await portal.reload();
