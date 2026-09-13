@@ -149,6 +149,12 @@ const ORGANIZATION_GROUP: SettingsGroup = {
       label: defineMessage({ id: "settings.section.general", defaultMessage: "General" }),
     },
     {
+      id: "departments",
+      path: "/settings/departments",
+      icon: Building2,
+      label: defineMessage({ id: "settings.section.departments", defaultMessage: "Departments" }),
+    },
+    {
       id: "users",
       path: "/settings/users",
       icon: Users,

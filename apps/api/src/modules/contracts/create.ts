@@ -52,6 +52,8 @@
  * ordinary create still starts on the column's own `medium` default.
  */
 
+import { lockedDepartment } from "../departments/references.js";
+
 import {
   and,
   asc,
@@ -121,7 +123,7 @@ export interface CreateContractInput {
   actorId: string;
   title: string;
   description?: string | null;
-  owningDepartment?: string | null | undefined;
+  owningDepartmentId?: string | null | undefined;
   region?: string | null | undefined;
   contractTypeId: string;
   /** The type's fields, keyed by slug. Only the hard-required ones have
@@ -306,13 +308,15 @@ export async function createContract(
     managerId = person.id;
   }
 
+  if (input.owningDepartmentId) await lockedDepartment(tx, input.owningDepartmentId);
+
   const isConfidential = input.isConfidential ?? false;
   const [row] = await tx
     .insert(contracts)
     .values({
       title: title.trim(),
       description: input.description?.trim() || null,
-      owningDepartment: input.owningDepartment?.trim() || null,
+      owningDepartmentId: input.owningDepartmentId ?? null,
       region: input.region?.trim() || null,
       contractTypeId: contractType.id,
       statusId: draft.id,

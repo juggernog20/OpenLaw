@@ -58,6 +58,7 @@ type Prefixed<P extends string, M> = { [K in keyof M & string as `${P}.${K}`]: M
 
 /** The taxonomy tables' audit namespaces. */
 export type TaxonomyActionPrefix =
+  | "department"
   | "contract_type"
   | "matter_type"
   | "entity_type"
@@ -150,6 +151,13 @@ type UserPayloads = {
   "user.two_factor_enrolled": EmptyActivityPayload;
   "user.two_factor_disabled": EmptyActivityPayload;
   "user.role_changed": { email: string; from: string; to: string };
+  "user.department_set": {
+    email: string;
+    from: string | null;
+    to: string | null;
+    fromId: string | null;
+    toId: string | null;
+  };
   "user.archived": { email: string; role: string };
   "user.unarchived": { email: string; role: string };
   "user.sessions_revoked": { email: string; sessions: number };
@@ -1240,6 +1248,7 @@ type KnowledgePayloads = {
  */
 export type ActivityPayloadMap = UserPayloads &
   OrgSettingsPayloads &
+  Prefixed<"department", TaxonomyPayloads> &
   Prefixed<"contract_type", TaxonomyPayloads> &
   Prefixed<"matter_type", TaxonomyPayloads> &
   Prefixed<"entity_type", TaxonomyPayloads> &

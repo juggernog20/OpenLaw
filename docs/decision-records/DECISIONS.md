@@ -1049,7 +1049,7 @@ The existing Document reader uses dedicated Portal endpoints. Every metadata, by
 
 ## DD-022: Auto-Docs — a new destination that fills approved templates from a form
 
-- **Status:** Accepted direction; grill and decision record pending
+- **Status:** Accepted; grilled 2026-09-13, decisions in [`DECISIONS-AUTO-DOCS.md`](DECISIONS-AUTO-DOCS.md) (ADO-001 to ADO-011)
 - **Date:** 2026-09-09
 - **Source:** Blair, on the [focus group, 2026-09-07](../reviews/focus-group-2026-09-07.md)
 
@@ -1068,6 +1068,10 @@ Module identity first: is an Auto-Doc a Document owned by a Contract created on 
 ### Consequences
 
 Nothing is built until the decision record exists. FUTURE-FEATURES' "Contract templates" row points here.
+
+### Grill addendum (2026-09-13)
+
+The grill answered every question above. An Auto-Doc is its own record in its own destination (ADO-001). Member+ author and publish with no gate, and the file and the form version on separate chains pinned by Publish (ADO-004, ADO-010). A Generation is download-only and the created Contract takes the ordinary signature pipeline (ADO-011). The engine fills double-brace Placeholders in `.docx` (ADO-002, TECH-028). Legal sees Generations on the Auto-Doc and, for a Contract with no Legal Owner, on the Inbox's Unassigned contracts tab (ADO-006). Generation bypasses triage entirely (ADO-005). Three records outside the module fell out of the grill: CTR-026 default people on a Contract Type, DD-027 Portal-listed Entities, and SET-010 / SET-011 Departments and the Business User first run.
 
 ## DD-023: Three account types, one team roster, and Portal work on Contracts and Matters
 
@@ -1248,6 +1252,33 @@ This supersedes DD-015's business Field edit permission as carried into DD-023, 
 
 ---
 
+## DD-027: Business Users may pick Portal-listed Entities on forms Legal put an Entity picker on
+
+- **Status:** Accepted
+- **Date:** 2026-09-13
+- **Source:** Auto-Docs grill (ADO-003); Blair challenged INT-002's M20/11 rule
+
+### Context
+
+INT-002's M20/11 addendum let a `user` or `entity` Field sit on a Portal request form but never be required, because the Portal drew both pickers empty for a Business User. It declined to open the Entity registry to Business Users inside a bug fix, called that "a DD-level visibility decision that nobody has taken", and said that if Entities later became visible to their own people, `entity` would leave the refusal and `user` would stay. An NDA Auto-Doc needs "which of our entities signs". Blair's rule: when Legal has put a picker on a form for Business Users, the picker must work.
+
+### Decision
+
+A Business User may read the **names** of Entities an Administrator has marked **Portal-listed** (ENT-010), and only those, wherever Member+ has placed an `entity` picker on a Portal request form or an Auto-Doc form. Nothing else about the Entity crosses over: no registrations, officers, holdings, Documents, or Obligations. A Confidential Entity is never listed, whatever its flag. An `entity` Field on a Portal request form may now be required; the M20/11 refusal is narrowed to `user`. The `user` picker stays refused on Portal forms: a staff directory with email addresses is a different question no form has asked yet.
+
+### Rationale
+
+Listing every Entity would confuse a Business User with holding companies they will never pick. The flag lets the Administrator show the five operating companies and hide the forty. Names only is the least that makes the picker work and the most a Business User needs.
+
+### Alternatives considered
+
+- **Per-Field subsets in the fields catalog editor.** Rejected. The subset would be repeated on every entity Field and go stale each time an Entity is added; "business people deal with this company" is a fact about the Entity.
+- **Open the whole registry.** Rejected for the confusion above and because ENT-004's Confidential Entities must stay hidden.
+
+### Consequences
+
+`entities.portal_listed` (ENT-010). A Portal read of Portal-listed Entity names. INT-002's M20/11 addendum is superseded for `entity` and stands for `user`. Every Portal write that carries an `entity` value checks the chosen row is live, non-Confidential, and Portal-listed.
+
 ## Index of decisions
 
 | #      | Decision                                                                                  | Status                                                                      |
@@ -1273,8 +1304,9 @@ This supersedes DD-015's business Field edit permission as carried into DD-023, 
 | DD-019 | Saved list views — private to one person, one `jsonb` config, saving is an act            | Accepted                                                                    |
 | DD-020 | Product documentation is public, versioned, and separate from Knowledge                   | Accepted                                                                    |
 | DD-021 | Business Users see the Contracts they are stakeholders on, in the portal                  | Accepted; implemented in #808                                               |
-| DD-022 | Auto-Docs — a new destination that fills approved templates from a form                   | Accepted direction; grill pending                                           |
+| DD-022 | Auto-Docs — a new destination that fills approved templates from a form                   | Accepted; grilled 2026-09-13, ADO-001 to ADO-011                            |
 | DD-023 | Three account types, one team roster, and Portal work on Contracts and Matters            | Accepted; Portal Field edits and the Legal-only roster superseded by DD-026 |
 | DD-024 | Business Users work with Document versions on their records                               | Accepted                                                                    |
 | DD-025 | Business Owner replaces the seeded Business sponsor Field                                 | Accepted                                                                    |
 | DD-026 | Portal contributions are Documents, comments and team additions                           | Accepted                                                                    |
+| DD-027 | Business Users may pick Portal-listed Entities on forms Legal put an Entity picker on     | Accepted                                                                    |

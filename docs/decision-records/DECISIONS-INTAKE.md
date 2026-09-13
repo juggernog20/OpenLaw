@@ -254,6 +254,10 @@ The M20/10 addendum above left one form nobody could submit, and named three can
 
 **The editor draws the box locked rather than letting the rule arrive as a failed save.** The row is otherwise an ordinary row — it attaches, reorders, and detaches — and only its Required box is disabled. The reason is said twice, beside the box for a reader and in the card's help line for everybody else, because a disabled control with no reason is a screen that refuses without explaining. The API's refusal is the real guard; the locked box is the client half of it, in the same way the Attach menu's scoping is the client half of the scope rule.
 
+### Addendum (2026-09-13, Auto-Docs grill) — `entity` leaves the refusal, `user` stays
+
+**DD-027** took the visibility decision the M20/11 addendum above deferred. A Business User may read the names of Portal-listed Entities (ENT-010), so an `entity` Field on a request form may now be required; the `TypeFieldRequiredRule` on the request-type mount refuses `user` alone. The Portal draws the Entity picker from the DD-027 read and refuses a submitted value that is not live, non-Confidential, and Portal-listed.
+
 ### Addendum (2026-08-22, M21/10, [#421](https://github.com/juggernog20/OpenLaw/issues/421)) — the paper follows a conversion
 
 The M20/6 addendum above built request attachments and left one sentence for M21: promotion into the record the Request became is conversion's. M21/10 built it, inside the conversion transaction the M21/9 addendum describes. These are the choices it settled.
@@ -748,6 +752,10 @@ and a Type that attaches a slug-matching Field still carries it as a Field. Noth
 the seed is required by this addendum: `workTheRecord` still adds the counterparty after
 conversion and is answered 409 now that the conversion already linked it, so the seed
 runs clean and can be simplified when it is next touched.
+
+### Addendum (2026-09-13, Auto-Docs grill, ADO-006) — the Inbox gains a second tab: Unassigned contracts
+
+The Inbox lists exactly the Requests whose fate is undecided, and now also the generated Contracts nobody owns yet. An Auto-Doc Generation that creates a Contract no Assignment rule matched leaves `manager_id` null; that Contract appears under an **Unassigned contracts** tab beside the Requests until a Member+ claims it or sets the Legal Owner on the record. The Request tab is unchanged. `contract.generated_unassigned` (NOT-009) gives the tab the same reach as a new Request. The glossary entry for Inbox is amended.
 
 ## INT-008 — Conversion drafts prepare editable Matter creation from cited Request sources
 

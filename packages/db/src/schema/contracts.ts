@@ -49,6 +49,7 @@ import { contractTypes } from "./contract-types.js";
 // bindings while it is still evaluating.
 import { documents } from "./documents.js";
 import { entities } from "./entities.js";
+import { departments } from "./departments.js";
 import type { CustomFieldValue } from "./fields.js";
 import type { AiUnverifiedMap } from "@openlaw/shared";
 import { searchVector, uuidPk } from "./helpers.js";
@@ -112,7 +113,7 @@ export const contracts = pgTable(
     createdBy: text("created_by").references(() => users.id),
     /** DD-021: NULL means unassigned, at direct creation or after an explicit clear. */
     businessOwnerId: text("business_owner_id").references(() => users.id),
-    owningDepartment: text("owning_department"),
+    owningDepartmentId: text("owning_department_id").references(() => departments.id),
     region: text("region"),
     /** CTR-011's our side of the contract: which of our own Entities
      * signs it. NULL until known — a contract is often recorded before

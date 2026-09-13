@@ -155,6 +155,7 @@ import {
   contractCounterparties,
   contractStatuses,
   contracts,
+  departments,
   contractTeam,
   contractTypeFields,
   contractTypes,
@@ -180,6 +181,7 @@ import {
   type SQL,
   type Transaction,
 } from "@openlaw/db";
+import { departmentOptions, departmentName, lockedDepartment } from "../departments/references.js";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import {
@@ -513,6 +515,7 @@ const ContractRowSchema = z.object({
    */
   proposedRenewalExpiry: z.iso.date().nullable(),
   owningDepartment: z.string().nullable(),
+  owningDepartmentId: z.string().nullable(),
   region: z.string().nullable(),
   description: z.string().nullable(),
   nextDeadline: NextDeadlineSchema,
@@ -755,6 +758,7 @@ interface RecordCounterparty extends JoinedCounterparty {
  * signs, and the party the other side is named by. */
 interface ContractContext {
   nextDeadline?: z.infer<typeof NextDeadlineSchema>;
+  owningDepartment: string | null;
   row: Contract;
   contractTypeName: string;
   statusName: string;
@@ -861,7 +865,8 @@ function toRow(
     // copy that drifts.
     renewalPendingConfirmation: renewalPending(row),
     proposedRenewalExpiry: proposedRollExpiry(row),
-    owningDepartment: row.owningDepartment,
+    owningDepartment: context.owningDepartment,
+    owningDepartmentId: row.owningDepartmentId,
     region: row.region,
     description: row.description,
     nextDeadline: context.nextDeadline ?? null,
@@ -913,6 +918,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     return db
       .select({
         row: contracts,
+        owningDepartment: departments.displayName,
         nextDeadline: nextDeadline("contract"),
         contractTypeName: contractTypes.displayName,
         statusName: contractStatuses.displayName,
@@ -950,6 +956,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       .from(contracts)
       .innerJoin(contractTypes, eq(contracts.contractTypeId, contractTypes.id))
       .innerJoin(contractStatuses, eq(contracts.statusId, contractStatuses.id))
+      .leftJoin(departments, eq(contracts.owningDepartmentId, departments.id))
       .leftJoin(users, eq(contracts.managerId, users.id))
       .leftJoin(businessOwner, eq(contracts.businessOwnerId, businessOwner.id))
       .leftJoin(entities, eq(contracts.entityId, entities.id))
@@ -1778,6 +1785,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["contracts"],
         response: {
           200: z.object({
+            departments: z.array(z.object({ id: z.string(), displayName: z.string() })),
             contractTypes: z.array(TypeChoiceSchema),
             contractStatuses: z.array(StatusOptionSchema),
             users: z.array(UserOptionSchema),
@@ -1871,6 +1879,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         types.map((contractType) => attachedFieldsOf(app.db, contractType.id)),
       );
       return {
+        departments: await departmentOptions(app.db),
         contractTypes: types.map((contractType, index) => ({
           ...contractType,
           fields: attached[index]!,
@@ -2028,6 +2037,8 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireMember,
       schema: {
         operationId: "createContract",
+        description:
+          "M35 pre-release breaking change: send nullable owningDepartmentId instead of the former owningDepartment text input. A non-null id must name a live Department. Responses retain owningDepartment as the display name alongside owningDepartmentId.",
         summary:
           "Create a contract from a title, a live type, and any custom " +
           "fields that type hard-requires (CTR-016/MTR-014 — creation is " +
@@ -2056,12 +2067,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         // carrying one is refused rather than silently ignored.
         body: z.strictObject({
           title: TitleSchema,
-          owningDepartment: z
-            .string()
-            .trim()
-            .max(MAX_CONTRACT_CLASSIFICATION_LENGTH)
-            .nullable()
-            .optional(),
+          owningDepartmentId: z.string().min(1).nullable().optional(),
           region: z.string().trim().max(MAX_CONTRACT_CLASSIFICATION_LENGTH).nullable().optional(),
           contractTypeId: z.string(),
           /** The type's fields, keyed by slug. Only the required ones
@@ -2137,7 +2143,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           actorId: request.user.id,
           title,
           contractTypeId,
-          owningDepartment: request.body.owningDepartment,
+          owningDepartmentId: request.body.owningDepartmentId,
           region: request.body.region,
           customFields: request.body.customFields,
           isConfidential: request.body.isConfidential,
@@ -2148,6 +2154,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         if (!renewal && !born.row.managerId) {
           return {
             ...born,
+            owningDepartment: await departmentName(tx, born.row.owningDepartmentId),
             // A new contract with no Owner named is unassigned, which of
             // ours signs is not known yet, and nobody is recorded on the
             // other side; all three are set on the record afterwards.
@@ -2180,7 +2187,8 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "updateContract",
         description:
-          "Business Owner assignment is Member+ only: Administrator or Legal Team Member. The person must be live; null clears ownership without removing team membership.",
+          "Business Owner assignment is Member+ only: Administrator or Legal Team Member. The person must be live; null clears ownership without removing team membership. " +
+          "M35 pre-release breaking change: send nullable owningDepartmentId instead of the former owningDepartment text input. A non-null id must name a live Department. Responses retain owningDepartment as the display name alongside owningDepartmentId.",
         summary:
           "Commit one field of a contract in place (DES-017 per-field " +
           "commits): title, description, the Owner, the signing entity, " +
@@ -2212,12 +2220,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         body: z.strictObject({
           title: TitleSchema.optional(),
           description: DescriptionSchema.nullable().optional(),
-          owningDepartment: z
-            .string()
-            .trim()
-            .max(MAX_CONTRACT_CLASSIFICATION_LENGTH)
-            .nullable()
-            .optional(),
+          owningDepartmentId: z.string().min(1).nullable().optional(),
           region: z.string().trim().max(MAX_CONTRACT_CLASSIFICATION_LENGTH).nullable().optional(),
           /** CTR-004's Owner. `null` clears it back to unassigned —
            * a real state (triage), not an absent field. */
@@ -2312,7 +2315,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           const allowed = new Set([
             "value",
             "effectiveDate",
-            "owningDepartment",
+            "owningDepartmentId",
             "region",
             "customFields",
           ]);
@@ -2358,7 +2361,20 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           }
         }
 
-        for (const key of ["owningDepartment", "region"] as const) {
+        let owningDepartment = current.owningDepartment;
+        if (
+          body.owningDepartmentId !== undefined &&
+          body.owningDepartmentId !== target.owningDepartmentId
+        ) {
+          const next = body.owningDepartmentId
+            ? await lockedDepartment(tx, body.owningDepartmentId)
+            : null;
+          patch.owningDepartmentId = next?.id ?? null;
+          owningDepartment = next?.displayName ?? null;
+          changed.owningDepartment = { from: current.owningDepartment, to: owningDepartment };
+        }
+
+        for (const key of ["region"] as const) {
           if (body[key] === undefined) continue;
           const next = body[key]?.trim() || null;
           if (next !== target[key]) {
@@ -2887,6 +2903,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           stage,
           manager,
           businessOwner,
+          owningDepartment,
           entity,
           entityRestricted,
           // No field of this PATCH touches the other side — the

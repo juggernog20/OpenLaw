@@ -161,6 +161,15 @@ Contracts are derived from `contracts.entity_id`; Matters are derived when any E
 
 The Entity-type taxonomy mount counts every referencing Entity, including archived records. Archive requires a live replacement when that count is non-zero and reassigns the complete set in the same transaction, appending one `entity.type_reassigned` entry per moved Entity and one `entity_type.archived` audit entry with the count and replacement. Hard delete refuses an in-use type with that same count.
 
+## ENT-010 — An Entity may be Portal-listed, so Business Users can pick it on a form
+
+- **Status** — Accepted
+- **Date** — 2026-09-13
+- **Context** — DD-027 lets a Business User pick an Entity where Legal has placed an `entity` picker. The registry holds holding companies a Business User should never see in a picker.
+- **Decision** — `entities.portal_listed`, boolean, default false, edited on the Entity record by Member+ and shown as a column in the Entities settings list. A Confidential Entity (ENT-004) is never listed whatever the flag, and the record refuses to set the flag on one. The Portal read returns id and name only, ordered by name, for live, non-Confidential, Portal-listed Entities. Archiving an Entity removes it from the read; the flag is kept for restore.
+- **Rationale** — A property of the Entity, set once, respected by every Business User picker. The alternative, a per-Field subset, was rejected in DD-027.
+- **Consequences** — One column, one Portal read, one settings column. Glossary: **Portal-listed Entity**. The activity verb `entity.portal_listed_set`.
+
 ## Index of decisions
 
 | #       | Decision                                                                               | Status   |
@@ -174,3 +183,4 @@ The Entity-type taxonomy mount counts every referencing Entity, including archiv
 | ENT-007 | Roll-ups: linked-records tabs with query-derived counts                                | Accepted |
 | ENT-008 | The registry surface owns a Member+ entity-type read                                   | Accepted |
 | ENT-009 | The type archive guard counts and moves every referencing entity, archived included    | Accepted |
+| ENT-010 | An Entity may be Portal-listed, so Business Users can pick it on a form                | Accepted |

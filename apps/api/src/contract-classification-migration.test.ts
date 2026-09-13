@@ -34,7 +34,7 @@ it("promotes Contract classification while retaining the shared Region Field and
     expect(
       (
         await db.execute(
-          sql`select owning_department, region, custom_fields from contracts where id = 'promote'`,
+          sql`select d.display_name as owning_department, c.region, c.custom_fields from contracts c left join departments d on d.id = c.owning_department_id where c.id = 'promote'`,
         )
       ).rows[0],
     ).toEqual({

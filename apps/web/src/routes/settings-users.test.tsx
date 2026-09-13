@@ -95,6 +95,8 @@ function usersApi(calls: UsersCalls) {
   const byId = (id: string) => LISTED.find((row) => row.id === id)!;
   return (call: StubCall) => {
     const path = call.url.pathname;
+    if (path === "/api/v1/departments" && call.method === "GET")
+      return json(200, { departments: [] });
     if (path === "/api/v1/users" && call.method === "GET") {
       return json(200, { users: LISTED });
     }
