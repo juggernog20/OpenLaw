@@ -133,6 +133,15 @@ it("renames and orders Departments, preserves archived references, and audits us
     cookies: member,
   });
   expect(options.json().departments.map((d: { id: string }) => d.id)).toEqual([legal.id]);
+  // A Department keeps its references, so the reassignment target the rest
+  // of the taxonomy asks for is refused rather than quietly ignored.
+  const reassigned = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/departments/${legal.id}/archive`,
+    cookies: admin,
+    payload: { reassignToId: sales.id },
+  });
+  expect(reassigned.statusCode, reassigned.body).toBe(400);
   const read = await harness.app.inject({
     method: "GET",
     url: `/api/v1/contracts/${contract.number}`,
