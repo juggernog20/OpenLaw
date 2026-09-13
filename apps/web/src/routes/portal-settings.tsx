@@ -8,11 +8,10 @@ import { api } from "../lib/api";
 import { currentUser, useSignOut } from "../lib/session";
 import { PageTitle } from "../components/page-title";
 import {
-  GROUP_COPY,
   NotificationSwitchGrid,
   useNotificationPreferences,
-  type EventGroup,
 } from "../components/notification-preferences";
+import { PORTAL_COPY, PORTAL_GROUPS } from "../components/portal/notification-preferences";
 import { PortalBackLink } from "../components/portal/back-link";
 import { PortalShell } from "../components/portal/portal-shell";
 import { StatusNote } from "../components/status-note";
@@ -27,31 +26,6 @@ export async function portalSettingsLoader() {
   if (!data) throw new Error("The notification preferences could not be read.");
   return { user, groups: data.groups };
 }
-
-/** Only events the Portal can deliver. */
-const PORTAL_GROUPS: readonly EventGroup[] = [
-  "requester_events",
-  "assigned_to_you",
-  "activity_on_your_records",
-];
-const PORTAL_COPY: typeof GROUP_COPY = {
-  ...GROUP_COPY,
-  assigned_to_you: {
-    label: defineMessage({ id: "portal.settings.mentions", defaultMessage: "Mentions" }),
-    detail: defineMessage({
-      id: "portal.settings.mentions.detail",
-      defaultMessage: "Comments that mention you on your Contracts and Matters.",
-    }),
-  },
-  activity_on_your_records: {
-    ...GROUP_COPY.activity_on_your_records,
-    detail: defineMessage({
-      id: "portal.settings.records.detail",
-      defaultMessage:
-        "Shared comments and supporting Documents on your Contracts and Matters, and Contract status changes.",
-    }),
-  },
-};
 
 const TITLE = defineMessage({
   id: "portal.settings.title",

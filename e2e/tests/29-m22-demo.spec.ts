@@ -9,6 +9,7 @@
  * the Matters destination shows both records together.
  */
 
+import { completePortalFirstRun } from "./helpers.js";
 import {
   test,
   expect,
@@ -58,6 +59,7 @@ async function enterPortal(context: BrowserContext, api: APIRequestContext): Pro
   await expect(page.getByText("Check your email")).toBeVisible();
   const mail = await waitForMailTo(api, REQUESTER, /^Sign in to OpenLaw$/);
   await page.goto(extractLink(mail.text, "/api/auth/magic-link/verify"));
+  await completePortalFirstRun(page);
   await expect(page).toHaveURL(/\/portal$/);
   return page;
 }

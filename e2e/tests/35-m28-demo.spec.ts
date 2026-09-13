@@ -2,6 +2,7 @@
 
 /** M28 close (#598): publish file-first Knowledge and open it from the portal. */
 
+import { completePortalFirstRun } from "./helpers.js";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
@@ -54,6 +55,7 @@ async function enterPortalByMagicLink(
 
   const mail = await waitForMailTo(api, REQUESTER, /^Sign in to OpenLaw$/);
   await page.goto(extractLink(mail.text, "/api/auth/magic-link/verify"));
+  await completePortalFirstRun(page);
   await expect(page).toHaveURL(/\/portal$/);
   return page;
 }

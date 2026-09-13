@@ -4805,6 +4805,21 @@ DD-026 governs these permissions at the server. Documents and Comments retain th
 
 ---
 
+## DES-084: The Business User first run is a Portal wizard
+
+- **Status:** Accepted
+- **Date:** 2026-09-13
+- **Context:** SET-011 gives Business Users a first run before the Portal home. It collects the Department used by Auto-Doc audiences and introduces the Portal destinations.
+- **Decision:** `/portal/onboarding` uses the Portal's canvas, raised cards, typography, narrow content column, brand, and Sign out control. The header and content fit narrow screens. The wizard title is "We need to learn a little about you". The Portal navigation appears after completion.
+
+The steps are Department, name and photo, theme, notifications, and a short tour. Department appears only when live Departments exist. It has a labelled native selector, requires a live choice, and has Continue without Skip. An Administrator's live assignment is selected initially. A failed write leaves the saved choice visible and explains the refusal beside the control. An archived assignment must be replaced when live choices exist. Back permits corrections during the first run.
+
+Every later step has Continue and Skip, with Finish on the tour. Name and photo reuse the Profile settings routes, with a labelled name input and a labelled JPG/PNG file input capped at 1 MB. Theme offers the three named themes as radio controls and applies a successful preference immediately. Notifications reuse the Portal settings switch grid and its event groups. Each field reports its own save state. Navigation waits for an active save; a failed optional change can be retried or skipped.
+
+The tour introduces Requests, Contracts, Matters, and Auto-Docs in four short paragraphs. Its Auto-Docs stop is text until the destination ships. Each step is a named region, its heading receives focus when the step changes, and a visible progress line names the current step and total. Controls have persistent labels; save errors are announced. The accessibility sweep covers every step.
+
+A refusal on Finish returns the person to Department with fresh choices and a visible explanation. Completing the tour opens the Portal home. SET-011 defines the lifecycle and persistence rules behind these transitions.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                     |
@@ -4892,6 +4907,7 @@ DD-026 governs these permissions at the server. Documents and Comments retain th
 | DES-081 | One Documents section for Portal Contracts and Matters                                                                                                               | Accepted                                                                                                   |
 | DES-082 | One theme colour for placeholders                                                                                                                                    | Accepted                                                                                                   |
 | DES-083 | Portal record values are read-only; the Team applet can add members                                                                                                  | Accepted                                                                                                   |
+| DES-084 | The Business User first run is a Portal wizard                                                                                                                       | Accepted                                                                                                   |
 
 ### DES-016 addendum (2026-09-11, #827) — Request source reading above Convert
 

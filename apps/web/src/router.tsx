@@ -45,6 +45,8 @@ import { PortalRequestPage, portalRequestLoader } from "./routes/portal-request"
 import { PortalContractsPage, portalContractsLoader } from "./routes/portal-contracts";
 import { PortalContractPage, portalContractLoader } from "./routes/portal-contract";
 import { PortalKnowledgePage, portalKnowledgeLoader } from "./routes/portal-knowledge";
+import { guardPortalLoader } from "./lib/portal-onboarding";
+import { PortalOnboardingPage, portalOnboardingLoader } from "./routes/portal-onboarding";
 import { PortalEntryPage, portalEntryLoader } from "./routes/portal-entry";
 import { PortalSettingsPage, portalSettingsLoader } from "./routes/portal-settings";
 import { SetPasswordPage } from "./routes/set-password";
@@ -613,6 +615,7 @@ export const routes: RouteObject[] = [
       // signed-out costume, so the emailed link, the dead-link page, and
       // the sign-out redirect all name one place.
       { path: "enter", loader: portalEntryLoader, element: <PortalEntryPage /> },
+      { path: "onboarding", loader: portalOnboardingLoader, element: <PortalOnboardingPage /> },
       // The lightweight settings surface NOT-001 promised a business
       // user (M20/9): NOT-002's group 5 and nothing else, reached from
       // the gear in the portal header.
@@ -653,7 +656,7 @@ export const routes: RouteObject[] = [
       },
       // A portal address nothing answers to, in the portal's own chrome.
       { path: "*", loader: portalNotFoundLoader, element: <PortalNotFoundPage /> },
-    ],
+    ].map((route) => ({ ...route, loader: guardPortalLoader(route.loader) })),
   },
   {
     // Any other address. Without this the router hands an unmatched URL

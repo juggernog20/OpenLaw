@@ -6173,6 +6173,78 @@
   "portal.navigation.requests": {
     "defaultMessage": "Requests"
   },
+  "portal.onboarding.back": {
+    "defaultMessage": "Back"
+  },
+  "portal.onboarding.continue": {
+    "defaultMessage": "Continue"
+  },
+  "portal.onboarding.department": {
+    "defaultMessage": "Department"
+  },
+  "portal.onboarding.department.choose": {
+    "defaultMessage": "Choose your Department"
+  },
+  "portal.onboarding.department.lead": {
+    "defaultMessage": "Choose the Department you work in. Legal uses this to share the right Auto-Docs with you."
+  },
+  "portal.onboarding.finish": {
+    "defaultMessage": "Finish"
+  },
+  "portal.onboarding.notifications": {
+    "defaultMessage": "Notifications"
+  },
+  "portal.onboarding.photo": {
+    "defaultMessage": "Photo"
+  },
+  "portal.onboarding.photo.hint": {
+    "defaultMessage": "PNG or JPG, up to 1 MB."
+  },
+  "portal.onboarding.photo.invalid": {
+    "defaultMessage": "Choose a PNG or JPG photo no larger than 1 MB."
+  },
+  "portal.onboarding.profile": {
+    "defaultMessage": "Name and photo"
+  },
+  "portal.onboarding.progress": {
+    "defaultMessage": "Step {current} of {total}"
+  },
+  "portal.onboarding.skip": {
+    "defaultMessage": "Skip"
+  },
+  "portal.onboarding.theme": {
+    "defaultMessage": "Theme"
+  },
+  "portal.onboarding.title": {
+    "defaultMessage": "We need to learn a little about you"
+  },
+  "portal.onboarding.tour": {
+    "defaultMessage": "A short tour"
+  },
+  "portal.onboarding.tour.autoDocs": {
+    "defaultMessage": "Auto-Docs"
+  },
+  "portal.onboarding.tour.autoDocs.detail": {
+    "defaultMessage": "Auto-Docs will let you fill in a form to generate a Document from a template Legal has prepared."
+  },
+  "portal.onboarding.tour.contracts": {
+    "defaultMessage": "Contracts"
+  },
+  "portal.onboarding.tour.contracts.detail": {
+    "defaultMessage": "Read the Contracts you work on, share Documents, and talk with Legal."
+  },
+  "portal.onboarding.tour.matters": {
+    "defaultMessage": "Matters"
+  },
+  "portal.onboarding.tour.matters.detail": {
+    "defaultMessage": "Follow legal work, its Documents, and its conversations."
+  },
+  "portal.onboarding.tour.requests": {
+    "defaultMessage": "Requests"
+  },
+  "portal.onboarding.tour.requests.detail": {
+    "defaultMessage": "Ask Legal for help and follow the progress of your Requests."
+  },
   "portal.record.description": {
     "defaultMessage": "Description"
   },
@@ -8550,6 +8622,9 @@
     "defaultMessage": "Email"
   },
   "settings.profile.fullName": {
+    "defaultMessage": "Full name"
+  },
+  "settings.profile.name": {
     "defaultMessage": "Full name"
   },
   "settings.profile.newPassword": {

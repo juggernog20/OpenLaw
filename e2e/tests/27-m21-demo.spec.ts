@@ -38,6 +38,7 @@
  * queue by definition, so it reaches no later run's screens.
  */
 
+import { completePortalFirstRun } from "./helpers.js";
 import {
   test,
   expect,
@@ -320,6 +321,7 @@ async function enterPortalByMagicLink(
 
   const mail = await waitForMailTo(api, REQUESTER, /^Sign in to OpenLaw$/);
   await page.goto(extractLink(mail.text, "/api/auth/magic-link/verify"));
+  await completePortalFirstRun(page);
   // Landing is by role, not by callback URL (the INT-001 M20/2
   // addendum).
   await expect(page).toHaveURL(/\/portal$/);

@@ -294,7 +294,13 @@ export interface OnboardedMember {
 export async function onboardActivatedMember(
   request: APIRequestContext,
   browser: Browser,
-  member: { email: string; displayName: string; role: string; password: string },
+  member: {
+    email: string;
+    displayName: string;
+    role: string;
+    password: string;
+    completePortalOnboarding?: boolean;
+  },
 ): Promise<OnboardedMember> {
   const invited = await request.post("/api/v1/auth/invites", {
     data: {
@@ -322,12 +328,38 @@ export async function onboardActivatedMember(
         data: { role: "business_user" },
       });
       expect(changed.status(), await changed.text()).toBe(200);
+      if (member.completePortalOnboarding !== false) await completePortalFirstRun(page);
     }
     return { context, page };
   } catch (error) {
     await context.close();
     throw error;
   }
+}
+
+/** Give an existing journey a ready Business User; the first-run journey exercises the wizard itself. */
+export async function completePortalFirstRun(page: Page): Promise<void> {
+  const response = await page.request.get("/api/v1/portal/onboarding");
+  expect(response.status(), await response.text()).toBe(200);
+  const state = z
+    .object({
+      completedAt: z.string().nullable(),
+      departmentId: z.string().nullable(),
+      departments: z.array(z.object({ id: z.string() })),
+    })
+    .parse(await response.json());
+  if (!state.completedAt) {
+    const first = state.departments[0];
+    if (first && !state.departments.some((department) => department.id === state.departmentId)) {
+      const assigned = await page.request.patch("/api/v1/portal/onboarding/department", {
+        data: { departmentId: first.id },
+      });
+      expect(assigned.status(), await assigned.text()).toBe(200);
+    }
+    const completed = await page.request.post("/api/v1/portal/onboarding/complete");
+    expect(completed.status(), await completed.text()).toBe(200);
+  }
+  await page.goto("/portal");
 }
 
 /**
