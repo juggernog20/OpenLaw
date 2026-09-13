@@ -21,7 +21,7 @@ The structured envelope a Business User submits through the portal, before triag
 _Avoid_: ticket, intake item, submission, enquiry
 
 **Document**:
-A logical file record owned by exactly one Matter, Contract, Entity, or Knowledge Item; carries no workflow of its own [DOC-008].
+A logical file record owned by exactly one Matter, Contract, Entity, Knowledge Item, or Auto-Doc; carries no workflow of its own [DOC-008, ADO-001].
 _Avoid_: file, attachment, upload
 
 **Document Version**:

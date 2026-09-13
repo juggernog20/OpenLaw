@@ -2,7 +2,7 @@
 
 -- Read-only data checks for the audit's principal cleanup candidates.
 -- Run on the intended deployment before authoring/applying a removal migration.
--- Counts reveal no contact values, comment text, credentials, or identities.
+-- Counts selected counterparty fields, attachment relationships, and 2FA timestamps.
 BEGIN READ ONLY;
 SET LOCAL statement_timeout = '30s';
 
@@ -17,7 +17,7 @@ FROM counterparties;
 
 SELECT count(*) AS comment_attachments,
        count(*) FILTER (WHERE c.id IS NULL) AS missing_parent_comments,
-       count(*) FILTER (WHERE a.uploaded_by IS DISTINCT FROM c.author_id)
+       count(*) FILTER (WHERE c.id IS NOT NULL AND a.uploaded_by IS DISTINCT FROM c.author_id)
          AS uploader_author_mismatches
 FROM comment_attachments a
 LEFT JOIN comments c ON c.id = a.comment_id;
