@@ -88,6 +88,12 @@ test("Legal publishes one pair, sees a stale Clause refusal, and restores an arc
     "href",
     /\/documents\/[^/]+\/compare\?from=.+&to=.+/,
   );
+  await page.getByRole("link", { name: "Compare files", exact: true }).click();
+  await expect(page.getByRole("region", { name: "Compared document", exact: true })).toBeVisible({
+    timeout: 60_000,
+  });
+  await page.getByRole("link", { name: "Close comparison", exact: true }).click();
+  await expect(page).toHaveURL(recordUrl);
   await page.getByRole("button", { name: "Unpublish", exact: true }).click();
   await expect(
     page.getByText("No file and form pair is published.", { exact: true }),

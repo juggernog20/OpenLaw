@@ -346,3 +346,38 @@ it("restores a clean editor when Legal reverts an edit to the first of two Claus
   await user.selectOptions(within(clause).getByLabelText("Operator"), "equals");
   expect(publish).toBeEnabled();
 });
+
+it("holds the selected forms steady while their comparison is loading", async () => {
+  const user = userEvent.setup();
+  let release: (() => void) | undefined;
+  stubApi({
+    signedIn: member,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
+      if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, record());
+      if (call.url.pathname.endsWith("/form-versions/diff"))
+        return new Promise<Response>((resolve) => {
+          release = () => resolve(json(200, { changes: [] }));
+        });
+      return undefined;
+    },
+  });
+  renderAt("/auto-docs/nda");
+  await screen.findByRole("heading", { name: "Publish NDA" });
+  const from = screen.getByLabelText("Compare form from");
+  const to = screen.getByLabelText("Compare form to");
+  await user.click(screen.getByRole("button", { name: "Compare forms" }));
+  await waitFor(() => expect(release).toBeDefined());
+  try {
+    expect(from).toBeDisabled();
+    expect(to).toBeDisabled();
+    await user.selectOptions(from, "form2");
+    expect(from).toHaveValue("form1");
+  } finally {
+    release?.();
+  }
+  await waitFor(() => expect(from).toBeEnabled());
+  expect(to).toBeEnabled();
+  await user.selectOptions(from, "form2");
+  expect(from).toHaveValue("form2");
+});

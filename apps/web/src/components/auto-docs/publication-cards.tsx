@@ -378,6 +378,7 @@ export function AutoDocVersionDiff({ record }: { record: AutoDocAnswer }) {
             <select
               className={CONTROL_CLASS}
               value={from}
+              disabled={busy}
               onChange={(event) => {
                 setFrom(event.target.value);
                 setChanges(undefined);
@@ -400,6 +401,7 @@ export function AutoDocVersionDiff({ record }: { record: AutoDocAnswer }) {
             <select
               className={CONTROL_CLASS}
               value={to}
+              disabled={busy}
               onChange={(event) => {
                 setTo(event.target.value);
                 setChanges(undefined);
