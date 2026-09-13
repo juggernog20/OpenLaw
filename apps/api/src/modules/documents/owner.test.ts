@@ -8,7 +8,13 @@ import { parseDocumentOwnerReference } from "./owner.js";
 describe("resolveDocumentOwner", () => {
   it("names the one owner a document has", () => {
     expect(
-      resolveDocumentOwner({ contract: "c1", matter: null, entity: null, knowledge_item: null }),
+      resolveDocumentOwner({
+        contract: "c1",
+        matter: null,
+        entity: null,
+        auto_doc: null,
+        knowledge_item: null,
+      }),
     ).toEqual({
       kind: "contract",
       value: "c1",
@@ -18,6 +24,7 @@ describe("resolveDocumentOwner", () => {
         contract: undefined,
         matter: "m1",
         entity: null,
+        auto_doc: null,
         knowledge_item: null,
       }),
     ).toEqual({
@@ -28,13 +35,20 @@ describe("resolveDocumentOwner", () => {
 
   it("refuses a row with no owner or more than one", () => {
     expect(() =>
-      resolveDocumentOwner({ contract: null, matter: null, entity: null, knowledge_item: null }),
+      resolveDocumentOwner({
+        contract: null,
+        matter: null,
+        entity: null,
+        auto_doc: null,
+        knowledge_item: null,
+      }),
     ).toThrow(/exactly one owning record/);
     expect(() =>
       resolveDocumentOwner({
         contract: "c1",
         matter: "m1",
         entity: null,
+        auto_doc: null,
         knowledge_item: null,
       }),
     ).toThrow(/exactly one owning record/);

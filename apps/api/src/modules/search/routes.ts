@@ -17,6 +17,7 @@ import {
   entityTypes,
   eq,
   isNull,
+  autoDocs,
   knowledgeItems,
   knowledgeTypes,
   matters,
@@ -262,6 +263,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
       left join ${matters} on ${matters.id} = ${documents.matterId}
       left join ${entities} on ${entities.id} = ${documents.entityId}
       left join ${knowledgeItems} on ${knowledgeItems.id} = ${documents.knowledgeItemId}
+    left join ${autoDocs} on ${autoDocs.id} = ${documents.autoDocId}
       where ${and(isNull(documents.archivedAt), documentRepositoryScope(db, user))}
     ),
     document_version_hits as (
@@ -461,6 +463,9 @@ function toSearchRow(row: SearchDbRow): z.infer<typeof SearchRowSchema> {
       break;
     case "entity":
       ownerKind = "entity";
+      break;
+    case "auto_doc":
+      ownerKind = "auto_doc";
       break;
     case "knowledge_item":
       ownerKind = "knowledge_item";

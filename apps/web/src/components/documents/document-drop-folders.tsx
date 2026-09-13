@@ -31,6 +31,7 @@ export function DocumentDropFolders({
   const missingNumber =
     (owner.kind === "contract" || owner.kind === "matter") && owner.number === null;
   useEffect(() => {
+    if (owner.kind === "auto_doc") return;
     let live = true;
     let record: DocumentRecord;
     if (owner.kind === "contract" || owner.kind === "matter") {
@@ -50,6 +51,7 @@ export function DocumentDropFolders({
       live = false;
     };
   }, [owner, attempt]);
+  if (owner.kind === "auto_doc") return null;
   const targets = [
     {
       id: null,

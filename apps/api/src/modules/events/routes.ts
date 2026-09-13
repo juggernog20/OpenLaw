@@ -2,7 +2,7 @@
 
 /** The authenticated Server-Sent Events channel (TECH-009). */
 
-import { eq, knowledgeItems } from "@openlaw/db";
+import { autoDocs, eq, knowledgeItems } from "@openlaw/db";
 import {
   LIVE_RECORD_ENTITY_TYPES,
   type LiveEventVisibility,
@@ -52,12 +52,13 @@ async function reachedRecord(
       : null;
   }
   if (user.role !== "administrator" && user.role !== "legal_team_member") return null;
+  const table = entityType === "auto_doc" ? autoDocs : knowledgeItems;
   const [item] = await app.db
-    .select({ id: knowledgeItems.id })
-    .from(knowledgeItems)
-    .where(eq(knowledgeItems.id, entityId))
+    .select({ id: table.id })
+    .from(table)
+    .where(eq(table.id, entityId))
     .limit(1);
-  return item ? { entityType: "knowledge_item", entityId: item.id, tiers: ["legal_only"] } : null;
+  return item ? { entityType, entityId: item.id, tiers: ["legal_only"] } : null;
 }
 
 export const eventRoutes: FastifyPluginAsyncZod = async (app) => {

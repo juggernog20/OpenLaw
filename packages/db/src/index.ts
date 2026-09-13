@@ -15,6 +15,7 @@ import { guardMigrationJournal } from "./migration-journal.js";
 import * as activitySchema from "./schema/activity.js";
 import * as aiConnectorSchema from "./schema/ai-connector.js";
 import * as approverGroupsSchema from "./schema/approver-groups.js";
+import * as autoDocsSchema from "./schema/auto-docs.js";
 import * as authSchema from "./schema/auth.js";
 import * as commentsSchema from "./schema/comments.js";
 import * as commentAttachmentsSchema from "./schema/comment-attachments.js";
@@ -75,6 +76,7 @@ export * from "./schema/activity.js";
 export * from "./schema/ai-connector.js";
 export * from "./schema/approver-groups.js";
 export * from "./schema/auth.js";
+export * from "./schema/auto-docs.js";
 export * from "./schema/comments.js";
 export * from "./schema/comment-attachments.js";
 export * from "./schema/contract-approvals.js";
@@ -136,6 +138,7 @@ export const schema = {
   ...aiConnectorSchema,
   ...approverGroupsSchema,
   ...authSchema,
+  ...autoDocsSchema,
   ...commentsSchema,
   ...commentAttachmentsSchema,
   ...contractApprovalsSchema,

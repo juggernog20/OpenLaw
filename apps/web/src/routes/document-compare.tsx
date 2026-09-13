@@ -137,6 +137,8 @@ function ownerDocumentsPath(comparison: DocumentComparison): string {
       return `/matters/${String(owner.number)}/documents`;
     case "entity":
       return `/entities/${encodeURIComponent(owner.id)}/documents`;
+    case "auto_doc":
+      return `/auto-docs/${encodeURIComponent(owner.id)}`;
     case "knowledge_item":
       return `/knowledge/${encodeURIComponent(owner.id)}`;
   }

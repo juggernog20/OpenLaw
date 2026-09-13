@@ -393,6 +393,14 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     from: "Playbook",
     to: "Article",
   },
+  "auto_doc.created": { name: "Supplier NDA" },
+  "auto_doc.template_uploaded": {
+    name: "Supplier NDA",
+    documentId: "doc",
+    versionId: "v1",
+    versionNumber: 1,
+  },
+  "auto_doc.form_saved": { name: "Supplier NDA", formVersionId: "form1", versionNumber: 1 },
   "knowledge_item.created": {
     title: "Contract review playbook",
     knowledgeType: "Playbook",
@@ -1430,3 +1438,15 @@ it("uses the generic Field label for older Matter confirmations without a slug",
     "a field",
   );
 });
+
+it.each(["auto_doc.created", "auto_doc.template_uploaded", "auto_doc.form_saved"])(
+  "names the Auto-Doc in %s",
+  (action) => {
+    const result = narrateActivity(intl, {
+      action,
+      actor: ACTOR,
+      payload: { name: "Supplier NDA" },
+    });
+    expect(result.sentence).toContain("Supplier NDA");
+  },
+);

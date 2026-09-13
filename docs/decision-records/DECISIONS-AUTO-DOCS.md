@@ -80,6 +80,8 @@ _None — queue cleared 2026-09-13 (ADO-001 through ADO-011). The clause library
 - **Alternatives considered** — One version of the whole Auto-Doc per Publish: simpler, but the diff of a form edit would be buried in a file compare. Form edits live at once: two Generations five minutes apart could differ with no version to cite.
 - **Consequences** — `auto_doc_form_versions` with a jsonb snapshot; `auto_docs.published_document_version_id` and `published_form_version_id`; `auto_doc_generations` cite both. The Activity verbs `auto_doc.published` and `auto_doc.unpublished` carry the pair.
 
+**M35/5 built addendum (#848):** Member+ has the Auto-Docs list, draft creation, template uploads, and the nine-type form editor. Migration 0120 adds the fifth Document owner and immutable JSON form snapshots. Each file Version holds detection metadata; a field's Placeholder provenance survives later uploads to drive the editor's orphan cue. History uses the shared activity feed, and file previews use the shared Document reader. Clause rules, maps, structural diffs, and Publish follow in M35/6.
+
 ## ADO-005 — Destinations: a Contract Type target creates a draft Contract; anything can be Filed afterwards
 
 - **Status** — Accepted

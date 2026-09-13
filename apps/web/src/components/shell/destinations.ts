@@ -108,6 +108,13 @@ export const destinations: Destination[] = [
     label: defineMessage({ id: "nav.knowledge", defaultMessage: "Knowledge" }),
     roles: MEMBER_PLUS_ROLES,
   },
+  {
+    id: "auto-docs",
+    path: "/auto-docs",
+    icon: FileText,
+    label: defineMessage({ id: "nav.autoDocs", defaultMessage: "Auto-Docs" }),
+    roles: MEMBER_PLUS_ROLES,
+  },
 ];
 
 /** The destinations a signed-in role gets to see (ENT-004 et al.). */

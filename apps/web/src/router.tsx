@@ -23,6 +23,8 @@ import { MattersPage, mattersLoader } from "./routes/matters";
 import { MatterRecordPage, matterRecordLoader } from "./routes/matter-record";
 import { EntitiesPage, entitiesLoader, entitiesShouldRevalidate } from "./routes/entities";
 import { EntityRecordPage, entityRecordLoader } from "./routes/entity-record";
+import { AutoDocsPage, autoDocsLoader } from "./routes/auto-docs";
+import { AutoDocRecordPage, autoDocRecordLoader } from "./routes/auto-doc-record";
 import { KnowledgePage, knowledgeLoader } from "./routes/knowledge";
 import { KnowledgeRecordPage, knowledgeRecordLoader } from "./routes/knowledge-record";
 import { RouteErrorPage } from "./routes/error-page";
@@ -334,6 +336,24 @@ export const routes: RouteObject[] = [
     element: (
       <KeyedByParam name="entityId">
         <EntityRecordPage />
+      </KeyedByParam>
+    ),
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <></>,
+  },
+  {
+    path: "/auto-docs",
+    loader: autoDocsLoader,
+    element: <AutoDocsPage />,
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <></>,
+  },
+  {
+    path: "/auto-docs/:id",
+    loader: autoDocRecordLoader,
+    element: (
+      <KeyedByParam name="id">
+        <AutoDocRecordPage />
       </KeyedByParam>
     ),
     errorElement: <RouteErrorPage />,

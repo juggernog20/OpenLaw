@@ -113,6 +113,9 @@ it("omits Department for an empty list and saves profile, theme, and notificatio
   renderAt("/portal/onboarding");
   const user = userEvent.setup();
   const name = await screen.findByRole("textbox", { name: "Full name" });
+  await waitFor(() =>
+    expect(screen.getByRole("heading", { name: "Name and photo" })).toHaveFocus(),
+  );
   expect(screen.queryByRole("combobox", { name: "Department" })).not.toBeInTheDocument();
   await user.clear(name);
   await user.type(name, "New name");

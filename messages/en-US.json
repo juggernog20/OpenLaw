@@ -95,6 +95,15 @@
   "activity.approverGroup.memberRemoved": {
     "defaultMessage": "{actor} took {member} off the approver group {name}"
   },
+  "activity.autoDoc.created": {
+    "defaultMessage": "{actor} created {name}"
+  },
+  "activity.autoDoc.formSaved": {
+    "defaultMessage": "{actor} saved a form version for {name}"
+  },
+  "activity.autoDoc.templateUploaded": {
+    "defaultMessage": "{actor} uploaded a template for {name}"
+  },
   "activity.boolean": {
     "defaultMessage": "{value, select, true {Yes} other {No}}"
   },
@@ -1111,6 +1120,132 @@
   },
   "auth.twoFactor.useTotp": {
     "defaultMessage": "Use your authenticator app"
+  },
+  "autoDocs.addField": {
+    "defaultMessage": "Add field"
+  },
+  "autoDocs.create": {
+    "defaultMessage": "Create Auto-Doc"
+  },
+  "autoDocs.createFailed": {
+    "defaultMessage": "Could not create the Auto-Doc. Please try again."
+  },
+  "autoDocs.createSubmit": {
+    "defaultMessage": "Create"
+  },
+  "autoDocs.description": {
+    "defaultMessage": "Description"
+  },
+  "autoDocs.download": {
+    "defaultMessage": "Download"
+  },
+  "autoDocs.empty": {
+    "defaultMessage": "Create an Auto-Doc to start with a Word template."
+  },
+  "autoDocs.fieldHelp": {
+    "defaultMessage": "Help text"
+  },
+  "autoDocs.fieldLabel": {
+    "defaultMessage": "Label"
+  },
+  "autoDocs.fieldOptions": {
+    "defaultMessage": "Options, one per line"
+  },
+  "autoDocs.fieldRequired": {
+    "defaultMessage": "Required"
+  },
+  "autoDocs.fieldSlug": {
+    "defaultMessage": "Slug"
+  },
+  "autoDocs.fieldType": {
+    "defaultMessage": "Type"
+  },
+  "autoDocs.fieldTypeName": {
+    "defaultMessage": "{type, select, text {Text} long_text {Long text} number {Number} currency {Currency} date {Date} boolean {Boolean} single_select {Single select} multi_select {Multi select} other {Entity}}"
+  },
+  "autoDocs.fileVersionLabel": {
+    "defaultMessage": "File version {number} · {filename}"
+  },
+  "autoDocs.form": {
+    "defaultMessage": "Form"
+  },
+  "autoDocs.formSaved": {
+    "defaultMessage": "Form saved."
+  },
+  "autoDocs.formVersion": {
+    "defaultMessage": "Form version {number}"
+  },
+  "autoDocs.formVersionDetails": {
+    "defaultMessage": "{date, date, medium} · {count, plural, one {# field} other {# fields}}"
+  },
+  "autoDocs.formVersions": {
+    "defaultMessage": "Form versions"
+  },
+  "autoDocs.invalidUploadReply": {
+    "defaultMessage": "The upload response could not be read. Reload this Auto-Doc to check its saved template."
+  },
+  "autoDocs.moveDown": {
+    "defaultMessage": "Move down"
+  },
+  "autoDocs.moveUp": {
+    "defaultMessage": "Move up"
+  },
+  "autoDocs.name": {
+    "defaultMessage": "Name"
+  },
+  "autoDocs.newField": {
+    "defaultMessage": "New field"
+  },
+  "autoDocs.notFound": {
+    "defaultMessage": "Auto-Doc not found"
+  },
+  "autoDocs.notFoundBody": {
+    "defaultMessage": "This Auto-Doc does not exist, or you cannot open it."
+  },
+  "autoDocs.openFailed": {
+    "defaultMessage": "Could not open this file version. Please try again."
+  },
+  "autoDocs.openVersion": {
+    "defaultMessage": "Open version {number}"
+  },
+  "autoDocs.orphanCount": {
+    "defaultMessage": "{count, plural, one {# orphaned field} other {# orphaned fields}}"
+  },
+  "autoDocs.orphanHelp": {
+    "defaultMessage": "This field no longer has a Placeholder in the template."
+  },
+  "autoDocs.removeField": {
+    "defaultMessage": "Remove field"
+  },
+  "autoDocs.saveBeforeUpload": {
+    "defaultMessage": "Save your form changes before uploading another template."
+  },
+  "autoDocs.saveFailed": {
+    "defaultMessage": "Could not save the form. Please try again."
+  },
+  "autoDocs.saveForm": {
+    "defaultMessage": "Save form"
+  },
+  "autoDocs.state": {
+    "defaultMessage": "{state, select, draft {Draft} published {Published} other {Archived}}"
+  },
+  "autoDocs.template": {
+    "defaultMessage": "Template"
+  },
+  "autoDocs.templateHelp": {
+    "defaultMessage": "Use double braces for Placeholders, such as {example}. Each upload adds a file version."
+  },
+  "autoDocs.uploadFailed": {
+    "defaultMessage": "Could not upload the template. Please try again."
+  },
+  "autoDocs.uploadTemplate": {
+    "defaultMessage": "Upload template"
+  },
+  "autoDocs.uploaded": {
+    "defaultMessage": "Template uploaded."
+  },
+  "autoDocs.wordTemplate": {
+    "defaultMessage": "Word template"
   },
   "breadcrumb.label": {
     "defaultMessage": "Breadcrumb"
@@ -5606,6 +5741,9 @@
   "matters.value.noDeadline": {
     "defaultMessage": "—"
   },
+  "nav.autoDocs": {
+    "defaultMessage": "Auto-Docs"
+  },
   "nav.contracts": {
     "defaultMessage": "Contracts"
   },
@@ -6646,6 +6784,9 @@
   },
   "role.legalTeamMember": {
     "defaultMessage": "Legal team member"
+  },
+  "search.autoDoc": {
+    "defaultMessage": "Auto-Doc"
   },
   "search.error.body": {
     "defaultMessage": "The server did not answer. Try again in a moment."

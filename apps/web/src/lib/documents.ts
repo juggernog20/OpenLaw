@@ -113,7 +113,11 @@ export function documentRepositoryFilters(
       : "";
   return {
     owner:
-      owner === "contract" || owner === "matter" || owner === "entity" || owner === "knowledge_item"
+      owner === "contract" ||
+      owner === "matter" ||
+      owner === "entity" ||
+      owner === "knowledge_item" ||
+      owner === "auto_doc"
         ? owner
         : "",
     record: typeof filters.record === "string" ? filters.record : "",
@@ -161,6 +165,7 @@ export function documentOwnerReference(
       return matterReference(intl, owner.number!);
     case "entity":
     case "knowledge_item":
+    case "auto_doc":
       return owner.reference;
   }
 }
@@ -178,6 +183,8 @@ export function documentLandingPath(document: RepositoryDocument): string {
       break;
     case "entity":
       return `/entities/${encodeURIComponent(owner.id)}/documents?doc=${encodeURIComponent(document.id)}&version=${encodeURIComponent(document.currentVersion.id)}`;
+    case "auto_doc":
+      return `/auto-docs/${encodeURIComponent(owner.id)}?doc=${encodeURIComponent(document.id)}&version=${encodeURIComponent(document.currentVersion.id)}`;
     case "knowledge_item":
       return `/knowledge/${encodeURIComponent(owner.id)}?doc=${encodeURIComponent(document.id)}&version=${encodeURIComponent(document.currentVersion.id)}`;
   }
