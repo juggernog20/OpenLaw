@@ -39,10 +39,12 @@ const FIELD_TYPES = autoDocFieldTypes.options;
 export async function autoDocRecordLoader({ params, request }: LoaderFunctionArgs) {
   const user = await requireUser();
   if (!isMemberPlus(user.role)) return redirect("/portal");
-  const result = await api.GET("/api/v1/auto-docs/{id}", { params: { path: { id: params.id! } } });
+  const [result, options] = await Promise.all([
+    api.GET("/api/v1/auto-docs/{id}", { params: { path: { id: params.id! } } }),
+    api.GET("/api/v1/auto-docs/options"),
+  ]);
   if (result.response.status === 404) return { user, notFound: true as const };
   if (!result.data) throw new Error("The Auto-Doc could not be read.");
-  const options = await api.GET("/api/v1/auto-docs/options");
   if (!options.data) throw new Error("The Auto-Doc editor options could not be read.");
   const query = new URL(request.url).searchParams;
   const versionId = query.get("version");

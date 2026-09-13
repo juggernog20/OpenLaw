@@ -201,6 +201,14 @@ it("renders all Publish gaps, pins the chosen pair, and offers the lifecycle con
     "href",
     "/documents/template/compare?from=file1&to=file2",
   );
+  // The Comparison seam refuses a newer-first pair, so picking the two
+  // file versions the other way round still links to the ordered pair.
+  await user.selectOptions(screen.getByLabelText("Compare file from"), "file2");
+  await user.selectOptions(screen.getByLabelText("Compare file to"), "file1");
+  expect(screen.getByRole("link", { name: "Compare files" })).toHaveAttribute(
+    "href",
+    "/documents/template/compare?from=file1&to=file2",
+  );
   for (const action of ["Unpublish", "Archive", "Restore"]) {
     await user.click(screen.getByRole("button", { name: action }));
     if (action === "Archive") await screen.findByRole("button", { name: "Restore" });

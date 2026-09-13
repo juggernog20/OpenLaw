@@ -275,16 +275,21 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       await app.db.transaction(async (tx) => {
         const row = await editable(tx, request.params.id);
-        if (
-          request.body.targetContractTypeId &&
-          request.body.targetContractTypeId !== row.targetContractTypeId
-        ) {
+        // Creation stores a blank description as null; an edit reads the
+        // same way, so the two routes cannot leave "" beside null.
+        const patch = {
+          ...request.body,
+          ...(request.body.description === undefined
+            ? {}
+            : { description: request.body.description || null }),
+        };
+        if (patch.targetContractTypeId && patch.targetContractTypeId !== row.targetContractTypeId) {
           const [type] = await tx
             .select()
             .from(contractTypes)
             .where(
               and(
-                eq(contractTypes.id, request.body.targetContractTypeId),
+                eq(contractTypes.id, patch.targetContractTypeId),
                 isNull(contractTypes.archivedAt),
               ),
             )
@@ -293,12 +298,12 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         const changed: ChangedFields = {};
         for (const key of ["name", "description", "audience", "targetContractTypeId"] as const) {
-          const value = request.body[key];
+          const value = patch[key];
           if (value !== undefined && value !== row[key])
             changed[key] = { from: row[key], to: value };
         }
         if (changed.targetContractTypeId) {
-          const ids = [row.targetContractTypeId, request.body.targetContractTypeId].filter(
+          const ids = [row.targetContractTypeId, patch.targetContractTypeId].filter(
             (id): id is string => Boolean(id),
           );
           const names = ids.length
@@ -312,14 +317,14 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
             id ? (names.find((type) => type.id === id)?.name ?? id) : null;
           changed.targetContractType = {
             from: nameFor(row.targetContractTypeId),
-            to: nameFor(request.body.targetContractTypeId),
+            to: nameFor(patch.targetContractTypeId),
           };
           delete changed.targetContractTypeId;
         }
         if (!Object.keys(changed).length) return;
         await tx
           .update(autoDocs)
-          .set({ ...request.body, updatedBy: request.user.id, updatedAt: new Date() })
+          .set({ ...patch, updatedBy: request.user.id, updatedAt: new Date() })
           .where(eq(autoDocs.id, row.id));
         await recordActivity(tx, {
           entityType: "auto_doc",
@@ -327,7 +332,7 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
           actorId: request.user.id,
           action: "auto_doc.updated",
           visibility: "legal_only",
-          payload: { name: request.body.name ?? row.name, changed },
+          payload: { name: patch.name ?? row.name, changed },
         });
       });
       return snapshot(request.params.id);

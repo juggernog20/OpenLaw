@@ -330,6 +330,16 @@ export function AutoDocVersionDiff({ record }: { record: AutoDocAnswer }) {
     useState<Array<{ kind: string; name: string; before: string | null; after: string | null }>>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
+  // The Comparison seam takes the older Version first and refuses the
+  // reverse, so either pick order resolves to the same ordered pair.
+  const fileNumber = (id: string) =>
+    record.template?.versions.find((version) => version.id === id)?.versionNumber ?? 0;
+  const filePair =
+    fileFrom && fileTo && fileFrom !== fileTo
+      ? fileNumber(fileFrom) < fileNumber(fileTo)
+        ? ([fileFrom, fileTo] as const)
+        : ([fileTo, fileFrom] as const)
+      : null;
   return (
     <section aria-labelledby="auto-doc-diff-title" className={CARD}>
       <h2 id="auto-doc-diff-title" className="text-lg font-semibold">
@@ -498,10 +508,10 @@ export function AutoDocVersionDiff({ record }: { record: AutoDocAnswer }) {
               </select>
             </label>
           </div>
-          {fileFrom && fileTo && fileFrom !== fileTo && (
+          {filePair && (
             <Link
               className="text-link hover:underline"
-              to={documentComparisonPath(record.template.id, fileFrom, fileTo)}
+              to={documentComparisonPath(record.template.id, filePair[0], filePair[1])}
             >
               <FormattedMessage id="autoDocs.compareFiles" defaultMessage="Compare files" />
             </Link>

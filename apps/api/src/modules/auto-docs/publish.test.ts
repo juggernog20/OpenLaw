@@ -378,6 +378,21 @@ it("stores audited audience and target Type settings, searches names literally, 
   ).toEqual({ from: null, to: typeName });
 });
 
+it("reads a blank description as no description, the way creation does", async () => {
+  const initial = await create("Described", "plain");
+  const describe = async (description: string) =>
+    h.app.inject({
+      method: "PATCH",
+      url: `/api/v1/auto-docs/${initial.autoDoc.id}`,
+      cookies: member,
+      payload: { description },
+    });
+  expect((await describe("Sent to every supplier.")).json().autoDoc.description).toBe(
+    "Sent to every supplier.",
+  );
+  expect((await describe("   ")).json().autoDoc.description).toBeNull();
+});
+
 it("refuses Business Users on settings, options, diffs, and every lifecycle route", async () => {
   const initial = await create("Reach", "plain");
   const id = initial.autoDoc.id;
