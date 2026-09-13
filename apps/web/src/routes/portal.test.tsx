@@ -507,8 +507,6 @@ describe("my-requests", () => {
   const MINE: HomeRequest[] = [
     {
       owner: { displayName: "Lee Member" },
-      expectedBy: "2026-10-10",
-      estimatePassed: true,
       id: "rq1",
       number: 45,
       status: "new",
@@ -518,8 +516,6 @@ describe("my-requests", () => {
     },
     {
       owner: null,
-      expectedBy: null,
-      estimatePassed: false,
       id: "rq2",
       number: 38,
       status: "converted",
@@ -529,8 +525,6 @@ describe("my-requests", () => {
     },
     {
       owner: null,
-      expectedBy: null,
-      estimatePassed: false,
       id: "rq3",
       number: 31,
       status: "resolved",
@@ -540,8 +534,6 @@ describe("my-requests", () => {
     },
     {
       owner: null,
-      expectedBy: null,
-      estimatePassed: false,
       id: "rq4",
       number: 22,
       status: "declined",
@@ -551,12 +543,13 @@ describe("my-requests", () => {
     },
   ];
 
-  it("shows ownership and the confirmed estimate on Your requests", async () => {
+  it("shows ownership on Your requests without a separate return estimate", async () => {
     stubApi({ signedIn: REQUESTER, extra: homeWith(MINE) });
     renderAt("/portal");
     expect(await screen.findByText("Owner: Lee Member")).toBeInTheDocument();
-    expect(screen.getByText("Estimate passed")).toBeInTheDocument();
-    expect(screen.getByText("Oct 10, 2026")).toBeInTheDocument();
+    expect(screen.queryByText(/Expected back/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Estimate passed")).not.toBeInTheDocument();
+    expect(screen.queryByText("Oct 10, 2026")).not.toBeInTheDocument();
   });
 
   function homeWith(requests: HomeRequest[]) {

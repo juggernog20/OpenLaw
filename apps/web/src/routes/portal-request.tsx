@@ -4,7 +4,7 @@
  * and History in applets (DES-079). Conversion redirects to the record; an
  * archived destination leaves only the read-only original submission. */
 
-import { RequestExpectation } from "../components/portal/request-expectation";
+import { RequestOwner } from "../components/portal/request-owner";
 import { HelpLink } from "../components/documentation/help-link";
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { defineMessage, FormattedMessage, useIntl, type IntlShape } from "react-intl";
@@ -123,7 +123,7 @@ export function PortalRequestPage() {
             </p>
           ) : (
             <>
-              <RequestExpectation request={request} />
+              <RequestOwner request={request} />
               <StatusBanner status={request.status} declinedReason={request.declinedReason} />
             </>
           )}

@@ -54,6 +54,7 @@ describe("app shell chrome", () => {
     expect(links.map((link) => link.textContent)).toEqual([
       "Home",
       "Inbox",
+      "My Tasks",
       "Matters",
       "Contracts",
       "Documents",

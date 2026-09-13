@@ -273,11 +273,18 @@ describe("the record's Tasks section (CTR-017)", () => {
     expect(api.writes[0]?.body).toMatchObject({ title: "Draft strategy", assigneeId: MEMBER.id });
   });
 
-  it("draws the checklist with done count", async () => {
+  it("hides completed Tasks by default and shows them without changing the counts", async () => {
     stubApi({ signedIn: MEMBER, extra: recordApi(CHECKLIST).handler });
     renderAt("/contracts/42/tasks");
 
     const card = await section();
+    const user = userEvent.setup();
+    const toggle = card.getByRole("switch", { name: "Show completed" });
+    expect(toggle).not.toBeChecked();
+    expect(card.getAllByRole("listitem")).toHaveLength(2);
+    expect(card.queryByText("Review redline")).not.toBeInTheDocument();
+    await user.click(toggle);
+    expect(toggle).toBeChecked();
     const items = card.getAllByRole("listitem");
     expect(items).toHaveLength(3);
     expect(items[0]).toHaveTextContent("Draft the NDA");
@@ -290,6 +297,10 @@ describe("the record's Tasks section (CTR-017)", () => {
     // The tab chip counts open work, not the whole checklist.
     const strip = within(screen.getByRole("navigation", { name: "Contract sections" }));
     expect(strip.getByRole("img", { name: "2 open tasks" })).toBeInTheDocument();
+    await user.click(card.getByRole("checkbox", { name: "Reopen task: Review redline" }));
+    await user.click(toggle);
+    expect(card.getAllByRole("listitem")).toHaveLength(3);
+    expect(card.getByText("0 of 3 done")).toBeInTheDocument();
   });
 
   it("shows the due date on a task that has one", async () => {
@@ -298,8 +309,9 @@ describe("the record's Tasks section (CTR-017)", () => {
 
     const card = await section();
     const items = card.getAllByRole("listitem");
-    // The third task has a due date.
-    expect(items[2]).toHaveTextContent("Due");
+    expect(items.find((item) => item.textContent?.includes("Sign the NDA"))).toHaveTextContent(
+      "Due",
+    );
   });
 
   it("draws the section's own empty line when the record has no tasks", async () => {

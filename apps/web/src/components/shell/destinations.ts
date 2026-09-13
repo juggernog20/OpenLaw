@@ -17,6 +17,7 @@ import {
   House,
   Inbox,
   Landmark,
+  ListChecks,
   Signature,
   type LucideIcon,
 } from "lucide-react";
@@ -56,6 +57,13 @@ export const destinations: Destination[] = [
     path: "/inbox",
     icon: Inbox,
     label: defineMessage({ id: "nav.inbox", defaultMessage: "Inbox" }),
+    roles: MEMBER_PLUS_ROLES,
+  },
+  {
+    id: "my-tasks",
+    path: "/home/tasks",
+    icon: ListChecks,
+    label: defineMessage({ id: "nav.myTasks", defaultMessage: "My Tasks" }),
     roles: MEMBER_PLUS_ROLES,
   },
   {

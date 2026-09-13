@@ -254,6 +254,10 @@ The M20/10 addendum above left one form nobody could submit, and named three can
 
 **The editor draws the box locked rather than letting the rule arrive as a failed save.** The row is otherwise an ordinary row — it attaches, reorders, and detaches — and only its Required box is disabled. The reason is said twice, beside the box for a reader and in the card's help line for everybody else, because a disabled control with no reason is a screen that refuses without explaining. The API's refusal is the real guard; the locked box is the client half of it, in the same way the Attach menu's scoping is the client half of the scope rule.
 
+### Addendum (2026-09-13, Auto-Docs grill) — `entity` leaves the refusal, `user` stays
+
+**DD-027** took the visibility decision the M20/11 addendum above deferred. A Business User may read the names of Portal-listed Entities (ENT-010), so an `entity` Field on a request form may now be required; the `TypeFieldRequiredRule` on the request-type mount refuses `user` alone. The Portal draws the Entity picker from the DD-027 read and refuses a submitted value that is not live, non-Confidential, and Portal-listed.
+
 ### Addendum (2026-08-22, M21/10, [#421](https://github.com/juggernog20/OpenLaw/issues/421)) — the paper follows a conversion
 
 The M20/6 addendum above built request attachments and left one sentence for M21: promotion into the record the Request became is conversion's. M21/10 built it, inside the conversion transaction the M21/9 addendum describes. These are the choices it settled.
@@ -398,6 +402,8 @@ Six of the nine Business User testers said the same thing: the request page says
 
 ### Addendum (2026-09-10, #806) — confirmed estimates and calendar-day turnaround
 
+**Return estimates superseded by the 2026-09-13 addendum below.** Historical activity remains readable.
+
 The expected return date is an **estimate**, labelled "Expected back (estimate)". Needed by stays the requester's requested date, displayed with their submitted values; it never pulls Legal's estimate earlier. The open specification questions in the 2026-09-09 addendum are settled by this addendum.
 
 Request types carry nullable **Turnaround (calendar days)**, a whole number from zero through 36,500. Blank means no suggestion; zero suggests the submission date. Triage is offered the submission date in the organization's default timezone plus that many calendar days, including weekends and holidays. Choosing the suggestion confirms it; reading a Request or changing a type, turnaround, or timezone setting never writes or overwrites a saved estimate.
@@ -405,6 +411,10 @@ Request types carry nullable **Turnaround (calendar days)**, a whole number from
 Member+ may set or clear the estimate while the requester-facing status is Open or In progress. Conversion preserves it. Resolved and Declined Requests retain a read-only estimate. A date before today in the organization's timezone carries neutral "Estimate passed" text only while Open or In progress. This adds no status, notification, or overdue styling.
 
 The requester sees only the triage owner's display name, on their own Request and Your requests. Clearing assignment clears that name. Conversion ownership remains independent of this projection.
+
+### UX review addendum (2026-09-13) — remove the separate Request return estimate
+
+The staff Request page no longer offers **Expected back (estimate)**, and the Portal Request page and **Your requests** no longer show the estimate, its empty placeholder, or **Estimate passed**. The separate date duplicates deadline management once a Request becomes a Contract or Matter. Track work through the resulting record's Tasks and Key dates; use the Request conversation for triage updates. The triage owner remains visible to the Requester, and submitted Needed by answers remain part of the original Request. A request type may still publish a general turnaround duration before submission. This supersedes return estimates in the INT-003 addenda of 2026-09-09 and 2026-09-10. Migration `0115_remove_request_return_estimate` drops `requests.expected_by`; the estimate write endpoint, response fields, date calculations, and seed writes are removed. Existing audit entries retain their historical payloads.
 
 ## INT-004 — Deflection links panel in v1; conditional form logic stays deferred
 
@@ -748,6 +758,10 @@ and a Type that attaches a slug-matching Field still carries it as a Field. Noth
 the seed is required by this addendum: `workTheRecord` still adds the counterparty after
 conversion and is answered 409 now that the conversion already linked it, so the seed
 runs clean and can be simplified when it is next touched.
+
+### Addendum (2026-09-13, Auto-Docs grill, ADO-006) — the Inbox gains a second tab: Unassigned contracts
+
+The Inbox lists exactly the Requests whose fate is undecided, and now also the generated Contracts nobody owns yet. An Auto-Doc Generation that creates a Contract no Assignment rule matched leaves `manager_id` null; that Contract appears under an **Unassigned contracts** tab beside the Requests until a Member+ claims it or sets the Legal Owner on the record. The Request tab is unchanged. `contract.generated_unassigned` (NOT-009) gives the tab the same reach as a new Request. The glossary entry for Inbox is amended.
 
 ## INT-008 — Conversion drafts prepare editable Matter creation from cited Request sources
 

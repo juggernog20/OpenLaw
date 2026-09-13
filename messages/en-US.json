@@ -4412,6 +4412,9 @@
   "home.tasks.empty": {
     "defaultMessage": "No open Tasks assigned to you."
   },
+  "home.tasks.emptyAll": {
+    "defaultMessage": "No Tasks assigned to you."
+  },
   "home.tasks.loadFailed": {
     "defaultMessage": "More Tasks could not be loaded. Please try again."
   },
@@ -4432,6 +4435,12 @@
   },
   "home.tasks.record": {
     "defaultMessage": "{title} · {kind, select, contract {Contract C-{number}} other {Matter M-{number}}}"
+  },
+  "home.tasks.reopen": {
+    "defaultMessage": "Reopen Task: {title}"
+  },
+  "home.tasks.reopenFailed": {
+    "defaultMessage": "The Task could not be reopened. Please try again."
   },
   "home.tasks.restored": {
     "defaultMessage": "Reopened: {title}"
@@ -5582,6 +5591,9 @@
   "nav.matters": {
     "defaultMessage": "Matters"
   },
+  "nav.myTasks": {
+    "defaultMessage": "My Tasks"
+  },
   "notFound.body": {
     "defaultMessage": "There is nothing at this address."
   },
@@ -6482,24 +6494,6 @@
   "renewal.vehicle.successorBlurb": {
     "defaultMessage": "Standalone record linked as the renewal."
   },
-  "requests.clearEstimate": {
-    "defaultMessage": "Clear estimate"
-  },
-  "requests.estimateHint": {
-    "defaultMessage": "An estimate from Legal, separate from the requester's Needed by date. Suggested dates use the request type's calendar-day turnaround from submission."
-  },
-  "requests.estimateNotSet": {
-    "defaultMessage": "Not set yet"
-  },
-  "requests.estimatePassed": {
-    "defaultMessage": "Estimate passed"
-  },
-  "requests.expectedBack": {
-    "defaultMessage": "Expected back (estimate)"
-  },
-  "requests.expectedBackValue": {
-    "defaultMessage": "Expected back (estimate): {date}"
-  },
   "requests.reference": {
     "defaultMessage": "R-{number, number, ::group-off}"
   },
@@ -6508,9 +6502,6 @@
   },
   "requests.statusLabel": {
     "defaultMessage": "{status, select, new {New} converted {Converted} resolved {Resolved} declined {Declined} other {Unknown}}"
-  },
-  "requests.useSuggestedEstimate": {
-    "defaultMessage": "Use suggested date: {date}"
   },
   "resolve.explains": {
     "defaultMessage": "Explain why this request can be closed without creating a contract or matter."
@@ -9188,6 +9179,15 @@
   "tasks.addTitle": {
     "defaultMessage": "Add a task"
   },
+  "tasks.completed.failed": {
+    "defaultMessage": "Tasks could not be loaded. Try changing the completed filter again."
+  },
+  "tasks.completed.hide": {
+    "defaultMessage": "Hide completed"
+  },
+  "tasks.completed.show": {
+    "defaultMessage": "Show completed"
+  },
   "tasks.count.done": {
     "defaultMessage": "{done} of {total} done"
   },
@@ -9202,6 +9202,9 @@
   },
   "tasks.empty": {
     "defaultMessage": "No tasks on this contract yet."
+  },
+  "tasks.emptyOpen": {
+    "defaultMessage": "No open Tasks."
   },
   "tasks.remove": {
     "defaultMessage": "Remove task"

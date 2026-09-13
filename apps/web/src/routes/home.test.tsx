@@ -44,6 +44,7 @@ const tasksSection = {
   rows: [
     {
       id: "contract-task-1",
+      isDone: false,
       title: "Prepare financing signature pages",
       dueDate: "2000-01-01",
       isOverdue: true,
@@ -57,6 +58,7 @@ const tasksSection = {
     },
     {
       id: "matter-task-1",
+      isDone: false,
       title: "Review response exhibits",
       dueDate: "2099-01-01",
       isOverdue: false,
@@ -70,6 +72,7 @@ const tasksSection = {
     },
     {
       id: "matter-task-2",
+      isDone: false,
       title: "Confirm interview list",
       dueDate: null,
       isOverdue: false,
@@ -574,6 +577,118 @@ describe("Home", () => {
     expect(await screen.findByText("No open Tasks assigned to you.")).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
+
+  it("loads completed Tasks through pagination and preserves the current filter when a read fails", async () => {
+    const user = userEvent.setup();
+    const open = tasksSection.rows[0];
+    const done = { ...tasksSection.rows[1], dueDate: "2000-01-01", isDone: true };
+    const moreDone = { ...tasksSection.rows[2], isDone: true };
+    const reads: string[] = [];
+    let fail = true;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname !== "/api/v1/home/tasks") return undefined;
+        reads.push(call.url.search);
+        if (call.url.searchParams.get("includeCompleted") !== "true")
+          return json(200, { total: 1, rows: [open], nextCursor: null });
+        if (fail) return problem(503, "Unavailable");
+        return call.url.searchParams.has("cursor")
+          ? json(200, { total: 3, rows: [moreDone], nextCursor: null })
+          : json(200, { total: 3, rows: [open, done], nextCursor: "completed-page-two" });
+      },
+    });
+    renderAt("/home/tasks");
+    const toggle = await screen.findByRole("switch", { name: "Show completed" });
+    expect(toggle).not.toBeChecked();
+    expect(toggle.closest("header")).toHaveTextContent("Tasks assigned to you");
+    expect(screen.queryByText("Hide completed")).not.toBeInTheDocument();
+    await user.click(toggle);
+    expect(await screen.findByRole("alert")).toHaveTextContent("Tasks could not be loaded");
+    expect(toggle).not.toBeChecked();
+    expect(screen.getByText(open.title)).toBeInTheDocument();
+    fail = false;
+    await user.click(toggle);
+    expect(
+      await screen.findByRole("checkbox", { name: `Reopen Task: ${done.title}` }),
+    ).toBeChecked();
+    expect(screen.getByText(done.title)).toHaveClass("line-through");
+    expect(screen.getByText(done.title).closest("li")).not.toHaveTextContent(/overdue/i);
+    expect(toggle).toBeChecked();
+    expect(toggle).toHaveAccessibleName("Hide completed");
+    expect(screen.queryByText("Show completed")).not.toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Load more Tasks" }));
+    expect(await screen.findByText(moreDone.title)).toBeInTheDocument();
+    expect(new URLSearchParams(reads.at(-1)).get("includeCompleted")).toBe("true");
+    expect(new URLSearchParams(reads.at(-1)).get("cursor")).toBe("completed-page-two");
+    await user.click(toggle);
+    expect(screen.queryByText(done.title)).not.toBeInTheDocument();
+    expect(screen.queryByText(moreDone.title)).not.toBeInTheDocument();
+    expect(screen.getByText(open.title)).toBeInTheDocument();
+    expect(new URLSearchParams(reads.at(-1)).get("includeCompleted")).toBe("false");
+    expect(new URLSearchParams(reads.at(-1)).has("cursor")).toBe(false);
+  });
+
+  it.each([
+    ["Contract", tasksSection.rows[0], "/api/v1/tasks/contract-task-1/toggle"],
+    ["Matter", tasksSection.rows[1], "/api/v1/matter-tasks/matter-task-1/toggle"],
+  ] as const)(
+    "keeps completed %s Tasks visible and supports reopening and Undo across filters",
+    async (_kind, task, endpoint) => {
+      const user = userEvent.setup();
+      let done = false;
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call) => {
+          if (call.url.pathname === "/api/v1/home/tasks") {
+            const rows =
+              !done || call.url.searchParams.get("includeCompleted") === "true"
+                ? [{ ...task, isDone: done, isOverdue: !done && task.isOverdue }]
+                : [];
+            return json(200, { total: rows.length, rows, nextCursor: null });
+          }
+          if (call.url.pathname === endpoint && call.method === "POST") {
+            done = !done;
+            return json(200, {
+              tasks: [{ id: task.id, isDone: done }],
+              doneCount: Number(done),
+              totalCount: 1,
+            });
+          }
+          return undefined;
+        },
+      });
+      renderAt("/home/tasks");
+      const toggle = await screen.findByRole("switch", { name: "Show completed" });
+      await user.click(toggle);
+      await user.click(screen.getByRole("checkbox", { name: `Complete Task: ${task.title}` }));
+      const checked = await screen.findByRole("checkbox", { name: `Reopen Task: ${task.title}` });
+      expect(checked).toBeChecked();
+      expect(checked.closest("li")).not.toHaveClass("home-task-exit");
+      expect(screen.queryByText("Overdue")).not.toBeInTheDocument();
+      await user.click(checked);
+      expect(
+        await screen.findByRole("checkbox", { name: `Complete Task: ${task.title}` }),
+      ).not.toBeChecked();
+      expect(screen.queryByRole("button", { name: "Undo" })).not.toBeInTheDocument();
+      await user.click(screen.getByRole("checkbox", { name: `Complete Task: ${task.title}` }));
+      await user.click(await screen.findByRole("button", { name: "Undo" }));
+      expect(
+        within(screen.getByRole("region", { name: "Tasks assigned to you" })).getByText("1"),
+      ).toBeInTheDocument();
+      await user.click(screen.getByRole("checkbox", { name: `Complete Task: ${task.title}` }));
+      await user.click(toggle);
+      expect(await screen.findByText("No open Tasks assigned to you.")).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: "Undo" }));
+      expect(
+        await screen.findByRole("checkbox", { name: `Complete Task: ${task.title}` }),
+      ).not.toBeChecked();
+      expect(
+        within(screen.getByRole("region", { name: "Tasks assigned to you" })).getByText("1"),
+      ).toBeInTheDocument();
+    },
+  );
 
   it("retains loaded Tasks on a paging failure and allows retry", async () => {
     const user = userEvent.setup();

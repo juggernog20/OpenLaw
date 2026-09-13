@@ -98,7 +98,6 @@
  */
 
 import { requestAssignees } from "./projection.js";
-import { requestCalendar } from "./calendar.js";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import type { FastifyRequest } from "fastify";
 import type { AuthenticatedUser } from "../../auth/guards.js";
@@ -194,8 +193,6 @@ const RequestTypeRefSchema = z.object({
  * through, where it got to, and how old it is. */
 const MyRequestRowSchema = z.object({
   owner: z.object({ displayName: z.string() }).nullable(),
-  expectedBy: z.iso.date().nullable(),
-  estimatePassed: z.boolean(),
   id: z.string(),
   /** Rendered R-###; it is also what the detail is addressed by. */
   number: z.number().int(),
@@ -416,7 +413,6 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
           typeId: requestTypes.id,
           typeSlug: requestTypes.slug,
           typeDisplayName: requestTypes.displayName,
-          expectedBy: requests.expectedBy,
           owner: { displayName: requestAssignees.displayName },
         })
         .from(requests)
@@ -445,8 +441,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         // home draws the block whole — there is no "load more" in I5 to
         // recover the tail with.
         .orderBy(desc(requests.createdAt), desc(requests.number));
-      const { today } = await requestCalendar(app.db);
-      return { requests: rows.map((row) => toRow(row, today)) };
+      return { requests: rows.map((row) => toRow(row)) };
     },
   );
 
@@ -508,7 +503,6 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
           typeId: requestTypes.id,
           typeSlug: requestTypes.slug,
           typeDisplayName: requestTypes.displayName,
-          expectedBy: requests.expectedBy,
           owner: { displayName: requestAssignees.displayName },
         })
         .from(requests)
@@ -560,7 +554,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         redirectTo,
         recordArchived,
         request: {
-          ...toRow(row, (await requestCalendar(app.db)).today),
+          ...toRow(row),
           description: row.description,
           urgency: row.urgency,
           customFields: row.customFields,
@@ -875,18 +869,13 @@ const AttachmentUploadForm = z.any().meta({
 });
 
 /** The joined row, reshaped into the answer's nested request type. */
-function toRow<T extends RequestRowColumns>(row: T, today: string) {
+function toRow<T extends RequestRowColumns>(row: T) {
   return {
     id: row.id,
     number: row.number,
     status: row.status,
     title: row.title,
     owner: row.owner,
-    expectedBy: row.expectedBy,
-    estimatePassed:
-      row.expectedBy !== null &&
-      row.expectedBy < today &&
-      (row.status === "new" || row.status === "converted"),
     createdAt: row.createdAt.toISOString(),
     requestType: { id: row.typeId, slug: row.typeSlug, displayName: row.typeDisplayName },
   };
@@ -894,7 +883,6 @@ function toRow<T extends RequestRowColumns>(row: T, today: string) {
 
 interface RequestRowColumns {
   owner: { displayName: string } | null;
-  expectedBy: string | null;
   id: string;
   number: number;
   status: (typeof REQUEST_STATUSES)[number];

@@ -338,6 +338,7 @@ describe("GET /api/v1/home", () => {
     for (const query of [
       "limit=0",
       "limit=101",
+      "includeCompleted=invalid",
       "cursor=invalid",
       "cursor=2099-02-31:contract:01950000-0000-7000-8000-000000000000",
     ]) {
@@ -637,8 +638,9 @@ describe("GET /api/v1/home", () => {
     expect(section!.rows.some((row) => row.title === "This must leave no gap")).toBe(false);
     expect(tasksIn(await home(OTHER))).toBeUndefined();
 
-    const list = async (cursor?: string, limit = 2) => {
+    const list = async (cursor?: string, limit = 2, includeCompleted = false) => {
       const query = new URLSearchParams({ limit: String(limit) });
+      query.set("includeCompleted", String(includeCompleted));
       if (cursor) query.set("cursor", cursor);
       const response = await harness.app.inject({
         method: "GET",
@@ -656,6 +658,19 @@ describe("GET /api/v1/home", () => {
     expect(first.total).toBe(4);
     expect(first.rows).toEqual(section!.rows.slice(0, 2));
     expect(first.nextCursor).toBeTruthy();
+    const includingDone = await list(undefined, 2, true);
+    expect(includingDone.total).toBe(5);
+    expect(includingDone.rows[0]).toMatchObject({
+      title: "Already complete",
+      isDone: true,
+      isOverdue: false,
+    });
+    const includingDoneNext = await list(includingDone.nextCursor!, 100, true);
+    expect(includingDoneNext.total).toBe(5);
+    expect([...includingDone.rows, ...includingDoneNext.rows].map((row) => row.title)).toEqual([
+      "Already complete",
+      ...section!.rows.map((row) => row.title),
+    ]);
     const second = await list(first.nextCursor!);
     expect(second.total).toBe(4);
     expect(second.rows.map((row) => row.title)).toEqual([
@@ -676,6 +691,10 @@ describe("GET /api/v1/home", () => {
       .update(matterTasks)
       .set({ isDone: true })
       .where(eq(matterTasks.id, first.rows[1]!.id));
+    const completedMatter = (await list(undefined, 100, true)).rows.find(
+      (row) => row.id === first.rows[1]!.id,
+    );
+    expect(completedMatter).toMatchObject({ isDone: true, isOverdue: false });
     expect((await list(first.nextCursor!)).rows).toEqual(second.rows);
     await harness.db
       .update(matterTasks)

@@ -1,0 +1,480 @@
+{
+  "audited_commit": "d20969516104dbebe3e46e4a840edba867370468",
+  "application_tables": 72,
+  "application_columns": 679,
+  "migrations": 109,
+  "generated_schema_diff": [],
+  "catalog_diff": {
+    "columns": {
+      "replayOnly": [],
+      "modelOnly": []
+    },
+    "indexes": {
+      "replayOnly": [],
+      "modelOnly": []
+    },
+    "constraints": {
+      "replayOnly": [],
+      "modelOnly": []
+    },
+    "sequences": {
+      "replayOnly": [],
+      "modelOnly": []
+    }
+  },
+  "replay_objects": {
+    "indexes": 210,
+    "constraints": 321,
+    "sequences": 3,
+    "functions": ["document_text_search_vector"],
+    "triggers": 0,
+    "views": 0,
+    "policies": 0
+  },
+  "tests": {
+    "files": 19,
+    "passed": 60,
+    "failed": 0,
+    "command": "pnpm exec vitest run src/*migration*.test.ts --maxWorkers 2",
+    "working_directory": "apps/api"
+  },
+  "candidate_drop_rehearsal": {
+    "columns": 6,
+    "cascade": false,
+    "result": "PASS; rolled back"
+  },
+  "local_database": {
+    "container": "openlaw-postgres-1",
+    "access": "read-only transactions",
+    "public_tables": 71,
+    "public_columns": 679,
+    "journal_records": 120,
+    "canonical_migrations_present": 109,
+    "extra_migrations": [
+      {
+        "id": 115,
+        "hash": "5ec52f106795aa04430ec397a974c36c1c9e42089c44a967937d4409f2391669",
+        "blob": "9839f353803639ad742bd3ee5049b2101458f19a",
+        "path": "packages/db/migrations/0109_portal_record_access.sql"
+      },
+      {
+        "id": 116,
+        "hash": "493a05e10ee3b97fbeb78eb100b17da6f7b12bd83659c478e3bbbf1516f3dbed",
+        "blob": "375381864f14b507b0426e9e83971aee76a0cc21",
+        "path": "packages/db/migrations/0110_portal_comment_reads.sql"
+      },
+      {
+        "id": 117,
+        "hash": "b52e22c6eba299e0f6b4171a867bcfd90cf8a23fabf901715868c7278818d392",
+        "blob": "898499f196a0847a70ba04fc95526f9ca9b8f5f6",
+        "path": "packages/db/migrations/0111_retire_business_sponsor.sql"
+      },
+      {
+        "id": 118,
+        "hash": "6b85252ae57ac013df1567ec5955a76e0258472b7ef3e32d23853cb953b42549",
+        "blob": "894a6aa884fb49f75a528fb0bbd1a9850181d8ff",
+        "path": "packages/db/migrations/0112_contract_overview_classification.sql"
+      },
+      {
+        "id": 119,
+        "hash": "5661d1768b6e1b0fedc6fbcf107c19be6f6e2ec20ff7f6502d72ee900220bc1a",
+        "blob": "3df5d29275f8b151e588a28319326a0daa90c5a8",
+        "path": "packages/db/migrations/0113_request_title.sql"
+      },
+      {
+        "id": 120,
+        "hash": "9edfafb79e8a8c6e13bd9875fd34c84c063f45bc11e8d9da22333fd222c47990",
+        "blob": "6d5a62f96a0557c2f0d75e06f86de79a40194853",
+        "path": "packages/db/migrations/0114_request_title_preferences.sql"
+      },
+      {
+        "id": 91,
+        "hash": "a74c7240bdfda1ef490996e0295d81f23f6d81e53a2d79b6f4b814f6ed12af19",
+        "blob": "9df0ffd11d0b4eb64c8c7231c1ba38e8c4414a47",
+        "path": "packages/db/migrations/0090_request_triage_assignee.sql"
+      },
+      {
+        "id": 92,
+        "hash": "bb3373780f9442de87864fdc179e836658a4c65b9cb7f85be72ba1420e83c277",
+        "blob": "140f6f7831f902e3cacf5b206be88ef47c33b1b5",
+        "path": "packages/db/migrations/0091_shallow_scarlet_witch.sql"
+      },
+      {
+        "id": 93,
+        "hash": "4144917cd695eb221c439732ca04439a853f57a0de51b5f09db9ec2711ca7824",
+        "blob": "e8b5d485f00a1b45633e214e22837f0af91acad8",
+        "path": "packages/db/migrations/0092_fat_tag.sql"
+      },
+      {
+        "id": 94,
+        "hash": "14372b5844cd06f42a670ddbcf39f7593c5930f65ce2b50719f5b5817a9b39e4",
+        "blob": "8dee43b37bf0bcb03ccd3f3bbb8998825562163e",
+        "path": "packages/db/migrations/0093_known_genesis.sql"
+      },
+      {
+        "id": 95,
+        "hash": "65218ed7fcce341502e52bbb3e0bf61609aa07389b9a58ecaa4af39795c8e6b0",
+        "blob": "b4ac2f0b435c81cde5a7622200a63d0b2ac0327d",
+        "path": "packages/db/migrations/0094_peaceful_azazel.sql"
+      }
+    ],
+    "column_diff": {
+      "localOnly": [
+        {
+          "table_schema": "public",
+          "table_name": "comment_last_read",
+          "column_name": "read_at",
+          "data_type": "timestamp with time zone",
+          "udt_name": "timestamptz",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "is_generated": "NEVER",
+          "generation_expression": null
+        },
+        {
+          "table_schema": "public",
+          "table_name": "comment_last_read",
+          "column_name": "full_thread_read_at",
+          "data_type": "timestamp with time zone",
+          "udt_name": "timestamptz",
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_generated": "NEVER",
+          "generation_expression": null
+        },
+        {
+          "table_schema": "public",
+          "table_name": "contracts",
+          "column_name": "created_by",
+          "data_type": "text",
+          "udt_name": "text",
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_generated": "NEVER",
+          "generation_expression": null
+        },
+        {
+          "table_schema": "public",
+          "table_name": "contracts",
+          "column_name": "owning_department",
+          "data_type": "text",
+          "udt_name": "text",
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_generated": "NEVER",
+          "generation_expression": null
+        },
+        {
+          "table_schema": "public",
+          "table_name": "contracts",
+          "column_name": "region",
+          "data_type": "text",
+          "udt_name": "text",
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_generated": "NEVER",
+          "generation_expression": null
+        },
+        {
+          "table_schema": "public",
+          "table_name": "matters",
+          "column_name": "business_owner_id",
+          "data_type": "text",
+          "udt_name": "text",
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_generated": "NEVER",
+          "generation_expression": null
+        },
+        {
+          "table_schema": "public",
+          "table_name": "requests",
+          "column_name": "title",
+          "data_type": "text",
+          "udt_name": "text",
+          "is_nullable": "NO",
+          "column_default": null,
+          "is_generated": "NEVER",
+          "generation_expression": null
+        },
+        {
+          "table_schema": "public",
+          "table_name": "requests",
+          "column_name": "search_vector",
+          "data_type": "tsvector",
+          "udt_name": "tsvector",
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_generated": "ALWAYS",
+          "generation_expression": "(((setweight(to_tsvector('english'::regconfig, COALESCE(title, ''::text)), 'A'::\"char\") || setweight(to_tsvector('english'::regconfig, ('R-'::text || (number)::text)), 'A'::\"char\")) || setweight(to_tsvector('english'::regconfig, COALESCE(description, ''::text)), 'B'::\"char\")) || setweight(to_tsvector('english'::regconfig, COALESCE(status, ''::text)), 'C'::\"char\"))"
+        }
+      ],
+      "replayOnly": [
+        {
+          "table_schema": "public",
+          "table_name": "comment_last_read",
+          "column_name": "read_at",
+          "data_type": "timestamp with time zone",
+          "udt_name": "timestamptz",
+          "is_nullable": "NO",
+          "column_default": "now()",
+          "is_generated": "NEVER",
+          "generation_expression": null
+        },
+        {
+          "table_schema": "public",
+          "table_name": "contract_stakeholders",
+          "column_name": "contract_id",
+          "data_type": "text",
+          "udt_name": "text",
+          "is_nullable": "NO",
+          "column_default": null,
+          "is_generated": "NEVER",
+          "generation_expression": null
+        },
+        {
+          "table_schema": "public",
+          "table_name": "contract_stakeholders",
+          "column_name": "user_id",
+          "data_type": "text",
+          "udt_name": "text",
+          "is_nullable": "NO",
+          "column_default": null,
+          "is_generated": "NEVER",
+          "generation_expression": null
+        },
+        {
+          "table_schema": "public",
+          "table_name": "contract_stakeholders",
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "udt_name": "timestamptz",
+          "is_nullable": "NO",
+          "column_default": "now()",
+          "is_generated": "NEVER",
+          "generation_expression": null
+        },
+        {
+          "table_schema": "public",
+          "table_name": "contract_team",
+          "column_name": "role",
+          "data_type": "text",
+          "udt_name": "text",
+          "is_nullable": "NO",
+          "column_default": null,
+          "is_generated": "NEVER",
+          "generation_expression": null
+        },
+        {
+          "table_schema": "public",
+          "table_name": "matter_team",
+          "column_name": "role",
+          "data_type": "text",
+          "udt_name": "text",
+          "is_nullable": "NO",
+          "column_default": null,
+          "is_generated": "NEVER",
+          "generation_expression": null
+        },
+        {
+          "table_schema": "public",
+          "table_name": "requests",
+          "column_name": "summary",
+          "data_type": "text",
+          "udt_name": "text",
+          "is_nullable": "NO",
+          "column_default": null,
+          "is_generated": "NEVER",
+          "generation_expression": null
+        },
+        {
+          "table_schema": "public",
+          "table_name": "requests",
+          "column_name": "search_vector",
+          "data_type": "tsvector",
+          "udt_name": "tsvector",
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_generated": "ALWAYS",
+          "generation_expression": "(((setweight(to_tsvector('english'::regconfig, COALESCE(summary, ''::text)), 'A'::\"char\") || setweight(to_tsvector('english'::regconfig, ('R-'::text || (number)::text)), 'A'::\"char\")) || setweight(to_tsvector('english'::regconfig, COALESCE(description, ''::text)), 'B'::\"char\")) || setweight(to_tsvector('english'::regconfig, COALESCE(status, ''::text)), 'C'::\"char\"))"
+        }
+      ]
+    },
+    "index_diff": {
+      "localOnly": [
+        {
+          "schemaname": "public",
+          "tablename": "contract_team",
+          "indexname": "contract_team_pkey",
+          "indexdef": "CREATE UNIQUE INDEX contract_team_pkey ON public.contract_team USING btree (contract_id, user_id)"
+        },
+        {
+          "schemaname": "public",
+          "tablename": "matter_team",
+          "indexname": "matter_team_pkey",
+          "indexdef": "CREATE UNIQUE INDEX matter_team_pkey ON public.matter_team USING btree (matter_id, user_id)"
+        }
+      ],
+      "replayOnly": [
+        {
+          "schemaname": "public",
+          "tablename": "contract_stakeholders",
+          "indexname": "contract_stakeholders_pkey",
+          "indexdef": "CREATE UNIQUE INDEX contract_stakeholders_pkey ON public.contract_stakeholders USING btree (contract_id, user_id)"
+        },
+        {
+          "schemaname": "public",
+          "tablename": "contract_stakeholders",
+          "indexname": "contract_stakeholders_user_idx",
+          "indexdef": "CREATE INDEX contract_stakeholders_user_idx ON public.contract_stakeholders USING btree (user_id)"
+        },
+        {
+          "schemaname": "public",
+          "tablename": "contract_team",
+          "indexname": "contract_team_pkey",
+          "indexdef": "CREATE UNIQUE INDEX contract_team_pkey ON public.contract_team USING btree (contract_id, user_id, role)"
+        },
+        {
+          "schemaname": "public",
+          "tablename": "matter_team",
+          "indexname": "matter_team_pkey",
+          "indexdef": "CREATE UNIQUE INDEX matter_team_pkey ON public.matter_team USING btree (matter_id, user_id, role)"
+        }
+      ]
+    },
+    "constraint_diff": {
+      "localOnly": [
+        {
+          "schema": "public",
+          "table_name": "contract_team",
+          "name": "contract_team_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (contract_id, user_id)"
+        },
+        {
+          "schema": "public",
+          "table_name": "contracts",
+          "name": "contracts_created_by_users_id_fk",
+          "type": "f",
+          "definition": "FOREIGN KEY (created_by) REFERENCES users(id)"
+        },
+        {
+          "schema": "public",
+          "table_name": "matter_team",
+          "name": "matter_team_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (matter_id, user_id)"
+        },
+        {
+          "schema": "public",
+          "table_name": "matters",
+          "name": "matters_business_owner_id_users_id_fk",
+          "type": "f",
+          "definition": "FOREIGN KEY (business_owner_id) REFERENCES users(id)"
+        },
+        {
+          "schema": "public",
+          "table_name": "users",
+          "name": "users_role_check",
+          "type": "c",
+          "definition": "CHECK ((role = ANY (ARRAY['administrator'::text, 'legal_team_member'::text, 'business_user'::text])))"
+        }
+      ],
+      "replayOnly": [
+        {
+          "schema": "public",
+          "table_name": "contract_stakeholders",
+          "name": "contract_stakeholders_contract_id_contracts_id_fk",
+          "type": "f",
+          "definition": "FOREIGN KEY (contract_id) REFERENCES contracts(id) ON DELETE CASCADE"
+        },
+        {
+          "schema": "public",
+          "table_name": "contract_stakeholders",
+          "name": "contract_stakeholders_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (contract_id, user_id)"
+        },
+        {
+          "schema": "public",
+          "table_name": "contract_stakeholders",
+          "name": "contract_stakeholders_user_id_users_id_fk",
+          "type": "f",
+          "definition": "FOREIGN KEY (user_id) REFERENCES users(id)"
+        },
+        {
+          "schema": "public",
+          "table_name": "contract_team",
+          "name": "contract_team_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (contract_id, user_id, role)"
+        },
+        {
+          "schema": "public",
+          "table_name": "contract_team",
+          "name": "contract_team_role_check",
+          "type": "c",
+          "definition": "CHECK ((role = ANY (ARRAY['member'::text, 'watcher'::text, 'creator'::text, 'contributor'::text])))"
+        },
+        {
+          "schema": "public",
+          "table_name": "matter_team",
+          "name": "matter_team_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (matter_id, user_id, role)"
+        },
+        {
+          "schema": "public",
+          "table_name": "matter_team",
+          "name": "matter_team_role_check",
+          "type": "c",
+          "definition": "CHECK ((role = ANY (ARRAY['member'::text, 'watcher'::text, 'creator'::text, 'contributor'::text])))"
+        },
+        {
+          "schema": "public",
+          "table_name": "users",
+          "name": "users_role_check",
+          "type": "c",
+          "definition": "CHECK ((role = ANY (ARRAY['administrator'::text, 'legal_team_member'::text, 'contributor'::text, 'business_user'::text])))"
+        }
+      ]
+    },
+    "candidate_counts": {
+      "counterparties": {
+        "rows": 54,
+        "primary_contact_name": 0,
+        "primary_contact_email": 0,
+        "address": 0,
+        "notes": 0,
+        "jurisdiction": 0,
+        "archived_at": 0,
+        "updated_differs_from_created": 0
+      },
+      "two_factors": {
+        "rows": 0,
+        "updated_differs_from_created": 0
+      },
+      "conversion_drafts": {
+        "rows": 10,
+        "model": 10,
+        "finished_at": 10
+      }
+    },
+    "comment_attachments": {
+      "rows": 26,
+      "uploader_differs_from_author": 0
+    },
+    "journal_guard_on_isolated_copy": {
+      "result": "PASS",
+      "repaired": [],
+      "note": "No unknown/newer migration rejection when all canonical hashes are present."
+    },
+    "pgboss": {
+      "version": "12.31.0",
+      "schema": 41,
+      "observed_schema_version": 41,
+      "tables": 12,
+      "columns": 161
+    }
+  }
+}

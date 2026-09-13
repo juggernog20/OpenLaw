@@ -46,6 +46,56 @@ _Avoid_: article, wiki page, resource
 A nested folder that organizes Knowledge Items in the Knowledge destination. It does not organize the Documents inside an item. The tree starts blank, and Type remains a separate filter [KNW-003, DOC-006].
 _Avoid_: Document folder, library type, category
 
+### Auto-Docs
+
+**Auto-Doc**:
+One approved Word template, the form that fills it, and the settings that govern its use, held as a record of its own. Legal maintains it; a Generation consumes it. It may target a Contract Type, in which case a Generation creates a Contract [DD-022, ADO-001, ADO-005].
+_Avoid_: template (that is a Matter template or a Knowledge type), document template, form (that is the Auto-Doc's form, not the Auto-Doc)
+
+**Placeholder**:
+One double-brace marker inside an Auto-Doc's Word file, such as `{{counterparty_name}}`, that a form field fills at Generation [DD-022].
+_Avoid_: variable, merge field (a specific Word feature this is not), field (that is the catalog)
+
+**Form field**:
+One question on an Auto-Doc's form. It either fills a Placeholder or collects a value the document does not print. It belongs to its Auto-Doc and is not a catalog Field, though it may map to one so the answer lands on the created Contract [DD-022].
+_Avoid_: Field (the catalog entry), question, input
+
+**Block**:
+A named span of an Auto-Doc's Word file, marked `{{#block name}} … {{/block}}`, that a Clause rule includes or omits at Generation. The text stays in the file with its own formatting. The editor detects Blocks from the file; a person never names one by hand [DD-022].
+_Avoid_: clause (that is legal content, which a Block may hold), section, optional paragraph
+
+**Clause rule**:
+A condition on an Auto-Doc's form, written in the form editor, that decides whether one Block is included: "include `arbitration` when `jurisdiction` equals United States" [DD-022].
+_Avoid_: conditional, trigger, if-statement, formula
+
+**Filing**:
+Member+ adding a Generation's output to an existing Matter or Contract as a Document, or creating a new Contract from it, after the Generation happened. The Generation keeps its own copy and points at where it was filed [DD-022].
+_Avoid_: attaching, moving, linking, converting (that is the Request act)
+
+**Generation**:
+One act of filling an Auto-Doc: who, when, which live pair, the answers given, and the output produced. It moves from pending to ready or failed, and it is the unit of Auto-Doc audit. A Generation is never a Document; Filing makes a Document from it [ADO-005, ADO-007].
+_Avoid_: run (that is an Analysis run), submission, request (that is the intake term), export
+
+**Live pair**:
+The one file Version and the one form version that Publish pinned together on an Auto-Doc. Every Generation cites its live pair. Editing either chain changes nothing until the next Publish; Unpublish clears the pair and deletes nothing [ADO-004].
+_Avoid_: current version, published version (there are two), release
+
+**Assignment rule**:
+An ordered condition on one Auto-Doc form field that names the Legal Owner of a Contract a Generation creates. First match wins; an optional default closes the list. It uses the same operators as a Clause rule [ADO-006].
+_Avoid_: routing rule, owner rule, workflow
+
+**Unassigned contract**:
+A Contract a Generation created that no Assignment rule matched, so it has no Legal Owner. It waits on the Inbox's Unassigned contracts tab until a Member+ claims it [ADO-006].
+_Avoid_: orphan contract, pending contract, triage item
+
+**Auto-Doc audience**:
+Who reaches a published Auto-Doc in the Portal: **Legal only**, **Selected** (named users and Departments), or **Everyone**. Member+ reach every Auto-Doc in the app whatever the audience [ADO-009].
+_Avoid_: visibility, permissions, sharing
+
+**Acknowledgement**:
+The statement a Business User must accept before using an Auto-Doc, with an org-wide default text overridable per Auto-Doc, at a per-Auto-Doc frequency of every use, once per Auto-Doc, or once. Editing the text resets it. Member+ never acknowledge [ADO-008].
+_Avoid_: consent, attestation, terms, disclaimer
+
 ### Parties
 
 **Entity**:
@@ -59,6 +109,10 @@ _Avoid_: parent link, ownership relation, shareholding record
 **Registration**:
 One jurisdiction where an Entity is registered or qualified to do business, with its own registration number, registered agent, and active, lapsed, or withdrawn status. Formation jurisdiction stays on the Entity [ENT-002].
 _Avoid_: formation, licence, incorporation
+
+**Portal-listed Entity**:
+An Entity an Administrator has flagged so Business Users can pick it by name wherever Legal placed an Entity picker on a Portal form. Names only; a Confidential Entity is never listed [ENT-010, DD-027].
+_Avoid_: public entity, visible entity, portal entity
 
 **Counterparty**:
 An external organisation on the other side of a contract or matter [DD-008].
@@ -96,7 +150,16 @@ _Avoid_: assignee, lead, responsible
 The required short name for what the requester needs. Stored as `requests.title` and called Title in forms, Inbox, Portal, notifications and original submissions. Formerly labelled Summary [INT-009].
 
 **Owning department / Region**:
-Built-in, nullable Contract attributes describing its business classification. Both live in Overview for every Contract Type, outside its configurable Fields. Legal edits them in the full app; Business Users on the team read the same values in the Portal. Neither grants access [CTR-025, DD-026].
+Built-in, nullable Contract attributes describing its business classification. Both live in Overview for every Contract Type, outside its configurable Fields. Owning department is a pick from the Departments list; Region is free text. Legal edits them in the full app; Business Users on the team read the same values in the Portal. Neither grants access [CTR-025, DD-026, SET-010].
+_Avoid_: department (alone, when the Contract attribute is meant), business unit
+
+**Department**:
+One entry in the Administrator-managed Departments list, carried on a user. An Administrator sets it on the user; a Business User sets their own once in the first run. It is an Auto-Doc audience term ("all of Procurement") and the source of a Contract's Owning department. It grants nothing by itself [SET-010, SET-011, ADO-009].
+_Avoid_: team (that is a record roster), group, business unit, owning department (that is the Contract attribute)
+
+**Default people**:
+The Administrator-managed list on a Contract Type of people who get a team row on every new Contract of that Type, whatever created it. Copied at creation, never re-applied [CTR-026].
+_Avoid_: default team, auto-members, watchers
 
 **Business Owner**:
 The single nullable person named for the business on a Contract or Matter. Conversion sets the Requester as Business Owner and adds their team row. Changing the assignment later does not grant or remove access [DD-023].
@@ -147,7 +210,7 @@ The warning a Contract meets when it moves from a Stage at or before `approval` 
 _Avoid_: approval gate, hard gate, block, approval lock
 
 **Inbox**:
-The single triage queue, containing exactly the Requests whose fate is undecided [INT-006, INT-007].
+The single triage queue: the Requests whose fate is undecided, and, on a second tab, the Unassigned contracts a Generation created [INT-006, INT-007, ADO-006].
 _Avoid_: queue, triage list, backlog
 
 **Disposition**:
@@ -330,6 +393,11 @@ _Avoid_: approval task, sign-off item, approval step, reviewer
 - A **Contract** may have one parent **Contract**, arbitrarily deep, with no inheritance semantics [CTR-015]
 - A **Contract** may hold typed links to other **Contracts** — `renews`, `amends`, or the symmetric `related` — each read from both directions, from the same single row [CTR-015]
 - A **Contract** holds many **Approval Requests**, each naming one approver; at most one of them is pending per approver [CTR-012]
+- An **Auto-Doc** owns exactly one template **Document** (a DOC-001 chain) and many form versions; Publish pins one of each as the **Live pair** [ADO-001, ADO-004]
+- An **Auto-Doc** may target one **Contract Type**; a **Generation** of a targeted Auto-Doc creates exactly one **Contract** in `draft` [ADO-005]
+- A **Generation** cites one Live pair, belongs to one person, and may be **Filed** to many Matters or Contracts, each Filing one Document [ADO-005]
+- A **Contract Type** carries many **Default people**, each copied to the team of every new Contract of that Type [CTR-026]
+- A **user** belongs to at most one **Department**; a **Contract**'s Owning department is one Department [SET-010, CTR-025]
 
 ## Example dialogue
 

@@ -28,6 +28,7 @@ const FULL_BRIEFING: BriefingMail = {
     rows: [
       {
         id: "task-1",
+        isDone: false,
         title: "Prepare signature pack",
         dueDate: "2026-09-01",
         isOverdue: false,

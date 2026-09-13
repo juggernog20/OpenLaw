@@ -1154,7 +1154,6 @@ Structured request envelope, created only via portal forms. Not a work container
 | `id`                       | UUID        | PK                                                                                                                                                                                                                |
 | `number`                   | integer     | `GENERATED ALWAYS AS IDENTITY` (`requests_number_seq`), displayed **R-42** per **INT-002**                                                                                                                        |
 | `request_type_id`          | UUID        | FK → `request_types.id`, not null                                                                                                                                                                                 |
-| `expected_by`              | date        | nullable confirmed estimate, independent of Needed by; Member+ writes while Open/In progress (**INT-003**, #806)                                                                                                  |
 | `requester_id`             | UUID        | FK → `users.id`, not null (magic-link identity)                                                                                                                                                                   |
 | `status`                   | text (enum) | `new` \| `converted` \| `resolved` \| `declined` per **INT-001** as revised by **INT-007** — fixed, code branches; not null, default `new` (every Request is born open; M21's disposition writes the other three) |
 | `title`                    | text        | not null                                                                                                                                                                                                          |
@@ -1301,6 +1300,56 @@ One person's saved way of reading one list. **Private to that person** — there
 Unique on (`user_id`, `surface`, `lower(name)`) — two views of one list may not share a name for one person, compared without case, the same reading the menu's sort takes and the same rule folder siblings follow (DES-033). Names are per person, so two people may both have a "My contracts". Unique on (`user_id`, `surface`) **partial where `is_default`** — at most one default per person per surface, as a database rule rather than a thing the writer is trusted to remember; partial because the non-default rows are the many.
 
 How many views one person may hold on one surface is bounded in the API (`MAX_LIST_VIEWS_PER_SURFACE`), not here — which is why the list route answers whole rather than paging (CTR-024's 2026-08-21 addendum).
+
+---
+
+### `auto_docs` and its tables
+
+Source: **ADO-001–010**, grilled 2026-09-13. Nothing built yet; this is the intended shape.
+
+`auto_docs`: `id`; not-null `name`; nullable `description`; `state` with CHECK `draft | published | archived` (default `draft`); `audience` with CHECK `legal_only | selected | everyone` (default `legal_only`); nullable `target_contract_type_id` FK → `contract_types.id` `ON DELETE SET NULL`; nullable `title_pattern`; nullable `fixed_entity_id` FK → `entities.id`; nullable `template_document_id` FK → `documents.id` (the one owned template Document); nullable `published_document_version_id` FK → `document_versions.id` and `published_form_version_id` FK → `auto_doc_form_versions.id`, both set or both null (the **live pair**); `formats` with CHECK `docx | pdf | both` (default `both`); nullable Markdown `cover_note`; nullable `acknowledgement_text` (null = the org default from `org_settings.auto_doc_acknowledgement_text`); `acknowledgement_frequency` with CHECK `none | every_use | once_per_auto_doc | once` (default `once_per_auto_doc`); nullable `default_legal_owner_id` FK → `users.id`; `created_by`, `updated_by`; timestamps; nullable `published_at`, `archived_at`.
+
+`documents.auto_doc_id`: the fifth DOC-008 owner arm; the exactly-one-owner CHECK widens to five. An Auto-Doc owns exactly one Document, its template; the chain is DOC-001's.
+
+`auto_doc_form_versions`: `id`; `auto_doc_id`; `version_number` (1..n per Auto-Doc, unique); `definition` jsonb, an immutable snapshot of the form fields (slug, label, help, `field_type` from the catalog's nine, options, required, display order, `catalog_field_id`, `contract_attribute`) and the Clause rules (block name, field slug, operator `equals | is_one_of | is_set | is_not`, value); `created_by`; `created_at`. The editor writes a new row on save; nothing is edited in place.
+
+`auto_doc_assignment_rules`: `id`; `auto_doc_id`; `display_order`; `field_slug`; `operator`; `value` jsonb; `legal_owner_id` FK → `users.id`. Settings, not form definition: edited in place, audited.
+
+`auto_doc_audience_users` (`auto_doc_id`, `user_id`) and `auto_doc_audience_departments` (`auto_doc_id`, `department_id`): the `selected` allowlist. Rows are ignored unless `audience = 'selected'`.
+
+`auto_doc_generations`: `id`; `auto_doc_id`; `document_version_id` and `form_version_id` (the pair cited); `generated_by` FK → `users.id`; `answers` jsonb keyed by form-field slug; `state` with CHECK `pending | ready | failed`; nullable `docx_file_ref`, `pdf_file_ref` (DOC-012 keys minted from the Generation id); nullable `email_sent_at`, `email_failure`; nullable `created_contract_id` FK → `contracts.id` `ON DELETE SET NULL`; `failure` jsonb; timestamps. The output is never a Document; `contracts.created_by_generation_id` (nullable FK, `ON DELETE SET NULL`) is the reverse pointer and what the Inbox's Unassigned contracts tab reads with `manager_id IS NULL`.
+
+`auto_doc_filings`: `id`; `generation_id`; exactly one of `matter_id`, `contract_id`; `document_id` FK → `documents.id` (the Document the Filing created); `filed_by`; `created_at`.
+
+`auto_doc_acknowledgements`: `id`; `auto_doc_id` nullable (null for a `once` org-wide acknowledgement); `user_id`; `text_hash` (SHA-256 of the text shown, so a text edit invalidates); `acknowledged_at`. The Activity entry `auto_doc.acknowledged` carries the full text.
+
+`document_versions.source = 'generated'` CHECK widens to admit `kind = 'draft_ours'` when the Version was written by a Generation or a Filing.
+
+`activity_log.entity_type` gains `auto_doc`. Verbs: `auto_doc.created`, `.published`, `.unpublished`, `.archived`, `.restored`, `.generated`, `.filed`, `.acknowledged`, `.form_saved`, `.template_uploaded`.
+
+---
+
+### `departments`
+
+Source: **SET-010**, **CTR-025** (amended 2026-09-13)
+
+MTR-001 taxonomy machinery: `id`, `slug`, `display_name`, `display_order`, `archived_at`, timestamps. Administrator-managed under Settings → Organization → Departments. `users.department_id` nullable FK; `contracts.owning_department_id` nullable FK replaces the free-text `owning_department` (migration creates one row per distinct existing value and links). `users.portal_onboarding_completed_at` (SET-011) is the first-run stamp.
+
+---
+
+### `contract_type_default_people`
+
+Source: **CTR-026**
+
+(`contract_type_id`, `user_id`, `created_at`), compound PK. Copied to `contract_team` on every creation of a Contract of that Type, deduplicated; archived users skipped. No role column: DD-023.
+
+---
+
+### `entities.portal_listed`
+
+Source: **ENT-010**, **DD-027**
+
+Boolean, not null, default false. Never true on a Confidential Entity (application-refused). The Portal Entity read returns `id`, `name` for live, non-Confidential, Portal-listed Entities only.
 
 ---
 

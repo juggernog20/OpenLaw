@@ -2200,23 +2200,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/requests/{number}/expected-by": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /** Set or clear Legal's return estimate on an open or in-progress Request */
-    patch: operations["setRequestEstimate"];
-    trace?: never;
-  };
   "/api/v1/requests/assignees": {
     parameters: {
       query?: never;
@@ -4997,7 +4980,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Open Tasks assigned to the signed-in user, across reachable active Contracts and Matters */
+    /** Tasks assigned to the signed-in user across reachable active Contracts and Matters; completed Tasks are hidden by default */
     get: operations["listAssignedTasks"];
     put?: never;
     post?: never;
@@ -14626,8 +14609,6 @@ export interface operations {
               owner: {
                 displayName: string;
               } | null;
-              expectedBy: string | null;
-              estimatePassed: boolean;
               id: string;
               number: number;
               /** @enum {string} */
@@ -14676,8 +14657,6 @@ export interface operations {
               owner: {
                 displayName: string;
               } | null;
-              expectedBy: string | null;
-              estimatePassed: boolean;
               id: string;
               number: number;
               /** @enum {string} */
@@ -14879,96 +14858,6 @@ export interface operations {
       };
     };
   };
-  setRequestEstimate: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          expectedBy: string | null;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            request: {
-              id: string;
-              number: number;
-              /** @enum {string} */
-              status: "new" | "converted" | "resolved" | "declined";
-              title: string;
-              description: string | null;
-              /** @enum {string} */
-              urgency: "low" | "medium" | "high" | "critical";
-              customFields: {
-                [key: string]: string | number | boolean | string[];
-              };
-              declinedReason: string | null;
-              createdAt: string;
-              requestType: {
-                id: string;
-                displayName: string;
-                targetModule: ("matter" | "contract") | null;
-                targetTypeId: string | null;
-                targetTypeName: string | null;
-              };
-              requester: {
-                id: string;
-                displayName: string;
-                email: string;
-                image: string | null;
-              };
-              assignee: {
-                id: string;
-                displayName: string;
-                image: string | null;
-              } | null;
-              expectedBy: string | null;
-              suggestedExpectedBy: string | null;
-              convertedContract: {
-                number: number;
-              } | null;
-              convertedRecord:
-                | (
-                    | {
-                        /** @enum {string} */
-                        module: "contract";
-                        number: number;
-                      }
-                    | {
-                        /** @enum {string} */
-                        module: "matter";
-                        number: number;
-                      }
-                  )
-                | null;
-            };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
   requestAssigneeOptions: {
     parameters: {
       query?: never;
@@ -15060,8 +14949,6 @@ export interface operations {
                 displayName: string;
                 image: string | null;
               } | null;
-              expectedBy: string | null;
-              suggestedExpectedBy: string | null;
               convertedContract: {
                 number: number;
               } | null;
@@ -15182,8 +15069,6 @@ export interface operations {
                 displayName: string;
                 image: string | null;
               } | null;
-              expectedBy: string | null;
-              suggestedExpectedBy: string | null;
               convertedContract: {
                 number: number;
               } | null;
@@ -15360,8 +15245,6 @@ export interface operations {
                 displayName: string;
                 image: string | null;
               } | null;
-              expectedBy: string | null;
-              suggestedExpectedBy: string | null;
               convertedContract: {
                 number: number;
               } | null;
@@ -15497,8 +15380,6 @@ export interface operations {
                 displayName: string;
                 image: string | null;
               } | null;
-              expectedBy: string | null;
-              suggestedExpectedBy: string | null;
               convertedContract: {
                 number: number;
               } | null;
@@ -16083,8 +15964,6 @@ export interface operations {
                 displayName: string;
                 image: string | null;
               } | null;
-              expectedBy: string | null;
-              suggestedExpectedBy: string | null;
               convertedContract: {
                 number: number;
               } | null;
@@ -29819,6 +29698,7 @@ export interface operations {
       query?: {
         limit?: number;
         cursor?: string;
+        includeCompleted?: "true" | "false";
       };
       header?: never;
       path?: never;
@@ -29838,6 +29718,7 @@ export interface operations {
               id: string;
               title: string;
               dueDate: string | null;
+              isDone: boolean;
               isOverdue: boolean;
               record: {
                 /** @enum {string} */
@@ -29935,6 +29816,7 @@ export interface operations {
                     id: string;
                     title: string;
                     dueDate: string | null;
+                    isDone: boolean;
                     isOverdue: boolean;
                     record: {
                       /** @enum {string} */

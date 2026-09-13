@@ -17,14 +17,6 @@ Sign in as a Legal Team Member or Administrator. Business Users [follow their ow
 
 Assignment records responsibility without reserving the Request. Another Legal Team Member or Administrator can still decide it. Assignment and replies leave it undecided, and the person assigned during triage does not automatically become the Contract Legal Owner or Matter Manager. The Requester sees the saved triage assignee as **Owner** in the Portal; clearing assignment clears that name.
 
-## Confirm a return estimate
-
-On the Request page, find **Expected back (estimate)**. Choose a date, or select **Use suggested date** when a suggestion is available. The suggestion uses the Request type's business-day turnaround from the submission date in the organization's timezone. Check the saved indication. Use **Clear estimate** to remove a confirmed date.
-
-The estimate stays separate from the Requester's **Needed by** date. If Needed by is earlier than the suggestion, consider it when choosing a date; the app does not silently move the estimate earlier. Changing the request type's turnaround later does not overwrite an estimate already saved on a Request.
-
-The Requester sees the confirmed date on the Request and under **Your requests**. An Open Request whose estimate is past shows **Estimate passed**. Legal can change the estimate while a Request is undecided. A converted Request shows only its envelope, and later deadlines belong to the resulting record's tasks. Resolution or decline makes the estimate read-only and removes the passed-estimate warning. If saving fails, retry the date and confirm the saved result before relying on it. Press Escape in the date control to return to the saved date.
-
 ## Convert to a Contract or Matter
 
 Check the target under **Converts to**. Open **Triage** and select the matching **Convert to contract** or **Convert to matter** action. If the Request is mis-routed, re-target it by selecting the other action and reviewing the destination before confirming. Conversion creates exactly one Contract or Matter. Follow [Convert a Request to a Contract or Matter](convert-request.md) to check the type, values, paper, and resulting work.

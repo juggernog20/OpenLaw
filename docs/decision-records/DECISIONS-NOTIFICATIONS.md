@@ -528,6 +528,29 @@ A successful send appends `user.briefing_sent` with `approvalCount`, `taskCount`
 
 ---
 
+## NOT-009 — Being added to a team is an event, and a Generation reaches the Legal Owner or the Inbox
+
+- **Status:** Accepted
+- **Date:** 2026-09-13
+
+### Context
+
+Team adds were Activity actions only; the catalog had no event for them. The Auto-Docs grill created two reasons to notify: CTR-026 adds default people to every new Contract of a Type, and ADO-005 creates Contracts nobody has opened yet.
+
+### Decision
+
+Three catalog events, no new group:
+
+- **`contract.team_added`**, group `assigned_to_you`. Fired for every team add, defaulted or manual, to the person added. Member+ receive it in the app; a Business User receives it in the Portal bell and by email, which is how Procurement learns an NDA exists.
+- **`contract.generated`**, group `assigned_to_you`. Fired to the Legal Owner an Assignment rule chose (ADO-006), naming the Auto-Doc, the Generation, and who generated it.
+- **`contract.generated_unassigned`**, group `new_requests`. Fired to every Member+ when a Generation creates a Contract no rule matched, so the Inbox's Unassigned contracts tab has the same reach as a new Request. Claiming it writes `contract.owner_assigned` as today.
+
+The Business User who generated the document gets the document itself (ADO-007), not a notification.
+
+### Consequences
+
+Three keys in `catalog.ts`; Activity's `contract.team_added` stays the narration. Portal notification settings show the `assigned_to_you` group for Business Users, which they already can.
+
 ## Index of decisions
 
 | #       | Decision                                                           | Status                                                                                                                                                                                                                                                                                                                          |
@@ -540,3 +563,4 @@ A successful send appends `user.briefing_sent` with `approvalCount`, `taskCount`
 | NOT-006 | The morning digest's anatomy and its delivery rules                | Accepted; the M29 close records the built six-section anatomy amendment                                                                                                                                                                                                                                                         |
 | NOT-007 | Email delivery is at-least-once; duplicate accepted over drop      | Accepted                                                                                                                                                                                                                                                                                                                        |
 | NOT-008 | The daily briefing: cross-module morning email replaces the digest | Accepted; Knowledge built in M28/6 and the six-section briefing completed in M29/7                                                                                                                                                                                                                                              |
+| NOT-009 | Team adds and Generations are events                               | Accepted                                                                                                                                                                                                                                                                                                                        |

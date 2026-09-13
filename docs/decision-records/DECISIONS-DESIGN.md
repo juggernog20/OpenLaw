@@ -4375,6 +4375,10 @@ Tasks assigned to you opens `/home/tasks` through **View all N**. The page lists
 
 Dates approaching opens **Your dates** in a wide modal through **View all N**. Home's total and preview still cover the next thirty days; the modal reads the full displayed month with the same personal, access, and lifecycle predicates. Previous month, next month, and Today share the top bar. Date numbers align under weekday headings; marked days can be selected to filter the list, and Show whole month clears the selection. Each entry links to its Contract or Matter Key dates tab. The modal fills narrow screens and preserves the standard dialog dismissal and focus behavior.
 
+### UX review addendum (2026-09-13) — Task navigation and completed visibility
+
+**My Tasks** sits between Inbox and Matters in the main navigation and opens `/home/tasks`. My Tasks and the Task sections on Contracts and Matters place the shared switch in the Task card header. Its single label says **Show completed** while completed Tasks are hidden and **Hide completed** while they are visible. Completed Tasks are hidden by default; showing them includes both open and completed Tasks, with completed titles struck through and checked boxes available to reopen them. Record counts continue to show the whole checklist. My Tasks applies the filter before counting and pagination, preserving assignment, record access, and lifecycle rules. Completing a Task while completed rows are shown keeps it in the list; Hide completed retains the existing removal animation and Undo. Home keeps its open-Task preview.
+
 ## DES-070: AI analysis is one settings pane, one record card, and one unverified marker (normalizes F.3; extends DES-054, DES-032, DES-042, DES-069)
 
 - **Status:** Accepted

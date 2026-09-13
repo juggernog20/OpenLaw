@@ -9,12 +9,12 @@ This repo is **single-context**: one glossary, one shared vocabulary across `app
 - **`CONTEXT.md`** at the repo root — the domain glossary.
 - **`docs/decision-records/`** — this repo's ADRs. They are **not** one-file-per-decision under `docs/adr/`. Decisions are grouped into per-module files, each holding many numbered entries:
 
-  | File                                                                                                                                                         | Scope                    | ID prefix  |
-  | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------ | ---------- |
-  | `DECISIONS.md`                                                                                                                                               | System-wide              | `DD-xxx`   |
-  | `DECISIONS-CONTRACTS.md`, `-MATTERS.md`, `-DOCUMENTS.md`, `-ENTITIES.md`, `-INTAKE.md`, `-KNOWLEDGE.md`, `-COMMENTS.md`, `-NOTIFICATIONS.md`, `-SETTINGS.md` | Per product module       | `DD-xxx`   |
-  | `DECISIONS-DESIGN.md`                                                                                                                                        | Frontend design system   | `DES-xxx`  |
-  | `DECISIONS-TECH-STACK.md`                                                                                                                                    | Stack and infrastructure | `TECH-xxx` |
+  | File                                                                                                                                                                          | Scope                    | ID prefix  |
+  | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ---------- |
+  | `DECISIONS.md`                                                                                                                                                                | System-wide              | `DD-xxx`   |
+  | `DECISIONS-CONTRACTS.md`, `-MATTERS.md`, `-DOCUMENTS.md`, `-ENTITIES.md`, `-INTAKE.md`, `-KNOWLEDGE.md`, `-COMMENTS.md`, `-NOTIFICATIONS.md`, `-SETTINGS.md`, `-AUTO-DOCS.md` | Per product module       | `DD-xxx`   |
+  | `DECISIONS-DESIGN.md`                                                                                                                                                         | Frontend design system   | `DES-xxx`  |
+  | `DECISIONS-TECH-STACK.md`                                                                                                                                                     | Stack and infrastructure | `TECH-xxx` |
 
   Read the module file covering the area you're about to work in, plus `DECISIONS.md`.
 

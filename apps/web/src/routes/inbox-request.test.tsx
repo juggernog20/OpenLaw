@@ -253,8 +253,7 @@ describe("the envelope (I2)", () => {
     // DD-018: triage confirms the routing the Administrator bound.
     expect(within(hero).getByText("Contract · NDA")).toBeInTheDocument();
     expect(within(hero).getByText("High")).toBeInTheDocument();
-    // INT-003's estimate stays on an undecided Request.
-    expect(screen.getByLabelText("Expected back (estimate)")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Expected back (estimate)")).not.toBeInTheDocument();
     // The age, which is what triage weighs. The assertion is the stamp
     // alone: what the element *reads* is relative to the wall clock at
     // run time (DES-014), so pinning the words would be a test that
