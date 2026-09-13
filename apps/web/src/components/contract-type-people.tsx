@@ -6,6 +6,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { ArrowDown, ArrowUp, X } from "lucide-react";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
+import { CONTROL_CLASS } from "../lib/form-controls";
 import { problem } from "../lib/problem";
 import { SettingsCard } from "./settings-card";
 import { Button } from "./ui/button";
@@ -160,7 +161,7 @@ export function ContractTypePeople({
       <div className="flex gap-2">
         <select
           id="contract-default-person"
-          className="min-w-0 flex-1 rounded-input border border-border-default bg-input px-3 py-2 text-sm"
+          className={`${CONTROL_CLASS} min-w-0 flex-1`}
           value={selected}
           disabled={busy || archived || candidates.length === 0}
           onChange={(event) => setSelected(event.target.value)}
@@ -185,7 +186,7 @@ export function ContractTypePeople({
         {announcement}
       </p>
       {error && (
-        <p role="alert" className="text-sm text-error">
+        <p role="alert" className="text-sm text-status-danger-fg">
           {error}
         </p>
       )}
