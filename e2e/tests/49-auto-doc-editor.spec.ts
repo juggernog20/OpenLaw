@@ -32,7 +32,11 @@ test("Legal uploads a template, edits its form, and retains orphaned fields on r
   await date.getByLabel("Help text", { exact: true }).fill("Use the agreed date.");
   await date.getByLabel("Required", { exact: true }).check();
   await page.getByRole("button", { name: "Save form", exact: true }).click();
-  await expect(page.getByText("Form version 2", { exact: true })).toBeVisible();
+  await expect(
+    page
+      .getByRole("region", { name: "Form versions", exact: true })
+      .getByText("Form version 2", { exact: true }),
+  ).toBeVisible();
   await page.getByLabel("Word template", { exact: true }).setInputFiles(fixture("formatting"));
   await page.getByRole("button", { name: "Upload template", exact: true }).click();
   await expect(page.getByRole("button", { name: "Open version 2", exact: true })).toBeVisible();

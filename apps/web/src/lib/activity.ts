@@ -363,7 +363,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "displayName {Name} display_name {Display name} name {Name} " +
         "role {Role} email {Email} " +
         "stage {Stage} moduleScope {Scope} isRequired {Required} defaultPeople {Default people} " +
-        "targetModule {Target} targetType {Target type} turnaroundDays {Target turnaround (business days)} " +
+        "targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} " +
         "theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} " +
         "defaultLocale {Default language} defaultTimezone {Default timezone} " +
         "authMode {Sign-in method} allowedEmailDomains {Allowed email domains} " +
@@ -413,6 +413,7 @@ const CIVIL_DATE = /^\d{4}-\d{2}-\d{2}$/;
  * before that was true still reads through the same lookup. */
 const REFERENCE_KEYS = new Set([
   "assigneeId",
+  "targetContractTypeId",
   "matterId",
   "registrationId",
   "linkedUser",
@@ -450,6 +451,11 @@ function changeValue(
   // KNW-004's audience is a stored slug, so the feed says "Everyone"
   // where the column says `everyone`. The label helper knows only the
   // two values the column admits; anything else reads as itself.
+  if (key === "audience" && value === "selected")
+    return intl.formatMessage({
+      id: "activity.autoDoc.audienceSelected",
+      defaultMessage: "Selected",
+    });
   if (key === "audience" && (value === "legal_only" || value === "everyone")) {
     return knowledgeAudienceLabel(intl, value);
   }
@@ -2909,6 +2915,47 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     values: (intl, payload) => ({ name: knowledgeItemNamed(intl, payload) }),
     changes: (intl, payload, context) => directChange(intl, payload, "knowledgeType", context),
+  },
+  "auto_doc.updated": {
+    icon: PencilLine,
+    message: defineMessage({
+      id: "activity.autoDoc.updated",
+      defaultMessage: "{actor} changed {name}",
+    }),
+    values: (intl, payload) => ({ name: text(payload, "name") ?? thingName(intl, payload) }),
+    changes: changesFrom,
+  },
+  "auto_doc.published": {
+    icon: Globe,
+    message: defineMessage({
+      id: "activity.autoDoc.published",
+      defaultMessage: "{actor} published {name}",
+    }),
+    values: (intl, payload) => ({ name: text(payload, "name") ?? thingName(intl, payload) }),
+  },
+  "auto_doc.unpublished": {
+    icon: Undo2,
+    message: defineMessage({
+      id: "activity.autoDoc.unpublished",
+      defaultMessage: "{actor} unpublished {name}",
+    }),
+    values: (intl, payload) => ({ name: text(payload, "name") ?? thingName(intl, payload) }),
+  },
+  "auto_doc.archived": {
+    icon: Archive,
+    message: defineMessage({
+      id: "activity.autoDoc.archived",
+      defaultMessage: "{actor} archived {name}",
+    }),
+    values: (intl, payload) => ({ name: text(payload, "name") ?? thingName(intl, payload) }),
+  },
+  "auto_doc.restored": {
+    icon: ArchiveRestore,
+    message: defineMessage({
+      id: "activity.autoDoc.restored",
+      defaultMessage: "{actor} restored {name}",
+    }),
+    values: (intl, payload) => ({ name: text(payload, "name") ?? thingName(intl, payload) }),
   },
   "auto_doc.created": {
     icon: FileText,

@@ -3,11 +3,16 @@
 /** ADO-003 and ADO-004 preserve form history when a file or the editor changes it. */
 import {
   AUTO_DOC_FIELD_TYPES,
+  AUTO_DOC_RULE_OPERATORS,
+  AUTO_DOC_CONTRACT_ATTRIBUTES,
   autoDocFormVersions,
   autoDocs,
   autoDocTemplateScans,
   desc,
   eq,
+  inArray,
+  fields as catalogFields,
+  type AutoDocFormDefinition,
   type AutoDocFormField,
   type Executor,
   type Transaction,
@@ -30,8 +35,16 @@ export const FormFieldInput = z
     fieldType: z.enum(AUTO_DOC_FIELD_TYPES),
     options: z.array(z.string().trim().min(1).max(200)).nullable().default(null),
     required: z.boolean().default(false),
+    catalogFieldId: z.string().min(1).nullable().default(null),
+    contractAttribute: z.enum(AUTO_DOC_CONTRACT_ATTRIBUTES).nullable().default(null),
   })
   .superRefine((field, ctx) => {
+    if (field.catalogFieldId && field.contractAttribute)
+      ctx.addIssue({
+        code: "custom",
+        path: ["catalogFieldId"],
+        message: "Map a form field to one catalog Field or one Contract attribute.",
+      });
     const select = field.fieldType === "single_select" || field.fieldType === "multi_select";
     if (select && (!field.options?.length || new Set(field.options).size !== field.options.length))
       ctx.addIssue({
@@ -46,8 +59,34 @@ export const FormFieldInput = z
         message: "Only select fields take options.",
       });
   });
+const RuleScalar = z.union([z.string().max(4000), z.number().finite(), z.boolean()]);
+export const ClauseRuleInput = z
+  .strictObject({
+    blockName: z.string().regex(AUTO_DOC_SLUG),
+    fieldSlug: z.string().regex(AUTO_DOC_SLUG),
+    operator: z.enum(AUTO_DOC_RULE_OPERATORS),
+    value: z.union([RuleScalar, z.array(RuleScalar).min(1), z.null()]),
+  })
+  .superRefine((rule, ctx) => {
+    if (
+      rule.operator === "is_set"
+        ? rule.value !== null
+        : rule.operator === "is_one_of"
+          ? !Array.isArray(rule.value)
+          : rule.value === null || Array.isArray(rule.value)
+    )
+      ctx.addIssue({
+        code: "custom",
+        path: ["value"],
+        message:
+          "Use no value for is set, a list for is one of, and one value for equals or is not.",
+      });
+  });
 export const FormSaveInput = z
-  .strictObject({ fields: z.array(FormFieldInput) })
+  .strictObject({
+    fields: z.array(FormFieldInput),
+    clauseRules: z.array(ClauseRuleInput).default([]),
+  })
   .superRefine((definition, ctx) => {
     if (new Set(definition.fields.map((field) => field.slug)).size !== definition.fields.length)
       ctx.addIssue({
@@ -55,7 +94,78 @@ export const FormSaveInput = z
         path: ["fields"],
         message: "Each form field needs a distinct slug.",
       });
+    if (
+      new Set(definition.clauseRules.map((rule) => rule.blockName)).size !==
+      definition.clauseRules.length
+    )
+      ctx.addIssue({
+        code: "custom",
+        path: ["clauseRules"],
+        message: "Give each Block at most one Clause rule.",
+      });
   });
+
+export async function validateMaps(db: Executor, definition: AutoDocFormDefinition) {
+  const ids = [
+    ...new Set(
+      definition.fields.flatMap((field) => (field.catalogFieldId ? [field.catalogFieldId] : [])),
+    ),
+  ];
+  if (!ids.length) return;
+  const rows = await db
+    .select()
+    .from(catalogFields)
+    .where(inArray(catalogFields.id, ids))
+    .for("share");
+  const admitted = new Set(
+    rows
+      .filter(
+        (field) =>
+          !field.archivedAt && (field.moduleScope === "contract" || field.moduleScope === "global"),
+      )
+      .map((field) => field.id),
+  );
+  const gaps = definition.fields
+    .filter((field) => field.catalogFieldId && !admitted.has(field.catalogFieldId))
+    .map((field) => `Map "${field.label}" to a live catalog Field with contract or global scope.`);
+  if (gaps.length) throw httpError(400, gaps.join(" "));
+}
+
+export function publicationGaps(
+  definition: AutoDocFormDefinition,
+  detection: TemplateDetection,
+): string[] {
+  const fields = new Map(definition.fields.map((field) => [field.slug, field]));
+  const gaps = [...new Set(detection.placeholders)]
+    .filter((slug) => !fields.has(slug))
+    .map((slug) => `Add a form field for Placeholder "${slug}".`);
+  for (const rule of definition.clauseRules ?? []) {
+    if (!detection.blocks.includes(rule.blockName))
+      gaps.push(`Clause rule "${rule.blockName}" names a Block this file does not hold.`);
+    const field = fields.get(rule.fieldSlug);
+    if (!field)
+      gaps.push(`Clause rule "${rule.blockName}" names missing form field "${rule.fieldSlug}".`);
+    else if (field.options && rule.operator !== "is_set") {
+      const values = Array.isArray(rule.value) ? rule.value : [rule.value];
+      for (const value of values)
+        if (typeof value !== "string" || !field.options.includes(value))
+          gaps.push(
+            `Clause rule "${rule.blockName}" names option "${String(value)}" that "${field.label}" no longer holds.`,
+          );
+    } else if (rule.operator !== "is_set") {
+      const values = Array.isArray(rule.value) ? rule.value : [rule.value];
+      const expected =
+        field.fieldType === "number" || field.fieldType === "currency"
+          ? "number"
+          : field.fieldType === "boolean"
+            ? "boolean"
+            : "string";
+      if (values.some((value) => typeof value !== expected))
+        gaps.push(`Clause rule "${rule.blockName}" needs ${expected} values for "${field.label}".`);
+    }
+  }
+  return gaps;
+}
 
 export async function latestForm(db: Executor, autoDocId: string) {
   const [row] = await db
@@ -72,7 +182,7 @@ export async function appendForm(
   tx: Transaction,
   autoDocId: string,
   actorId: string,
-  fields: AutoDocFormField[],
+  definition: AutoDocFormDefinition,
   prior?: Awaited<ReturnType<typeof latestForm>>,
 ) {
   const previous = prior === undefined ? await latestForm(tx, autoDocId) : prior;
@@ -81,7 +191,7 @@ export async function appendForm(
     .values({
       autoDocId,
       versionNumber: (previous?.versionNumber ?? 0) + 1,
-      definition: { fields },
+      definition,
       createdBy: actorId,
     })
     .returning();
@@ -141,7 +251,10 @@ export async function applyTemplateVersion(
     tx,
     input.autoDocId,
     input.actorId,
-    detectedFields(previous?.definition.fields ?? [], input.detection),
+    {
+      fields: detectedFields(previous?.definition.fields ?? [], input.detection),
+      clauseRules: previous?.definition.clauseRules ?? [],
+    },
     previous,
   );
   await tx

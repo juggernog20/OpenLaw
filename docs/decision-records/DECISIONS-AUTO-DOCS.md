@@ -82,6 +82,10 @@ _None — queue cleared 2026-09-13 (ADO-001 through ADO-011). The clause library
 
 **M35/5 built addendum (#848):** Member+ has the Auto-Docs list, draft creation, template uploads, and the nine-type form editor. Migration 0120 adds the fifth Document owner and immutable JSON form snapshots. Each file Version holds detection metadata; a field's Placeholder provenance survives later uploads to drive the editor's orphan cue. History uses the shared activity feed, and file previews use the shared Document reader. Clause rules, maps, structural diffs, and Publish follow in M35/6.
 
+**M35/6 built addendum (#849):** Each form snapshot also holds its maps and Clause rules. The editor offers one row per detected Block and each select field's options. It refuses a rule for an absent Block when saving. Publish checks the chosen file and form together and names every missing Placeholder, Block, field, or option in one refusal. Structural form comparisons report field and rule changes. File comparisons open the shared Comparison view.
+
+Member+ can Publish a new pair, Unpublish, Archive, and Restore through separate audited routes. Later uploads and form saves keep the live pair. Migration 0121 adds publication and audience settings, the target Contract Type, and deferred checks on both version owners. Settings edits record before and after. The list searches by name and filters by state, audience, and target Type, with archived records hidden by default. Portal audience enforcement follows in M35/11.
+
 ## ADO-005 — Destinations: a Contract Type target creates a draft Contract; anything can be Filed afterwards
 
 - **Status** — Accepted

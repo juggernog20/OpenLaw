@@ -1249,6 +1249,23 @@ type KnowledgePayloads = {
  */
 type AutoDocPayloads = {
   "auto_doc.created": { name: string };
+  "auto_doc.updated": { name: string; changed: ChangedFields };
+  "auto_doc.published": { name: string; documentVersionId: string; formVersionId: string };
+  "auto_doc.unpublished": {
+    name: string;
+    documentVersionId: string | null;
+    formVersionId: string | null;
+  };
+  "auto_doc.archived": {
+    name: string;
+    documentVersionId: string | null;
+    formVersionId: string | null;
+  };
+  "auto_doc.restored": {
+    name: string;
+    documentVersionId: string | null;
+    formVersionId: string | null;
+  };
   "auto_doc.template_uploaded": {
     name: string;
     documentId: string;

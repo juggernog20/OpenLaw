@@ -5,7 +5,12 @@ import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import type { paths } from "@openlaw/api-client";
-import { autoDocFieldTypes, autoDocUploadAnswer } from "../lib/auto-docs";
+import {
+  autoDocFieldTypes,
+  autoDocUploadAnswer,
+  type AutoDocOptions,
+  type AutoDocClauseRule,
+} from "../lib/auto-docs";
 import { api } from "../lib/api";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
 import { isMemberPlus } from "../lib/roles";
@@ -22,14 +27,25 @@ import { RecordNotFoundPage } from "./not-found";
 type Answer =
   paths["/api/v1/auto-docs/{id}"]["get"]["responses"][200]["content"]["application/json"];
 type Field = NonNullable<Answer["formVersion"]>["definition"]["fields"][number];
+import { ClausesEditor, FieldMap } from "../components/auto-docs/clauses-editor";
+import {
+  PublicationCard,
+  AutoDocSettings,
+  AutoDocVersionDiff,
+} from "../components/auto-docs/publication-cards";
+
 const FIELD_TYPES = autoDocFieldTypes.options;
 
 export async function autoDocRecordLoader({ params, request }: LoaderFunctionArgs) {
   const user = await requireUser();
   if (!isMemberPlus(user.role)) return redirect("/portal");
-  const result = await api.GET("/api/v1/auto-docs/{id}", { params: { path: { id: params.id! } } });
+  const [result, options] = await Promise.all([
+    api.GET("/api/v1/auto-docs/{id}", { params: { path: { id: params.id! } } }),
+    api.GET("/api/v1/auto-docs/options"),
+  ]);
   if (result.response.status === 404) return { user, notFound: true as const };
   if (!result.data) throw new Error("The Auto-Doc could not be read.");
+  if (!options.data) throw new Error("The Auto-Doc editor options could not be read.");
   const query = new URL(request.url).searchParams;
   const versionId = query.get("version");
   let landing: { document: ContractDocument; versionId: string } | null = null;
@@ -41,7 +57,7 @@ export async function autoDocRecordLoader({ params, request }: LoaderFunctionArg
     if (document?.versions.some((version) => version.id === versionId))
       landing = { document, versionId };
   }
-  return { user, record: result.data, landing, find: query.get("find") };
+  return { user, record: result.data, options: options.data, landing, find: query.get("find") };
 }
 
 export function AutoDocRecordPage() {
@@ -68,6 +84,7 @@ export function AutoDocRecordPage() {
   return (
     <AutoDocRecord
       initial={loaded.record}
+      options={loaded.options}
       user={loaded.user}
       landing={loaded.landing}
       find={loaded.find}
@@ -77,11 +94,13 @@ export function AutoDocRecordPage() {
 
 function AutoDocRecord({
   initial,
+  options,
   user,
   landing,
   find,
 }: {
   initial: Answer;
+  options: AutoDocOptions;
   landing: { document: ContractDocument; versionId: string } | null;
   find: string | null;
   user: Awaited<ReturnType<typeof requireUser>>;
@@ -89,7 +108,13 @@ function AutoDocRecord({
   const intl = useIntl();
   const signOut = useSignOut("/auth/login");
   const [saved, setSaved] = useState(initial);
-  const history = useActivityApplet({ entityType: "auto_doc", entityId: initial.autoDoc.id });
+  const history = useActivityApplet({
+    entityType: "auto_doc",
+    entityId: initial.autoDoc.id,
+    referenceNames: Object.fromEntries(
+      options.contractTypes.map((type) => [type.id, type.displayName]),
+    ),
+  });
   const [reading, setReading] = useState(landing);
   const [covered, setCovered] = useState(false);
   const openVersion = reading?.document.versions.find(
@@ -115,10 +140,15 @@ function AutoDocRecord({
   const drafts = (record: Answer) =>
     (record.formVersion?.definition.fields ?? []).map((field, index) => ({
       ...field,
+      catalogFieldId: field.catalogFieldId ?? null,
+      contractAttribute: field.contractAttribute ?? null,
       key: `saved-${index}`,
       optionText: field.options?.join("\n") ?? "",
     }));
   const [fields, setFields] = useState(() => drafts(initial));
+  const [rules, setRules] = useState<AutoDocClauseRule[]>(
+    initial.formVersion?.definition.clauseRules ?? [],
+  );
   const [nextKey, setNextKey] = useState(1);
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
@@ -134,8 +164,12 @@ function AutoDocRecord({
       optionText: field.optionText,
       required: field.required,
       placeholder: field.placeholder,
+      catalogFieldId: field.catalogFieldId,
+      contractAttribute: field.contractAttribute,
     }));
-  const dirty = JSON.stringify(comparable(fields)) !== JSON.stringify(comparable(drafts(saved)));
+  const dirty =
+    JSON.stringify(comparable(fields)) !== JSON.stringify(comparable(drafts(saved))) ||
+    JSON.stringify(rules) !== JSON.stringify(saved.formVersion?.definition.clauseRules ?? []);
 
   const orphaned = fields.filter(
     (field) => field.placeholder && !saved.detection.placeholders.includes(field.slug),
@@ -161,6 +195,7 @@ function AutoDocRecord({
   function accept(record: Answer) {
     setSaved(record);
     setFields(drafts(record));
+    setRules(record.formVersion?.definition.clauseRules ?? []);
   }
   async function save() {
     // The seam refuses a duplicate slug and an empty or repeated option, but it
@@ -198,7 +233,10 @@ function AutoDocRecord({
             fieldType: field.fieldType,
             required: field.required,
             options: optionsOf(field),
+            catalogFieldId: field.catalogFieldId,
+            contractAttribute: field.contractAttribute,
           })),
+          clauseRules: rules,
         },
       })
       .catch(() => undefined);
@@ -316,6 +354,12 @@ function AutoDocRecord({
           <p role="status" className="text-sm text-muted">
             {notice}
           </p>
+          <PublicationCard
+            key={`publication-${saved.formVersion?.id}-${saved.template?.versions[0]?.id}`}
+            record={saved}
+            dirty={dirty}
+            onSaved={setSaved}
+          />
           <section
             aria-labelledby="auto-doc-template-title"
             className="space-y-4 rounded-card border border-border-default bg-raised p-6"
@@ -515,6 +559,11 @@ function AutoDocRecord({
                       />
                     </label>
                   )}
+                  <FieldMap
+                    field={field}
+                    options={options}
+                    onChange={(map) => update(field.key, map)}
+                  />
                   <label className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -552,6 +601,13 @@ function AutoDocRecord({
                   </div>
                 </fieldset>
               ))}
+              <ClausesEditor
+                blocks={saved.detection.blocks}
+                fields={fields.map((field) => ({ ...field, options: optionsOf(field) }))}
+                rules={rules}
+                disabled={busy || archived}
+                onChange={setRules}
+              />
               <div className="flex gap-2">
                 <Button
                   type="button"
@@ -576,6 +632,8 @@ function AutoDocRecord({
                         required: false,
                         displayOrder: rows.length,
                         placeholder: false,
+                        catalogFieldId: null,
+                        contractAttribute: null,
                       },
                     ]);
                     setNextKey(number + 1);
@@ -589,6 +647,11 @@ function AutoDocRecord({
               </div>
             </form>
           </section>
+          <AutoDocSettings record={saved} options={options} onSaved={setSaved} />
+          <AutoDocVersionDiff
+            key={`diff-${saved.formVersion?.id}-${saved.template?.versions[0]?.id}`}
+            record={saved}
+          />
           <section
             aria-labelledby="auto-doc-versions-title"
             className="space-y-3 rounded-card border border-border-default bg-raised p-6"

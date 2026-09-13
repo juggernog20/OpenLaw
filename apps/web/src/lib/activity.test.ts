@@ -393,6 +393,22 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     from: "Playbook",
     to: "Article",
   },
+  "auto_doc.updated": {
+    name: "Supplier NDA",
+    changed: { audience: { from: "legal_only", to: "everyone" } },
+  },
+  "auto_doc.published": {
+    name: "Supplier NDA",
+    documentVersionId: "file1",
+    formVersionId: "form1",
+  },
+  "auto_doc.unpublished": {
+    name: "Supplier NDA",
+    documentVersionId: "file1",
+    formVersionId: "form1",
+  },
+  "auto_doc.archived": { name: "Supplier NDA", documentVersionId: "file1", formVersionId: "form1" },
+  "auto_doc.restored": { name: "Supplier NDA", documentVersionId: "file1", formVersionId: "form1" },
   "auto_doc.created": { name: "Supplier NDA" },
   "auto_doc.template_uploaded": {
     name: "Supplier NDA",
@@ -1450,3 +1466,32 @@ it.each(["auto_doc.created", "auto_doc.template_uploaded", "auto_doc.form_saved"
     expect(result.sentence).toContain("Supplier NDA");
   },
 );
+
+it("names an Auto-Doc's selected audience and target Contract Type in History", () => {
+  expect(
+    narrate("auto_doc.updated", {
+      name: "Supplier NDA",
+      changed: {
+        audience: { from: "legal_only", to: "selected" },
+        targetContractType: { from: null, to: "Supplier NDA Type" },
+      },
+    }).changes,
+  ).toEqual([
+    { label: "Audience", from: "Legal Only", to: "Selected" },
+    { label: "Target Contract Type", from: "Not set", to: "Supplier NDA Type" },
+  ]);
+  expect(
+    narrateActivity(
+      intl,
+      {
+        action: "auto_doc.updated",
+        actor: ACTOR,
+        payload: {
+          name: "Supplier NDA",
+          changed: { targetContractTypeId: { from: null, to: "type-1" } },
+        },
+      },
+      { referenceNames: { "type-1": "Supplier NDA Type" } },
+    ).changes,
+  ).toEqual([{ label: "Target Contract Type", from: "Not set", to: "Supplier NDA Type" }]);
+});

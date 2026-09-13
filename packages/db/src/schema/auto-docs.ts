@@ -12,13 +12,36 @@ import {
   timestamp,
   uniqueIndex,
   type AnyPgColumn,
+  type PgTableExtraConfigValue,
 } from "drizzle-orm/pg-core";
 import { users } from "./auth.js";
+import { contractTypes } from "./contract-types.js";
 import { documents, documentVersions } from "./documents.js";
 import { FIELD_TYPES, type FieldType } from "./fields.js";
 import { uuidPk } from "./helpers.js";
 
 export const AUTO_DOC_STATES = ["draft", "published", "archived"] as const;
+export const AUTO_DOC_AUDIENCES = ["legal_only", "selected", "everyone"] as const;
+export const AUTO_DOC_RULE_OPERATORS = ["equals", "is_one_of", "is_set", "is_not"] as const;
+export const AUTO_DOC_CONTRACT_ATTRIBUTES = [
+  "title",
+  "primary_counterparty_name",
+  "entity_id",
+  "owning_department_id",
+  "region",
+  "value",
+  "effective_date",
+  "expiry_date",
+  "term_type",
+] as const;
+export interface AutoDocCondition {
+  fieldSlug: string;
+  operator: (typeof AUTO_DOC_RULE_OPERATORS)[number];
+  value: string | number | boolean | (string | number | boolean)[] | null;
+}
+export interface AutoDocClauseRule extends AutoDocCondition {
+  blockName: string;
+}
 export const AUTO_DOC_FIELD_TYPES = FIELD_TYPES.filter((type) => type !== "user");
 export interface AutoDocFormField {
   slug: string;
@@ -30,9 +53,13 @@ export interface AutoDocFormField {
   displayOrder: number;
   /** Retains the link after a Placeholder disappears, so the editor can mark the orphan. */
   placeholder: boolean;
+  /** Absent in snapshots saved before maps were added. */
+  catalogFieldId?: string | null;
+  contractAttribute?: (typeof AUTO_DOC_CONTRACT_ATTRIBUTES)[number] | null;
 }
 export interface AutoDocFormDefinition {
   fields: AutoDocFormField[];
+  clauseRules?: AutoDocClauseRule[];
 }
 
 export const autoDocs = pgTable(
@@ -42,6 +69,19 @@ export const autoDocs = pgTable(
     name: text("name").notNull(),
     description: text("description"),
     state: text("state", { enum: AUTO_DOC_STATES }).notNull().default("draft"),
+    audience: text("audience", { enum: AUTO_DOC_AUDIENCES }).notNull().default("legal_only"),
+    /** Null means this Auto-Doc has no target Contract Type. */
+    targetContractTypeId: text("target_contract_type_id").references(() => contractTypes.id, {
+      onDelete: "set null",
+    }),
+    /** Null while no Live pair is published. */
+    publishedDocumentVersionId: text("published_document_version_id").references(
+      (): AnyPgColumn => documentVersions.id,
+    ),
+    /** Null while no Live pair is published. */
+    publishedFormVersionId: text("published_form_version_id"),
+    /** Null while no Live pair is published. */
+    publishedAt: timestamp("published_at", { withTimezone: true }),
     /** Null until the first template upload. */
     templateDocumentId: text("template_document_id").references((): AnyPgColumn => documents.id),
     createdBy: text("created_by")
@@ -55,8 +95,29 @@ export const autoDocs = pgTable(
     /** Null while the Auto-Doc is live. */
     archivedAt: timestamp("archived_at", { withTimezone: true }),
   },
-  (table) => [
+  (table): PgTableExtraConfigValue[] => [
+    foreignKey({
+      name: "auto_docs_published_form_fk",
+      columns: [table.publishedFormVersionId],
+      foreignColumns: [autoDocFormVersions.id],
+    }),
     check("auto_docs_state_check", sql`${table.state} in ('draft', 'published', 'archived')`),
+    check(
+      "auto_docs_audience_check",
+      sql`${table.audience} in ('legal_only', 'selected', 'everyone')`,
+    ),
+    check(
+      "auto_docs_live_pair_check",
+      sql`(${table.publishedDocumentVersionId} is null) = (${table.publishedFormVersionId} is null)`,
+    ),
+    check(
+      "auto_docs_publication_state_check",
+      sql`((${table.state} = 'published') = (${table.publishedDocumentVersionId} is not null)) and ((${table.publishedAt} is null) = (${table.publishedDocumentVersionId} is null))`,
+    ),
+    check(
+      "auto_docs_archive_state_check",
+      sql`(${table.state} = 'archived') = (${table.archivedAt} is not null)`,
+    ),
     uniqueIndex("auto_docs_template_document_idx")
       .on(table.templateDocumentId)
       .where(sql`${table.templateDocumentId} is not null`),
@@ -80,6 +141,10 @@ export const autoDocFormVersions = pgTable(
   (table) => [
     uniqueIndex("auto_doc_form_versions_number_idx").on(table.autoDocId, table.versionNumber),
     check("auto_doc_form_versions_number_check", sql`${table.versionNumber} >= 1`),
+    check(
+      "auto_doc_form_fields_map_check",
+      sql`not jsonb_path_exists(${table.definition}, '$.fields[*] ? (@.catalogFieldId != null && @.contractAttribute != null)')`,
+    ),
   ],
 );
 
