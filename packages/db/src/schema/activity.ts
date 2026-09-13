@@ -23,6 +23,7 @@ export const ACTIVITY_ENTITY_TYPES = [
    * polymorphic sense of this column pair (see CONTEXT.md). */
   "entity",
   "knowledge_item",
+  "auto_doc",
   "system",
 ] as const;
 export type ActivityEntityType = (typeof ACTIVITY_ENTITY_TYPES)[number];
@@ -81,7 +82,7 @@ export const activityLog = pgTable(
     index("activity_log_created_at_idx").on(table.createdAt, table.id),
     check(
       "activity_log_entity_type_check",
-      sql`${table.entityType} in ('matter', 'contract', 'document', 'request', 'user', 'entity', 'knowledge_item', 'system')`,
+      sql`${table.entityType} in ('matter', 'contract', 'document', 'request', 'user', 'entity', 'knowledge_item', 'auto_doc', 'system')`,
     ),
     check(
       "activity_log_visibility_check",

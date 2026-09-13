@@ -1247,7 +1247,19 @@ type KnowledgePayloads = {
  * unqueryable entry and a mistyped payload key becomes an entry the
  * narrator cannot read — the compiler is the only place to catch either.
  */
-export type ActivityPayloadMap = UserPayloads &
+type AutoDocPayloads = {
+  "auto_doc.created": { name: string };
+  "auto_doc.template_uploaded": {
+    name: string;
+    documentId: string;
+    versionId: string;
+    versionNumber: number;
+  };
+  "auto_doc.form_saved": { name: string; formVersionId: string; versionNumber: number };
+};
+
+export type ActivityPayloadMap = AutoDocPayloads &
+  UserPayloads &
   OrgSettingsPayloads &
   Prefixed<"department", TaxonomyPayloads> &
   Prefixed<"contract_type", TaxonomyPayloads> &

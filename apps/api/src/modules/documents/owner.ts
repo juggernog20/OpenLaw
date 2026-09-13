@@ -4,10 +4,10 @@
  * The one definition of a Document owner in SQL: which column holds it,
  * which record it joins, and how its reference reads. Every owner-aware
  * query in the repository composes these arms instead of repeating the
- * `case` by hand, so a fourth owner is one switch arm here (DOC-008).
+ * `case` by hand, so a new owner adds one switch arm here (DOC-008).
  *
  * The queries lean on the table check `documents_owner_check`: exactly
- * one of `contract_id`, `matter_id`, and `entity_id` is present on a row.
+ * one of the five owner columns is present on a row.
  * That is what lets `documentOwnerCase` read the first non-null column as
  * the owner and never fall through. Drizzle's `sql` template keeps the
  * arms typed (TECH-006).
@@ -16,6 +16,7 @@ import {
   contracts,
   documents,
   entities,
+  autoDocs,
   knowledgeItems,
   matters,
   sql,
@@ -61,6 +62,17 @@ export function documentOwnerSql(owner: DocumentOwner) {
         recordId: entities.id,
         number: sql<number | null>`null::integer`,
         title: entities.legalName,
+      } as const;
+    case "auto_doc":
+      return {
+        kind: owner,
+        prefix: null,
+        kindSql: sql<DocumentOwner>`'auto_doc'::text`,
+        prefixSql: sql<string>`''::text`,
+        documentOwnerId: documents.autoDocId,
+        recordId: autoDocs.id,
+        number: sql<number | null>`null::integer`,
+        title: autoDocs.name,
       } as const;
     case "knowledge_item":
       return {
@@ -124,7 +136,9 @@ export function parseDocumentOwnerReference(
     : undefined;
   if (!owner) {
     return {
-      owner: documentOwnerSql(ownerHint === "knowledge_item" ? "knowledge_item" : "entity"),
+      owner: documentOwnerSql(
+        ownerHint === "knowledge_item" || ownerHint === "auto_doc" ? ownerHint : "entity",
+      ),
       id: reference,
     };
   }

@@ -399,6 +399,7 @@ describe("who the Inbox is for (INT-006, DD-013)", () => {
       "Documents",
       "Entities",
       "Knowledge",
+      "Auto-Docs",
     ]);
     expect(links[1]).toHaveAttribute("aria-current", "page");
   });

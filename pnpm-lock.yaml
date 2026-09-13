@@ -235,6 +235,9 @@ importers:
       uqr:
         specifier: ^0.1.3
         version: 0.1.3
+      zod:
+        specifier: ^4.6.4
+        version: 4.6.4
     devDependencies:
       '@formatjs/cli':
         specifier: ^6.16.27

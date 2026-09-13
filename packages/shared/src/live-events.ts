@@ -16,6 +16,7 @@ export const LIVE_RECORD_ENTITY_TYPES = [
   "request",
   "entity",
   "knowledge_item",
+  "auto_doc",
 ] as const;
 export type LiveRecordEntityType = (typeof LIVE_RECORD_ENTITY_TYPES)[number];
 

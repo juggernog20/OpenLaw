@@ -51,6 +51,7 @@ import {
   ArrowRightLeft,
   Bell,
   BookOpen,
+  FileText,
   Building2,
   CalendarClock,
   CalendarPlus,
@@ -2908,6 +2909,30 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     values: (intl, payload) => ({ name: knowledgeItemNamed(intl, payload) }),
     changes: (intl, payload, context) => directChange(intl, payload, "knowledgeType", context),
+  },
+  "auto_doc.created": {
+    icon: FileText,
+    message: defineMessage({
+      id: "activity.autoDoc.created",
+      defaultMessage: "{actor} created {name}",
+    }),
+    values: (intl, payload) => ({ name: text(payload, "name") ?? thingName(intl, payload) }),
+  },
+  "auto_doc.template_uploaded": {
+    icon: FileText,
+    message: defineMessage({
+      id: "activity.autoDoc.templateUploaded",
+      defaultMessage: "{actor} uploaded a template for {name}",
+    }),
+    values: (intl, payload) => ({ name: text(payload, "name") ?? thingName(intl, payload) }),
+  },
+  "auto_doc.form_saved": {
+    icon: PencilLine,
+    message: defineMessage({
+      id: "activity.autoDoc.formSaved",
+      defaultMessage: "{actor} saved a form version for {name}",
+    }),
+    values: (intl, payload) => ({ name: text(payload, "name") ?? thingName(intl, payload) }),
   },
   "knowledge_item.created": {
     icon: BookOpen,

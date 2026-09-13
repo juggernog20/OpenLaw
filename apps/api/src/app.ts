@@ -53,6 +53,7 @@ import { contractEnvelopesRoutes } from "./modules/contract-envelopes/routes.js"
 import { contractRelationsRoutes } from "./modules/contract-relations/routes.js";
 import { contractStatusesRoutes } from "./modules/contract-statuses/routes.js";
 import { defaultPeopleRoutes } from "./modules/contract-types/default-people.js";
+import { autoDocsRoutes } from "./modules/auto-docs/routes.js";
 import { contractTypesRoutes } from "./modules/contract-types/routes.js";
 import { attachedFieldsRoutes } from "./modules/contract-types/attached-fields.js";
 import { activityRoutes } from "./modules/activity/routes.js";
@@ -486,6 +487,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(aiConnectorRoutes, { prefix: "/api/v1" });
   await app.register(aiFieldPromptRoutes, { prefix: "/api/v1" });
   await app.register(signerErasureRoutes, { prefix: "/api/v1" });
+  await app.register(autoDocsRoutes, { prefix: "/api/v1" });
   await app.register(contractTypesRoutes, { prefix: "/api/v1" });
   await app.register(defaultPeopleRoutes, { prefix: "/api/v1" });
   await app.register(attachedFieldsRoutes, { prefix: "/api/v1" });

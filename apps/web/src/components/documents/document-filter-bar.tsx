@@ -49,7 +49,7 @@ export function DocumentFilterBar({
   });
   const folders = folderAnswer.key === folderKey ? folderAnswer.rows : [];
   useEffect(() => {
-    if (derivedOwner === "knowledge_item") return;
+    if (derivedOwner === "knowledge_item" || derivedOwner === "auto_doc") return;
     const record = documentRecordReference(filters.record, derivedOwner || undefined);
     if (!record) return;
     let cancelled = false;
@@ -90,6 +90,10 @@ export function DocumentFilterBar({
           }),
         },
         {
+          id: "auto_doc",
+          displayName: intl.formatMessage({ id: "nav.autoDocs", defaultMessage: "Auto-Docs" }),
+        },
+        {
           id: "knowledge_item",
           displayName: intl.formatMessage({
             id: "documents.filter.owner.knowledge",
@@ -113,7 +117,7 @@ export function DocumentFilterBar({
               : record.title,
         })),
     },
-    ...(filters.record && derivedOwner !== "knowledge_item"
+    ...(filters.record && derivedOwner !== "knowledge_item" && derivedOwner !== "auto_doc"
       ? [
           {
             key: "folder",

@@ -127,7 +127,7 @@ describe("the M27 Entities schema migration", () => {
         {
           conname: "documents_owner_check",
           definition:
-            "CHECK ((num_nonnulls(matter_id, contract_id, entity_id, knowledge_item_id) = 1))",
+            "CHECK ((num_nonnulls(matter_id, contract_id, entity_id, knowledge_item_id, auto_doc_id) = 1))",
         },
       ]);
     } finally {

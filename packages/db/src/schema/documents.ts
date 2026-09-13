@@ -42,6 +42,7 @@ import {
   uniqueIndex,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
+import { autoDocs } from "./auto-docs.js";
 import { users } from "./auth.js";
 import { contracts } from "./contracts.js";
 import { documentFolders } from "./document-folders.js";
@@ -89,34 +90,10 @@ export type DocumentVersionSource = (typeof DOCUMENT_VERSION_SOURCES)[number];
  * The logical file record (DOC-001). It holds identity and ownership;
  * the bytes live in the version chain, never here.
  *
- * **Exactly one owning record** (DOC-008): a matter, a contract, an
- * entity, or a knowledge item, and there is no such thing as a
- * standalone document. M11 began with Contract as the only owner; M22
- * added Matter, M27 added Entity, and M28 completes the set with
- * Knowledge. The current constraint names all four columns and requires
- * exactly one.
- *
- * **The migration that adds a second owner column must carry the rule
- * down with it, not hand it to the application.** Dropping `NOT NULL`
- * and relying on the application check DOC-008 describes would leave the
- * table able to hold a two-owner row and an orphan row alike, and a row
- * like that is unreachable by every access path in the product — the
- * gate is the owner. Postgres states the rule directly, with
- * `num_nonnulls`.
- *
- * **The constraint names the owner columns that exist when it is
- * written.** It cannot be written in its final four-column form up
- * front: a CHECK naming `entity_id` before M27 adds that column does not
- * parse. So the migration that adds the second owner column carries
- * `CHECK (num_nonnulls(matter_id, contract_id) = 1)` beside its
- * `DROP NOT NULL` — never one without the other, because the gap between
- * them is where an ownerless row can be written. Each later owner module
- * then drops and re-adds it one column wider, in the migration that adds
- * its own column, until it reaches:
- *
- * ```sql
- * CHECK (num_nonnulls(matter_id, contract_id, entity_id, knowledge_item_id) = 1)
- * ```
+ * Exactly one owning record: Contract, Matter, Entity, Knowledge Item,
+ * or Auto-Doc. Each module widens documents_owner_check when it adds
+ * its owner column, so no migration permits an ownerless or shared row.
+ * Auto-Docs own at most one Document: their template's ordinary chain.
  *
  * The application check stays, because it is what turns a violation into
  * a message somebody can act on rather than a 500. The constraint is the
@@ -149,7 +126,9 @@ export const documents = pgTable(
     /** M27's third owning record: the Entity-owned statutory Document arm
      * (ENT-005). Subject to the same exactly-one-owner check. */
     entityId: text("entity_id").references(() => entities.id),
-    /** M28's fourth and final owning-record arm (KNW-001). */
+    /** ADO-001: the fifth owner, with one template Document per Auto-Doc. */
+    autoDocId: text("auto_doc_id").references((): AnyPgColumn => autoDocs.id),
+    /** M28's Knowledge Item owner (KNW-001). */
     knowledgeItemId: text("knowledge_item_id").references(() => knowledgeItems.id),
     /**
      * CTR-014's executed pin: which version of this document is the
@@ -257,6 +236,9 @@ export const documents = pgTable(
     index("documents_contract_idx").on(table.contractId, table.createdAt, table.id),
     index("documents_matter_idx").on(table.matterId, table.createdAt, table.id),
     index("documents_entity_idx").on(table.entityId, table.createdAt, table.id),
+    uniqueIndex("documents_auto_doc_idx")
+      .on(table.autoDocId)
+      .where(sql`${table.autoDocId} is not null`),
     index("documents_knowledge_item_idx").on(table.knowledgeItemId, table.createdAt, table.id),
     // The executed pin's own column — the referencing side of the
     // foreign key into `document_versions` (M11/5). No read filters on
@@ -278,7 +260,7 @@ export const documents = pgTable(
     index("documents_search_vector_idx").using("gin", table.searchVector),
     check(
       "documents_owner_check",
-      sql`num_nonnulls(${table.matterId}, ${table.contractId}, ${table.entityId}, ${table.knowledgeItemId}) = 1`,
+      sql`num_nonnulls(${table.matterId}, ${table.contractId}, ${table.entityId}, ${table.knowledgeItemId}, ${table.autoDocId}) = 1`,
     ),
   ],
 );

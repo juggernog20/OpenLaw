@@ -1306,13 +1306,17 @@ How many views one person may hold on one surface is bounded in the API (`MAX_LI
 
 ### `auto_docs` and its tables
 
-Source: **ADO-001–010**, grilled 2026-09-13. Nothing built yet; this is the intended shape.
+Source: **ADO-001–010**, grilled 2026-09-13. M35/5 (#848, migration 0120) builds the record identity, template ownership, detection metadata, and immutable form snapshots below. Publication, maps, rules, access, and delivery columns remain the intended shape for the following M35 tasks.
 
 `auto_docs`: `id`; not-null `name`; nullable `description`; `state` with CHECK `draft | published | archived` (default `draft`); `audience` with CHECK `legal_only | selected | everyone` (default `legal_only`); nullable `target_contract_type_id` FK → `contract_types.id` `ON DELETE SET NULL`; nullable `title_pattern`; nullable `fixed_entity_id` FK → `entities.id`; nullable `template_document_id` FK → `documents.id` (the one owned template Document); nullable `published_document_version_id` FK → `document_versions.id` and `published_form_version_id` FK → `auto_doc_form_versions.id`, both set or both null (the **live pair**); `formats` with CHECK `docx | pdf | both` (default `both`); nullable Markdown `cover_note`; nullable `acknowledgement_text` (null = the org default from `org_settings.auto_doc_acknowledgement_text`); `acknowledgement_frequency` with CHECK `none | every_use | once_per_auto_doc | once` (default `once_per_auto_doc`); nullable `default_legal_owner_id` FK → `users.id`; `created_by`, `updated_by`; timestamps; nullable `published_at`, `archived_at`.
 
 `documents.auto_doc_id`: the fifth DOC-008 owner arm; the exactly-one-owner CHECK widens to five. A unique constraint on non-null `auto_doc_id` permits at most one template Document per Auto-Doc. An Auto-Doc owns exactly one Document, its template, once uploaded; the chain is DOC-001's.
 
 `auto_doc_form_versions`: `id`; `auto_doc_id`; `version_number` (1..n per Auto-Doc, unique); `definition` jsonb, an immutable snapshot of the form fields (slug, label, help, `field_type` from the catalog's nine, options, required, display order, `catalog_field_id`, `contract_attribute`) and the Clause rules (block name, field slug, operator `equals | is_one_of | is_set | is_not`, value); `created_by`; `created_at`. The editor writes a new row on save; nothing is edited in place.
+
+**Built in M35/5:** `auto_docs` carries identity, description, state, the unique template pointer, creator/updater, timestamps and archival timestamp. `auto_doc_form_versions.definition.fields` carries slug, label, help, field type, options, required, display order, and `placeholder`: whether the field has ever matched a detected Placeholder. This last fact lets a later upload mark a missing Placeholder without mislabelling an intentionally non-document field. Fields, maps, and Clause rules share the JSON snapshot; no separate mutable form-field table is created.
+
+`auto_doc_template_scans`: `document_version_id` primary key/FK → `document_versions.id` (cascade on delete); `detection` jsonb with Placeholders in document order and unique Block names. Detection is metadata on each immutable file Version. Both template upload routes validate before writing a Version and append a reconciled form snapshot under the Auto-Doc row lock.
 
 `auto_doc_assignment_rules`: `id`; `auto_doc_id`; `display_order`; `field_slug`; `operator`; `value` jsonb; `legal_owner_id` FK → `users.id`. Settings, not form definition: edited in place, audited.
 

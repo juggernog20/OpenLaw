@@ -151,6 +151,7 @@ import {
   isNotNull,
   isNull,
   knowledgeFolders,
+  autoDocs,
   knowledgeItems,
   knowledgeTypes,
   matters,
@@ -170,6 +171,7 @@ import {
   type ResolvedDocumentOwner,
 } from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
+import { applyTemplateVersion, detectStoredTemplate } from "../auto-docs/forms.js";
 import { assertConversionDocumentCanNarrow } from "../../lib/conversion-source-privacy.js";
 import { copyStoredBlob } from "../../lib/copy-stored-blob.js";
 import { requireDocumentReader } from "../../lib/document-access.js";
@@ -918,6 +920,13 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         return and(isNotNull(documents.matterId), matterTeamScope(db, user));
       case "entity":
         return and(isNotNull(documents.entityId), entityReachScope(db, user));
+      case "auto_doc":
+        return and(
+          isNotNull(documents.autoDocId),
+          user.role === "administrator" || user.role === "legal_team_member"
+            ? undefined
+            : sql`false`,
+        );
       case "knowledge_item":
         // No archived filter: archiving freezes a record, it does not
         // hide it. `assertLiveOwner` answers writes on an archived
@@ -940,6 +949,8 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         return { matterId: owner.value } as const;
       case "entity":
         return { entityId: owner.value } as const;
+      case "auto_doc":
+        return { autoDocId: owner.value } as const;
       case "knowledge_item":
         return { knowledgeItemId: owner.value } as const;
     }
@@ -953,6 +964,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     contractId: string | null;
     matterId: string | null;
     entityId: string | null;
+    autoDocId: string | null;
     knowledgeItemId: string | null;
     owner: ResolvedDocumentOwner<string>;
     /** The owning contract's SET-003 soft delete (CTR-021). */
@@ -1025,10 +1037,12 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         contractId: documents.contractId,
         matterId: documents.matterId,
         entityId: documents.entityId,
+        autoDocId: documents.autoDocId,
         knowledgeItemId: documents.knowledgeItemId,
         contractArchivedAt: contracts.archivedAt,
         matterArchivedAt: matters.archivedAt,
         entityArchivedAt: entities.archivedAt,
+        autoDocArchivedAt: autoDocs.archivedAt,
         knowledgeItemArchivedAt: knowledgeItems.archivedAt,
         archivedAt: documents.archivedAt,
         executedVersionId: documents.executedVersionId,
@@ -1045,6 +1059,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         matterNumber: matters.number,
         matterTitle: matters.title,
         entityTitle: entities.legalName,
+        autoDocTitle: autoDocs.name,
         knowledgeItemTitle: knowledgeItems.title,
       })
       .from(documents)
@@ -1052,6 +1067,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       .leftJoin(matters, eq(documents.matterId, matters.id))
       .leftJoin(entities, eq(documents.entityId, entities.id))
       .leftJoin(knowledgeItems, eq(documents.knowledgeItemId, knowledgeItems.id))
+      .leftJoin(autoDocs, eq(documents.autoDocId, autoDocs.id))
       // Left, because most documents sit at the record root and an inner
       // join would answer none of them.
       .leftJoin(documentFolders, eq(documents.folderId, documentFolders.id))
@@ -1070,6 +1086,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         contract: row.contractId,
         matter: row.matterId,
         entity: row.entityId,
+        auto_doc: row.autoDocId,
         knowledge_item: row.knowledgeItemId,
       });
       switch (owner.kind) {
@@ -1094,6 +1111,13 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             .where(eq(entities.id, owner.value))
             .for("update", { of: entities });
           break;
+        case "auto_doc":
+          await db
+            .select({ id: autoDocs.id })
+            .from(autoDocs)
+            .where(eq(autoDocs.id, owner.value))
+            .for("update", { of: autoDocs });
+          break;
         case "knowledge_item":
           await db
             .select({ id: knowledgeItems.id })
@@ -1109,6 +1133,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       contract: row.contractId,
       matter: row.matterId,
       entity: row.entityId,
+      auto_doc: row.autoDocId,
       knowledge_item: row.knowledgeItemId,
     });
     let ownerArchivedAt: Date | null;
@@ -1138,6 +1163,13 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         ownerNumber = null;
         ownerTitle = row.entityTitle!;
         break;
+      case "auto_doc":
+        ownerArchivedAt = row.autoDocArchivedAt;
+        primaryDocumentId = null;
+        ownerManagerId = null;
+        ownerNumber = null;
+        ownerTitle = row.autoDocTitle!;
+        break;
       case "knowledge_item":
         ownerArchivedAt = row.knowledgeItemArchivedAt;
         primaryDocumentId = row.knowledgePrimaryDocumentId;
@@ -1153,6 +1185,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       contractId: row.contractId,
       matterId: row.matterId,
       entityId: row.entityId,
+      autoDocId: row.autoDocId,
       knowledgeItemId: row.knowledgeItemId,
       owner,
       ownerArchivedAt,
@@ -1180,6 +1213,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         contractId: documents.contractId,
         matterId: documents.matterId,
         entityId: documents.entityId,
+        autoDocId: documents.autoDocId,
         knowledgeItemId: documents.knowledgeItemId,
         /** CTR-014's pin, read here so the chain below can mark the row
          * it names without a second query. */
@@ -1493,6 +1527,9 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       case "entity":
         owningRecord = eq(documents.entityId, owner.id);
         break;
+      case "auto_doc":
+        owningRecord = eq(documents.autoDocId, owner.id);
+        break;
       case "knowledge_item":
         owningRecord = eq(documents.knowledgeItemId, owner.id);
         break;
@@ -1758,6 +1795,28 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         throw error;
       }
+    },
+  );
+
+  app.get(
+    "/auto-docs/:id/documents",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "listAutoDocDocuments",
+        summary: "Member+ reads the Auto-Doc template with its ordinary Document Version chain",
+        tags: ["documents"],
+        params: EntityParams,
+        response: { 200: DocumentsEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const [row] = await app.db
+        .select({ id: autoDocs.id })
+        .from(autoDocs)
+        .where(eq(autoDocs.id, request.params.id));
+      if (!row) throw httpError(404, "No Auto-Doc exists with this id.");
+      return paperOf(app.db, request.user, { id: row.id, primaryDocumentId: null }, "auto_doc");
     },
   );
 
@@ -2035,6 +2094,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             contract: locked.id,
             matter: null,
             entity: null,
+            auto_doc: null,
             knowledge_item: null,
           });
 
@@ -2192,6 +2252,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             contract: null,
             matter: locked.id,
             entity: null,
+            auto_doc: null,
             knowledge_item: null,
           });
           const folder = file.destination
@@ -2265,6 +2326,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             contract: null,
             matter: null,
             entity: locked.id,
+            auto_doc: null,
             knowledge_item: null,
           });
           const folder = file.destination
@@ -2439,7 +2501,9 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         request,
         versionStorageKey(documentId, versionId),
         false,
-        reached.owner.kind === "matter" ? "general" : "draft_ours",
+        reached.owner.kind === "matter" || reached.owner.kind === "auto_doc"
+          ? "general"
+          : "draft_ours",
       );
 
       // The seam's transaction, for the create path's reason: a new
@@ -2456,6 +2520,14 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           const locked = await reachedDocument(tx, request.user, documentId, true);
           assertOpenDocument(locked);
 
+          const detection = locked.autoDocId
+            ? await detectStoredTemplate(
+                app.storage,
+                file.fileRef,
+                file.filename,
+                app.maxUploadBytes,
+              )
+            : null;
           const versionNumber = await nextVersionNumber(tx, documentId);
 
           await insertVersion(tx, { documentId, versionId, versionNumber, file, by: request.user });
@@ -2466,23 +2538,34 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             .update(documents)
             .set({ updatedAt: new Date() })
             .where(eq(documents.id, documentId));
-          await recordActivity(tx, {
-            entityType: locked.owner.kind,
-            entityId: locked.owner.value,
-            actorId: request.user.id,
-            action: "document.version_added",
-            visibility: RECORD_ACTIVITY_TIER,
-            payload: {
+          if (locked.autoDocId && detection) {
+            await applyTemplateVersion(tx, {
+              autoDocId: locked.autoDocId,
+              name: locked.ownerTitle,
+              actorId: request.user.id,
               documentId,
               versionId,
-              title: locked.title,
               versionNumber,
-              kind: file.kind,
-              ...(request.user.role === "business_user"
-                ? { actorRole: "business_user" as const }
-                : {}),
-            },
-          });
+              detection,
+            });
+          } else
+            await recordActivity(tx, {
+              entityType: locked.owner.kind,
+              entityId: locked.owner.value,
+              actorId: request.user.id,
+              action: "document.version_added",
+              visibility: RECORD_ACTIVITY_TIER,
+              payload: {
+                documentId,
+                versionId,
+                title: locked.title,
+                versionNumber,
+                kind: file.kind,
+                ...(request.user.role === "business_user"
+                  ? { actorRole: "business_user" as const }
+                  : {}),
+              },
+            });
           // The team hears that the paper moved (NOT-002 group 2). This is
           // the door where the document flag bites: a round appended to a
           // confidential document goes exactly as far as that document
@@ -2537,6 +2620,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         document: await app.db.transaction(async (tx) => {
           const target = await reachedDocument(tx, request.user, documentId, true);
           assertOpenDocument(target);
+          if (target.autoDocId) throw httpError(409, "Manage this template through its Auto-Doc.");
 
           const [version] = await tx
             .select({
@@ -2639,6 +2723,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             await assertMayFlagConfidential(tx, target, request.user);
           }
           assertOpenDocument(target);
+          if (target.autoDocId) throw httpError(409, "Manage this template through its Auto-Doc.");
           // The INT-008 narrowing refusal is about this document's own
           // state, not the actor's standing, so it waits until after the
           // freezes above. An archived document has a plainer reason to
@@ -2978,6 +3063,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         app.notifier.notifying(async (tx) => {
           const target = await reachedDocument(tx, request.user, documentId, true);
           assertOpenDocument(target);
+          if (target.autoDocId) throw httpError(409, "Manage this template through its Auto-Doc.");
 
           const [comparison] = await tx
             .select({
@@ -3414,6 +3500,11 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           // own answer below, and it has to be told apart from a
           // document somebody is trying to edit while it is hidden.
           assertReachedDocument(target);
+          if (target.autoDocId)
+            throw httpError(
+              409,
+              "The template belongs to its Auto-Doc and cannot be removed separately.",
+            );
           assertLiveOwner(target);
           if (target.archivedAt) throw httpError(409, "This document is already archived.");
 
@@ -3535,6 +3626,11 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         // without being restored first, and so is one on an archived
         // contract.
         assertReachedDocument(target);
+        if (target.autoDocId)
+          throw httpError(
+            409,
+            "The template belongs to its Auto-Doc and cannot be removed separately.",
+          );
         if (confirmTitle.trim() !== target.title.trim()) {
           throw httpError(400, "Type the document's name exactly to delete it.");
         }
@@ -4340,6 +4436,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       .leftJoin(matters, eq(documents.matterId, matters.id))
       .leftJoin(entities, eq(documents.entityId, entities.id))
       .leftJoin(knowledgeItems, eq(documents.knowledgeItemId, knowledgeItems.id))
+      .leftJoin(autoDocs, eq(documents.autoDocId, autoDocs.id))
       .where(
         and(
           eq(documentVersions.id, params.versionId),
@@ -4738,6 +4835,8 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         return { manager: "Matter Manager", noun: "matter" };
       case "entity":
         return { manager: null, noun: "Entity" };
+      case "auto_doc":
+        return { manager: null, noun: "Auto-Doc" };
       case "knowledge_item":
         return { manager: null, noun: "Knowledge item" };
     }

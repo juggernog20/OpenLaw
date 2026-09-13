@@ -66,6 +66,7 @@ import {
   desc,
   eq,
   inArray,
+  autoDocs,
   knowledgeItems,
   matters,
   sql,
@@ -100,7 +101,7 @@ const PAGE_SIZE = 25;
  * so far, and each answers the reach question through its own audience
  * rule below.
  */
-const ActivityEntityType = z.enum(["matter", "contract", "entity", "knowledge_item"]);
+const ActivityEntityType = z.enum(["matter", "contract", "entity", "knowledge_item", "auto_doc"]);
 
 /** The record's id. Bounded rather than shaped, as every id in this API
  * is: an opaque text primary key, with no UUID pattern asserted
@@ -192,6 +193,7 @@ export const activityRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       const { entityType, entityId, cursor } = request.query;
+      const legalRecord = entityType === "auto_doc" ? autoDocs : knowledgeItems;
       const audience =
         entityType === "contract"
           ? await contractAudience(app.db, request.user, entityId)
@@ -202,13 +204,13 @@ export const activityRoutes: FastifyPluginAsyncZod = async (app) => {
               : request.user.role === "administrator" || request.user.role === "legal_team_member"
                 ? (
                     await app.db
-                      .select({ id: knowledgeItems.id })
-                      .from(knowledgeItems)
-                      .where(eq(knowledgeItems.id, entityId))
+                      .select({ id: legalRecord.id })
+                      .from(legalRecord)
+                      .where(eq(legalRecord.id, entityId))
                       .limit(1)
                   )[0] && {
-                    entityType: "knowledge_item" as const,
-                    knowledgeItemId: entityId,
+                    entityType,
+                    legalRecordId: entityId,
                     tiers: ["legal_only"] as const,
                     seesConfidentialDocuments: true,
                   }
@@ -221,7 +223,7 @@ export const activityRoutes: FastifyPluginAsyncZod = async (app) => {
             ? audience.matterId
             : audience.entityType === "entity"
               ? audience.entityId
-              : audience.knowledgeItemId;
+              : audience.legalRecordId;
 
       // Keyset, on the pair the feed is ordered by. The cursor row's own
       // position comes from the table rather than from the client, so a

@@ -841,6 +841,13 @@
       "when": 1789312749211,
       "tag": "0119_contract_type_default_people",
       "breakpoints": true
+    },
+    {
+      "idx": 120,
+      "version": "7",
+      "when": 1789317029619,
+      "tag": "0120_auto_doc_records",
+      "breakpoints": true
     }
   ]
 }

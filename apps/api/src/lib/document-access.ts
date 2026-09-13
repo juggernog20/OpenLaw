@@ -14,6 +14,7 @@ import {
   entities,
   isNotNull,
   isNull,
+  autoDocs,
   knowledgeItems,
   matters,
   or,
@@ -53,6 +54,12 @@ function owningRecordScope(
         isNotNull(documents.entityId),
         isNull(entities.archivedAt),
         entityReachScope(db, user),
+      );
+    case "auto_doc":
+      return and(
+        isNotNull(documents.autoDocId),
+        isNull(autoDocs.archivedAt),
+        user.role === "administrator" || user.role === "legal_team_member" ? undefined : sql`false`,
       );
     case "knowledge_item":
       return and(
