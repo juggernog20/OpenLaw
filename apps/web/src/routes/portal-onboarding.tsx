@@ -3,12 +3,13 @@
 /** SET-011 and DES-084 introduce the Portal and persist the Business User's first run. */
 
 import { useEffect, useRef, useState } from "react";
-import { redirect, useLoaderData, useNavigate } from "react-router";
+import { redirect, useLoaderData, useNavigate, type LoaderFunctionArgs } from "react-router";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import { Scale } from "lucide-react";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
-import { currentUser, useSignOut } from "../lib/session";
+import { AVATAR_BYTE_LIMIT, AVATAR_TYPES } from "../lib/avatar";
+import { currentUserFor, useSignOut } from "../lib/session";
 import { networkError } from "../lib/messages";
 import { problem } from "../lib/problem";
 import { applyPreferredTheme, THEMES, type Theme } from "../lib/theme";
@@ -41,8 +42,8 @@ type Step = "department" | "profile" | "theme" | "notifications" | "tour";
 type Field = "department" | "name" | "photo" | "theme";
 type Note = { status: FieldStatus; detail?: string };
 
-export async function portalOnboardingLoader() {
-  const user = await currentUser();
+export async function portalOnboardingLoader({ request }: LoaderFunctionArgs) {
+  const user = await currentUserFor(request);
   if (!user) return redirect("/portal/enter");
   if (user.role !== "business_user") return redirect("/settings/profile");
   if (user.portalOnboardingCompletedAt) return redirect("/portal");
@@ -143,7 +144,7 @@ export function PortalOnboardingPage() {
   function uploadPhoto(file?: File) {
     if (!file) return;
     void save("photo", async () => {
-      if (!["image/png", "image/jpeg"].includes(file.type) || file.size > 1024 * 1024) {
+      if (!AVATAR_TYPES.includes(file.type) || file.size > AVATAR_BYTE_LIMIT) {
         throw new Error(
           intl.formatMessage({
             id: "portal.onboarding.photo.invalid",
@@ -279,7 +280,7 @@ export function PortalOnboardingPage() {
           {step === "profile" && (
             <>
               <Label htmlFor="first-run-name">
-                <FormattedMessage id="settings.profile.name" defaultMessage="Full name" />
+                <FormattedMessage id="settings.profile.fullName" defaultMessage="Full name" />
               </Label>
               <Input
                 id="first-run-name"
@@ -296,7 +297,7 @@ export function PortalOnboardingPage() {
               <Input
                 id="first-run-photo"
                 type="file"
-                accept="image/png,image/jpeg"
+                accept={AVATAR_TYPES.join(",")}
                 disabled={saving}
                 onChange={(event) => uploadPhoto(event.target.files?.[0])}
               />

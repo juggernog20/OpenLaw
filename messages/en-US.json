@@ -8624,9 +8624,6 @@
   "settings.profile.fullName": {
     "defaultMessage": "Full name"
   },
-  "settings.profile.name": {
-    "defaultMessage": "Full name"
-  },
   "settings.profile.newPassword": {
     "defaultMessage": "New password"
   },

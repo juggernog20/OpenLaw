@@ -170,6 +170,27 @@ it("returns to Department with fresh choices when the list changes before Finish
   expect(screen.getByRole("alert")).toHaveTextContent("Choose a live Department");
 });
 
+it("asks the session question once for a guarded Portal page", async () => {
+  const calls: StubCall[] = [];
+  stubApi({
+    signedIn: {
+      id: "business",
+      email: "business@example.com",
+      displayName: "Business colleague",
+      role: "business_user",
+    },
+    extra: (call) => {
+      calls.push(call);
+      return undefined;
+    },
+  });
+  renderAt("/portal");
+  expect(
+    await screen.findByRole("heading", { name: "What do you need from Legal?" }),
+  ).toBeVisible();
+  expect(calls.filter((call) => call.url.pathname === "/api/v1/me")).toHaveLength(1);
+});
+
 it.each(["administrator", "legal_team_member"])("refuses the wizard to a %s", async (role) => {
   stubApi({
     signedIn: {

@@ -23,13 +23,13 @@ import {
   type MyRequestFieldRefs,
   type RequestStatus,
 } from "../lib/requests";
-import { currentUser, useSignOut } from "../lib/session";
+import { currentUserFor, useSignOut } from "../lib/session";
 import { PageTitle } from "../components/page-title";
 import { PortalBackLink } from "../components/portal/back-link";
 import { PortalRecordShell } from "../components/portal/record-shell";
 
-export async function portalRequestLoader({ params }: LoaderFunctionArgs) {
-  const user = await currentUser();
+export async function portalRequestLoader({ params, request }: LoaderFunctionArgs) {
+  const user = await currentUserFor(request);
   if (!user) return redirect("/portal/enter");
   const number = Number(params.number);
   if (!Number.isInteger(number) || number < 1) return redirect("/portal");

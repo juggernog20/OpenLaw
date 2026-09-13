@@ -42,18 +42,18 @@
  */
 
 import { HelpLink } from "../components/documentation/help-link";
-import { Link, redirect, useLoaderData } from "react-router";
+import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { ArrowRight, FolderOpen } from "lucide-react";
 import { api } from "../lib/api";
-import { currentUser, useSignOut } from "../lib/session";
+import { currentUserFor, useSignOut } from "../lib/session";
 import { PageTitle } from "../components/page-title";
 import { DeflectionPanel } from "../components/portal/deflection-panel";
 import { MyRequests, REQUEST_TYPE_PICKER_ID } from "../components/portal/my-requests";
 import { PortalShell } from "../components/portal/portal-shell";
 
-export async function portalHomeLoader() {
-  const user = await currentUser();
+export async function portalHomeLoader({ request }: LoaderFunctionArgs) {
+  const user = await currentUserFor(request);
   if (!user) return redirect("/portal/enter");
   const [typesRes, linksRes, requestsRes] = await Promise.all([
     api.GET("/api/v1/portal/request-types"),

@@ -4,7 +4,7 @@ import { redirect, type LoaderFunctionArgs } from "react-router";
 import { useIntl } from "react-intl";
 import { PORTAL_MATTER_FILTER_KEYS, PORTAL_MATTER_SORT_KEYS } from "@openlaw/shared";
 import { api } from "../lib/api";
-import { currentUser } from "../lib/session";
+import { currentUserFor } from "../lib/session";
 import type { Layout } from "../lib/list-views";
 import { portalListLayout, portalListQuery } from "../lib/portal-lists";
 
@@ -33,7 +33,7 @@ async function read(layout: Layout, cursor?: number) {
     : undefined;
 }
 export async function portalMattersLoader(args: LoaderFunctionArgs) {
-  const user = await currentUser();
+  const user = await currentUserFor(args.request);
   if (!user) return redirect("/portal/enter");
   const layout = portalListLayout(
     catalogue,

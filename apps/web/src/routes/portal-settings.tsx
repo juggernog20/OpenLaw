@@ -2,10 +2,10 @@
 
 /** Portal preferences cover Request updates, mentions, and shared record news (DD-023). */
 
-import { redirect, useLoaderData } from "react-router";
+import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { FormattedMessage, defineMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
-import { currentUser, useSignOut } from "../lib/session";
+import { currentUserFor, useSignOut } from "../lib/session";
 import { PageTitle } from "../components/page-title";
 import {
   NotificationSwitchGrid,
@@ -16,8 +16,8 @@ import { PortalBackLink } from "../components/portal/back-link";
 import { PortalShell } from "../components/portal/portal-shell";
 import { StatusNote } from "../components/status-note";
 
-export async function portalSettingsLoader() {
-  const user = await currentUser();
+export async function portalSettingsLoader({ request }: LoaderFunctionArgs) {
+  const user = await currentUserFor(request);
   if (!user) return redirect("/portal/enter");
   const { data } = await api.GET("/api/v1/me/notification-preferences");
   // A failed read fails the pane, the staff pane's rule. Drawing the
