@@ -40,12 +40,12 @@
     "fast-myers-diff": "3.2.0",
     "fastify": "^5.12.4",
     "fastify-type-provider-zod": "^7.0.0",
-    "nodemailer": "^10.0.8",
+    "nodemailer": "^10.0.9",
     "pg-boss": "^12.31.0",
     "postal-mime": "^3.0.0",
     "sanitize-html": "^2.17.7",
     "uuidv7": "^1.2.1",
-    "zod": "^4.6.2"
+    "zod": "^4.6.4"
   },
   "devDependencies": {
     "@testcontainers/azurite": "^12.1.0",
