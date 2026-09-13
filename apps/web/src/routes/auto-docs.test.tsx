@@ -4,6 +4,8 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, it } from "vitest";
+import type { AutoDocAnswer } from "../lib/auto-docs";
+type Definition = NonNullable<AutoDocAnswer["formVersion"]>["definition"];
 import { destinationsFor } from "../components/shell/destinations";
 import { json, problem, renderAt, stubApi } from "../testing/helpers";
 
@@ -13,16 +15,22 @@ const member = {
   displayName: "Legal",
   role: "legal_team_member",
 };
-const autoDoc = {
+const autoDoc: AutoDocAnswer["autoDoc"] = {
   id: "nda",
   name: "Supplier NDA",
   description: "For suppliers",
   state: "draft",
   templateDocumentId: "template",
+  audience: "legal_only",
+  targetContractTypeId: null,
+  publishedDocumentVersionId: null,
+  publishedFormVersionId: null,
+  publishedAt: null,
+  archivedAt: null,
   createdAt: "2026-09-13T00:00:00Z",
   updatedAt: "2026-09-13T00:00:00Z",
 };
-const initialFields = [
+const initialFields: Definition["fields"] = [
   {
     slug: "counterparty_name",
     label: "Counterparty name",
@@ -32,6 +40,8 @@ const initialFields = [
     required: false,
     displayOrder: 0,
     placeholder: true,
+    catalogFieldId: null,
+    contractAttribute: null,
   },
   {
     slug: "signing_date",
@@ -42,13 +52,15 @@ const initialFields = [
     required: false,
     displayOrder: 1,
     placeholder: true,
+    catalogFieldId: null,
+    contractAttribute: null,
   },
 ];
-function record() {
+function record(): AutoDocAnswer & { formVersion: NonNullable<AutoDocAnswer["formVersion"]> } {
   const formVersion = {
     id: "form1",
     versionNumber: 1,
-    definition: { fields: initialFields },
+    definition: { fields: initialFields, clauseRules: [] },
     createdBy: member.id,
     createdAt: autoDoc.createdAt,
   };
@@ -80,6 +92,8 @@ it("lists Auto-Docs and creates a draft from name and description", async () => 
   stubApi({
     signedIn: member,
     extra: (call) => {
+      if (call.url.pathname === "/api/v1/auto-docs/options")
+        return json(200, { catalogFields: [], contractTypes: [] });
       if (call.url.pathname === "/api/v1/auto-docs") {
         if (call.method === "POST") {
           creates.push(call.body);
@@ -103,15 +117,17 @@ it("lists Auto-Docs and creates a draft from name and description", async () => 
 
 it("edits fields, preserves the orphan cue, and shows saved form versions and upload refusals", async () => {
   const user = userEvent.setup();
-  const saves: Array<{ fields: typeof initialFields }> = [];
+  const saves: Array<Definition> = [];
   let current = record();
   let invalidReply = false;
   stubApi({
     signedIn: member,
     extra: (call) => {
+      if (call.url.pathname === "/api/v1/auto-docs/options")
+        return json(200, { catalogFields: [], contractTypes: [] });
       if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, current);
       if (call.url.pathname.endsWith("/form-versions")) {
-        const body = call.body as { fields: typeof initialFields };
+        const body = call.body as Definition;
         saves.push(body);
         const next = { ...current.formVersion, id: "form2", versionNumber: 2, definition: body };
         current = { ...current, formVersion: next, formVersions: [next, ...current.formVersions] };
@@ -157,8 +173,14 @@ it("edits fields, preserves the orphan cue, and shows saved form versions and up
     required: true,
   });
   expect(saves[0]?.fields[1]?.options).toEqual(["Standard", "Legal"]);
-  expect(await screen.findByText("Form version 2")).toBeVisible();
-  expect(screen.getByText("Form version 1")).toBeVisible();
+  expect(
+    await within(screen.getByRole("region", { name: "Form versions" })).findByText(
+      "Form version 2",
+    ),
+  ).toBeVisible();
+  expect(
+    within(screen.getByRole("region", { name: "Form versions" })).getByText("Form version 1"),
+  ).toBeVisible();
   await user.upload(
     screen.getByLabelText("Word template"),
     new File(["word"], "broken.docx", {
@@ -174,19 +196,23 @@ it("edits fields, preserves the orphan cue, and shows saved form versions and up
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "The upload response could not be read.",
   );
-  expect(screen.getByText("Form version 2")).toBeVisible();
+  expect(
+    within(screen.getByRole("region", { name: "Form versions" })).getByText("Form version 2"),
+  ).toBeVisible();
 });
 
 it("drops blank option lines and names the rule when a save cannot be sent", async () => {
   const user = userEvent.setup();
-  const saves: Array<{ fields: typeof initialFields }> = [];
+  const saves: Array<Definition> = [];
   let current = record();
   stubApi({
     signedIn: member,
     extra: (call) => {
+      if (call.url.pathname === "/api/v1/auto-docs/options")
+        return json(200, { catalogFields: [], contractTypes: [] });
       if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, current);
       if (call.url.pathname.endsWith("/form-versions")) {
-        const body = call.body as { fields: typeof initialFields };
+        const body = call.body as Definition;
         saves.push(body);
         const next = { ...current.formVersion, id: "form2", versionNumber: 2, definition: body };
         current = { ...current, formVersion: next, formVersions: [next, ...current.formVersions] };
@@ -237,6 +263,8 @@ it("reserves the destination and app routes for Member+", async () => {
   stubApi({
     signedIn: { ...member, role: "business_user" },
     extra: (call) => {
+      if (call.url.pathname === "/api/v1/auto-docs/options")
+        return json(200, { catalogFields: [], contractTypes: [] });
       calls.push(call.url.pathname);
       return undefined;
     },

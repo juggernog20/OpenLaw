@@ -3,8 +3,16 @@
 /** ADO-001: the flat Auto-Docs destination belongs to Member+. */
 import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import { Link, redirect, useLoaderData, useNavigate } from "react-router";
+import {
+  Form,
+  Link,
+  redirect,
+  useLoaderData,
+  useNavigate,
+  type LoaderFunctionArgs,
+} from "react-router";
 import { api } from "../lib/api";
+import { autoDocListStates, autoDocAudiences } from "../lib/auto-docs";
 import { isMemberPlus } from "../lib/roles";
 import { requireUser, useSignOut } from "../lib/session";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
@@ -13,16 +21,38 @@ import { PageTitle } from "../components/page-title";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
 
-export async function autoDocsLoader() {
+export async function autoDocsLoader({ request }: LoaderFunctionArgs) {
   const user = await requireUser();
   if (!isMemberPlus(user.role)) return redirect("/portal");
-  const result = await api.GET("/api/v1/auto-docs");
+  const search = new URL(request.url).searchParams;
+  const state = autoDocListStates.safeParse(search.get("state"));
+  const audience = autoDocAudiences.safeParse(search.get("audience"));
+  const filters = {
+    q: search.get("q") ?? "",
+    state: state.success ? state.data : undefined,
+    audience: audience.success ? audience.data : undefined,
+    targetContractTypeId: search.get("targetContractTypeId") ?? "",
+  };
+  const [result, options] = await Promise.all([
+    api.GET("/api/v1/auto-docs", {
+      params: {
+        query: {
+          q: filters.q || undefined,
+          state: filters.state || undefined,
+          audience: filters.audience || undefined,
+          targetContractTypeId: filters.targetContractTypeId || undefined,
+        },
+      },
+    }),
+    api.GET("/api/v1/auto-docs/options"),
+  ]);
+  if (!options.data) throw new Error("The Auto-Doc list options could not be read.");
   if (!result.data) throw new Error("Auto-Docs could not be read.");
-  return { user, ...result.data };
+  return { user, ...result.data, options: options.data, filters };
 }
 
 export function AutoDocsPage() {
-  const { user, autoDocs } = useLoaderData<typeof autoDocsLoader>();
+  const { user, autoDocs, options, filters } = useLoaderData<typeof autoDocsLoader>();
   const intl = useIntl();
   const signOut = useSignOut("/auth/login");
   const navigate = useNavigate();
@@ -42,6 +72,98 @@ export function AutoDocsPage() {
             <FormattedMessage id="autoDocs.create" defaultMessage="Create Auto-Doc" />
           </Button>
         </div>
+        <Form method="get" key={JSON.stringify(filters)} className="flex flex-wrap items-end gap-3">
+          <label className="block space-y-1">
+            <span>
+              <FormattedMessage id="autoDocs.search" defaultMessage="Search Auto-Docs" />
+            </span>
+            <input name="q" type="search" className={CONTROL_CLASS} defaultValue={filters.q} />
+          </label>
+          <label className="block space-y-1">
+            <span>
+              <FormattedMessage id="autoDocs.stateFilter" defaultMessage="State" />
+            </span>
+            <select name="state" className={CONTROL_CLASS} defaultValue={filters.state}>
+              <option value="">
+                {intl.formatMessage({
+                  id: "autoDocs.liveStates",
+                  defaultMessage: "Draft and published",
+                })}
+              </option>
+              <option value="all">
+                {intl.formatMessage({ id: "autoDocs.allStates", defaultMessage: "All states" })}
+              </option>
+              {(["draft", "published", "archived"] as const).map((state) => (
+                <option key={state} value={state}>
+                  {intl.formatMessage(
+                    {
+                      id: "autoDocs.state",
+                      defaultMessage:
+                        "{state, select, draft {Draft} published {Published} other {Archived}}",
+                    },
+                    { state },
+                  )}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block space-y-1">
+            <span>
+              <FormattedMessage id="autoDocs.audience" defaultMessage="Audience" />
+            </span>
+            <select name="audience" className={CONTROL_CLASS} defaultValue={filters.audience}>
+              <option value="">
+                {intl.formatMessage({
+                  id: "autoDocs.allAudiences",
+                  defaultMessage: "All audiences",
+                })}
+              </option>
+              {(["legal_only", "selected", "everyone"] as const).map((audience) => (
+                <option key={audience} value={audience}>
+                  {intl.formatMessage(
+                    {
+                      id: "autoDocs.audienceName",
+                      defaultMessage:
+                        "{audience, select, legal_only {Legal only} selected {Selected} other {Everyone}}",
+                    },
+                    { audience },
+                  )}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block space-y-1">
+            <span>
+              <FormattedMessage id="autoDocs.targetType" defaultMessage="Target Contract Type" />
+            </span>
+            <select
+              name="targetContractTypeId"
+              className={CONTROL_CLASS}
+              defaultValue={filters.targetContractTypeId}
+            >
+              <option value="">
+                {intl.formatMessage({
+                  id: "autoDocs.allTargetTypes",
+                  defaultMessage: "All target Contract Types",
+                })}
+              </option>
+              <option value="none">
+                {intl.formatMessage({
+                  id: "autoDocs.noTargetType",
+                  defaultMessage: "No target Contract Type",
+                })}
+              </option>
+              {options.contractTypes.map((type) => (
+                <option key={type.id} value={type.id}>
+                  {type.displayName}
+                </option>
+              ))}
+            </select>
+          </label>
+          <Button type="submit" variant="secondary">
+            <FormattedMessage id="autoDocs.applyFilters" defaultMessage="Apply filters" />
+          </Button>
+        </Form>
         <ul className="divide-y divide-border-default rounded-card border border-border-default bg-raised">
           {autoDocs.map((row) => (
             <li key={row.id} className="flex items-center justify-between gap-4 p-4">

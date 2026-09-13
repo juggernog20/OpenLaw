@@ -711,18 +711,16 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/auto-docs": {
+  "/api/v1/auto-docs/options": {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    /** Member+ lists Auto-Docs */
-    get: operations["listAutoDocs"];
+    get: operations["getAutoDocOptions"];
     put?: never;
-    /** Member+ creates a draft Auto-Doc */
-    post: operations["createAutoDoc"];
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -740,6 +738,110 @@ export interface paths {
     get: operations["getAutoDoc"];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Member+ edits Auto-Doc settings */
+    patch: operations["updateAutoDoc"];
+    trace?: never;
+  };
+  "/api/v1/auto-docs/{id}/form-versions/diff": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Compare two saved forms by structure */
+    get: operations["diffAutoDocForms"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auto-docs/{id}/publish": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Validate and publish one file and form pair */
+    post: operations["publishAutoDoc"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auto-docs/{id}/unpublish": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Member+ unpublishes an Auto-Doc without deleting versions */
+    post: operations["unpublishAutoDoc"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auto-docs/{id}/archive": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Member+ archives an Auto-Doc without deleting versions */
+    post: operations["archiveAutoDoc"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auto-docs/{id}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Member+ restores an Auto-Doc without deleting versions */
+    post: operations["restoreAutoDoc"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auto-docs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Member+ searches and filters Auto-Docs; archived records are hidden by default */
+    get: operations["listAutoDocs"];
+    put?: never;
+    /** Member+ creates a draft Auto-Doc */
+    post: operations["createAutoDoc"];
     delete?: never;
     options?: never;
     head?: never;
@@ -8176,9 +8278,1140 @@ export interface operations {
       };
     };
   };
-  listAutoDocs: {
+  getAutoDocOptions: {
     parameters: {
       query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            catalogFields: {
+              id: string;
+              displayName: string;
+              fieldType: string;
+            }[];
+            contractTypes: {
+              id: string;
+              displayName: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getAutoDoc: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            autoDoc: {
+              id: string;
+              name: string;
+              description: string | null;
+              /** @enum {string} */
+              state: "draft" | "published" | "archived";
+              templateDocumentId: string | null;
+              /** @enum {string} */
+              audience: "legal_only" | "selected" | "everyone";
+              targetContractTypeId: string | null;
+              publishedDocumentVersionId: string | null;
+              publishedFormVersionId: string | null;
+              publishedAt: string | null;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+            template: {
+              id: string;
+              title: string;
+              versions: {
+                id: string;
+                versionNumber: number;
+                originalFilename: string;
+                byteSize: number;
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+            } | null;
+            detection: {
+              placeholders: string[];
+              blocks: string[];
+            };
+            formVersion: {
+              id: string;
+              versionNumber: number;
+              definition: {
+                fields: {
+                  slug: string;
+                  label: string;
+                  help: string | null;
+                  /** @enum {string} */
+                  fieldType:
+                    | "text"
+                    | "long_text"
+                    | "number"
+                    | "currency"
+                    | "date"
+                    | "boolean"
+                    | "single_select"
+                    | "multi_select"
+                    | "entity";
+                  options: string[] | null;
+                  required: boolean;
+                  displayOrder: number;
+                  placeholder: boolean;
+                  catalogFieldId: string | null;
+                  contractAttribute:
+                    | (
+                        | "title"
+                        | "primary_counterparty_name"
+                        | "entity_id"
+                        | "owning_department_id"
+                        | "region"
+                        | "value"
+                        | "effective_date"
+                        | "expiry_date"
+                        | "term_type"
+                      )
+                    | null;
+                }[];
+                clauseRules: {
+                  blockName: string;
+                  fieldSlug: string;
+                  /** @enum {string} */
+                  operator: "equals" | "is_one_of" | "is_set" | "is_not";
+                  value: (string | number | boolean) | (string | number | boolean)[] | null;
+                }[];
+              };
+              createdBy: string;
+              /** Format: date-time */
+              createdAt: string;
+            } | null;
+            formVersions: {
+              id: string;
+              versionNumber: number;
+              definition: {
+                fields: {
+                  slug: string;
+                  label: string;
+                  help: string | null;
+                  /** @enum {string} */
+                  fieldType:
+                    | "text"
+                    | "long_text"
+                    | "number"
+                    | "currency"
+                    | "date"
+                    | "boolean"
+                    | "single_select"
+                    | "multi_select"
+                    | "entity";
+                  options: string[] | null;
+                  required: boolean;
+                  displayOrder: number;
+                  placeholder: boolean;
+                  catalogFieldId: string | null;
+                  contractAttribute:
+                    | (
+                        | "title"
+                        | "primary_counterparty_name"
+                        | "entity_id"
+                        | "owning_department_id"
+                        | "region"
+                        | "value"
+                        | "effective_date"
+                        | "expiry_date"
+                        | "term_type"
+                      )
+                    | null;
+                }[];
+                clauseRules: {
+                  blockName: string;
+                  fieldSlug: string;
+                  /** @enum {string} */
+                  operator: "equals" | "is_one_of" | "is_set" | "is_not";
+                  value: (string | number | boolean) | (string | number | boolean)[] | null;
+                }[];
+              };
+              createdBy: string;
+              /** Format: date-time */
+              createdAt: string;
+            }[];
+            orphanedFields: string[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateAutoDoc: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          name?: string;
+          description?: string | null;
+          /** @enum {string} */
+          audience?: "legal_only" | "selected" | "everyone";
+          targetContractTypeId?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            autoDoc: {
+              id: string;
+              name: string;
+              description: string | null;
+              /** @enum {string} */
+              state: "draft" | "published" | "archived";
+              templateDocumentId: string | null;
+              /** @enum {string} */
+              audience: "legal_only" | "selected" | "everyone";
+              targetContractTypeId: string | null;
+              publishedDocumentVersionId: string | null;
+              publishedFormVersionId: string | null;
+              publishedAt: string | null;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+            template: {
+              id: string;
+              title: string;
+              versions: {
+                id: string;
+                versionNumber: number;
+                originalFilename: string;
+                byteSize: number;
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+            } | null;
+            detection: {
+              placeholders: string[];
+              blocks: string[];
+            };
+            formVersion: {
+              id: string;
+              versionNumber: number;
+              definition: {
+                fields: {
+                  slug: string;
+                  label: string;
+                  help: string | null;
+                  /** @enum {string} */
+                  fieldType:
+                    | "text"
+                    | "long_text"
+                    | "number"
+                    | "currency"
+                    | "date"
+                    | "boolean"
+                    | "single_select"
+                    | "multi_select"
+                    | "entity";
+                  options: string[] | null;
+                  required: boolean;
+                  displayOrder: number;
+                  placeholder: boolean;
+                  catalogFieldId: string | null;
+                  contractAttribute:
+                    | (
+                        | "title"
+                        | "primary_counterparty_name"
+                        | "entity_id"
+                        | "owning_department_id"
+                        | "region"
+                        | "value"
+                        | "effective_date"
+                        | "expiry_date"
+                        | "term_type"
+                      )
+                    | null;
+                }[];
+                clauseRules: {
+                  blockName: string;
+                  fieldSlug: string;
+                  /** @enum {string} */
+                  operator: "equals" | "is_one_of" | "is_set" | "is_not";
+                  value: (string | number | boolean) | (string | number | boolean)[] | null;
+                }[];
+              };
+              createdBy: string;
+              /** Format: date-time */
+              createdAt: string;
+            } | null;
+            formVersions: {
+              id: string;
+              versionNumber: number;
+              definition: {
+                fields: {
+                  slug: string;
+                  label: string;
+                  help: string | null;
+                  /** @enum {string} */
+                  fieldType:
+                    | "text"
+                    | "long_text"
+                    | "number"
+                    | "currency"
+                    | "date"
+                    | "boolean"
+                    | "single_select"
+                    | "multi_select"
+                    | "entity";
+                  options: string[] | null;
+                  required: boolean;
+                  displayOrder: number;
+                  placeholder: boolean;
+                  catalogFieldId: string | null;
+                  contractAttribute:
+                    | (
+                        | "title"
+                        | "primary_counterparty_name"
+                        | "entity_id"
+                        | "owning_department_id"
+                        | "region"
+                        | "value"
+                        | "effective_date"
+                        | "expiry_date"
+                        | "term_type"
+                      )
+                    | null;
+                }[];
+                clauseRules: {
+                  blockName: string;
+                  fieldSlug: string;
+                  /** @enum {string} */
+                  operator: "equals" | "is_one_of" | "is_set" | "is_not";
+                  value: (string | number | boolean) | (string | number | boolean)[] | null;
+                }[];
+              };
+              createdBy: string;
+              /** Format: date-time */
+              createdAt: string;
+            }[];
+            orphanedFields: string[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  diffAutoDocForms: {
+    parameters: {
+      query: {
+        from: string;
+        to: string;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            changes: {
+              /** @enum {string} */
+              kind:
+                | "added"
+                | "removed"
+                | "retyped"
+                | "relabelled"
+                | "reordered"
+                | "edited"
+                | "mapped"
+                | "rules_changed";
+              name: string;
+              before: string | null;
+              after: string | null;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  publishAutoDoc: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          documentVersionId: string;
+          formVersionId: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            autoDoc: {
+              id: string;
+              name: string;
+              description: string | null;
+              /** @enum {string} */
+              state: "draft" | "published" | "archived";
+              templateDocumentId: string | null;
+              /** @enum {string} */
+              audience: "legal_only" | "selected" | "everyone";
+              targetContractTypeId: string | null;
+              publishedDocumentVersionId: string | null;
+              publishedFormVersionId: string | null;
+              publishedAt: string | null;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+            template: {
+              id: string;
+              title: string;
+              versions: {
+                id: string;
+                versionNumber: number;
+                originalFilename: string;
+                byteSize: number;
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+            } | null;
+            detection: {
+              placeholders: string[];
+              blocks: string[];
+            };
+            formVersion: {
+              id: string;
+              versionNumber: number;
+              definition: {
+                fields: {
+                  slug: string;
+                  label: string;
+                  help: string | null;
+                  /** @enum {string} */
+                  fieldType:
+                    | "text"
+                    | "long_text"
+                    | "number"
+                    | "currency"
+                    | "date"
+                    | "boolean"
+                    | "single_select"
+                    | "multi_select"
+                    | "entity";
+                  options: string[] | null;
+                  required: boolean;
+                  displayOrder: number;
+                  placeholder: boolean;
+                  catalogFieldId: string | null;
+                  contractAttribute:
+                    | (
+                        | "title"
+                        | "primary_counterparty_name"
+                        | "entity_id"
+                        | "owning_department_id"
+                        | "region"
+                        | "value"
+                        | "effective_date"
+                        | "expiry_date"
+                        | "term_type"
+                      )
+                    | null;
+                }[];
+                clauseRules: {
+                  blockName: string;
+                  fieldSlug: string;
+                  /** @enum {string} */
+                  operator: "equals" | "is_one_of" | "is_set" | "is_not";
+                  value: (string | number | boolean) | (string | number | boolean)[] | null;
+                }[];
+              };
+              createdBy: string;
+              /** Format: date-time */
+              createdAt: string;
+            } | null;
+            formVersions: {
+              id: string;
+              versionNumber: number;
+              definition: {
+                fields: {
+                  slug: string;
+                  label: string;
+                  help: string | null;
+                  /** @enum {string} */
+                  fieldType:
+                    | "text"
+                    | "long_text"
+                    | "number"
+                    | "currency"
+                    | "date"
+                    | "boolean"
+                    | "single_select"
+                    | "multi_select"
+                    | "entity";
+                  options: string[] | null;
+                  required: boolean;
+                  displayOrder: number;
+                  placeholder: boolean;
+                  catalogFieldId: string | null;
+                  contractAttribute:
+                    | (
+                        | "title"
+                        | "primary_counterparty_name"
+                        | "entity_id"
+                        | "owning_department_id"
+                        | "region"
+                        | "value"
+                        | "effective_date"
+                        | "expiry_date"
+                        | "term_type"
+                      )
+                    | null;
+                }[];
+                clauseRules: {
+                  blockName: string;
+                  fieldSlug: string;
+                  /** @enum {string} */
+                  operator: "equals" | "is_one_of" | "is_set" | "is_not";
+                  value: (string | number | boolean) | (string | number | boolean)[] | null;
+                }[];
+              };
+              createdBy: string;
+              /** Format: date-time */
+              createdAt: string;
+            }[];
+            orphanedFields: string[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  unpublishAutoDoc: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": Record<string, never>;
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            autoDoc: {
+              id: string;
+              name: string;
+              description: string | null;
+              /** @enum {string} */
+              state: "draft" | "published" | "archived";
+              templateDocumentId: string | null;
+              /** @enum {string} */
+              audience: "legal_only" | "selected" | "everyone";
+              targetContractTypeId: string | null;
+              publishedDocumentVersionId: string | null;
+              publishedFormVersionId: string | null;
+              publishedAt: string | null;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+            template: {
+              id: string;
+              title: string;
+              versions: {
+                id: string;
+                versionNumber: number;
+                originalFilename: string;
+                byteSize: number;
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+            } | null;
+            detection: {
+              placeholders: string[];
+              blocks: string[];
+            };
+            formVersion: {
+              id: string;
+              versionNumber: number;
+              definition: {
+                fields: {
+                  slug: string;
+                  label: string;
+                  help: string | null;
+                  /** @enum {string} */
+                  fieldType:
+                    | "text"
+                    | "long_text"
+                    | "number"
+                    | "currency"
+                    | "date"
+                    | "boolean"
+                    | "single_select"
+                    | "multi_select"
+                    | "entity";
+                  options: string[] | null;
+                  required: boolean;
+                  displayOrder: number;
+                  placeholder: boolean;
+                  catalogFieldId: string | null;
+                  contractAttribute:
+                    | (
+                        | "title"
+                        | "primary_counterparty_name"
+                        | "entity_id"
+                        | "owning_department_id"
+                        | "region"
+                        | "value"
+                        | "effective_date"
+                        | "expiry_date"
+                        | "term_type"
+                      )
+                    | null;
+                }[];
+                clauseRules: {
+                  blockName: string;
+                  fieldSlug: string;
+                  /** @enum {string} */
+                  operator: "equals" | "is_one_of" | "is_set" | "is_not";
+                  value: (string | number | boolean) | (string | number | boolean)[] | null;
+                }[];
+              };
+              createdBy: string;
+              /** Format: date-time */
+              createdAt: string;
+            } | null;
+            formVersions: {
+              id: string;
+              versionNumber: number;
+              definition: {
+                fields: {
+                  slug: string;
+                  label: string;
+                  help: string | null;
+                  /** @enum {string} */
+                  fieldType:
+                    | "text"
+                    | "long_text"
+                    | "number"
+                    | "currency"
+                    | "date"
+                    | "boolean"
+                    | "single_select"
+                    | "multi_select"
+                    | "entity";
+                  options: string[] | null;
+                  required: boolean;
+                  displayOrder: number;
+                  placeholder: boolean;
+                  catalogFieldId: string | null;
+                  contractAttribute:
+                    | (
+                        | "title"
+                        | "primary_counterparty_name"
+                        | "entity_id"
+                        | "owning_department_id"
+                        | "region"
+                        | "value"
+                        | "effective_date"
+                        | "expiry_date"
+                        | "term_type"
+                      )
+                    | null;
+                }[];
+                clauseRules: {
+                  blockName: string;
+                  fieldSlug: string;
+                  /** @enum {string} */
+                  operator: "equals" | "is_one_of" | "is_set" | "is_not";
+                  value: (string | number | boolean) | (string | number | boolean)[] | null;
+                }[];
+              };
+              createdBy: string;
+              /** Format: date-time */
+              createdAt: string;
+            }[];
+            orphanedFields: string[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  archiveAutoDoc: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": Record<string, never>;
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            autoDoc: {
+              id: string;
+              name: string;
+              description: string | null;
+              /** @enum {string} */
+              state: "draft" | "published" | "archived";
+              templateDocumentId: string | null;
+              /** @enum {string} */
+              audience: "legal_only" | "selected" | "everyone";
+              targetContractTypeId: string | null;
+              publishedDocumentVersionId: string | null;
+              publishedFormVersionId: string | null;
+              publishedAt: string | null;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+            template: {
+              id: string;
+              title: string;
+              versions: {
+                id: string;
+                versionNumber: number;
+                originalFilename: string;
+                byteSize: number;
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+            } | null;
+            detection: {
+              placeholders: string[];
+              blocks: string[];
+            };
+            formVersion: {
+              id: string;
+              versionNumber: number;
+              definition: {
+                fields: {
+                  slug: string;
+                  label: string;
+                  help: string | null;
+                  /** @enum {string} */
+                  fieldType:
+                    | "text"
+                    | "long_text"
+                    | "number"
+                    | "currency"
+                    | "date"
+                    | "boolean"
+                    | "single_select"
+                    | "multi_select"
+                    | "entity";
+                  options: string[] | null;
+                  required: boolean;
+                  displayOrder: number;
+                  placeholder: boolean;
+                  catalogFieldId: string | null;
+                  contractAttribute:
+                    | (
+                        | "title"
+                        | "primary_counterparty_name"
+                        | "entity_id"
+                        | "owning_department_id"
+                        | "region"
+                        | "value"
+                        | "effective_date"
+                        | "expiry_date"
+                        | "term_type"
+                      )
+                    | null;
+                }[];
+                clauseRules: {
+                  blockName: string;
+                  fieldSlug: string;
+                  /** @enum {string} */
+                  operator: "equals" | "is_one_of" | "is_set" | "is_not";
+                  value: (string | number | boolean) | (string | number | boolean)[] | null;
+                }[];
+              };
+              createdBy: string;
+              /** Format: date-time */
+              createdAt: string;
+            } | null;
+            formVersions: {
+              id: string;
+              versionNumber: number;
+              definition: {
+                fields: {
+                  slug: string;
+                  label: string;
+                  help: string | null;
+                  /** @enum {string} */
+                  fieldType:
+                    | "text"
+                    | "long_text"
+                    | "number"
+                    | "currency"
+                    | "date"
+                    | "boolean"
+                    | "single_select"
+                    | "multi_select"
+                    | "entity";
+                  options: string[] | null;
+                  required: boolean;
+                  displayOrder: number;
+                  placeholder: boolean;
+                  catalogFieldId: string | null;
+                  contractAttribute:
+                    | (
+                        | "title"
+                        | "primary_counterparty_name"
+                        | "entity_id"
+                        | "owning_department_id"
+                        | "region"
+                        | "value"
+                        | "effective_date"
+                        | "expiry_date"
+                        | "term_type"
+                      )
+                    | null;
+                }[];
+                clauseRules: {
+                  blockName: string;
+                  fieldSlug: string;
+                  /** @enum {string} */
+                  operator: "equals" | "is_one_of" | "is_set" | "is_not";
+                  value: (string | number | boolean) | (string | number | boolean)[] | null;
+                }[];
+              };
+              createdBy: string;
+              /** Format: date-time */
+              createdAt: string;
+            }[];
+            orphanedFields: string[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  restoreAutoDoc: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": Record<string, never>;
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            autoDoc: {
+              id: string;
+              name: string;
+              description: string | null;
+              /** @enum {string} */
+              state: "draft" | "published" | "archived";
+              templateDocumentId: string | null;
+              /** @enum {string} */
+              audience: "legal_only" | "selected" | "everyone";
+              targetContractTypeId: string | null;
+              publishedDocumentVersionId: string | null;
+              publishedFormVersionId: string | null;
+              publishedAt: string | null;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+            template: {
+              id: string;
+              title: string;
+              versions: {
+                id: string;
+                versionNumber: number;
+                originalFilename: string;
+                byteSize: number;
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+            } | null;
+            detection: {
+              placeholders: string[];
+              blocks: string[];
+            };
+            formVersion: {
+              id: string;
+              versionNumber: number;
+              definition: {
+                fields: {
+                  slug: string;
+                  label: string;
+                  help: string | null;
+                  /** @enum {string} */
+                  fieldType:
+                    | "text"
+                    | "long_text"
+                    | "number"
+                    | "currency"
+                    | "date"
+                    | "boolean"
+                    | "single_select"
+                    | "multi_select"
+                    | "entity";
+                  options: string[] | null;
+                  required: boolean;
+                  displayOrder: number;
+                  placeholder: boolean;
+                  catalogFieldId: string | null;
+                  contractAttribute:
+                    | (
+                        | "title"
+                        | "primary_counterparty_name"
+                        | "entity_id"
+                        | "owning_department_id"
+                        | "region"
+                        | "value"
+                        | "effective_date"
+                        | "expiry_date"
+                        | "term_type"
+                      )
+                    | null;
+                }[];
+                clauseRules: {
+                  blockName: string;
+                  fieldSlug: string;
+                  /** @enum {string} */
+                  operator: "equals" | "is_one_of" | "is_set" | "is_not";
+                  value: (string | number | boolean) | (string | number | boolean)[] | null;
+                }[];
+              };
+              createdBy: string;
+              /** Format: date-time */
+              createdAt: string;
+            } | null;
+            formVersions: {
+              id: string;
+              versionNumber: number;
+              definition: {
+                fields: {
+                  slug: string;
+                  label: string;
+                  help: string | null;
+                  /** @enum {string} */
+                  fieldType:
+                    | "text"
+                    | "long_text"
+                    | "number"
+                    | "currency"
+                    | "date"
+                    | "boolean"
+                    | "single_select"
+                    | "multi_select"
+                    | "entity";
+                  options: string[] | null;
+                  required: boolean;
+                  displayOrder: number;
+                  placeholder: boolean;
+                  catalogFieldId: string | null;
+                  contractAttribute:
+                    | (
+                        | "title"
+                        | "primary_counterparty_name"
+                        | "entity_id"
+                        | "owning_department_id"
+                        | "region"
+                        | "value"
+                        | "effective_date"
+                        | "expiry_date"
+                        | "term_type"
+                      )
+                    | null;
+                }[];
+                clauseRules: {
+                  blockName: string;
+                  fieldSlug: string;
+                  /** @enum {string} */
+                  operator: "equals" | "is_one_of" | "is_set" | "is_not";
+                  value: (string | number | boolean) | (string | number | boolean)[] | null;
+                }[];
+              };
+              createdBy: string;
+              /** Format: date-time */
+              createdAt: string;
+            }[];
+            orphanedFields: string[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listAutoDocs: {
+    parameters: {
+      query?: {
+        q?: string;
+        state?: "draft" | "published" | "archived" | "all";
+        audience?: "legal_only" | "selected" | "everyone";
+        targetContractTypeId?: string;
+      };
       header?: never;
       path?: never;
       cookie?: never;
@@ -8199,6 +9432,13 @@ export interface operations {
               /** @enum {string} */
               state: "draft" | "published" | "archived";
               templateDocumentId: string | null;
+              /** @enum {string} */
+              audience: "legal_only" | "selected" | "everyone";
+              targetContractTypeId: string | null;
+              publishedDocumentVersionId: string | null;
+              publishedFormVersionId: string | null;
+              publishedAt: string | null;
+              archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
               /** Format: date-time */
@@ -8248,130 +9488,18 @@ export interface operations {
               /** @enum {string} */
               state: "draft" | "published" | "archived";
               templateDocumentId: string | null;
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
-            };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  getAutoDoc: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            autoDoc: {
-              id: string;
-              name: string;
-              description: string | null;
               /** @enum {string} */
-              state: "draft" | "published" | "archived";
-              templateDocumentId: string | null;
+              audience: "legal_only" | "selected" | "everyone";
+              targetContractTypeId: string | null;
+              publishedDocumentVersionId: string | null;
+              publishedFormVersionId: string | null;
+              publishedAt: string | null;
+              archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
               /** Format: date-time */
               updatedAt: string;
             };
-            template: {
-              id: string;
-              title: string;
-              versions: {
-                id: string;
-                versionNumber: number;
-                originalFilename: string;
-                byteSize: number;
-                /** Format: date-time */
-                createdAt: string;
-              }[];
-            } | null;
-            detection: {
-              placeholders: string[];
-              blocks: string[];
-            };
-            formVersion: {
-              id: string;
-              versionNumber: number;
-              definition: {
-                fields: {
-                  slug: string;
-                  label: string;
-                  help: string | null;
-                  /** @enum {string} */
-                  fieldType:
-                    | "text"
-                    | "long_text"
-                    | "number"
-                    | "currency"
-                    | "date"
-                    | "boolean"
-                    | "single_select"
-                    | "multi_select"
-                    | "entity";
-                  options: string[] | null;
-                  required: boolean;
-                  displayOrder: number;
-                  placeholder: boolean;
-                }[];
-              };
-              createdBy: string;
-              /** Format: date-time */
-              createdAt: string;
-            } | null;
-            formVersions: {
-              id: string;
-              versionNumber: number;
-              definition: {
-                fields: {
-                  slug: string;
-                  label: string;
-                  help: string | null;
-                  /** @enum {string} */
-                  fieldType:
-                    | "text"
-                    | "long_text"
-                    | "number"
-                    | "currency"
-                    | "date"
-                    | "boolean"
-                    | "single_select"
-                    | "multi_select"
-                    | "entity";
-                  options: string[] | null;
-                  required: boolean;
-                  displayOrder: number;
-                  placeholder: boolean;
-                }[];
-              };
-              createdBy: string;
-              /** Format: date-time */
-              createdAt: string;
-            }[];
-            orphanedFields: string[];
           };
         };
       };
@@ -8418,6 +9546,13 @@ export interface operations {
               /** @enum {string} */
               state: "draft" | "published" | "archived";
               templateDocumentId: string | null;
+              /** @enum {string} */
+              audience: "legal_only" | "selected" | "everyone";
+              targetContractTypeId: string | null;
+              publishedDocumentVersionId: string | null;
+              publishedFormVersionId: string | null;
+              publishedAt: string | null;
+              archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
               /** Format: date-time */
@@ -8462,6 +9597,27 @@ export interface operations {
                   required: boolean;
                   displayOrder: number;
                   placeholder: boolean;
+                  catalogFieldId: string | null;
+                  contractAttribute:
+                    | (
+                        | "title"
+                        | "primary_counterparty_name"
+                        | "entity_id"
+                        | "owning_department_id"
+                        | "region"
+                        | "value"
+                        | "effective_date"
+                        | "expiry_date"
+                        | "term_type"
+                      )
+                    | null;
+                }[];
+                clauseRules: {
+                  blockName: string;
+                  fieldSlug: string;
+                  /** @enum {string} */
+                  operator: "equals" | "is_one_of" | "is_set" | "is_not";
+                  value: (string | number | boolean) | (string | number | boolean)[] | null;
                 }[];
               };
               createdBy: string;
@@ -8491,6 +9647,27 @@ export interface operations {
                   required: boolean;
                   displayOrder: number;
                   placeholder: boolean;
+                  catalogFieldId: string | null;
+                  contractAttribute:
+                    | (
+                        | "title"
+                        | "primary_counterparty_name"
+                        | "entity_id"
+                        | "owning_department_id"
+                        | "region"
+                        | "value"
+                        | "effective_date"
+                        | "expiry_date"
+                        | "term_type"
+                      )
+                    | null;
+                }[];
+                clauseRules: {
+                  blockName: string;
+                  fieldSlug: string;
+                  /** @enum {string} */
+                  operator: "equals" | "is_one_of" | "is_set" | "is_not";
+                  value: (string | number | boolean) | (string | number | boolean)[] | null;
                 }[];
               };
               createdBy: string;
@@ -8544,6 +9721,30 @@ export interface operations {
             options?: string[] | null;
             /** @default false */
             required?: boolean;
+            /** @default null */
+            catalogFieldId?: string | null;
+            /** @default null */
+            contractAttribute?:
+              | (
+                  | "title"
+                  | "primary_counterparty_name"
+                  | "entity_id"
+                  | "owning_department_id"
+                  | "region"
+                  | "value"
+                  | "effective_date"
+                  | "expiry_date"
+                  | "term_type"
+                )
+              | null;
+          }[];
+          /** @default [] */
+          clauseRules?: {
+            blockName: string;
+            fieldSlug: string;
+            /** @enum {string} */
+            operator: "equals" | "is_one_of" | "is_set" | "is_not";
+            value: (string | number | boolean) | (string | number | boolean)[] | null;
           }[];
         };
       };
@@ -8563,6 +9764,13 @@ export interface operations {
               /** @enum {string} */
               state: "draft" | "published" | "archived";
               templateDocumentId: string | null;
+              /** @enum {string} */
+              audience: "legal_only" | "selected" | "everyone";
+              targetContractTypeId: string | null;
+              publishedDocumentVersionId: string | null;
+              publishedFormVersionId: string | null;
+              publishedAt: string | null;
+              archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
               /** Format: date-time */
@@ -8607,6 +9815,27 @@ export interface operations {
                   required: boolean;
                   displayOrder: number;
                   placeholder: boolean;
+                  catalogFieldId: string | null;
+                  contractAttribute:
+                    | (
+                        | "title"
+                        | "primary_counterparty_name"
+                        | "entity_id"
+                        | "owning_department_id"
+                        | "region"
+                        | "value"
+                        | "effective_date"
+                        | "expiry_date"
+                        | "term_type"
+                      )
+                    | null;
+                }[];
+                clauseRules: {
+                  blockName: string;
+                  fieldSlug: string;
+                  /** @enum {string} */
+                  operator: "equals" | "is_one_of" | "is_set" | "is_not";
+                  value: (string | number | boolean) | (string | number | boolean)[] | null;
                 }[];
               };
               createdBy: string;
@@ -8636,6 +9865,27 @@ export interface operations {
                   required: boolean;
                   displayOrder: number;
                   placeholder: boolean;
+                  catalogFieldId: string | null;
+                  contractAttribute:
+                    | (
+                        | "title"
+                        | "primary_counterparty_name"
+                        | "entity_id"
+                        | "owning_department_id"
+                        | "region"
+                        | "value"
+                        | "effective_date"
+                        | "expiry_date"
+                        | "term_type"
+                      )
+                    | null;
+                }[];
+                clauseRules: {
+                  blockName: string;
+                  fieldSlug: string;
+                  /** @enum {string} */
+                  operator: "equals" | "is_one_of" | "is_set" | "is_not";
+                  value: (string | number | boolean) | (string | number | boolean)[] | null;
                 }[];
               };
               createdBy: string;

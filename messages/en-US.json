@@ -95,14 +95,32 @@
   "activity.approverGroup.memberRemoved": {
     "defaultMessage": "{actor} took {member} off the approver group {name}"
   },
+  "activity.autoDoc.archived": {
+    "defaultMessage": "{actor} archived {name}"
+  },
+  "activity.autoDoc.audienceSelected": {
+    "defaultMessage": "Selected"
+  },
   "activity.autoDoc.created": {
     "defaultMessage": "{actor} created {name}"
   },
   "activity.autoDoc.formSaved": {
     "defaultMessage": "{actor} saved a form version for {name}"
   },
+  "activity.autoDoc.published": {
+    "defaultMessage": "{actor} published {name}"
+  },
+  "activity.autoDoc.restored": {
+    "defaultMessage": "{actor} restored {name}"
+  },
   "activity.autoDoc.templateUploaded": {
     "defaultMessage": "{actor} uploaded a template for {name}"
+  },
+  "activity.autoDoc.unpublished": {
+    "defaultMessage": "{actor} unpublished {name}"
+  },
+  "activity.autoDoc.updated": {
+    "defaultMessage": "{actor} changed {name}"
   },
   "activity.boolean": {
     "defaultMessage": "{value, select, true {Yes} other {No}}"
@@ -348,7 +366,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Owning department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} defaultPeople {Default people} targetModule {Target} targetType {Target type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Owning department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -1124,6 +1142,57 @@
   "autoDocs.addField": {
     "defaultMessage": "Add field"
   },
+  "autoDocs.allAudiences": {
+    "defaultMessage": "All audiences"
+  },
+  "autoDocs.allStates": {
+    "defaultMessage": "All states"
+  },
+  "autoDocs.allTargetTypes": {
+    "defaultMessage": "All target Contract Types"
+  },
+  "autoDocs.alwaysInclude": {
+    "defaultMessage": "Always include"
+  },
+  "autoDocs.applyFilters": {
+    "defaultMessage": "Apply filters"
+  },
+  "autoDocs.archive": {
+    "defaultMessage": "Archive"
+  },
+  "autoDocs.archivedTargetType": {
+    "defaultMessage": "Archived Contract Type"
+  },
+  "autoDocs.attributeName": {
+    "defaultMessage": "{attribute, select, title {Title} primary_counterparty_name {Primary Counterparty name} entity_id {Our Entity} owning_department_id {Owning department} region {Region} value {Value} effective_date {Effective date} expiry_date {Expiry date} other {Term type}}"
+  },
+  "autoDocs.audience": {
+    "defaultMessage": "Audience"
+  },
+  "autoDocs.audienceName": {
+    "defaultMessage": "{audience, select, legal_only {Legal only} selected {Selected} other {Everyone}}"
+  },
+  "autoDocs.catalogFields": {
+    "defaultMessage": "Catalog Fields"
+  },
+  "autoDocs.changeValues": {
+    "defaultMessage": "{before} → {after}"
+  },
+  "autoDocs.chooseVersion": {
+    "defaultMessage": "Choose a version"
+  },
+  "autoDocs.clauses": {
+    "defaultMessage": "Clauses"
+  },
+  "autoDocs.compareFiles": {
+    "defaultMessage": "Compare files"
+  },
+  "autoDocs.compareForms": {
+    "defaultMessage": "Compare forms"
+  },
+  "autoDocs.contractAttributes": {
+    "defaultMessage": "Contract attributes"
+  },
   "autoDocs.create": {
     "defaultMessage": "Create Auto-Doc"
   },
@@ -1135,6 +1204,9 @@
   },
   "autoDocs.description": {
     "defaultMessage": "Description"
+  },
+  "autoDocs.diffFailed": {
+    "defaultMessage": "Could not compare these forms. Try again."
   },
   "autoDocs.download": {
     "defaultMessage": "Download"
@@ -1163,14 +1235,38 @@
   "autoDocs.fieldTypeName": {
     "defaultMessage": "{type, select, text {Text} long_text {Long text} number {Number} currency {Currency} date {Date} boolean {Boolean} single_select {Single select} multi_select {Multi select} other {Entity}}"
   },
+  "autoDocs.fileDiffFrom": {
+    "defaultMessage": "Compare file from"
+  },
+  "autoDocs.fileDiffTo": {
+    "defaultMessage": "Compare file to"
+  },
+  "autoDocs.fileToPublish": {
+    "defaultMessage": "File version to publish"
+  },
   "autoDocs.fileVersionLabel": {
     "defaultMessage": "File version {number} · {filename}"
+  },
+  "autoDocs.fileVersionNumber": {
+    "defaultMessage": "File version {number}"
   },
   "autoDocs.form": {
     "defaultMessage": "Form"
   },
+  "autoDocs.formChange": {
+    "defaultMessage": "{kind, select, added {Added {name}} removed {Removed {name}} retyped {Retyped {name}} relabelled {Relabelled {name}} reordered {Reordered {name}} mapped {Map changed: {name}} rules_changed {Clause rule changed: {name}} other {Field settings changed: {name}}}"
+  },
+  "autoDocs.formDiffFrom": {
+    "defaultMessage": "Compare form from"
+  },
+  "autoDocs.formDiffTo": {
+    "defaultMessage": "Compare form to"
+  },
   "autoDocs.formSaved": {
     "defaultMessage": "Form saved."
+  },
+  "autoDocs.formToPublish": {
+    "defaultMessage": "Form version to publish"
   },
   "autoDocs.formVersion": {
     "defaultMessage": "Form version {number}"
@@ -1181,8 +1277,32 @@
   "autoDocs.formVersions": {
     "defaultMessage": "Form versions"
   },
+  "autoDocs.includeBlock": {
+    "defaultMessage": "Include this Block"
+  },
   "autoDocs.invalidUploadReply": {
     "defaultMessage": "The upload response could not be read. Reload this Auto-Doc to check its saved template."
+  },
+  "autoDocs.lifecycleFailed": {
+    "defaultMessage": "Could not change this Auto-Doc's state. Try again."
+  },
+  "autoDocs.livePair": {
+    "defaultMessage": "Live: file version {file} and form version {form}."
+  },
+  "autoDocs.liveStates": {
+    "defaultMessage": "Draft and published"
+  },
+  "autoDocs.mapTo": {
+    "defaultMessage": "Map to"
+  },
+  "autoDocs.missingBlock": {
+    "defaultMessage": "This Block is missing from the current template. Remove its rule or choose an earlier file version when publishing."
+  },
+  "autoDocs.missingRuleField": {
+    "defaultMessage": "{slug} (missing)"
+  },
+  "autoDocs.missingRuleOption": {
+    "defaultMessage": "{value} (missing)"
   },
   "autoDocs.moveDown": {
     "defaultMessage": "Move down"
@@ -1196,6 +1316,24 @@
   "autoDocs.newField": {
     "defaultMessage": "New field"
   },
+  "autoDocs.noBlocks": {
+    "defaultMessage": "This template has no Blocks."
+  },
+  "autoDocs.noFormChanges": {
+    "defaultMessage": "These form versions have no structural changes."
+  },
+  "autoDocs.noLivePair": {
+    "defaultMessage": "No file and form pair is published."
+  },
+  "autoDocs.noMap": {
+    "defaultMessage": "No map"
+  },
+  "autoDocs.noTargetType": {
+    "defaultMessage": "No target Contract Type"
+  },
+  "autoDocs.noValue": {
+    "defaultMessage": "None"
+  },
   "autoDocs.notFound": {
     "defaultMessage": "Auto-Doc not found"
   },
@@ -1208,6 +1346,9 @@
   "autoDocs.openVersion": {
     "defaultMessage": "Open version {number}"
   },
+  "autoDocs.operator": {
+    "defaultMessage": "Operator"
+  },
   "autoDocs.optionsRefused": {
     "defaultMessage": "Give each select field distinct, non-empty options."
   },
@@ -1217,8 +1358,35 @@
   "autoDocs.orphanHelp": {
     "defaultMessage": "This field no longer has a Placeholder in the template."
   },
+  "autoDocs.publication": {
+    "defaultMessage": "Publication"
+  },
+  "autoDocs.publish": {
+    "defaultMessage": "Publish"
+  },
+  "autoDocs.publishHelp": {
+    "defaultMessage": "Choose the file and saved form to publish together. Later edits leave this pair unchanged until you publish again."
+  },
   "autoDocs.removeField": {
     "defaultMessage": "Remove field"
+  },
+  "autoDocs.restore": {
+    "defaultMessage": "Restore"
+  },
+  "autoDocs.ruleField": {
+    "defaultMessage": "Form field"
+  },
+  "autoDocs.ruleListRefused": {
+    "defaultMessage": "Enter one value per line, using numbers for a number or currency field."
+  },
+  "autoDocs.ruleOperator": {
+    "defaultMessage": "{operator, select, equals {Equals} is_one_of {Is one of} is_set {Is set} other {Is not}}"
+  },
+  "autoDocs.ruleValue": {
+    "defaultMessage": "Value"
+  },
+  "autoDocs.saveBeforePublish": {
+    "defaultMessage": "Save your form changes before publishing."
   },
   "autoDocs.saveBeforeUpload": {
     "defaultMessage": "Save your form changes before uploading another template."
@@ -1229,17 +1397,44 @@
   "autoDocs.saveForm": {
     "defaultMessage": "Save form"
   },
+  "autoDocs.saveSettings": {
+    "defaultMessage": "Save settings"
+  },
+  "autoDocs.search": {
+    "defaultMessage": "Search Auto-Docs"
+  },
+  "autoDocs.settings": {
+    "defaultMessage": "Settings"
+  },
+  "autoDocs.settingsFailed": {
+    "defaultMessage": "Could not save these settings. Try again."
+  },
+  "autoDocs.settingsSaved": {
+    "defaultMessage": "Settings saved."
+  },
   "autoDocs.slugsRefused": {
     "defaultMessage": "Each form field needs a distinct slug."
   },
   "autoDocs.state": {
     "defaultMessage": "{state, select, draft {Draft} published {Published} other {Archived}}"
   },
+  "autoDocs.stateFilter": {
+    "defaultMessage": "State"
+  },
+  "autoDocs.targetType": {
+    "defaultMessage": "Target Contract Type"
+  },
   "autoDocs.template": {
     "defaultMessage": "Template"
   },
   "autoDocs.templateHelp": {
     "defaultMessage": "Use double braces for Placeholders, such as {example}. Each upload adds a file version."
+  },
+  "autoDocs.unavailableMap": {
+    "defaultMessage": "Unavailable catalog Field"
+  },
+  "autoDocs.unpublish": {
+    "defaultMessage": "Unpublish"
   },
   "autoDocs.uploadFailed": {
     "defaultMessage": "Could not upload the template. Please try again."
@@ -1249,6 +1444,12 @@
   },
   "autoDocs.uploaded": {
     "defaultMessage": "Template uploaded."
+  },
+  "autoDocs.versionDiffs": {
+    "defaultMessage": "Version comparisons"
+  },
+  "autoDocs.whenRuleMatches": {
+    "defaultMessage": "When a Clause rule matches"
   },
   "autoDocs.wordTemplate": {
     "defaultMessage": "Word template"

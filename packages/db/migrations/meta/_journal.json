@@ -848,6 +848,13 @@
       "when": 1789317029619,
       "tag": "0120_auto_doc_records",
       "breakpoints": true
+    },
+    {
+      "idx": 121,
+      "version": "7",
+      "when": 1789323127870,
+      "tag": "0121_auto_doc_publication",
+      "breakpoints": true
     }
   ]
 }

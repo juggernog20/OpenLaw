@@ -1306,7 +1306,7 @@ How many views one person may hold on one surface is bounded in the API (`MAX_LI
 
 ### `auto_docs` and its tables
 
-Source: **ADO-001–010**, grilled 2026-09-13. M35/5 (#848, migration 0120) builds the record identity, template ownership, detection metadata, and immutable form snapshots below. Publication, maps, rules, access, and delivery columns remain the intended shape for the following M35 tasks.
+Source: **ADO-001–010**, grilled 2026-09-13. M35/5 (#848, migration 0120) builds the record identity, template ownership, detection metadata, and immutable form snapshots below. M35/6, migration 0121, adds publication, maps, rules, audience, and the target Type. Audience allowlists and delivery settings remain the intended shape for the following M35 tasks.
 
 `auto_docs`: `id`; not-null `name`; nullable `description`; `state` with CHECK `draft | published | archived` (default `draft`); `audience` with CHECK `legal_only | selected | everyone` (default `legal_only`); nullable `target_contract_type_id` FK → `contract_types.id` `ON DELETE SET NULL`; nullable `title_pattern`; nullable `fixed_entity_id` FK → `entities.id`; nullable `template_document_id` FK → `documents.id` (the one owned template Document); nullable `published_document_version_id` FK → `document_versions.id` and `published_form_version_id` FK → `auto_doc_form_versions.id`, both set or both null (the **live pair**); `formats` with CHECK `docx | pdf | both` (default `both`); nullable Markdown `cover_note`; nullable `acknowledgement_text` (null = the org default from `org_settings.auto_doc_acknowledgement_text`); `acknowledgement_frequency` with CHECK `none | every_use | once_per_auto_doc | once` (default `once_per_auto_doc`); nullable `default_legal_owner_id` FK → `users.id`; `created_by`, `updated_by`; timestamps; nullable `published_at`, `archived_at`.
 
@@ -1315,6 +1315,8 @@ Source: **ADO-001–010**, grilled 2026-09-13. M35/5 (#848, migration 0120) buil
 `auto_doc_form_versions`: `id`; `auto_doc_id`; `version_number` (1..n per Auto-Doc, unique); `definition` jsonb, an immutable snapshot of the form fields (slug, label, help, `field_type` from the catalog's nine, options, required, display order, `catalog_field_id`, `contract_attribute`) and the Clause rules (block name, field slug, operator `equals | is_one_of | is_set | is_not`, value); `created_by`; `created_at`. The editor writes a new row on save; nothing is edited in place.
 
 **Built in M35/5:** `auto_docs` carries identity, description, state, the unique template pointer, creator/updater, timestamps and archival timestamp. `auto_doc_form_versions.definition.fields` carries slug, label, help, field type, options, required, display order, and `placeholder`: whether the field has ever matched a detected Placeholder. This last fact lets a later upload mark a missing Placeholder without mislabelling an intentionally non-document field. Fields, maps, and Clause rules share the JSON snapshot; no separate mutable form-field table is created.
+
+**Built in M35/6:** `audience`, `target_contract_type_id`, both published version ids, and `published_at` are stored. CHECKs tie the pair and publication timestamp to `published` and the archival timestamp to `archived`. Deferred constraints check the pair on Auto-Doc writes and on changes to Document or version ownership. Form fields hold optional `catalogFieldId` and `contractAttribute`; the API and a JSON-path CHECK refuse both on one field. `definition.clauseRules` holds each Block's condition. Older snapshots omit the new map and rule properties and read as no map or rule, without rewriting history.
 
 `auto_doc_template_scans`: `document_version_id` primary key/FK → `document_versions.id` (cascade on delete); `detection` jsonb with Placeholders in document order and unique Block names. Detection is metadata on each immutable file Version. Both template upload routes validate before writing a Version and append a reconciled form snapshot under the Auto-Doc row lock.
 
@@ -1332,7 +1334,7 @@ Source: **ADO-001–010**, grilled 2026-09-13. M35/5 (#848, migration 0120) buil
 
 `document_versions.source = 'generated'` CHECK widens to admit `kind = 'draft_ours'` when the Version was written by a Generation or a Filing.
 
-`activity_log.entity_type` gains `auto_doc`. Verbs: `auto_doc.created`, `.published`, `.unpublished`, `.archived`, `.restored`, `.generated`, `.filed`, `.acknowledged`, `.form_saved`, `.template_uploaded`.
+`activity_log.entity_type` gains `auto_doc`. Verbs: `auto_doc.created`, `.updated`, `.published`, `.unpublished`, `.archived`, `.restored`, `.generated`, `.filed`, `.acknowledged`, `.form_saved`, `.template_uploaded`.
 
 ---
 
