@@ -43,6 +43,7 @@ function people(db: Executor, id: string) {
     .where(eq(defaults.contractTypeId, id))
     .orderBy(asc(defaults.displayOrder), asc(defaults.userId));
 }
+type DefaultPerson = Awaited<ReturnType<typeof people>>[number];
 async function typeRow(db: Executor, id: string, edit = true) {
   const query = db.select().from(contractTypes).where(eq(contractTypes.id, id));
   const [row] = edit ? await query.for("update") : await query;
@@ -51,20 +52,28 @@ async function typeRow(db: Executor, id: string, edit = true) {
     throw httpError(409, "Restore this contract type before changing its default people.");
   return row;
 }
+/** The audit entry names the people, because the log has no picker to
+ * read an id back from. Order is part of the change, so the comparison
+ * is on ids: two people can share a display name. */
 async function audit(
   tx: Transaction,
   type: { id: string; slug: string },
   actorId: string,
-  before: string[],
-  after: string[],
+  before: readonly DefaultPerson[],
+  after: readonly DefaultPerson[],
 ) {
-  if (JSON.stringify(before) === JSON.stringify(after)) return;
+  const ids = (rows: readonly DefaultPerson[]) => rows.map((row) => row.id);
+  if (JSON.stringify(ids(before)) === JSON.stringify(ids(after))) return;
+  const names = (rows: readonly DefaultPerson[]) => rows.map((row) => row.displayName);
   await recordActivity(tx, {
     entityType: "system",
     actorId,
     action: "contract_type.updated",
     visibility: "admin_only",
-    payload: { slug: type.slug, changed: { defaultPeople: { from: before, to: after } } },
+    payload: {
+      slug: type.slug,
+      changed: { defaultPeople: { from: names(before), to: names(after) } },
+    },
   });
 }
 
@@ -118,13 +127,7 @@ export const defaultPeopleRoutes: FastifyPluginAsyncZod = async (app) => {
           displayOrder: Math.max(-1, ...before.map((p) => p.displayOrder)) + 1,
         });
         const after = await people(tx, type.id);
-        await audit(
-          tx,
-          type,
-          request.user.id,
-          before.map((p) => p.id),
-          after.map((p) => p.id),
-        );
+        await audit(tx, type, request.user.id, before, after);
         return { people: after };
       });
       return reply.status(201).send(result);
@@ -155,13 +158,7 @@ export const defaultPeopleRoutes: FastifyPluginAsyncZod = async (app) => {
             and(eq(defaults.contractTypeId, type.id), eq(defaults.userId, request.params.userId)),
           );
         const after = await people(tx, type.id);
-        await audit(
-          tx,
-          type,
-          request.user.id,
-          before.map((p) => p.id),
-          after.map((p) => p.id),
-        );
+        await audit(tx, type, request.user.id, before, after);
         return { people: after };
       }),
   );
@@ -195,14 +192,9 @@ export const defaultPeopleRoutes: FastifyPluginAsyncZod = async (app) => {
             .update(defaults)
             .set({ displayOrder })
             .where(and(eq(defaults.contractTypeId, type.id), eq(defaults.userId, userId)));
-        await audit(
-          tx,
-          type,
-          request.user.id,
-          before.map((p) => p.id),
-          order,
-        );
-        return { people: await people(tx, type.id) };
+        const after = await people(tx, type.id);
+        await audit(tx, type, request.user.id, before, after);
+        return { people: after };
       }),
   );
 };

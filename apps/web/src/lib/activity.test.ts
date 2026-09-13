@@ -999,6 +999,22 @@ it("names a Key date's selected recipients and the usual audience", () => {
   ).toEqual([{ label: "Reminder recipients", from: "Usual audience", to: "Casey Counsel" }]);
 });
 
+it("names a Contract Type's default people, in the order the card holds them", () => {
+  const entry: NarratableEntry = {
+    action: "contract_type.updated",
+    actor: ACTOR,
+    payload: {
+      slug: "nda",
+      changed: { defaultPeople: { from: [], to: ["Casey Counsel", "Dana Procurement"] } },
+    },
+  };
+  // The audit log has no picker to read an id back from, so the payload
+  // carries the names the Administrator saw (CTR-026).
+  expect(narrateActivity(intl, entry).changes).toEqual([
+    { label: "Default people", from: "Not set", to: "Casey Counsel and Dana Procurement" },
+  ]);
+});
+
 describe("the record's own id-valued and slug-valued changes", () => {
   it("names a Task's assignee from the mount's reference names, and the id when nothing names it", () => {
     const entry: NarratableEntry = {

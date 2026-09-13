@@ -2,7 +2,7 @@
 
 /** CTR-026 and NOT-009 at the settings, creation, and notification HTTP seams. */
 import { afterAll, beforeAll, expect, it } from "vitest";
-import { activityLog, and, contracts, eq, notifications, users } from "@openlaw/db";
+import { activityLog, and, asc, contracts, eq, notifications, users } from "@openlaw/db";
 import { createContract } from "../contracts/create.js";
 import { provisionUser } from "../../auth/instance.js";
 import {
@@ -130,6 +130,22 @@ it("lets only Administrators manage an ordered, deduplicated list of live people
       })
     ).statusCode,
   ).toBe(400);
+  // The audit entry names the people: the log has no picker to read an
+  // id back from (CTR-026).
+  const entries = await h.db
+    .select()
+    .from(activityLog)
+    .where(eq(activityLog.action, "contract_type.updated"))
+    .orderBy(asc(activityLog.createdAt));
+  const reorder = entries.at(-1)!.payload as {
+    changed: { defaultPeople: { from: string[]; to: string[] } };
+  };
+  expect(reorder.changed.defaultPeople.to).toEqual([
+    "business_user",
+    "legal_team_member",
+    "Retired",
+    TEST_ADMIN.displayName,
+  ]);
   await h.db.update(users).set({ archivedAt: new Date() }).where(eq(users.id, retiredId));
 });
 

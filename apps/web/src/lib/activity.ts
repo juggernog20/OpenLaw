@@ -361,7 +361,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "primaryDocument {Primary document} " +
         "displayName {Name} display_name {Display name} name {Name} " +
         "role {Role} email {Email} " +
-        "stage {Stage} moduleScope {Scope} isRequired {Required} " +
+        "stage {Stage} moduleScope {Scope} isRequired {Required} defaultPeople {Default people} " +
         "targetModule {Target} targetType {Target type} turnaroundDays {Target turnaround (business days)} " +
         "theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} " +
         "defaultLocale {Default language} defaultTimezone {Default timezone} " +
@@ -520,6 +520,10 @@ function changeValue(
         defaultMessage: "Usual audience",
       });
     }
+    // An empty list is an unset side, and reads as one. `formatList`
+    // answers the empty string, which would leave the row reading
+    // "Default people:  → Casey Counsel".
+    if (value.length === 0) return notSet(intl);
     return intl.formatList(
       value.map((item) => changeValue(intl, key, item, context)),
       { type: "conjunction" },
