@@ -10,7 +10,6 @@
  * chain shows round two.
  */
 
-import { completePortalFirstRun } from "./helpers.js";
 import {
   test,
   expect,
@@ -22,6 +21,7 @@ import {
 import { z } from "zod";
 import {
   ADMIN,
+  completePortalFirstRun,
   ensureAdminExists,
   ensureMemberInert,
   onboardActivatedMember,
@@ -83,6 +83,7 @@ async function enterPortal(
   await expect(page.getByText("Check your email")).toBeVisible();
   const mail = await waitForMailTo(adminRequest, REQUESTER, /^Sign in to OpenLaw$/);
   await page.goto(extractLink(mail.text, "/api/auth/magic-link/verify"));
+  await expect(page).toHaveURL(/\/portal\/onboarding$/);
   await completePortalFirstRun(page);
   await expect(page).toHaveURL(/\/portal$/);
   return page;
