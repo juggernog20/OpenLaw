@@ -4,7 +4,9 @@ import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
 import { ADMIN, ensureAdminExists, reportAxeViolations, signInAs } from "./helpers.js";
 
-test.setTimeout(120_000);
+// A real Word comparison runs through the doc-engine, which journeys 39
+// budget 180s for. This journey waits on one after a full publish run.
+test.setTimeout(300_000);
 test.beforeAll(async ({ request }) => ensureAdminExists(request));
 
 test("Legal publishes one pair, sees a stale Clause refusal, and restores an archived Auto-Doc", async ({
@@ -90,7 +92,7 @@ test("Legal publishes one pair, sees a stale Clause refusal, and restores an arc
   );
   await page.getByRole("link", { name: "Compare files", exact: true }).click();
   await expect(page.getByRole("region", { name: "Compared document", exact: true })).toBeVisible({
-    timeout: 60_000,
+    timeout: 180_000,
   });
   await page.getByRole("link", { name: "Close comparison", exact: true }).click();
   await expect(page).toHaveURL(recordUrl);
