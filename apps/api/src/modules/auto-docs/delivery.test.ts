@@ -5,6 +5,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { autoDocGenerations, eq, orgSettings, sql } from "@openlaw/db";
+import { sweepGenerationDeliveries } from "../../pipeline/generation-delivery.js";
 import { startPipeline, type Pipeline } from "../../pipeline/pg-boss.js";
 import {
   startHarness,
@@ -370,6 +371,41 @@ it("ignores duplicate and superseded delivery jobs without sending another email
   const later = await generate(id, pair);
   await delivered(id, later.id);
   expect(h.mailer.messagesTo(TEST_ADMIN.email)).toHaveLength(before + 1);
+});
+
+it("fails a fill that was interrupted, then lets Legal retry it", async () => {
+  const { id, pair } = await prepare("docx");
+  const generation = await generate(id, pair);
+  await delivered(id, generation.id);
+  // What a process that stopped mid-fill leaves: a pending row that no
+  // queue ask will ever name, because the ask follows the stored output.
+  await h.db
+    .update(autoDocGenerations)
+    .set({
+      state: "pending",
+      docxFileRef: null,
+      emailState: "pending",
+      emailSentAt: null,
+      updatedAt: new Date(Date.now() - 6 * 60_000),
+    })
+    .where(eq(autoDocGenerations.id, generation.id));
+  await sweepGenerationDeliveries(
+    { db: h.db, log: { info() {}, warn() {}, error() {} } },
+    h.pipeline,
+  );
+  expect((await read(id, generation.id)).json().generation).toMatchObject({
+    state: "failed",
+    hasDocx: false,
+    failure: { code: "fill_interrupted" },
+  });
+  const retry = await h.app.inject({
+    method: "POST",
+    url: `/api/v1/auto-docs/${id}/generations/${generation.id}/retry`,
+    cookies,
+    payload: {},
+  });
+  expect(retry.statusCode, retry.body).toBe(200);
+  expect(await delivered(id, generation.id)).toMatchObject({ state: "ready", hasDocx: true });
 });
 
 it("requires recorded email failures to have a nonempty code and reason", async () => {
