@@ -547,6 +547,14 @@ Three catalog events, no new group:
 
 The Business User who generated the document gets the document itself (ADO-007), not a notification.
 
+### Rationale and alternatives considered
+
+- `contract.team_added` uses `assigned_to_you` because joining a team gives the named person work to follow. It reaches that person, not the whole team. A separate preference group would add a second control for the same assignment intent; reusing the group means team additions cannot be muted independently of other assignments.
+- `contract.generated` uses `assigned_to_you` because the chosen Legal Owner is accountable for the new Contract. Broadcasting a matched Generation to all Legal staff would notify people with no pickup action. The existing group keeps the recipient and channel preferences consistent, at the cost of no separate generated-Contract preference.
+- `contract.generated_unassigned` uses `new_requests` because every Member+ may pick up the unowned work from Inbox. Restricting it to a guessed owner would leave unmatched work unseen; a separate group would split the same Inbox-monitoring preference. The cost is that subscribers receive unassigned generated Contracts alongside Requests.
+
+ADO-007 delivers the generated files to the Business User on screen and by email. An additional generation notification would duplicate that delivery without adding an action. This does not suppress a separate team-add event when one applies.
+
 ### Consequences
 
 Three keys in `catalog.ts`; Activity's `contract.team_added` stays the narration. Portal notification settings show the `assigned_to_you` group for Business Users, which they already can.

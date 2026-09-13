@@ -56,3 +56,7 @@ follow-request, triage-requests and request-forms guides now describe ownership,
 conversation updates and record deadlines without directing readers to that field.
 Their development publication hashes reflect these edits; validation status and
 previous evidence are unchanged.
+
+The PR review also clarifies the active-record and team-membership conditions on
+converted Request links and makes the request-form guidance address its reader.
+The follow-request and request-forms hashes include those wording corrections.

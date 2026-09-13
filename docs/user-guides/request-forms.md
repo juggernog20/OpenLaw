@@ -23,7 +23,7 @@ The **Display name** can change. Rename or reorder request types from the list. 
 
 In the request type editor, set **Target turnaround (business days)** to a whole number from 0 to 36,500, or leave it blank when no estimate is published. Leave the control or press Enter to save, then check the saved indication. Zero means the submission date. Business days are Monday–Friday in the organization's timezone; weekends are skipped and public holidays are not excluded.
 
-The Portal's request-type card shows this duration as general guidance before submission. Legal shares updates through the Request conversation and tracks work deadlines on the resulting Contract or Matter.
+Check the Portal's request-type card for this duration as general guidance before submission. Share updates through the Request conversation and track work deadlines on the resulting Contract or Matter.
 
 ## Choose the form fields
 

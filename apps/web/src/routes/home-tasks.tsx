@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** Assigned Tasks, with optional completed rows and Undo for the latest completion. */
+/** Assigned Tasks, with optional completed rows and Undo for the latest completion (DES-069). */
 
 import { useState } from "react";
 import { Link, redirect, useLoaderData } from "react-router";

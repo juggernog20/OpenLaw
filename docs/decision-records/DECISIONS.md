@@ -1264,7 +1264,7 @@ INT-002's M20/11 addendum let a `user` or `entity` Field sit on a Portal request
 
 ### Decision
 
-A Business User may read the **names** of Entities an Administrator has marked **Portal-listed** (ENT-010), and only those, wherever Member+ has placed an `entity` picker on a Portal request form or an Auto-Doc form. Nothing else about the Entity crosses over: no registrations, officers, holdings, Documents, or Obligations. A Confidential Entity is never listed, whatever its flag. An `entity` Field on a Portal request form may now be required; the M20/11 refusal is narrowed to `user`. The `user` picker stays refused on Portal forms: a staff directory with email addresses is a different question no form has asked yet.
+A Business User may read the **names** of Entities an Administrator has marked **Portal-listed** (ENT-010), and only those, wherever Member+ has placed an `entity` picker on a Portal request form or an Auto-Doc form. Only an Administrator may set or clear `entities.portal_listed`. Nothing else about the Entity crosses over: no registrations, officers, holdings, Documents, or Obligations. A Confidential Entity is never listed, whatever its flag. An `entity` Field on a Portal request form may now be required; the M20/11 refusal is narrowed to `user`. The `user` picker stays refused on Portal forms: a staff directory with email addresses is a different question no form has asked yet.
 
 ### Rationale
 

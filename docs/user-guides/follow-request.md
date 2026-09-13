@@ -1,6 +1,6 @@
 # Follow a Request and reply to Legal
 
-Use your Request to follow Legal's response. Once Legal converts it, the same address opens the Contract or Matter where the work continues.
+Use your Request to follow Legal's response. Once Legal converts it, use the same address to open the resulting Contract or Matter while it is active and you remain on its team.
 
 ## Before you start
 
@@ -20,7 +20,7 @@ Use your Request to follow Legal's response. Once Legal converts it, the same ad
 | **Resolved** | Legal answered and closed the Request without conversion. Read the resolution in Comments. |
 | **Declined** | Legal declined the Request. Read the reason shown beneath the status.                      |
 
-A converted Request leaves **Your requests**. Its address redirects to the resulting Contract or Matter. Conversion adds you to that record's team and records you as Business Owner. Read the original ask under **Original request** and continue in the record's **Comments**. Legal may add other Business Users to that same record later.
+A converted Request leaves **Your requests**. Its address redirects to the resulting Contract or Matter while it is active and you remain on its team. Conversion adds you to that record's team and records you as Business Owner. Read the original ask under **Original request** and continue in the record's **Comments**. Legal may add other Business Users to that same record later.
 
 If Legal removes your team row, the old Request link no longer opens the live record. If the destination is archived, the Request address shows your original ask and an archived notice. That stub has no conversation or Document access.
 

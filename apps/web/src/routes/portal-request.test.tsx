@@ -1095,5 +1095,6 @@ it("shows Legal's owner and submitted Needed by date without a separate return e
   expect(screen.queryByText(/Expected back \(estimate\)/)).not.toBeInTheDocument();
   expect(screen.queryByText("Estimate passed")).not.toBeInTheDocument();
   expect(screen.getByText("Needed by")).toBeInTheDocument();
+  expect(screen.getByText("Oct 8, 2026")).toBeInTheDocument();
   expect(screen.queryByText("Oct 10, 2026")).not.toBeInTheDocument();
 });

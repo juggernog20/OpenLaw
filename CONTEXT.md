@@ -384,7 +384,7 @@ _Avoid_: approval task, sign-off item, approval step, reviewer
 
 - A **Matter** contains many **Contracts** and many **Documents**
 - A **Contract** owns many **Documents** and links to at most one **Matter** — contracts stand alone by default [MTR-007]
-- Every **Document** has exactly one owning record: a **Matter**, **Contract**, **Entity**, or **Knowledge Item** [DOC-008]
+- Every **Document** has exactly one owning record: a **Matter**, **Contract**, **Entity**, **Knowledge Item**, or **Auto-Doc** [DOC-008, ADO-001]
 - A **Document** has one or more **Document Versions**, strictly linear
 - A **Contract** references one of our **Entities** and many **Counterparties**, exactly one of which is primary [CTR-011]
 - A **Request** converts to exactly one **Matter** or one **Contract**, or is resolved or declined — never both [INT-007]
@@ -397,7 +397,7 @@ _Avoid_: approval task, sign-off item, approval step, reviewer
 - An **Auto-Doc** may target one **Contract Type**; a **Generation** of a targeted Auto-Doc creates exactly one **Contract** in `draft` [ADO-005]
 - A **Generation** cites one Live pair, belongs to one person, and may be **Filed** to many Matters or Contracts, each Filing one Document [ADO-005]
 - A **Contract Type** carries many **Default people**, each copied to the team of every new Contract of that Type [CTR-026]
-- A **user** belongs to at most one **Department**; a **Contract**'s Owning department is one Department [SET-010, CTR-025]
+- A **user** belongs to at most one **Department**; a **Contract** may have one Department as its Owning department [SET-010, CTR-025]
 
 ## Example dialogue
 
@@ -420,7 +420,7 @@ _Avoid_: approval task, sign-off item, approval step, reviewer
 ## Flagged ambiguities
 
 - **"entity"** collides with itself. In the domain it means one of our corporate entities. In the schema, `entity_type` / `entity_id` on `comments` and `activity_log` is a generic polymorphic reference to any record. Resolved: the domain term always means the corporate entity; the column pair is infrastructure naming and carries no domain meaning.
-- **"owner"** has two senses. A Contract's **Owner** is the accountable person (`manager_id`) [CTR-004]. A Document's **owning record** is the Matter, Contract, Entity, or Knowledge Item it belongs to [DOC-008]. Never a person.
+- **"owner"** has two senses. A Contract's **Owner** is the accountable person (`manager_id`) [CTR-004]. A Document's **owning record** is the Matter, Contract, Entity, Knowledge Item, or Auto-Doc it belongs to [DOC-008, ADO-001]. Never a person.
 - **"assignee"** is retired. It was a `matter_team` role before being promoted to `matters.manager_id`; the term now means nothing. Use **Matter Manager** or **Owner** [MTR-003].
 - **"Privileged"** was explicitly rejected as the Tier 1 label, to avoid implying a formal attorney-client privilege determination and creating discovery-awkward artifacts. Use **Legal Only** [DD-016].
 - **"status" vs "stage"** was a real duplication in the contract mocks — two fields for one datum. Resolved: one stored `status_id`, stage derived from it [CTR-001].

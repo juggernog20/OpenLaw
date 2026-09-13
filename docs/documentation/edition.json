@@ -51,7 +51,7 @@
       },
       {
         "id": "follow-request",
-        "contentSha256": "e40776f3ce1eeae531352731147a5e73bc7edf775e494ba4cbeeccd08a38a85e"
+        "contentSha256": "1db0631e8dde4911fa0c122d09b42771e88937d37c1a85d445fafac0f60a1880"
       },
       {
         "id": "portal-knowledge",
@@ -175,7 +175,7 @@
       },
       {
         "id": "request-forms",
-        "contentSha256": "b3629b2bed119eb900105876132b096a9774b3dc53148c278c88509c33972c3b"
+        "contentSha256": "b106ef3a55c18c136f5d38dadc24b169586a3cabfb7ebf8586a8642e6d1150b2"
       },
       {
         "id": "reminders-and-audit",

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** Contract and Matter Tasks assigned to the signed-in viewer. */
+/** Contract and Matter Tasks assigned to the signed-in viewer (DES-069). */
 import { ListChecks } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link } from "react-router";

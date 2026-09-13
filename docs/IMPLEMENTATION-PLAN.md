@@ -676,8 +676,8 @@ leaves a coherent product; none of them is optional in the sense that we intend 
       _Demo:_ Legal uploads an NDA template with `{{counterparty_name}}` in it, publishes the form OpenLaw
       detected, and opens it to Sales. An account executive signs in to the Portal, acknowledges the
       no-edits statement, fills the form, and has the finished `.docx` and `.pdf` on screen and in their
-      inbox. A draft Contract is on the Contracts list with the executive as Business Owner, Procurement on
-      the team, and the jurisdiction's lawyer as Legal Owner; an NDA no rule matched waits on the Inbox's
+      inbox. A draft Contract is on the Contracts list with the executive as Business Owner, Procurement as
+      its Owning department, and the jurisdiction's lawyer as Legal Owner; an NDA no rule matched waits on the Inbox's
       Unassigned contracts tab. Legal re-uploads the template, sees the Word compare and the form diff, and
       publishes the new pair.
       Numbered ahead of M34 in the arc order but lands before Release closes: the Departments list and the

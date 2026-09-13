@@ -166,8 +166,9 @@ The Entity-type taxonomy mount counts every referencing Entity, including archiv
 - **Status** — Accepted
 - **Date** — 2026-09-13
 - **Context** — DD-027 lets a Business User pick an Entity where Legal has placed an `entity` picker. The registry holds holding companies a Business User should never see in a picker.
-- **Decision** — `entities.portal_listed`, boolean, default false, edited on the Entity record by Member+ and shown as a column in the Entities settings list. A Confidential Entity (ENT-004) is never listed whatever the flag, and the record refuses to set the flag on one. The Portal read returns id and name only, ordered by name, for live, non-Confidential, Portal-listed Entities. Archiving an Entity removes it from the read; the flag is kept for restore.
+- **Decision** — `entities.portal_listed`, boolean, default false, set or cleared on the Entity record only by an Administrator and shown as a column in the Entities settings list. A Confidential Entity (ENT-004) is never listed whatever the flag, and the record refuses to set the flag on one. The Portal read returns id and name only, ordered by name, for live, non-Confidential, Portal-listed Entities. Archiving an Entity removes it from the read; the flag is kept for restore.
 - **Rationale** — A property of the Entity, set once, respected by every Business User picker. The alternative, a per-Field subset, was rejected in DD-027.
+- **Alternatives considered** — Per-Field subsets repeat the same visibility choice on every form and can drift as Entities change. Listing the whole non-Confidential registry exposes irrelevant holding companies; DD-027 instead chooses one explicit list of operating Entities.
 - **Consequences** — One column, one Portal read, one settings column. Glossary: **Portal-listed Entity**. The activity verb `entity.portal_listed_set`.
 
 ## Index of decisions
